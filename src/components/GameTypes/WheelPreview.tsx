@@ -25,7 +25,6 @@ interface WheelPreviewProps {
   onStart?: () => void;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
-  previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const DEFAULT_FIELDS: FieldConfig[] = [
@@ -42,8 +41,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   disabled = false,
   onStart,
   gameSize = 'small',
-  gamePosition = 'center',
-  previewDevice = 'desktop'
+  gamePosition = 'center'
 }) => {
   // Récupérer les couleurs des segments depuis la configuration
   const segmentColor1 = campaign?.config?.roulette?.segmentColor1 || '#ff6b6b';
@@ -89,15 +87,17 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();
   
-  // Check if we're on mobile/tablet and position is left/right for 50% cropping
-  const isMobileTablet = previewDevice === 'mobile' || previewDevice === 'tablet';
-  const isLeftRightPosition = gamePosition === 'left' || gamePosition === 'right';
-  const shouldCropWheel = isMobileTablet && isLeftRightPosition;
+  // Determine if the wheel should be cropped based on its position
+  const isCroppablePosition = ['left', 'right', 'bottom'].includes(gamePosition);
+  const shouldCropWheel = isCroppablePosition;
   
   // Adjust canvas and container sizes for cropping
   const baseCanvasSize = Math.min(gameDimensions.width, gameDimensions.height) - 60;
   const canvasSize = baseCanvasSize;
-  const containerWidth = shouldCropWheel ? baseCanvasSize * 0.5 : baseCanvasSize;
+  const containerWidth =
+    shouldCropWheel && (gamePosition === 'left' || gamePosition === 'right')
+      ? baseCanvasSize * 0.5
+      : baseCanvasSize;
   
   // Taille du pointeur proportionnelle
   const pointerSize = Math.max(30, canvasSize * 0.08);
@@ -185,9 +185,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   if (segments.length === 0) {
     return (
       <WheelContainer 
-        gamePosition={gamePosition} 
+        gamePosition={gamePosition}
         gameDimensions={gameDimensions}
-        previewDevice={previewDevice}
       >
         <p>Aucun segment configuré pour la roue</p>
       </WheelContainer>
@@ -195,10 +194,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   }
 
   return (
-    <WheelContainer 
-      gamePosition={gamePosition} 
+    <WheelContainer
+      gamePosition={gamePosition}
       gameDimensions={gameDimensions}
-      previewDevice={previewDevice}
     >
       <div style={{ 
         position: 'relative', 
@@ -212,7 +210,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             position: 'absolute',
             width: canvasSize - 15, // Réduit de 10 à 15
             height: canvasSize - 15,
-            left: shouldCropWheel ? (gamePosition === 'left' ? '8px' : `-${canvasSize * 0.5 + 8}px`) : '8px',
+            left:
+              shouldCropWheel && gamePosition === 'right'
+                ? `-${canvasSize * 0.5 + 8}px`
+                : '8px',
             top: '12px', // Légèrement augmenté pour moins d'ombre
             borderRadius: '50%',
             background: 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.05) 50%, rgba(0,0,0,0.1) 100%)', // Réduit l'opacité
@@ -232,7 +233,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           borderColor={borderColor}
           borderOutlineColor={borderOutlineColor}
           canvasSize={canvasSize}
-          offset={shouldCropWheel ? (gamePosition === 'left' ? '0px' : `-${canvasSize * 0.5}px`) : '0px'}
+          offset={shouldCropWheel && gamePosition === 'right' ? `-${canvasSize * 0.5}px` : '0px'}
         />
         
         {/* Theme decoration */}

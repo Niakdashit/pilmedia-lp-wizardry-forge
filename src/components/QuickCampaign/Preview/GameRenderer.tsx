@@ -24,7 +24,6 @@ interface GameRendererProps {
   };
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
-  previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const GameRenderer: React.FC<GameRendererProps> = ({
@@ -33,8 +32,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   customColors,
   jackpotColors,
   gameSize = 'large',
-  gamePosition = 'center',
-  previewDevice = 'desktop'
+  gamePosition = 'center'
 }) => {
 
   // Synchroniser les couleurs de la roue avec les couleurs personnalisées
@@ -78,7 +76,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           }}
           gameSize={gameSize}
           gamePosition={gamePosition}
-          previewDevice={previewDevice}
         />
       );
 

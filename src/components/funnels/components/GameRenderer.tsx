@@ -86,7 +86,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             onStart={handleGameStartInternal}
             gameSize={gameSize}
             gamePosition={gamePosition}
-            previewDevice={previewMode}
             disabled={!formValidated}
           />
         );

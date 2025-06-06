@@ -239,14 +239,13 @@ const Step3VisualStyle: React.FC = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center w-full h-full">
                     <div className="transform scale-90 origin-center">
-                      <GameRenderer 
-                        gameType={selectedGameType || 'wheel'} 
-                        mockCampaign={previewCampaign} 
-                        customColors={customColors} 
-                        jackpotColors={jackpotColors} 
-                        gameSize="medium" 
-                        gamePosition="center" 
-                        previewDevice="desktop" 
+                      <GameRenderer
+                        gameType={selectedGameType || 'wheel'}
+                        mockCampaign={previewCampaign}
+                        customColors={customColors}
+                        jackpotColors={jackpotColors}
+                        gameSize="medium"
+                        gamePosition="center"
                       />
                     </div>
                   </div>

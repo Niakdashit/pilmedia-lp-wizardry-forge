@@ -29,12 +29,21 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
     return canvasSize / 2 - pointerSize / 2;
   };
 
+  // Calcul de la position verticale du pointeur
+  const getPointerTop = () => {
+    if (shouldCropWheel && gamePosition === 'bottom') {
+      // Décaler vers le bas pour compenser le décalage de la roue
+      return canvasSize / 2 - pointerSize * 0.6;
+    }
+    return -pointerSize * 0.6;
+  };
+
   return (
     <div
       style={{
         position: 'absolute',
         left: getPointerLeft(),
-        top: -pointerSize * 0.6, // Ajuster pour que le pointeur touche le bord de la roue
+        top: getPointerTop(), // Ajuster pour que le pointeur touche le bord de la roue
         width: pointerSize,
         height: pointerSize * 1.6,
         zIndex: 3,
