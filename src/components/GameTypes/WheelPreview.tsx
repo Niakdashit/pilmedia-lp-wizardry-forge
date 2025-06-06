@@ -74,7 +74,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const isCroppablePosition = ['left', 'right', 'bottom'].includes(gamePosition);
   const shouldCropWheel = isMobile && isCroppablePosition;
   
-  const { canvasSize, containerWidth, pointerSize } = getWheelDimensions(
+  const { canvasSize, containerWidth, containerHeight, pointerSize } = getWheelDimensions(
     gameDimensions,
     gamePosition,
     shouldCropWheel
@@ -143,8 +143,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     >
       <div style={{ 
         position: 'relative', 
-        width: containerWidth, 
-        height: canvasSize,
+        width: containerWidth,
+        height: containerHeight,
         overflow: shouldCropWheel ? 'hidden' : 'visible'
       }}>
         {/* Ombre réduite */}

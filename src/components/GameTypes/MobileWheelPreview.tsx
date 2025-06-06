@@ -90,17 +90,26 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
     }
   };
 
-  // Détermine si on doit couper la roue (positions left/right)
-  const shouldCropWheel = gamePosition === 'left' || gamePosition === 'right';
+  // Détermine si on doit couper la roue (positions left/right/bottom)
+  const shouldCropWheel = ['left', 'right', 'bottom'].includes(gamePosition);
+
+  const containerWidth =
+    shouldCropWheel && (gamePosition === 'left' || gamePosition === 'right')
+      ? canvasSize / 2
+      : canvasSize;
+
+  const containerHeight =
+    shouldCropWheel && gamePosition === 'bottom' ? canvasSize / 2 : canvasSize;
   
   // Offset pour le canvas dans le conteneur
   const getCanvasOffset = () => {
     if (!shouldCropWheel) return '0px';
-    return gamePosition === 'left' ? '0px' : `-${canvasSize / 2}px`;
+    if (gamePosition === 'right') return `-${canvasSize / 2}px`;
+    return '0px';
   };
 
   const renderWheelContainer = () => (
-    <div style={{ position: 'relative', width: canvasSize, height: canvasSize, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: containerWidth, height: containerHeight, overflow: 'hidden' }}>
       <WheelCanvas
         segments={segments}
         centerImage={centerImage}
@@ -108,6 +117,15 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
         borderColor={borderColor}
         canvasSize={canvasSize}
         offset={getCanvasOffset()}
+        position={
+          gamePosition === 'left'
+            ? 'gauche'
+            : gamePosition === 'right'
+            ? 'droite'
+            : gamePosition === 'bottom'
+            ? 'bas'
+            : 'centre'
+        }
       />
       
       <WheelDecorations
@@ -119,7 +137,7 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
       <WheelPointer
         pointerColor={pointerColor}
         gamePosition={gamePosition}
-        containerWidth={shouldCropWheel ? canvasSize / 2 : canvasSize}
+        containerWidth={containerWidth}
         canvasSize={canvasSize}
         shouldCropWheel={shouldCropWheel}
       />

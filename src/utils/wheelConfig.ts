@@ -30,8 +30,11 @@ export const getWheelDimensions = (
     shouldCropWheel && (gamePosition === 'left' || gamePosition === 'right')
       ? baseCanvasSize * 0.5
       : baseCanvasSize;
-  
+
+  const containerHeight =
+    shouldCropWheel && gamePosition === 'bottom' ? baseCanvasSize * 0.5 : baseCanvasSize;
+
   const pointerSize = Math.max(30, canvasSize * 0.08);
 
-  return { canvasSize, containerWidth, pointerSize };
+  return { canvasSize, containerWidth, containerHeight, pointerSize };
 };
