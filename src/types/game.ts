@@ -52,7 +52,7 @@ export interface DiceConfig extends GameConfig {
   winConditions: number[][];
 }
 
-// ----------- AJOUT CONFIG JACKPOT -----------
+// Configuration for Jackpot games
 export interface JackpotConfig extends GameConfig {
   symbols: string[];
   reels: number;
@@ -65,5 +65,5 @@ export interface JackpotConfig extends GameConfig {
   };
 }
 
-// ----------- AJOUT TYPE GAME "JACKPOT" -----------
+// Game type definition including Jackpot
 export type GameType = 'wheel' | 'scratch' | 'memory' | 'puzzle' | 'dice' | 'jackpot';
