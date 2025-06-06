@@ -179,7 +179,11 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             borderColor={borderColor}
             borderOutlineColor={borderOutlineColor}
             canvasSize={canvasSize}
-            offset={shouldCropWheel && gamePosition === 'right' ? `-${canvasSize * 0.5}px` : '0px'}
+            offset={
+              shouldCropWheel && gamePosition === 'left'
+                ? `-${canvasSize * 0.5}px`
+                : '0px'
+            }
             position={position}
           />
           
