@@ -27,7 +27,7 @@ const gameTypes = [{
   color: 'from-green-400 to-blue-500'
 }, {
   id: 'dice',
-  name: 'Lancé de dés',
+  name: 'Lancer de dés',
   description: 'Jeu de dés simple et amusant',
   icon: Dice1,
   color: 'from-red-400 to-pink-500'
