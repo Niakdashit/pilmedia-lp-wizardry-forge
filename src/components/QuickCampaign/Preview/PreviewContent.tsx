@@ -2,7 +2,6 @@
 import React from 'react';
 import FunnelUnlockedGame from '../../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../../funnels/FunnelStandard';
-import MobilePreview from '../../CampaignEditor/Mobile/MobilePreview';
 
 interface PreviewContentProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -38,7 +37,8 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
       return (
         <FunnelUnlockedGame
           campaign={mockCampaign}
-          previewMode={selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+          previewMode={selectedDevice}
+          mobileConfig={mockCampaign.mobileConfig}
           modalContained={false}
         />
       );
@@ -46,37 +46,23 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
     return <FunnelStandard campaign={mockCampaign} />;
   };
 
-  const renderDesktopPreview = () => (
-    <div className="w-full h-full flex items-center justify-center bg-gray-50 relative overflow-hidden">
-      {/* Background image if available */}
+  const renderPreview = () => (
+    <div className="w-full h-full flex items-center justify-center bg-gray-50 relative overflow-hidden p-4 md:p-8">
       {mockCampaign.design?.backgroundImage && (
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-          style={{
-            backgroundImage: `url(${mockCampaign.design.backgroundImage})`
-          }}
+          style={{ backgroundImage: `url(${mockCampaign.design.backgroundImage})` }}
         />
       )}
-      
-      {/* Content container */}
-      <div className="relative z-10 max-w-2xl mx-auto p-8">
+      <div className="relative z-10 max-w-2xl mx-auto w-full">
         {getFunnelComponent()}
       </div>
     </div>
   );
 
-  const renderMobilePreview = () => (
-    <div className="w-full h-full flex items-center justify-center p-4 bg-gray-50">
-      <MobilePreview
-        campaign={mockCampaign}
-        previewMode={selectedDevice === 'tablet' ? 'tablet' : 'mobile'}
-      />
-    </div>
-  );
-
   return (
     <div className="flex-1 pt-20 overflow-auto">
-      {selectedDevice === 'desktop' ? renderDesktopPreview() : renderMobilePreview()}
+      {renderPreview()}
     </div>
   );
 };
