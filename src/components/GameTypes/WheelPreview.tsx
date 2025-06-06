@@ -89,9 +89,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();
   
-  // Determine if the wheel should be cropped based on its position
+  // Determine if the wheel should be cropped on mobile for specific positions
+  const isMobile = previewDevice === 'mobile';
   const isCroppablePosition = ['left', 'right', 'bottom'].includes(gamePosition);
-  const shouldCropWheel = isCroppablePosition;
+  const shouldCropWheel = isMobile && isCroppablePosition;
   
   // Adjust canvas and container sizes for cropping
   const baseCanvasSize = Math.min(gameDimensions.width, gameDimensions.height) - 60;

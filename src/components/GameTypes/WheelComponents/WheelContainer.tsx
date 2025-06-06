@@ -15,9 +15,10 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   gameDimensions,
   previewDevice
 }) => {
-  // Crop the wheel when placed left, right or bottom
+  // Crop the wheel on mobile when placed left, right or bottom
+  const isMobile = previewDevice === 'mobile';
   const isCroppablePosition = ['left', 'right', 'bottom'].includes(gamePosition);
-  const shouldCropWheel = isCroppablePosition;
+  const shouldCropWheel = isMobile && isCroppablePosition;
 
   const getAbsolutePositionStyles = (): React.CSSProperties => {
     const containerStyle: React.CSSProperties = {
