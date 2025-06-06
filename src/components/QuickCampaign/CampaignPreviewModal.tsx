@@ -28,7 +28,6 @@ const CampaignPreviewModal: React.FC<CampaignPreviewModalProps> = ({
 
   const mockCampaign = generatePreviewCampaign();
 
-  console.log('Preview campaign data:', mockCampaign);
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">

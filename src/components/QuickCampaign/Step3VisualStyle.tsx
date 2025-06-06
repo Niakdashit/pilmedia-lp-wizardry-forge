@@ -6,6 +6,7 @@ import { useCampaigns } from '../../hooks/useCampaigns';
 import CampaignPreviewModal from './CampaignPreviewModal';
 import ColorCustomizer from './ColorCustomizer';
 import JackpotPreview from './Preview/JackpotPreview';
+import GameRenderer from './Preview/GameRenderer';
 
 const Step3VisualStyle: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Step3VisualStyle: React.FC = () => {
     customColors,
     jackpotColors,
     segmentCount,
+    generatePreviewCampaign,
     setBackgroundImage,
     setCurrentStep,
     reset
@@ -31,6 +33,7 @@ const Step3VisualStyle: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [creationSuccess, setCreationSuccess] = useState(false);
+  const previewCampaign = generatePreviewCampaign();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handleFileUpload = (files: FileList | null) => {
     if (files && files[0]) {
@@ -225,10 +228,23 @@ const Step3VisualStyle: React.FC = () => {
           </div>
 
           <div className="space-y-12">
-            {/* Aperçu dynamique du Jackpot pour le type jackpot */}
-            {selectedGameType === 'jackpot' && <div className="bg-gray-50 rounded-2xl p-8 py-0 px-[31px]">
+            {/* Aperçu dynamique du jeu */}
+            {selectedGameType === 'jackpot' ? (
+              <div className="bg-gray-50 rounded-2xl p-8 py-0 px-[31px]">
                 <JackpotPreview customColors={customColors} jackpotColors={jackpotColors} />
-              </div>}
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-2xl p-8 py-0 px-[31px]">
+                <GameRenderer
+                  gameType={selectedGameType || 'wheel'}
+                  mockCampaign={previewCampaign}
+                  customColors={customColors}
+                  jackpotColors={jackpotColors}
+                  gameSize="medium"
+                  gamePosition="center"
+                />
+              </div>
+            )}
 
             {/* Color Customizer */}
             <ColorCustomizer />

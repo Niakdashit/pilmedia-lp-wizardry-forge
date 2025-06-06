@@ -36,13 +36,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   gamePosition = 'center',
   previewDevice = 'desktop'
 }) => {
-  console.log('GameRenderer received:', { 
-    gameType, 
-    gameSize, 
-    gamePosition,
-    jackpotColors,
-    mockCampaign: mockCampaign.gameConfig?.jackpot 
-  });
 
   // Synchroniser les couleurs de la roue avec les couleurs personnalisées
   const synchronizedCampaign = {
