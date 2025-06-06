@@ -6,19 +6,16 @@ interface WheelContainerProps {
   children: React.ReactNode;
   gamePosition: 'top' | 'center' | 'bottom' | 'left' | 'right';
   gameDimensions: GameDimensions;
-  previewDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
 const WheelContainer: React.FC<WheelContainerProps> = ({
   children,
   gamePosition,
-  gameDimensions,
-  previewDevice
+  gameDimensions
 }) => {
-  // Check if we're on mobile and position requires cropping
-  const isMobile = previewDevice === 'mobile';
+  // Crop the wheel when placed left, right or bottom
   const isCroppablePosition = ['left', 'right', 'bottom'].includes(gamePosition);
-  const shouldCropWheel = isMobile && isCroppablePosition;
+  const shouldCropWheel = isCroppablePosition;
 
   const getAbsolutePositionStyles = (): React.CSSProperties => {
     const containerStyle: React.CSSProperties = {
@@ -32,7 +29,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
 
     const safeMargin = 20;
 
-    // For mobile cropping scenarios - position wheel to show only desired part
+    // When cropping, position the wheel so only the desired part is visible
     if (shouldCropWheel) {
       switch (gamePosition) {
         case 'left':
