@@ -11,13 +11,11 @@ import { GAME_SIZES, GameSize } from '../configurators/GameSizeSelector';
 interface GameCanvasPreviewProps {
   campaign: any;
   className?: string;
-  previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   campaign,
-  className = "",
-  previewDevice = 'desktop'
+  className = ""
 }) => {
   console.log('GameCanvasPreview received campaign:', campaign);
   console.log('Game config:', campaign.gameConfig);
@@ -149,7 +147,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
               onFinish={() => {}}
               gameSize={gameSize}
               gamePosition={gamePosition}
-              key={`${gameSize}-${gamePosition}-${previewDevice}-${JSON.stringify(campaign.gameConfig?.wheel)}`}
+              key={`${gameSize}-${gamePosition}-${JSON.stringify(campaign.gameConfig?.wheel)}`}
             />
           </div>
         );
@@ -202,7 +200,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     <div
       className={`relative w-full h-full overflow-hidden ${className}`}
       style={{ minHeight: '600px' }}
-      key={`game-preview-${gameSize}-${gamePosition}-${previewDevice}-${buttonColor}-${JSON.stringify(campaign.gameConfig?.[campaign.type])}`}
+      key={`game-preview-${gameSize}-${gamePosition}-${buttonColor}-${JSON.stringify(campaign.gameConfig?.[campaign.type])}`}
     >
       {/* Image de fond plein écran */}
       {gameBackgroundImage && (
