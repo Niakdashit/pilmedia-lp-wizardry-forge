@@ -44,7 +44,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
     if (cardCount === 2) {
       return {
         containerClass: 'w-full flex justify-center',
-        gridClass: 'grid grid-cols-2 place-items-center',
+        gridClass: 'grid grid-cols-1 sm:grid-cols-2 place-items-center',
         spacing: isModal ? 'gap-4 sm:gap-6' : 'gap-6 sm:gap-8'
       };
     }
@@ -52,7 +52,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
     // Pour 3 cartes ou plus
     return {
       containerClass: 'w-full flex justify-center',
-      gridClass: 'grid grid-cols-2 md:grid-cols-3 place-items-center',
+      gridClass: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 place-items-center',
       spacing: isModal ? 'gap-4 sm:gap-5 md:gap-6' : 'gap-6 sm:gap-8 md:gap-6'
     };
   };
