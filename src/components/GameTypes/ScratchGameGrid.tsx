@@ -32,7 +32,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   // Configuration responsive de la grille
   const getGridConfig = () => {
     const cardCount = cards.length;
-    
+
     if (cardCount === 1) {
       return {
         containerClass: 'flex justify-center',
@@ -40,27 +40,27 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
         spacing: isModal ? 'gap-4' : 'gap-6'
       };
     }
-    
+
     if (cardCount === 2) {
       return {
-        containerClass: 'w-full',
-        gridClass: 'grid grid-cols-1 sm:grid-cols-2 place-items-center',
+        containerClass: 'w-full flex justify-center',
+        gridClass: 'grid grid-cols-2 place-items-center',
         spacing: isModal ? 'gap-4 sm:gap-6' : 'gap-6 sm:gap-8'
       };
     }
-    
+
     // Pour 3 cartes ou plus
     return {
-      containerClass: 'w-full',
-      gridClass: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 place-items-center',
-      spacing: isModal ? 'gap-4 sm:gap-5 lg:gap-4' : 'gap-6 sm:gap-8 lg:gap-6'
+      containerClass: 'w-full flex justify-center',
+      gridClass: 'grid grid-cols-2 md:grid-cols-3 place-items-center',
+      spacing: isModal ? 'gap-4 sm:gap-5 md:gap-6' : 'gap-6 sm:gap-8 md:gap-6'
     };
   };
 
   const { containerClass, gridClass, spacing } = getGridConfig();
 
   return (
-    <div className={`w-full mx-auto ${isModal ? 'max-w-4xl px-2 py-4' : 'max-w-6xl px-4 py-6'}`}>
+    <div className={`w-full mx-auto ${isModal ? 'max-w-4xl px-2 py-4' : 'max-w-6xl px-4 py-6'} overflow-x-hidden`}>
       <div className={containerClass}>
         <div className={`${gridClass} ${spacing} w-full`}>
           {cards.map((card: any, index: number) => {
