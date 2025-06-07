@@ -2,6 +2,7 @@ import React from 'react';
 import GameRenderer from './GameRenderer';
 import { useGamePositionCalculator } from './GamePositionCalculator';
 import { GAME_SIZES, GameSize } from '../configurators/GameSizeSelector';
+import MobilePreview from './Mobile/MobilePreview';
 interface GameCanvasPreviewProps {
   campaign: any;
   className?: string;
@@ -12,6 +13,13 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   className = "",
   previewDevice = 'desktop'
 }) => {
+  if (previewDevice === 'mobile' || previewDevice === 'tablet') {
+    return (
+      <div className={`w-full h-full ${className}`}>
+        <MobilePreview campaign={campaign} previewMode={previewDevice} />
+      </div>
+    );
+  }
   const baseBackgroundImage = campaign.gameConfig?.[campaign.type]?.backgroundImage || campaign.design?.backgroundImage;
   const mobileBackgroundImage = campaign.design?.mobileBackgroundImage;
   const gameBackgroundImage = previewDevice === 'mobile' && mobileBackgroundImage
