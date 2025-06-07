@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { X, Monitor, Smartphone, Tablet } from 'lucide-react';
+import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+import FunnelStandard from '../funnels/FunnelStandard';
 
 interface ModernPreviewModalProps {
   isOpen: boolean;
@@ -28,9 +30,75 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
     }
   };
 
+  const getContainerStyle = () => {
+    const baseStyle = {
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: campaign.design?.background || '#f9fafb',
+      position: 'relative' as const,
+      overflow: 'hidden' as const
+    } as React.CSSProperties;
+
+    if (campaign.design?.backgroundImage) {
+      return {
+        ...baseStyle,
+        backgroundImage: `url(${campaign.design.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    return baseStyle;
+  };
+
+  const enhancedCampaign = {
+    ...campaign,
+    design: {
+      ...campaign.design,
+      buttonColor:
+        campaign.buttonConfig?.color || campaign.design?.buttonColor || '#841b60',
+      titleColor: campaign.design?.titleColor || '#000000',
+      background: campaign.design?.background || '#f8fafc'
+    },
+    gameConfig: {
+      ...campaign.gameConfig,
+      [campaign.type]: {
+        ...campaign.gameConfig?.[campaign.type],
+        buttonLabel:
+          campaign.buttonConfig?.text ||
+          campaign.gameConfig?.[campaign.type]?.buttonLabel ||
+          'Jouer',
+        buttonColor:
+          campaign.buttonConfig?.color ||
+          campaign.gameConfig?.[campaign.type]?.buttonColor ||
+          '#841b60'
+      }
+    }
+  };
+
+  const getFunnelComponent = () => {
+    const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
+    const funnel =
+      enhancedCampaign.funnel ||
+      (unlockedTypes.includes(enhancedCampaign.type) ? 'unlocked_game' : 'standard');
+    if (funnel === 'unlocked_game') {
+      return (
+        <FunnelUnlockedGame
+          campaign={enhancedCampaign}
+          previewMode={device === 'desktop' ? 'desktop' : device}
+          modalContained={false}
+        />
+      );
+    }
+    return <FunnelStandard campaign={enhancedCampaign} />;
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-[95vw] max-h-[95vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full h-full flex flex-col relative overflow-hidden rounded-3xl shadow-2xl max-w-7xl max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center space-x-4">
@@ -71,41 +139,18 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
         </div>
 
         {/* Preview Content */}
-        <div className="flex-1 p-8 bg-gray-100 flex items-center justify-center">
-          <div
-            className="bg-white rounded-lg shadow-lg overflow-hidden"
-            style={getDeviceStyles()}
-          >
-            <div
-              className="h-full p-6 flex flex-col items-center justify-center"
-              style={{
-                backgroundColor: campaign.design?.background || '#f8fafc',
-                fontFamily: campaign.design?.fontFamily || 'Inter'
-              }}
-            >
-              <div className="text-center space-y-4">
-                <h1
-                  className="text-3xl font-bold"
-                  style={{ color: campaign.design?.titleColor || '#000000' }}
+        <div className="flex-1 pt-20 overflow-auto">
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <div style={getDeviceStyles()}>
+              <div style={getContainerStyle()}>
+                {campaign.design?.backgroundImage && (
+                  <div className="absolute inset-0 bg-black opacity-20" style={{ zIndex: 1 }} />
+                )}
+                <div
+                  className="relative z-10 w-full h-full flex items-center justify-center p-4"
+                  style={{ minHeight: device === 'desktop' ? '600px' : '100%' }}
                 >
-                  {campaign.screens?.[1]?.title || 'Bienvenue !'}
-                </h1>
-                <p className="text-lg text-gray-600">
-                  {campaign.screens?.[1]?.description || 'Participez à notre jeu et tentez de gagner !'}
-                </p>
-                <button
-                  className="px-8 py-3 rounded-lg text-white font-medium text-lg"
-                  style={{ backgroundColor: campaign.design?.buttonColor || '#841b60' }}
-                >
-                  {campaign.screens?.[1]?.buttonText || 'Participer'}
-                </button>
-              </div>
-
-              {/* Game Preview Area */}
-              <div className="mt-8 p-6 border-2 border-dashed border-gray-300 rounded-lg">
-                <div className="text-center text-gray-500">
-                  <div className="text-lg font-medium">Jeu : {campaign.type}</div>
-                  <div className="text-sm mt-2">Position : {campaign.gamePosition || 'center'}</div>
+                  {getFunnelComponent()}
                 </div>
               </div>
             </div>

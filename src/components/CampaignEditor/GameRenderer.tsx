@@ -94,6 +94,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             buttonLabel={buttonLabel}
             buttonColor={buttonColor}
             gameSize={gameSize}
+            autoStart
           />
         </div>
       );

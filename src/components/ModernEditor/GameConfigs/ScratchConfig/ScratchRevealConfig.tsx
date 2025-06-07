@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Percent, Type, Image } from 'lucide-react';
+import ImageUpload from '../../../common/ImageUpload';
 
 interface ScratchRevealConfigProps {
   scratchArea: number;
@@ -61,33 +62,7 @@ const ScratchRevealConfig: React.FC<ScratchRevealConfigProps> = ({
           <Image className="w-4 h-4 mr-2" />
           Image de révélation par défaut (optionnel)
         </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              const url = URL.createObjectURL(file);
-              onRevealImageChange(url);
-            }
-          }}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-        />
-        {revealImage && (
-          <div className="mt-2">
-            <img
-              src={revealImage}
-              alt="Aperçu"
-              className="w-full h-20 object-cover rounded border"
-            />
-            <button
-              onClick={() => onRevealImageChange('')}
-              className="mt-1 text-xs text-red-600 hover:text-red-800"
-            >
-              Supprimer
-            </button>
-          </div>
-        )}
+        <ImageUpload value={revealImage || ''} onChange={onRevealImageChange} label="" />
       </div>
     </>
   );

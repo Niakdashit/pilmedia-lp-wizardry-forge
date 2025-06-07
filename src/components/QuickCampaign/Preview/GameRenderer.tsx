@@ -107,8 +107,9 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
     case 'scratch':
       return (
-        <ScratchPreview 
+        <ScratchPreview
           config={mockCampaign.gameConfig?.scratch || {}}
+          autoStart
         />
       );
 

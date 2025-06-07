@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import ImageUpload from '../../../common/ImageUpload';
 
 interface ScratchCardsManagerProps {
   cards: any[];
@@ -61,33 +62,11 @@ const ScratchCardsManager: React.FC<ScratchCardsManagerProps> = ({
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Image spécifique</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const url = URL.createObjectURL(file);
-                  onUpdateCard(index, 'revealImage', url);
-                }
-              }}
-              className="w-full"
+            <ImageUpload
+              value={card.revealImage || ''}
+              onChange={(value) => onUpdateCard(index, 'revealImage', value)}
+              label=""
             />
-            {card.revealImage && (
-              <div className="mt-2">
-                <img 
-                  src={card.revealImage} 
-                  alt="Aperçu" 
-                  className="w-full h-20 object-cover rounded border" 
-                />
-                <button
-                  onClick={() => onUpdateCard(index, 'revealImage', '')}
-                  className="mt-1 text-xs text-red-600 hover:text-red-800"
-                >
-                  Supprimer
-                </button>
-              </div>
-            )}
           </div>
         </div>
       ))}

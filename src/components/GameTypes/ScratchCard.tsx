@@ -8,6 +8,8 @@ interface ScratchCardProps {
   gameSize: string;
   gameStarted: boolean;
   onCardFinish: (result: 'win' | 'lose') => void;
+  onScratchStart: () => void;
+  locked: boolean;
   config: any;
 }
 
@@ -17,6 +19,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   gameSize,
   gameStarted,
   onCardFinish,
+  onScratchStart,
+  locked,
   config
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -102,7 +106,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       };
       
       const scratch = (e: MouseEvent | TouchEvent) => {
-        if (!isDrawing) return;
+        if (!isDrawing || locked) return;
         const { x, y } = getXY(e);
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
@@ -130,8 +134,10 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       };
       
       const startDrawing = (e: Event) => {
+        if (locked) return;
         e.preventDefault();
         isDrawing = true;
+        onScratchStart();
       };
       
       const stopDrawing = () => isDrawing = false;
@@ -212,9 +218,15 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         </div>
       )}
 
-      <div 
-        className="relative rounded-lg overflow-hidden border-2 border-gray-300" 
-        style={{ width: '100%', maxWidth: `${width}px`, height: `${height}px` }}
+      <div
+        className="relative rounded-lg overflow-hidden border-2 border-gray-300"
+        style={{
+          width: '100%',
+          maxWidth: `${width}px`,
+          height: `${height}px`,
+          pointerEvents: locked && !isRevealed ? 'none' : 'auto',
+          opacity: locked && !isRevealed ? 0.5 : 1
+        }}
       >
         {/* Contenu à révéler */}
         <div className="absolute inset-0">
@@ -223,11 +235,17 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
         {/* Canvas de grattage */}
         {gameStarted && !isRevealed && (
-          <canvas 
-            ref={canvasRef} 
-            className="absolute inset-0 w-full h-full cursor-crosshair" 
-            style={{ touchAction: 'none' }} 
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full cursor-crosshair"
+            style={{ touchAction: 'none' }}
           />
+        )}
+
+        {locked && !isRevealed && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-semibold">
+            Carte verrouillée
+          </div>
         )}
 
         {/* Overlay de résultat */}
