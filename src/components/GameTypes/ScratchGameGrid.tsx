@@ -7,6 +7,8 @@ interface ScratchGameGridProps {
   gameSize: string;
   gameStarted: boolean;
   onCardFinish: (result: 'win' | 'lose', cardIndex: number) => void;
+  onCardStart: (index: number) => void;
+  activeCard: number | null;
   config: any;
 }
 
@@ -15,6 +17,8 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   gameSize,
   gameStarted,
   onCardFinish,
+  onCardStart,
+  activeCard,
   config
 }) => {
   // Responsive grid: 2 cards on mobile, 3 on tablet/desktop
@@ -41,6 +45,8 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
             gameSize={gameSize}
             gameStarted={gameStarted}
             onCardFinish={(result) => onCardFinish(result, index)}
+            onScratchStart={() => onCardStart(index)}
+            locked={activeCard !== null && activeCard !== index}
             config={config}
           />
         ))}

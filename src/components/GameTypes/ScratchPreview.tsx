@@ -32,6 +32,15 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   const [gameStarted, setGameStarted] = useState(autoStart && !disabled);
   const [finishedCards, setFinishedCards] = useState<Set<number>>(new Set());
   const [hasWon, setHasWon] = useState(false);
+  const [activeCard, setActiveCard] = useState<number | null>(null);
+
+  // Automatically start the game in preview mode if autoStart is enabled
+  useEffect(() => {
+    if (autoStart && !gameStarted && !disabled) {
+      setGameStarted(true);
+      if (onStart) onStart();
+    }
+  }, [autoStart, gameStarted, disabled, onStart]);
 
   // Automatically start the game in preview mode if autoStart is enabled
   useEffect(() => {
@@ -45,6 +54,12 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     if (disabled) return;
     setGameStarted(true);
     if (onStart) onStart();
+  };
+
+  const handleCardStart = (index: number) => {
+    if (activeCard === null) {
+      setActiveCard(index);
+    }
   };
 
   const handleCardFinish = (result: 'win' | 'lose', cardIndex: number) => {
@@ -83,6 +98,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           gameSize={gameSize}
           gameStarted={false}
           onCardFinish={() => {}}
+          onCardStart={() => {}}
+          activeCard={null}
           config={config}
         />
 
@@ -105,6 +122,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
         gameSize={gameSize}
         gameStarted={gameStarted}
         onCardFinish={handleCardFinish}
+        onCardStart={handleCardStart}
+        activeCard={activeCard}
         config={config}
       />
 
