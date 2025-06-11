@@ -4,6 +4,7 @@ import { Jackpot } from '../../GameTypes';
 import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
 import FormPreview from '../../GameTypes/FormPreview';
+import { applyBrandStyleToWheel, BrandColors } from '../../../utils/BrandStyleAnalyzer';
 
 interface GameRendererProps {
   gameType: string;
@@ -22,6 +23,8 @@ interface GameRendererProps {
     slotBorderWidth: number;
     slotBackgroundColor: string;
   };
+  logoUrl?: string;
+  fontUrl?: string;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
@@ -32,36 +35,29 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   mockCampaign,
   customColors,
   jackpotColors,
+  logoUrl,
+  fontUrl,
   gameSize = 'large',
   gamePosition = 'center',
   previewDevice = 'desktop'
 }) => {
-  // Synchroniser les couleurs de la roue avec les couleurs personnalisées
-  const synchronizedCampaign = {
-    ...mockCampaign,
-    config: {
-      ...mockCampaign.config,
-      roulette: {
-        ...mockCampaign.config?.roulette,
-        borderColor: customColors.primary,
-        borderOutlineColor: customColors.accent || customColors.secondary,
-        segmentColor1: customColors.primary,
-        segmentColor2: customColors.secondary,
-        segments: mockCampaign.config?.roulette?.segments?.map((segment: any, index: number) => ({
-          ...segment,
-          color: index % 2 === 0 ? customColors.primary : customColors.secondary
-        })) || []
-      }
-    },
-    design: {
-      ...mockCampaign.design,
-      customColors: customColors
-    },
-    buttonConfig: {
-      ...mockCampaign.buttonConfig,
-      color: customColors.primary,
-      borderColor: customColors.primary
+  React.useEffect(() => {
+    if (fontUrl) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = fontUrl;
+      document.head.appendChild(link);
+      return () => {
+        document.head.removeChild(link);
+      };
     }
+  }, [fontUrl]);
+
+  // Appliquer la charte de marque à la configuration de la roue
+  const synchronizedCampaign = applyBrandStyleToWheel(mockCampaign, customColors as BrandColors);
+  synchronizedCampaign.design = {
+    ...synchronizedCampaign.design,
+    centerLogo: logoUrl || synchronizedCampaign.design?.centerLogo,
   };
 
   // Style universel pour tout centrer verticalement et horizontalement

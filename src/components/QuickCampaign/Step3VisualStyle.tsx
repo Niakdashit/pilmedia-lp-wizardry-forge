@@ -18,6 +18,8 @@ const Step3VisualStyle: React.FC = () => {
     launchDate,
     marketingGoal,
     logoFile,
+    logoUrl,
+    fontUrl,
     selectedTheme,
     backgroundImage,
     customColors,
@@ -232,7 +234,17 @@ const Step3VisualStyle: React.FC = () => {
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-inner border border-gray-200/50 max-w-2xl w-full flex items-center justify-center min-h-[400px] p-8">
                 {selectedGameType === 'jackpot' ? <JackpotPreview customColors={customColors} jackpotColors={jackpotColors} /> : <div className="flex flex-col items-center justify-center w-full h-full">
                     <div className="transform scale-90 origin-center">
-                      <GameRenderer gameType={selectedGameType || 'wheel'} mockCampaign={previewCampaign} customColors={customColors} jackpotColors={jackpotColors} gameSize="medium" gamePosition="center" previewDevice="desktop" />
+                      <GameRenderer
+                        gameType={selectedGameType || 'wheel'}
+                        mockCampaign={previewCampaign}
+                        customColors={customColors}
+                        jackpotColors={jackpotColors}
+                        logoUrl={logoUrl || undefined}
+                        fontUrl={fontUrl || undefined}
+                        gameSize="medium"
+                        gamePosition="center"
+                        previewDevice="desktop"
+                      />
                     </div>
                   </div>}
               </div>

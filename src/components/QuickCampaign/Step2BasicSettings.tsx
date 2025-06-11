@@ -2,19 +2,26 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Upload, Calendar, Target } from 'lucide-react';
 import { useQuickCampaignStore } from '../../stores/quickCampaignStore';
+import { analyzeBrandStyle } from '../../utils/BrandStyleAnalyzer';
 const Step2BasicSettings: React.FC = () => {
   const {
     campaignName,
     launchDate,
     marketingGoal,
     logoFile,
+    brandSiteUrl,
     setCampaignName,
     setLaunchDate,
     setMarketingGoal,
     setLogoFile,
+    setBrandSiteUrl,
+    setLogoUrl,
+    setFontUrl,
+    setCustomColors,
     setCurrentStep
   } = useQuickCampaignStore();
   const [dragActive, setDragActive] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const marketingGoals = [{
     id: 'leads',
     label: 'Générer des leads',
@@ -52,6 +59,26 @@ const Step2BasicSettings: React.FC = () => {
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setLogoFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!brandSiteUrl) return;
+    setIsAnalyzing(true);
+    try {
+      const styles = await analyzeBrandStyle(brandSiteUrl);
+      setCustomColors({
+        primary: styles.primaryColor,
+        secondary: styles.lightColor || '#E3F2FD',
+        accent: styles.darkColor || styles.primaryColor,
+      });
+      setLogoUrl(styles.logoUrl || null);
+      setFontUrl(styles.fontUrl || null);
+    } catch (err) {
+      console.error(err);
+      alert('Analyse impossible');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
   const canProceed = campaignName.trim() && launchDate && marketingGoal;
@@ -97,6 +124,37 @@ const Step2BasicSettings: React.FC = () => {
                 Nom de la campagne
               </label>
               <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} placeholder="Ex: Jeu concours été 2024" className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#841b60] focus:outline-none transition-all text-lg bg-gray-50" />
+            </motion.div>
+
+            {/* Brand Website */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <label className="block text-lg font-medium text-gray-900 mb-4">
+                Site de la marque
+              </label>
+              <div className="flex space-x-4">
+                <input
+                  type="url"
+                  value={brandSiteUrl}
+                  onChange={(e) => setBrandSiteUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="flex-1 px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-[#841b60] focus:outline-none transition-all text-lg bg-gray-50"
+                />
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  className="px-4 py-3 rounded-2xl bg-[#841b60] text-white hover:bg-[#841b60]/90 transition-colors flex items-center justify-center"
+                >
+                  {isAnalyzing ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <span>Analyser</span>
+                  )}
+                </button>
+              </div>
             </motion.div>
 
             {/* Launch Date */}
