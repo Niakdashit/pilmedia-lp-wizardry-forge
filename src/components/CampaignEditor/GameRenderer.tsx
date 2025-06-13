@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Jackpot from '../GameTypes/Jackpot';
-import { Quiz } from '../GameTypes';
+import { QuizPreview } from '../GameTypes';
 import WheelPreview from '../GameTypes/WheelPreview';
 import MemoryPreview from '../GameTypes/MemoryPreview';
 import PuzzlePreview from '../GameTypes/PuzzlePreview';
@@ -69,7 +69,12 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       return (
         <div style={{ ...containerStyle, minHeight: '400px', padding: '20px', boxSizing: 'border-box' }}>
           <div style={{ ...wrapperStyle, ...getPositionStyles() }}>
-            <Quiz config={campaign.gameConfig?.quiz || {}} onConfigChange={() => {}} />
+            <QuizPreview
+              question={
+                campaign.previewQuestion ||
+                campaign.gameConfig?.quiz?.questions?.[campaign.activeQuizQuestion ?? 0]
+              }
+            />
           </div>
         </div>
       );

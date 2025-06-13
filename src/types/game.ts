@@ -66,4 +66,4 @@ export interface JackpotConfig extends GameConfig {
 }
 
 // ----------- AJOUT TYPE GAME "JACKPOT" -----------
-export type GameType = 'wheel' | 'scratch' | 'memory' | 'puzzle' | 'dice' | 'jackpot';
+export type GameType = 'wheel' | 'scratch' | 'memory' | 'puzzle' | 'dice' | 'jackpot' | 'quiz';

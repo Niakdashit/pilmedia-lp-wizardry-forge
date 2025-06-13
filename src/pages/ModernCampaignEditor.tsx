@@ -159,6 +159,17 @@ const ModernCampaignEditor: React.FC = () => {
   const handleSave = async (continueEditing = false) => {
     setIsLoading(true);
     try {
+      if (campaign.type === 'quiz') {
+        const questions = campaign.gameConfig?.quiz?.questions || [];
+        const valid = questions.every((q: any) =>
+          Array.isArray(q.options) && q.options.length >= 2 && q.options.some((o: any) => o.isCorrect)
+        );
+        if (!valid) {
+          alert('Chaque question doit comporter au moins deux options et une réponse correcte.');
+          setIsLoading(false);
+          return;
+        }
+      }
       const campaignData = {
         ...campaign,
         form_fields: campaign.formFields

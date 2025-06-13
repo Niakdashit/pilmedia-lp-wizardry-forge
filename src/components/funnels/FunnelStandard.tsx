@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Color from 'color';
 import DynamicContactForm from '../forms/DynamicContactForm';
-import { Quiz, Memory, Puzzle } from '../GameTypes';
+import { QuizGame, Memory, Puzzle } from '../GameTypes';
 import { useParticipations } from '../../hooks/useParticipations';
 
 const DEFAULT_FIELDS = [
@@ -60,7 +60,9 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
   const getGameComponent = () => {
     switch (campaign.type) {
       case 'quiz':
-        return <Quiz config={campaign.gameConfig.quiz} onConfigChange={() => {}} />;
+        return (
+          <QuizGame campaignId={campaign.id} config={campaign.gameConfig.quiz} />
+        );
       case 'memory':
         return <Memory config={campaign.gameConfig.memory} onConfigChange={() => {}} />;
       case 'puzzle':

@@ -3,7 +3,7 @@ import React from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
-import { Jackpot } from '../../GameTypes';
+import { Jackpot, QuizGame } from '../../GameTypes';
 import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
 import { GAME_SIZES, GameSize } from '../../configurators/GameSizeSelector';
@@ -111,13 +111,20 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
             slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
             onFinish={handleGameComplete}
-            onStart={handleGameStartInternal}
+          onStart={handleGameStartInternal}
+        />
+      );
+      case 'quiz':
+        return (
+          <QuizGame
+            campaignId={campaign.id}
+            config={campaign.gameConfig?.quiz || {}}
           />
         );
       case 'dice':
         return (
-          <DicePreview 
-            config={campaign.gameConfig?.dice || {}} 
+          <DicePreview
+            config={campaign.gameConfig?.dice || {}}
           />
         );
       default:

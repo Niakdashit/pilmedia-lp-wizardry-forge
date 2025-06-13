@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Color from 'color';
-import { Quiz, Memory, Puzzle } from './GameTypes';
+import { QuizGame, Memory, Puzzle } from './GameTypes';
 
 interface GameFunnelProps {
   campaign: any;
@@ -36,7 +36,9 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
   const getGameComponent = () => {
     switch (campaign.type) {
       case 'quiz':
-        return <Quiz config={campaign.gameConfig.quiz} onConfigChange={() => {}} />;
+        return (
+          <QuizGame campaignId={campaign.id} config={campaign.gameConfig.quiz} />
+        );
       case 'memory':
         return <Memory config={campaign.gameConfig.memory} onConfigChange={() => {}} />;
       case 'puzzle':
