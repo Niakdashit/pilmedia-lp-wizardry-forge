@@ -1,7 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
 import { drawWheelSegments } from './WheelSegmentDrawer';
-import { drawWheelBorders } from './WheelBorderDrawer';
 import { drawWheelCenter } from './WheelCenterDrawer';
 
 interface Segment {
@@ -66,15 +65,22 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
       borderOutlineColor
     });
 
-    // Draw borders
-    drawWheelBorders({
-      ctx,
-      center,
-      radius,
-      size,
-      borderColor,
-      borderOutlineColor
-    });
+    // Draw outer border - one solid arc after the segments
+    ctx.beginPath();
+    ctx.arc(center, center, radius + 15, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = borderOutlineColor;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Draw inner border
+    ctx.beginPath();
+    ctx.arc(center, center, radius + 8, 0, 2 * Math.PI);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = borderColor;
+    ctx.stroke();
 
     // Draw center
     drawWheelCenter({
