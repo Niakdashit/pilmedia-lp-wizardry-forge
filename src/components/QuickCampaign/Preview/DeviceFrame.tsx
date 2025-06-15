@@ -13,16 +13,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
 
   if (device === 'tablet') {
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div className="relative w-full h-full flex items-center justify-center p-4 box-border">
         {/* Tablet Frame */}
-        <div className="bg-gray-800 rounded-3xl p-6 shadow-2xl w-full max-w-[768px]">
-          <div className="bg-black rounded-2xl p-2">
+        <div className="bg-gray-800 rounded-3xl p-6 shadow-2xl max-w-full max-h-full w-full" style={{ maxWidth: '768px' }}>
+          <div className="bg-black rounded-2xl p-2 w-full h-full flex items-center justify-center">
             <div
-              className="bg-white rounded-xl overflow-hidden relative w-full"
+              className="bg-white rounded-xl overflow-hidden relative w-full h-full flex flex-col"
               style={{
-                aspectRatio: '768 / 1024',
-                display: 'flex',
-                flexDirection: 'column'
+                aspectRatio: '768 / 1024'
               }}
             >
               {/* Home indicator for tablet */}
@@ -49,16 +47,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
 
   // Mobile frame
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
+    <div className="relative w-full h-full flex items-center justify-center p-4 box-border">
       {/* Mobile Frame */}
-      <div className="bg-gray-900 rounded-[3rem] p-2 shadow-2xl w-full max-w-[375px]">
-        <div className="bg-black rounded-[2.5rem] p-1">
+      <div className="bg-gray-900 rounded-[3rem] p-2 shadow-2xl max-w-full max-h-full w-full" style={{ maxWidth: '375px' }}>
+        <div className="bg-black rounded-[2.5rem] p-1 w-full h-full flex items-center justify-center">
           <div
-            className="bg-white rounded-[2rem] overflow-hidden relative w-full"
+            className="bg-white rounded-[2rem] overflow-hidden relative w-full h-full flex flex-col"
             style={{
-              aspectRatio: '375 / 812',
-              display: 'flex',
-              flexDirection: 'column'
+              aspectRatio: '375 / 812'
             }}
           >
             {/* Notch */}
