@@ -14,7 +14,12 @@ interface ActionModalProps {
 const ActionModal: React.FC<ActionModalProps> = ({ isOpen, onClose, campaign, position }) => {
   if (!isOpen || !campaign) return null;
   const actions = [
-    { icon: <Eye className="w-5 h-5" />, label: 'Voir', href: `/campaign/${campaign.id}`, color: 'text-gray-700' },
+    {
+      icon: <Eye className="w-5 h-5" />,
+      label: 'Voir',
+      href: `/modern-campaign/${campaign.id}`,
+      color: 'text-gray-700'
+    },
     { icon: <BarChart2 className="w-5 h-5" />, label: 'Statistiques', color: 'text-gray-700' },
     { icon: <ExternalLink className="w-5 h-5" />, label: 'Voir en ligne', color: 'text-gray-700' },
     { icon: <Copy className="w-5 h-5" />, label: 'Dupliquer', color: 'text-gray-700' },
@@ -188,7 +193,7 @@ const Campaigns: React.FC = () => {
               Création rapide
             </Link>
             <Link
-              to="/campaign/new"
+              to="/modern-campaign/new"
               className="inline-flex items-center px-6 py-2.5 bg-[#841b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-base"
             >
               <Plus className="w-5 h-5 mr-2" />
