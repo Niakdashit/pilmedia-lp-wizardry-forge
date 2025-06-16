@@ -85,11 +85,11 @@ const RecentCampaigns: React.FC = () => {
           </div>
           <Link 
             to="/campaigns" 
-            className="group relative overflow-hidden px-4 py-2 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#841b60]/25 transition-all duration-300 transform hover:-translate-y-0.5 text-sm"
+            className="group relative overflow-hidden px-6 py-3 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white font-semibold rounded-2xl hover:shadow-xl hover:shadow-[#841b60]/25 transition-all duration-300 transform hover:-translate-y-1"
           >
             <span className="relative z-10 flex items-center">
               Voir toutes
-              <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+              <ChevronRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#6d164f] to-[#841b60] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </Link>
@@ -130,9 +130,9 @@ const RecentCampaigns: React.FC = () => {
 
                   {/* Campaign Type Badge */}
                   <div className="absolute top-4 left-4 z-20">
-                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#841b60] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
-                      <div className="flex items-center space-x-1.5">
-                        <IconComponent className="w-3.5 h-3.5 transition-transform group-hover/badge:rotate-12 duration-300" />
+                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#841b60] px-4 py-2 text-sm font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
+                      <div className="flex items-center space-x-2">
+                        <IconComponent className="w-4 h-4 transition-transform group-hover/badge:rotate-12 duration-300" />
                         <span className="relative z-10">{getCampaignTypeText(campaign.type)}</span>
                       </div>
                       {/* Badge Glow Effect */}
@@ -142,9 +142,9 @@ const RecentCampaigns: React.FC = () => {
 
                   {/* Status Badge */}
                   <div className="absolute top-4 right-4 z-20">
-                    <div className={`relative overflow-hidden rounded-full px-2.5 py-1 text-xs font-bold border backdrop-blur-sm shadow-lg transition-all duration-300 group-hover:scale-110 ${getStatusColor(campaign.status)} ${getStatusGlow(campaign.status)} group-hover:shadow-lg`}>
+                    <div className={`relative overflow-hidden rounded-full px-3 py-1.5 text-xs font-bold border backdrop-blur-sm shadow-lg transition-all duration-300 group-hover:scale-110 ${getStatusColor(campaign.status)} ${getStatusGlow(campaign.status)} group-hover:shadow-lg`}>
                       <span className="relative z-10 flex items-center">
-                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                        <span className="mr-2 h-2 w-2 rounded-full bg-current animate-pulse" />
                         {getStatusText(campaign.status)}
                       </span>
                       {/* Status Badge Glow Animation */}
@@ -154,7 +154,7 @@ const RecentCampaigns: React.FC = () => {
 
                   {/* Actions Button */}
                   <button className="absolute bottom-4 right-4 z-20 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 hover:scale-110" aria-label="Options">
-                    <MoreVertical className="w-4 h-4 text-white" />
+                    <MoreVertical className="w-5 h-5 text-white" />
                   </button>
 
                   {/* Campaign Title and Info Overlay */}
@@ -168,10 +168,10 @@ const RecentCampaigns: React.FC = () => {
                       {/* Campaign Meta Info */}
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center text-white/80 group-hover:text-white transition-colors duration-300">
-                          <Calendar className="w-3.5 h-3.5 mr-2" />
+                          <Calendar className="w-4 h-4 mr-2" />
                           <span className="font-medium">Créé le {campaign.createdAt}</span>
                         </div>
-                        <div className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-bold text-xs group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300">
+                        <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-bold text-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300">
                           {campaign.participants} participants
                         </div>
                       </div>

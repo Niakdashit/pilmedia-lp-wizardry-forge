@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 // Types des champs disponibles
@@ -24,7 +23,7 @@ const FIELD_TYPES: { value: FieldType; label: string }[] = [
   { value: 'select', label: 'Liste déroulante' },
 ];
 
-// Générateur d'id unique simple
+// Générateur d’id unique simple
 const generateId = () => Math.random().toString(36).substring(2, 10);
 
 const CampaignFormEditor: React.FC<FormEditorProps> = ({ formFields, setFormFields }) => {
@@ -67,7 +66,7 @@ const CampaignFormEditor: React.FC<FormEditorProps> = ({ formFields, setFormFiel
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold">Champs du formulaire</h3>
         <button
           type="button"
@@ -77,20 +76,18 @@ const CampaignFormEditor: React.FC<FormEditorProps> = ({ formFields, setFormFiel
           Ajouter un champ
         </button>
       </div>
-      
       {fields.length === 0 && (
         <div className="text-gray-400 text-center italic py-6">
-          Aucun champ pour l'instant.
+          Aucun champ pour l’instant.
         </div>
       )}
-      
-      <div className="space-y-6">
+      <div className="space-y-5">
         {fields.map((field, idx) => (
           <div
             key={field.id}
-            className="p-6 rounded-md border flex flex-col md:flex-row md:items-end gap-6 bg-gray-50 relative"
+            className="p-4 rounded-md border flex flex-col md:flex-row md:items-end gap-4 bg-gray-50 relative"
           >
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Label */}
               <div>
                 <label className="block text-xs mb-1 font-medium">Label affiché</label>
@@ -129,10 +126,9 @@ const CampaignFormEditor: React.FC<FormEditorProps> = ({ formFields, setFormFiel
                 <label htmlFor={`required-${field.id}`} className="text-sm">Obligatoire</label>
               </div>
             </div>
-            
             {/* Options pour select */}
             {field.type === 'select' && (
-              <div className="col-span-3 mt-4">
+              <div className="col-span-3 mt-2">
                 <label className="block text-xs mb-1 font-medium">Options (une par ligne)</label>
                 <textarea
                   className="w-full border rounded px-2 py-1 text-sm"
@@ -143,7 +139,6 @@ const CampaignFormEditor: React.FC<FormEditorProps> = ({ formFields, setFormFiel
                 />
               </div>
             )}
-            
             {/* Actions */}
             <div className="flex flex-row gap-2 absolute top-2 right-2">
               <button

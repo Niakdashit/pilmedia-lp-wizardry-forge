@@ -1,4 +1,3 @@
-
 import React from 'react';
 interface PageHeaderProps {
   title: string;
@@ -15,8 +14,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   size = 'sm'
 }) => {
   const titleClass = size === 'sm'
-    ? 'text-2xl font-bold mb-6 text-[#841b60] drop-shadow-sm'
-    : 'text-3xl md:text-4xl font-bold mb-8 text-[#841b60] drop-shadow-sm';
+    ? 'text-2xl font-bold mb-2 text-[#841b60] drop-shadow-sm'
+    : 'text-3xl md:text-4xl font-bold mb-4 text-[#841b60] drop-shadow-sm';
   const actionsClass = size === 'sm'
     ? 'flex flex-wrap justify-center gap-3 [&_button]:px-6 [&_button]:py-2.5 [&_button]:text-base [&_button]:rounded-xl [&_button]:shadow'
     : 'flex flex-wrap justify-center gap-4';
@@ -25,7 +24,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     return (
       <div className="relative w-full mt-3 pb-2 px-2 select-none md:px-[19px] z-10 overflow-hidden">
         {/* Fond glassmorphique pastel bleu, identique à QuickCreationSection */}
-        {/* Suppression de l'ombre ici */}
+        {/* Suppression de l’ombre ici */}
         <div className="relative max-w-7xl mx-auto rounded-b-3xl overflow-hidden">
           <div
             className="
@@ -64,7 +63,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             {/* Contenu principal */}
             <div className="relative z-10 flex flex-col items-center text-center pt-10 pb-10 px-6">
               <h1 className={titleClass}>{title}</h1>
-              {children && <div className="mb-6 flex justify-center">{children}</div>}
+              {children && <div className="mb-3 flex justify-center">{children}</div>}
               {actions && <div className={actionsClass}>{actions}</div>}
             </div>
             {/* Gradient border en bas */}
@@ -90,7 +89,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       <div className="relative max-w-7xl mx-auto">
         <div className="relative z-10 flex flex-col items-center text-center">
           <h1 className={titleClass}>{title}</h1>
-          {children && <div className="mb-6 flex justify-center">{children}</div>}
+          {children && <div className="mb-4 flex justify-center">{children}</div>}
           {actions && <div className={actionsClass}>{actions}</div>}
         </div>
       </div>

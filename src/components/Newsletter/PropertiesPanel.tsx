@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Settings } from 'lucide-react';
 import { useNewsletterStore } from '@/stores/newsletterStore';
@@ -10,7 +9,6 @@ import { SocialProperties } from './properties/SocialProperties';
 import { FooterProperties } from './properties/FooterProperties';
 import { HeaderProperties } from './properties/HeaderProperties';
 import { HTMLProperties } from './properties/HTMLProperties';
-import { ColumnsProperties } from './properties/ColumnsProperties';
 
 export const PropertiesPanel: React.FC = () => {
   const { modules, selectedModuleId, updateModule } = useNewsletterStore();
@@ -21,7 +19,7 @@ export const PropertiesPanel: React.FC = () => {
       <div className="w-72 bg-white border-l border-gray-200 p-4">
         <div className="text-center text-gray-500">
           <Settings className="w-8 h-8 mx-auto mb-2" />
-          <p className="text-sm">Sélectionnez un élément pour modifier ses propriétés</p>
+          <p>Sélectionnez un élément pour modifier ses propriétés</p>
         </div>
       </div>
     );
@@ -45,12 +43,10 @@ export const PropertiesPanel: React.FC = () => {
         return <HeaderProperties module={selectedModule} onUpdate={updateModule} />;
       case 'html':
         return <HTMLProperties module={selectedModule} onUpdate={updateModule} />;
-      case 'columns':
-        return <ColumnsProperties module={selectedModule} onUpdate={updateModule} />;
       default:
         return (
           <div className="p-4 text-center text-gray-500">
-            <p className="text-sm">Propriétés non disponibles pour ce type de module</p>
+            <p>Propriétés non disponibles pour ce type de module</p>
           </div>
         );
     }
@@ -61,12 +57,9 @@ export const PropertiesPanel: React.FC = () => {
       <div className="p-4 border-b border-gray-200">
         <h2 className="font-semibold text-lg text-gray-700">Propriétés</h2>
         <p className="text-sm text-gray-500">Personnalisez l'élément sélectionné</p>
-        <div className="mt-2 px-2 py-1 bg-[#841b60]/10 rounded text-xs text-[#841b60] font-medium">
-          {selectedModule.type.toUpperCase()}
-        </div>
       </div>
       
-      <div className="p-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+      <div className="p-4">
         {renderProperties()}
       </div>
     </div>

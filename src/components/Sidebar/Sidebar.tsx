@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -14,8 +13,7 @@ import {
   UserCircle,
   LogOut,
   ChevronLeft,
-  ChevronRight,
-  Shield
+  ChevronRight
 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import logo from '@/assets/logo.png';
@@ -26,7 +24,7 @@ const Sidebar: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
 
   const navItems = [
-    { name: 'Tableau de bord', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { name: 'Tableau de bord', path: '/', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Campagnes', path: '/campaigns', icon: <Target className="w-5 h-5" /> },
     { name: 'Gamification', path: '/gamification', icon: <Gamepad2 className="w-5 h-5" /> },
     { name: 'Newsletter', path: '/newsletter', icon: <Mail className="w-5 h-5" /> },
@@ -71,6 +69,7 @@ const Sidebar: React.FC = () => {
                 className={`flex items-center px-3 py-2 rounded-xl transition-all duration-200 group ${isActive ? 'bg-[#841b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
               >
                 <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>{item.icon}</div>
+                {/* On garde truncate pour forcer le texte à ne jamais déborder */}
                 {!sidebarCollapsed && <span className="ml-3 font-medium truncate">{item.name}</span>}
               </Link>
             );
@@ -81,17 +80,7 @@ const Sidebar: React.FC = () => {
       {/* Footer section */}
       <div className="p-3 border-t border-gray-200/50">
         <Link
-          to="/admin"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group mb-2"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
-            <Shield className="w-5 h-5" />
-          </div>
-          {!sidebarCollapsed && <span className="ml-3 font-medium">Interface Admin</span>}
-        </Link>
-        
-        <Link
-          to="/login"
+          to="/logout"
           className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">

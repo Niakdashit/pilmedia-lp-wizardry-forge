@@ -2,7 +2,6 @@
 import React from 'react';
 import FunnelUnlockedGame from '../../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../../funnels/FunnelStandard';
-import DeviceFrame from './DeviceFrame';
 
 interface PreviewContentProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -117,24 +116,41 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
     return baseStyle;
   };
 
+  const getDeviceContainerStyle = () => {
+    switch (selectedDevice) {
+      case 'tablet':
+        return {
+          maxWidth: '768px',
+          maxHeight: '1024px',
+          margin: '0 auto',
+          border: '1px solid #e5e7eb',
+          borderRadius: '12px',
+          overflow: 'hidden' as const,
+          backgroundColor: '#ffffff'
+        };
+      case 'mobile':
+        return {
+          maxWidth: '375px',
+          maxHeight: '812px',
+          margin: '0 auto',
+          border: '1px solid #e5e7eb',
+          borderRadius: '20px',
+          overflow: 'hidden' as const,
+          backgroundColor: '#ffffff'
+        };
+      default:
+        return {
+          width: '100%',
+          height: '100%'
+        };
+    }
+  };
+
   return (
     <div className="flex-1 pt-20 overflow-auto">
       <div className="w-full h-full flex items-center justify-center p-4">
-        <DeviceFrame device={selectedDevice}>
-          <div
-            style={{
-              ...getContainerStyle(),
-              width: '100%',
-              height: '100%',
-              minHeight: 0,      // Pour éviter le débordement vertical
-              minWidth: 0,       // Pour éviter le débordement horizontal
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'stretch',
-              justifyContent: 'stretch'
-            }}
-          >
+        <div style={getDeviceContainerStyle()}>
+          <div style={getContainerStyle()}>
             {/* Background overlay for better contrast if background image exists */}
             {(selectedDevice === 'mobile'
               ? enhancedCampaign.design?.mobileBackgroundImage
@@ -147,23 +163,16 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
             
             {/* Content container */}
             <div 
-              className="relative z-10 w-full h-full flex items-center justify-center"
-              style={{ 
-                minHeight: selectedDevice === 'desktop' ? '600px' : '100%',
-                padding: selectedDevice === 'mobile' ? '32px 16px 16px' : selectedDevice === 'tablet' ? '24px 16px' : '16px',
-                overflowY: 'auto', // Ajoute le scroll pour le funnel/formulaire à l'intérieur du device !
-                width: '100%',
-                height: '100%'
-              }}
+              className="relative z-10 w-full h-full flex items-center justify-center p-4"
+              style={{ minHeight: selectedDevice === 'desktop' ? '600px' : '100%' }}
             >
               {getFunnelComponent()}
             </div>
           </div>
-        </DeviceFrame>
+        </div>
       </div>
     </div>
   );
 };
 
 export default PreviewContent;
-

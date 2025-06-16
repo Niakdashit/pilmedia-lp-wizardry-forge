@@ -154,7 +154,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
             <button
               key={option.value}
               onClick={() => handleChange('size', option.value)}
-              className={`p-1.5 text-xs rounded border transition-colors ${
+              className={`p-2 text-xs rounded border transition-colors ${
                 buttonConfig.size === option.value
                   ? 'bg-[#841b60] text-white border-[#841b60]'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
@@ -216,9 +216,9 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
                 borderStyle: 'solid'
               }}
               className={`text-white font-medium transition-opacity hover:opacity-80 ${
-                buttonConfig.size === 'small' ? 'px-2 py-1 text-xs' :
-                buttonConfig.size === 'large' ? 'px-6 py-3 text-base' :
-                'px-4 py-2 text-sm'
+                buttonConfig.size === 'small' ? 'px-3 py-1 text-sm' :
+                buttonConfig.size === 'large' ? 'px-8 py-4 text-lg' :
+                'px-6 py-3 text-base'
               }`}
             >
               {buttonConfig.text || 'Bouton d\'exemple'}

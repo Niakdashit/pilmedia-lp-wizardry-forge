@@ -1,99 +1,65 @@
-
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AppProvider } from './context/AppContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { AppProvider } from './context/AppContext';
-import Login from './pages/Login';
+import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Campaigns from './pages/Campaigns';
 import CampaignEditor from './pages/CampaignEditor';
 import QuickCampaign from './pages/QuickCampaign';
-import Gamification from './pages/Gamification';
 import Newsletter from './pages/Newsletter';
-import Account from './pages/Account';
-import Statistics from './pages/Statistics';
+import Gamification from './pages/Gamification';
 import Contacts from './pages/Contacts';
-import Data from './pages/Data';
 import Social from './pages/Social';
+import Data from './pages/Data';
+import Statistics from './pages/Statistics';
 import Studies from './pages/Studies';
-import ModernWizardPage from './pages/ModernWizardPage';
-import Admin from './pages/Admin';
-import AdminClients from './pages/AdminClients';
-import AdminClientDetail from './pages/AdminClientDetail';
-import AdminTemplates from './pages/AdminTemplates';
-import AdminCampaigns from './pages/AdminCampaigns';
-import AdminAnalytics from './pages/AdminAnalytics';
-import AdminTeam from './pages/AdminTeam';
-import AdminAlerts from './pages/AdminAlerts';
-import AdminReports from './pages/AdminReports';
-import AdminSettings from './pages/AdminSettings';
+import Account from './pages/Account';
 import ModernCampaignEditor from './pages/ModernCampaignEditor';
-import AdminLayout from './components/Admin/AdminLayout';
-import Layout from './components/Layout/Layout';
+import ModernWizardPage from './pages/ModernWizardPage';
 
 function App() {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-  const isLoginRoute = location.pathname === '/login' || location.pathname === '/';
-
   return (
     <AppProvider>
-      <div className="App">
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-        
-        {isLoginRoute ? (
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/login" element={<Login />} />
-          </Routes>
-        ) : isAdminRoute ? (
-          <AdminLayout>
+      <Router>
+        <div className="min-h-screen bg-gradient-to-br from-[#161B33] to-[#24123B] relative overflow-hidden">
+          {/* --- BACKGROUND EFFETS (inchangé) --- */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* ... tes divs d’effets visuels ... */}
+          </div>
+
+          {/* --- ROUTES --- */}
+          <div className="relative z-10">
             <Routes>
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/clients" element={<AdminClients />} />
-              <Route path="/admin/clients/:clientId" element={<AdminClientDetail />} />
-              <Route path="/admin/templates" element={<AdminTemplates />} />
-              <Route path="/admin/campaigns" element={<AdminCampaigns />} />
-              <Route path="/admin/analytics" element={<AdminAnalytics />} />
-              <Route path="/admin/team" element={<AdminTeam />} />
-              <Route path="/admin/alerts" element={<AdminAlerts />} />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-            </Routes>
-          </AdminLayout>
-        ) : (
-          <Layout>
-            <Routes>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/campaigns" element={<Campaigns />} />
-              <Route path="/campaign/:id" element={<CampaignEditor />} />
+              {/* Route Dashboard = accueil */}
+              <Route path="/" element={<Layout><Dashboard /></Layout>} />
+              <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+              
+              {/* Gamification, campagnes, etc */}
+              <Route path="/campaigns" element={<Layout><Campaigns /></Layout>} />
+              <Route path="/campaign/:id" element={<Layout><CampaignEditor /></Layout>} />
+              
+              {/* Éditeur avancé, SANS layout pour affichage 100% */}
               <Route path="/modern-campaign/:id" element={<ModernCampaignEditor />} />
-              <Route path="/quick-campaign" element={<QuickCampaign />} />
-              <Route path="/modern-wizard" element={<ModernWizardPage />} />
-              <Route path="/gamification" element={<Gamification />} />
-              <Route path="/newsletter" element={<Newsletter />} />
-              <Route path="/statistics" element={<Statistics />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/data" element={<Data />} />
-              <Route path="/social" element={<Social />} />
-              <Route path="/studies" element={<Studies />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/logout" element={<div className="p-6"><h1 className="text-2xl font-bold">Déconnexion</h1><p>Vous avez été déconnecté avec succès.</p></div>} />
+              <Route path="/modern-wizard" element={<Layout><ModernWizardPage /></Layout>} />
+              
+              {/* Quick campaign avec layout */}
+              <Route path="/quick-campaign" element={<Layout><QuickCampaign /></Layout>} />
+              
+              {/* Autres modules */}
+              <Route path="/newsletter" element={<Layout><Newsletter /></Layout>} />
+              <Route path="/gamification" element={<Layout><Gamification /></Layout>} />
+              <Route path="/contacts" element={<Layout><Contacts /></Layout>} />
+              <Route path="/social" element={<Layout><Social /></Layout>} />
+              <Route path="/data" element={<Layout><Data /></Layout>} />
+              <Route path="/statistics" element={<Layout><Statistics /></Layout>} />
+              <Route path="/studies" element={<Layout><Studies /></Layout>} />
+              <Route path="/account" element={<Layout><Account /></Layout>} />
             </Routes>
-          </Layout>
-        )}
-      </div>
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+          </div>
+        </div>
+      </Router>
     </AppProvider>
   );
 }

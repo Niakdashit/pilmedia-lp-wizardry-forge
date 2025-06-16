@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Eye, Settings, CheckCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ArrowLeft, Upload, Eye, Settings, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuickCampaignStore } from '../../stores/quickCampaignStore';
 import { useCampaigns } from '../../hooks/useCampaigns';
@@ -28,6 +28,8 @@ const Step3VisualStyle: React.FC = () => {
     jackpotColors,
     segmentCount,
     generatePreviewCampaign,
+    setBackgroundImage,
+    setBackgroundImageUrl,
     setCurrentStep,
     reset
   } = useQuickCampaignStore();
@@ -38,6 +40,25 @@ const Step3VisualStyle: React.FC = () => {
   const [creationSuccess, setCreationSuccess] = useState(false);
   
   const previewCampaign = generatePreviewCampaign();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (backgroundImageUrl) {
+        URL.revokeObjectURL(backgroundImageUrl);
+      }
+    };
+  }, [backgroundImageUrl]);
+
+
+  const handleFileUpload = (files: FileList | null) => {
+    if (files && files[0]) {
+      const file = files[0];
+      setBackgroundImage(file);
+      const url = URL.createObjectURL(file);
+      setBackgroundImageUrl(url);
+    }
+  };
   const handleFinish = () => {
     setShowFinalStep(true);
   };
@@ -268,6 +289,54 @@ const Step3VisualStyle: React.FC = () => {
             {/* Color Customizer */}
             <ColorCustomizer />
 
+            {/* Background Upload */}
+            <div>
+              <h3 className="text-2xl font-light text-gray-900 mb-8">
+                Image de fond <span className="text-gray-400 font-light">(optionnel)</span>
+              </h3>
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+              >
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                {backgroundImage ? (
+                  <div>
+                    <p className="text-gray-900 font-medium mb-2">
+                      {backgroundImage.name}
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBackgroundImage(null);
+                        setBackgroundImageUrl(null);
+                      }}
+                      className="text-red-500 hover:text-red-600 transition-colors"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-600 mb-2">
+                      <span className="text-[#841b60] font-medium">
+                        Téléchargez une image de fond
+                      </span>
+                    </p>
+                    <p className="text-gray-400 text-sm">PNG, JPG jusqu'à 10MB</p>
+                  </>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Navigation */}

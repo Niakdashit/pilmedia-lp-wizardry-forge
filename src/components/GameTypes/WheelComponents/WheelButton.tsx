@@ -31,11 +31,11 @@ const WheelButton: React.FC<WheelButtonProps> = ({
   const getButtonSizeClasses = () => {
     switch (buttonConfig.size) {
       case 'small':
-        return 'px-2 py-1 text-xs';
+        return 'px-3 py-1 text-sm';
       case 'large':
-        return 'px-6 py-3 text-base';
+        return 'px-8 py-4 text-lg';
       default:
-        return 'px-4 py-2 text-sm';
+        return 'px-6 py-3 text-base';
     }
   };
 
@@ -54,10 +54,10 @@ const WheelButton: React.FC<WheelButtonProps> = ({
         borderWidth: `${buttonConfig.borderWidth}px`,
         borderRadius: `${buttonConfig.borderRadius}px`,
         borderStyle: 'solid',
-        boxShadow: `0 2px 8px ${buttonConfig.borderColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+        boxShadow: `0 4px 15px ${buttonConfig.borderColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
         color: textColor
       }} 
-      className={`${getButtonSizeClasses()} font-medium disabled:opacity-50 hover:opacity-90 transition-all duration-200 relative overflow-hidden`}
+      className={`${getButtonSizeClasses()} font-bold disabled:opacity-50 hover:opacity-90 transition-all duration-200 relative overflow-hidden`}
     >
       <span className="relative z-10">
         {spinning ? 'Tourne...' : formValidated ? 'Lancer la roue' : buttonConfig.text || 'Remplir le formulaire'}

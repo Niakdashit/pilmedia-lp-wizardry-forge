@@ -11,56 +11,48 @@ const Gamification: React.FC = () => {
       name: 'Roue de la fortune',
       description: 'Faites tourner la roue pour gagner des réductions, cadeaux ou surprises',
       color: '#841b60',
-      image: '/gamification/wheel.svg',
       type: 'wheel' as CampaignType
     },
     {
       name: 'Carte à gratter',
       description: 'Découvrez ce qui se cache sous la surface grattable',
       color: '#2c7be5',
-      image: '/gamification/scratch.svg',
       type: 'scratch' as CampaignType
     },
     {
       name: 'Jeu de mémoire',
       description: 'Trouvez les paires correspondantes pour gagner des points',
       color: '#00b8d9',
-      image: '/gamification/memory.svg',
       type: 'memory' as CampaignType
     },
     {
       name: 'Quiz interactifs',
       description: 'Testez vos connaissances et gagnez des points en fonction de vos réponses',
       color: '#f5803e',
-      image: '/gamification/quiz.svg',
       type: 'quiz' as CampaignType
     },
     {
       name: 'Formulaire dynamique',
       description: 'Créez des formulaires interactifs avec logique conditionnelle et validation en temps réel',
       color: '#36b37e',
-      image: '/gamification/form.svg',
       type: 'form' as CampaignType
     },
     {
       name: 'Puzzle',
       description: 'Reconstituez l\'image en déplaçant les pièces au bon endroit',
       color: '#6554c0',
-      image: '/gamification/puzzle.svg',
       type: 'puzzle' as CampaignType
     },
     {
       name: 'Dés chanceux',
       description: 'Lancez les dés et tentez votre chance pour gagner des lots',
       color: '#ff5630',
-      image: '/gamification/dice.svg',
       type: 'dice' as CampaignType
     },
     {
       name: 'Jackpot',
       description: 'Faites tourner les rouleaux et tentez de décrocher le jackpot',
       color: '#ffd700',
-      image: '/gamification/jackpot.svg',
       type: 'jackpot' as CampaignType
     }
   ];
@@ -97,10 +89,8 @@ const Gamification: React.FC = () => {
               const IconComponent = getCampaignTypeIcon(game.type);
               return (
                 <div key={index} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-300">
-                  <div className="relative h-24 overflow-hidden">
-                    <img src={game.image} alt={game.name} className="object-cover w-full h-full" />
-                    <div className="absolute inset-0" style={{ backgroundColor: game.color, opacity: 0.3 }} />
-                    <IconComponent className="absolute inset-0 m-auto w-10 h-10 text-white" />
+                  <div className="h-24 flex items-center justify-center" style={{ backgroundColor: game.color }}>
+                    <IconComponent className="w-10 h-10 text-white" />
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-gray-800 mb-1">{game.name}</h3>

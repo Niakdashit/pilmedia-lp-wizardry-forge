@@ -47,9 +47,9 @@ const getButtonStyle = (mobileConfig: any) => {
   const buttonWidth = mobileConfig.buttonWidth || 80;
   
   const sizeConfig = {
-    small: { padding: '6px 12px', fontSize: '0.8rem' },
-    medium: { padding: '8px 16px', fontSize: '0.9rem' },
-    large: { padding: '12px 24px', fontSize: '1rem' }
+    small: { padding: '8px 16px', fontSize: '0.875rem' },
+    medium: { padding: '12px 24px', fontSize: '1rem' },
+    large: { padding: '16px 32px', fontSize: '1.125rem' }
   };
 
   return {
@@ -71,7 +71,7 @@ const getButtonStyle = (mobileConfig: any) => {
     border: 'none',
     cursor: 'pointer',
     transition: 'all 0.2s ease-in-out',
-    minHeight: '40px',
+    minHeight: '44px',
     minWidth: '100px',
     wordBreak: 'break-word' as const,
     hyphens: 'auto' as const

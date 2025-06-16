@@ -14,24 +14,9 @@
   display: none;  /* Safari et Chrome */
 }
 
-/* Empêcher le débordement horizontal global */
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 font-sans;
-  }
-  
-  /* Assurer que tous les contenants respectent la largeur de l'écran */
-  .container {
-    @apply w-full max-w-none px-4 sm:px-6 lg:px-8;
   }
 }
 
@@ -42,22 +27,5 @@ html, body {
   
   .wheel-pointer {
     filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
-  }
-  
-  /* Responsive table wrapper */
-  .table-responsive {
-    @apply w-full overflow-x-auto;
-  }
-  
-  /* Ensure dropdowns have proper z-index and background */
-  .dropdown-menu {
-    @apply z-50 bg-white border border-gray-200 rounded-lg shadow-lg;
-  }
-}
-
-/* Media queries pour s'assurer que tout reste dans les limites */
-@media (max-width: 640px) {
-  .container {
-    @apply px-3;
   }
 }

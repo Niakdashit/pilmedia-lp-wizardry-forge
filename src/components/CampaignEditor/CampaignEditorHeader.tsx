@@ -27,26 +27,26 @@ const CampaignEditorHeader: React.FC<CampaignEditorHeaderProps> = ({
       <div className="flex space-x-3">
         <button
           onClick={onPreview}
-          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg bg-white hover:bg-gray-50 transition-colors duration-200"
+          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg bg-white hover:bg-gray-50 transition-colors duration-200"
         >
-          <Eye className="w-4 h-4 mr-1.5" />
+          <Eye className="w-4 h-4 mr-2" />
           Aperçu
         </button>
         
         <button
           onClick={() => onSave(true)}
-          className="inline-flex items-center px-3 py-1.5 border border-[#841b60] text-sm font-medium rounded-lg text-[#841b60] bg-white hover:bg-[#f8f0f5] transition-colors duration-200"
+          className="inline-flex items-center px-3 py-2 border border-[#841b60] text-sm font-medium rounded-lg text-[#841b60] bg-white hover:bg-[#f8f0f5] transition-colors duration-200"
         >
-          <Save className="w-4 h-4 mr-1.5" />
+          <Save className="w-4 h-4 mr-2" />
           Enregistrer
         </button>
         
         <button
           onClick={() => onSave(false)}
-          className="inline-flex items-center px-3 py-1.5 bg-[#841b60] text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200"
+          className="inline-flex items-center px-3 py-2 bg-[#841b60] text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200"
         >
           Publier
-          <ChevronRight className="w-4 h-4 ml-1.5" />
+          <ChevronRight className="w-4 h-4 ml-2" />
         </button>
       </div>
     </div>

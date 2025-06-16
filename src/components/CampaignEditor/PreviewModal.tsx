@@ -102,7 +102,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, campaign }
             height: specs.height,
             border: '1px solid #e5e7eb',
             borderRadius: specs.borderRadius,
-            overflow: 'auto',
+            overflow: 'hidden',
             backgroundColor: '#ffffff'
           }}
         >

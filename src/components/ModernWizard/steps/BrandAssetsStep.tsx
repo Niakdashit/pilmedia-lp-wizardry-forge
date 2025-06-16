@@ -1,11 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { WizardData } from '../ModernWizard';
-import { Image, Smartphone, Monitor } from 'lucide-react';
-import ImageUploadCard from './components/ImageUploadCard';
-import WebsiteUrlInput from './components/WebsiteUrlInput';
-import ProductNameInput from './components/ProductNameInput';
-import { useBrandThemeExtraction } from '../hooks/useBrandThemeExtraction';
+import { Upload, Image, Smartphone, Monitor } from 'lucide-react';
 
 interface BrandAssetsStepProps {
   wizardData: WizardData;
@@ -20,33 +16,6 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
   nextStep,
   prevStep
 }) => {
-  // Extraction du thème de marque : couleur, logo (optionnel, pas automatique sur le texte)
-  const { brandTheme, loading: extractingTheme } = useBrandThemeExtraction(wizardData.websiteUrl);
-
-  // Champ de contenu saisi manuellement (optionnel, le prompt OpenAI peut aussi partir de rien)
-  const [manualContent, setManualContent] = useState(wizardData['manualContent'] || '');
-
-  // Injection du résultat d'extraction de thème si changé
-  React.useEffect(() => {
-    if (
-      brandTheme && 
-      JSON.stringify(wizardData.extractedBrandTheme || {}) !== JSON.stringify(brandTheme)
-    ) {
-      updateWizardData({ extractedBrandTheme: brandTheme });
-    }
-    if (!brandTheme && wizardData.extractedBrandTheme) {
-      updateWizardData({ extractedBrandTheme: undefined });
-    }
-  }, [brandTheme]);
-
-  // Mémorise le contenu éventuel à chaque changement
-  React.useEffect(() => {
-    if (manualContent !== wizardData['manualContent']) {
-      updateWizardData({ manualContent });
-    }
-    // eslint-disable-next-line
-  }, [manualContent]);
-
   const handleFileUpload = (type: 'logo' | 'desktopVisual' | 'mobileVisual', file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -55,12 +24,8 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveImage = (type: 'logo' | 'desktopVisual' | 'mobileVisual') => {
-    updateWizardData({ [type]: undefined });
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Main Content Card */}
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-gray-100/50">
         {/* Section Header */}
@@ -72,74 +37,121 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
             Personnalisez votre campagne avec vos visuels de marque pour une expérience cohérente.
           </p>
         </div>
-        {/* Infos extraction */}
-        {extractingTheme && (
-          <div className="mb-3 flex items-center gap-3 text-[#815194] animate-pulse">
-            <svg width="22" height="22" fill="none" className="animate-spin" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#ae8ac3" strokeWidth="4" />
-              <path className="opacity-75" fill="#ae8ac3" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-            Extraction du thème de marque en cours...
-          </div>
-        )}
 
         {/* Upload Areas */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <ImageUploadCard
-            title="Logo"
-            icon={Image}
-            value={wizardData.logo}
-            onUpload={(file) => handleFileUpload('logo', file)}
-            onRemove={() => handleRemoveImage('logo')}
-            placeholder="Glissez votre logo ici"
-            inputId="logo-upload"
-          />
+          {/* Logo Upload */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+                <Image className="w-4 h-4 text-[#951b6d]" />
+              </div>
+              <h3 className="font-semibold text-[#141e29]">Logo</h3>
+            </div>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#951b6d]/50 transition-colors">
+              {wizardData.logo ? (
+                <img src={wizardData.logo} alt="Logo" className="max-h-20 mx-auto" />
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Glissez votre logo ici</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload('logo', e.target.files[0])}
+                    className="hidden"
+                    id="logo-upload"
+                  />
+                  <label
+                    htmlFor="logo-upload"
+                    className="inline-block px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 cursor-pointer text-sm font-medium"
+                  >
+                    Sélectionner un fichier
+                  </label>
+                </>
+              )}
+            </div>
+          </div>
 
-          <ImageUploadCard
-            title="Visuel desktop"
-            icon={Monitor}
-            value={wizardData.desktopVisual}
-            onUpload={(file) => handleFileUpload('desktopVisual', file)}
-            onRemove={() => handleRemoveImage('desktopVisual')}
-            placeholder="Visuel pour ordinateur"
-            inputId="desktop-upload"
-          />
+          {/* Desktop Visual */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+                <Monitor className="w-4 h-4 text-[#951b6d]" />
+              </div>
+              <h3 className="font-semibold text-[#141e29]">Visuel desktop</h3>
+            </div>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#951b6d]/50 transition-colors">
+              {wizardData.desktopVisual ? (
+                <img src={wizardData.desktopVisual} alt="Desktop visual" className="max-h-20 mx-auto" />
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Visuel pour ordinateur</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload('desktopVisual', e.target.files[0])}
+                    className="hidden"
+                    id="desktop-upload"
+                  />
+                  <label
+                    htmlFor="desktop-upload"
+                    className="inline-block px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 cursor-pointer text-sm font-medium"
+                  >
+                    Sélectionner un fichier
+                  </label>
+                </>
+              )}
+            </div>
+          </div>
 
-          <ImageUploadCard
-            title="Visuel mobile"
-            icon={Smartphone}
-            value={wizardData.mobileVisual}
-            onUpload={(file) => handleFileUpload('mobileVisual', file)}
-            onRemove={() => handleRemoveImage('mobileVisual')}
-            placeholder="Visuel pour mobile"
-            inputId="mobile-upload"
-          />
+          {/* Mobile Visual */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-8 h-8 bg-[#951b6d]/10 rounded-lg flex items-center justify-center">
+                <Smartphone className="w-4 h-4 text-[#951b6d]" />
+              </div>
+              <h3 className="font-semibold text-[#141e29]">Visuel mobile</h3>
+            </div>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#951b6d]/50 transition-colors">
+              {wizardData.mobileVisual ? (
+                <img src={wizardData.mobileVisual} alt="Mobile visual" className="max-h-20 mx-auto" />
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Visuel pour mobile</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload('mobileVisual', e.target.files[0])}
+                    className="hidden"
+                    id="mobile-upload"
+                  />
+                  <label
+                    htmlFor="mobile-upload"
+                    className="inline-block px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 cursor-pointer text-sm font-medium"
+                  >
+                    Sélectionner un fichier
+                  </label>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Website URL */}
-        <WebsiteUrlInput
-          value={wizardData.websiteUrl || ''}
-          onChange={(value) => updateWizardData({ websiteUrl: value })}
-        />
-
         {/* Product Name */}
-        <ProductNameInput
-          value={wizardData.productName || ''}
-          onChange={(value) => updateWizardData({ productName: value })}
-        />
-
-        {/* Ajout d'un champ pour un résumé/manuel facultatif */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            (Optionnel) Collez ici un texte/résumé clé de votre site (utile pour booster la pertinence du quiz si vous le souhaitez)
-          </label>
-          <textarea
-            value={manualContent}
-            onChange={e => setManualContent(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg p-3 text-gray-900 focus:ring-[#951b6d] focus:border-[#951b6d] min-h-[64px]"
-            placeholder="Résumé, présentation, valeurs, infos..."
-            rows={3}
-            spellCheck={true}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
+          <h3 className="font-semibold text-[#141e29] mb-4">Nom du produit</h3>
+          <input
+            type="text"
+            value={wizardData.productName || ''}
+            onChange={(e) => updateWizardData({ productName: e.target.value })}
+            placeholder="Entrez le nom de votre produit ou campagne"
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#951b6d]/20 focus:border-[#951b6d] transition-colors"
           />
         </div>
 

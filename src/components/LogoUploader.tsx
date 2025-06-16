@@ -10,7 +10,6 @@ interface LogoUploaderProps {
 
 const LogoUploader: React.FC<LogoUploaderProps> = ({ className }) => {
   const {
-    logoUrl,
     setLogoFile,
     setLogoUrl,
     setCustomColors,
@@ -85,11 +84,7 @@ const LogoUploader: React.FC<LogoUploaderProps> = ({ className }) => {
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        {logoUrl ? (
-          <img src={logoUrl} alt="Logo" className="h-24 mx-auto mb-4 object-contain" />
-        ) : (
-          <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        )}
+        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 mb-2">
           <label className="text-[#841b60] cursor-pointer hover:text-[#841b60]/80 transition-colors">
             Cliquez pour télécharger
