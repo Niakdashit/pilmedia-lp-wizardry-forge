@@ -159,7 +159,7 @@ const Step3VisualStyle: React.FC = () => {
       const result = await saveCampaign(campaignData);
       if (result) {
         reset();
-        navigate(`/campaign/${result.id}`);
+        navigate(`/modern-campaign/${result.id}`);
       }
     } catch (error) {
       console.error('Erreur lors de la création:', error);
@@ -204,7 +204,7 @@ const Step3VisualStyle: React.FC = () => {
                                border border-gray-200 hover:bg-gray-100 transition-all
                                flex items-center justify-center space-x-3 disabled:opacity-50">
                     <Settings className="w-5 h-5" />
-                    <span>Réglages avancés</span>
+                    <span>Éditeur avancé</span>
                   </button>
                 </div>
               </>}
