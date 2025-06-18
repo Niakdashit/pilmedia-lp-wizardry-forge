@@ -1,229 +1,143 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { CampaignType, getDefaultGameConfig } from '../utils/campaignTypes';
-import { useCampaigns } from '../hooks/useCampaigns';
-import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
-import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
+import { Loader, Save, Eye, ChevronLeft, Settings, Edit, BarChart2, Users } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
-const defaultFormFields = [
-  {
-    id: 'prenom',
-    label: 'Prénom',
-    type: 'text',
-    required: true
-  },
-  {
-    id: 'nom',
-    label: 'Nom',
-    type: 'text',
-    required: true
-  },
-  {
-    id: 'email',
-    label: 'Email',
-    type: 'email',
-    required: true
-  }
+import { useCampaigns } from '../hooks/useCampaigns';
+import ModernEditorSidebar from '../components/ModernEditor/ModernEditorSidebar';
+import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
+import ModernGeneralTab from '../components/ModernEditor/ModernGeneralTab';
+import ModernGameTab from '../components/ModernEditor/ModernGameTab';
+import ModernLayoutTab from '../components/ModernEditor/ModernLayoutTab';
+import ModernDesignTab from '../components/ModernEditor/ModernDesignTab';
+import ModernFormTab from '../components/ModernEditor/ModernFormTab';
+import ModernMobileTab from '../components/ModernEditor/ModernMobileTab';
+
+const TAB_OPTIONS = [
+  { label: 'Général', icon: <Edit />, key: 'general' },
+  { label: 'Jeu', icon: <Settings />, key: 'game' },
+  { label: 'Layout', icon: <BarChart2 />, key: 'layout' },
+  { label: 'Design', icon: <BarChart2 />, key: 'design' },
+  { label: 'Formulaire', icon: <Users />, key: 'form' },
+  { label: 'Mobile', icon: <BarChart2 />, key: 'mobile' },
 ];
 
 const ModernCampaignEditor: React.FC = () => {
-  const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isNewCampaign = id === 'new';
-  const campaignType = searchParams.get('type') as CampaignType || 'wheel';
-  
+  const isNew = !id || id === 'new';
+
+  const { getCampaign, saveCampaign } = useCampaigns();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { saveCampaign, getCampaign } = useCampaigns();
-  
-  const [campaign, setCampaign] = useState<any>({
-    id: undefined,
-    name: isNewCampaign ? 'Nouvelle Campagne' : 'Ma Campagne',
-    description: '',
-    url: '',
-    startDate: '',
-    startTime: '09:00',
-    endDate: '',
-    endTime: '18:00',
-    status: 'draft',
-    type: campaignType,
-    formFields: defaultFormFields,
-    gameConfig: getDefaultGameConfig(campaignType),
-    gameSize: 'medium' as 'small' | 'medium' | 'large' | 'xlarge',
-    gamePosition: 'center' as 'top' | 'center' | 'bottom' | 'left' | 'right',
-    buttonConfig: {
-      color: '#841b60',
-      borderColor: '#841b60',
-      borderWidth: 1,
-      borderRadius: 8,
-      size: 'medium' as 'small' | 'medium' | 'large',
-      link: '',
-      visible: true,
-      text: 'Remplir le formulaire'
-    },
-    design: {
-      background: '#f8fafc',
-      primaryColor: '#841b60',
-      secondaryColor: '#ffffff',
-      titleColor: '#000000',
-      buttonColor: '#841b60',
-      fontFamily: 'Inter',
-      borderRadius: '0.5rem',
-      textStyles: {
-        title: {
-          fontFamily: 'Inter',
-          fontSize: '24px',
-          fontWeight: 'bold',
-          textAlign: 'center' as const,
-          color: '#000000',
-          lineHeight: '1.2'
-        },
-        description: {
-          fontFamily: 'Inter',
-          fontSize: '16px',
-          fontWeight: 'normal',
-          textAlign: 'left' as const,
-          color: '#000000',
-          lineHeight: '1.5'
-        },
-        label: {
-          fontFamily: 'Inter',
-          fontSize: '14px',
-          fontWeight: 'normal',
-          textAlign: 'left' as const,
-          color: '#000000',
-          lineHeight: '1.4'
-        },
-        button: {
-          fontFamily: 'Inter',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          textAlign: 'center' as const,
-          color: '#ffffff',
-          lineHeight: '1.2'
-        }
-      },
-      customText: {
-        enabled: false,
-        text: 'Texte personnalisé',
-        position: 'top' as 'top' | 'bottom' | 'left' | 'right' | 'center',
-        size: 'medium' as 'small' | 'medium' | 'large',
-        color: '#000000',
-        showFrame: false,
-        frameColor: '#ffffff',
-        frameBorderColor: '#e5e7eb'
-      }
-    },
-    screens: {
-      1: {
-        title: 'Bienvenue !',
-        description: 'Participez à notre jeu et tentez de gagner !',
-        buttonText: 'Participer',
-        showTitle: true,
-        showDescription: true
-      },
-      3: {
-        title: 'Félicitations !',
-        description: 'Merci pour votre participation !',
-        showTitle: true,
-        showDescription: true
-      }
-    }
-  });
+  const [showPreview, setShowPreview] = useState(false);
+  const [campaign, setCampaign] = useState<any>(null);
 
   useEffect(() => {
-    if (!isNewCampaign && id) {
-      loadCampaign(id);
+    if (isNew) {
+      setLoading(false);
+      setCampaign({
+        name: '',
+        description: '',
+        type: 'quiz',
+        config: {},
+        design: {},
+      });
+      return;
     }
-  }, [id, isNewCampaign]);
+    if (id) {
+      getCampaign(id)
+        .then((data) => data && setCampaign(data))
+        .catch(() => toast.error('Erreur lors du chargement de la campagne'))
+        .finally(() => setLoading(false));
+    }
+  }, [id, isNew, getCampaign]);
 
-  const loadCampaign = async (campaignId: string) => {
-    setIsLoading(true);
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const existingCampaign = await getCampaign(campaignId);
-      if (existingCampaign) {
-        setCampaign({
-          ...existingCampaign,
-          formFields: existingCampaign.form_fields || defaultFormFields
-        });
-      }
+      await saveCampaign({ ...campaign, id: isNew ? undefined : id });
+      toast.success('Campagne sauvegardée avec succès !');
+    } catch {
+      toast.error('Erreur lors de la sauvegarde');
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleSave = async (continueEditing = false) => {
-    setIsLoading(true);
-    try {
-      if (campaign.type === 'quiz') {
-        const questions = campaign.gameConfig?.quiz?.questions || [];
-        const valid = questions.every((q: any) =>
-          Array.isArray(q.options) && q.options.length >= 2 && q.options.some((o: any) => o.isCorrect)
-        );
-        if (!valid) {
-          alert('Chaque question doit comporter au moins deux options et une réponse correcte.');
-          setIsLoading(false);
-          return;
-        }
-      }
-      const campaignData = {
-        ...campaign,
-        form_fields: campaign.formFields
-      };
-      const savedCampaign = await saveCampaign(campaignData);
-      if (savedCampaign && !continueEditing) {
-        navigate('/gamification');
-      } else if (savedCampaign && isNewCampaign) {
-        setCampaign((prev: any) => ({
-          ...prev,
-          id: savedCampaign.id
-        }));
-      }
-    } finally {
-      setIsLoading(false);
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'general':
+        return <ModernGeneralTab campaign={campaign} setCampaign={setCampaign} />;
+      case 'game':
+        return <ModernGameTab campaign={campaign} setCampaign={setCampaign} />;
+      case 'layout':
+        return <ModernLayoutTab campaign={campaign} setCampaign={setCampaign} />;
+      case 'design':
+        return <ModernDesignTab campaign={campaign} setCampaign={setCampaign} />;
+      case 'form':
+        return <ModernFormTab campaign={campaign} setCampaign={setCampaign} />;
+      case 'mobile':
+        return <ModernMobileTab campaign={campaign} setCampaign={setCampaign} />;
+      default:
+        return null;
     }
   };
 
-  const gameTypeLabels: Record<CampaignType, string> = {
-    wheel: 'Roue de la Fortune',
-    jackpot: 'Jackpot',
-    memory: 'Jeu de Mémoire',
-    puzzle: 'Puzzle',
-    quiz: 'Quiz Interactif',
-    dice: 'Dés Magiques',
-    scratch: 'Carte à Gratter',
-    swiper: 'Swiper',
-    form: 'Formulaire Dynamique'
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader className="animate-spin w-10 h-10 text-[#841b60]" />
+      </div>
+    );
+  }
 
   return (
-    <div className="relative">
-      <ModernEditorLayout
-        campaign={campaign}
-        setCampaign={setCampaign}
+    <div className="flex h-[calc(100vh-40px)]">
+      <ModernEditorSidebar
+        tabs={TAB_OPTIONS}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        previewDevice={previewDevice}
-        onDeviceChange={setPreviewDevice}
-        onSave={() => handleSave(true)}
-        onPreview={() => setShowPreviewModal(true)}
-        isLoading={isLoading}
-        campaignType={campaignType}
-        isNewCampaign={isNewCampaign}
-        gameTypeLabels={gameTypeLabels}
+        campaignName={campaign?.name}
+        onBack={() => navigate('/campaigns')}
       />
-
-      {/* Preview Modal */}
-      {showPreviewModal && (
-        <ModernPreviewModal
-          isOpen={showPreviewModal}
-          onClose={() => setShowPreviewModal(false)}
-          campaign={campaign}
-        />
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center justify-between px-8 py-6 border-b bg-white shadow-sm z-10">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate('/campaigns')}
+              className="text-gray-500 hover:text-[#841b60] transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-bold text-[#841b60]">{campaign?.name || 'Nouvelle campagne'}</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowPreview(true)}
+              className="px-5 py-2 rounded-lg border bg-gray-50 hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
+            >
+              <Eye className="w-5 h-5" />
+              <span>Prévisualiser</span>
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-6 py-2 rounded-lg bg-[#841b60] text-white font-semibold shadow-lg hover:bg-[#6d164f] transition-all flex items-center space-x-2"
+            >
+              <Save className="w-5 h-5" />
+              <span>{saving ? 'Sauvegarde…' : 'Sauvegarder'}</span>
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 bg-gradient-to-b from-[#f9f1f9] to-[#f7fafc] p-8 overflow-y-auto">
+          {renderTabContent()}
+        </div>
+      </div>
+      {showPreview && (
+        <ModernPreviewModal campaign={campaign} onClose={() => setShowPreview(false)} />
       )}
     </div>
   );
