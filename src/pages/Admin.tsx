@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Target, Users } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
+import Button from '../components/common/Button';
 import AdminKPICards from '../components/Admin/AdminKPICards';
 import AdminRecentActivity from '../components/Admin/AdminRecentActivity';
 import AdminQuickAccess from '../components/Admin/AdminQuickAccess';
@@ -110,19 +111,23 @@ const Admin: React.FC = () => {
         size="sm"
         actions={
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Link
-              to="/admin/templates"
-              className="inline-flex items-center justify-center px-6 py-2.5 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm whitespace-nowrap"
-            >
-              <Target className="w-5 h-5 mr-2" />
-              Modèles
+            <Link to="/admin/templates">
+              <Button
+                variant="primary"
+                className="px-6 py-2.5 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm whitespace-nowrap"
+              >
+                <Target className="w-5 h-5 mr-2" />
+                Modèles
+              </Button>
             </Link>
-            <Link
-              to="/admin/clients"
-              className="inline-flex items-center justify-center px-6 py-2.5 bg-[#841b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm whitespace-nowrap"
-            >
-              <Users className="w-5 h-5 mr-2" />
-              Gestion Clients
+            <Link to="/admin/clients">
+              <Button
+                variant="primary"
+                className="px-6 py-2.5 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm whitespace-nowrap"
+              >
+                <Users className="w-5 h-5 mr-2" />
+                Gestion Clients
+              </Button>
             </Link>
           </div>
         }

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import Button from '../components/common/Button';
 import logo from '@/assets/logo.png';
 
 const Login: React.FC = () => {
@@ -94,12 +95,13 @@ const Login: React.FC = () => {
             </div>
 
             {/* Bouton de connexion */}
-            <button
+            <Button
               type="submit"
-              className="w-full bg-[#841b60] text-white py-3 px-4 rounded-xl font-semibold hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              variant="primary"
+              className="w-full py-3 px-4 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Se connecter
-            </button>
+            </Button>
           </form>
 
           {/* Séparateur */}
@@ -110,12 +112,13 @@ const Login: React.FC = () => {
           </div>
 
           {/* Accès admin */}
-          <button
+          <Button
             onClick={handleAdminLogin}
-            className="w-full bg-gray-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            variant="primary"
+            className="w-full py-3 px-4 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Accès Administrateur
-          </button>
+          </Button>
 
           {/* Liens */}
           <div className="mt-6 text-center space-y-2">
