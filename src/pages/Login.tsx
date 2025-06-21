@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
@@ -7,24 +6,21 @@ import logo from '@/assets/logo.png';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Pour le moment, on redirige directement vers le dashboard
-    navigate('/');
+    navigate("/");
   };
 
   const handleAdminLogin = () => {
-    // Redirection directe vers l'interface admin
-    navigate('/admin');
+    navigate("/admin");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e9f1fd] via-[#f3e8fa] to-[#c4e0f9] flex items-center justify-center p-4">
-      {/* Décorations de fond */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-lg"></div>
@@ -32,18 +28,14 @@ const Login: React.FC = () => {
       </div>
 
       <div className="relative w-full max-w-md">
-        {/* Carte de connexion */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/25 p-8">
-          {/* Logo et titre */}
           <div className="text-center mb-8">
             <img src={logo} alt="Leadya Logo" className="h-16 w-auto mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-[#841b60] mb-2">Bienvenue sur Leadya</h1>
+            <h1 className="text-2xl font-bold text-brand mb-2">Bienvenue sur Leadya</h1>
             <p className="text-gray-600">Connectez-vous pour accéder à votre dashboard</p>
           </div>
 
-          {/* Formulaire de connexion */}
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Champ Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email
@@ -57,13 +49,12 @@ const Login: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent bg-white/90 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand bg-white/90 backdrop-blur-sm"
                   placeholder="votre@email.com"
                 />
               </div>
             </div>
 
-            {/* Champ Mot de passe */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Mot de passe
@@ -74,10 +65,10 @@ const Login: React.FC = () => {
                 </div>
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent bg-white/90 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand bg-white/90 backdrop-blur-sm"
                   placeholder="••••••••"
                 />
                 <button
@@ -94,7 +85,6 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            {/* Bouton de connexion */}
             <Button
               type="submit"
               variant="primary"
@@ -104,14 +94,12 @@ const Login: React.FC = () => {
             </Button>
           </form>
 
-          {/* Séparateur */}
           <div className="my-6 flex items-center">
             <div className="flex-1 border-t border-gray-300"></div>
             <span className="px-4 text-sm text-gray-500">ou</span>
             <div className="flex-1 border-t border-gray-300"></div>
           </div>
 
-          {/* Accès admin */}
           <Button
             onClick={handleAdminLogin}
             variant="primary"
@@ -120,14 +108,13 @@ const Login: React.FC = () => {
             Accès Administrateur
           </Button>
 
-          {/* Liens */}
           <div className="mt-6 text-center space-y-2">
-            <a href="#" className="text-sm text-[#841b60] hover:underline block">
+            <a href="#" className="text-sm text-brand hover:underline block">
               Mot de passe oublié ?
             </a>
             <p className="text-sm text-gray-600">
-              Pas encore de compte ?{' '}
-              <a href="#" className="text-[#841b60] hover:underline">
+              Pas encore de compte ?{" "}
+              <a href="#" className="text-brand hover:underline">
                 Contactez-nous
               </a>
             </p>
