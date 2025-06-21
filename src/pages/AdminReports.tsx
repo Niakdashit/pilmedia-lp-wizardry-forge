@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
+import Button from '../components/common/Button';
 
 const AdminReports: React.FC = () => {
   return (
@@ -12,12 +13,14 @@ const AdminReports: React.FC = () => {
         size="sm"
         actions={
           <div className="flex gap-x-4">
-            <Link
-              to="/admin"
-              className="inline-flex items-center px-6 py-2.5 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-base"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Retour Dashboard
+            <Link to="/admin">
+              <Button
+                variant="primary"
+                className="px-6 py-2.5 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-base"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Retour Dashboard
+              </Button>
             </Link>
           </div>
         }

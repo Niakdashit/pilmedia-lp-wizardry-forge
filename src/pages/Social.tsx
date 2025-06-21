@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart2, AlertCircle, Plus } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
+import Button from '../components/common/Button';
 
 const Social: React.FC = () => {
   return (
@@ -9,10 +10,10 @@ const Social: React.FC = () => {
         title="Réseaux sociaux"
         size="sm"
         actions={
-          <button className="inline-flex items-center bg-[#841b60] text-white font-semibold hover:bg-[#6d164f] transition-all duration-300">
+          <Button variant="primary" className="px-4 py-2">
             <Plus className="w-5 h-5 mr-2" />
             Nouvelle Publication
-          </button>
+          </Button>
         }
       />
 
@@ -54,9 +55,9 @@ const Social: React.FC = () => {
                     <option>Commentaires</option>
                     <option>Partages</option>
                   </select>
-                  <button className="px-4 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
+                  <Button variant="primary" className="px-4 py-2 font-medium rounded-lg">
                     Comparer
-                  </button>
+                  </Button>
                 </div>
                 <div className="h-64 border border-gray-200 rounded-lg flex items-center justify-center">
                   <BarChart2 className="w-8 h-8 text-gray-300" />
