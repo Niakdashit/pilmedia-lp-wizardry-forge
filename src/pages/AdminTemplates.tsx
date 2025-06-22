@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, ArrowLeft } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
+import Button from '../components/common/Button';
 import AdminTemplatesStats from '../components/Admin/AdminTemplates/AdminTemplatesStats';
 import AdminTemplatesFilters from '../components/Admin/AdminTemplates/AdminTemplatesFilters';
 import AdminTemplatesGrid from '../components/Admin/AdminTemplates/AdminTemplatesGrid';
@@ -79,19 +80,24 @@ const AdminTemplates: React.FC = () => {
         size="sm"
         actions={
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-            <Link
-              to="/admin"
-              className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base whitespace-nowrap"
-            >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              <span className="hidden sm:inline">Retour Dashboard</span>
-              <span className="sm:hidden">Retour</span>
+            <Link to="/admin">
+              <Button
+                variant="primary"
+                className="px-4 sm:px-6 py-2.5 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base whitespace-nowrap"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <span className="hidden sm:inline">Retour Dashboard</span>
+                <span className="sm:hidden">Retour</span>
+              </Button>
             </Link>
-            <button className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-[#841b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base whitespace-nowrap">
+            <Button
+              variant="primary"
+              className="px-4 sm:px-6 py-2.5 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base whitespace-nowrap"
+            >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               <span className="hidden sm:inline">Créer un Modèle</span>
               <span className="sm:hidden">Créer</span>
-            </button>
+            </Button>
           </div>
         }
       />

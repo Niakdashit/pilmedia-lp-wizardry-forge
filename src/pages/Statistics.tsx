@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart3, LineChart, PieChart, Users, Target, ArrowUpRight, Calendar, Download } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
+import Button from '../components/common/Button';
 
 const Statistics: React.FC = () => {
   const [period, setPeriod] = useState('30');
@@ -20,10 +21,13 @@ const Statistics: React.FC = () => {
               <option value="90">90 derniers jours</option>
               <option value="365">Cette année</option>
             </select>
-            <button className="inline-flex items-center px-8 py-4 bg-[#841b60] text-white font-semibold rounded-2xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <Button
+              variant="primary"
+              className="px-8 py-4 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
               <Download className="w-5 h-5 mr-2" />
               Exporter
-            </button>
+            </Button>
           </div>
         }
       />
