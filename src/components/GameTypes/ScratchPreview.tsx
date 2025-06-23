@@ -29,7 +29,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   autoStart = false,
   isModal = false
 }) => {
-  const [gameStarted, setGameStarted] = useState(autoStart && !disabled);
+  // CORRECTION: Le jeu ne démarre jamais automatiquement si disabled=true (formulaire non validé)
+  const [gameStarted, setGameStarted] = useState(false);
   const [finishedCards, setFinishedCards] = useState<Set<number>>(new Set());
   const [hasWon, setHasWon] = useState(false);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -42,7 +43,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     localStorage.removeItem(SCRATCH_STARTED_KEY);
   }, []);
 
-  // Automatically start the game in preview mode if autoStart is enabled
+  // CORRECTION: N'autostart que si explicitement demandé ET que le jeu n'est pas disabled
   useEffect(() => {
     if (autoStart && !gameStarted && !disabled) {
       setGameStarted(true);
@@ -51,6 +52,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   }, [autoStart, gameStarted, disabled, onStart]);
 
   const handleGameStart = () => {
+    // CORRECTION: Vérifier que le jeu n'est pas disabled avant de démarrer
     if (disabled) return;
     setGameStarted(true);
     if (onStart) onStart();
@@ -99,6 +101,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     scratchColor: config?.scratchColor || '#C0C0C0'
   }];
 
+  // CORRECTION: Afficher l'interface de démarrage même quand disabled=true, mais avec un bouton inactif
   if (!gameStarted) {
     return (
       <div className="w-full h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
@@ -118,28 +121,31 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           />
         </div>
 
-        {/* Bouton de démarrage - uniquement si pas en modal */}
-        {!isModal && (
-          <div className="flex-shrink-0 text-center py-8 px-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-gray-800">Cartes à gratter</h3>
-                <p className="text-gray-600">Cliquez sur le bouton pour commencer à jouer</p>
-              </div>
-              
-              <button
-                onClick={handleGameStart}
-                disabled={disabled}
-                className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-lg"
-                style={{
-                  backgroundColor: disabled ? '#6b7280' : buttonColor
-                }}
-              >
-                {disabled ? 'Remplissez le formulaire' : buttonLabel}
-              </button>
+        {/* CORRECTION: Toujours afficher le bouton de démarrage pour respecter le funnel */}
+        <div className="flex-shrink-0 text-center py-8 px-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-gray-800">Cartes à gratter</h3>
+              <p className="text-gray-600">
+                {disabled 
+                  ? "Remplissez le formulaire pour commencer à jouer" 
+                  : "Cliquez sur le bouton pour commencer à jouer"
+                }
+              </p>
             </div>
+            
+            <button
+              onClick={handleGameStart}
+              disabled={disabled}
+              className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-lg"
+              style={{
+                backgroundColor: disabled ? '#6b7280' : buttonColor
+              }}
+            >
+              {disabled ? 'Remplissez le formulaire' : buttonLabel}
+            </button>
           </div>
-        )}
+        </div>
       </div>
     );
   }
