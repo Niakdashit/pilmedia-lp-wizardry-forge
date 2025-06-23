@@ -46,7 +46,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Editor Sidebar - largeur réduite de 280px à 260px */}
-        <div className="w-[290px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
+        <div className="w-[390px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
           <div className="flex h-full">
             {/* Navigation tabs - alignés à gauche */}
             <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
