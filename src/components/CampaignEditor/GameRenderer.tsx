@@ -1,13 +1,7 @@
-
 import React from 'react';
 import Jackpot from '../GameTypes/Jackpot';
-import QuizPreview from '../GameTypes/QuizPreview';
 import WheelPreview from '../GameTypes/WheelPreview';
-import MemoryPreview from '../GameTypes/MemoryPreview';
-import PuzzlePreview from '../GameTypes/PuzzlePreview';
 import ScratchPreview from '../GameTypes/ScratchPreview';
-import DicePreview from '../GameTypes/DicePreview';
-import FormPreview from '../GameTypes/FormPreview';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../funnels/FunnelStandard';
 import { GameSize } from '../configurators/GameSizeSelector';
