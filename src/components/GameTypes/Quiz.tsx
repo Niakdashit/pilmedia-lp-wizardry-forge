@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuizPreview from './QuizPreview';
@@ -25,7 +24,6 @@ const Quiz: React.FC<QuizProps> = ({
   buttonLabel = 'Commencer le quiz',
   design = {},
   className = '',
-  onConfigChange,
   activeQuestion = 0,
   onActiveQuestionChange,
   onQuestionChange

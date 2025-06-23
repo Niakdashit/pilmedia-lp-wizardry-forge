@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import QuizContainer from './Quiz/QuizContainer';
 import { createEnhancedQuizDesign } from '../../utils/quizConfigSync';
 
@@ -11,20 +11,14 @@ interface QuizGameProps {
 
 const QuizGame: React.FC<QuizGameProps> = ({
   config,
-  design = {},
-  onGameComplete
+  design = {}
 }) => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, any>>({});
-  const [showResults, setShowResults] = useState(false);
-
   const questions = config?.questions || [];
-  const currentQuestion = questions[currentQuestionIndex];
 
   // Utiliser le nouveau système de synchronisation
   const enhancedDesign = createEnhancedQuizDesign({ design });
 
-  if (!currentQuestion && !showResults) {
+  if (!questions.length) {
     return (
       <div className="w-full max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-12 text-center">

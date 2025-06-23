@@ -37,6 +37,7 @@ const CampaignContent: React.FC<CampaignContentProps> = ({
       case 'quiz':
         return (
           <Quiz
+            isPreview={false}
             config={campaign.gameConfig?.quiz}
             onConfigChange={(config) => updateGameConfig('quiz', config)}
             activeQuestion={activeQuizQuestion}
