@@ -24,6 +24,11 @@ interface WheelPreviewContentProps {
   formValidated: boolean;
   showValidationMessage: boolean;
   onWheelClick: () => void;
+  /**
+   * Display the default radial shadow behind the wheel.
+   * Enabled by default for a subtle depth effect.
+   */
+  showShadow?: boolean;
 }
 
 const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
@@ -43,7 +48,8 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   gamePosition,
   formValidated,
   showValidationMessage,
-  onWheelClick
+  onWheelClick,
+  showShadow = true
 }) => {
   // Assurer que le canvas ne dépasse jamais du conteneur
   const constrainedCanvasSize = Math.min(
@@ -87,19 +93,21 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   return (
     <div style={getContainerStyle()}>
       {/* Ombre de la roue */}
-      <div 
-        style={{
-          position: 'absolute',
-          width: constrainedCanvasSize - 20,
-          height: constrainedCanvasSize - 20,
-          left: wheelOffset.left + 10,
-          top: wheelOffset.top + 15,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)',
-          filter: 'blur(8px)',
-          zIndex: 0
-        }}
-      />
+      {showShadow && (
+        <div
+          style={{
+            position: 'absolute',
+            width: constrainedCanvasSize - 20,
+            height: constrainedCanvasSize - 20,
+            left: wheelOffset.left + 10,
+            top: wheelOffset.top + 15,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)',
+            filter: 'blur(8px)',
+            zIndex: 0
+          }}
+        />
+      )}
       
       <WheelInteractionHandler
         formValidated={formValidated}

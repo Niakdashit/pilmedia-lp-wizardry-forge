@@ -17,6 +17,11 @@ interface GameRendererProps {
   buttonLabel?: string;
   buttonColor?: string;
   gameBackgroundImage?: string;
+  /**
+   * Display a dark overlay between the background image and the game content.
+   * Disabled by default to keep the background fully visible.
+   */
+  showBackgroundOverlay?: boolean;
   className?: string;
 }
 
@@ -27,6 +32,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   buttonLabel,
   buttonColor,
   gameBackgroundImage,
+  showBackgroundOverlay = false,
   className = ''
 }) => {
   // Utiliser le système de synchronisation pour le quiz
@@ -75,7 +81,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   if (enhancedCampaign.type === 'form' || enhancedCampaign.type === 'quiz') {
     return (
       <div className={className} style={containerStyle}>
-        {gameBackgroundImage && (
+        {gameBackgroundImage && showBackgroundOverlay && (
           <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
         )}
         <div
@@ -97,7 +103,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   if (shouldUseUnlockedFunnel) {
     return (
       <div className={className} style={containerStyle}>
-        {gameBackgroundImage && (
+        {gameBackgroundImage && showBackgroundOverlay && (
           <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
         )}
         <div
@@ -181,7 +187,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
   return (
     <div className={className} style={containerStyle}>
-      {gameBackgroundImage && (
+      {gameBackgroundImage && showBackgroundOverlay && (
         <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
       )}
       <div

@@ -24,6 +24,8 @@ interface WheelPreviewProps {
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
   disableForm?: boolean;
+  /** Control display of the radial shadow under the wheel */
+  showShadow?: boolean;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -35,7 +37,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'small',
   gamePosition = 'center',
   previewDevice = 'desktop',
-  disableForm = false
+  disableForm = false,
+  showShadow = true
 }) => {
   const {
     formValidated,
@@ -119,6 +122,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             formValidated={formValidated}
             showValidationMessage={showValidationMessage}
             onWheelClick={handleWheelClick}
+            showShadow={showShadow}
           />
         </div>
 

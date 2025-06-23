@@ -8,6 +8,11 @@ interface GameCanvasPreviewProps {
   campaign: any;
   gameSize: GameSize;
   gameBackgroundImage?: string;
+  /**
+   * Display a dark overlay between the background image and the game.
+   * Defaults to false to show the raw background.
+   */
+  showBackgroundOverlay?: boolean;
   className?: string;
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
@@ -17,7 +22,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   gameSize,
   gameBackgroundImage,
   className = '',
-  previewDevice = 'desktop'
+  previewDevice = 'desktop',
+  showBackgroundOverlay = false
 }) => {
   // Résoudre l'image de fond à afficher (priorité à la prop, fallback sur config)
   const resolvedBackground =
@@ -83,6 +89,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
         buttonLabel={campaign.buttonConfig?.text || campaign.gameConfig?.[campaign.type]?.buttonLabel}
         buttonColor={campaign.buttonConfig?.color || campaign.gameConfig?.[campaign.type]?.buttonColor || '#841b60'}
         gameBackgroundImage={resolvedBackground}
+        showBackgroundOverlay={showBackgroundOverlay}
         className="w-full h-full flex items-center justify-center"
       />
     </div>
