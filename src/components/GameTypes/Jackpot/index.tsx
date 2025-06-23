@@ -12,6 +12,7 @@ const Jackpot: React.FC<JackpotProps> = ({
   instantWinConfig,
   onFinish,
   onStart,
+  disabled = false,
   buttonLabel = "Lancer le Jackpot",
   buttonColor = "#ec4899",
   backgroundImage,
@@ -30,7 +31,7 @@ const Jackpot: React.FC<JackpotProps> = ({
 
 
   const roll = () => {
-    if (isRolling || result) return;
+    if (isRolling || result || disabled) return;
     
     onStart?.();
     
@@ -169,6 +170,7 @@ const Jackpot: React.FC<JackpotProps> = ({
           buttonLabel={buttonLabel}
           buttonColor={buttonColor}
           borderColor={borderColor}
+          disabled={disabled}
         />
       </div>
     </div>

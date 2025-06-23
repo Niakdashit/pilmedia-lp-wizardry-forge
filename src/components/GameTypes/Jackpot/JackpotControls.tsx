@@ -9,6 +9,7 @@ interface JackpotControlsProps {
   buttonLabel: string;
   buttonColor: string;
   borderColor: string;
+  disabled?: boolean;
 }
 
 const JackpotControls: React.FC<JackpotControlsProps> = ({
@@ -34,10 +35,10 @@ const JackpotControls: React.FC<JackpotControlsProps> = ({
   }
 
   return (
-    <button 
-      onClick={onRoll} 
-      disabled={isRolling} 
-      className="px-6 py-3 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 max-w-full" 
+    <button
+      onClick={onRoll}
+      disabled={isRolling || disabled}
+      className="px-6 py-3 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 max-w-full"
       style={{
         backgroundColor: buttonColor,
         fontSize: 'clamp(14px, 3.5vw, 18px)',
