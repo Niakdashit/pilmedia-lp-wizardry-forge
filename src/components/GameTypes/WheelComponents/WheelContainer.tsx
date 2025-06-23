@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { calculateConstrainedSize } from '../../QuickCampaign/Preview/utils/previewConstraints';
 
 interface WheelContainerProps {
   children: React.ReactNode;
@@ -15,14 +14,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   gameDimensions,
   previewDevice
 }) => {
-  // Calculer les dimensions contraintes pour la roue
-  const constrainedSize = calculateConstrainedSize(
-    gameDimensions.width,
-    gameDimensions.height,
-    'wheel',
-    40
-  );
-
+  // Utiliser des dimensions plus généreuses pour éviter les coupures
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -31,36 +23,29 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     position: 'relative',
     width: '100%',
     height: '100%',
-    maxWidth: `${constrainedSize.width + 40}px`,
-    maxHeight: `${constrainedSize.height + 40}px`,
-    overflow: 'hidden',
-    padding: '20px',
+    minWidth: `${Math.max(gameDimensions.width + 100, 400)}px`,
+    minHeight: `${Math.max(gameDimensions.height + 100, 400)}px`,
+    maxWidth: '100%',
+    overflow: 'visible', // Permettre le débordement pour éviter les coupures
+    padding: '40px 20px',
     boxSizing: 'border-box',
   };
 
-  // Ajustements pour mobile avec crop
+  // Pas de crop pour l'éditeur - on veut voir la roue complète
   const isMobile = previewDevice === 'mobile';
-  const shouldCrop = isMobile && ['left', 'right', 'bottom'].includes(gamePosition);
-
-  if (shouldCrop) {
-    switch (gamePosition) {
-      case 'left':
-      case 'right':
-        containerStyle.maxWidth = `${constrainedSize.width / 2 + 20}px`;
-        break;
-      case 'bottom':
-        containerStyle.maxHeight = `${constrainedSize.height / 2 + 20}px`;
-        break;
-    }
+  if (isMobile) {
+    containerStyle.padding = '30px 15px';
+    containerStyle.minHeight = `${Math.max(gameDimensions.height + 80, 350)}px`;
   }
 
   return (
     <div style={containerStyle}>
       <div 
-        className="w-full h-full overflow-hidden flex items-center justify-center"
+        className="w-full h-full flex items-center justify-center"
         style={{
-          maxWidth: `${constrainedSize.width}px`,
-          maxHeight: `${constrainedSize.height}px`,
+          minWidth: `${gameDimensions.width}px`,
+          minHeight: `${gameDimensions.height}px`,
+          overflow: 'visible'
         }}
       >
         {children}

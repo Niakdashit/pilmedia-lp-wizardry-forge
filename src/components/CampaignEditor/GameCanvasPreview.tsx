@@ -24,7 +24,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     gameBackgroundImage || getCampaignBackgroundImage(campaign, previewDevice);
 
   const getContainerClasses = () => {
-    const baseClasses = "bg-white border-2 border-gray-200 overflow-visible";
+    const baseClasses = "bg-white border-2 border-gray-200 overflow-auto";
     
     if (previewDevice === 'mobile') {
       return `${baseClasses} rounded-3xl shadow-2xl`;
@@ -37,27 +37,30 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 
   const getContainerStyle = () => {
     const dimensions = GAME_SIZES[gameSize];
-    const baseMinHeight = Math.max(dimensions.height + 100, 400);
+    // Augmenter significativement la hauteur minimale pour éviter les coupures
+    const baseMinHeight = Math.max(dimensions.height + 200, 600);
 
     const baseStyle: React.CSSProperties = {
       minHeight: `${baseMinHeight}px`,
+      maxHeight: '90vh', // Limiter à 90% de la hauteur viewport
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative'
+      position: 'relative',
+      width: '100%'
     };
 
     if (previewDevice === 'mobile') {
       return {
         ...baseStyle,
-        padding: '16px',
-        minHeight: `${Math.max(baseMinHeight, 600)}px`
+        padding: '20px',
+        minHeight: `${Math.max(baseMinHeight, 700)}px`
       };
     } else if (previewDevice === 'tablet') {
       return {
         ...baseStyle,
         padding: '24px',
-        minHeight: `${Math.max(baseMinHeight, 500)}px`
+        minHeight: `${Math.max(baseMinHeight, 650)}px`
       };
     }
 

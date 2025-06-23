@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Jackpot from '../GameTypes/Jackpot';
 import WheelPreview from '../GameTypes/WheelPreview';
@@ -48,12 +49,17 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const shouldUseUnlockedFunnel = unlockedTypes.includes(enhancedCampaign.type) || 
     enhancedCampaign.funnel === 'unlocked_game';
 
-  // Style du conteneur principal
+  // Style du conteneur principal avec des dimensions plus généreuses
   const containerStyle: React.CSSProperties = {
     ...baseContainerStyle,
     backgroundColor: enhancedCampaign.design?.background || '#f8fafc',
     position: 'relative',
-    overflow: 'visible'
+    overflow: 'visible',
+    minHeight: '100%',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   };
 
   // Ajouter l'image de fond si définie
@@ -73,7 +79,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
         )}
         <div
-          className="relative z-10"
+          className="relative z-10 w-full h-full flex items-center justify-center"
           style={{ ...wrapperStyle, ...getPositionStyles() }}
         >
           <FunnelStandard
@@ -95,7 +101,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
         )}
         <div
-          className="relative z-10"
+          className="relative z-10 w-full h-full flex items-center justify-center"
           style={{ ...wrapperStyle, ...getPositionStyles() }}
         >
           <FunnelUnlockedGame
@@ -149,6 +155,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             gameSize={gameSize}
             gamePosition={enhancedCampaign.gamePosition || 'center'}
             previewDevice={previewDevice}
+            disableForm={true}
           />
         );
 
@@ -178,7 +185,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
       )}
       <div
-        className="relative z-10 flex items-center justify-center"
+        className="relative z-10 flex items-center justify-center w-full h-full"
         style={{ ...wrapperStyle, ...getPositionStyles() }}
       >
         {renderDirectGame()}
