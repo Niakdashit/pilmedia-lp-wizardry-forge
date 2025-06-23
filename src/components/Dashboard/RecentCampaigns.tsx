@@ -1,41 +1,34 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Calendar, MoreVertical } from 'lucide-react';
 import { getCampaignTypeIcon, getCampaignTypeText, CampaignType } from '../../utils/campaignTypes';
 import { RecentCampaign } from './types';
-
 const RecentCampaigns: React.FC = () => {
-  const recentCampaigns: RecentCampaign[] = [
-    {
-      id: '1',
-      name: 'Quiz Marketing Digital',
-      type: 'quiz' as CampaignType,
-      participants: 4,
-      status: 'draft',
-      createdAt: '17 mai 2025',
-      image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg'
-    },
-    {
-      id: '2',
-      name: 'Roue de la fortune Soldes',
-      type: 'wheel' as CampaignType,
-      participants: 45,
-      status: 'active',
-      createdAt: '16 mai 2025',
-      image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg'
-    },
-    {
-      id: '3',
-      name: 'Campagne Instagram Été',
-      type: 'dice' as CampaignType,
-      participants: 128,
-      status: 'active',
-      createdAt: '15 mai 2025',
-      image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg'
-    }
-  ];
-
+  const recentCampaigns: RecentCampaign[] = [{
+    id: '1',
+    name: 'Quiz Marketing Digital',
+    type: 'quiz' as CampaignType,
+    participants: 4,
+    status: 'draft',
+    createdAt: '17 mai 2025',
+    image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg'
+  }, {
+    id: '2',
+    name: 'Roue de la fortune Soldes',
+    type: 'wheel' as CampaignType,
+    participants: 45,
+    status: 'active',
+    createdAt: '16 mai 2025',
+    image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg'
+  }, {
+    id: '3',
+    name: 'Campagne Instagram Été',
+    type: 'dice' as CampaignType,
+    participants: 128,
+    status: 'active',
+    createdAt: '15 mai 2025',
+    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg'
+  }];
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -48,7 +41,6 @@ const RecentCampaigns: React.FC = () => {
         return 'bg-slate-500/90 text-white border-slate-300/50';
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
@@ -61,7 +53,6 @@ const RecentCampaigns: React.FC = () => {
         return status;
     }
   };
-
   const getStatusGlow = (status: string) => {
     switch (status) {
       case 'active':
@@ -74,19 +65,14 @@ const RecentCampaigns: React.FC = () => {
         return 'shadow-slate-500/30';
     }
   };
-
-  return (
-    <div className="relative">
-      <div className="p-0">
+  return <div className="relative">
+      <div className="p-0 my-[10px]">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Galerie des créations</h2>
             <p className="text-gray-600">Vos dernières campagnes avec style</p>
           </div>
-          <Link 
-            to="/campaigns" 
-            className="group relative overflow-hidden px-4 py-2 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#841b60]/25 transition-all duration-300 transform hover:-translate-y-0.5 text-sm"
-          >
+          <Link to="/campaigns" className="group relative overflow-hidden px-4 py-2 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#841b60]/25 transition-all duration-300 transform hover:-translate-y-0.5 text-sm">
             <span className="relative z-10 flex items-center">
               Voir toutes
               <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
@@ -97,30 +83,19 @@ const RecentCampaigns: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {recentCampaigns.map((campaign, index) => {
-            const IconComponent = getCampaignTypeIcon(campaign.type);
-            return (
-              <div 
-                key={campaign.id} 
-                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] opacity-0 animate-fade-in"
-                style={{
-                  animationDelay: `${index * 0.15}s`,
-                  animationFillMode: 'forwards'
-                }}
-              >
+          const IconComponent = getCampaignTypeIcon(campaign.type);
+          return <div key={campaign.id} className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] opacity-0 animate-fade-in" style={{
+            animationDelay: `${index * 0.15}s`,
+            animationFillMode: 'forwards'
+          }}>
                 {/* Main Campaign Card */}
                 <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-900 to-gray-700">
                   {/* Background Image with Parallax Effect */}
-                  {campaign.image && (
-                    <div className="absolute inset-0 overflow-hidden">
-                      <img 
-                        src={campaign.image} 
-                        alt={campaign.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      />
+                  {campaign.image && <div className="absolute inset-0 overflow-hidden">
+                      <img src={campaign.image} alt={campaign.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       {/* Dark Overlay for Better Text Contrast */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                    </div>
-                  )}
+                    </div>}
 
                   {/* Glass Morphism Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
@@ -186,9 +161,8 @@ const RecentCampaigns: React.FC = () => {
                     <div className="absolute -top-full -left-full w-full h-full bg-gradient-to-br from-transparent via-white/10 to-transparent transform rotate-45 group-hover:top-full group-hover:left-full transition-all duration-1000 ease-out"></div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              </div>;
+        })}
         </div>
       </div>
 
@@ -208,8 +182,6 @@ const RecentCampaigns: React.FC = () => {
           animation: fade-in 0.8s ease-out;
         }
       `}</style>
-    </div>
-  );
+    </div>;
 };
-
 export default RecentCampaigns;

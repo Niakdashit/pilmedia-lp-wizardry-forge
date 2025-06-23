@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FolderOpen, Layers } from 'lucide-react';
@@ -30,8 +29,8 @@ const QuickCreationSection: React.FC = () => {
     type: 'form',
     label: 'Formulaire'
   }];
-  return <div className="w-full mt-8">
-      <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/40 shadow-1xl shadow-purple-500/10 bg-[#428cec]/25">
+  return <div className="w-full mt-8 py-0">
+      <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/40 shadow-1xl shadow-purple-500/10 bg-[#428cec]/25 my-0">
         
         {/* Enhanced Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#841b60]/8 via-transparent to-[#841b60]/5 pointer-events-none"></div>
@@ -67,18 +66,16 @@ const QuickCreationSection: React.FC = () => {
             {/* Container pour mobile avec scroll horizontal */}
             <div className="md:hidden w-full">
               {/* Ajout de negative margins pour affleurer le bord */}
-              <div
-                className="flex space-x-4 overflow-x-auto pb-4 px-6 -mx-4 scrollbar-hide"
-                style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none'
-                }}>
+              <div className="flex space-x-4 overflow-x-auto pb-4 px-6 -mx-4 scrollbar-hide" style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}>
                 {gameTypes.map((game, index) => {
-                  const IconComponent = getCampaignTypeIcon(game.type);
-                  return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
-                    animationDelay: `${index * 0.1}s`,
-                    animationFillMode: 'forwards'
-                  }}>
+                const IconComponent = getCampaignTypeIcon(game.type);
+                return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'forwards'
+                }}>
                         <div className="w-16 h-16 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
                           <IconComponent className="w-8 h-8 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
                         </div>
@@ -86,7 +83,7 @@ const QuickCreationSection: React.FC = () => {
                           {game.label}
                         </span>
                       </Link>;
-                })}
+              })}
               </div>
             </div>
           </div>
