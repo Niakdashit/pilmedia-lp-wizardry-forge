@@ -110,13 +110,14 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             containerBackgroundColor={campaign.gameConfig?.jackpot?.containerBackgroundColor}
             backgroundColor={campaign.gameConfig?.jackpot?.backgroundColor}
             borderColor={campaign.gameConfig?.jackpot?.borderColor}
-            borderWidth={campaign.gameConfig?.jackpot?.borderWidth}
-            slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
-            slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
-            slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
-            onFinish={handleGameComplete}
-            onStart={handleGameStartInternal}
-          />
+          borderWidth={campaign.gameConfig?.jackpot?.borderWidth}
+          slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
+          slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
+          slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
+          disabled={!formValidated}
+          onFinish={handleGameComplete}
+          onStart={handleGameStartInternal}
+        />
         );
       case 'quiz':
         return (

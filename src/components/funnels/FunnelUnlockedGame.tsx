@@ -33,9 +33,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     console.warn(`Type de jeu "${campaign.type}" utilise FunnelUnlockedGame mais devrait utiliser FunnelStandard`);
   }
 
-  // Wheel games do not require any form validation. Initialize the
-  // validation state accordingly so the game can be launched directly.
-  const [formValidated, setFormValidated] = useState(campaign.type === 'wheel');
+  // L'état de validation du formulaire démarre toujours à false pour
+  // obliger l'utilisateur à renseigner le formulaire avant de jouer,
+  // quel que soit le type de jeu.
+  const [formValidated, setFormValidated] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
