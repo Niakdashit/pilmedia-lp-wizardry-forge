@@ -22,7 +22,7 @@ const ModernCampaignEditor: React.FC = () => {
   } = useModernCampaignEditor();
 
   return (
-    <div className="w-full h-screen bg-[#ebf4f7]">
+    <div className="w-full h-screen bg-[#ebf4f7] overflow-hidden">
       <ModernEditorLayout
         campaign={campaign}
         setCampaign={setCampaign}
