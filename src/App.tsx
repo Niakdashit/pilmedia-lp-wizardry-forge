@@ -37,6 +37,7 @@ const App: React.FC = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isLoginRoute = location.pathname === '/login' || location.pathname === '/';
   const isModernCampaignRoute = location.pathname.startsWith('/modern-campaign');
+  const isQuickCampaignRoute = location.pathname.startsWith('/quick-campaign');
 
   return (
     <AppProvider>
@@ -78,13 +79,16 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/modern-campaign/:id" element={<ModernEditorPage />} />
           </Routes>
+        ) : isQuickCampaignRoute ? (
+          <Routes>
+            <Route path="/quick-campaign" element={<QuickCampaign />} />
+          </Routes>
         ) : (
           <Layout>
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/campaigns" element={<Campaigns />} />
               <Route path="/campaign/:id" element={<CampaignEditor />} />
-              <Route path="/quick-campaign" element={<QuickCampaign />} />
               <Route path="/modern-wizard" element={<ModernWizardPage />} />
               <Route path="/gamification" element={<Gamification />} />
               <Route path="/newsletter" element={<Newsletter />} />
