@@ -27,7 +27,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   mobileConfig,
   modalContained = true
 }) => {
-  const [formValidated, setFormValidated] = useState(false);
+  // Wheel games do not require any form validation. Initialize the
+  // validation state accordingly so the game can be launched directly.
+  const [formValidated, setFormValidated] = useState(campaign.type === 'wheel');
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
