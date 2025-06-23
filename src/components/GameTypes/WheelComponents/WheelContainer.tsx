@@ -3,12 +3,14 @@ import React from 'react';
 
 interface WheelContainerProps {
   children: React.ReactNode;
+  gamePosition: 'top' | 'center' | 'bottom' | 'left' | 'right';
   gameDimensions: { width: number; height: number };
   previewDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
 const WheelContainer: React.FC<WheelContainerProps> = ({
   children,
+  gamePosition,
   gameDimensions,
   previewDevice
 }) => {
@@ -22,7 +24,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     width: '100%',
     height: '100%',
     minWidth: `${Math.max(gameDimensions.width + 100, 400)}px`,
-    minHeight: `${Math.max(gameDimensions.height + 200, 600)}px`,
+    minHeight: `${Math.max(gameDimensions.height + 100, 400)}px`,
     maxWidth: '100%',
     overflow: 'visible', // Permettre le débordement pour éviter les coupures
     padding: '40px 20px',
@@ -33,7 +35,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const isMobile = previewDevice === 'mobile';
   if (isMobile) {
     containerStyle.padding = '30px 15px';
-    containerStyle.minHeight = `${Math.max(gameDimensions.height + 120, 500)}px`;
+    containerStyle.minHeight = `${Math.max(gameDimensions.height + 80, 350)}px`;
   }
 
   return (
