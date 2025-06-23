@@ -1,8 +1,5 @@
 
 import React from 'react';
-import Jackpot from '../GameTypes/Jackpot';
-import WheelPreview from '../GameTypes/WheelPreview';
-import ScratchPreview from '../GameTypes/ScratchPreview';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../funnels/FunnelStandard';
 import { GameSize } from '../configurators/GameSizeSelector';
@@ -15,8 +12,6 @@ interface GameRendererProps {
   campaign: any;
   gameSize: GameSize;
   previewDevice: 'desktop' | 'tablet' | 'mobile';
-  buttonLabel?: string;
-  buttonColor?: string;
   gameBackgroundImage?: string;
   /**
    * Display a dark overlay between the background image and the game content.
@@ -30,8 +25,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   campaign,
   gameSize,
   previewDevice,
-  buttonLabel,
-  buttonColor,
   gameBackgroundImage,
   showBackgroundOverlay = false,
   className = ''
