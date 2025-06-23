@@ -74,10 +74,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
     return config;
   };
 
-  const visual = selectedDevice === 'mobile'
-    ? (wizardData.mobileVisual || wizardData.desktopVisual)
-    : wizardData.desktopVisual;
-
   return (
     <div className="space-y-6">
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-gray-100/50">

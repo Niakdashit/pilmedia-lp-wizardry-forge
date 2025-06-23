@@ -11,6 +11,10 @@ interface QuizProps {
   buttonLabel?: string;
   design?: any;
   className?: string;
+  onConfigChange?: (config: any) => void;
+  activeQuestion?: number;
+  onActiveQuestionChange?: React.Dispatch<React.SetStateAction<number>>;
+  onQuestionChange?: React.Dispatch<React.SetStateAction<any>>;
 }
 
 const Quiz: React.FC<QuizProps> = ({ 
@@ -20,7 +24,11 @@ const Quiz: React.FC<QuizProps> = ({
   buttonColor = '#841b60',
   buttonLabel = 'Commencer le quiz',
   design = {},
-  className = ''
+  className = '',
+  onConfigChange,
+  activeQuestion = 0,
+  onActiveQuestionChange,
+  onQuestionChange
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -35,6 +43,19 @@ const Quiz: React.FC<QuizProps> = ({
       setHasStarted(true);
     }
   }, [isPreview]);
+
+  // Handle config changes for editor mode
+  useEffect(() => {
+    if (onActiveQuestionChange && currentQuestionIndex !== activeQuestion) {
+      onActiveQuestionChange(currentQuestionIndex);
+    }
+  }, [currentQuestionIndex, onActiveQuestionChange, activeQuestion]);
+
+  useEffect(() => {
+    if (onQuestionChange && questions[currentQuestionIndex]) {
+      onQuestionChange(questions[currentQuestionIndex]);
+    }
+  }, [currentQuestionIndex, questions, onQuestionChange]);
 
   const handleStart = () => {
     setHasStarted(true);

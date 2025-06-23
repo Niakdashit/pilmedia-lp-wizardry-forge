@@ -168,7 +168,6 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
                 ]
               }}
               design={synchronizedCampaign.design}
-              useCustomLayout={true}
               key={renderKey}
             />
           </div>
