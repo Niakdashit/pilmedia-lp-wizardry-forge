@@ -3,14 +3,12 @@ import React from 'react';
 
 interface WheelContainerProps {
   children: React.ReactNode;
-  gamePosition: 'top' | 'center' | 'bottom' | 'left' | 'right';
   gameDimensions: { width: number; height: number };
   previewDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
 const WheelContainer: React.FC<WheelContainerProps> = ({
   children,
-  gamePosition,
   gameDimensions,
   previewDevice
 }) => {

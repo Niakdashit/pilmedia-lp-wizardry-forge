@@ -18,7 +18,8 @@ const JackpotControls: React.FC<JackpotControlsProps> = ({
   onRoll,
   buttonLabel,
   buttonColor,
-  borderColor
+  borderColor,
+  disabled = false
 }) => {
   if (result) {
     return (
