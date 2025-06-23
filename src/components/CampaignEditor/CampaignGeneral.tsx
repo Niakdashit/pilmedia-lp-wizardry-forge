@@ -8,9 +8,12 @@ interface CampaignGeneralProps {
 }
 
 const CampaignGeneral: React.FC<CampaignGeneralProps> = ({ campaign, setCampaign }) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setCampaign((prev: any) => ({ ...prev, [name]: value }));
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    const newValue = type === 'checkbox' ? checked : value;
+    setCampaign((prev: any) => ({ ...prev, [name]: newValue }));
   };
   
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,7 +174,40 @@ const CampaignGeneral: React.FC<CampaignGeneralProps> = ({ campaign, setCampaign
             </div>
           </div>
         </div>
-        
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1">
+              Fuseau horaire
+            </label>
+            <select
+              id="timezone"
+              name="timezone"
+              value={campaign.timezone || 'Europe/Paris'}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            >
+              <option value="Europe/Paris">Europe/Paris</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="Asia/Tokyo">Asia/Tokyo</option>
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2 mt-6">
+            <input
+              id="autoSchedule"
+              type="checkbox"
+              name="autoSchedule"
+              checked={campaign.autoSchedule || false}
+              onChange={handleInputChange}
+              className="h-4 w-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+            />
+            <label htmlFor="autoSchedule" className="text-sm text-gray-700">
+              Activer la planification automatique
+            </label>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
