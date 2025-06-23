@@ -3,49 +3,37 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 interface QuizProgressProps {
-  currentQuestion: number;
-  totalQuestions: number;
-  design?: any;
+  current: number;
+  total: number;
+  primaryColor?: string;
 }
 
-const QuizProgress: React.FC<QuizProgressProps> = ({
-  currentQuestion,
-  totalQuestions,
-  design = {}
+const QuizProgress: React.FC<QuizProgressProps> = ({ 
+  current, 
+  total, 
+  primaryColor = '#841b60' 
 }) => {
-  const progress = (currentQuestion + 1) / totalQuestions * 100;
-  
-  const progressStyle = {
-    backgroundColor: design.progressBackgroundColor || '#f3f4f6',
-    color: design.textColor || '#374151'
-  };
-  
-  // Utiliser la couleur des boutons pour la barre de progression
-  const progressBarStyle = {
-    backgroundColor: design.buttonColor || design.primaryColor || '#841b60'
-  };
+  const progressPercentage = (current / total) * 100;
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-medium" style={{ color: design.textColor || '#374151' }}>
-          Question {currentQuestion + 1} sur {totalQuestions}
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-sm font-semibold text-gray-600">
+          Question {current} sur {total}
         </span>
-        <span className="text-sm" style={{ color: design.secondaryTextColor || '#6b7280' }}>
-          {Math.round(progress)}%
+        <span className="text-sm font-medium text-gray-500">
+          {Math.round(progressPercentage)}%
         </span>
       </div>
       
-      <div className="relative">
-        <div className="h-2 rounded-full overflow-hidden" style={progressStyle}>
-          <motion.div 
-            className="h-full rounded-full" 
-            style={progressBarStyle} 
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          />
-        </div>
+      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <motion.div 
+          className="h-full rounded-full"
+          style={{ backgroundColor: primaryColor }}
+          initial={{ width: 0 }}
+          animate={{ width: `${progressPercentage}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
       </div>
     </div>
   );

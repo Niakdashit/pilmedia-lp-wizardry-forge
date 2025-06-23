@@ -59,8 +59,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor Sidebar - largeur augmentée de 8% (de 288px à 311px) */}
-        <div className="w-[311px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[7px] mx-0">
+        {/* Editor Sidebar - largeur réduite de 280px à 260px */}
+        <div className="w-[260px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
           <div className="flex h-full">
             {/* Navigation tabs - alignés à gauche */}
             <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
@@ -82,7 +82,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
           </div>
         </div>
 
-        {/* Zone centrale - dimensions fixes pour l'aperçu */}
+        {/* Zone centrale - dimensions optimisées pour l'aperçu */}
         <div className="flex-1 flex flex-col min-w-0 bg-gray-50/50">
           {/* Barre d'outils centrée */}
           <div className="bg-white/50 border-b border-gray-200/50 px-4 py-2 flex-shrink-0">
@@ -93,13 +93,17 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
             </div>
           </div>
 
-          {/* Zone de prévisualisation - dimensions absolues fixes */}
-          <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+          {/* Zone de prévisualisation - dimensions dynamiques */}
+          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
             <div 
-              className="bg-white rounded-xl shadow-lg border border-gray-200/50 overflow-hidden flex-shrink-0" 
+              className="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden flex-shrink-0" 
               style={{
-                width: '1200px',
-                height: '800px'
+                width: previewDevice === 'mobile' ? '400px' : 
+                       previewDevice === 'tablet' ? '800px' : '100%',
+                height: previewDevice === 'mobile' ? '700px' : 
+                        previewDevice === 'tablet' ? '600px' : '100%',
+                maxWidth: '1400px',
+                maxHeight: '900px'
               }}
             >
               <GameCanvasPreview 

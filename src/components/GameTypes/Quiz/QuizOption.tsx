@@ -22,13 +22,15 @@ const QuizOption: React.FC<QuizOptionProps> = ({
 }) => {
   const optionStyle = {
     backgroundColor: isSelected 
-      ? `${design.primaryColor || '#841b60'}15` 
-      : design.optionBackgroundColor || '#ffffff',
+      ? `${design.primaryColor || '#841b60'}08` 
+      : '#ffffff',
     borderColor: isSelected 
       ? design.primaryColor || '#841b60' 
-      : design.optionBorderColor || '#e5e7eb',
+      : '#e5e7eb',
     color: design.textColor || '#374151',
-    borderRadius: design.borderRadius || '12px'
+    borderRadius: '16px',
+    borderWidth: '2px',
+    transition: 'all 0.2s ease'
   };
 
   const iconColor = isSelected ? design.primaryColor || '#841b60' : '#9ca3af';
@@ -38,10 +40,10 @@ const QuizOption: React.FC<QuizOptionProps> = ({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
-      className="w-full p-4 text-left border-2 transition-all duration-200 hover:shadow-lg group"
+      className="w-full p-5 text-left border transition-all duration-200 hover:shadow-xl group bg-white"
       style={optionStyle}
     >
       <div className="flex items-center space-x-4">
@@ -53,9 +55,11 @@ const QuizOption: React.FC<QuizOptionProps> = ({
                 <CheckCircle className="w-6 h-6" style={{ color: iconColor }} />
               ) : (
                 <div 
-                  className="w-6 h-6 border-2 rounded"
+                  className="w-6 h-6 border-2 rounded-md flex items-center justify-center"
                   style={{ borderColor: iconColor }}
-                />
+                >
+                  <div className="w-3 h-3 bg-gray-200 rounded-sm opacity-0 group-hover:opacity-30 transition-opacity"></div>
+                </div>
               )}
             </div>
           ) : (
@@ -72,14 +76,17 @@ const QuizOption: React.FC<QuizOptionProps> = ({
         </div>
 
         {/* Option text */}
-        <span className="flex-1 font-medium group-hover:translate-x-1 transition-transform duration-200">
+        <span className="flex-1 font-medium text-lg group-hover:translate-x-1 transition-transform duration-200">
           {option.text}
         </span>
 
-        {/* Option number */}
+        {/* Option letter */}
         <div 
-          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold opacity-60"
-          style={{ backgroundColor: `${design.primaryColor || '#841b60'}20` }}
+          className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+          style={{ 
+            backgroundColor: isSelected ? `${design.primaryColor || '#841b60'}20` : '#f3f4f6',
+            color: isSelected ? design.primaryColor || '#841b60' : '#6b7280'
+          }}
         >
           {String.fromCharCode(65 + index)}
         </div>
