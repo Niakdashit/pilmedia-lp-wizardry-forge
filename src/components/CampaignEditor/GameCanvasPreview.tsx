@@ -1,7 +1,7 @@
 
 import React from 'react';
 import GameRenderer from './GameRenderer';
-import { GameSize } from '../configurators/GameSizeSelector';
+import { GameSize, GAME_SIZES } from '../configurators/GameSizeSelector';
 import { getCampaignBackgroundImage } from '../../utils/background';
 
 interface GameCanvasPreviewProps {
@@ -36,8 +36,11 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   };
 
   const getContainerStyle = () => {
+    const dimensions = GAME_SIZES[gameSize];
+    const baseMinHeight = Math.max(dimensions.height + 100, 400);
+
     const baseStyle: React.CSSProperties = {
-      minHeight: '400px',
+      minHeight: `${baseMinHeight}px`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -48,20 +51,20 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       return {
         ...baseStyle,
         padding: '16px',
-        minHeight: '600px'
+        minHeight: `${Math.max(baseMinHeight, 600)}px`
       };
     } else if (previewDevice === 'tablet') {
       return {
         ...baseStyle,
         padding: '24px',
-        minHeight: '500px'
+        minHeight: `${Math.max(baseMinHeight, 500)}px`
       };
     }
 
     return {
       ...baseStyle,
       padding: '32px',
-      minHeight: '400px'
+      minHeight: `${baseMinHeight}px`
     };
   };
 

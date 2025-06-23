@@ -21,6 +21,7 @@ interface UseWheelPreviewLogicProps {
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
+  disableForm?: boolean;
 }
 
 const getWheelDimensions = (
@@ -64,9 +65,10 @@ export const useWheelPreviewLogic = ({
   onStart,
   gameSize = 'small',
   gamePosition = 'center',
-  previewDevice = 'desktop'
+  previewDevice = 'desktop',
+  disableForm = false
 }: UseWheelPreviewLogicProps) => {
-  const [formValidated, setFormValidated] = useState(false);
+  const [formValidated, setFormValidated] = useState(disableForm);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
 
@@ -144,6 +146,10 @@ export const useWheelPreviewLogic = ({
     }
 
     if (!formValidated) {
+      if (disableForm) {
+        // When form handling is external, do nothing here
+        return;
+      }
       setShowFormModal(true);
       return;
     }

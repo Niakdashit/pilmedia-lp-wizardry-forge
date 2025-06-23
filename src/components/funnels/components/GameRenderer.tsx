@@ -79,6 +79,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             gamePosition={gamePosition}
             previewDevice={previewMode}
             disabled={!formValidated}
+            disableForm={true}
           />
         );
       
