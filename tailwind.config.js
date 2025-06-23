@@ -35,7 +35,9 @@ export default {
           800: '#075985',
           900: '#0c4a6e',
           950: '#082f49',
-        }
+        },
+        brand: '#841b60',
+        'brand-dark': '#6d184d'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

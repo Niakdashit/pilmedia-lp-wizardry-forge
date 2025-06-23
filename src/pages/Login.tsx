@@ -86,7 +86,7 @@ const Login: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full bg-brand text-white py-3 px-4 rounded-xl font-semibold hover:bg-brand-dark transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full bg-brand text-black py-3 px-4 rounded-xl font-semibold hover:bg-brand-dark transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Se connecter
             </button>
