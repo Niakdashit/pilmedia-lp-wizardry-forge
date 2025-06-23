@@ -10,6 +10,7 @@ interface WheelContainerProps {
 
 const WheelContainer: React.FC<WheelContainerProps> = ({
   children,
+  gamePosition,
   gameDimensions,
   previewDevice
 }) => {
