@@ -44,8 +44,6 @@ const CampaignPreview: React.FC<CampaignPreviewProps> = ({ campaign, previewDevi
               campaign={campaign}
               gameSize={campaign.gameSize || 'large'}
               previewDevice={previewDevice}
-              buttonLabel={campaign.buttonConfig?.text || 'Jouer'}
-              buttonColor={campaign.buttonConfig?.color || '#841b60'}
               showBackgroundOverlay={false}
             />
           </div>
