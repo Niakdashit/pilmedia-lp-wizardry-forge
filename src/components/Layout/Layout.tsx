@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({
           <img src={logo} alt="Leadya Logo" className="h-8 w-auto" />
         </header>
         <main className="flex-1 overflow-y-auto w-full">
-          <div className="p-3 sm:p-6 w-full max-w-full px-[4px] py-[2px]">
+          <div className="p-3 sm:p-6 w-full max-w-full py-0 px-[3px]">
             {children}
           </div>
         </main>
