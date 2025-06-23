@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModernEditorSidebar from './ModernEditorSidebar';
@@ -46,8 +45,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor Sidebar - élargi de 15% (de 264px à 304px) */}
-        <div className="w-76 bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[7px] mx-0">
+        {/* Editor Sidebar - largeur réduite */}
+        <div className="w-64 bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[7px] mx-0">
           <div className="flex h-full">
             {/* Navigation tabs - alignés à gauche */}
             <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
