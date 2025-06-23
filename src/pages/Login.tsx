@@ -25,7 +25,7 @@ const Login: React.FC = () => {
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/25 p-8">
           <div className="text-center mb-8">
             <img src={logo} alt="Leadya Logo" className="h-16 w-auto mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-brand mb-2">Bienvenue sur Leadya</h1>
+            
             <p className="text-gray-600">Connectez-vous pour accéder à votre dashboard</p>
           </div>
 
