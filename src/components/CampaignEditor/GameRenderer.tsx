@@ -6,6 +6,8 @@ import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../funnels/FunnelStandard';
 import { GameSize } from '../configurators/GameSizeSelector';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
+import { useGamePositionCalculator } from './GamePositionCalculator';
+import useCenteredStyles from '../../hooks/useCenteredStyles';
 
 interface GameRendererProps {
   campaign: any;
@@ -27,12 +29,20 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   className = ''
 }) => {
   // Utiliser le système de synchronisation pour le quiz
-  const enhancedCampaign = campaign.type === 'quiz' 
+  const enhancedCampaign = campaign.type === 'quiz'
     ? createSynchronizedQuizCampaign(campaign)
     : campaign;
 
   // Types de jeux utilisant le funnel unlocked_game
   const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
+
+  const gamePosition = enhancedCampaign.gamePosition || 'center';
+  const { containerStyle: baseContainerStyle, wrapperStyle } = useCenteredStyles();
+  const { getPositionStyles } = useGamePositionCalculator({
+    gameSize,
+    gamePosition,
+    shouldCropWheel: false
+  });
   
   // Déterminer le funnel à utiliser
   const shouldUseUnlockedFunnel = unlockedTypes.includes(enhancedCampaign.type) || 
@@ -40,12 +50,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
   // Style du conteneur principal
   const containerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    minHeight: '400px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...baseContainerStyle,
     backgroundColor: enhancedCampaign.design?.background || '#f8fafc',
     position: 'relative',
     overflow: 'hidden'
@@ -67,10 +72,15 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         {gameBackgroundImage && (
           <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
         )}
-        <div className="relative z-10 w-full h-full">
-          <FunnelStandard 
+        <div
+          className="relative z-10"
+          style={{ ...wrapperStyle, ...getPositionStyles() }}
+        >
+          <FunnelStandard
             campaign={enhancedCampaign}
-            key={`standard-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
+            key={`standard-${enhancedCampaign.type}-${JSON.stringify(
+              enhancedCampaign.gameConfig
+            )}`}
           />
         </div>
       </div>
@@ -84,7 +94,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         {gameBackgroundImage && (
           <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
         )}
-        <div className="relative z-10 w-full h-full">
+        <div
+          className="relative z-10"
+          style={{ ...wrapperStyle, ...getPositionStyles() }}
+        >
           <FunnelUnlockedGame
             campaign={enhancedCampaign}
             previewMode={previewDevice === 'desktop' ? 'desktop' : previewDevice}
@@ -164,7 +177,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       {gameBackgroundImage && (
         <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
       )}
-      <div className="relative z-10 w-full h-full flex items-center justify-center">
+      <div
+        className="relative z-10 flex items-center justify-center"
+        style={{ ...wrapperStyle, ...getPositionStyles() }}
+      >
         {renderDirectGame()}
       </div>
     </div>
