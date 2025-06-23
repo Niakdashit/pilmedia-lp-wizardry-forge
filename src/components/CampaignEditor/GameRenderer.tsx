@@ -53,7 +53,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     ...baseContainerStyle,
     backgroundColor: enhancedCampaign.design?.background || '#f8fafc',
     position: 'relative',
-    overflow: 'hidden'
+    overflow: 'visible'
   };
 
   // Ajouter l'image de fond si définie

@@ -24,7 +24,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     gameBackgroundImage || getCampaignBackgroundImage(campaign, previewDevice);
 
   const getContainerClasses = () => {
-    const baseClasses = "bg-white border-2 border-gray-200 overflow-hidden";
+    const baseClasses = "bg-white border-2 border-gray-200 overflow-visible";
     
     if (previewDevice === 'mobile') {
       return `${baseClasses} rounded-3xl shadow-2xl`;
