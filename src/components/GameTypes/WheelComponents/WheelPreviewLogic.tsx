@@ -68,7 +68,7 @@ export const useWheelPreviewLogic = ({
   previewDevice = 'desktop',
   disableForm = false
 }: UseWheelPreviewLogicProps) => {
-  // État du formulaire - commencer à false pour forcer la validation
+  // État du formulaire - commencer à false pour forcer la validation, sauf si le formulaire est désactivé
   const [formValidated, setFormValidated] = useState(disableForm);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
@@ -96,9 +96,12 @@ export const useWheelPreviewLogic = ({
     return result;
   }, [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]);
 
+  // Calculer si la roue doit être désactivée : seulement si disabled est true OU (formulaire pas validé ET formulaire pas désactivé)
+  const wheelDisabled = disabled || (!formValidated && !disableForm);
+
   const { rotation, spinning, spinWheel } = useWheelSpin({
     segments,
-    disabled: disabled || !formValidated, // Désactiver si pas validé
+    disabled: wheelDisabled,
     config,
     onStart,
     onFinish
@@ -153,21 +156,29 @@ export const useWheelPreviewLogic = ({
   };
 
   const handleWheelClick = () => {
-    console.log('WheelPreviewLogic - handleWheelClick appelé, formValidated:', formValidated, 'spinning:', spinning);
+    console.log('WheelPreviewLogic - handleWheelClick appelé, formValidated:', formValidated, 'spinning:', spinning, 'disableForm:', disableForm);
     
-    // Vérifier si on peut lancer la roue
-    if (!formValidated || spinning || disabled || segments.length === 0) {
-      console.log('WheelPreviewLogic - Impossible de lancer la roue:', {
-        formValidated,
-        spinning,
-        disabled,
-        segmentsLength: segments.length
-      });
+    // Si le formulaire est désactivé, on peut toujours lancer la roue (mode aperçu)
+    if (disableForm) {
+      if (!spinning && segments.length > 0) {
+        console.log('WheelPreviewLogic - Mode aperçu - Lancement de la roue');
+        spinWheel();
+      }
       return;
     }
     
-    console.log('WheelPreviewLogic - Lancement de la roue');
-    spinWheel();
+    // Si le formulaire n'est pas validé, on affiche la modale
+    if (!formValidated) {
+      console.log('WheelPreviewLogic - Formulaire non validé, ouverture de la modale');
+      setShowFormModal(true);
+      return;
+    }
+    
+    // Si le formulaire est validé, on lance la roue
+    if (!spinning && segments.length > 0) {
+      console.log('WheelPreviewLogic - Formulaire validé, lancement de la roue');
+      spinWheel();
+    }
   };
 
   return {
