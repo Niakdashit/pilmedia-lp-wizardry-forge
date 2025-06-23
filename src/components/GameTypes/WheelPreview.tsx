@@ -74,26 +74,20 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     buttonConfig
   } = getWheelPreviewConfig(campaign);
 
-  if (segments.length === 0) {
-    return (
-      <WheelContainer 
-        gamePosition={gamePosition} 
-        gameDimensions={gameDimensions}
-        previewDevice={previewDevice}
-      >
-        <div className="flex items-center justify-center p-8">
-          <p className="text-gray-500">Aucun segment configuré pour la roue</p>
-        </div>
-      </WheelContainer>
-    );
-  }
+  const hasNoConfiguredSegments =
+    (campaign?.config?.roulette?.segments || []).length === 0;
 
   return (
-    <WheelContainer 
-      gamePosition={gamePosition} 
+    <WheelContainer
+      gamePosition={gamePosition}
       gameDimensions={gameDimensions}
       previewDevice={previewDevice}
     >
+      {hasNoConfiguredSegments && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 text-gray-600 text-center p-4">
+          Ajoutez des segments pour activer la roue
+        </div>
+      )}
       <div className="flex flex-col items-center justify-center space-y-6 w-full h-full">
         <div className="flex-shrink-0">
           <WheelPreviewContent

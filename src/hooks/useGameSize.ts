@@ -1,24 +1,8 @@
-
 import { useMemo } from 'react';
-
-export type GameSize = 'small' | 'medium' | 'large' | 'xlarge';
-
+import { GAME_SIZES, GameSize } from '../components/configurators/GameSizeSelector';
 export const useGameSize = (size: GameSize = 'medium') => {
   const getGameDimensions = useMemo(() => {
-    return () => {
-      switch (size) {
-        case 'small':
-          return { width: 200, height: 200 };
-        case 'medium':
-          return { width: 300, height: 300 };
-        case 'large':
-          return { width: 400, height: 400 };
-        case 'xlarge':
-          return { width: 500, height: 500 };
-        default:
-          return { width: 300, height: 300 };
-      }
-    };
+    return () => GAME_SIZES[size];
   }, [size]);
 
   const getContainerDimensions = useMemo(() => {
