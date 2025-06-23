@@ -53,6 +53,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     shouldCropWheel: false
   });
 
+  const baseMinHeight = Math.max(GAME_SIZES[gameSize].height + 100, 400);
+
   const handleGameComplete = (result: 'win' | 'lose') => {
     onGameFinish(result);
   };
@@ -144,10 +146,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   };
 
   return (
-    <div style={{ 
-      ...containerStyle, 
-      minHeight: '400px', 
-      padding: '20px', 
+    <div style={{
+      ...containerStyle,
+      minHeight: `${baseMinHeight}px`,
+      padding: '20px',
       boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
