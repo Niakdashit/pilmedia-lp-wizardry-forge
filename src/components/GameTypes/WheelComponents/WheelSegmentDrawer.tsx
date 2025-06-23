@@ -71,7 +71,7 @@ export const drawWheelSegments = ({
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw text
+    // Draw text - VALIDATION CRITIQUE du label
     ctx.save();
     ctx.translate(center, center);
     ctx.rotate(startAngle + anglePerSlice / 2);
@@ -80,28 +80,70 @@ export const drawWheelSegments = ({
     ctx.font = `bold ${Math.max(12, size * 0.04)}px Arial`;
     ctx.strokeStyle = 'rgba(0,0,0,0.5)';
     ctx.lineWidth = 2;
-    ctx.strokeText(seg.label, radius - 30, 5);
-    ctx.fillText(seg.label, radius - 30, 5);
+    
+    // SÉCURITÉ: Vérifier que le label est valide avant de l'afficher
+    const safeLabel = seg.label && typeof seg.label === 'string' && seg.label.length < 50 
+      ? seg.label 
+      : `Segment ${i + 1}`;
+    
+    try {
+      ctx.strokeText(safeLabel, radius - 30, 5);
+      ctx.fillText(safeLabel, radius - 30, 5);
+    } catch (error) {
+      console.error('Error drawing segment text:', error);
+      // Fallback text en cas d'erreur
+      ctx.strokeText(`Segment ${i + 1}`, radius - 30, 5);
+      ctx.fillText(`Segment ${i + 1}`, radius - 30, 5);
+    }
     ctx.restore();
 
-    if (seg.image) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const angle = startAngle + anglePerSlice / 2;
-        const distance = radius - 20;
-        const imgSize = Math.max(40, size * 0.15);
-        const x = center + distance * Math.cos(angle) - imgSize / 2;
-        const y = center + distance * Math.sin(angle) - imgSize / 2;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x + imgSize / 2, y + imgSize / 2, imgSize / 2, 0, 2 * Math.PI);
-        ctx.clip();
-        ctx.drawImage(img, x, y, imgSize, imgSize);
-        ctx.restore();
+    // SÉCURITÉ: Validation stricte de l'image avant chargement
+    if (seg.image && typeof seg.image === 'string') {
+      // Vérifier que l'image n'est pas une chaîne corrompue
+      const isValidImageUrl = (url: string) => {
+        try {
+          // Vérifier la longueur et le format
+          if (url.length > 500) return false;
+          if (url.includes('undefined') || url.includes('null')) return false;
+          
+          // Vérifier le format d'URL
+          return url.startsWith('http') || 
+                 url.startsWith('/') || 
+                 url.startsWith('data:image/') ||
+                 url.startsWith('blob:');
+        } catch {
+          return false;
+        }
       };
-      img.src = seg.image;
+
+      if (isValidImageUrl(seg.image)) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const angle = startAngle + anglePerSlice / 2;
+            const distance = radius - 20;
+            const imgSize = Math.max(40, size * 0.15);
+            const x = center + distance * Math.cos(angle) - imgSize / 2;
+            const y = center + distance * Math.sin(angle) - imgSize / 2;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x + imgSize / 2, y + imgSize / 2, imgSize / 2, 0, 2 * Math.PI);
+            ctx.clip();
+            ctx.drawImage(img, x, y, imgSize, imgSize);
+            ctx.restore();
+          } catch (error) {
+            console.error('Error drawing segment image:', error);
+          }
+        };
+        img.onerror = () => {
+          console.warn('Failed to load segment image:', seg.image);
+        };
+        img.src = seg.image;
+      } else {
+        console.warn('Invalid image URL detected:', seg.image);
+      }
     }
   });
 };

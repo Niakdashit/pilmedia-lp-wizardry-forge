@@ -1,5 +1,6 @@
 
 import { FieldConfig } from '../components/forms/DynamicContactForm';
+import { validateSegments } from '../components/GameTypes/WheelComponents/WheelSegmentValidator';
 
 export const DEFAULT_FIELDS: FieldConfig[] = [
   { id: "civilite", label: "Civilité", type: "select", options: ["M.", "Mme"], required: false },
@@ -38,14 +39,22 @@ export const getWheelSegments = (campaign: any) => {
     return [];
   }
 
-  const segments = originalSegments.map((segment: any, index: number) => ({
+  // NOUVELLE VALIDATION: Utiliser le validateur pour nettoyer les segments
+  const validatedSegments = validateSegments(originalSegments);
+  
+  if (validatedSegments.length === 0) {
+    console.warn('getWheelSegments - Tous les segments étaient invalides, retour tableau vide');
+    return [];
+  }
+
+  const segments = validatedSegments.map((segment: any, index: number) => ({
     ...segment,
     color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2),
     textColor: segment.textColor || '#ffffff',
     id: segment.id || `segment-${index}`
   }));
 
-  console.log('getWheelSegments - Segments finaux:', segments);
+  console.log('getWheelSegments - Segments finaux validés:', segments);
   return segments;
 };
 
