@@ -1,9 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import QuizContainer from './Quiz/QuizContainer';
-import QuizProgress from './Quiz/QuizProgress';
-import QuizQuestion from './Quiz/QuizQuestion';
-import QuizOption from './Quiz/QuizOption';
-import QuizResults from './Quiz/QuizResults';
 import { createEnhancedQuizDesign } from '../../utils/quizConfigSync';
 
 interface QuizGameProps {
@@ -95,72 +92,22 @@ const QuizGame: React.FC<QuizGameProps> = ({
 
   if (!currentQuestion && !showResults) {
     return (
-      <QuizContainer design={enhancedDesign} className="p-8">
-        <div className="text-center">
-          <p className="text-lg" style={{ color: enhancedDesign.textColor }}>
-            Aucune question configurée
-          </p>
+      <div className="w-full max-w-2xl mx-auto p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-12 text-center">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Quiz non configuré</h3>
+          <p className="text-gray-600">Veuillez ajouter des questions pour commencer</p>
         </div>
-      </QuizContainer>
-    );
-  }
-
-  if (showResults) {
-    return (
-      <QuizContainer design={enhancedDesign}>
-        <QuizResults
-          score={score}
-          totalQuestions={questions.length}
-          design={enhancedDesign}
-          onRestart={handleRestart}
-        />
-      </QuizContainer>
-    );
-  }
-
-  const currentAnswers = selectedAnswers[currentQuestionIndex] || [];
-  const isMultiple = currentQuestion.type === 'multiple';
-
-  return (
-    <QuizContainer design={enhancedDesign} className="p-6 max-w-2xl mx-auto">
-      <QuizProgress
-        currentQuestion={currentQuestionIndex}
-        totalQuestions={questions.length}
-        design={enhancedDesign}
-      />
-
-      <QuizQuestion question={currentQuestion} design={enhancedDesign} />
-
-      {/* Options */}
-      <div className="space-y-3 mb-8">
-        {currentQuestion.options?.map((option: any, index: number) => (
-          <QuizOption
-            key={option.id}
-            option={option}
-            isSelected={currentAnswers.includes(option.id)}
-            isMultiple={isMultiple}
-            onSelect={() => handleAnswerSelect(option.id, isMultiple)}
-            design={enhancedDesign}
-            index={index}
-          />
-        ))}
       </div>
+    );
+  }
 
-      {/* Next button */}
-      <button
-        onClick={handleNextQuestion}
-        disabled={currentAnswers.length === 0}
-        className="w-full py-4 px-6 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg enabled:hover:scale-[1.02]"
-        style={{
-          backgroundColor: enhancedDesign.buttonColor,
-          color: enhancedDesign.buttonTextColor,
-          borderRadius: enhancedDesign.borderRadius,
-          opacity: currentAnswers.length === 0 ? 0.5 : 1
-        }}
-      >
-        {currentQuestionIndex < questions.length - 1 ? 'Question suivante' : 'Voir les résultats'}
-      </button>
-    </QuizContainer>
+  // Use QuizContainer directly instead of wrapping it
+  return (
+    <QuizContainer 
+      config={config}
+      design={enhancedDesign}
+      className="max-w-2xl mx-auto"
+    />
   );
 };
 

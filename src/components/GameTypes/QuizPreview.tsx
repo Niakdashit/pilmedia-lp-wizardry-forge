@@ -5,14 +5,12 @@ import QuizContainer from './Quiz/QuizContainer';
 interface QuizPreviewProps {
   config: any;
   design?: any;
-  useCustomLayout?: boolean;
   className?: string;
 }
 
 const QuizPreview: React.FC<QuizPreviewProps> = ({ 
   config, 
   design = {},
-  useCustomLayout = false,
   className = ''
 }) => {
   // Configuration par défaut si aucune question n'est fournie

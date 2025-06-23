@@ -21,13 +21,14 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
 
-  const questions = config.questions || [];
+  // Ensure config exists and has questions
+  const questions = config?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];
 
-  if (!currentQuestion || questions.length === 0) {
+  if (!config || !questions || questions.length === 0) {
     return (
-      <div className="w-full max-w-2xl mx-auto p-8 text-center">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-12">
+      <div className={`w-full max-w-2xl mx-auto p-4 ${className}`}>
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-12 text-center">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Quiz non configuré</h3>
           <p className="text-gray-600">Veuillez ajouter des questions pour commencer</p>
         </div>

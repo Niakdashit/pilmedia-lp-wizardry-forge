@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Eye, Monitor, Smartphone, Tablet, AlertCircle } from 'lucide-react';
 import type { WizardData } from '../ModernWizard';
@@ -135,9 +136,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   <QuizPreview 
                     config={buildQuizConfig()} 
                     design={quizDesign}
-                    useCustomLayout={true}
-                    logoUrl={undefined} // déja mis dans la frame
-                    backgroundUrl={visual}
                   />
                 </PhoneFrame>
               ) : (
@@ -145,9 +143,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   <QuizPreview 
                     config={buildQuizConfig()} 
                     design={quizDesign}
-                    useCustomLayout={true}
-                    logoUrl={logoOrExtracted}
-                    backgroundUrl={visual}
                   />
                 </div>
               )

@@ -1,338 +1,268 @@
+
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Image as ImageIcon, Type, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import QuizPreview from './QuizPreview';
 
 interface QuizProps {
-  config: any;
-  onConfigChange: (config: any) => void;
-  activeQuestion?: number;
-  onActiveQuestionChange?: (index: number) => void;
-  onQuestionChange?: (question: any) => void;
+  isPreview: boolean;
+  config?: any;
+  onFinish?: (result: { win: boolean; score?: number }) => void;
+  buttonColor?: string;
+  buttonLabel?: string;
+  design?: any;
+  className?: string;
 }
 
-const Quiz: React.FC<QuizProps> = ({
-  config,
-  onConfigChange,
-  activeQuestion: externalActive,
-  onActiveQuestionChange,
-  onQuestionChange
+const Quiz: React.FC<QuizProps> = ({ 
+  isPreview = false, 
+  config = {}, 
+  onFinish,
+  buttonColor = '#841b60',
+  buttonLabel = 'Commencer le quiz',
+  design = {},
+  className = ''
 }) => {
-  const [internalActive, setInternalActive] = useState(externalActive ?? 0);
-  const activeQuestion = externalActive ?? internalActive;
-  const setActiveQuestion = onActiveQuestionChange ?? setInternalActive;
+  const [hasStarted, setHasStarted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [score, setScore] = useState(0);
 
-  // Ensure config has a default structure
-  const safeConfig = config || { questions: [] };
-  const questions = safeConfig.questions || [];
+  const questions = config?.questions || [];
 
   useEffect(() => {
-    if (onQuestionChange) {
-      onQuestionChange(questions[activeQuestion]);
+    if (isPreview) {
+      setHasStarted(true);
     }
-  }, [activeQuestion, questions, onQuestionChange]);
+  }, [isPreview]);
 
-  const addQuestion = () => {
-    const newConfig = {
-      ...safeConfig,
-      questions: [
-        ...questions,
-        {
-          id: Date.now(),
-          text: '',
-          type: 'multiple',
-          image: '',
-          options: [
-            { id: Date.now() + 1, text: '', isCorrect: false },
-            { id: Date.now() + 2, text: '', isCorrect: false }
-          ],
-          feedback: {
-            correct: 'Bonne réponse !',
-            incorrect: 'Mauvaise réponse.'
-          },
-          timeLimit: 0
-        }
-      ]
-    };
-    onConfigChange(newConfig);
-    setActiveQuestion(newConfig.questions.length - 1);
-    if (onQuestionChange) {
-      onQuestionChange(newConfig.questions[newConfig.questions.length - 1]);
+  const handleStart = () => {
+    setHasStarted(true);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers([]);
+    setScore(0);
+    setShowResults(false);
+  };
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    const newAnswers = [...selectedAnswers];
+    newAnswers[currentQuestionIndex] = answerIndex;
+    setSelectedAnswers(newAnswers);
+  };
+
+  const handleNextQuestion = () => {
+    const currentQuestion = questions[currentQuestionIndex];
+    const selectedAnswer = selectedAnswers[currentQuestionIndex];
+    
+    // Check if answer is correct
+    if (currentQuestion?.options?.[selectedAnswer]?.isCorrect) {
+      setScore(score + 1);
+    }
+
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      setShowResults(true);
+      if (onFinish) {
+        const finalScore = score + (currentQuestion?.options?.[selectedAnswer]?.isCorrect ? 1 : 0);
+        onFinish({
+          win: finalScore > questions.length / 2,
+          score: finalScore
+        });
+      }
     }
   };
 
-  const removeQuestion = (index: number) => {
-    const newQuestions = [...questions];
-    newQuestions.splice(index, 1);
-    onConfigChange({ ...safeConfig, questions: newQuestions });
-    if (activeQuestion >= newQuestions.length) {
-      setActiveQuestion(Math.max(0, newQuestions.length - 1));
-    }
-    if (onQuestionChange) {
-      onQuestionChange(newQuestions[Math.max(0, newQuestions.length - 1)]);
-    }
+  const containerStyle = {
+    backgroundColor: design?.backgroundColor || '#ffffff',
+    borderRadius: '24px',
+    fontFamily: design?.fontFamily || 'Inter, sans-serif'
   };
 
-  const updateQuestion = (index: number, field: string, value: any) => {
-    const newQuestions = [...questions];
-    newQuestions[index] = {
-      ...newQuestions[index],
-      [field]: value
-    };
-    onConfigChange({ ...safeConfig, questions: newQuestions });
-    if (onQuestionChange) {
-      onQuestionChange(newQuestions[activeQuestion]);
-    }
-  };
-
-  const addOption = (questionIndex: number) => {
-    const newQuestions = [...questions];
-    newQuestions[questionIndex].options.push({
-      id: Date.now(),
-      text: '',
-      isCorrect: false
-    });
-    onConfigChange({ ...safeConfig, questions: newQuestions });
-    if (onQuestionChange) {
-      onQuestionChange(newQuestions[questionIndex]);
-    }
-  };
-
-  const removeOption = (questionIndex: number, optionIndex: number) => {
-    const newQuestions = [...questions];
-    newQuestions[questionIndex].options.splice(optionIndex, 1);
-    onConfigChange({ ...safeConfig, questions: newQuestions });
-    if (onQuestionChange) {
-      onQuestionChange(newQuestions[questionIndex]);
-    }
-  };
-
-  const updateOption = (questionIndex: number, optionIndex: number, field: string, value: any) => {
-    const newQuestions = [...questions];
-    newQuestions[questionIndex].options[optionIndex] = {
-      ...newQuestions[questionIndex].options[optionIndex],
-      [field]: value
-    };
-    onConfigChange({ ...safeConfig, questions: newQuestions });
-    if (onQuestionChange) {
-      onQuestionChange(newQuestions[questionIndex]);
-    }
-  };
-
-  // If no questions exist, show empty state
-  if (questions.length === 0) {
+  if (!hasStarted && !isPreview) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 mb-4">Aucune question configurée</p>
-        <button
-          onClick={addQuestion}
-          className="flex items-center px-4 py-2 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] mx-auto"
+      <div className={`flex flex-col items-center justify-center p-8 ${className}`} style={containerStyle}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Ajouter la première question
-        </button>
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl">🧠</span>
+          </div>
+          
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">
+            Quiz Challenge
+          </h3>
+          
+          <p className="text-gray-600 mb-8 max-w-md">
+            Testez vos connaissances avec notre quiz interactif !
+          </p>
+          
+          <button
+            onClick={handleStart}
+            className="px-8 py-4 text-white font-semibold rounded-2xl transition-all duration-200 hover:scale-105 hover:shadow-xl"
+            style={{ backgroundColor: buttonColor }}
+          >
+            {buttonLabel}
+          </button>
+        </motion.div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex space-x-4 overflow-x-auto pb-4">
-        {questions.map((question: any, index: number) => (
-          <button
-            key={question.id}
-            onClick={() => {
-              setActiveQuestion(index);
-              if (onQuestionChange) {
-                onQuestionChange(questions[index]);
-              }
-            }}
-            className={`flex items-center px-4 py-2 rounded-lg whitespace-nowrap ${
-              activeQuestion === index
-                ? 'bg-[#841b60] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Question {index + 1}
-          </button>
-        ))}
-        <button
-          onClick={addQuestion}
-          className="flex items-center px-4 py-2 bg-[#f8f0f5] text-[#841b60] rounded-lg hover:bg-[#f0e5ec] whitespace-nowrap"
+  if (questions.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`} style={containerStyle}>
+        <div className="text-center">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Quiz non configuré</h3>
+          <p className="text-gray-600">Aucune question disponible</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showResults) {
+    return (
+      <div className={`flex flex-col items-center justify-center p-8 ${className}`} style={containerStyle}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Ajouter une question
-        </button>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {questions[activeQuestion] ? (
-          <>
-            <div className="space-y-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Question
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Type className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        value={questions[activeQuestion].text}
-                        onChange={(e) => updateQuestion(activeQuestion, 'text', e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                        placeholder="Saisissez votre question"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Image (optionnelle)
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <ImageIcon className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        value={questions[activeQuestion].image}
-                        onChange={(e) => updateQuestion(activeQuestion, 'image', e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                        placeholder="URL de l'image"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type de réponse
-                    </label>
-                    <select
-                      value={questions[activeQuestion].type}
-                      onChange={(e) => updateQuestion(activeQuestion, 'type', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                    >
-                      <option value="multiple">Choix multiple</option>
-                      <option value="single">Choix unique</option>
-                      <option value="true-false">Vrai/Faux</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Limite de temps (en secondes, 0 = pas de limite)
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Clock className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <input
-                        type="number"
-                        min="0"
-                        value={questions[activeQuestion].timeLimit}
-                        onChange={(e) => updateQuestion(activeQuestion, 'timeLimit', parseInt(e.target.value))}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => removeQuestion(activeQuestion)}
-                  className="ml-4 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                  disabled={questions.length === 1}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Options de réponse
-                  </label>
-                  <button
-                    onClick={() => addOption(activeQuestion)}
-                    className="text-sm text-[#841b60] hover:text-[#6d164f] font-medium flex items-center"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Ajouter une option
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {questions[activeQuestion].options?.map((option: any, optionIndex: number) => (
-                    <div key={option.id} className="flex items-center space-x-3">
-                      <input
-                        type={questions[activeQuestion].type === 'multiple' ? 'checkbox' : 'radio'}
-                        checked={option.isCorrect}
-                        onChange={(e) => updateOption(activeQuestion, optionIndex, 'isCorrect', e.target.checked)}
-                        className="w-5 h-5 text-[#841b60] border-gray-300 focus:ring-[#841b60]"
-                      />
-                      <input
-                        type="text"
-                        value={option.text}
-                        onChange={(e) => updateOption(activeQuestion, optionIndex, 'text', e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                        placeholder={`Option ${optionIndex + 1}`}
-                      />
-                      <button
-                        onClick={() => removeOption(activeQuestion, optionIndex)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                        disabled={questions[activeQuestion].options?.length <= 2}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Message réponse correcte
-                  </label>
-                  <input
-                    type="text"
-                    value={questions[activeQuestion].feedback?.correct || ''}
-                    onChange={(e) => updateQuestion(activeQuestion, 'feedback', {
-                      ...questions[activeQuestion].feedback,
-                      correct: e.target.value
-                    })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                    placeholder="Bravo !"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Message réponse incorrecte
-                  </label>
-                  <input
-                    type="text"
-                    value={questions[activeQuestion].feedback?.incorrect || ''}
-                    onChange={(e) => updateQuestion(activeQuestion, 'feedback', {
-                      ...questions[activeQuestion].feedback,
-                      incorrect: e.target.value
-                    })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-                    placeholder="Dommage..."
-                  />
-                </div>
-              </div>
-            </div>
-            <QuizPreview question={questions[activeQuestion]} />
-          </>
-        ) : (
-          <div className="md:col-span-2 text-center py-12 text-gray-500">
-            Sélectionnez ou ajoutez une question pour la prévisualiser
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl">🎉</span>
           </div>
-        )}
+          
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">
+            Quiz terminé !
+          </h3>
+          
+          <p className="text-lg text-gray-600 mb-8">
+            Votre score : <span className="font-bold text-2xl" style={{ color: buttonColor }}>
+              {score}/{questions.length}
+            </span>
+          </p>
+          
+          <button
+            onClick={handleStart}
+            className="px-8 py-4 text-white font-semibold rounded-2xl transition-all duration-200 hover:scale-105 hover:shadow-xl"
+            style={{ backgroundColor: buttonColor }}
+          >
+            Recommencer
+          </button>
+        </motion.div>
       </div>
+    );
+  }
+
+  // For preview mode, use QuizPreview
+  if (isPreview) {
+    return (
+      <QuizPreview 
+        config={config}
+        design={design}
+        className={className}
+      />
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const selectedAnswer = selectedAnswers[currentQuestionIndex];
+
+  return (
+    <div className={`max-w-2xl mx-auto p-6 ${className}`} style={containerStyle}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentQuestionIndex}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Progress */}
+          <div className="mb-8">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Question {currentQuestionIndex + 1} sur {questions.length}</span>
+              <span>{Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="h-2 rounded-full transition-all duration-300"
+                style={{ 
+                  backgroundColor: buttonColor,
+                  width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Question */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold mb-6" style={{ color: design?.titleColor || '#1f2937' }}>
+              {currentQuestion?.text}
+            </h3>
+            
+            {currentQuestion?.image && (
+              <div className="mb-6">
+                <img 
+                  src={currentQuestion.image} 
+                  alt="Question" 
+                  className="max-w-full h-auto rounded-lg"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Options */}
+          <div className="space-y-3 mb-8">
+            {currentQuestion?.options?.map((option: any, index: number) => (
+              <button
+                key={index}
+                onClick={() => handleAnswerSelect(index)}
+                className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 hover:scale-[1.02] ${
+                  selectedAnswer === index
+                    ? 'border-current bg-blue-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+                style={{
+                  borderColor: selectedAnswer === index ? buttonColor : undefined,
+                  backgroundColor: selectedAnswer === index ? `${buttonColor}08` : undefined
+                }}
+              >
+                <div className="flex items-center">
+                  <div 
+                    className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      selectedAnswer === index ? 'border-current' : 'border-gray-300'
+                    }`}
+                    style={{ borderColor: selectedAnswer === index ? buttonColor : undefined }}
+                  >
+                    {selectedAnswer === index && (
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: buttonColor }}
+                      />
+                    )}
+                  </div>
+                  <span className="font-medium">{option.text}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Next button */}
+          <div className="flex justify-center">
+            <button
+              onClick={handleNextQuestion}
+              disabled={selectedAnswer === undefined}
+              className="px-8 py-3 text-white font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 enabled:hover:shadow-lg"
+              style={{ backgroundColor: buttonColor }}
+            >
+              {currentQuestionIndex === questions.length - 1 ? 'Terminer' : 'Suivant'}
+            </button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
