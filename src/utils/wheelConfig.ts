@@ -8,12 +8,23 @@ export const DEFAULT_FIELDS: FieldConfig[] = [
   { id: "email", label: "Email", type: "email", required: true }
 ];
 
+export const DEFAULT_WHEEL_SEGMENTS = [
+  { label: 'Prix 1', color: '#ff6b6b' },
+  { label: 'Prix 2', color: '#4ecdc4' },
+  { label: 'Prix 3', color: '#45b7d1' },
+  { label: 'Prix 4', color: '#96ceb4' },
+  { label: 'Dommage', color: '#feca57' },
+  { label: 'Rejouer', color: '#ff9ff3' }
+] as const;
+
 export const getWheelSegments = (campaign: any) => {
   const segmentColor1 = campaign?.config?.roulette?.segmentColor1 || '#ff6b6b';
   const segmentColor2 = campaign?.config?.roulette?.segmentColor2 || '#4ecdc4';
-  
+
   const originalSegments = campaign?.config?.roulette?.segments || [];
-  return originalSegments.map((segment: any, index: number) => ({
+  const segments =
+    originalSegments.length > 0 ? originalSegments : DEFAULT_WHEEL_SEGMENTS;
+  return segments.map((segment: any, index: number) => ({
     ...segment,
     color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2)
   }));
