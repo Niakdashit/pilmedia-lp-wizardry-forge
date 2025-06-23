@@ -18,16 +18,35 @@ export const DEFAULT_WHEEL_SEGMENTS = [
 ] as const;
 
 export const getWheelSegments = (campaign: any) => {
+  console.log('getWheelSegments - Campaign reçu:', campaign);
+  
   const segmentColor1 = campaign?.config?.roulette?.segmentColor1 || '#ff6b6b';
   const segmentColor2 = campaign?.config?.roulette?.segmentColor2 || '#4ecdc4';
 
-  const originalSegments = campaign?.config?.roulette?.segments || [];
-  const segments =
-    originalSegments.length > 0 ? originalSegments : DEFAULT_WHEEL_SEGMENTS;
-  return segments.map((segment: any, index: number) => ({
+  // Vérifier plusieurs sources pour les segments
+  let originalSegments = 
+    campaign?.gameConfig?.wheel?.segments || 
+    campaign?.config?.roulette?.segments || 
+    [];
+
+  console.log('getWheelSegments - Segments trouvés:', originalSegments);
+
+  // Si aucun segment n'est trouvé, ne pas utiliser les segments par défaut
+  // pour permettre l'affichage du message "Ajoutez des segments"
+  if (!originalSegments || originalSegments.length === 0) {
+    console.log('getWheelSegments - Aucun segment, retour tableau vide');
+    return [];
+  }
+
+  const segments = originalSegments.map((segment: any, index: number) => ({
     ...segment,
-    color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2)
+    color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2),
+    textColor: segment.textColor || '#ffffff',
+    id: segment.id || `segment-${index}`
   }));
+
+  console.log('getWheelSegments - Segments finaux:', segments);
+  return segments;
 };
 
 export const getWheelDimensions = (

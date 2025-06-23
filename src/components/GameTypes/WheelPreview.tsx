@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import WheelContainer from './WheelComponents/WheelContainer';
 import WheelButton from './WheelComponents/WheelButton';
 import WheelFormModal from './WheelComponents/WheelFormModal';
@@ -74,8 +74,16 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     buttonConfig
   } = getWheelPreviewConfig(campaign);
 
-  const hasNoConfiguredSegments =
-    (campaign?.config?.roulette?.segments || []).length === 0;
+  // Calculer dynamiquement si on doit afficher le message d'absence de segments
+  const hasNoConfiguredSegments = useMemo(() => {
+    const segmentCount = segments?.length || 0;
+    console.log('WheelPreview - Nombre de segments:', segmentCount);
+    return segmentCount === 0;
+  }, [segments]);
+
+  // Debug des segments
+  console.log('WheelPreview - Segments reçus:', segments);
+  console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
 
   return (
     <WheelContainer
@@ -115,7 +123,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           <WheelButton
             buttonConfig={buttonConfig}
             spinning={spinning}
-            disabled={disabled}
+            disabled={disabled || hasNoConfiguredSegments}
             formValidated={formValidated}
             onClick={handleWheelClick}
           />

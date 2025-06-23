@@ -11,29 +11,51 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
   campaign,
   setCampaign
 }) => {
-  const segments = campaign.gameConfig?.wheel?.segments || [];
+  // Assurer que les segments existent avec une structure par défaut
+  const segments = campaign.gameConfig?.wheel?.segments || campaign.config?.roulette?.segments || [];
 
   const updateWheelConfig = (updates: any) => {
-    setCampaign((prev: any) => ({
-      ...prev,
-      gameConfig: {
-        ...prev.gameConfig,
-        wheel: {
-          ...prev.gameConfig?.wheel,
-          ...updates
+    setCampaign((prev: any) => {
+      const newCampaign = {
+        ...prev,
+        gameConfig: {
+          ...prev.gameConfig,
+          wheel: {
+            ...prev.gameConfig?.wheel,
+            ...updates
+          }
+        },
+        // Maintenir aussi la structure legacy pour la compatibilité
+        config: {
+          ...prev.config,
+          roulette: {
+            ...prev.config?.roulette,
+            ...updates
+          }
         }
-      }
-    }));
+      };
+      
+      // Force un re-render en créant un nouvel objet avec un timestamp
+      newCampaign._lastUpdate = Date.now();
+      
+      console.log('WheelGameConfig - Mise à jour:', updates);
+      console.log('WheelGameConfig - Nouveaux segments:', newCampaign.gameConfig.wheel.segments);
+      
+      return newCampaign;
+    });
   };
 
   const addSegment = () => {
-    const newSegments = [...segments, {
+    const colors = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+    const newSegment = {
       id: Date.now(),
       label: `Segment ${segments.length + 1}`,
-      color: '#841b60',
+      color: colors[segments.length % colors.length],
       textColor: '#ffffff',
       probability: 1
-    }];
+    };
+    
+    const newSegments = [...segments, newSegment];
     updateWheelConfig({ segments: newSegments });
   };
 
@@ -141,7 +163,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         <div className="flex items-center justify-between">
           <label className="flex items-center text-sm font-medium text-gray-700">
             <Palette className="w-4 h-4 mr-2" />
-            Segments de la roue
+            Segments de la roue ({segments.length})
           </label>
           <button
             onClick={addSegment}
@@ -153,23 +175,23 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
 
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {segments.map((segment: any, index: number) => (
-            <div key={segment.id} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg">
+            <div key={segment.id || index} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg">
               <input
                 type="color"
-                value={segment.color}
+                value={segment.color || '#841b60'}
                 onChange={(e) => updateSegment(index, 'color', e.target.value)}
                 className="w-8 h-8 rounded border border-gray-300"
               />
               <input
                 type="text"
-                value={segment.label}
+                value={segment.label || ''}
                 onChange={(e) => updateSegment(index, 'label', e.target.value)}
                 placeholder="Texte du segment"
                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] focus:border-transparent"
               />
               <input
                 type="color"
-                value={segment.textColor}
+                value={segment.textColor || '#ffffff'}
                 onChange={(e) => updateSegment(index, 'textColor', e.target.value)}
                 title="Couleur du texte"
                 className="w-8 h-8 rounded border border-gray-300"
@@ -178,7 +200,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
                 <input
                   type="number"
                   min="1"
-                  value={segment.probability}
+                  value={segment.probability || 1}
                   onChange={(e) => updateSegment(index, 'probability', parseInt(e.target.value))}
                   className="w-16 px-2 py-1 text-sm border border-gray-300 rounded"
                   title="Poids"

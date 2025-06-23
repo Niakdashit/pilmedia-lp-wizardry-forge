@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParticipations } from '../../../hooks/useParticipations';
 import { useGameSize } from '../../../hooks/useGameSize';
 import { useWheelSpin } from '../../../hooks/useWheelSpin';
@@ -83,7 +83,14 @@ export const useWheelPreviewLogic = ({
     shouldCropWheel
   );
 
-  const segments = getWheelSegments(campaign);
+  // Utiliser useMemo pour optimiser le calcul des segments et forcer le re-render
+  const segments = useMemo(() => {
+    console.log('WheelPreviewLogic - Recalcul des segments pour campaign:', campaign?._lastUpdate);
+    const result = getWheelSegments(campaign);
+    console.log('WheelPreviewLogic - Segments calculés:', result);
+    return result;
+  }, [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]);
+
   const { rotation, spinning, spinWheel } = useWheelSpin({
     segments,
     disabled,
@@ -99,6 +106,11 @@ export const useWheelPreviewLogic = ({
 
   const fields = Array.isArray(campaign.formFields) && campaign.formFields.length > 0
     ? campaign.formFields : DEFAULT_FIELDS;
+
+  // Effect pour debug les changements de segments
+  useEffect(() => {
+    console.log('WheelPreviewLogic - useEffect segments changé:', segments);
+  }, [segments]);
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     if (campaign.id) {
