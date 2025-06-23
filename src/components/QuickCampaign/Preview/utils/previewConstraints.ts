@@ -25,7 +25,7 @@ export const DEVICE_CONSTRAINTS = {
 export const GAME_CONSTRAINTS = {
   wheel: {
     minSize: 200,
-    maxSize: 400,
+    maxSize: 500,
     defaultSize: 300,
   },
   jackpot: {
