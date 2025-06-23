@@ -136,17 +136,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       />
 
       {/* Modal de formulaire */}
-      <FormHandler 
-        showFormModal={showFormModal} 
-        campaign={campaign} 
-        fields={fields} 
-        participationLoading={participationLoading} 
-        modalContained={modalContained} 
-        onClose={() => {
-          setShowFormModal(false);
-        }} 
-        onSubmit={handleFormSubmit} 
-      />
+      {campaign.type !== 'wheel' && (
+        <FormHandler
+          showFormModal={showFormModal}
+          campaign={campaign}
+          fields={fields}
+          participationLoading={participationLoading}
+          modalContained={modalContained}
+          onClose={() => {
+            setShowFormModal(false);
+          }}
+          onSubmit={handleFormSubmit}
+        />
+      )}
     </div>
   );
 };

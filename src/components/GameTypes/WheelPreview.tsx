@@ -23,6 +23,7 @@ interface WheelPreviewProps {
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
+  disableForm?: boolean;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -33,7 +34,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   onStart,
   gameSize = 'small',
   gamePosition = 'center',
-  previewDevice = 'desktop'
+  previewDevice = 'desktop',
+  disableForm = false
 }) => {
   const {
     formValidated,
@@ -61,7 +63,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     onStart,
     gameSize,
     gamePosition,
-    previewDevice
+    previewDevice,
+    disableForm
   });
 
   const {
@@ -130,14 +133,16 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         </div>
       </div>
 
-      <WheelFormModal
-        showFormModal={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        campaign={campaign}
-        fields={fields}
-        participationLoading={participationLoading}
-        onSubmit={handleFormSubmit}
-      />
+      {!disableForm && (
+        <WheelFormModal
+          showFormModal={showFormModal}
+          onClose={() => setShowFormModal(false)}
+          campaign={campaign}
+          fields={fields}
+          participationLoading={participationLoading}
+          onSubmit={handleFormSubmit}
+        />
+      )}
     </WheelContainer>
   );
 };
