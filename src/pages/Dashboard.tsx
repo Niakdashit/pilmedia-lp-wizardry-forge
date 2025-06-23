@@ -8,7 +8,7 @@ const Dashboard: React.FC = () => {
   return <PageContainer>
       <DashboardHeader />
       
-      <div className="space-y-6 px-[45px] py-[5px]">
+      <div className="space-y-6 px-[25px] py-0">
         <div className="mt-6">
           <QuickCreationSection />
         </div>
