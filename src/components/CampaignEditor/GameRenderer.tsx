@@ -9,6 +9,7 @@ import { GameSize } from '../configurators/GameSizeSelector';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
 import { useGamePositionCalculator } from './GamePositionCalculator';
 import useCenteredStyles from '../../hooks/useCenteredStyles';
+import { shouldUseUnlockedFunnel, shouldUseStandardFunnel } from '../../utils/funnelMatcher';
 
 interface GameRendererProps {
   campaign: any;
@@ -40,9 +41,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     ? createSynchronizedQuizCampaign(campaign)
     : campaign;
 
-  // Types de jeux utilisant le funnel unlocked_game
-  const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
-
   const gamePosition = enhancedCampaign.gamePosition || 'center';
   const { containerStyle: baseContainerStyle, wrapperStyle } = useCenteredStyles();
   const { getPositionStyles } = useGamePositionCalculator({
@@ -51,9 +49,9 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     shouldCropWheel: false
   });
   
-  // Déterminer le funnel à utiliser
-  const shouldUseUnlockedFunnel = unlockedTypes.includes(enhancedCampaign.type) || 
-    enhancedCampaign.funnel === 'unlocked_game';
+  // Déterminer le funnel à utiliser basé uniquement sur le type de jeu
+  const useUnlockedFunnel = shouldUseUnlockedFunnel(enhancedCampaign.type);
+  const useStandardFunnel = shouldUseStandardFunnel(enhancedCampaign.type);
 
   // Style du conteneur principal avec des dimensions plus généreuses
   const containerStyle: React.CSSProperties = {
@@ -77,8 +75,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     containerStyle.backgroundRepeat = 'no-repeat';
   }
 
-  // Pour les types form et quiz, utiliser le funnel standard
-  if (enhancedCampaign.type === 'form' || enhancedCampaign.type === 'quiz') {
+  // Pour les types utilisant le funnel standard
+  if (useStandardFunnel) {
     return (
       <div className={className} style={containerStyle}>
         {gameBackgroundImage && showBackgroundOverlay && (
@@ -99,8 +97,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     );
   }
 
-  // Pour les autres types, utiliser le funnel approprié
-  if (shouldUseUnlockedFunnel) {
+  // Pour les types utilisant le funnel unlocked
+  if (useUnlockedFunnel) {
     return (
       <div className={className} style={containerStyle}>
         {gameBackgroundImage && showBackgroundOverlay && (
@@ -121,80 +119,20 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     );
   }
 
-  // Fallback vers le rendu direct du jeu
-  const renderDirectGame = () => {
-    switch (enhancedCampaign.type) {
-      case 'jackpot':
-        return (
-          <Jackpot
-            isPreview={true}
-            instantWinConfig={{
-              mode: 'instant_winner' as const,
-              winProbability: enhancedCampaign.gameConfig?.jackpot?.instantWin?.winProbability || 0.05,
-              maxWinners: enhancedCampaign.gameConfig?.jackpot?.instantWin?.maxWinners,
-              winnersCount: 0
-            }}
-            buttonLabel={buttonLabel || enhancedCampaign.gameConfig?.jackpot?.buttonLabel || 'Jouer'}
-            buttonColor={buttonColor || enhancedCampaign.buttonConfig?.color || '#841b60'}
-            backgroundImage={gameBackgroundImage}
-            containerBackgroundColor={enhancedCampaign.gameConfig?.jackpot?.containerBackgroundColor || '#1f2937'}
-            backgroundColor={enhancedCampaign.gameConfig?.jackpot?.backgroundColor || '#c4b5fd30'}
-            borderColor={enhancedCampaign.gameConfig?.jackpot?.borderColor || '#8b5cf6'}
-            borderWidth={enhancedCampaign.gameConfig?.jackpot?.borderWidth || 3}
-            slotBorderColor={enhancedCampaign.gameConfig?.jackpot?.slotBorderColor || '#a78bfa'}
-            slotBorderWidth={enhancedCampaign.gameConfig?.jackpot?.slotBorderWidth || 2}
-            slotBackgroundColor={enhancedCampaign.gameConfig?.jackpot?.slotBackgroundColor || '#ffffff'}
-          />
-        );
-
-      case 'wheel':
-        return (
-          <WheelPreview
-            campaign={enhancedCampaign}
-            config={{
-              mode: 'instant_winner' as const,
-              winProbability: enhancedCampaign.gameConfig?.wheel?.winProbability || 0.1,
-              maxWinners: enhancedCampaign.gameConfig?.wheel?.maxWinners,
-              winnersCount: 0
-            }}
-            onFinish={() => {}}
-            gameSize={gameSize}
-            gamePosition={enhancedCampaign.gamePosition || 'center'}
-            previewDevice={previewDevice}
-            disableForm={true}
-          />
-        );
-
-      case 'scratch':
-        return (
-          <ScratchPreview
-            config={enhancedCampaign.gameConfig?.scratch || {}}
-            buttonLabel={buttonLabel || enhancedCampaign.gameConfig?.scratch?.buttonLabel || 'Gratter'}
-            buttonColor={buttonColor || enhancedCampaign.buttonConfig?.color || '#841b60'}
-            gameSize={gameSize}
-            autoStart
-          />
-        );
-
-      default:
-        return (
-          <div className="text-center text-gray-500 flex items-center justify-center h-full">
-            <p className="text-sm">Type de jeu non pris en charge: {enhancedCampaign.type}</p>
-          </div>
-        );
-    }
-  };
-
+  // Fallback pour types non reconnus - afficher un message d'erreur
   return (
     <div className={className} style={containerStyle}>
-      {gameBackgroundImage && showBackgroundOverlay && (
-        <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
-      )}
       <div
         className="relative z-10 flex items-center justify-center w-full h-full"
         style={{ ...wrapperStyle, ...getPositionStyles() }}
       >
-        {renderDirectGame()}
+        <div className="text-center text-red-500 bg-red-50 p-6 rounded-lg border border-red-200">
+          <h3 className="font-semibold mb-2">Type de jeu non supporté</h3>
+          <p className="text-sm">Le type "{enhancedCampaign.type}" n'est pas configuré pour utiliser un funnel.</p>
+          <p className="text-xs mt-2 text-gray-600">
+            Types supportés: wheel, scratch, jackpot, dice (unlocked) | form, quiz, memory, puzzle (standard)
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import GameRenderer from './components/GameRenderer';
 import ResultScreen from './components/ResultScreen';
 import FormHandler from './components/FormHandler';
+import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
 
 interface FunnelUnlockedGameProps {
   campaign: any;
@@ -27,6 +28,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   mobileConfig,
   modalContained = true
 }) => {
+  // Vérifier que le type de jeu est compatible avec ce funnel
+  if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
+    console.warn(`Type de jeu "${campaign.type}" utilise FunnelUnlockedGame mais devrait utiliser FunnelStandard`);
+  }
+
   // Wheel games do not require any form validation. Initialize the
   // validation state accordingly so the game can be launched directly.
   const [formValidated, setFormValidated] = useState(campaign.type === 'wheel');

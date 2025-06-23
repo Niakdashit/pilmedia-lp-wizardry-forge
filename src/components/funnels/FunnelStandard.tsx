@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import Color from 'color';
 import DynamicContactForm from '../forms/DynamicContactForm';
 import { QuizGame, Memory, Puzzle } from '../GameTypes';
 import { useParticipations } from '../../hooks/useParticipations';
+import { STANDARD_GAME_TYPES } from '../../utils/funnelMatcher';
 
 const DEFAULT_FIELDS = [
   { id: "civilite", label: "Civilité", type: "select", options: ["M.", "Mme"], required: false },
@@ -19,6 +19,11 @@ interface GameFunnelProps {
 const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
   const [step, setStep] = useState<'start' | 'form' | 'game' | 'end'>('start');
   const { createParticipation, loading: participationLoading } = useParticipations();
+
+  // Vérifier que le type de jeu est compatible avec ce funnel
+  if (!STANDARD_GAME_TYPES.includes(campaign.type)) {
+    console.warn(`Type de jeu "${campaign.type}" utilise FunnelStandard mais devrait utiliser FunnelUnlockedGame`);
+  }
 
   const fields = Array.isArray(campaign.formFields) && campaign.formFields.length > 0 
     ? campaign.formFields 
@@ -63,18 +68,23 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
       case 'quiz':
         return (
           <QuizGame
-            config={campaign.gameConfig.quiz}
+            config={campaign.gameConfig?.quiz || {}}
             design={campaign.design}
           />
         );
       case 'memory':
-        return <Memory config={campaign.gameConfig.memory} onConfigChange={() => {}} />;
+        return <Memory config={campaign.gameConfig?.memory || {}} onConfigChange={() => {}} />;
       case 'puzzle':
-        return <Puzzle config={campaign.gameConfig.puzzle} onConfigChange={() => {}} />;
+        return <Puzzle config={campaign.gameConfig?.puzzle || {}} onConfigChange={() => {}} />;
       case 'form':
         return <div className="text-center text-gray-500">Formulaire dynamique</div>;
       default:
-        return <div className="text-center text-gray-400">Non compatible avec ce funnel</div>;
+        return (
+          <div className="text-center text-red-500 bg-red-50 p-4 rounded border border-red-200">
+            <p className="font-medium">Type de jeu incompatible</p>
+            <p className="text-sm">"{campaign.type}" ne devrait pas utiliser le FunnelStandard</p>
+          </div>
+        );
     }
   };
 
