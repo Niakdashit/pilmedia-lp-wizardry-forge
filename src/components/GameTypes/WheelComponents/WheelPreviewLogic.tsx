@@ -68,9 +68,12 @@ export const useWheelPreviewLogic = ({
   previewDevice = 'desktop',
   disableForm = false
 }: UseWheelPreviewLogicProps) => {
+  // État du formulaire - commencer à false pour forcer la validation
   const [formValidated, setFormValidated] = useState(disableForm);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
+
+  console.log('WheelPreviewLogic - État initial formValidated:', formValidated, 'disableForm:', disableForm);
 
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();
@@ -95,7 +98,7 @@ export const useWheelPreviewLogic = ({
 
   const { rotation, spinning, spinWheel } = useWheelSpin({
     segments,
-    disabled,
+    disabled: disabled || !formValidated, // Désactiver si pas validé
     config,
     onStart,
     onFinish
@@ -114,45 +117,56 @@ export const useWheelPreviewLogic = ({
     console.log('WheelPreviewLogic - useEffect segments changé:', segments);
   }, [segments]);
 
-  const handleFormSubmit = async (formData: Record<string, string>) => {
-    if (campaign.id) {
-      await createParticipation({
-        campaign_id: campaign.id,
-        form_data: formData,
-        user_email: formData.email
-      });
+  // Effect pour synchroniser l'état quand disableForm change
+  useEffect(() => {
+    if (disableForm) {
+      setFormValidated(true);
+      console.log('WheelPreviewLogic - disableForm activé, formValidated set à true');
+    } else {
+      setFormValidated(false);
+      console.log('WheelPreviewLogic - disableForm désactivé, formValidated set à false');
     }
-    setShowFormModal(false);
-    setFormValidated(true);
-    setShowValidationMessage(true);
-    setTimeout(() => setShowValidationMessage(false), 1500);
+  }, [disableForm]);
+
+  const handleFormSubmit = async (formData: Record<string, string>) => {
+    console.log('WheelPreviewLogic - handleFormSubmit appelé avec:', formData);
+    
+    try {
+      if (campaign.id) {
+        await createParticipation({
+          campaign_id: campaign.id,
+          form_data: formData,
+          user_email: formData.email
+        });
+      }
+      
+      setShowFormModal(false);
+      setFormValidated(true);
+      setShowValidationMessage(true);
+      
+      console.log('WheelPreviewLogic - Formulaire soumis avec succès, formValidated:', true);
+      
+      setTimeout(() => setShowValidationMessage(false), 1500);
+    } catch (error) {
+      console.error('WheelPreviewLogic - Erreur lors de la soumission:', error);
+    }
   };
 
   const handleWheelClick = () => {
-    const buttonConfig = campaign?.buttonConfig || {
-      color: campaign?.design?.customColors?.primary || '#841b60',
-      borderColor: campaign?.design?.customColors?.primary || '#841b60',
-      borderWidth: 1,
-      borderRadius: 8,
-      size: 'medium',
-      link: '',
-      visible: true,
-      text: 'Remplir le formulaire'
-    };
-
-    if (buttonConfig.link && !formValidated) {
-      window.open(buttonConfig.link, '_blank');
+    console.log('WheelPreviewLogic - handleWheelClick appelé, formValidated:', formValidated, 'spinning:', spinning);
+    
+    // Vérifier si on peut lancer la roue
+    if (!formValidated || spinning || disabled || segments.length === 0) {
+      console.log('WheelPreviewLogic - Impossible de lancer la roue:', {
+        formValidated,
+        spinning,
+        disabled,
+        segmentsLength: segments.length
+      });
       return;
     }
-
-    if (!formValidated) {
-      if (disableForm) {
-        // When form handling is external, do nothing here
-        return;
-      }
-      setShowFormModal(true);
-      return;
-    }
+    
+    console.log('WheelPreviewLogic - Lancement de la roue');
     spinWheel();
   };
 

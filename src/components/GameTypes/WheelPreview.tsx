@@ -90,6 +90,31 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   // Debug des segments
   console.log('WheelPreview - Segments reçus:', segments);
   console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
+  console.log('WheelPreview - formValidated:', formValidated);
+  console.log('WheelPreview - disableForm:', disableForm);
+
+  // Gestion du clic sur le bouton - logique simplifiée
+  const handleButtonClick = () => {
+    console.log('WheelPreview - Bouton cliqué, formValidated:', formValidated, 'disableForm:', disableForm);
+    
+    // Si le formulaire est désactivé, on valide automatiquement
+    if (disableForm) {
+      console.log('WheelPreview - Formulaire désactivé, lancement direct');
+      handleWheelClick();
+      return;
+    }
+
+    // Si le formulaire n'est pas validé, on affiche la modale
+    if (!formValidated) {
+      console.log('WheelPreview - Formulaire non validé, ouverture de la modale');
+      setShowFormModal(true);
+      return;
+    }
+
+    // Si le formulaire est validé, on lance la roue
+    console.log('WheelPreview - Formulaire validé, lancement de la roue');
+    handleWheelClick();
+  };
 
   return (
     <WheelContainer
@@ -120,7 +145,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             gamePosition={gamePosition}
             formValidated={formValidated}
             showValidationMessage={showValidationMessage}
-            onWheelClick={handleWheelClick}
+            onWheelClick={handleButtonClick}
             showShadow={showShadow}
           />
         </div>
@@ -131,7 +156,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             spinning={spinning}
             disabled={disabled || hasNoConfiguredSegments}
             formValidated={formValidated}
-            onClick={handleWheelClick}
+            onClick={handleButtonClick}
           />
         </div>
       </div>
