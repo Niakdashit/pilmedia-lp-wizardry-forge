@@ -40,10 +40,19 @@ interface BaseConfig {
   buttonColor: string;
 }
 
+interface WheelSegment {
+  id: number;
+  label: string;
+  color: string;
+  textColor: string;
+  probability: number;
+}
+
 interface WheelConfig extends BaseConfig {
   winProbability: number;
   maxWinners: number;
   winnersCount: number;
+  segments: WheelSegment[];
 }
 
 interface JackpotConfig extends BaseConfig {
@@ -111,7 +120,23 @@ export const getDefaultGameConfig = (type: CampaignType) => {
       maxWinners: 10,
       winnersCount: 0,
       buttonLabel: 'Tourner',
-      buttonColor: '#841b60'
+      buttonColor: '#841b60',
+      segments: [
+        {
+          id: 1,
+          label: 'Segment 1',
+          color: '#ff6b6b',
+          textColor: '#ffffff',
+          probability: 50
+        },
+        {
+          id: 2,
+          label: 'Segment 2',
+          color: '#4ecdc4',
+          textColor: '#ffffff',
+          probability: 50
+        }
+      ]
     },
     jackpot: {
       instantWin: {
