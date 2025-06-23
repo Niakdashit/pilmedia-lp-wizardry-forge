@@ -8,18 +8,19 @@ import PuzzlePreview from '../GameTypes/PuzzlePreview';
 import ScratchPreview from '../GameTypes/ScratchPreview';
 import DicePreview from '../GameTypes/DicePreview';
 import FormPreview from '../GameTypes/FormPreview';
+import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+import FunnelStandard from '../funnels/FunnelStandard';
 import { GameSize } from '../configurators/GameSizeSelector';
-import { useGamePositionCalculator } from './GamePositionCalculator';
-import useCenteredStyles from '../../hooks/useCenteredStyles';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
 
 interface GameRendererProps {
   campaign: any;
   gameSize: GameSize;
   previewDevice: 'desktop' | 'tablet' | 'mobile';
-  buttonLabel: string;
-  buttonColor: string;
+  buttonLabel?: string;
+  buttonColor?: string;
   gameBackgroundImage?: string;
+  className?: string;
 }
 
 const GameRenderer: React.FC<GameRendererProps> = ({
@@ -28,178 +29,152 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   previewDevice,
   buttonLabel,
   buttonColor,
-  gameBackgroundImage
+  gameBackgroundImage,
+  className = ''
 }) => {
-  const { containerStyle, wrapperStyle } = useCenteredStyles();
-  const gamePosition = campaign.gamePosition || 'center';
-  const { getPositionStyles } = useGamePositionCalculator({
-    gameSize,
-    gamePosition,
-    shouldCropWheel: false
-  });
-
-  const baseContainerStyle = {
-    ...containerStyle,
-    minHeight: '400px',
-    padding: '20px',
-    boxSizing: 'border-box' as const,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden'
-  };
-
-  const baseWrapperStyle = {
-    ...wrapperStyle,
-    ...getPositionStyles(),
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%'
-  };
-
   // Utiliser le système de synchronisation pour le quiz
   const enhancedCampaign = campaign.type === 'quiz' 
     ? createSynchronizedQuizCampaign(campaign)
     : campaign;
 
-  switch (campaign.type) {
-    case 'jackpot':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <Jackpot
-              isPreview={true}
-              instantWinConfig={{
-                mode: 'instant_winner' as const,
-                winProbability: campaign.gameConfig?.jackpot?.instantWin?.winProbability || 0.05,
-                maxWinners: campaign.gameConfig?.jackpot?.instantWin?.maxWinners,
-                winnersCount: 0
-              }}
-              buttonLabel={buttonLabel}
-              buttonColor={buttonColor}
-              backgroundImage={gameBackgroundImage}
-              containerBackgroundColor={campaign.gameConfig?.jackpot?.containerBackgroundColor || '#1f2937'}
-              backgroundColor={campaign.gameConfig?.jackpot?.backgroundColor || '#c4b5fd30'}
-              borderColor={campaign.gameConfig?.jackpot?.borderColor || '#8b5cf6'}
-              borderWidth={campaign.gameConfig?.jackpot?.borderWidth || 3}
-              slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor || '#a78bfa'}
-              slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth || 2}
-              slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor || '#ffffff'}
-            />
-          </div>
-        </div>
-      );
+  // Types de jeux utilisant le funnel unlocked_game
+  const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
+  
+  // Déterminer le funnel à utiliser
+  const shouldUseUnlockedFunnel = unlockedTypes.includes(enhancedCampaign.type) || 
+    enhancedCampaign.funnel === 'unlocked_game';
 
-    case 'quiz':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <div style={{ 
-              width: '100%', 
-              maxWidth: '800px', 
-              margin: '0 auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <QuizPreview
-                config={enhancedCampaign.gameConfig?.quiz || {}}
-                design={enhancedCampaign.design}
-              />
-            </div>
-          </div>
-        </div>
-      );
+  // Style du conteneur principal
+  const containerStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    minHeight: '400px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: enhancedCampaign.design?.background || '#f8fafc',
+    position: 'relative',
+    overflow: 'hidden'
+  };
 
-    case 'wheel':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <WheelPreview
-              campaign={campaign}
-              config={{
-                mode: 'instant_winner' as const,
-                winProbability: campaign.gameConfig?.wheel?.winProbability || 0.1,
-                maxWinners: campaign.gameConfig?.wheel?.maxWinners,
-                winnersCount: 0
-              }}
-              onFinish={() => {}}
-              gameSize={gameSize}
-              gamePosition={gamePosition}
-              previewDevice={previewDevice}
-              key={`${gameSize}-center-${previewDevice}-${JSON.stringify(campaign.gameConfig?.wheel)}`}
-            />
-          </div>
-        </div>
-      );
-
-    case 'scratch':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <ScratchPreview
-              config={campaign.gameConfig?.scratch || {}}
-              buttonLabel={buttonLabel}
-              buttonColor={buttonColor}
-              gameSize={gameSize}
-              autoStart
-            />
-          </div>
-        </div>
-      );
-
-    case 'memory':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <MemoryPreview config={campaign.gameConfig?.memory || {}} />
-          </div>
-        </div>
-      );
-
-    case 'puzzle':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <PuzzlePreview config={campaign.gameConfig?.puzzle || {}} />
-          </div>
-        </div>
-      );
-
-    case 'dice':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <DicePreview config={campaign.gameConfig?.dice || {}} />
-          </div>
-        </div>
-      );
-
-    case 'form':
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <FormPreview
-              campaign={campaign}
-              gameSize={gameSize}
-            />
-          </div>
-        </div>
-      );
-
-    default:
-      return (
-        <div style={baseContainerStyle}>
-          <div style={baseWrapperStyle}>
-            <div className="text-center text-gray-500 flex items-center justify-center h-full">
-              <p className="text-sm">Type de jeu non pris en charge</p>
-            </div>
-          </div>
-        </div>
-      );
+  // Ajouter l'image de fond si définie
+  if (gameBackgroundImage || enhancedCampaign.design?.backgroundImage) {
+    const bgImage = gameBackgroundImage || enhancedCampaign.design?.backgroundImage;
+    containerStyle.backgroundImage = `url(${bgImage})`;
+    containerStyle.backgroundSize = 'cover';
+    containerStyle.backgroundPosition = 'center';
+    containerStyle.backgroundRepeat = 'no-repeat';
   }
+
+  // Pour les types form et quiz, utiliser le funnel standard
+  if (enhancedCampaign.type === 'form' || enhancedCampaign.type === 'quiz') {
+    return (
+      <div className={className} style={containerStyle}>
+        {gameBackgroundImage && (
+          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+        )}
+        <div className="relative z-10 w-full h-full">
+          <FunnelStandard 
+            campaign={enhancedCampaign}
+            key={`standard-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Pour les autres types, utiliser le funnel approprié
+  if (shouldUseUnlockedFunnel) {
+    return (
+      <div className={className} style={containerStyle}>
+        {gameBackgroundImage && (
+          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+        )}
+        <div className="relative z-10 w-full h-full">
+          <FunnelUnlockedGame
+            campaign={enhancedCampaign}
+            previewMode={previewDevice === 'desktop' ? 'desktop' : previewDevice}
+            modalContained={false}
+            key={`unlocked-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback vers le rendu direct du jeu
+  const renderDirectGame = () => {
+    switch (enhancedCampaign.type) {
+      case 'jackpot':
+        return (
+          <Jackpot
+            isPreview={true}
+            instantWinConfig={{
+              mode: 'instant_winner' as const,
+              winProbability: enhancedCampaign.gameConfig?.jackpot?.instantWin?.winProbability || 0.05,
+              maxWinners: enhancedCampaign.gameConfig?.jackpot?.instantWin?.maxWinners,
+              winnersCount: 0
+            }}
+            buttonLabel={buttonLabel || enhancedCampaign.gameConfig?.jackpot?.buttonLabel || 'Jouer'}
+            buttonColor={buttonColor || enhancedCampaign.buttonConfig?.color || '#841b60'}
+            backgroundImage={gameBackgroundImage}
+            containerBackgroundColor={enhancedCampaign.gameConfig?.jackpot?.containerBackgroundColor || '#1f2937'}
+            backgroundColor={enhancedCampaign.gameConfig?.jackpot?.backgroundColor || '#c4b5fd30'}
+            borderColor={enhancedCampaign.gameConfig?.jackpot?.borderColor || '#8b5cf6'}
+            borderWidth={enhancedCampaign.gameConfig?.jackpot?.borderWidth || 3}
+            slotBorderColor={enhancedCampaign.gameConfig?.jackpot?.slotBorderColor || '#a78bfa'}
+            slotBorderWidth={enhancedCampaign.gameConfig?.jackpot?.slotBorderWidth || 2}
+            slotBackgroundColor={enhancedCampaign.gameConfig?.jackpot?.slotBackgroundColor || '#ffffff'}
+          />
+        );
+
+      case 'wheel':
+        return (
+          <WheelPreview
+            campaign={enhancedCampaign}
+            config={{
+              mode: 'instant_winner' as const,
+              winProbability: enhancedCampaign.gameConfig?.wheel?.winProbability || 0.1,
+              maxWinners: enhancedCampaign.gameConfig?.wheel?.maxWinners,
+              winnersCount: 0
+            }}
+            onFinish={() => {}}
+            gameSize={gameSize}
+            gamePosition={enhancedCampaign.gamePosition || 'center'}
+            previewDevice={previewDevice}
+          />
+        );
+
+      case 'scratch':
+        return (
+          <ScratchPreview
+            config={enhancedCampaign.gameConfig?.scratch || {}}
+            buttonLabel={buttonLabel || enhancedCampaign.gameConfig?.scratch?.buttonLabel || 'Gratter'}
+            buttonColor={buttonColor || enhancedCampaign.buttonConfig?.color || '#841b60'}
+            gameSize={gameSize}
+            autoStart
+          />
+        );
+
+      default:
+        return (
+          <div className="text-center text-gray-500 flex items-center justify-center h-full">
+            <p className="text-sm">Type de jeu non pris en charge: {enhancedCampaign.type}</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className={className} style={containerStyle}>
+      {gameBackgroundImage && (
+        <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+      )}
+      <div className="relative z-10 w-full h-full flex items-center justify-center">
+        {renderDirectGame()}
+      </div>
+    </div>
+  );
 };
 
 export default GameRenderer;

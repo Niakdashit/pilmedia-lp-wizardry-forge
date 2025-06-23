@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
@@ -92,17 +91,27 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
   // Hauteur fixe, largeur responsive
   const FIXED_CANVAS_HEIGHT = 700;
 
-  // Utiliser le système de synchronisation centralisé
-  const enhancedCampaign = createSynchronizedQuizCampaign({
-    ...campaign,
-    gameSize,
-    gamePosition,
-    buttonConfig: {
-      ...campaign.buttonConfig,
-      text: campaign.buttonConfig?.text || campaign.gameConfig?.[campaign.type]?.buttonLabel || 'Jouer',
-      color: campaign.design?.buttonColor || campaign.buttonConfig?.color || campaign.gameConfig?.[campaign.type]?.buttonColor || '#841b60'
-    }
-  });
+  // Préparer la campagne avec toutes les configurations nécessaires
+  const enhancedCampaign = React.useMemo(() => {
+    const base = campaign.type === 'quiz' 
+      ? createSynchronizedQuizCampaign(campaign)
+      : campaign;
+
+    return {
+      ...base,
+      gameSize,
+      gamePosition,
+      buttonConfig: {
+        ...base.buttonConfig,
+        text: base.buttonConfig?.text || base.gameConfig?.[base.type]?.buttonLabel || 'Jouer',
+        color: base.design?.buttonColor || base.buttonConfig?.color || base.gameConfig?.[base.type]?.buttonColor || '#841b60'
+      },
+      design: {
+        ...base.design,
+        buttonColor: base.design?.buttonColor || base.buttonConfig?.color || '#841b60'
+      }
+    };
+  }, [campaign, gameSize, gamePosition]);
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4 md:p-6 bg-gradient-to-br from-gray-50 to-white overflow-hidden">
@@ -121,7 +130,7 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
           onClick={handleCanvasClick}
           className="relative w-full h-full overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${campaign.design?.background || '#f8fafc'} 0%, ${campaign.design?.background || '#f8fafc'}88 100%)`,
+            background: `linear-gradient(135deg, ${enhancedCampaign.design?.background || '#f8fafc'} 0%, ${enhancedCampaign.design?.background || '#f8fafc'}88 100%)`,
             backgroundImage: showGridLines ? 
               'radial-gradient(circle, rgba(147, 197, 253, 0.2) 1px, transparent 1px)' : 'none',
             backgroundSize: showGridLines ? '20px 20px' : 'auto'
@@ -138,7 +147,7 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
               campaign={enhancedCampaign}
               gameSize={gameSize}
               className="w-full h-full"
-              key={`preview-${gameSize}-${gamePosition}-${JSON.stringify(enhancedCampaign.design)}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
+              key={`preview-${gameSize}-${gamePosition}-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.design)}-${JSON.stringify(enhancedCampaign.gameConfig)}-${previewDevice}`}
               previewDevice={previewDevice}
             />
             

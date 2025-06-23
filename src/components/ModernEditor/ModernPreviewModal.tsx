@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, Monitor, Smartphone, Tablet } from 'lucide-react';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
@@ -70,22 +71,28 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
       );
     }
 
+    // Types utilisant le funnel unlocked_game
     const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
-    const funnel =
-      enhancedCampaign.funnel ||
-      (unlockedTypes.includes(enhancedCampaign.type) ? 'unlocked_game' : 'standard');
+    const shouldUseUnlockedFunnel = unlockedTypes.includes(enhancedCampaign.type) || 
+      enhancedCampaign.funnel === 'unlocked_game';
     
-    if (funnel === 'unlocked_game') {
+    if (shouldUseUnlockedFunnel) {
       return (
         <FunnelUnlockedGame
           campaign={enhancedCampaign}
           previewMode={device === 'desktop' ? 'desktop' : device}
           modalContained={false}
+          key={`unlocked-${enhancedCampaign.type}-${device}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
         />
       );
     }
+    
+    // Utiliser le funnel standard pour quiz et autres
     return (
-      <FunnelStandard campaign={enhancedCampaign} />
+      <FunnelStandard 
+        campaign={enhancedCampaign} 
+        key={`standard-${enhancedCampaign.type}-${device}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
+      />
     );
   };
 
