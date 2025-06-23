@@ -90,7 +90,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   return (
     <WheelContainer
-      gamePosition={gamePosition}
       gameDimensions={gameDimensions}
       previewDevice={previewDevice}
     >
