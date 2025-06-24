@@ -69,7 +69,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   };
 
   // Clé de rendu forcé pour la mise à jour des couleurs
-  const renderKey = `${gameType}-${JSON.stringify(finalColors)}-${Date.now()}`;
+  const renderKey = `${gameType}-${JSON.stringify(finalColors)}-${mockCampaign._lastUpdate || 0}`;
 
   return (
     <GameSwitcher

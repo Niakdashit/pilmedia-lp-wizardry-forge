@@ -59,20 +59,7 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
       }}
       onClick={onWheelClick}
     >
-      {showShadow && !shouldCropWheel && (
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: canvasSize + 30,
-            height: canvasSize + 30,
-            background: 'radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)',
-            top: '15px',
-            left: `calc(50% - ${(canvasSize + 30) / 2}px)`,
-            zIndex: 0,
-            filter: 'blur(12px)'
-          }}
-        />
-      )}
+
 
       <WheelCanvas
         segments={segments}
