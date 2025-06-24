@@ -1,6 +1,5 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { drawPremiumWheelSegments } from './WheelEffects';
 import { createWheelGradients } from './WheelGradients';
 
 interface Segment {
@@ -32,10 +31,8 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   rotation,
   centerImage,
   centerLogo,
-  theme,
   customColors,
   borderColor = '#FF4444',
-  borderOutlineColor = '#FFD700',
   canvasSize,
   offset,
   spinning = false
@@ -63,7 +60,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
     // Create gradients if needed
     if (!gradients) {
-      setGradients(createWheelGradients(ctx, center, radius, theme, customColors));
+      setGradients(createWheelGradients(ctx, center, radius, 'modern', customColors));
       return;
     }
 
@@ -78,14 +75,12 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       center,
       radius,
       size,
-      theme,
       customColors,
-      borderOutlineColor,
       spinning
     });
 
     // Draw modern metallic borders
-    drawModernBorders(ctx, center, radius, borderColor, borderOutlineColor);
+    drawModernBorders(ctx, center, radius, borderColor);
 
     // Draw golden metallic center
     drawGoldenMetallicCenter(ctx, center, centerImage, centerLogo);
@@ -115,9 +110,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     center,
     radius,
     size,
-    theme,
     customColors,
-    borderOutlineColor,
     spinning
   }: any) => {
     const total = segments.length;
@@ -221,7 +214,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     ctx.restore();
   };
 
-  const drawModernBorders = (ctx: CanvasRenderingContext2D, center: number, radius: number, borderColor: string, borderOutlineColor: string) => {
+  const drawModernBorders = (ctx: CanvasRenderingContext2D, center: number, radius: number, borderColor: string) => {
     // Outer red border ring
     ctx.beginPath();
     ctx.arc(center, center, radius + 35, 0, 2 * Math.PI);
@@ -375,7 +368,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
   useEffect(() => {
     drawModernFortuneWheel();
-  }, [segments, rotation, centerImage, centerLogo, theme, customColors, borderColor, borderOutlineColor, canvasSize, spinning, gradients]);
+  }, [segments, rotation, centerImage, centerLogo, customColors, borderColor, canvasSize, spinning, gradients]);
 
   return (
     <div style={{ position: 'relative' }}>

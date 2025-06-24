@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import WheelContainer from './WheelComponents/WheelContainer';
 import WheelButton from './WheelComponents/WheelButton';
@@ -50,7 +49,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     canvasSize,
     containerWidth,
     containerHeight,
-    pointerSize,
     segments,
     rotation,
     spinning,
@@ -131,6 +129,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           <WheelPreviewContent
             segments={segments}
             rotation={rotation}
+            spinning={spinning}
             centerImage={centerImage}
             centerLogo={centerLogo}
             theme={theme}
@@ -140,10 +139,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             canvasSize={canvasSize}
             containerWidth={containerWidth}
             containerHeight={containerHeight}
-            pointerSize={pointerSize}
             shouldCropWheel={shouldCropWheel}
             gamePosition={gamePosition}
-            formValidated={formValidated}
             showValidationMessage={showValidationMessage}
             onWheelClick={handleButtonClick}
             showShadow={showShadow}
