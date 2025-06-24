@@ -3,13 +3,11 @@ import { useEffect, useRef } from 'react';
 
 interface PremiumAnimationOptions {
   spinning: boolean;
-  theme: string;
   onAnimationFrame?: (timestamp: number) => void;
 }
 
 export const usePremiumWheelAnimations = ({
   spinning,
-  theme,
   onAnimationFrame
 }: PremiumAnimationOptions) => {
   const animationFrameRef = useRef<number>();

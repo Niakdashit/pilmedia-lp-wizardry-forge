@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { createWheelGradients } from './WheelGradients';
 import { getPremiumTheme, applyThemeEffects } from './WheelPremiumThemes';
@@ -49,7 +50,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   // Use premium animations
   usePremiumWheelAnimations({
     spinning,
-    theme,
     onAnimationFrame: (elapsed) => {
       setAnimationTime(elapsed);
     }
@@ -350,45 +350,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
         ctx.restore();
       };
       img.src = logoToDisplay;
-    }
-  };
-
-  const addModernSpinningEffects = (ctx: CanvasRenderingContext2D, center: number, radius: number) => {
-    // Motion blur rings
-    ctx.save();
-    ctx.globalAlpha = 0.15;
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.arc(center, center, radius + 25 - i * 3, 0, 2 * Math.PI);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Sparkle effects
-    const sparkleCount = 8;
-    for (let i = 0; i < sparkleCount; i++) {
-      const angle = (Date.now() * 0.008 + i * 45) * Math.PI / 180;
-      const sparkleX = center + (radius + 45) * Math.cos(angle);
-      const sparkleY = center + (radius + 45) * Math.sin(angle);
-      
-      ctx.save();
-      ctx.translate(sparkleX, sparkleY);
-      ctx.rotate(angle);
-      ctx.fillStyle = '#FFD700';
-      ctx.beginPath();
-      ctx.moveTo(0, -6);
-      ctx.lineTo(2, -2);
-      ctx.lineTo(6, 0);
-      ctx.lineTo(2, 2);
-      ctx.lineTo(0, 6);
-      ctx.lineTo(-2, 2);
-      ctx.lineTo(-6, 0);
-      ctx.lineTo(-2, -2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
     }
   };
 
