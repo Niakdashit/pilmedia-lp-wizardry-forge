@@ -37,7 +37,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gamePosition = 'center',
   previewDevice = 'desktop',
   disableForm = false,
-  showShadow = true
+  showShadow = false
 }) => {
   const {
     formValidated,
