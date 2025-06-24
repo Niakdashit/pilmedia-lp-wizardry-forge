@@ -43,7 +43,7 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   gamePosition,
   showValidationMessage,
   onWheelClick,
-  showShadow = true
+  showShadow = false
 }) => {
   const offset = shouldCropWheel && gamePosition !== 'center' 
     ? `${(containerWidth - canvasSize) / 2}px`
