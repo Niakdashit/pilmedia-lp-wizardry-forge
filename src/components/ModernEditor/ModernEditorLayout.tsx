@@ -81,7 +81,13 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
             maxWidth: '1400px',
             maxHeight: '900px'
           }}>
-              <GameCanvasPreview campaign={campaign} gameSize={campaign.gameSize || 'medium'} previewDevice={previewDevice} className="w-full h-full" key={`preview-${activeTab}-${JSON.stringify(campaign.gameConfig)}-${previewDevice}`} />
+              <GameCanvasPreview
+                campaign={campaign}
+                gameSize={campaign.gameSize || 'medium'}
+                previewDevice={previewDevice}
+                className="w-full h-full"
+                key={`preview-${activeTab}-${campaign._lastUpdate || 0}-${previewDevice}`}
+              />
             </div>
           </div>
 
