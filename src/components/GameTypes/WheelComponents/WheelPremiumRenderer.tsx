@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { drawPremiumWheelSegments } from './WheelEffects';
 import { createWheelGradients } from './WheelGradients';
@@ -81,7 +80,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       theme,
       customColors,
       borderOutlineColor,
-      gradients,
       spinning
     });
 
