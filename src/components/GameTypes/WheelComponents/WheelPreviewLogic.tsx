@@ -68,8 +68,8 @@ export const useWheelPreviewLogic = ({
   previewDevice = 'desktop',
   disableForm = false
 }: UseWheelPreviewLogicProps) => {
-  // ✅ LOGIQUE FUNNEL UNLOCKED : 
-  // - Si disableForm=true (éditeur/preview) ➜ formValidated=true (pas de formulaire)
+  // ✅ LOGIQUE CORRIGÉE : 
+  // - Si disableForm=true (éditeur/preview) ➜ formValidated=true (pas de formulaire requis)
   // - Si disableForm=false (funnel) ➜ formValidated=false (formulaire obligatoire)
   const [formValidated, setFormValidated] = useState(disableForm);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -98,10 +98,14 @@ export const useWheelPreviewLogic = ({
     return result;
   }, [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]);
 
-  // ✅ CORRECTION FUNNEL : disabled basé sur formValidated ET disabled externe
+  // ✅ CORRECTION : disabled basé sur le mode
+  // - En mode preview (disableForm=true) : jamais disabled (sauf external disabled)
+  // - En mode funnel (disableForm=false) : disabled si formulaire pas validé
+  const isWheelDisabled = disabled || (!disableForm && !formValidated);
+
   const { rotation, spinning, spinWheel } = useWheelSpin({
     segments,
-    disabled: disabled || !formValidated,
+    disabled: isWheelDisabled,
     config,
     onStart,
     onFinish
@@ -151,20 +155,34 @@ export const useWheelPreviewLogic = ({
   };
 
   const handleWheelClick = () => {
-    console.log('WheelPreviewLogic - handleWheelClick appelé, formValidated:', formValidated, 'spinning:', spinning);
+    console.log('WheelPreviewLogic - handleWheelClick appelé, formValidated:', formValidated, 'spinning:', spinning, 'disableForm:', disableForm);
     
-    // ✅ LOGIQUE FUNNEL UNLOCKED : Si formulaire pas validé ➜ impossible de jouer
-    if (!formValidated || spinning || disabled || segments.length === 0) {
-      console.log('WheelPreviewLogic - Impossible de lancer la roue:', {
-        formValidated,
+    // ✅ LOGIQUE CORRIGÉE :
+    // - Si disableForm=true (preview) : peut toujours lancer la roue
+    // - Si disableForm=false (funnel) : doit avoir formulaire validé
+    if (spinning || disabled || segments.length === 0) {
+      console.log('WheelPreviewLogic - Impossible de lancer la roue (conditions basiques):', {
         spinning,
         disabled,
         segmentsLength: segments.length
       });
       return;
     }
+
+    // Mode preview : pas de vérification de formulaire
+    if (disableForm) {
+      console.log('WheelPreviewLogic - ✅ Mode preview - Lancement direct de la roue');
+      spinWheel();
+      return;
+    }
+
+    // Mode funnel : vérification du formulaire
+    if (!formValidated) {
+      console.log('WheelPreviewLogic - Mode funnel - Formulaire requis');
+      return;
+    }
     
-    console.log('WheelPreviewLogic - ✅ Lancement de la roue autorisé');
+    console.log('WheelPreviewLogic - ✅ Mode funnel - Formulaire validé, lancement de la roue');
     spinWheel();
   };
 
