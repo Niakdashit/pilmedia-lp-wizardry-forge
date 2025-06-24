@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Eye, Save, Share2, MoreHorizontal, Menu } from 'lucide-react';
+import { Eye, Save, Share2, MoreHorizontal } from 'lucide-react';
 import PreviewDeviceButtons from './PreviewDeviceButtons';
 
 interface EditorHeaderProps {
@@ -11,7 +11,6 @@ interface EditorHeaderProps {
   isNewCampaign?: boolean;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   onDeviceChange?: (device: 'desktop' | 'tablet' | 'mobile') => void;
-  onOpenPanel?: () => void;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -21,8 +20,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   isLoading = false,
   isNewCampaign = false,
   selectedDevice = 'desktop',
-  onDeviceChange = () => {},
-  onOpenPanel
+  onDeviceChange = () => {}
 }) => {
   return (
     <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0 z-50">
@@ -30,14 +28,6 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         <div className="flex items-center justify-between">
           {/* Left section - Titre de la campagne */}
           <div className="flex items-center space-x-4 flex-shrink-0">
-            {onOpenPanel && (
-              <button
-                onClick={onOpenPanel}
-                className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            )}
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-gray-900 truncate">
                 {campaign.name || (isNewCampaign ? 'Nouvelle Campagne' : 'Campagne')}
