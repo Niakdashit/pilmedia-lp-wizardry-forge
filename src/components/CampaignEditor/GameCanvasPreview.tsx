@@ -113,7 +113,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             gamePosition={gamePosition}
             previewDevice={previewDevice}
             disabled={false}
-            disableForm={true}
+            disableForm={false}
           />
         );
       
