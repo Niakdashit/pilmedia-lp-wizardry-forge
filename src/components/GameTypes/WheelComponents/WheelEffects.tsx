@@ -1,4 +1,3 @@
-
 import { getThemeColors } from './WheelThemes';
 
 interface Segment {
@@ -21,7 +20,6 @@ interface DrawPremiumWheelSegmentsProps {
     accent?: string;
   };
   borderOutlineColor: string;
-  gradients: any;
   spinning: boolean;
 }
 
@@ -35,7 +33,6 @@ export const drawPremiumWheelSegments = ({
   theme,
   customColors,
   borderOutlineColor,
-  gradients,
   spinning
 }: DrawPremiumWheelSegmentsProps) => {
   const total = segments.length;

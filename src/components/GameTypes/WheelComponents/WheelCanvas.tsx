@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import WheelPremiumRenderer from './WheelPremiumRenderer';
 import { useWheelAnimations } from './WheelAnimations';
 

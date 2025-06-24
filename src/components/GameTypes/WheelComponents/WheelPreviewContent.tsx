@@ -40,10 +40,8 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   canvasSize,
   containerWidth,
   containerHeight,
-  pointerSize,
   shouldCropWheel,
   gamePosition,
-  formValidated,
   showValidationMessage,
   onWheelClick,
   showShadow = true
