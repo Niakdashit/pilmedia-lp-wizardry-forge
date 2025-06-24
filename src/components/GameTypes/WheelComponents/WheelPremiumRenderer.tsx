@@ -38,6 +38,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   canvasSize,
   spinning = false
 }) => {
+  const rotationRad = rotation * Math.PI / 180;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const shadowCanvasRef = useRef<HTMLCanvasElement>(null);
   const [gradients, setGradients] = useState<any>(null);
@@ -83,7 +84,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     drawSimpleWheelSegments({
       ctx,
       segments,
-      rotation,
+      rotationRad,
       center,
       radius,
       size,
@@ -119,7 +120,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   const drawSimpleWheelSegments = ({
     ctx,
     segments,
-    rotation,
+    rotationRad,
     center,
     radius,
     size,
@@ -134,7 +135,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       premiumTheme.colors;
 
     segments.forEach((seg: any, i: number) => {
-      const startAngle = i * anglePerSlice + rotation;
+      const startAngle = i * anglePerSlice + rotationRad;
       const endAngle = startAngle + anglePerSlice;
 
       // Draw segment with flat color (no gradients)

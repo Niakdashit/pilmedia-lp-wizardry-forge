@@ -34,6 +34,7 @@ export const drawWheelSegments = ({
   customColors,
   borderOutlineColor
 }: WheelSegmentDrawerProps) => {
+  const rotationRad = rotation * Math.PI / 180;
   const total = segments.length;
   const anglePerSlice = (2 * Math.PI) / total;
   
@@ -46,7 +47,7 @@ export const drawWheelSegments = ({
   console.log('WheelSegmentDrawer - CustomColors reçues:', customColors);
 
   segments.forEach((seg: Segment, i: number) => {
-    const startAngle = i * anglePerSlice + rotation;
+    const startAngle = i * anglePerSlice + rotationRad;
     const endAngle = startAngle + anglePerSlice;
 
     // Draw segment - toujours utiliser la couleur du segment si définie, sinon les couleurs du thème
