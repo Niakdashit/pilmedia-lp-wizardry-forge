@@ -24,7 +24,6 @@ interface WheelPremiumRendererProps {
   borderColor?: string;
   borderOutlineColor?: string;
   canvasSize: number;
-  offset: string;
   spinning?: boolean;
 }
 
@@ -37,7 +36,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   customColors,
   borderColor = '#FF4444',
   canvasSize,
-  offset,
   spinning = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -81,8 +79,8 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     // Draw shadow layer
     drawWheelShadow(shadowCtx, center, radius);
 
-    // Draw premium themed segments without glow effects
-    drawPremiumWheelSegments({
+    // Draw simple flat segments
+    drawSimpleWheelSegments({
       ctx,
       segments,
       rotation,
@@ -118,7 +116,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     ctx.fill();
   };
 
-  const drawPremiumWheelSegments = ({
+  const drawSimpleWheelSegments = ({
     ctx,
     segments,
     rotation,
@@ -139,21 +137,14 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       const startAngle = i * anglePerSlice + rotation;
       const endAngle = startAngle + anglePerSlice;
 
-      // Create simple gradient for each segment (no glow effects)
+      // Draw segment with flat color (no gradients)
       const segmentColor = seg.color || themeColors[i % themeColors.length];
-      const segmentGradient = ctx.createRadialGradient(center, center, radius * 0.2, center, center, radius + 20);
-      
-      // Simple gradient without metallic effects
-      segmentGradient.addColorStop(0, lightenColor(segmentColor, 30));
-      segmentGradient.addColorStop(0.5, segmentColor);
-      segmentGradient.addColorStop(1, darkenColor(segmentColor, 20));
 
-      // Draw segment
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.arc(center, center, radius + 20, startAngle, endAngle);
       ctx.closePath();
-      ctx.fillStyle = segmentGradient;
+      ctx.fillStyle = segmentColor;
       ctx.fill();
 
       // Draw simple separator
@@ -336,7 +327,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   }, [segments, rotation, centerImage, centerLogo, theme, customColors, borderColor, canvasSize, spinning, gradients, animationTime]);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       {/* Shadow layer */}
       <canvas
         ref={shadowCanvasRef}
@@ -344,8 +335,9 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
         height={canvasSize}
         style={{
           position: 'absolute',
-          left: '0px',
-          top: 0,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
           zIndex: 0,
           filter: 'blur(6px)',
         }}
@@ -359,8 +351,9 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
         height={canvasSize}
         style={{
           position: 'absolute',
-          left: '0px',
-          top: 0,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
           zIndex: 1,
           filter: spinning ? `brightness(1.2) contrast(1.1) saturate(1.2)` : 'none',
           transition: 'filter 0.3s ease',
