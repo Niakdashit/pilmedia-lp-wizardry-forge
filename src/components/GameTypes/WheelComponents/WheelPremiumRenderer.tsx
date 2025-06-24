@@ -25,6 +25,9 @@ interface WheelPremiumRendererProps {
   borderOutlineColor?: string;
   canvasSize: number;
   spinning?: boolean;
+  /** Optional refs to allow external control over the canvas elements */
+  canvasRef?: React.RefObject<HTMLCanvasElement>;
+  shadowCanvasRef?: React.RefObject<HTMLCanvasElement>;
 }
 
 const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
@@ -36,11 +39,16 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   customColors,
   borderColor = '#FF4444',
   canvasSize,
-  spinning = false
+  spinning = false,
+  canvasRef,
+  shadowCanvasRef
 }) => {
   const rotationRad = rotation * Math.PI / 180;
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const shadowCanvasRef = useRef<HTMLCanvasElement>(null);
+  const internalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const internalShadowCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const mainCanvasRef = canvasRef || internalCanvasRef;
+  const mainShadowCanvasRef = shadowCanvasRef || internalShadowCanvasRef;
   const [gradients, setGradients] = useState<any>(null);
   const [animationTime, setAnimationTime] = useState(0);
 
@@ -55,8 +63,8 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   });
 
   const drawModernFortuneWheel = () => {
-    const canvas = canvasRef.current;
-    const shadowCanvas = shadowCanvasRef.current;
+    const canvas = mainCanvasRef.current;
+    const shadowCanvas = mainShadowCanvasRef.current;
     if (!canvas || !shadowCanvas || segments.length === 0) return;
     
     const ctx = canvas.getContext('2d');
@@ -331,7 +339,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       {/* Shadow layer */}
       <canvas
-        ref={shadowCanvasRef}
+        ref={mainShadowCanvasRef}
         width={canvasSize}
         height={canvasSize}
         style={{
@@ -347,7 +355,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       
       {/* Main wheel */}
       <canvas
-        ref={canvasRef}
+        ref={mainCanvasRef}
         width={canvasSize}
         height={canvasSize}
         style={{
