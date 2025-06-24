@@ -12,7 +12,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   gameDimensions,
   previewDevice
 }) => {
-  // Utiliser des dimensions plus généreuses pour éviter les coupures
+  // Dimensions fixes généreuses pour éviter toute coupure
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -21,28 +21,22 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     position: 'relative',
     width: '100%',
     height: '100%',
-    minWidth: `${Math.max(gameDimensions.width + 100, 400)}px`,
-    minHeight: `${Math.max(gameDimensions.height + 100, 400)}px`,
-    maxWidth: '100%',
+    minWidth: `${Math.max(gameDimensions.width + 200, 600)}px`,
+    minHeight: `${Math.max(gameDimensions.height + 200, 600)}px`,
+    maxWidth: 'none', // Pas de limite pour éviter le responsive
+    maxHeight: 'none', // Pas de limite pour éviter le responsive
     overflow: 'visible', // Permettre le débordement pour éviter les coupures
-    padding: '40px 20px',
+    padding: '60px 40px', // Padding généreux
     boxSizing: 'border-box',
   };
-
-  // Pas de crop pour l'éditeur - on veut voir la roue complète
-  const isMobile = previewDevice === 'mobile';
-  if (isMobile) {
-    containerStyle.padding = '30px 15px';
-    containerStyle.minHeight = `${Math.max(gameDimensions.height + 80, 350)}px`;
-  }
 
   return (
     <div style={containerStyle}>
       <div 
         className="w-full h-full flex items-center justify-center"
         style={{
-          minWidth: `${gameDimensions.width}px`,
-          minHeight: `${gameDimensions.height}px`,
+          minWidth: `${gameDimensions.width + 100}px`,
+          minHeight: `${gameDimensions.height + 100}px`,
           overflow: 'visible'
         }}
       >

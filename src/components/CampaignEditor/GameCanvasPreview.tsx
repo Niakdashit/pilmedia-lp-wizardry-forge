@@ -7,7 +7,6 @@ import { Jackpot } from '../GameTypes';
 import ScratchPreview from '../GameTypes/ScratchPreview';
 import DicePreview from '../GameTypes/DicePreview';
 import QuizPreview from '../GameTypes/QuizPreview';
-import useCenteredStyles from '../../hooks/useCenteredStyles';
 
 interface GameCanvasPreviewProps {
   campaign: any;
@@ -34,10 +33,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   const resolvedBackground =
     gameBackgroundImage || getCampaignBackgroundImage(campaign, previewDevice);
 
-  const { containerStyle: baseContainerStyle, wrapperStyle } = useCenteredStyles();
-
   const getContainerClasses = () => {
-    const baseClasses = "bg-white border-2 border-gray-200 overflow-auto";
+    const baseClasses = "bg-white border-2 border-gray-200";
     
     if (previewDevice === 'mobile') {
       return `${baseClasses} rounded-3xl shadow-2xl`;
@@ -50,18 +47,24 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 
   const getContainerStyle = () => {
     const dimensions = GAME_SIZES[gameSize];
-    // Augmenter significativement la hauteur minimale pour éviter les coupures
-    const baseMinHeight = Math.max(dimensions.height + 200, 600);
+    
+    // Dimensions fixes non-responsive pour éviter le crop
+    const fixedWidth = Math.max(dimensions.width, 800);
+    const fixedHeight = Math.max(dimensions.height + 200, 700);
 
     const baseStyle: React.CSSProperties = {
-      ...baseContainerStyle,
-      minHeight: `${baseMinHeight}px`,
-      maxHeight: '90vh', // Limiter à 90% de la hauteur viewport
+      width: `${fixedWidth}px`,
+      height: `${fixedHeight}px`,
+      minWidth: `${fixedWidth}px`,
+      minHeight: `${fixedHeight}px`,
+      maxWidth: 'none', // Pas de limite max pour éviter le responsive
+      maxHeight: 'none', // Pas de limite max pour éviter le responsive
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
-      width: '100%'
+      overflow: 'visible' // Permettre le débordement naturel
     };
 
     // Ajouter l'image de fond si définie
@@ -72,25 +75,28 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       baseStyle.backgroundRepeat = 'no-repeat';
     }
 
+    // Padding selon le device mais sans affecter les dimensions
     if (previewDevice === 'mobile') {
-      return {
-        ...baseStyle,
-        padding: '20px',
-        minHeight: `${Math.max(baseMinHeight, 700)}px`
-      };
+      baseStyle.padding = '20px';
     } else if (previewDevice === 'tablet') {
-      return {
-        ...baseStyle,
-        padding: '24px',
-        minHeight: `${Math.max(baseMinHeight, 650)}px`
-      };
+      baseStyle.padding = '24px';
+    } else {
+      baseStyle.padding = '32px';
     }
 
-    return {
-      ...baseStyle,
-      padding: '32px',
-      minHeight: `${baseMinHeight}px`
-    };
+    return baseStyle;
+  };
+
+  // Container wrapper avec scroll pour gérer le débordement
+  const wrapperStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    overflow: 'auto', // Permettre le scroll
+    display: 'flex',
+    alignItems: 'flex-start', // Aligner en haut pour éviter le centrage qui peut couper
+    justifyContent: 'center',
+    padding: '20px',
+    boxSizing: 'border-box'
   };
 
   const renderPreviewGame = () => {
@@ -183,16 +189,18 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   };
 
   return (
-    <div 
-      className={`${getContainerClasses()} ${className}`}
-      style={getContainerStyle()}
-    >
-      {resolvedBackground && showBackgroundOverlay && (
-        <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
-      )}
-      
-      <div className="relative z-10 w-full h-full flex items-center justify-center" style={wrapperStyle}>
-        {renderPreviewGame()}
+    <div style={wrapperStyle} className={className}>
+      <div 
+        className={getContainerClasses()}
+        style={getContainerStyle()}
+      >
+        {resolvedBackground && showBackgroundOverlay && (
+          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+        )}
+        
+        <div className="relative z-10 w-full h-full flex items-center justify-center">
+          {renderPreviewGame()}
+        </div>
       </div>
     </div>
   );
