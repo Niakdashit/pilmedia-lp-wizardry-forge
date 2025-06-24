@@ -96,6 +96,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
             isModal={isModal}
+            autoStart={false}
           />
         );
       
@@ -110,14 +111,14 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             containerBackgroundColor={campaign.gameConfig?.jackpot?.containerBackgroundColor}
             backgroundColor={campaign.gameConfig?.jackpot?.backgroundColor}
             borderColor={campaign.gameConfig?.jackpot?.borderColor}
-          borderWidth={campaign.gameConfig?.jackpot?.borderWidth}
-          slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
-          slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
-          slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
-          disabled={!formValidated}
-          onFinish={handleGameComplete}
-          onStart={handleGameStartInternal}
-        />
+            borderWidth={campaign.gameConfig?.jackpot?.borderWidth}
+            slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
+            slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
+            slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
+            disabled={!formValidated}
+            onFinish={handleGameComplete}
+            onStart={handleGameStartInternal}
+          />
         );
       case 'quiz':
         return (
@@ -183,7 +184,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         </ContrastBackground>
       </div>
       
-      {!formValidated && campaign.type !== 'quiz' && (
+      {!formValidated && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
         <div 
           onClick={() => {
             onGameButtonClick();

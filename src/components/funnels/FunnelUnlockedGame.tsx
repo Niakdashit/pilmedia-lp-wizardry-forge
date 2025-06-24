@@ -33,9 +33,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     console.warn(`Type de jeu "${campaign.type}" utilise FunnelUnlockedGame mais devrait utiliser FunnelStandard`);
   }
 
-  // L'état de validation du formulaire démarre toujours à false pour
-  // obliger l'utilisateur à renseigner le formulaire avant de jouer,
-  // quel que soit le type de jeu.
+  // LOGIQUE FUNNEL UNLOCKED : formulaire obligatoire pour démarrer le jeu
   const [formValidated, setFormValidated] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
@@ -64,9 +62,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   }];
 
   const handleGameButtonClick = () => {
+    // Si le formulaire n'est pas validé, on affiche la modale
     if (!formValidated) {
       setShowFormModal(true);
     }
+    // Si le formulaire est validé, le jeu peut démarrer (géré dans chaque composant de jeu)
   };
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
@@ -112,8 +112,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     setGameResult(result);
   };
 
+  // FONCTION DE RESET COMPLET pour le funnel unlocked
   const handleReset = () => {
-    setFormValidated(false);
+    console.log('🔄 Reset complet du funnel unlocked game');
+    setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
     setGameResult(null);
     setShowFormModal(false);
     setShowValidationMessage(false);
@@ -159,20 +161,18 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         />
       </div>
 
-      {/* Modal de formulaire - UNIQUEMENT pour les types qui ne sont pas des roues */}
-      {campaign.type !== 'wheel' && (
-        <FormHandler
-          showFormModal={showFormModal}
-          campaign={campaign}
-          fields={fields}
-          participationLoading={participationLoading}
-          modalContained={modalContained}
-          onClose={() => {
-            setShowFormModal(false);
-          }}
-          onSubmit={handleFormSubmit}
-        />
-      )}
+      {/* Modal de formulaire pour tous les jeux unlocked */}
+      <FormHandler
+        showFormModal={showFormModal}
+        campaign={campaign}
+        fields={fields}
+        participationLoading={participationLoading}
+        modalContained={modalContained}
+        onClose={() => {
+          setShowFormModal(false);
+        }}
+        onSubmit={handleFormSubmit}
+      />
     </div>
   );
 };

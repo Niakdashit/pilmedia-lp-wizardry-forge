@@ -68,7 +68,9 @@ export const useWheelPreviewLogic = ({
   previewDevice = 'desktop',
   disableForm = false
 }: UseWheelPreviewLogicProps) => {
-  // État du formulaire - commencer à false pour forcer la validation
+  // ✅ LOGIQUE FUNNEL UNLOCKED : 
+  // - Si disableForm=true (éditeur/preview) ➜ formValidated=true (pas de formulaire)
+  // - Si disableForm=false (funnel) ➜ formValidated=false (formulaire obligatoire)
   const [formValidated, setFormValidated] = useState(disableForm);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
@@ -96,9 +98,10 @@ export const useWheelPreviewLogic = ({
     return result;
   }, [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]);
 
+  // ✅ CORRECTION FUNNEL : disabled basé sur formValidated ET disabled externe
   const { rotation, spinning, spinWheel } = useWheelSpin({
     segments,
-    disabled: disabled || !formValidated, // Désactiver si pas validé
+    disabled: disabled || !formValidated,
     config,
     onStart,
     onFinish
@@ -117,15 +120,10 @@ export const useWheelPreviewLogic = ({
     console.log('WheelPreviewLogic - useEffect segments changé:', segments);
   }, [segments]);
 
-  // Effect pour synchroniser l'état quand disableForm change
+  // ✅ SYNCHRONISATION disableForm avec formValidated
   useEffect(() => {
-    if (disableForm) {
-      setFormValidated(true);
-      console.log('WheelPreviewLogic - disableForm activé, formValidated set à true');
-    } else {
-      setFormValidated(false);
-      console.log('WheelPreviewLogic - disableForm désactivé, formValidated set à false');
-    }
+    console.log('WheelPreviewLogic - Sync disableForm:', disableForm, '➜ formValidated:', disableForm);
+    setFormValidated(disableForm);
   }, [disableForm]);
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
@@ -155,7 +153,7 @@ export const useWheelPreviewLogic = ({
   const handleWheelClick = () => {
     console.log('WheelPreviewLogic - handleWheelClick appelé, formValidated:', formValidated, 'spinning:', spinning);
     
-    // Vérifier si on peut lancer la roue
+    // ✅ LOGIQUE FUNNEL UNLOCKED : Si formulaire pas validé ➜ impossible de jouer
     if (!formValidated || spinning || disabled || segments.length === 0) {
       console.log('WheelPreviewLogic - Impossible de lancer la roue:', {
         formValidated,
@@ -166,7 +164,7 @@ export const useWheelPreviewLogic = ({
       return;
     }
     
-    console.log('WheelPreviewLogic - Lancement de la roue');
+    console.log('WheelPreviewLogic - ✅ Lancement de la roue autorisé');
     spinWheel();
   };
 

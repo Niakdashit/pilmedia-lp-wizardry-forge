@@ -29,7 +29,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   autoStart = false,
   isModal = false
 }) => {
-  // CORRECTION: Le jeu ne démarre jamais automatiquement si disabled=true (formulaire non validé)
+  // ✅ LOGIQUE FUNNEL UNLOCKED : le jeu ne démarre que si disabled=false (formulaire validé)
   const [gameStarted, setGameStarted] = useState(false);
   const [finishedCards, setFinishedCards] = useState<Set<number>>(new Set());
   const [hasWon, setHasWon] = useState(false);
@@ -43,7 +43,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     localStorage.removeItem(SCRATCH_STARTED_KEY);
   }, []);
 
-  // CORRECTION: N'autostart que si explicitement demandé ET que le jeu n'est pas disabled
+  // ✅ CORRECTION : Pas d'autostart si disabled=true (formulaire non validé)
   useEffect(() => {
     if (autoStart && !gameStarted && !disabled) {
       setGameStarted(true);
@@ -52,8 +52,12 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   }, [autoStart, gameStarted, disabled, onStart]);
 
   const handleGameStart = () => {
-    // CORRECTION: Vérifier que le jeu n'est pas disabled avant de démarrer
-    if (disabled) return;
+    // ✅ VERIFICATION FUNNEL : Ne peut pas démarrer si disabled (formulaire non validé)
+    if (disabled) {
+      console.log('🚫 Scratch: Jeu bloqué - formulaire non validé');
+      return;
+    }
+    console.log('🎮 Scratch: Démarrage du jeu autorisé');
     setGameStarted(true);
     if (onStart) onStart();
   };
@@ -101,7 +105,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     scratchColor: config?.scratchColor || '#C0C0C0'
   }];
 
-  // CORRECTION: Afficher l'interface de démarrage même quand disabled=true, mais avec un bouton inactif
+  // ✅ INTERFACE DE DÉMARRAGE : respecte le funnel unlocked
   if (!gameStarted) {
     return (
       <div className="w-full h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
@@ -121,7 +125,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           />
         </div>
 
-        {/* CORRECTION: Toujours afficher le bouton de démarrage pour respecter le funnel */}
+        {/* ✅ BOUTON DE DÉMARRAGE : respecte disabled pour le funnel */}
         <div className="flex-shrink-0 text-center py-8 px-4">
           <div className="space-y-4">
             <div className="space-y-2">
