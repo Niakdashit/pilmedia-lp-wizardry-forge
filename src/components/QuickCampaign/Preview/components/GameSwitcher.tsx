@@ -102,7 +102,7 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
           gamePosition={gamePosition}
           previewDevice={previewDevice}
           key={renderKey}
-          showShadow={true}
+          showShadow={false}
         />
       );
 

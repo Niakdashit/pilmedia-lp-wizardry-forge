@@ -120,7 +120,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             previewDevice={previewDevice}
             disabled={false}
             disableForm={false}
-            showShadow={true}
+            showShadow={false}
           />
         );
       

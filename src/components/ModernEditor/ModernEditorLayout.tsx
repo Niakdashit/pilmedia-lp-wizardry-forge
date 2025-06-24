@@ -4,6 +4,7 @@ import ModernEditorSidebar from './ModernEditorSidebar';
 import ModernEditorPanel from './ModernEditorPanel';
 import AIAssistantSidebar from './AIAssistantSidebar';
 import EditorHeader from './components/EditorHeader';
+import EditorMobilePanel from './components/EditorMobilePanel';
 import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
 interface ModernEditorLayoutProps {
   campaign: any;
@@ -34,6 +35,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 }) => {
   const [showAIAssistant] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
   const handleAIGenerate = async () => {
     setIsGenerating(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -41,12 +43,12 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
   };
   return <div className="flex flex-col min-w-0 h-screen">
       {/* Header */}
-      <EditorHeader campaign={campaign} onSave={onSave} onPreview={onPreview} isLoading={isLoading} isNewCampaign={isNewCampaign} selectedDevice={previewDevice} onDeviceChange={onDeviceChange} />
+      <EditorHeader campaign={campaign} onSave={onSave} onPreview={onPreview} isLoading={isLoading} isNewCampaign={isNewCampaign} selectedDevice={previewDevice} onDeviceChange={onDeviceChange} onOpenPanel={() => setIsMobilePanelOpen(true)} />
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Editor Sidebar - largeur réduite de 280px à 260px */}
-        <div className="w-[390px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
+        <div className="hidden md:flex w-[390px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
           <div className="flex h-full">
             {/* Navigation tabs - alignés à gauche */}
             <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
@@ -102,6 +104,16 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
           </AnimatePresence>
         </div>
       </div>
+
+      <EditorMobilePanel
+        isOpen={isMobilePanelOpen}
+        onClose={() => setIsMobilePanelOpen(false)}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        campaign={campaign}
+        setCampaign={setCampaign}
+        campaignType={campaignType as any}
+      />
     </div>;
 };
 export default ModernEditorLayout;

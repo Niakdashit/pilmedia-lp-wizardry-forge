@@ -82,7 +82,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             previewDevice={previewMode}
             disabled={!formValidated}
             disableForm={true}
-            showShadow={true}
+            showShadow={false}
           />
         );
       
