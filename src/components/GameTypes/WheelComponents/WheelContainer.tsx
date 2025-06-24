@@ -9,24 +9,21 @@ interface WheelContainerProps {
 
 const WheelContainer: React.FC<WheelContainerProps> = ({
   children,
-  gameDimensions,
-  previewDevice
+  gameDimensions
 }) => {
   // Dimensions fixes généreuses pour éviter toute coupure
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Alignement en haut pour éviter le crop
     position: 'relative',
     width: '100%',
     height: '100%',
-    minWidth: `${Math.max(gameDimensions.width + 200, 600)}px`,
-    minHeight: `${Math.max(gameDimensions.height + 200, 600)}px`,
-    maxWidth: 'none', // Pas de limite pour éviter le responsive
-    maxHeight: 'none', // Pas de limite pour éviter le responsive
+    minWidth: `${Math.max(gameDimensions.width + 200, 800)}px`, // Dimensions fixes plus importantes
+    minHeight: `${Math.max(gameDimensions.height + 200, 700)}px`, // Dimensions fixes plus importantes
     overflow: 'visible', // Permettre le débordement pour éviter les coupures
-    padding: '60px 40px', // Padding généreux
+    padding: '40px', // Padding généreux mais moins que avant
     boxSizing: 'border-box',
   };
 
