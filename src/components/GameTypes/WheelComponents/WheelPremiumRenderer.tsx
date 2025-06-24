@@ -1,6 +1,7 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { createWheelGradients } from './WheelGradients';
+import { getPremiumTheme, applyThemeEffects } from './WheelPremiumThemes';
+import { usePremiumWheelAnimations, createPremiumSpinningEffects } from './WheelPremiumAnimations';
 
 interface Segment {
   label: string;
@@ -31,6 +32,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   rotation,
   centerImage,
   centerLogo,
+  theme,
   customColors,
   borderColor = '#FF4444',
   canvasSize,
@@ -40,6 +42,18 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const shadowCanvasRef = useRef<HTMLCanvasElement>(null);
   const [gradients, setGradients] = useState<any>(null);
+  const [animationTime, setAnimationTime] = useState(0);
+
+  const premiumTheme = getPremiumTheme(theme);
+
+  // Use premium animations
+  usePremiumWheelAnimations({
+    spinning,
+    theme,
+    onAnimationFrame: (elapsed) => {
+      setAnimationTime(elapsed);
+    }
+  });
 
   const drawModernFortuneWheel = () => {
     const canvas = canvasRef.current;
@@ -60,34 +74,35 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
     // Create gradients if needed
     if (!gradients) {
-      setGradients(createWheelGradients(ctx, center, radius, 'modern', customColors));
+      setGradients(createWheelGradients(ctx, center, radius, theme, customColors));
       return;
     }
 
     // Draw shadow layer
     drawWheelShadow(shadowCtx, center, radius);
 
-    // Draw modern segments with vibrant colors
-    drawModernWheelSegments({
+    // Draw premium themed segments
+    drawPremiumWheelSegments({
       ctx,
       segments,
       rotation,
       center,
       radius,
       size,
-      customColors,
-      spinning
+      premiumTheme,
+      customColors
     });
 
-    // Draw modern metallic borders
-    drawModernBorders(ctx, center, radius, borderColor);
+    // Draw premium borders
+    drawPremiumBorders(ctx, center, radius, premiumTheme);
 
-    // Draw golden metallic center
-    drawGoldenMetallicCenter(ctx, center, centerImage, centerLogo);
+    // Draw premium center
+    drawPremiumCenter(ctx, center, premiumTheme, centerImage, centerLogo);
 
-    // Add spinning effects if active
+    // Apply theme-specific effects
     if (spinning) {
-      addModernSpinningEffects(ctx, center, radius);
+      applyThemeEffects(ctx, premiumTheme, center, radius, spinning);
+      createPremiumSpinningEffects(ctx, center, radius, theme, animationTime);
     }
   };
 
@@ -103,48 +118,43 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     ctx.fill();
   };
 
-  const drawModernWheelSegments = ({
+  const drawPremiumWheelSegments = ({
     ctx,
     segments,
     rotation,
     center,
     radius,
     size,
-    customColors,
-    spinning
+    premiumTheme,
+    customColors
   }: any) => {
     const total = segments.length;
     const anglePerSlice = (2 * Math.PI) / total;
     
-    // Modern vibrant colors matching the reference image
-    const modernColors = [
-      '#FF4444', // Red
-      '#4CAF50', // Green  
-      '#2196F3', // Blue
-      '#FF9800', // Orange
-      '#9C27B0', // Purple
-      '#00BCD4', // Cyan
-      '#8BC34A', // Light Green
-      '#FFC107'  // Amber
-    ];
-
     const themeColors = customColors && customColors.primary ? 
       [customColors.primary, customColors.secondary, customColors.accent || customColors.secondary] :
-      modernColors;
+      premiumTheme.colors;
 
-    segments.forEach((seg: Segment, i: number) => {
+    segments.forEach((seg: any, i: number) => {
       const startAngle = i * anglePerSlice + rotation;
       const endAngle = startAngle + anglePerSlice;
 
-      // Create vibrant gradient for each segment
+      // Create premium gradient for each segment
       const segmentColor = seg.color || themeColors[i % themeColors.length];
       const segmentGradient = ctx.createRadialGradient(center, center, radius * 0.2, center, center, radius + 20);
       
-      // Bright, vibrant gradient
-      segmentGradient.addColorStop(0, lightenColor(segmentColor, 50));
-      segmentGradient.addColorStop(0.5, segmentColor);
-      segmentGradient.addColorStop(0.8, darkenColor(segmentColor, 10));
-      segmentGradient.addColorStop(1, darkenColor(segmentColor, 30));
+      // Apply theme-specific gradient
+      if (premiumTheme.effects.metallic) {
+        segmentGradient.addColorStop(0, lightenColor(segmentColor, 60));
+        segmentGradient.addColorStop(0.3, lightenColor(segmentColor, 30));
+        segmentGradient.addColorStop(0.7, segmentColor);
+        segmentGradient.addColorStop(1, darkenColor(segmentColor, 40));
+      } else {
+        segmentGradient.addColorStop(0, lightenColor(segmentColor, 50));
+        segmentGradient.addColorStop(0.5, segmentColor);
+        segmentGradient.addColorStop(0.8, darkenColor(segmentColor, 10));
+        segmentGradient.addColorStop(1, darkenColor(segmentColor, 30));
+      }
 
       // Draw segment
       ctx.beginPath();
@@ -154,32 +164,34 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       ctx.fillStyle = segmentGradient;
       ctx.fill();
 
-      // Add glossy highlight
-      const highlightGradient = ctx.createRadialGradient(center, center, 0, center, center, radius + 15);
-      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-      highlightGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.1)');
-      highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      
-      ctx.beginPath();
-      ctx.moveTo(center, center);
-      ctx.arc(center, center, radius + 15, startAngle, endAngle);
-      ctx.closePath();
-      ctx.fillStyle = highlightGradient;
-      ctx.fill();
+      // Add premium highlight based on theme
+      if (premiumTheme.effects.glow) {
+        const highlightGradient = ctx.createRadialGradient(center, center, 0, center, center, radius + 15);
+        highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        highlightGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.2)');
+        highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius + 15, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = highlightGradient;
+        ctx.fill();
+      }
 
-      // Draw white separator lines
-      drawModernSeparator(ctx, center, radius, startAngle);
+      // Draw premium separator
+      drawPremiumSeparator(ctx, center, radius, startAngle, premiumTheme);
 
-      // Draw modern text
-      drawModernText(ctx, seg.label, center, radius, startAngle, anglePerSlice, size);
+      // Draw premium text
+      drawPremiumText(ctx, seg.label, center, radius, startAngle, anglePerSlice, size, premiumTheme);
     });
   };
 
-  const drawModernSeparator = (ctx: CanvasRenderingContext2D, center: number, radius: number, angle: number) => {
+  const drawPremiumSeparator = (ctx: CanvasRenderingContext2D, center: number, radius: number, angle: number, premiumTheme: any) => {
     const innerRadius = 50;
     const outerRadius = radius + 20;
     
-    // White separator line
+    // Main separator line
     ctx.beginPath();
     ctx.moveTo(
       center + innerRadius * Math.cos(angle),
@@ -191,10 +203,17 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     );
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#FFFFFF';
+    
+    if (premiumTheme.effects.glow) {
+      ctx.shadowColor = '#FFFFFF';
+      ctx.shadowBlur = 8;
+    }
+    
     ctx.stroke();
+    ctx.shadowBlur = 0;
   };
 
-  const drawModernText = (ctx: CanvasRenderingContext2D, text: string, center: number, radius: number, startAngle: number, anglePerSlice: number, size: number) => {
+  const drawPremiumText = (ctx: CanvasRenderingContext2D, text: string, center: number, radius: number, startAngle: number, anglePerSlice: number, size: number, premiumTheme: any) => {
     ctx.save();
     ctx.translate(center, center);
     ctx.rotate(startAngle + anglePerSlice / 2);
@@ -203,19 +222,30 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     ctx.font = `bold ${fontSize}px "Arial Black", Arial, sans-serif`;
     ctx.textAlign = 'center';
     
-    // White text with black outline for visibility
+    // Premium text effects
+    if (premiumTheme.effects.glow) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+    }
+    
+    // Text outline
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.lineWidth = 3;
     ctx.strokeText(text, radius - 40, 8);
     
+    // Main text
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(text, radius - 40, 8);
     
     ctx.restore();
   };
 
-  const drawModernBorders = (ctx: CanvasRenderingContext2D, center: number, radius: number, borderColor: string) => {
-    // Outer red border ring
+  const drawPremiumBorders = (ctx: CanvasRenderingContext2D, center: number, radius: number, premiumTheme: any) => {
+    const borderColor = premiumTheme.borderColor;
+    
+    // Outer premium border ring
     ctx.beginPath();
     ctx.arc(center, center, radius + 35, 0, 2 * Math.PI);
     const outerGradient = ctx.createLinearGradient(0, center - radius - 35, 0, center + radius + 35);
@@ -224,22 +254,37 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     outerGradient.addColorStop(1, darkenColor(borderColor, 20));
     ctx.lineWidth = 16;
     ctx.strokeStyle = outerGradient;
+    
+    if (premiumTheme.effects.glow) {
+      ctx.shadowColor = borderColor;
+      ctx.shadowBlur = 12;
+    }
+    
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Golden studs/bolts around the border
-    const numStuds = 12;
+    // Premium studs based on theme
+    const numStuds = premiumTheme.effects.metallic ? 12 : 8;
     for (let i = 0; i < numStuds; i++) {
       const angle = (i / numStuds) * 2 * Math.PI;
       const studX = center + (radius + 35) * Math.cos(angle);
       const studY = center + (radius + 35) * Math.sin(angle);
       
-      // Golden stud
+      // Premium stud
       ctx.beginPath();
       ctx.arc(studX, studY, 6, 0, 2 * Math.PI);
       const studGradient = ctx.createRadialGradient(studX, studY, 0, studX, studY, 6);
-      studGradient.addColorStop(0, '#FFF700');
-      studGradient.addColorStop(0.7, '#FFD700');
-      studGradient.addColorStop(1, '#B8860B');
+      
+      if (premiumTheme.effects.metallic) {
+        studGradient.addColorStop(0, '#FFF700');
+        studGradient.addColorStop(0.7, '#FFD700');
+        studGradient.addColorStop(1, '#B8860B');
+      } else {
+        studGradient.addColorStop(0, lightenColor(borderColor, 50));
+        studGradient.addColorStop(0.7, borderColor);
+        studGradient.addColorStop(1, darkenColor(borderColor, 30));
+      }
+      
       ctx.fillStyle = studGradient;
       ctx.fill();
       
@@ -250,7 +295,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       ctx.fill();
     }
 
-    // Inner white border
+    // Inner border
     ctx.beginPath();
     ctx.arc(center, center, radius + 22, 0, 2 * Math.PI);
     ctx.lineWidth = 4;
@@ -258,27 +303,31 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     ctx.stroke();
   };
 
-  const drawGoldenMetallicCenter = (ctx: CanvasRenderingContext2D, center: number, centerImage?: string, centerLogo?: string) => {
+  const drawPremiumCenter = (ctx: CanvasRenderingContext2D, center: number, premiumTheme: any, centerImage?: string, centerLogo?: string) => {
     const centerRadius = 45;
     
-    // Golden metallic center base
+    // Premium center base with theme gradient
     ctx.beginPath();
     ctx.arc(center, center, centerRadius, 0, 2 * Math.PI);
     const centerGradient = ctx.createRadialGradient(center, center, 0, center, center, centerRadius);
-    centerGradient.addColorStop(0, '#FFF700');
-    centerGradient.addColorStop(0.3, '#FFD700');
-    centerGradient.addColorStop(0.7, '#DAA520');
-    centerGradient.addColorStop(1, '#B8860B');
+    
+    premiumTheme.centerGradient.forEach((color: string, index: number) => {
+      centerGradient.addColorStop(index / (premiumTheme.centerGradient.length - 1), color);
+    });
+    
     ctx.fillStyle = centerGradient;
     ctx.fill();
 
-    // Metallic rings
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.arc(center, center, centerRadius - (i * 8), 0, 2 * Math.PI);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = i % 2 === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.3)';
-      ctx.stroke();
+    // Premium center effects
+    if (premiumTheme.effects.metallic) {
+      // Metallic rings
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(center, center, centerRadius - (i * 8), 0, 2 * Math.PI);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = i % 2 === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.3)';
+        ctx.stroke();
+      }
     }
 
     // Center highlight
@@ -368,7 +417,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
   useEffect(() => {
     drawModernFortuneWheel();
-  }, [segments, rotation, centerImage, centerLogo, customColors, borderColor, canvasSize, spinning, gradients]);
+  }, [segments, rotation, centerImage, centerLogo, theme, customColors, borderColor, canvasSize, spinning, gradients, animationTime]);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -397,7 +446,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
           left: offset,
           top: 0,
           zIndex: 1,
-          filter: spinning ? 'brightness(1.2) contrast(1.1) saturate(1.2)' : 'none',
+          filter: spinning ? `brightness(1.2) contrast(1.1) saturate(1.2) ${premiumTheme.effects.glow ? 'drop-shadow(0 0 20px ' + premiumTheme.borderColor + ')' : ''}` : 'none',
           transition: 'filter 0.3s ease',
         }}
         className="rounded-full"
