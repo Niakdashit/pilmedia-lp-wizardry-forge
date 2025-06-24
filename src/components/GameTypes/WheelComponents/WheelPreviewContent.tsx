@@ -1,3 +1,4 @@
+
 import React from 'react';
 import WheelCanvas from './WheelCanvas';
 
@@ -18,10 +19,8 @@ interface WheelPreviewContentProps {
   canvasSize: number;
   containerWidth: number;
   containerHeight: number;
-  pointerSize: number;
   shouldCropWheel: boolean;
   gamePosition: string;
-  formValidated: boolean;
   showValidationMessage: boolean;
   onWheelClick: () => void;
   showShadow?: boolean;
@@ -64,13 +63,13 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
         <div
           className="absolute rounded-full"
           style={{
-            width: canvasSize + 20,
-            height: canvasSize + 20,
-            background: 'radial-gradient(circle, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 70%, transparent 100%)',
-            top: '10px',
-            left: `calc(50% - ${(canvasSize + 20) / 2}px)`,
+            width: canvasSize + 30,
+            height: canvasSize + 30,
+            background: 'radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)',
+            top: '15px',
+            left: `calc(50% - ${(canvasSize + 30) / 2}px)`,
             zIndex: 0,
-            filter: 'blur(8px)'
+            filter: 'blur(12px)'
           }}
         />
       )}
@@ -89,17 +88,18 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
         offset={offset}
       />
       
+      {/* Modern pointer with golden style */}
       <div
         style={{
           position: 'absolute',
           left: shouldCropWheel && gamePosition === 'left' 
-            ? `${containerWidth - 15}px`
+            ? `${containerWidth - 20}px`
             : shouldCropWheel && gamePosition === 'right'
-            ? '-15px'
-            : `${canvasSize / 2 - 15}px`,
-          top: '-20px',
-          width: '30px',
-          height: '50px',
+            ? '-20px'
+            : `${canvasSize / 2 - 20}px`,
+          top: '-25px',
+          width: '40px',
+          height: '60px',
           zIndex: 3,
           pointerEvents: 'none',
           display: 'flex',
@@ -107,30 +107,36 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
           alignItems: 'flex-start',
         }}
       >
-        <svg width="30" height="50">
+        <svg width="40" height="60">
           <defs>
-            <linearGradient id="pointerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="50%" stopColor={borderOutlineColor} />
-              <stop offset="100%" stopColor={borderColor} />
+            <linearGradient id="modernPointerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#FFF700" />
+              <stop offset="30%" stopColor="#FFD700" />
+              <stop offset="70%" stopColor="#DAA520" />
+              <stop offset="100%" stopColor="#B8860B" />
             </linearGradient>
-            <filter id="pointerShadow">
-              <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+            <filter id="modernPointerShadow">
+              <feDropShadow dx="3" dy="3" stdDeviation="4" floodOpacity="0.4"/>
             </filter>
           </defs>
           <polygon
-            points="15,50 27,15 3,15"
-            fill="url(#pointerGradient)"
-            stroke="#000000"
-            strokeWidth="1"
-            filter="url(#pointerShadow)"
+            points="20,60 35,20 5,20"
+            fill="url(#modernPointerGradient)"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+            filter="url(#modernPointerShadow)"
+          />
+          {/* Highlight on pointer */}
+          <polygon
+            points="20,55 30,25 10,25"
+            fill="rgba(255, 255, 255, 0.3)"
           />
         </svg>
       </div>
 
       {showValidationMessage && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in font-bold">
             ✓ Formulaire validé !
           </div>
         </div>
