@@ -35,6 +35,7 @@ export const drawPremiumWheelSegments = ({
   borderOutlineColor,
   spinning
 }: DrawPremiumWheelSegmentsProps) => {
+  const rotationRad = rotation * Math.PI / 180;
   const total = segments.length;
   const anglePerSlice = (2 * Math.PI) / total;
   
@@ -43,7 +44,7 @@ export const drawPremiumWheelSegments = ({
     getThemeColors(theme);
 
   segments.forEach((seg: Segment, i: number) => {
-    const startAngle = i * anglePerSlice + rotation;
+    const startAngle = i * anglePerSlice + rotationRad;
     const endAngle = startAngle + anglePerSlice;
 
     // Create segment gradient
