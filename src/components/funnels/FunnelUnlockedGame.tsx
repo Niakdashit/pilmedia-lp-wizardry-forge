@@ -114,7 +114,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   // FONCTION DE RESET COMPLET pour le funnel unlocked
   const handleReset = () => {
-    console.log('🔄 Reset complet du funnel unlocked game');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔄 Reset complet du funnel unlocked game');
+    }
     setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
     setGameResult(null);
     setShowFormModal(false);

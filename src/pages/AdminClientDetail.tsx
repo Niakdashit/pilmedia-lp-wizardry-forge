@@ -11,7 +11,9 @@ const AdminClientDetail: React.FC = () => {
   const { clientId } = useParams();
   const [filterStatus, setFilterStatus] = useState('all');
 
-  console.log('Client ID:', clientId); // Pour éviter l'erreur unused variable
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Client ID:', clientId); // Pour éviter l'erreur unused variable
+  }
 
   // Mock client data
   const clientData: ClientData = {

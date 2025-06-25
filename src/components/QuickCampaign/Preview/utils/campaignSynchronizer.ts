@@ -12,7 +12,9 @@ export const synchronizeCampaignWithColors = (
   finalColors: CustomColors,
   logoUrl?: string
 ) => {
-  console.log('Synchronisation de la campagne avec les couleurs:', finalColors);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Synchronisation de la campagne avec les couleurs:', finalColors);
+  }
   
   const campaign = applyBrandStyleToWheel(mockCampaign, finalColors as BrandColors);
   
@@ -47,6 +49,8 @@ export const synchronizeCampaignWithColors = (
     textColor: finalColors.primary
   };
 
-  console.log('Campagne synchronisée avec couleurs exactes:', campaign);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Campagne synchronisée avec couleurs exactes:', campaign);
+  }
   return campaign;
 };

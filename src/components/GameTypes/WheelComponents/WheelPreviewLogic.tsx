@@ -68,7 +68,9 @@ export const useWheelPreviewLogic = ({
   previewDevice = 'desktop',
   disableForm = false
 }: UseWheelPreviewLogicProps) => {
-  console.log('WheelPreviewLogic - Initialisation avec disableForm:', disableForm);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('WheelPreviewLogic - Initialisation avec disableForm:', disableForm);
+  }
 
   // State pour la gestion du formulaire
   const [formValidated, setFormValidated] = useState(disableForm);
@@ -90,9 +92,13 @@ export const useWheelPreviewLogic = ({
 
   // Utiliser useMemo pour optimiser le calcul des segments et forcer le re-render
   const segments = useMemo(() => {
-    console.log('WheelPreviewLogic - Recalcul des segments pour campaign:', campaign?._lastUpdate);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - Recalcul des segments pour campaign:', campaign?._lastUpdate);
+    }
     const result = getWheelSegments(campaign);
-    console.log('WheelPreviewLogic - Segments calculés:', result);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - Segments calculés:', result);
+    }
     return result;
   }, [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]);
 
@@ -117,17 +123,23 @@ export const useWheelPreviewLogic = ({
 
   // Effect pour debug les changements de segments
   useEffect(() => {
-    console.log('WheelPreviewLogic - useEffect segments changé:', segments);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - useEffect segments changé:', segments);
+    }
   }, [segments]);
 
   // Synchronisation disableForm avec formValidated
   useEffect(() => {
-    console.log('WheelPreviewLogic - Sync disableForm:', disableForm, '➜ formValidated:', disableForm);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - Sync disableForm:', disableForm, '➜ formValidated:', disableForm);
+    }
     setFormValidated(disableForm);
   }, [disableForm]);
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
-    console.log('WheelPreviewLogic - handleFormSubmit appelé avec:', formData);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - handleFormSubmit appelé avec:', formData);
+    }
     
     try {
       if (campaign.id) {
@@ -142,7 +154,9 @@ export const useWheelPreviewLogic = ({
       setFormValidated(true);
       setShowValidationMessage(true);
       
-      console.log('WheelPreviewLogic - Formulaire soumis avec succès, formValidated:', true);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreviewLogic - Formulaire soumis avec succès, formValidated:', true);
+      }
       
       setTimeout(() => setShowValidationMessage(false), 1500);
     } catch (error) {
@@ -151,36 +165,45 @@ export const useWheelPreviewLogic = ({
   };
 
   const handleWheelClick = () => {
-    console.log('WheelPreviewLogic - handleWheelClick appelé:', {
-      spinning,
-      disabled,
-      segmentsLength: segments.length,
-      disableForm,
-      formValidated
-    });
-    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - handleWheelClick appelé:', {
+        spinning,
+        disabled,
+        segmentsLength: segments.length,
+        disableForm,
+        formValidated
+      });
+    }
     // Vérifications de base
     if (spinning || disabled || segments.length === 0) {
-      console.log('WheelPreviewLogic - Impossible de lancer (conditions de base)');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreviewLogic - Impossible de lancer (conditions de base)');
+      }
       return;
     }
 
     // Si le formulaire est désactivé, lancer directement la roue
     if (disableForm) {
-      console.log('WheelPreviewLogic - Formulaire désactivé, lancement direct');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreviewLogic - Formulaire désactivé, lancement direct');
+      }
       spinWheel();
       return;
     }
 
     // Si le formulaire n'est pas validé, afficher la modale
     if (!formValidated) {
-      console.log('WheelPreviewLogic - Formulaire requis, ouverture modale');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreviewLogic - Formulaire requis, ouverture modale');
+      }
       setShowFormModal(true);
       return;
     }
     
     // Si le formulaire est validé, lancer la roue
-    console.log('WheelPreviewLogic - Formulaire validé, lancement roue');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreviewLogic - Formulaire validé, lancement roue');
+    }
     spinWheel();
   };
 

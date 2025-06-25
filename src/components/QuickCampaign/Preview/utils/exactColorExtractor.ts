@@ -22,18 +22,24 @@ export const getExactBrandColors = (siteUrl: string) => {
   if (!siteUrl) return null;
   
   const domain = extractDomain(siteUrl);
-  console.log('Recherche des couleurs exactes pour:', domain);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Recherche des couleurs exactes pour:', domain);
+  }
   
   // Recherche exacte
   if (EXACT_BRAND_COLORS[domain]) {
-    console.log('Couleurs exactes trouvées:', EXACT_BRAND_COLORS[domain]);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Couleurs exactes trouvées:', EXACT_BRAND_COLORS[domain]);
+    }
     return EXACT_BRAND_COLORS[domain];
   }
   
   // Recherche partielle
   for (const [brandDomain, colors] of Object.entries(EXACT_BRAND_COLORS)) {
     if (domain.includes(brandDomain.split('.')[0]) || brandDomain.includes(domain.split('.')[0])) {
-      console.log('Couleurs trouvées par correspondance partielle:', colors);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Couleurs trouvées par correspondance partielle:', colors);
+      }
       return colors;
     }
   }

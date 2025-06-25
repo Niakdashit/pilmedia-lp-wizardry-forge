@@ -28,7 +28,9 @@ export const useCampaigns = () => {
         updatedAt: new Date().toISOString()
       };
       
-      console.log('Campaign saved:', savedCampaign);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Campaign saved:', savedCampaign);
+      }
       return savedCampaign;
     } catch (err) {
       setError('Erreur lors de la sauvegarde');
@@ -69,7 +71,9 @@ export const useCampaigns = () => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Campaign published:', id);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Campaign published:', id);
+      }
       return true;
     } catch (err) {
       setError('Erreur lors de la publication');

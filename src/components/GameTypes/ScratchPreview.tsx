@@ -54,10 +54,14 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   const handleGameStart = () => {
     // ✅ VERIFICATION FUNNEL : Ne peut pas démarrer si disabled (formulaire non validé)
     if (disabled) {
-      console.log('🚫 Scratch: Jeu bloqué - formulaire non validé');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🚫 Scratch: Jeu bloqué - formulaire non validé');
+      }
       return;
     }
-    console.log('🎮 Scratch: Démarrage du jeu autorisé');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🎮 Scratch: Démarrage du jeu autorisé');
+    }
     setGameStarted(true);
     if (onStart) onStart();
   };

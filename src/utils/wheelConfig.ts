@@ -18,7 +18,9 @@ export const DEFAULT_WHEEL_SEGMENTS = [
 ] as const;
 
 export const getWheelSegments = (campaign: any) => {
-  console.log('getWheelSegments - Campaign reçu:', campaign);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('getWheelSegments - Campaign reçu:', campaign);
+  }
   
   const segmentColor1 = campaign?.config?.roulette?.segmentColor1 || '#ff6b6b';
   const segmentColor2 = campaign?.config?.roulette?.segmentColor2 || '#4ecdc4';
@@ -29,12 +31,16 @@ export const getWheelSegments = (campaign: any) => {
     campaign?.config?.roulette?.segments || 
     [];
 
-  console.log('getWheelSegments - Segments trouvés:', originalSegments);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('getWheelSegments - Segments trouvés:', originalSegments);
+  }
 
   // Si aucun segment n'est trouvé, ne pas utiliser les segments par défaut
   // pour permettre l'affichage du message "Ajoutez des segments"
   if (!originalSegments || originalSegments.length === 0) {
-    console.log('getWheelSegments - Aucun segment, retour tableau vide');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('getWheelSegments - Aucun segment, retour tableau vide');
+    }
     return [];
   }
 
@@ -45,7 +51,9 @@ export const getWheelSegments = (campaign: any) => {
     id: segment.id || `segment-${index}`
   }));
 
-  console.log('getWheelSegments - Segments finaux:', segments);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('getWheelSegments - Segments finaux:', segments);
+  }
   return segments;
 };
 

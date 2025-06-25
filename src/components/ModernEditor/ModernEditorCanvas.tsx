@@ -71,20 +71,26 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
   };
 
   const handleAddText = () => {
-    console.log('Ajout de texte déclenché');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Ajout de texte déclenché');
+    }
     addTextElement();
     setShowAddMenu(false);
   };
 
   const handleAddImage = () => {
-    console.log('Ajout d\'image déclenché');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Ajout d'image déclenché");
+    }
     addImageElement();
     setShowAddMenu(false);
   };
 
   const toggleAddMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Toggle menu:', !showAddMenu);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Toggle menu:', !showAddMenu);
+    }
     setShowAddMenu(!showAddMenu);
   };
 
