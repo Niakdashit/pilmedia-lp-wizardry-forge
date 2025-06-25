@@ -6,9 +6,11 @@ interface WheelContainerProps {
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const WheelContainer: React.FC<WheelContainerProps> = ({ children }) => {
+const WheelContainer: React.FC<WheelContainerProps> = ({ children, previewDevice }) => {
+  const minHeight = previewDevice === 'mobile' ? 'min-h-[300px]' : 'min-h-[400px]';
+
   return (
-    <div className="flex items-center justify-center w-full h-full min-h-[400px] relative">
+    <div className={`relative flex items-center justify-center w-full h-full ${minHeight} overflow-visible`}>
       {children}
     </div>
   );

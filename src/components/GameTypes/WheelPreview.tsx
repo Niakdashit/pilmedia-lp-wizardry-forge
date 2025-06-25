@@ -43,6 +43,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     setShowFormModal,
     showValidationMessage,
     canvasSize,
+    containerWidth,
+    containerHeight,
     segments,
     rotation,
     spinning,
@@ -129,7 +131,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
       )}
       
       <div className="flex flex-col items-center justify-center space-y-6 w-full h-full">
-        <div className="flex-1 flex items-center justify-center">
+        <div
+          className="flex-1 flex items-center justify-center"
+          style={{ width: containerWidth, height: containerHeight }}
+        >
           <WheelPreviewContent
             segments={segments}
             rotation={rotation}
