@@ -9,34 +9,35 @@ interface WheelContainerProps {
 
 const WheelContainer: React.FC<WheelContainerProps> = ({
   children,
-  gameDimensions
+  gameDimensions,
+  previewDevice
 }) => {
-  // Dimensions fixes généreuses pour éviter toute coupure
   const containerStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-start', // Alignement en haut pour éviter le crop
+    justifyContent: 'center',
     position: 'relative',
+    overflow: 'hidden',
+    padding: '20px',
+    boxSizing: 'border-box'
+  };
+
+  const gameWrapperStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
-    minWidth: `${Math.max(gameDimensions.width + 200, 800)}px`, // Dimensions fixes plus importantes
-    minHeight: `${Math.max(gameDimensions.height + 200, 700)}px`, // Dimensions fixes plus importantes
-    overflow: 'visible', // Permettre le débordement pour éviter les coupures
-    padding: '40px', // Padding généreux mais moins que avant
-    boxSizing: 'border-box',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden'
   };
 
   return (
     <div style={containerStyle}>
-      <div 
-        className="w-full h-full flex items-center justify-center"
-        style={{
-          minWidth: `${gameDimensions.width + 100}px`,
-          minHeight: `${gameDimensions.height + 100}px`,
-          overflow: 'visible'
-        }}
-      >
+      <div style={gameWrapperStyle}>
         {children}
       </div>
     </div>

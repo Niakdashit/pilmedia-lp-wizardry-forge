@@ -18,16 +18,17 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
   onCanvasClick,
   canvasRef
 }) => {
-  const getCanvasStyle = () => {
+  const getCanvasStyle = (): React.CSSProperties => {
     const baseStyle = {
       width: '100%',
       height: '100%',
       backgroundColor: campaign.design?.background || '#f8fafc',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
       transition: 'background-color 0.3s ease',
       position: 'relative' as const,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     };
 
     // Determine background image based on device
@@ -41,6 +42,9 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
     const styleWithBackground = {
       ...baseStyle,
       backgroundImage,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
     };
 
     switch (previewDevice) {
@@ -88,7 +92,16 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
         </div>
       )}
       
-      {children}
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden'
+      }}>
+        {children}
+      </div>
     </div>
   );
 };

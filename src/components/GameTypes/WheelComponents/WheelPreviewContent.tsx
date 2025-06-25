@@ -45,80 +45,84 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   onWheelClick,
   showShadow = false
 }) => {
-  const offset = shouldCropWheel && gamePosition !== 'center' 
-    ? `${(containerWidth - canvasSize) / 2}px`
-    : '0px';
+  const containerStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    cursor: 'pointer'
+  };
+
+  const wheelWrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: `${canvasSize}px`,
+    height: `${canvasSize}px`
+  };
 
   return (
-    <div 
-      className="relative flex items-center justify-center cursor-pointer"
-      style={{
-        width: containerWidth,
-        height: containerHeight,
-        overflow: shouldCropWheel ? 'hidden' : 'visible'
-      }}
-      onClick={onWheelClick}
-    >
-
-
-      <WheelCanvas
-        segments={segments}
-        rotation={rotation}
-        spinning={spinning}
-        centerImage={centerImage}
-        centerLogo={centerLogo}
-        theme={theme}
-        customColors={customColors}
-        borderColor={borderColor}
-        borderOutlineColor={borderOutlineColor}
-        canvasSize={canvasSize}
-        offset={offset}
-      />
-      
-      {/* Modern pointer with golden style */}
-      <div
-        style={{
-          position: 'absolute',
-          left: shouldCropWheel && gamePosition === 'left' 
-            ? `${containerWidth - 20}px`
-            : shouldCropWheel && gamePosition === 'right'
-            ? '-20px'
-            : `${canvasSize / 2 - 20}px`,
-          top: '-25px',
-          width: '40px',
-          height: '60px',
-          zIndex: 3,
-          pointerEvents: 'none',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-        }}
-      >
-        <svg width="40" height="60">
-          <defs>
-            <linearGradient id="modernPointerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#FFF700" />
-              <stop offset="30%" stopColor="#FFD700" />
-              <stop offset="70%" stopColor="#DAA520" />
-              <stop offset="100%" stopColor="#B8860B" />
-            </linearGradient>
-            <filter id="modernPointerShadow">
-              <feDropShadow dx="3" dy="3" stdDeviation="4" floodOpacity="0.4"/>
-            </filter>
-          </defs>
-          <polygon
-            points="20,60 35,20 5,20"
-            fill="url(#modernPointerGradient)"
-            stroke="#FFFFFF"
-            strokeWidth="2"
-            filter="url(#modernPointerShadow)"
-          />
-          {/* Highlight on pointer */}
-          <polygon
-            points="20,55 30,25 10,25"
-            fill="rgba(255, 255, 255, 0.3)"
-          />
-        </svg>
+    <div style={containerStyle} onClick={onWheelClick}>
+      <div style={wheelWrapperStyle}>
+        <WheelCanvas
+          segments={segments}
+          rotation={rotation}
+          spinning={spinning}
+          centerImage={centerImage}
+          centerLogo={centerLogo}
+          theme={theme}
+          customColors={customColors}
+          borderColor={borderColor}
+          borderOutlineColor={borderOutlineColor}
+          canvasSize={canvasSize}
+          offset="0px"
+        />
+        
+        {/* Pointer centré au-dessus de la roue */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-25px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '40px',
+            height: '60px',
+            zIndex: 3,
+            pointerEvents: 'none',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+          }}
+        >
+          <svg width="40" height="60">
+            <defs>
+              <linearGradient id="modernPointerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FFF700" />
+                <stop offset="30%" stopColor="#FFD700" />
+                <stop offset="70%" stopColor="#DAA520" />
+                <stop offset="100%" stopColor="#B8860B" />
+              </linearGradient>
+              <filter id="modernPointerShadow">
+                <feDropShadow dx="3" dy="3" stdDeviation="4" floodOpacity="0.4"/>
+              </filter>
+            </defs>
+            <polygon
+              points="20,60 35,20 5,20"
+              fill="url(#modernPointerGradient)"
+              stroke="#FFFFFF"
+              strokeWidth="2"
+              filter="url(#modernPointerShadow)"
+            />
+            <polygon
+              points="20,55 30,25 10,25"
+              fill="rgba(255, 255, 255, 0.3)"
+            />
+          </svg>
+        </div>
       </div>
 
       {showValidationMessage && (

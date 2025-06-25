@@ -12,10 +12,6 @@ interface GameCanvasPreviewProps {
   campaign: any;
   gameSize: GameSize;
   gameBackgroundImage?: string;
-  /**
-   * Display a dark overlay between the background image and the game.
-   * Defaults to false to show the raw background.
-   */
   showBackgroundOverlay?: boolean;
   className?: string;
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
@@ -29,74 +25,39 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   previewDevice = 'desktop',
   showBackgroundOverlay = false
 }) => {
-  // Résoudre l'image de fond à afficher (priorité à la prop, fallback sur config)
   const resolvedBackground =
     gameBackgroundImage || getCampaignBackgroundImage(campaign, previewDevice);
 
-  const getContainerClasses = () => {
-    const baseClasses = "bg-white border-2 border-gray-200";
-    
-    if (previewDevice === 'mobile') {
-      return `${baseClasses} rounded-3xl shadow-2xl`;
-    } else if (previewDevice === 'tablet') {
-      return `${baseClasses} rounded-2xl shadow-xl`;
-    } else {
-      return `${baseClasses} rounded-xl shadow-lg`;
-    }
-  };
-
-  const getContainerStyle = () => {
-    const dimensions = GAME_SIZES[gameSize];
-    
-    // Dimensions fixes non-responsive pour éviter le crop
-    const fixedWidth = Math.max(dimensions.width, 800);
-    const fixedHeight = Math.max(dimensions.height + 200, 700);
-
-    const baseStyle: React.CSSProperties = {
-      width: `${fixedWidth}px`,
-      height: `${fixedHeight}px`,
-      minWidth: `${fixedWidth}px`,
-      minHeight: `${fixedHeight}px`,
-      maxWidth: 'none', // Pas de limite max pour éviter le responsive
-      maxHeight: 'none', // Pas de limite max pour éviter le responsive
+  const getContainerStyle = (): React.CSSProperties => {
+    return {
+      width: '100%',
+      height: '100%',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
-      overflow: 'visible' // Permettre le débordement naturel
+      overflow: 'hidden',
+      backgroundColor: campaign.design?.background || '#ebf4f7',
+      backgroundImage: resolvedBackground ? `url(${resolvedBackground})` : undefined,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
+      border: '2px solid #e5e7eb'
     };
-
-    // Ajouter l'image de fond si définie
-    if (resolvedBackground) {
-      baseStyle.backgroundImage = `url(${resolvedBackground})`;
-      baseStyle.backgroundSize = 'cover';
-      baseStyle.backgroundPosition = 'center';
-      baseStyle.backgroundRepeat = 'no-repeat';
-    }
-
-    // Padding selon le device mais sans affecter les dimensions
-    if (previewDevice === 'mobile') {
-      baseStyle.padding = '20px';
-    } else if (previewDevice === 'tablet') {
-      baseStyle.padding = '24px';
-    } else {
-      baseStyle.padding = '32px';
-    }
-
-    return baseStyle;
   };
 
-  // Container wrapper avec scroll pour gérer le débordement
-  const wrapperStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    overflow: 'auto', // Permettre le scroll
-    display: 'flex',
-    alignItems: 'flex-start', // Aligner en haut pour éviter le centrage qui peut couper
-    justifyContent: 'center',
-    padding: '20px',
-    boxSizing: 'border-box'
+  const getGameContainerStyle = (): React.CSSProperties => {
+    return {
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      zIndex: 10,
+      overflow: 'hidden'
+    };
   };
 
   const renderPreviewGame = () => {
@@ -119,7 +80,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             gamePosition={gamePosition}
             previewDevice={previewDevice}
             disabled={false}
-            disableForm={false}
+            disableForm={true}
             showShadow={false}
           />
         );
@@ -164,8 +125,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
         return (
           <div style={{ 
             width: '100%', 
-            maxWidth: '800px', 
-            margin: '0 auto',
+            maxWidth: '600px', 
+            height: 'auto',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -190,18 +151,13 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   };
 
   return (
-    <div style={wrapperStyle} className={className}>
-      <div 
-        className={getContainerClasses()}
-        style={getContainerStyle()}
-      >
-        {resolvedBackground && showBackgroundOverlay && (
-          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
-        )}
-        
-        <div className="relative z-10 w-full h-full flex items-center justify-center">
-          {renderPreviewGame()}
-        </div>
+    <div className={className} style={getContainerStyle()}>
+      {resolvedBackground && showBackgroundOverlay && (
+        <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+      )}
+      
+      <div style={getGameContainerStyle()}>
+        {renderPreviewGame()}
       </div>
     </div>
   );
