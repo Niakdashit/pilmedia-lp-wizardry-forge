@@ -3,6 +3,7 @@ import React from 'react';
 
 interface WheelContainerProps {
   children: React.ReactNode;
+  previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const WheelContainer: React.FC<WheelContainerProps> = ({ children }) => {

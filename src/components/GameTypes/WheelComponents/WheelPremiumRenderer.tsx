@@ -25,7 +25,6 @@ interface WheelPremiumRendererProps {
   canvasSize: number;
   spinning?: boolean;
   canvasRef?: React.RefObject<HTMLCanvasElement>;
-  shadowCanvasRef?: React.RefObject<HTMLCanvasElement>;
 }
 
 const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
@@ -38,12 +37,10 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   borderColor = '#FF4444',
   canvasSize,
   spinning = false,
-  canvasRef,
-  shadowCanvasRef
+  canvasRef
 }) => {
   const rotationRad = rotation * Math.PI / 180;
   const internalCanvasRef = useRef<HTMLCanvasElement>(null);
-  const internalShadowCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const mainCanvasRef = canvasRef || internalCanvasRef;
   const [gradients, setGradients] = useState<any>(null);

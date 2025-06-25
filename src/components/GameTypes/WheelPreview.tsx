@@ -37,19 +37,14 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'small',
   gamePosition = 'center',
   previewDevice = 'desktop',
-  disableForm = false,
-  showShadow = false
+  disableForm = false
 }) => {
   const {
     formValidated,
     showFormModal,
     setShowFormModal,
     showValidationMessage,
-    gameDimensions,
-    shouldCropWheel,
     canvasSize,
-    containerWidth,
-    containerHeight,
     segments,
     rotation,
     spinning,
