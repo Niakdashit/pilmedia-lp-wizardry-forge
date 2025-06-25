@@ -64,7 +64,6 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
         canvasSize={canvasSize}
         spinning={spinning}
         canvasRef={canvasRef}
-        shadowCanvasRef={shadowCanvasRef}
       />
     </div>
   );
