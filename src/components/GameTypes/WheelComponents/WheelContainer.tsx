@@ -3,15 +3,9 @@ import React from 'react';
 
 interface WheelContainerProps {
   children: React.ReactNode;
-  gameDimensions: { width: number; height: number };
-  previewDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
-const WheelContainer: React.FC<WheelContainerProps> = ({
-  children,
-  gameDimensions,
-  previewDevice
-}) => {
+const WheelContainer: React.FC<WheelContainerProps> = ({ children }) => {
   const containerStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',

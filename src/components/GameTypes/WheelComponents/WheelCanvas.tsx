@@ -37,8 +37,7 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
   customColors,
   borderColor = '#841b60',
   borderOutlineColor = '#FFD700',
-  canvasSize,
-  offset
+  canvasSize
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const shadowCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -63,7 +62,6 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
         borderColor={borderColor}
         borderOutlineColor={borderOutlineColor}
         canvasSize={canvasSize}
-        offset={offset}
         spinning={spinning}
         canvasRef={canvasRef}
         shadowCanvasRef={shadowCanvasRef}

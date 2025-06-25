@@ -25,7 +25,6 @@ interface WheelPremiumRendererProps {
   borderOutlineColor?: string;
   canvasSize: number;
   spinning?: boolean;
-  /** Optional refs to allow external control over the canvas elements */
   canvasRef?: React.RefObject<HTMLCanvasElement>;
   shadowCanvasRef?: React.RefObject<HTMLCanvasElement>;
 }
@@ -54,7 +53,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
   const premiumTheme = getPremiumTheme(theme);
 
-  // Use premium animations
   usePremiumWheelAnimations({
     spinning,
     onAnimationFrame: (elapsed) => {
@@ -64,29 +62,23 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
   const drawModernFortuneWheel = () => {
     const canvas = mainCanvasRef.current;
-    const shadowCanvas = mainShadowCanvasRef.current;
-    if (!canvas || !shadowCanvas || segments.length === 0) return;
+    if (!canvas || segments.length === 0) return;
     
     const ctx = canvas.getContext('2d');
-    const shadowCtx = shadowCanvas.getContext('2d');
-    if (!ctx || !shadowCtx) return;
+    if (!ctx) return;
 
     const size = canvas.width;
     const center = size / 2;
     const radius = center - 60;
 
-    // Clear both canvases
+    // Clear canvas
     ctx.clearRect(0, 0, size, size);
-    shadowCtx.clearRect(0, 0, size, size);
 
     // Create gradients if needed
     if (!gradients) {
       setGradients(createWheelGradients(ctx, center, radius, theme, customColors));
       return;
     }
-
-    // Draw shadow layer
-    drawWheelShadow(shadowCtx, center, radius);
 
     // Draw simple flat segments
     drawSimpleWheelSegments({
@@ -111,18 +103,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
       applyThemeEffects(ctx, premiumTheme, center, radius, spinning);
       createPremiumSpinningEffects(ctx, center, radius, theme, animationTime);
     }
-  };
-
-  const drawWheelShadow = (ctx: CanvasRenderingContext2D, center: number, radius: number) => {
-    // Main shadow
-    ctx.beginPath();
-    ctx.arc(center, center + 12, radius + 40, 0, 2 * Math.PI);
-    const shadowGradient = ctx.createRadialGradient(center, center + 12, 0, center, center + 12, radius + 40);
-    shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0.6)');
-    shadowGradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.3)');
-    shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = shadowGradient;
-    ctx.fill();
   };
 
   const drawSimpleWheelSegments = ({
@@ -336,24 +316,15 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   }, [segments, rotation, centerImage, centerLogo, theme, customColors, borderColor, canvasSize, spinning, gradients, animationTime]);
 
   return (
-    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      {/* Shadow layer */}
-      <canvas
-        ref={mainShadowCanvasRef}
-        width={canvasSize}
-        height={canvasSize}
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 0,
-          filter: 'blur(6px)',
-        }}
-        className="rounded-full"
-      />
-      
-      {/* Main wheel */}
+    <div style={{ 
+      position: 'relative', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      width: `${canvasSize}px`,
+      height: `${canvasSize}px`
+    }}>
+      {/* Main wheel - NO SHADOW LAYER */}
       <canvas
         ref={mainCanvasRef}
         width={canvasSize}

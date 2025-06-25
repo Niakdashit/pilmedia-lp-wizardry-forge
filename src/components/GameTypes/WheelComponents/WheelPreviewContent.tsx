@@ -17,13 +17,8 @@ interface WheelPreviewContentProps {
   borderColor: string;
   borderOutlineColor: string;
   canvasSize: number;
-  containerWidth: number;
-  containerHeight: number;
-  shouldCropWheel: boolean;
-  gamePosition: string;
   showValidationMessage: boolean;
   onWheelClick: () => void;
-  showShadow?: boolean;
 }
 
 const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
@@ -37,13 +32,8 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   borderColor,
   borderOutlineColor,
   canvasSize,
-  containerWidth,
-  containerHeight,
-  shouldCropWheel,
-  gamePosition,
   showValidationMessage,
-  onWheelClick,
-  showShadow = false
+  onWheelClick
 }) => {
   const containerStyle: React.CSSProperties = {
     width: '100%',

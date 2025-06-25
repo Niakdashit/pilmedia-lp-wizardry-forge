@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { GameSize, GAME_SIZES } from '../configurators/GameSizeSelector';
+import { GameSize } from '../configurators/GameSizeSelector';
 import { getCampaignBackgroundImage } from '../../utils/background';
 import WheelPreview from '../GameTypes/WheelPreview';
 import { Jackpot } from '../GameTypes';
@@ -44,19 +44,6 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       backgroundRepeat: 'no-repeat',
       borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
       border: '2px solid #e5e7eb'
-    };
-  };
-
-  const getGameContainerStyle = (): React.CSSProperties => {
-    return {
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      zIndex: 10,
-      overflow: 'hidden'
     };
   };
 
@@ -156,7 +143,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
         <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
       )}
       
-      <div style={getGameContainerStyle()}>
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 10,
+        overflow: 'hidden'
+      }}>
         {renderPreviewGame()}
       </div>
     </div>
