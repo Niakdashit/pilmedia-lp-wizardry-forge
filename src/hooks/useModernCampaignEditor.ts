@@ -32,11 +32,41 @@ export const useModernCampaignEditor = () => {
     try {
       const existingCampaign = await getCampaign(campaignId);
       if (existingCampaign) {
-        setCampaign({
+        console.log('Loaded campaign from QuickCampaign:', existingCampaign);
+        
+        // Fusionner les données de QuickCampaign avec la structure par défaut
+        const mergedCampaign = {
+          ...getDefaultCampaign(existingCampaign.type || campaignType, false),
           ...existingCampaign,
-          formFields: existingCampaign.form_fields || getDefaultCampaign(campaignType, isNewCampaign).formFields
-        });
+          // S'assurer que les formFields sont correctement mappés
+          formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(campaignType, isNewCampaign).formFields,
+          // Préserver la configuration du design
+          design: {
+            ...getDefaultCampaign(existingCampaign.type || campaignType, false).design,
+            ...existingCampaign.design
+          },
+          // Préserver la configuration des jeux
+          gameConfig: {
+            ...getDefaultCampaign(existingCampaign.type || campaignType, false).gameConfig,
+            ...existingCampaign.gameConfig
+          },
+          // Préserver la configuration des boutons
+          buttonConfig: {
+            ...getDefaultCampaign(existingCampaign.type || campaignType, false).buttonConfig,
+            ...existingCampaign.buttonConfig
+          },
+          // Préserver les écrans
+          screens: {
+            ...getDefaultCampaign(existingCampaign.type || campaignType, false).screens,
+            ...existingCampaign.screens
+          }
+        };
+        
+        console.log('Merged campaign data:', mergedCampaign);
+        setCampaign(mergedCampaign);
       }
+    } catch (error) {
+      console.error('Error loading campaign:', error);
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +93,8 @@ export const useModernCampaignEditor = () => {
         form_fields: campaign.formFields
       };
       
+      console.log('Saving campaign with data:', campaignData);
+      
       const savedCampaign = await saveCampaign(campaignData);
       if (savedCampaign && !continueEditing) {
         navigate('/gamification');
@@ -72,6 +104,8 @@ export const useModernCampaignEditor = () => {
           id: savedCampaign.id
         }));
       }
+    } catch (error) {
+      console.error('Error saving campaign:', error);
     } finally {
       setIsLoading(false);
     }

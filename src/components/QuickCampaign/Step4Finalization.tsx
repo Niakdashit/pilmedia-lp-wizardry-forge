@@ -35,15 +35,25 @@ const Step4Finalization: React.FC = () => {
       // Générer la campagne avec toutes les données de QuickCampaign
       const quickCampaign = generatePreviewCampaign();
       
-      // Sauvegarder temporairement la campagne
+      console.log('QuickCampaign data being transferred:', quickCampaign);
+      
+      // Sauvegarder temporairement la campagne avec un statut draft
       const savedCampaign = await saveCampaign({
         ...quickCampaign,
-        status: 'draft'
+        status: 'draft',
+        // S'assurer que tous les champs nécessaires sont présents
+        form_fields: quickCampaign.formFields || [
+          { id: '1', type: 'text', label: 'Nom', required: true, placeholder: 'Votre nom' },
+          { id: '2', type: 'email', label: 'Email', required: true, placeholder: 'votre@email.com' }
+        ]
       });
 
       if (savedCampaign?.id) {
+        console.log('Campaign saved, redirecting to modern editor with ID:', savedCampaign.id);
         // Rediriger vers l'éditeur moderne avec l'ID de la campagne
         navigate(`/modern-campaign/${savedCampaign.id}`);
+      } else {
+        console.error('Failed to save campaign or no ID returned');
       }
     } catch (error) {
       console.error('Erreur lors de la redirection vers les paramètres avancés:', error);
@@ -52,7 +62,8 @@ const Step4Finalization: React.FC = () => {
 
   const handlePreview = () => {
     // Logique d'aperçu existante
-    console.log('Aperçu de la campagne');
+    const campaign = generatePreviewCampaign();
+    console.log('Preview campaign:', campaign);
   };
 
   return (
