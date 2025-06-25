@@ -38,8 +38,10 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
       // Force un re-render en créant un nouvel objet avec un timestamp
       newCampaign._lastUpdate = Date.now();
       
-      console.log('WheelGameConfig - Mise à jour:', updates);
-      console.log('WheelGameConfig - Nouveaux segments:', newCampaign.gameConfig.wheel.segments);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelGameConfig - Mise à jour:', updates);
+        console.log('WheelGameConfig - Nouveaux segments:', newCampaign.gameConfig.wheel.segments);
+      }
       
       return newCampaign;
     });

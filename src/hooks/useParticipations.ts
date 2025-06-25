@@ -22,10 +22,12 @@ export const useParticipations = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      console.log('Participation created:', {
-        ...participation,
-        created_at: participation.created_at || new Date().toISOString()
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Participation created:', {
+          ...participation,
+          created_at: participation.created_at || new Date().toISOString()
+        });
+      }
       
       return true;
     } catch (err) {
@@ -55,7 +57,9 @@ export const useParticipations = () => {
   };
 
   const getParticipationsByCampaign = async (campaignId: string): Promise<Participation[]> => {
-    console.log('Loading participations for campaign:', campaignId);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Loading participations for campaign:', campaignId);
+    }
     return getParticipations();
   };
 

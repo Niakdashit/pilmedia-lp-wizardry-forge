@@ -22,11 +22,13 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
   // Vérification de la disponibilité des données
   const hasQuizData = wizardData.generatedQuiz && wizardData.generatedQuiz.questions?.length > 0;
   
-  console.log('📋 PreviewStep - Données du wizard:', {
-    hasGeneratedQuiz: !!wizardData.generatedQuiz,
-    questionsCount: wizardData.generatedQuiz?.questions?.length || 0,
-    allData: wizardData
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('📋 PreviewStep - Données du wizard:', {
+      hasGeneratedQuiz: !!wizardData.generatedQuiz,
+      questionsCount: wizardData.generatedQuiz?.questions?.length || 0,
+      allData: wizardData
+    });
+  }
 
   // Ajout récupération design et logo extraits automatiquement si présents
   const brandTheme = wizardData.extractedBrandTheme;
@@ -48,10 +50,12 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
 
   // Construction sécurisée de la configuration du quiz
   const buildQuizConfig = () => {
-    if (!hasQuizData) {
-      console.log('⚠️ Aucune donnée de quiz disponible');
-      return { questions: [] };
-    }
+      if (!hasQuizData) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('⚠️ Aucune donnée de quiz disponible');
+        }
+        return { questions: [] };
+      }
     
     const qs = wizardData.generatedQuiz.questions || [];
     const config = {
@@ -70,7 +74,9 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
       }))
     };
     
-    console.log('🎯 Configuration quiz construite:', config);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🎯 Configuration quiz construite:', config);
+      }
     return config;
   };
 

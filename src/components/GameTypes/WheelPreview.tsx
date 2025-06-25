@@ -73,38 +73,50 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   } = getWheelPreviewConfig(campaign);
 
   // Calculer dynamiquement si on doit afficher le message d'absence de segments
-  const hasNoConfiguredSegments = useMemo(() => {
-    const segmentCount = segments?.length || 0;
-    console.log('WheelPreview - Nombre de segments:', segmentCount);
-    return segmentCount === 0;
-  }, [segments]);
+    const hasNoConfiguredSegments = useMemo(() => {
+      const segmentCount = segments?.length || 0;
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreview - Nombre de segments:', segmentCount);
+      }
+      return segmentCount === 0;
+    }, [segments]);
 
   // Debug des segments
-  console.log('WheelPreview - Segments reçus:', segments);
-  console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
-  console.log('WheelPreview - formValidated:', formValidated);
-  console.log('WheelPreview - disableForm:', disableForm);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Segments reçus:', segments);
+      console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
+      console.log('WheelPreview - formValidated:', formValidated);
+      console.log('WheelPreview - disableForm:', disableForm);
+    }
 
   // Gestion du clic sur le bouton - logique simplifiée
   const handleButtonClick = () => {
-    console.log('WheelPreview - Bouton cliqué, formValidated:', formValidated, 'disableForm:', disableForm);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Bouton cliqué, formValidated:', formValidated, 'disableForm:', disableForm);
+    }
     
     // Si le formulaire est désactivé, on valide automatiquement
     if (disableForm) {
-      console.log('WheelPreview - Formulaire désactivé, lancement direct');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('WheelPreview - Formulaire désactivé, lancement direct');
+        }
       handleWheelClick();
       return;
     }
 
     // Si le formulaire n'est pas validé, on affiche la modale
     if (!formValidated) {
-      console.log('WheelPreview - Formulaire non validé, ouverture de la modale');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('WheelPreview - Formulaire non validé, ouverture de la modale');
+        }
       setShowFormModal(true);
       return;
     }
 
     // Si le formulaire est validé, on lance la roue
-    console.log('WheelPreview - Formulaire validé, lancement de la roue');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Formulaire validé, lancement de la roue');
+    }
     handleWheelClick();
   };
 

@@ -43,8 +43,10 @@ export const drawWheelSegments = ({
     [customColors.primary, customColors.secondary, customColors.accent || customColors.secondary] :
     getThemeColors(theme);
 
-  console.log('WheelSegmentDrawer - Couleurs utilisées:', themeColors);
-  console.log('WheelSegmentDrawer - CustomColors reçues:', customColors);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('WheelSegmentDrawer - Couleurs utilisées:', themeColors);
+    console.log('WheelSegmentDrawer - CustomColors reçues:', customColors);
+  }
 
   segments.forEach((seg: Segment, i: number) => {
     const startAngle = i * anglePerSlice + rotationRad;

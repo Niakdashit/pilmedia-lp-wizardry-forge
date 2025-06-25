@@ -49,7 +49,9 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
 
     try {
       setDebugInfo('Appel à l\'API Supabase (header apikey envoyé)');
-      console.log('🚀 [QuizGen] Appel API avec endpoint:', quizEndpoint);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🚀 [QuizGen] Appel API avec endpoint:', quizEndpoint);
+      }
 
       const progressInterval = setInterval(() => {
         setProgress(prev => Math.min(prev + 10, 80));
@@ -64,7 +66,9 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
         manualContent: wizardData['manualContent'] || ''
       };
 
-      console.log('[QuizGen] Payload envoyé à l\'API:', payload);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[QuizGen] Payload envoyé à l\'API:', payload);
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -88,7 +92,9 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
       clearInterval(progressInterval);
       clearTimeout(timeoutId);
 
-      console.log('[QuizGen] Réponse HTTP:', response);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[QuizGen] Réponse HTTP:', response);
+      }
 
       let data;
       let textBody = '';
@@ -118,7 +124,9 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
       }
 
       // Tout bon !
-      console.log('[QuizGen] Réponse JSON reçue :', data);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[QuizGen] Réponse JSON reçue :', data);
+      }
       setProgress(100);
       setDebugInfo('Réponse API OK. Quiz personnalisé reçu.');
       updateWizardData({ generatedQuiz: data });

@@ -28,12 +28,16 @@ export const useBrandColorExtraction = (
       setIsExtracting(true);
       
       try {
-        console.log('🚀 Démarrage extraction thème de marque pour:', siteUrl);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('🚀 Démarrage extraction thème de marque pour:', siteUrl);
+        }
         
         // Priorité ABSOLUE: Couleurs exactes prédéfinies
         const exactColors = getExactBrandColors(siteUrl);
         if (exactColors) {
-          console.log('🎯 Application couleurs exactes:', exactColors);
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('🎯 Application couleurs exactes:', exactColors);
+          }
           setFinalColors(exactColors);
           setBrandStyleExtracted(true);
           return;
@@ -41,7 +45,9 @@ export const useBrandColorExtraction = (
 
         // Nouveau système : generateBrandThemeFromUrl
         const brandTheme = await generateBrandThemeFromUrl(siteUrl);
-        console.log('✅ Thème de marque généré:', brandTheme);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('✅ Thème de marque généré:', brandTheme);
+        }
         
         // Application des couleurs extraites
         setFinalColors({

@@ -60,7 +60,9 @@ export const useWheelSpin = ({
         onFinish(result);
       }
       
-      console.log('Wheel spin result:', { winningSegment, result });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Wheel spin result:', { winningSegment, result });
+      }
     }, 3000);
   }, [spinning, disabled, segments, rotation, config, onStart, onFinish]);
 

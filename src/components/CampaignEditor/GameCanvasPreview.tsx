@@ -60,8 +60,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
               maxWinners: campaign.gameConfig?.wheel?.maxWinners,
               winnersCount: 0
             }}
-            onFinish={() => console.log('Preview wheel finished')}
-            onStart={() => console.log('Preview wheel started')}
+            onFinish={() => {
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Preview wheel finished');
+              }
+            }}
+            onStart={() => {
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Preview wheel started');
+              }
+            }}
             gameSize={gameSize}
             gamePosition={gamePosition}
             previewDevice={previewDevice}
@@ -78,8 +86,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             buttonColor={campaign.buttonConfig?.color || campaign.gameConfig?.[campaign.type]?.buttonColor || '#841b60'}
             gameSize={gameSize}
             disabled={false}
-            onFinish={() => console.log('Preview scratch finished')}
-            onStart={() => console.log('Preview scratch started')}
+            onFinish={() => {
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Preview scratch finished');
+              }
+            }}
+            onStart={() => {
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Preview scratch started');
+              }
+            }}
             isModal={false}
             autoStart={false}
           />
@@ -101,8 +117,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
             slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
             disabled={false}
-            onFinish={() => console.log('Preview jackpot finished')}
-            onStart={() => console.log('Preview jackpot started')}
+            onFinish={() => {
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Preview jackpot finished');
+              }
+            }}
+            onStart={() => {
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Preview jackpot started');
+              }
+            }}
           />
         );
       
