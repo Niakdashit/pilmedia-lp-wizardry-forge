@@ -6,35 +6,10 @@ interface WheelContainerProps {
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const WheelContainer: React.FC<WheelContainerProps> = ({ children }) => {
-  const containerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    padding: '20px',
-    boxSizing: 'border-box'
-  };
-
-  const gameWrapperStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden'
-  };
-
+const WheelContainer: React.FC<WheelContainerProps> = ({ children, previewDevice = 'desktop' }) => {
   return (
-    <div style={containerStyle}>
-      <div style={gameWrapperStyle}>
-        {children}
-      </div>
+    <div className="flex items-center justify-center w-full h-full min-h-[400px] relative">
+      {children}
     </div>
   );
 };

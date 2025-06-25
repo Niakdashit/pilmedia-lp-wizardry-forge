@@ -24,8 +24,6 @@ interface WheelPreviewProps {
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
   disableForm?: boolean;
-  /** Control display of the radial shadow under the wheel */
-  showShadow?: boolean;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -111,16 +109,15 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   };
 
   return (
-    <WheelContainer
-      previewDevice={previewDevice}
-    >
+    <WheelContainer previewDevice={previewDevice}>
       {hasNoConfiguredSegments && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 text-gray-600 text-center p-4">
           Ajoutez des segments pour activer la roue
         </div>
       )}
+      
       <div className="flex flex-col items-center justify-center space-y-6 w-full h-full">
-        <div className="flex-shrink-0">
+        <div className="flex-1 flex items-center justify-center">
           <WheelPreviewContent
             segments={segments}
             rotation={rotation}
@@ -137,7 +134,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           />
         </div>
 
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 pb-4">
           <WheelButton
             buttonConfig={buttonConfig}
             spinning={spinning}

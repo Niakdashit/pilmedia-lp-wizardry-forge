@@ -35,29 +35,9 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   showValidationMessage,
   onWheelClick
 }) => {
-  const containerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    cursor: 'pointer'
-  };
-
-  const wheelWrapperStyle: React.CSSProperties = {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: `${canvasSize}px`,
-    height: `${canvasSize}px`
-  };
-
   return (
-    <div style={containerStyle} onClick={onWheelClick}>
-      <div style={wheelWrapperStyle}>
+    <div className="flex items-center justify-center w-full h-full relative cursor-pointer" onClick={onWheelClick}>
+      <div className="relative flex items-center justify-center">
         <WheelCanvas
           segments={segments}
           rotation={rotation}
@@ -74,19 +54,7 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
         
         {/* Pointer centré au-dessus de la roue */}
         <div
-          style={{
-            position: 'absolute',
-            top: '-25px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '40px',
-            height: '60px',
-            zIndex: 3,
-            pointerEvents: 'none',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-          }}
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-6 z-10 pointer-events-none"
         >
           <svg width="40" height="60">
             <defs>
@@ -116,7 +84,7 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
       </div>
 
       {showValidationMessage && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="absolute inset-0 flex items-center justify-center z-20">
           <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in font-bold">
             ✓ Formulaire validé !
           </div>
