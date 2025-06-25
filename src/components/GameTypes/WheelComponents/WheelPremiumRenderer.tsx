@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { createWheelGradients } from './WheelGradients';
 import { getPremiumTheme, applyThemeEffects } from './WheelPremiumThemes';
@@ -47,7 +46,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
   const internalShadowCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const mainCanvasRef = canvasRef || internalCanvasRef;
-  const mainShadowCanvasRef = shadowCanvasRef || internalShadowCanvasRef;
   const [gradients, setGradients] = useState<any>(null);
   const [animationTime, setAnimationTime] = useState(0);
 

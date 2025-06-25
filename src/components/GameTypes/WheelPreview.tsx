@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import WheelContainer from './WheelComponents/WheelContainer';
 import WheelButton from './WheelComponents/WheelButton';
@@ -116,7 +117,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   return (
     <WheelContainer
-      gameDimensions={gameDimensions}
       previewDevice={previewDevice}
     >
       {hasNoConfiguredSegments && (
@@ -137,13 +137,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             borderColor={borderColor}
             borderOutlineColor={borderOutlineColor}
             canvasSize={canvasSize}
-            containerWidth={containerWidth}
-            containerHeight={containerHeight}
-            shouldCropWheel={shouldCropWheel}
-            gamePosition={gamePosition}
             showValidationMessage={showValidationMessage}
             onWheelClick={handleButtonClick}
-            showShadow={showShadow}
           />
         </div>
 
