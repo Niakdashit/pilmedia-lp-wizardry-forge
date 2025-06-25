@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
@@ -34,30 +33,33 @@ export const useModernCampaignEditor = () => {
       if (existingCampaign) {
         console.log('Loaded campaign from QuickCampaign:', existingCampaign);
         
+        // Ensure the campaign type is properly typed
+        const existingCampaignType = (existingCampaign.type as CampaignType) || campaignType;
+        
         // Fusionner les données de QuickCampaign avec la structure par défaut
         const mergedCampaign = {
-          ...getDefaultCampaign(existingCampaign.type || campaignType, false),
+          ...getDefaultCampaign(existingCampaignType, false),
           ...existingCampaign,
           // S'assurer que les formFields sont correctement mappés
-          formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(campaignType, isNewCampaign).formFields,
+          formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
           // Préserver la configuration du design
           design: {
-            ...getDefaultCampaign(existingCampaign.type || campaignType, false).design,
+            ...getDefaultCampaign(existingCampaignType, false).design,
             ...existingCampaign.design
           },
           // Préserver la configuration des jeux
           gameConfig: {
-            ...getDefaultCampaign(existingCampaign.type || campaignType, false).gameConfig,
+            ...getDefaultCampaign(existingCampaignType, false).gameConfig,
             ...existingCampaign.gameConfig
           },
           // Préserver la configuration des boutons
           buttonConfig: {
-            ...getDefaultCampaign(existingCampaign.type || campaignType, false).buttonConfig,
+            ...getDefaultCampaign(existingCampaignType, false).buttonConfig,
             ...existingCampaign.buttonConfig
           },
           // Préserver les écrans
           screens: {
-            ...getDefaultCampaign(existingCampaign.type || campaignType, false).screens,
+            ...getDefaultCampaign(existingCampaignType, false).screens,
             ...existingCampaign.screens
           }
         };
