@@ -1,4 +1,3 @@
-
 import React from 'react';
 import WheelPreview from '../../../GameTypes/WheelPreview';
 import { Jackpot } from '../../../GameTypes';
@@ -102,7 +101,6 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
           gamePosition={gamePosition}
           previewDevice={previewDevice}
           key={renderKey}
-          showShadow={false}
         />
       );
 

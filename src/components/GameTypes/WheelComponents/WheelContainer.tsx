@@ -6,7 +6,7 @@ interface WheelContainerProps {
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const WheelContainer: React.FC<WheelContainerProps> = ({ children, previewDevice = 'desktop' }) => {
+const WheelContainer: React.FC<WheelContainerProps> = ({ children }) => {
   return (
     <div className="flex items-center justify-center w-full h-full min-h-[400px] relative">
       {children}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { GameSize } from '../configurators/GameSizeSelector';
 import { getCampaignBackgroundImage } from '../../utils/background';
@@ -68,7 +67,6 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             previewDevice={previewDevice}
             disabled={false}
             disableForm={true}
-            showShadow={false}
           />
         );
       

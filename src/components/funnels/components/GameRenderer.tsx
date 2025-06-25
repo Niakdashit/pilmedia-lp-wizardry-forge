@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
@@ -82,7 +81,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             previewDevice={previewMode}
             disabled={!formValidated}
             disableForm={true}
-            showShadow={false}
           />
         );
       
