@@ -19,38 +19,50 @@ export const useModernCampaignEditor = () => {
   
   const { saveCampaign, getCampaign } = useCampaigns();
   
-  const [campaign, setCampaign] = useState<any>(getDefaultCampaign(campaignType, isNewCampaign));
+  const [campaign, setCampaign] = useState<any>(() => {
+    console.log('Initializing campaign with campaignType:', campaignType);
+    return getDefaultCampaign(campaignType, isNewCampaign);
+  });
 
   useEffect(() => {
+    console.log('useEffect triggered with id:', id, 'isNewCampaign:', isNewCampaign);
+    
     if (!isNewCampaign && id) {
       loadCampaign(id);
     }
   }, [id, isNewCampaign]);
 
   const loadCampaign = async (campaignId: string) => {
+    console.log('Loading campaign with ID:', campaignId);
     setIsLoading(true);
+    
     try {
-      console.log('Loading campaign with ID:', campaignId);
-      
-      // For QuickCampaign preview, we need to handle the mock data differently
+      // Special handling for QuickCampaign preview
       if (campaignId === 'quick-preview') {
-        // Try to get the campaign from localStorage or another source
+        console.log('Loading QuickCampaign preview data');
+        
         const quickCampaignData = localStorage.getItem('quickCampaignPreview');
+        console.log('QuickCampaign data from localStorage:', quickCampaignData);
+        
         if (quickCampaignData) {
           const parsedData = JSON.parse(quickCampaignData);
-          console.log('Loaded QuickCampaign data from localStorage:', parsedData);
+          console.log('Parsed QuickCampaign data:', parsedData);
           
           const existingCampaignType = (parsedData.type as CampaignType) || campaignType;
+          console.log('Using campaign type:', existingCampaignType);
           
           // Create comprehensive merged campaign
+          const defaultCampaign = getDefaultCampaign(existingCampaignType, false);
+          console.log('Default campaign:', defaultCampaign);
+          
           const mergedCampaign = {
-            ...getDefaultCampaign(existingCampaignType, false),
+            ...defaultCampaign,
             ...parsedData,
             // Ensure proper field mapping
-            formFields: parsedData.form_fields || parsedData.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
+            formFields: parsedData.form_fields || parsedData.formFields || defaultCampaign.formFields,
             // Ensure design configuration is preserved
             design: {
-              ...getDefaultCampaign(existingCampaignType, false).design,
+              ...defaultCampaign.design,
               ...parsedData.design,
               // Map QuickCampaign colors to ModernEditor format
               primaryColor: parsedData.customColors?.primary || parsedData.design?.primaryColor,
@@ -63,7 +75,7 @@ export const useModernCampaignEditor = () => {
             },
             // Ensure game configuration is preserved
             gameConfig: {
-              ...getDefaultCampaign(existingCampaignType, false).gameConfig,
+              ...defaultCampaign.gameConfig,
               ...parsedData.gameConfig,
               // Special handling for wheel configuration
               wheel: parsedData.config?.roulette ? {
@@ -73,23 +85,29 @@ export const useModernCampaignEditor = () => {
             },
             // Ensure button configuration is preserved
             buttonConfig: {
-              ...getDefaultCampaign(existingCampaignType, false).buttonConfig,
+              ...defaultCampaign.buttonConfig,
               ...parsedData.buttonConfig
             },
             // Ensure screens configuration is preserved
             screens: {
-              ...getDefaultCampaign(existingCampaignType, false).screens,
+              ...defaultCampaign.screens,
               ...parsedData.screens
             }
           };
           
           console.log('Final merged campaign:', mergedCampaign);
           setCampaign(mergedCampaign);
+          setIsLoading(false);
           return;
+        } else {
+          console.log('No QuickCampaign data found in localStorage');
         }
       }
 
+      // Standard campaign loading
+      console.log('Loading standard campaign from API');
       const existingCampaign = await getCampaign(campaignId);
+      
       if (existingCampaign) {
         console.log('Loaded campaign from API:', existingCampaign);
         
@@ -117,7 +135,10 @@ export const useModernCampaignEditor = () => {
           }
         };
         
+        console.log('Merged standard campaign:', mergedCampaign);
         setCampaign(mergedCampaign);
+      } else {
+        console.log('No campaign found, using default');
       }
     } catch (error) {
       console.error('Error loading campaign:', error);
@@ -164,6 +185,8 @@ export const useModernCampaignEditor = () => {
       setIsLoading(false);
     }
   };
+
+  console.log('Current campaign state:', campaign);
 
   return {
     campaign,
