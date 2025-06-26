@@ -5,6 +5,60 @@ import { CampaignType } from '../utils/campaignTypes';
 import { useCampaigns } from './useCampaigns';
 import { getDefaultCampaign } from '../components/ModernEditor/utils/defaultCampaign';
 
+// Helper function to validate and sanitize colors
+const validateColors = (colors: any) => {
+  const defaultColors = {
+    primary: '#3b82f6',
+    secondary: '#1e40af',
+    accent: '#0ea5e9',
+    textColor: '#000000'
+  };
+
+  if (!colors || typeof colors !== 'object') {
+    console.warn('Invalid colors object, using defaults:', colors);
+    return defaultColors;
+  }
+
+  return {
+    primary: (colors.primary && typeof colors.primary === 'string' && colors.primary.startsWith('#')) 
+      ? colors.primary : defaultColors.primary,
+    secondary: (colors.secondary && typeof colors.secondary === 'string' && colors.secondary.startsWith('#')) 
+      ? colors.secondary : defaultColors.secondary,
+    accent: (colors.accent && typeof colors.accent === 'string' && colors.accent.startsWith('#')) 
+      ? colors.accent : defaultColors.accent,
+    textColor: (colors.textColor && typeof colors.textColor === 'string') 
+      ? colors.textColor : defaultColors.textColor
+  };
+};
+
+// Helper function to validate QuickCampaign data
+const validateQuickCampaignData = (data: any) => {
+  console.log('Validating QuickCampaign data:', data);
+  
+  if (!data || typeof data !== 'object') {
+    console.error('Invalid QuickCampaign data structure');
+    return null;
+  }
+
+  // Validate essential properties
+  if (!data.name && !data.campaignName) {
+    console.error('Missing campaign name in QuickCampaign data');
+    return null;
+  }
+
+  if (!data.type && !data.selectedGameType) {
+    console.error('Missing game type in QuickCampaign data');
+    return null;
+  }
+
+  return {
+    ...data,
+    name: data.name || data.campaignName,
+    type: data.type || data.selectedGameType,
+    customColors: validateColors(data.customColors || data.design?.customColors)
+  };
+};
+
 export const useModernCampaignEditor = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -48,50 +102,62 @@ export const useModernCampaignEditor = () => {
           const parsedData = JSON.parse(quickCampaignData);
           console.log('Parsed QuickCampaign data:', parsedData);
           
-          const existingCampaignType = (parsedData.type as CampaignType) || campaignType;
+          // Validate the parsed data
+          const validatedData = validateQuickCampaignData(parsedData);
+          if (!validatedData) {
+            console.error('QuickCampaign data validation failed');
+            setIsLoading(false);
+            return;
+          }
+          
+          const existingCampaignType = (validatedData.type as CampaignType) || campaignType;
           console.log('Using campaign type:', existingCampaignType);
           
-          // Create comprehensive merged campaign
+          // Create comprehensive merged campaign with better error handling
           const defaultCampaign = getDefaultCampaign(existingCampaignType, false);
           console.log('Default campaign:', defaultCampaign);
           
           const mergedCampaign = {
             ...defaultCampaign,
-            ...parsedData,
-            // Ensure proper field mapping
-            formFields: parsedData.form_fields || parsedData.formFields || defaultCampaign.formFields,
-            // Ensure design configuration is preserved
+            ...validatedData,
+            // Ensure proper field mapping with validation
+            formFields: validatedData.form_fields || validatedData.formFields || defaultCampaign.formFields,
+            // Ensure design configuration is preserved with validated colors
             design: {
               ...defaultCampaign.design,
-              ...parsedData.design,
-              // Map QuickCampaign colors to ModernEditor format
-              primaryColor: parsedData.customColors?.primary || parsedData.design?.primaryColor,
-              secondaryColor: parsedData.customColors?.secondary || parsedData.design?.secondaryColor,
-              accentColor: parsedData.customColors?.accent || parsedData.design?.accentColor,
-              textPrimaryColor: parsedData.customColors?.textColor || parsedData.design?.textPrimaryColor,
-              centerLogo: parsedData.logoUrl || parsedData.design?.centerLogo,
-              backgroundImage: parsedData.backgroundImageUrl || parsedData.design?.backgroundImage,
-              customColors: parsedData.customColors || {}
+              ...validatedData.design,
+              // Map QuickCampaign colors to ModernEditor format with validation
+              primaryColor: validatedData.customColors?.primary || validatedData.design?.primaryColor || defaultCampaign.design.primaryColor,
+              secondaryColor: validatedData.customColors?.secondary || validatedData.design?.secondaryColor || defaultCampaign.design.secondaryColor,
+              accentColor: validatedData.customColors?.accent || validatedData.design?.accentColor || defaultCampaign.design.accentColor,
+              textPrimaryColor: validatedData.customColors?.textColor || validatedData.design?.textPrimaryColor || defaultCampaign.design.textPrimaryColor,
+              centerLogo: validatedData.logoUrl || validatedData.design?.centerLogo,
+              backgroundImage: validatedData.backgroundImageUrl || validatedData.design?.backgroundImage,
+              customColors: validatedData.customColors || {}
             },
-            // Ensure game configuration is preserved
+            // Ensure game configuration is preserved with proper validation
             gameConfig: {
               ...defaultCampaign.gameConfig,
-              ...parsedData.gameConfig,
+              ...validatedData.gameConfig,
               // Special handling for wheel configuration
-              wheel: parsedData.config?.roulette ? {
-                ...parsedData.config.roulette,
-                segments: parsedData.config.roulette.segments || []
-              } : parsedData.gameConfig?.wheel
+              wheel: validatedData.config?.roulette ? {
+                ...validatedData.config.roulette,
+                segments: Array.isArray(validatedData.config.roulette.segments) 
+                  ? validatedData.config.roulette.segments 
+                  : defaultCampaign.gameConfig?.wheel?.segments || []
+              } : validatedData.gameConfig?.wheel || defaultCampaign.gameConfig?.wheel
             },
             // Ensure button configuration is preserved
             buttonConfig: {
               ...defaultCampaign.buttonConfig,
-              ...parsedData.buttonConfig
+              ...validatedData.buttonConfig,
+              color: validatedData.customColors?.accent || validatedData.buttonConfig?.color || defaultCampaign.buttonConfig?.color,
+              textColor: validatedData.customColors?.textColor || validatedData.buttonConfig?.textColor || defaultCampaign.buttonConfig?.textColor
             },
             // Ensure screens configuration is preserved
             screens: {
               ...defaultCampaign.screens,
-              ...parsedData.screens
+              ...validatedData.screens
             }
           };
           
@@ -119,7 +185,8 @@ export const useModernCampaignEditor = () => {
           formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
           design: {
             ...getDefaultCampaign(existingCampaignType, false).design,
-            ...existingCampaign.design
+            ...existingCampaign.design,
+            customColors: validateColors(existingCampaign.design?.customColors)
           },
           gameConfig: {
             ...getDefaultCampaign(existingCampaignType, false).gameConfig,

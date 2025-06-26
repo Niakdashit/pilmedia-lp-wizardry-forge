@@ -10,15 +10,26 @@ export const createWheelGradients = (
     accent?: string;
   }
 ) => {
+  console.log('Creating wheel gradients with:', { theme, customColors });
+  
   const gradients: any = {};
+
+  // Validate and provide fallback colors
+  const safeCustomColors = customColors && customColors.primary && customColors.secondary ? {
+    primary: customColors.primary || '#3b82f6',
+    secondary: customColors.secondary || '#1e40af',
+    accent: customColors.accent || customColors.secondary || '#1e40af'
+  } : null;
+
+  console.log('Safe custom colors:', safeCustomColors);
 
   // Base wheel gradient
   gradients.wheel = ctx.createRadialGradient(center, center, 0, center, center, radius);
   
-  if (customColors) {
-    gradients.wheel.addColorStop(0, customColors.primary);
-    gradients.wheel.addColorStop(0.5, customColors.secondary);
-    gradients.wheel.addColorStop(1, customColors.accent || customColors.secondary);
+  if (safeCustomColors) {
+    gradients.wheel.addColorStop(0, safeCustomColors.primary);
+    gradients.wheel.addColorStop(0.5, safeCustomColors.secondary);
+    gradients.wheel.addColorStop(1, safeCustomColors.accent);
   } else {
     switch (theme) {
       case 'casino':
@@ -75,55 +86,89 @@ export const createSegmentGradient = (
   color: string,
   theme: string
 ) => {
+  // Validate color parameter
+  const safeColor = color && typeof color === 'string' && color.startsWith('#') ? color : '#3b82f6';
+  console.log('Creating segment gradient with color:', { original: color, safe: safeColor });
+  
   const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
   
   switch (theme) {
     case 'casino':
-      gradient.addColorStop(0, lightenColor(color, 30));
-      gradient.addColorStop(0.4, color);
-      gradient.addColorStop(0.8, darkenColor(color, 20));
-      gradient.addColorStop(1, darkenColor(color, 40));
+      gradient.addColorStop(0, lightenColor(safeColor, 30));
+      gradient.addColorStop(0.4, safeColor);
+      gradient.addColorStop(0.8, darkenColor(safeColor, 20));
+      gradient.addColorStop(1, darkenColor(safeColor, 40));
       break;
     case 'luxury':
-      gradient.addColorStop(0, lightenColor(color, 50));
-      gradient.addColorStop(0.3, lightenColor(color, 20));
-      gradient.addColorStop(0.6, color);
-      gradient.addColorStop(1, darkenColor(color, 30));
+      gradient.addColorStop(0, lightenColor(safeColor, 50));
+      gradient.addColorStop(0.3, lightenColor(safeColor, 20));
+      gradient.addColorStop(0.6, safeColor);
+      gradient.addColorStop(1, darkenColor(safeColor, 30));
       break;
     case 'noel':
       gradient.addColorStop(0, '#ffffff');
-      gradient.addColorStop(0.2, lightenColor(color, 40));
-      gradient.addColorStop(0.7, color);
-      gradient.addColorStop(1, darkenColor(color, 20));
+      gradient.addColorStop(0.2, lightenColor(safeColor, 40));
+      gradient.addColorStop(0.7, safeColor);
+      gradient.addColorStop(1, darkenColor(safeColor, 20));
       break;
     default:
-      gradient.addColorStop(0, lightenColor(color, 20));
-      gradient.addColorStop(0.5, color);
-      gradient.addColorStop(1, darkenColor(color, 15));
+      gradient.addColorStop(0, lightenColor(safeColor, 20));
+      gradient.addColorStop(0.5, safeColor);
+      gradient.addColorStop(1, darkenColor(safeColor, 15));
   }
   
   return gradient;
 };
 
-// Utility functions
+// Utility functions with better error handling
 const lightenColor = (color: string, percent: number): string => {
-  const num = parseInt(color.replace("#", ""), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = (num >> 16) + amt;
-  const G = (num >> 8 & 0x00FF) + amt;
-  const B = (num & 0x0000FF) + amt;
-  return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  try {
+    if (!color || !color.startsWith('#')) {
+      console.warn('Invalid color for lightening:', color);
+      return '#3b82f6'; // Default blue
+    }
+    
+    const num = parseInt(color.replace("#", ""), 16);
+    if (isNaN(num)) {
+      console.warn('Invalid hex color:', color);
+      return '#3b82f6';
+    }
+    
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  } catch (error) {
+    console.error('Error lightening color:', error);
+    return color || '#3b82f6';
+  }
 };
 
 const darkenColor = (color: string, percent: number): string => {
-  const num = parseInt(color.replace("#", ""), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = (num >> 16) - amt;
-  const G = (num >> 8 & 0x00FF) - amt;
-  const B = (num & 0x0000FF) - amt;
-  return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
-    (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
-    (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
+  try {
+    if (!color || !color.startsWith('#')) {
+      console.warn('Invalid color for darkening:', color);
+      return '#1e40af'; // Default dark blue
+    }
+    
+    const num = parseInt(color.replace("#", ""), 16);
+    if (isNaN(num)) {
+      console.warn('Invalid hex color:', color);
+      return '#1e40af';
+    }
+    
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) - amt;
+    const G = (num >> 8 & 0x00FF) - amt;
+    const B = (num & 0x0000FF) - amt;
+    return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+      (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+      (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
+  } catch (error) {
+    console.error('Error darkening color:', error);
+    return color || '#1e40af';
+  }
 };

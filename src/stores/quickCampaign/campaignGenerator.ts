@@ -1,7 +1,49 @@
-
 import { QuickCampaignState } from './types';
 
+// Helper function to validate and sanitize colors
+const validateAndSanitizeColors = (colors: any) => {
+  const defaultColors = {
+    primary: '#3b82f6',
+    secondary: '#1e40af',
+    accent: '#0ea5e9',
+    textColor: '#000000'
+  };
+
+  if (!colors || typeof colors !== 'object') {
+    console.warn('Invalid colors in QuickCampaign, using defaults');
+    return defaultColors;
+  }
+
+  return {
+    primary: (colors.primary && typeof colors.primary === 'string' && colors.primary.startsWith('#')) 
+      ? colors.primary : defaultColors.primary,
+    secondary: (colors.secondary && typeof colors.secondary === 'string' && colors.secondary.startsWith('#')) 
+      ? colors.secondary : defaultColors.secondary,
+    accent: (colors.accent && typeof colors.accent === 'string' && colors.accent.startsWith('#')) 
+      ? colors.accent : defaultColors.accent,
+    textColor: (colors.textColor && typeof colors.textColor === 'string') 
+      ? colors.textColor : defaultColors.textColor
+  };
+};
+
 export const generatePreviewCampaign = (state: QuickCampaignState) => {
+  console.log('Generating preview campaign from state:', state);
+  
+  // Validate essential data
+  if (!state.campaignName) {
+    console.error('Missing campaign name in QuickCampaign state');
+    throw new Error('Nom de campagne requis');
+  }
+
+  if (!state.selectedGameType) {
+    console.error('Missing game type in QuickCampaign state');
+    throw new Error('Type de jeu requis');
+  }
+
+  // Sanitize colors
+  const safeColors = validateAndSanitizeColors(state.customColors);
+  console.log('Safe colors for campaign:', safeColors);
+
   const baseConfig = {
     id: 'quick-preview',
     name: state.campaignName,
@@ -21,53 +63,53 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
 
     // Configuration du design - structure complète pour ModernEditor
     design: {
-      customColors: state.customColors,
+      customColors: safeColors,
       centerLogo: state.logoUrl || null,
       backgroundImage: state.backgroundImageUrl || null,
       mobileBackgroundImage: state.backgroundImageUrl || null,
       containerBackgroundColor: '#ffffff',
-      borderColor: state.customColors.primary,
+      borderColor: safeColors.primary,
       borderRadius: '16px',
-      buttonColor: state.customColors.accent,
-      buttonTextColor: state.customColors.primary,
-      textColor: state.customColors.textColor || '#000000',
-      theme: state.selectedTheme,
+      buttonColor: safeColors.accent,
+      buttonTextColor: safeColors.primary,
+      textColor: safeColors.textColor,
+      theme: state.selectedTheme || 'default',
       fontUrl: state.fontUrl,
       // Ajout des propriétés requises par ModernEditor
-      primaryColor: state.customColors.primary,
-      secondaryColor: state.customColors.secondary,
-      accentColor: state.customColors.accent,
+      primaryColor: safeColors.primary,
+      secondaryColor: safeColors.secondary,
+      accentColor: safeColors.accent,
       backgroundColor: '#ffffff',
-      textPrimaryColor: state.customColors.textColor || '#000000',
+      textPrimaryColor: safeColors.textColor,
       textSecondaryColor: '#666666'
     },
 
     // Configuration des boutons
     buttonConfig: {
-      color: state.customColors.accent,
-      textColor: state.customColors.primary,
-      borderColor: state.customColors.primary,
+      color: safeColors.accent,
+      textColor: safeColors.primary,
+      borderColor: safeColors.primary,
       borderWidth: 2,
       borderRadius: 8,
       size: 'medium',
       text: 'Jouer maintenant !',
       visible: true,
-      style: state.customColors.buttonStyle || 'primary',
-      backgroundColor: state.customColors.accent,
-      hoverColor: state.customColors.primary
+      style: safeColors.buttonStyle || 'primary',
+      backgroundColor: safeColors.accent,
+      hoverColor: safeColors.primary
     },
 
     // Configuration mobile
     mobileConfig: {
-      gamePosition: state.gamePosition,
-      buttonColor: state.customColors.accent,
-      buttonTextColor: state.customColors.primary,
+      gamePosition: state.gamePosition || 'center',
+      buttonColor: safeColors.accent,
+      buttonTextColor: safeColors.primary,
       buttonPlacement: 'bottom'
     },
 
     // Taille et position du jeu
     gameSize: 'medium',
-    gamePosition: state.gamePosition,
+    gamePosition: state.gamePosition || 'center',
 
     // Écrans par défaut avec personnalisation
     screens: {
@@ -76,21 +118,21 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
         description: 'Participez à notre jeu et tentez de gagner des prix !',
         buttonText: 'Participer',
         backgroundColor: '#ffffff',
-        textColor: state.customColors.textColor || '#000000'
+        textColor: safeColors.textColor || '#000000'
       },
       form: {
         title: 'Vos informations',
         description: 'Remplissez le formulaire pour continuer',
         buttonText: "C'est parti !",
         backgroundColor: '#ffffff',
-        textColor: state.customColors.textColor || '#000000'
+        textColor: safeColors.textColor || '#000000'
       },
       game: {
         title: 'Jouez maintenant !',
         description: 'Bonne chance !',
         buttonText: 'Jouer',
         backgroundColor: '#ffffff',
-        textColor: state.customColors.textColor || '#000000'
+        textColor: safeColors.textColor || '#000000'
       },
       result: {
         title: 'Merci !',
@@ -101,7 +143,7 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
         winMessage: 'Bravo ! Vous avez gagné !',
         loseMessage: 'Pas de chance cette fois !',
         backgroundColor: '#ffffff',
-        textColor: state.customColors.textColor || '#000000'
+        textColor: safeColors.textColor || '#000000'
       }
     },
 
@@ -126,14 +168,14 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
         segments: Array.from({ length: state.segmentCount }).map((_, i) => ({
           id: i + 1,
           label: `Segment ${i + 1}`,
-          color: i % 2 === 0 ? state.customColors.primary : state.customColors.secondary,
+          color: i % 2 === 0 ? safeColors.primary : safeColors.secondary,
           image: null,
           winProbability: 100 / state.segmentCount
         })),
-        borderColor: state.customColors.secondary,
-        borderOutlineColor: state.customColors.accent,
-        segmentColor1: state.customColors.primary,
-        segmentColor2: state.customColors.secondary,
+        borderColor: safeColors.secondary,
+        borderOutlineColor: safeColors.accent,
+        segmentColor1: safeColors.primary,
+        segmentColor2: safeColors.secondary,
         theme: state.selectedTheme,
         // Propriétés avancées de la roue
         wheelCustomization: state.wheelCustomization,
@@ -150,7 +192,7 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
           segments: Array.from({ length: state.segmentCount }).map((_, i) => ({
             id: i + 1,
             label: `Segment ${i + 1}`,
-            color: i % 2 === 0 ? state.customColors.primary : state.customColors.secondary,
+            color: i % 2 === 0 ? safeColors.primary : safeColors.secondary,
             image: null,
             winProbability: 100 / state.segmentCount
           }))
@@ -163,14 +205,14 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
         quiz: {
           questions: state.quizQuestions.map(q => ({
             ...q,
-            backgroundColor: state.customColors.primary,
-            textColor: state.customColors.textColor || '#ffffff'
+            backgroundColor: safeColors.primary,
+            textColor: safeColors.textColor || '#ffffff'
           })),
           timePerQuestion: 30,
           buttonLabel: 'Commencer le Quiz',
-          buttonColor: state.customColors.accent,
-          primaryColor: state.customColors.primary,
-          secondaryColor: state.customColors.secondary
+          buttonColor: safeColors.accent,
+          primaryColor: safeColors.primary,
+          secondaryColor: safeColors.secondary
         }
       };
       break;
@@ -200,15 +242,15 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
               revealImage: '',
               revealMessage: 'Félicitations !',
               scratchColor: '#C0C0C0',
-              backgroundColor: state.customColors.primary,
-              textColor: state.customColors.textColor || '#ffffff'
+              backgroundColor: safeColors.primary,
+              textColor: safeColors.textColor || '#ffffff'
             }
           ],
           buttonLabel: 'Gratter',
           winMessage: 'Bravo ! Vous avez gagné !',
           loseMessage: 'Pas de chance cette fois !',
-          primaryColor: state.customColors.primary,
-          secondaryColor: state.customColors.secondary
+          primaryColor: safeColors.primary,
+          secondaryColor: safeColors.secondary
         }
       };
       break;
@@ -217,5 +259,6 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
       break;
   }
 
+  console.log('Generated campaign config:', baseConfig);
   return baseConfig;
 };
