@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Gamification from './pages/Gamification';
@@ -30,45 +30,43 @@ import AdminAlerts from './pages/AdminAlerts';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        {/* Main Application Routes */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="gamification" element={<Gamification />} />
-          <Route path="newsletter" element={<Newsletter />} />
-          <Route path="social" element={<Social />} />
-          <Route path="data" element={<Data />} />
-          <Route path="statistics" element={<Statistics />} />
-          <Route path="studies" element={<Studies />} />
-          <Route path="account" element={<Account />} />
-          <Route path="contacts" element={<Contacts />} />
-          <Route path="campaigns" element={<Campaigns />} />
-          <Route path="campaigns/:id" element={<CampaignEditor />} />
-        </Route>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      
+      {/* Main Application Routes */}
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="gamification" element={<Gamification />} />
+        <Route path="newsletter" element={<Newsletter />} />
+        <Route path="social" element={<Social />} />
+        <Route path="data" element={<Data />} />
+        <Route path="statistics" element={<Statistics />} />
+        <Route path="studies" element={<Studies />} />
+        <Route path="account" element={<Account />} />
+        <Route path="contacts" element={<Contacts />} />
+        <Route path="campaigns" element={<Campaigns />} />
+        <Route path="campaigns/:id" element={<CampaignEditor />} />
+      </Route>
 
-        {/* Editor Routes (outside Layout) */}
-        <Route path="/modern-wizard" element={<ModernWizardPage />} />
-        <Route path="/modern-campaign/:id" element={<ModernEditorPage />} />
-        <Route path="/quick-campaign" element={<QuickCampaign />} />
+      {/* Editor Routes (outside Layout) */}
+      <Route path="/modern-wizard" element={<ModernWizardPage />} />
+      <Route path="/modern-campaign/:id" element={<ModernEditorPage />} />
+      <Route path="/quick-campaign" element={<QuickCampaign />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Admin />} />
-          <Route path="campaigns" element={<AdminCampaigns />} />
-          <Route path="clients" element={<AdminClients />} />
-          <Route path="clients/:id" element={<AdminClientDetail />} />
-          <Route path="templates" element={<AdminTemplates />} />
-          <Route path="analytics" element={<AdminAnalytics />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="team" element={<AdminTeam />} />
-          <Route path="alerts" element={<AdminAlerts />} />
-        </Route>
-      </Routes>
-    </Router>
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Admin />} />
+        <Route path="campaigns" element={<AdminCampaigns />} />
+        <Route path="clients" element={<AdminClients />} />
+        <Route path="clients/:id" element={<AdminClientDetail />} />
+        <Route path="templates" element={<AdminTemplates />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="reports" element={<AdminReports />} />
+        <Route path="settings" element={<AdminSettings />} />
+        <Route path="team" element={<AdminTeam />} />
+        <Route path="alerts" element={<AdminAlerts />} />
+      </Route>
+    </Routes>
   );
 }
 
