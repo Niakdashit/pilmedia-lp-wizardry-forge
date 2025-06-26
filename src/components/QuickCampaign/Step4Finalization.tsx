@@ -37,24 +37,17 @@ const Step4Finalization: React.FC = () => {
       
       console.log('QuickCampaign data being transferred:', quickCampaign);
       
-      // Sauvegarder temporairement la campagne avec un statut draft
-      const savedCampaign = await saveCampaign({
-        ...quickCampaign,
-        status: 'draft',
-        // S'assurer que tous les champs nécessaires sont présents
-        form_fields: quickCampaign.formFields || [
-          { id: '1', type: 'text', label: 'Nom', required: true, placeholder: 'Votre nom' },
-          { id: '2', type: 'email', label: 'Email', required: true, placeholder: 'votre@email.com' }
-        ]
-      });
-
-      if (savedCampaign?.id) {
-        console.log('Campaign saved, redirecting to modern editor with ID:', savedCampaign.id);
-        // Rediriger vers l'éditeur moderne avec l'ID de la campagne
-        navigate(`/modern-campaign/${savedCampaign.id}`);
-      } else {
-        console.error('Failed to save campaign or no ID returned');
-      }
+      // Store the campaign data in localStorage for immediate access
+      localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
+      
+      // For quick preview, we'll use a special ID
+      const campaignId = 'quick-preview';
+      
+      console.log('Redirecting to modern editor with campaign data');
+      
+      // Redirect to modern editor with the special preview ID
+      navigate(`/modern-campaign/${campaignId}`);
+      
     } catch (error) {
       console.error('Erreur lors de la redirection vers les paramètres avancés:', error);
     }

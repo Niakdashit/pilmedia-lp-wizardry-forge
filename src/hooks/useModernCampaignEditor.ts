@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
@@ -29,42 +30,93 @@ export const useModernCampaignEditor = () => {
   const loadCampaign = async (campaignId: string) => {
     setIsLoading(true);
     try {
+      console.log('Loading campaign with ID:', campaignId);
+      
+      // For QuickCampaign preview, we need to handle the mock data differently
+      if (campaignId === 'quick-preview') {
+        // Try to get the campaign from localStorage or another source
+        const quickCampaignData = localStorage.getItem('quickCampaignPreview');
+        if (quickCampaignData) {
+          const parsedData = JSON.parse(quickCampaignData);
+          console.log('Loaded QuickCampaign data from localStorage:', parsedData);
+          
+          const existingCampaignType = (parsedData.type as CampaignType) || campaignType;
+          
+          // Create comprehensive merged campaign
+          const mergedCampaign = {
+            ...getDefaultCampaign(existingCampaignType, false),
+            ...parsedData,
+            // Ensure proper field mapping
+            formFields: parsedData.form_fields || parsedData.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
+            // Ensure design configuration is preserved
+            design: {
+              ...getDefaultCampaign(existingCampaignType, false).design,
+              ...parsedData.design,
+              // Map QuickCampaign colors to ModernEditor format
+              primaryColor: parsedData.customColors?.primary || parsedData.design?.primaryColor,
+              secondaryColor: parsedData.customColors?.secondary || parsedData.design?.secondaryColor,
+              accentColor: parsedData.customColors?.accent || parsedData.design?.accentColor,
+              textPrimaryColor: parsedData.customColors?.textColor || parsedData.design?.textPrimaryColor,
+              centerLogo: parsedData.logoUrl || parsedData.design?.centerLogo,
+              backgroundImage: parsedData.backgroundImageUrl || parsedData.design?.backgroundImage,
+              customColors: parsedData.customColors || {}
+            },
+            // Ensure game configuration is preserved
+            gameConfig: {
+              ...getDefaultCampaign(existingCampaignType, false).gameConfig,
+              ...parsedData.gameConfig,
+              // Special handling for wheel configuration
+              wheel: parsedData.config?.roulette ? {
+                ...parsedData.config.roulette,
+                segments: parsedData.config.roulette.segments || []
+              } : parsedData.gameConfig?.wheel
+            },
+            // Ensure button configuration is preserved
+            buttonConfig: {
+              ...getDefaultCampaign(existingCampaignType, false).buttonConfig,
+              ...parsedData.buttonConfig
+            },
+            // Ensure screens configuration is preserved
+            screens: {
+              ...getDefaultCampaign(existingCampaignType, false).screens,
+              ...parsedData.screens
+            }
+          };
+          
+          console.log('Final merged campaign:', mergedCampaign);
+          setCampaign(mergedCampaign);
+          return;
+        }
+      }
+
       const existingCampaign = await getCampaign(campaignId);
       if (existingCampaign) {
-        console.log('Loaded campaign from QuickCampaign:', existingCampaign);
+        console.log('Loaded campaign from API:', existingCampaign);
         
-        // Ensure the campaign type is properly typed
         const existingCampaignType = (existingCampaign.type as CampaignType) || campaignType;
         
-        // Fusionner les données de QuickCampaign avec la structure par défaut
         const mergedCampaign = {
           ...getDefaultCampaign(existingCampaignType, false),
           ...existingCampaign,
-          // S'assurer que les formFields sont correctement mappés
           formFields: existingCampaign.form_fields || existingCampaign.formFields || getDefaultCampaign(existingCampaignType, false).formFields,
-          // Préserver la configuration du design
           design: {
             ...getDefaultCampaign(existingCampaignType, false).design,
             ...existingCampaign.design
           },
-          // Préserver la configuration des jeux
           gameConfig: {
             ...getDefaultCampaign(existingCampaignType, false).gameConfig,
             ...existingCampaign.gameConfig
           },
-          // Préserver la configuration des boutons
           buttonConfig: {
             ...getDefaultCampaign(existingCampaignType, false).buttonConfig,
             ...existingCampaign.buttonConfig
           },
-          // Préserver les écrans
           screens: {
             ...getDefaultCampaign(existingCampaignType, false).screens,
             ...existingCampaign.screens
           }
         };
         
-        console.log('Merged campaign data:', mergedCampaign);
         setCampaign(mergedCampaign);
       }
     } catch (error) {
