@@ -1,15 +1,12 @@
 
 import React, { useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { useAppContext } from '../../context/AppContext';
 import { Menu } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
-
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
 
   // Empêche le scroll du background seulement quand la sidebar est ouverte sur mobile
@@ -54,7 +51,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </header>
         <main className="flex-1 overflow-y-auto w-full">
           <div className="p-3 sm:p-6 w-full max-w-full">
-            {children}
+            <Outlet />
           </div>
         </main>
       </div>
