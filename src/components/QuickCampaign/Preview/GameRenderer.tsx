@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { synchronizeCampaignWithColors } from './utils/campaignSynchronizer';
 import GameSwitcher from './components/GameSwitcher';
@@ -84,6 +83,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
                      gameSize === 'medium' ? 300 : 
                      gameSize === 'large' ? 400 : 500;
 
+    // Récupérer le style de bordure depuis la campagne synchronisée
+    const borderStyle = synchronizedCampaign.design?.wheelBorderStyle || 'classic';
+    console.log('QuickCampaign GameRenderer - borderStyle:', borderStyle);
+
     return (
       <div style={containerStyle}>
         <SmartWheel
@@ -91,6 +94,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           theme="modern"
           size={wheelSize}
           brandColors={finalColors}
+          borderStyle={borderStyle}
           onResult={(segment) => {
             console.log('Segment gagné en preview:', segment);
           }}
