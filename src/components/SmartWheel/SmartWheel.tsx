@@ -4,7 +4,7 @@ import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
-import { BorderStyleSelector } from './components/BorderStyleSelector';
+import BorderStyleSelector from './components/BorderStyleSelector';
 import { BORDER_STYLES } from './utils/borderStyles';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
@@ -94,7 +94,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           <div className="p-4 bg-white rounded-xl shadow-lg border">
             <BorderStyleSelector
               currentStyle={currentBorderStyle}
-              onStyleChange={(style) => {
+              onStyleChange={(style: string) => {
                 setCurrentBorderStyle(style);
                 setShowBorderSelector(false);
               }}
