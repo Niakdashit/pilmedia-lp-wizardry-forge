@@ -1,4 +1,3 @@
-
 import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
 import { BrandData } from '../services/scrapingBeeService';
 import { CampaignType } from './campaignTypes';
@@ -15,8 +14,7 @@ export interface TransformedCampaignData {
 }
 
 export const transformBrandGameToCampaign = (
-  gameConcept: GeneratedGameConcept,
-  brandData: BrandData
+  gameConcept: GeneratedGameConcept
 ): TransformedCampaignData => {
   const baseConfig = {
     type: gameConcept.gameType as CampaignType,

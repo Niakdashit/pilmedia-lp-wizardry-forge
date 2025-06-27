@@ -1,4 +1,3 @@
-
 export interface BrandData {
   url: string;
   title: string;
@@ -99,13 +98,13 @@ export class ScrapingBeeService {
     const computedStyles = window.getComputedStyle(doc.body);
     
     // Extract colors from CSS variables and computed styles
-    const primaryColor = this.findColorInStyles(styles, ['--primary', '--brand', '--main']) || '#841b60';
-    const secondaryColor = this.findColorInStyles(styles, ['--secondary', '--accent']) || '#6d164f';
+    const primaryColor = this.findColorInStyles(['--primary', '--brand', '--main']) || '#841b60';
+    const secondaryColor = this.findColorInStyles(['--secondary', '--accent']) || '#6d164f';
     
     return {
       primary: primaryColor,
       secondary: secondaryColor,
-      accent: this.findColorInStyles(styles, ['--accent', '--highlight']) || '#ffffff',
+      accent: this.findColorInStyles(['--accent', '--highlight']) || '#ffffff',
       background: computedStyles.backgroundColor || '#ffffff'
     };
   }
@@ -154,7 +153,7 @@ export class ScrapingBeeService {
     };
   }
 
-  private findColorInStyles(styles: Element[], patterns: string[]): string | null {
+  private findColorInStyles(patterns: string[]): string | null {
     // Simplified color extraction - in real implementation, would parse CSS
     return null;
   }

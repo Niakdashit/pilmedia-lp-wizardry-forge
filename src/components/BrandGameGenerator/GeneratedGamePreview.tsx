@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Gamepad2, Trophy, Palette, Sparkles } from 'lucide-react';
+import { Trophy, Palette, Sparkles } from 'lucide-react';
 import { GeneratedGameConcept } from '../../services/openAIGameGeneratorService';
 
 interface GeneratedGamePreviewProps {

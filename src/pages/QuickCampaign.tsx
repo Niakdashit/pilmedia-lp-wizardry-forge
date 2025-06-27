@@ -1,6 +1,4 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import QuickCampaignCreator from '../components/QuickCampaign/QuickCampaignCreator';
 import BrandGameGenerator from '../components/BrandGameGenerator/BrandGameGenerator';
@@ -10,27 +8,15 @@ import { transformBrandGameToCampaign } from '../utils/brandGameTransformer';
 import { useQuickCampaignStore } from '../stores/quickCampaignStore';
 
 const QuickCampaign: React.FC = () => {
-  const navigate = useNavigate();
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const { updateCampaign } = useQuickCampaignStore();
+  const { setCampaign } = useQuickCampaignStore();
 
   const handleBrandGenerated = (concept: GeneratedGameConcept, brandData: BrandData) => {
     const campaignData = transformBrandGameToCampaign(concept, brandData);
     
     // Update the store with generated data
-    updateCampaign({
-      gameType: campaignData.type,
-      title: campaignData.name,
-      description: campaignData.description,
-      colors: {
-        primary: campaignData.design.primaryColor,
-        secondary: campaignData.design.secondaryColor,
-        accent: campaignData.design.customColors.accent
-      },
-      design: campaignData.design,
-      gameConfig: campaignData.gameConfig
-    });
+    setCampaign(campaignData);
 
     setShowBrandGenerator(false);
     setShowWelcome(false);

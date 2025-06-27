@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameSelectionStep from './steps/GameSelectionStep';
@@ -132,7 +131,6 @@ const ModernWizard: React.FC = () => {
         return (
           <PublishStep
             wizardData={wizardData}
-            updateWizardData={updateWizardData}
             onFinish={() => navigate('/gamification')}
             prevStep={prevStep}
           />
