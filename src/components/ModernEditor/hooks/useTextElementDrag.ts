@@ -22,7 +22,6 @@ export const useTextElementDrag = (
     }
 
     const elementRect = elementRef.current.getBoundingClientRect();
-    const containerRect = containerRef.current.getBoundingClientRect();
     
     // Calculate offset relative to container
     const offsetX = e.clientX - elementRect.left;
