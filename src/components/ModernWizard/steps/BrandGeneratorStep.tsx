@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import BrandGameGenerator from '../../BrandGameGenerator/BrandGameGenerator';
 import { GeneratedGameConcept } from '../../../services/openAIGameGeneratorService';
-import { BrandData } from '../../../services/scrapingBeeService';
 import { transformBrandGameToCampaign } from '../../../utils/brandGameTransformer';
 
 interface BrandGeneratorStepProps {

@@ -97,13 +97,13 @@ export class ScrapingBeeService {
     const computedStyles = window.getComputedStyle(doc.body);
     
     // Extract colors from CSS variables and computed styles
-    const primaryColor = this.findColorInStyles(['--primary', '--brand', '--main']) || '#841b60';
-    const secondaryColor = this.findColorInStyles(['--secondary', '--accent']) || '#6d164f';
+    const primaryColor = this.findColorInStyles() || '#841b60';
+    const secondaryColor = this.findColorInStyles() || '#6d164f';
     
     return {
       primary: primaryColor,
       secondary: secondaryColor,
-      accent: this.findColorInStyles(['--accent', '--highlight']) || '#ffffff',
+      accent: this.findColorInStyles() || '#ffffff',
       background: computedStyles.backgroundColor || '#ffffff'
     };
   }

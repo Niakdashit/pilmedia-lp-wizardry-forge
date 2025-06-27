@@ -4,23 +4,24 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import QuickCampaignCreator from '../components/QuickCampaign/QuickCampaignCreator';
 import BrandGameGenerator from '../components/BrandGameGenerator/BrandGameGenerator';
 import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
-import { BrandData } from '../services/scrapingBeeService';
 import { transformBrandGameToCampaign } from '../utils/brandGameTransformer';
 import { useQuickCampaignStore } from '../stores/quickCampaignStore';
 
 const QuickCampaign: React.FC = () => {
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const { updateWizardData } = useQuickCampaignStore();
+  const store = useQuickCampaignStore();
 
   const handleBrandGenerated = (concept: GeneratedGameConcept) => {
     const campaignData = transformBrandGameToCampaign(concept);
     
-    // Update the store with generated data
-    updateWizardData({
-      gameType: campaignData.type,
-      generatedCampaignData: campaignData
-    });
+    // Update the store with generated data - using available store methods
+    store.setGameType(campaignData.type);
+    store.setDesign(campaignData.design);
+    store.setGameConfig(campaignData.gameConfig);
+    store.setScreens(campaignData.screens);
+    store.setButtonConfig(campaignData.buttonConfig);
+    store.setFormFields(campaignData.formFields);
 
     setShowBrandGenerator(false);
     setShowWelcome(false);

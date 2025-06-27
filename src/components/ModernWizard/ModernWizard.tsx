@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import GameSelectionStep from './steps/GameSelectionStep';
 import BrandGeneratorStep from './steps/BrandGeneratorStep';
 import BrandAssetsStep from './steps/BrandAssetsStep';
@@ -24,7 +23,6 @@ export interface WizardData {
 }
 
 const ModernWizard: React.FC = () => {
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [wizardData, setWizardData] = useState<WizardData>({});
 
