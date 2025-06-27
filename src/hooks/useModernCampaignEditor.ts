@@ -137,7 +137,7 @@ export const useModernCampaignEditor = () => {
                   ...validatedData.config.roulette,
                   segments: Array.isArray(validatedData.config.roulette.segments) 
                     ? validatedData.config.roulette.segments 
-                    : (defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig && defaultCampaign.gameConfig.wheel && defaultCampaign.gameConfig.wheel.segments ? defaultCampaign.gameConfig.wheel.segments : [])
+                    : (defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig && defaultCampaign.gameConfig.wheel && Array.isArray(defaultCampaign.gameConfig.wheel.segments) ? defaultCampaign.gameConfig.wheel.segments : [])
                 }
               } : {})
             },
