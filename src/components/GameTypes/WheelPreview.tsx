@@ -43,8 +43,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     setShowFormModal,
     showValidationMessage,
     canvasSize,
-    containerWidth,
-    containerHeight,
     segments,
     rotation,
     spinning,
