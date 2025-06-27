@@ -71,16 +71,18 @@ const TextElement: React.FC<TextElementProps> = ({
   }), [element, sizeMap, isDragging]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    console.log('Text element mouse down:', element.id);
     onSelect();
     handleDragStart(e);
-  }, [onSelect, handleDragStart]);
+  }, [onSelect, handleDragStart, element.id]);
 
   return (
     <div
       ref={elementRef}
       style={{
         position: 'absolute',
-        transform: `translate3d(${deviceConfig.x}px, ${deviceConfig.y}px, 0)`,
+        left: `${deviceConfig.x}px`,
+        top: `${deviceConfig.y}px`,
         zIndex: isSelected ? 30 : 20,
         ...getTextStyles()
       }}

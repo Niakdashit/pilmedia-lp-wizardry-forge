@@ -15,8 +15,9 @@ export const useCanvasElements = (
   const customImages = campaign.design?.customImages || [];
 
   const addTextElement = useCallback(() => {
+    const newId = Date.now() + Math.random(); // Ensure unique ID
     const newText = {
-      id: Date.now(),
+      id: newId,
       text: 'Nouveau texte',
       enabled: true,
       x: 100,
@@ -40,6 +41,8 @@ export const useCanvasElements = (
       }
     };
 
+    console.log('Adding new text element:', newText);
+
     setCampaign((prev: any) => ({
       ...prev,
       design: {
@@ -52,8 +55,9 @@ export const useCanvasElements = (
   }, [setCampaign, customTexts, deviceKey]);
 
   const addImageElement = useCallback(() => {
+    const newId = Date.now() + Math.random(); // Ensure unique ID
     const newImage = {
-      id: Date.now(),
+      id: newId,
       src: '',
       enabled: true,
       x: 100,
@@ -71,6 +75,8 @@ export const useCanvasElements = (
       }
     };
 
+    console.log('Adding new image element:', newImage);
+
     setCampaign((prev: any) => ({
       ...prev,
       design: {
@@ -83,82 +89,97 @@ export const useCanvasElements = (
   }, [setCampaign, customImages, deviceKey]);
 
   const updateTextElement = useCallback((id: number, updates: any) => {
-    setCampaign((prevCampaign: any) => ({
-      ...prevCampaign,
-      design: {
-        ...prevCampaign.design,
-        customTexts: customTexts.map((text: any) => {
-          if (text.id === id) {
-            const updatedText = { ...text };
-            
-            // Update device-specific properties
-            if (updates.x !== undefined || updates.y !== undefined || updates.width !== undefined || updates.height !== undefined) {
-              updatedText.deviceConfig = {
-                ...updatedText.deviceConfig,
-                [deviceKey]: {
-                  ...updatedText.deviceConfig?.[deviceKey],
-                  x: updates.x !== undefined ? updates.x : updatedText.deviceConfig?.[deviceKey]?.x || updatedText.x || 0,
-                  y: updates.y !== undefined ? updates.y : updatedText.deviceConfig?.[deviceKey]?.y || updatedText.y || 0,
-                  width: updates.width !== undefined ? updates.width : updatedText.deviceConfig?.[deviceKey]?.width || updatedText.width,
-                  height: updates.height !== undefined ? updates.height : updatedText.deviceConfig?.[deviceKey]?.height || updatedText.height
-                }
-              };
-            }
-            
-            // Update other properties (color, text, etc.)
-            Object.keys(updates).forEach(key => {
-              if (!['x', 'y', 'width', 'height'].includes(key)) {
-                updatedText[key] = updates[key];
+    console.log('Updating text element:', id, updates);
+    
+    setCampaign((prevCampaign: any) => {
+      const updatedTexts = customTexts.map((text: any) => {
+        if (text.id === id) {
+          const updatedText = { ...text };
+          
+          // Update device-specific properties
+          if (updates.x !== undefined || updates.y !== undefined || updates.width !== undefined || updates.height !== undefined) {
+            updatedText.deviceConfig = {
+              ...updatedText.deviceConfig,
+              [deviceKey]: {
+                ...updatedText.deviceConfig?.[deviceKey],
+                x: updates.x !== undefined ? updates.x : updatedText.deviceConfig?.[deviceKey]?.x || updatedText.x || 0,
+                y: updates.y !== undefined ? updates.y : updatedText.deviceConfig?.[deviceKey]?.y || updatedText.y || 0,
+                width: updates.width !== undefined ? updates.width : updatedText.deviceConfig?.[deviceKey]?.width || updatedText.width,
+                height: updates.height !== undefined ? updates.height : updatedText.deviceConfig?.[deviceKey]?.height || updatedText.height
               }
-            });
-            
-            return updatedText;
+            };
           }
-          return text;
-        })
-      }
-    }));
+          
+          // Update other properties (color, text, etc.)
+          Object.keys(updates).forEach(key => {
+            if (!['x', 'y', 'width', 'height'].includes(key)) {
+              updatedText[key] = updates[key];
+            }
+          });
+          
+          console.log('Text element updated:', updatedText);
+          return updatedText;
+        }
+        return text;
+      });
+
+      return {
+        ...prevCampaign,
+        design: {
+          ...prevCampaign.design,
+          customTexts: updatedTexts
+        }
+      };
+    });
   }, [setCampaign, customTexts, deviceKey]);
 
   const updateImageElement = useCallback((id: number, updates: any) => {
-    setCampaign((prevCampaign: any) => ({
-      ...prevCampaign,
-      design: {
-        ...prevCampaign.design,
-        customImages: customImages.map((img: any) => {
-          if (img.id === id) {
-            const updatedImage = { ...img };
-            
-            // Update device-specific properties
-            if (updates.x !== undefined || updates.y !== undefined || updates.width !== undefined || updates.height !== undefined) {
-              updatedImage.deviceConfig = {
-                ...updatedImage.deviceConfig,
-                [deviceKey]: {
-                  ...updatedImage.deviceConfig?.[deviceKey],
-                  x: updates.x !== undefined ? updates.x : updatedImage.deviceConfig?.[deviceKey]?.x || updatedImage.x || 0,
-                  y: updates.y !== undefined ? updates.y : updatedImage.deviceConfig?.[deviceKey]?.y || updatedImage.y || 0,
-                  width: updates.width !== undefined ? updates.width : updatedImage.deviceConfig?.[deviceKey]?.width || updatedImage.width || 100,
-                  height: updates.height !== undefined ? updates.height : updatedImage.deviceConfig?.[deviceKey]?.height || updatedImage.height || 100
-                }
-              };
-            }
-            
-            // Update other properties (src, rotation, etc.)
-            Object.keys(updates).forEach(key => {
-              if (!['x', 'y', 'width', 'height'].includes(key)) {
-                updatedImage[key] = updates[key];
+    console.log('Updating image element:', id, updates);
+    
+    setCampaign((prevCampaign: any) => {
+      const updatedImages = customImages.map((img: any) => {
+        if (img.id === id) {
+          const updatedImage = { ...img };
+          
+          // Update device-specific properties
+          if (updates.x !== undefined || updates.y !== undefined || updates.width !== undefined || updates.height !== undefined) {
+            updatedImage.deviceConfig = {
+              ...updatedImage.deviceConfig,
+              [deviceKey]: {
+                ...updatedImage.deviceConfig?.[deviceKey],
+                x: updates.x !== undefined ? updates.x : updatedImage.deviceConfig?.[deviceKey]?.x || updatedImage.x || 0,
+                y: updates.y !== undefined ? updates.y : updatedImage.deviceConfig?.[deviceKey]?.y || updatedImage.y || 0,
+                width: updates.width !== undefined ? updates.width : updatedImage.deviceConfig?.[deviceKey]?.width || updatedImage.width || 100,
+                height: updates.height !== undefined ? updates.height : updatedImage.deviceConfig?.[deviceKey]?.height || updatedImage.height || 100
               }
-            });
-            
-            return updatedImage;
+            };
           }
-          return img;
-        })
-      }
-    }));
+          
+          // Update other properties (src, rotation, etc.)
+          Object.keys(updates).forEach(key => {
+            if (!['x', 'y', 'width', 'height'].includes(key)) {
+              updatedImage[key] = updates[key];
+            }
+          });
+          
+          console.log('Image element updated:', updatedImage);
+          return updatedImage;
+        }
+        return img;
+      });
+
+      return {
+        ...prevCampaign,
+        design: {
+          ...prevCampaign.design,
+          customImages: updatedImages
+        }
+      };
+    });
   }, [setCampaign, customImages, deviceKey]);
 
   const deleteTextElement = useCallback((id: number) => {
+    console.log('Deleting text element:', id);
     setCampaign((prevCampaign: any) => ({
       ...prevCampaign,
       design: {
@@ -170,6 +191,7 @@ export const useCanvasElements = (
   }, [setCampaign, customTexts]);
 
   const deleteImageElement = useCallback((id: number) => {
+    console.log('Deleting image element:', id);
     setCampaign((prevCampaign: any) => ({
       ...prevCampaign,
       design: {
@@ -183,12 +205,15 @@ export const useCanvasElements = (
   // Helper function to get current device config for an element
   const getElementDeviceConfig = useCallback((element: any) => {
     const deviceConfig = element.deviceConfig?.[deviceKey];
-    return {
+    const config = {
       x: deviceConfig?.x ?? element.x ?? 0,
       y: deviceConfig?.y ?? element.y ?? 0,
       width: deviceConfig?.width ?? element.width ?? (element.src ? 100 : undefined),
       height: deviceConfig?.height ?? element.height ?? (element.src ? 100 : undefined)
     };
+    
+    console.log('Getting device config for element:', element.id, config);
+    return config;
   }, [deviceKey]);
 
   return {

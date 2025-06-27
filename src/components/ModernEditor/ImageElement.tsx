@@ -63,16 +63,18 @@ const ImageElement: React.FC<ImageElementProps> = ({
   }, [onUpdate, element.rotation]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    console.log('Image element mouse down:', element.id);
     onSelect();
     handleDragStart(e);
-  }, [onSelect, handleDragStart]);
+  }, [onSelect, handleDragStart, element.id]);
 
   if (!element.src) {
     return (
       <div
         style={{
           position: 'absolute',
-          transform: `translate3d(${deviceConfig.x}px, ${deviceConfig.y}px, 0)`,
+          left: `${deviceConfig.x}px`,
+          top: `${deviceConfig.y}px`,
           width: deviceConfig.width,
           height: deviceConfig.height,
           border: '2px dashed #cbd5e1',
@@ -96,9 +98,11 @@ const ImageElement: React.FC<ImageElementProps> = ({
       ref={elementRef}
       style={{
         position: 'absolute',
-        transform: `translate3d(${deviceConfig.x}px, ${deviceConfig.y}px, 0) rotate(${element.rotation || 0}deg)`,
+        left: `${deviceConfig.x}px`,
+        top: `${deviceConfig.y}px`,
         width: deviceConfig.width,
         height: deviceConfig.height,
+        transform: `rotate(${element.rotation || 0}deg)`,
         cursor: isDragging ? 'grabbing' : 'grab',
         zIndex: isSelected ? 30 : 20,
         willChange: isDragging || isResizing ? 'transform' : 'auto',

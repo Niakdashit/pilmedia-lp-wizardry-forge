@@ -13,12 +13,21 @@ export const useImageElementDrag = (
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    console.log('Starting image drag for element:', deviceConfig);
 
-    if (!containerRef.current || !elementRef.current) return;
+    if (!containerRef.current || !elementRef.current) {
+      console.log('Missing refs:', { container: !!containerRef.current, element: !!elementRef.current });
+      return;
+    }
 
     const elementRect = elementRef.current.getBoundingClientRect();
+    const containerRect = containerRef.current.getBoundingClientRect();
+    
     const offsetX = e.clientX - elementRect.left;
     const offsetY = e.clientY - elementRect.top;
+    
+    console.log('Drag start - offset:', { offsetX, offsetY });
     
     dragStartRef.current = { offsetX, offsetY };
     setIsDragging(true);
@@ -35,11 +44,14 @@ export const useImageElementDrag = (
       newX = Math.max(0, Math.min(newX, containerRect.width - deviceConfig.width));
       newY = Math.max(0, Math.min(newY, containerRect.height - deviceConfig.height));
       
+      console.log('Moving image to:', { newX, newY });
+      
       // Update immediately for real-time feedback
       onUpdate({ x: newX, y: newY });
     };
 
     const handleMouseUp = () => {
+      console.log('Image drag ended');
       setIsDragging(false);
       dragStartRef.current = null;
       document.removeEventListener('mousemove', handleMouseMove);
