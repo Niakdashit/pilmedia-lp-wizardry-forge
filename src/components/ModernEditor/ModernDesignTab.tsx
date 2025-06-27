@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bold, Italic, Underline, Plus, Trash2, Image } from 'lucide-react';
 import ImageUpload from '../common/ImageUpload';
+import BorderStyleSelector from '../SmartWheel/components/BorderStyleSelector';
 
 interface ModernDesignTabProps {
   campaign: any;
@@ -255,6 +256,26 @@ const ModernDesignTab: React.FC<ModernDesignTabProps> = ({
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Wheel Border Style - Only for wheel campaigns */}
+      {campaign.type === 'wheel' && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Style de bordure</h3>
+          <BorderStyleSelector
+            currentStyle={campaign.gameConfig?.wheel?.borderStyle || 'classic'}
+            onStyleChange={(style) => setCampaign({
+              ...campaign,
+              gameConfig: {
+                ...campaign.gameConfig,
+                wheel: {
+                  ...campaign.gameConfig?.wheel,
+                  borderStyle: style
+                }
+              }
+            })}
+          />
         </div>
       )}
 
