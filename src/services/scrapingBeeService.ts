@@ -94,7 +94,6 @@ export class ScrapingBeeService {
   }
 
   private extractColors(doc: Document): BrandData['colors'] {
-    const styles = Array.from(doc.querySelectorAll('style, link[rel="stylesheet"]'));
     const computedStyles = window.getComputedStyle(doc.body);
     
     // Extract colors from CSS variables and computed styles
@@ -153,7 +152,7 @@ export class ScrapingBeeService {
     };
   }
 
-  private findColorInStyles(patterns: string[]): string | null {
+  private findColorInStyles(): string | null {
     // Simplified color extraction - in real implementation, would parse CSS
     return null;
   }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import QuickCampaignCreator from '../components/QuickCampaign/QuickCampaignCreator';
@@ -10,13 +11,16 @@ import { useQuickCampaignStore } from '../stores/quickCampaignStore';
 const QuickCampaign: React.FC = () => {
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const { setCampaign } = useQuickCampaignStore();
+  const { updateWizardData } = useQuickCampaignStore();
 
-  const handleBrandGenerated = (concept: GeneratedGameConcept, brandData: BrandData) => {
-    const campaignData = transformBrandGameToCampaign(concept, brandData);
+  const handleBrandGenerated = (concept: GeneratedGameConcept) => {
+    const campaignData = transformBrandGameToCampaign(concept);
     
     // Update the store with generated data
-    setCampaign(campaignData);
+    updateWizardData({
+      gameType: campaignData.type,
+      generatedCampaignData: campaignData
+    });
 
     setShowBrandGenerator(false);
     setShowWelcome(false);

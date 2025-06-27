@@ -20,8 +20,8 @@ const BrandGeneratorStep: React.FC<BrandGeneratorStepProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
 
-  const handleGameGenerated = (concept: GeneratedGameConcept, brandData: BrandData) => {
-    const campaignData = transformBrandGameToCampaign(concept, brandData);
+  const handleGameGenerated = (concept: GeneratedGameConcept) => {
+    const campaignData = transformBrandGameToCampaign(concept);
     setIsGenerating(false);
     onNext(campaignData);
   };

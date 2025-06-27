@@ -7,7 +7,7 @@ import BrandPreview from './BrandPreview';
 import GeneratedGamePreview from './GeneratedGamePreview';
 
 interface BrandGameGeneratorProps {
-  onGameGenerated: (concept: GeneratedGameConcept, brandData: BrandData) => void;
+  onGameGenerated: (concept: GeneratedGameConcept) => void;
   onCancel?: () => void;
 }
 
@@ -57,8 +57,8 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
   };
 
   const handleApply = () => {
-    if (gameConcept && brandData) {
-      onGameGenerated(gameConcept, brandData);
+    if (gameConcept) {
+      onGameGenerated(gameConcept);
       setStep('complete');
     }
   };

@@ -1,5 +1,5 @@
+
 import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
-import { BrandData } from '../services/scrapingBeeService';
 import { CampaignType } from './campaignTypes';
 
 export interface TransformedCampaignData {
