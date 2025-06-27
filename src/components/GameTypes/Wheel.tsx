@@ -14,7 +14,6 @@ interface WheelProps {
   winRate?: number;
   disabled?: boolean;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
-  position?: 'gauche' | 'droite' | 'bas' | 'centre';
 }
 
 const Wheel: React.FC<WheelProps> = ({ 
@@ -24,8 +23,7 @@ const Wheel: React.FC<WheelProps> = ({
   onFinish,
   onStart,
   disabled = false,
-  gameSize = 'small',
-  position = 'centre'
+  gameSize = 'small'
 }) => {
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();

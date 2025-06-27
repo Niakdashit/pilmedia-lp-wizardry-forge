@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SmartWheel } from '../SmartWheel';
+import SmartWheel from '../SmartWheel';
 
 interface SmartWheelWrapperProps {
   // Props de compatibilité avec l'ancienne roue

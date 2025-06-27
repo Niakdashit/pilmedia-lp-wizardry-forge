@@ -57,7 +57,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   const wheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
 
-  const handleResult = (segment: any) => {
+  const handleResult = () => {
     if (onFinish) {
       // Logique de win/lose basée sur la probabilité configurée
       const isWin = Math.random() < config.winProbability;
