@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
@@ -124,7 +125,7 @@ export const useModernCampaignEditor = () => {
               primaryColor: validatedData.customColors?.primary || validatedData.design?.primaryColor || defaultCampaign.design.primaryColor,
               secondaryColor: validatedData.customColors?.secondary || validatedData.design?.secondaryColor || defaultCampaign.design.secondaryColor,
               accentColor: validatedData.customColors?.accent || validatedData.design?.accentColor || validatedData.customColors?.primary || defaultCampaign.design.primaryColor,
-              textColor: validatedData.customColors?.textColor || validatedData.design?.textColor || defaultCampaign.design.textColor || '#000000',
+              textColor: validatedData.customColors?.textColor || '#000000',
               centerLogo: validatedData.logoUrl || validatedData.design?.centerLogo,
               backgroundImage: validatedData.backgroundImageUrl || validatedData.design?.backgroundImage,
               customColors: validatedData.customColors || {}
