@@ -45,7 +45,7 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
                   boxShadow: style.effects.glow 
                     ? `0 0 20px ${style.colors[0]}40`
                     : style.effects.shadow 
-                    ? '0 1px 8px rgba(0,0,0,0.1)'
+                    ? '0 4px 8px rgba(0,0,0,0.1)'
                     : undefined
                 }}
               >
