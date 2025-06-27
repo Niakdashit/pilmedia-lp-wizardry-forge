@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ScratchCard } from '../ScratchCard';
 import { RevealContent } from '../components/RevealContent';
-import { BrandContentGenerator, BrandInfo } from '../generators/BrandContentGenerator';
+import { BrandInfo } from '../generators/BrandContentGenerator';
 
 const ModernScratchCardExample: React.FC = () => {
   const [result, setResult] = useState<'win' | 'lose'>('win');

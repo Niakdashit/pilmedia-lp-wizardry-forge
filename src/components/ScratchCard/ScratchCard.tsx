@@ -104,16 +104,6 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
     setState(prev => ({ ...prev, isScratching: false }));
   }, []);
 
-  const resetScratchCard = useCallback(() => {
-    clearCanvas();
-    setState({
-      isScratching: false,
-      scratchPercentage: 0,
-      isCompleted: false,
-      hasStarted: false
-    });
-  }, [clearCanvas]);
-
   return (
     <div 
       className={`scratch-card ${className}`}
@@ -173,5 +163,3 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
     </div>
   );
 };
-
-export { resetScratchCard } from './ScratchCard';
