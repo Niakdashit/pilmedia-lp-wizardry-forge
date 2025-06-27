@@ -15,10 +15,10 @@ interface CanvasContentProps {
   customImages: any[];
   selectedElement: any;
   setSelectedElement: (element: any) => void;
-  updateTextElement: (id: string, updates: any) => void;
-  updateImageElement: (id: string, updates: any) => void;
-  deleteTextElement: (id: string) => void;
-  deleteImageElement: (id: string) => void;
+  updateTextElement: (id: number, updates: any) => void;
+  updateImageElement: (id: number, updates: any) => void;
+  deleteTextElement: (id: number) => void;
+  deleteImageElement: (id: number) => void;
   getElementDeviceConfig: (element: any) => any;
   containerRef: React.RefObject<HTMLDivElement>;
   sizeMap: Record<string, string>;

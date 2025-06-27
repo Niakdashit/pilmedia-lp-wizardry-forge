@@ -28,7 +28,6 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
     showAddMenu,
     setShowAddMenu,
     canvasRef,
-    handleCanvasClick,
     toggleAddMenu
   } = useCanvasState();
 
