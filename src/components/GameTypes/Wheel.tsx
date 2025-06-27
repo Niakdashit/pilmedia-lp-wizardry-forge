@@ -14,7 +14,7 @@ interface WheelProps {
   winRate?: number;
   disabled?: boolean;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
-  campaign?: any; // Ajouter le campaign pour récupérer le style de bordure
+  campaign?: any;
 }
 
 const Wheel: React.FC<WheelProps> = ({ 
@@ -79,10 +79,10 @@ const Wheel: React.FC<WheelProps> = ({
     accent: '#45b7d1'
   };
 
-  // Récupérer le style de bordure depuis la campaign ou utiliser le style par défaut
-  const borderStyle = campaign?.design?.wheelBorderStyle || 
-                      config?.wheel?.borderStyle || 
-                      'classic';
+  // Récupérer le style de bordure directement depuis la campaign avec console.log pour debug
+  const borderStyle = campaign?.design?.wheelBorderStyle || 'classic';
+  console.log('Wheel component - borderStyle from campaign:', borderStyle);
+  console.log('Wheel component - full campaign.design:', campaign?.design);
 
   if (!isPreview) {
     return (
