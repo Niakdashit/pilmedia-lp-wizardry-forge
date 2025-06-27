@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { getThemeColors } from './MobileTabRoulette/themeUtils';
 import SegmentEditor from './MobileTabRoulette/SegmentEditor';
 import ColorControls from './MobileTabRoulette/ColorControls';
@@ -28,7 +27,6 @@ const MobileTabRoulette: React.FC<MobileTabRouletteProps> = ({
   const [theme, setTheme] = useState<'default' | 'promo' | 'food' | 'casino' | 'child' | 'gaming' | 'luxury' | 'halloween' | 'noel'>(mobileRouletteConfig.theme || 'default');
   const [borderColor, setBorderColor] = useState<string>(mobileRouletteConfig.borderColor || '#841b60');
   const [pointerColor, setPointerColor] = useState<string>(mobileRouletteConfig.pointerColor || '#841b60');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const updateMobileRouletteConfig = (newSegments: Segment[], center: File | null, newTheme?: string, newBorderColor?: string, newPointerColor?: string) => {
     setSegments(newSegments);
