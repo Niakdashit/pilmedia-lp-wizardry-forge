@@ -94,7 +94,6 @@ export const generatePreviewCampaign = (state: QuickCampaignState) => {
       size: 'medium',
       text: 'Jouer maintenant !',
       visible: true,
-      style: safeColors.buttonStyle || 'primary',
       backgroundColor: safeColors.accent,
       hoverColor: safeColors.primary
     },

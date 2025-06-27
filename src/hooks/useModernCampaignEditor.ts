@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
@@ -91,7 +90,6 @@ export const useModernCampaignEditor = () => {
     setIsLoading(true);
     
     try {
-      // Special handling for QuickCampaign preview
       if (campaignId === 'quick-preview') {
         console.log('Loading QuickCampaign preview data');
         
@@ -102,7 +100,6 @@ export const useModernCampaignEditor = () => {
           const parsedData = JSON.parse(quickCampaignData);
           console.log('Parsed QuickCampaign data:', parsedData);
           
-          // Validate the parsed data
           const validatedData = validateQuickCampaignData(parsedData);
           if (!validatedData) {
             console.error('QuickCampaign data validation failed');
@@ -113,48 +110,48 @@ export const useModernCampaignEditor = () => {
           const existingCampaignType = (validatedData.type as CampaignType) || campaignType;
           console.log('Using campaign type:', existingCampaignType);
           
-          // Create comprehensive merged campaign with better error handling
           const defaultCampaign = getDefaultCampaign(existingCampaignType, false);
           console.log('Default campaign:', defaultCampaign);
           
           const mergedCampaign = {
             ...defaultCampaign,
             ...validatedData,
-            // Ensure proper field mapping with validation
             formFields: validatedData.form_fields || validatedData.formFields || defaultCampaign.formFields,
-            // Ensure design configuration is preserved with validated colors
             design: {
               ...defaultCampaign.design,
               ...validatedData.design,
-              // Map QuickCampaign colors to ModernEditor format with validation
+              // Fix property mapping - use existing properties or fallback to defaults
               primaryColor: validatedData.customColors?.primary || validatedData.design?.primaryColor || defaultCampaign.design.primaryColor,
               secondaryColor: validatedData.customColors?.secondary || validatedData.design?.secondaryColor || defaultCampaign.design.secondaryColor,
-              accentColor: validatedData.customColors?.accent || validatedData.design?.accentColor || defaultCampaign.design.accentColor,
+              // Use existing accentColor or fallback to primary
+              accentColor: validatedData.customColors?.accent || validatedData.design?.accentColor || validatedData.customColors?.primary || defaultCampaign.design.primaryColor,
+              // Use existing textPrimaryColor or fallback to textColor
               textPrimaryColor: validatedData.customColors?.textColor || validatedData.design?.textPrimaryColor || defaultCampaign.design.textPrimaryColor,
               centerLogo: validatedData.logoUrl || validatedData.design?.centerLogo,
               backgroundImage: validatedData.backgroundImageUrl || validatedData.design?.backgroundImage,
               customColors: validatedData.customColors || {}
             },
-            // Ensure game configuration is preserved with proper validation
             gameConfig: {
               ...defaultCampaign.gameConfig,
               ...validatedData.gameConfig,
-              // Special handling for wheel configuration
-              wheel: validatedData.config?.roulette ? {
-                ...validatedData.config.roulette,
-                segments: Array.isArray(validatedData.config.roulette.segments) 
-                  ? validatedData.config.roulette.segments 
-                  : defaultCampaign.gameConfig?.wheel?.segments || []
-              } : validatedData.gameConfig?.wheel || defaultCampaign.gameConfig?.wheel
+              // Fix wheel property access - ensure it exists in gameConfig
+              ...(validatedData.config?.roulette && existingCampaignType === 'wheel' ? {
+                wheel: {
+                  ...defaultCampaign.gameConfig?.wheel,
+                  ...validatedData.config.roulette,
+                  segments: Array.isArray(validatedData.config.roulette.segments) 
+                    ? validatedData.config.roulette.segments 
+                    : defaultCampaign.gameConfig?.wheel?.segments || []
+                }
+              } : {})
             },
-            // Ensure button configuration is preserved
             buttonConfig: {
               ...defaultCampaign.buttonConfig,
               ...validatedData.buttonConfig,
               color: validatedData.customColors?.accent || validatedData.buttonConfig?.color || defaultCampaign.buttonConfig?.color,
-              textColor: validatedData.customColors?.textColor || validatedData.buttonConfig?.textColor || defaultCampaign.buttonConfig?.textColor
+              // Fix textColor property - ensure it exists in buttonConfig
+              textColor: validatedData.customColors?.textColor || validatedData.buttonConfig?.textColor || defaultCampaign.buttonConfig?.textColor || '#ffffff'
             },
-            // Ensure screens configuration is preserved
             screens: {
               ...defaultCampaign.screens,
               ...validatedData.screens
@@ -170,7 +167,6 @@ export const useModernCampaignEditor = () => {
         }
       }
 
-      // Standard campaign loading
       console.log('Loading standard campaign from API');
       const existingCampaign = await getCampaign(campaignId);
       
@@ -217,7 +213,6 @@ export const useModernCampaignEditor = () => {
   const handleSave = async (continueEditing = false) => {
     setIsLoading(true);
     try {
-      // Quiz validation
       if (campaign.type === 'quiz') {
         const questions = campaign.gameConfig?.quiz?.questions || [];
         const valid = questions.every((q: any) =>
