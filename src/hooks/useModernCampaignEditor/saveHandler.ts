@@ -17,7 +17,7 @@ export const createSaveHandler = (
         );
         if (!valid) {
           alert('Chaque question doit comporter au moins deux options et une réponse correcte.');
-          return;
+          return null;
         }
       }
       
@@ -29,6 +29,7 @@ export const createSaveHandler = (
       console.log('Saving campaign with data:', campaignData);
       
       const savedCampaign = await saveCampaign(campaignData);
+      
       if (savedCampaign && !continueEditing) {
         navigate('/gamification');
       } else if (savedCampaign && isNewCampaign) {
@@ -37,6 +38,8 @@ export const createSaveHandler = (
           id: savedCampaign.id
         }));
       }
+      
+      return savedCampaign;
     } catch (error) {
       console.error('Error saving campaign:', error);
       throw error;
