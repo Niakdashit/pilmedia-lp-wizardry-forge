@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
@@ -78,9 +79,10 @@ const Wheel: React.FC<WheelProps> = ({
     accent: '#45b7d1'
   };
 
-  // Récupérer le style de bordure depuis la campaign
-  const borderStyle = campaign?.design?.wheelBorderStyle || 'classic';
-  console.log('Wheel component - borderStyle from campaign:', borderStyle);
+  // Récupérer le style de bordure depuis la campaign ou utiliser le style par défaut
+  const borderStyle = campaign?.design?.wheelBorderStyle || 
+                      config?.wheel?.borderStyle || 
+                      'classic';
 
   if (!isPreview) {
     return (

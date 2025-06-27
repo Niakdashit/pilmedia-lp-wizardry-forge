@@ -86,7 +86,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
     // Récupérer le style de bordure depuis la campagne
     const borderStyle = enhancedCampaign.design?.wheelBorderStyle || 'classic';
-    console.log('GameRenderer - borderStyle from campaign:', borderStyle);
 
     return (
       <div className={className} style={containerStyle}>
