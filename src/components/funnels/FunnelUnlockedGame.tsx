@@ -5,20 +5,13 @@ import GameRenderer from './components/GameRenderer';
 import ResultScreen from './components/ResultScreen';
 import FormHandler from './components/FormHandler';
 import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
+import { FieldConfig } from '../forms/DynamicContactForm';
 
 interface FunnelUnlockedGameProps {
   campaign: any;
   previewMode?: 'mobile' | 'tablet' | 'desktop';
   mobileConfig?: any;
   modalContained?: boolean;
-}
-
-export interface FieldConfig {
-  id: string;
-  label: string;
-  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'radio';
-  required?: boolean;
-  options?: string[];
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
