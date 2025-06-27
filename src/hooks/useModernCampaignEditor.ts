@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
@@ -125,8 +124,6 @@ export const useModernCampaignEditor = () => {
               primaryColor: validatedData.customColors?.primary || validatedData.design?.primaryColor || defaultCampaign.design.primaryColor,
               secondaryColor: validatedData.customColors?.secondary || validatedData.design?.secondaryColor || defaultCampaign.design.secondaryColor,
               accentColor: validatedData.customColors?.accent || validatedData.design?.accentColor || validatedData.customColors?.primary || defaultCampaign.design.primaryColor,
-              textColor: validatedData.customColors?.textColor || '#000000',
-              centerLogo: validatedData.logoUrl || validatedData.design?.centerLogo,
               backgroundImage: validatedData.backgroundImageUrl || validatedData.design?.backgroundImage,
               customColors: validatedData.customColors || {}
             },
@@ -136,11 +133,11 @@ export const useModernCampaignEditor = () => {
               // Handle wheel configuration specifically
               ...(existingCampaignType === 'wheel' && validatedData.config?.roulette ? {
                 wheel: {
-                  ...(existingCampaignType === 'wheel' && defaultCampaign.gameConfig?.wheel ? defaultCampaign.gameConfig.wheel : {}),
+                  ...(existingCampaignType === 'wheel' && defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig ? defaultCampaign.gameConfig.wheel : {}),
                   ...validatedData.config.roulette,
                   segments: Array.isArray(validatedData.config.roulette.segments) 
                     ? validatedData.config.roulette.segments 
-                    : (existingCampaignType === 'wheel' && defaultCampaign.gameConfig?.wheel ? defaultCampaign.gameConfig.wheel.segments : []) || []
+                    : (existingCampaignType === 'wheel' && defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig && defaultCampaign.gameConfig.wheel ? defaultCampaign.gameConfig.wheel.segments : []) || []
                 }
               } : {})
             },
