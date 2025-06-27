@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
+import { BORDER_STYLES } from './utils/borderStyles';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
   segments,
@@ -14,8 +15,11 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   onResult,
   brandColors,
   customButton,
+  borderStyle = 'classic',
   className = ''
 }) => {
+  const [showBorderSelector, setShowBorderSelector] = useState(false);
+
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
 
@@ -32,7 +36,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     segments,
     theme: resolvedTheme,
     wheelState,
-    size
+    size,
+    borderStyle
   });
 
   const handleSpin = () => {
@@ -70,6 +75,45 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             <div className="text-center text-gray-500 bg-white/80 backdrop-blur-sm rounded-lg p-4">
               <p className="text-sm">Aucun segment configuré</p>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sélecteur de style de bordure */}
+      <div className="flex flex-col items-center space-y-3">
+        <button
+          onClick={() => setShowBorderSelector(!showBorderSelector)}
+          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          Style: {BORDER_STYLES[borderStyle]?.name || 'Classique'}
+        </button>
+
+        {showBorderSelector && (
+          <div className="grid grid-cols-3 gap-2 p-4 bg-white rounded-xl shadow-lg border">
+            {Object.entries(BORDER_STYLES).map(([key, style]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  // Cette fonctionnalité sera implémentée par le parent
+                  setShowBorderSelector(false);
+                }}
+                className={`p-2 text-xs rounded-lg border-2 transition-all ${
+                  borderStyle === key 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div 
+                  className="w-8 h-8 rounded-full mx-auto mb-1"
+                  style={{ 
+                    background: style.type === 'gradient' 
+                      ? `linear-gradient(45deg, ${style.colors.join(', ')})`
+                      : style.colors[0]
+                  }}
+                />
+                {style.name}
+              </button>
+            ))}
           </div>
         )}
       </div>

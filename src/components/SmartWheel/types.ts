@@ -49,6 +49,7 @@ export interface SmartWheelProps {
     color: string;
     textColor: string;
   };
+  borderStyle?: string; // Nouveau prop pour le style de bordure
   className?: string;
 }
 
