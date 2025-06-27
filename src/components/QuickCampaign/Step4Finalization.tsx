@@ -42,13 +42,8 @@ const Step4Finalization: React.FC = () => {
       
       console.log('Campaign saved, redirecting to modern editor');
       
-      // Vérifier que la campagne a été sauvegardée avec succès
-      if (savedCampaign && savedCampaign.id) {
-        // Rediriger vers l'éditeur moderne avec l'ID de la campagne sauvegardée
-        navigate(`/modern-campaign/${savedCampaign.id}`);
-      } else {
-        throw new Error('Failed to save campaign');
-      }
+      // Rediriger vers l'éditeur moderne avec l'ID de la campagne sauvegardée
+      navigate(`/modern-campaign/${savedCampaign.id}`);
       
     } catch (error) {
       console.error('Erreur lors de la redirection vers les paramètres avancés:', error);
@@ -66,22 +61,13 @@ const Step4Finalization: React.FC = () => {
       const quickCampaign = generatePreviewCampaign();
       const savedCampaign = await saveCampaign(quickCampaign);
       
-      console.log('Redirecting to modern editor for editing:', savedCampaign?.id);
+      console.log('Redirecting to modern editor for editing:', savedCampaign.id);
       
-      // Vérifier que la campagne a été sauvegardée avec succès
-      if (savedCampaign && savedCampaign.id) {
-        // Rediriger directement vers l'éditeur moderne
-        navigate(`/modern-campaign/${savedCampaign.id}`);
-      } else {
-        throw new Error('Failed to save campaign');
-      }
+      // Rediriger directement vers l'éditeur moderne
+      navigate(`/modern-campaign/${savedCampaign.id}`);
       
     } catch (error) {
       console.error('Erreur lors de la redirection vers l\'éditeur:', error);
-      // En cas d'erreur, rediriger vers la prévisualisation
-      const quickCampaign = generatePreviewCampaign();
-      localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
-      navigate(`/modern-campaign/quick-preview`);
     }
   };
 

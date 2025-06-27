@@ -71,10 +71,8 @@ const ModernCampaignEditor: React.FC = () => {
                   onClick={async () => {
                     try {
                       const savedCampaign = await handleSave(true);
-                      if (savedCampaign && typeof savedCampaign === 'object' && 'id' in savedCampaign && savedCampaign.id) {
+                      if (savedCampaign?.id) {
                         navigate(`/modern-campaign/${savedCampaign.id}`);
-                      } else {
-                        console.error('Campaign saved but no ID returned');
                       }
                     } catch (error) {
                       console.error('Erreur lors de la sauvegarde:', error);
