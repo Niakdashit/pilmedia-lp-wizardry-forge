@@ -84,10 +84,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
                      gameSize === 'medium' ? 300 : 
                      gameSize === 'large' ? 400 : 500;
 
-    // Récupérer le style de bordure depuis la campagne avec console.log pour debug
+    // Récupérer le style de bordure depuis la campagne
     const borderStyle = enhancedCampaign.design?.wheelBorderStyle || 'classic';
-    console.log('GameRenderer - borderStyle from campaign:', borderStyle);
-    console.log('GameRenderer - full campaign.design:', enhancedCampaign.design);
 
     return (
       <div className={className} style={containerStyle}>

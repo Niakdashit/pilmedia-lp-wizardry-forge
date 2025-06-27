@@ -84,11 +84,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
                      gameSize === 'medium' ? 300 : 
                      gameSize === 'large' ? 400 : 500;
 
-    // Récupérer le style de bordure depuis la campagne avec console.log pour debug
-    const borderStyle = synchronizedCampaign.design?.wheelBorderStyle || 'classic';
-    console.log('QuickCampaign GameRenderer - borderStyle from campaign:', borderStyle);
-    console.log('QuickCampaign GameRenderer - full campaign.design:', synchronizedCampaign.design);
-
     return (
       <div style={containerStyle}>
         <SmartWheel
@@ -96,7 +91,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           theme="modern"
           size={wheelSize}
           brandColors={finalColors}
-          borderStyle={borderStyle}
           onResult={(segment) => {
             console.log('Segment gagné en preview:', segment);
           }}

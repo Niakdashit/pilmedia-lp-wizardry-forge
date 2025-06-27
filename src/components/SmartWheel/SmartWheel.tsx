@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
+import BorderStyleSelector from './components/BorderStyleSelector';
+import { BORDER_STYLES } from './utils/borderStyles';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
   segments,
@@ -17,6 +19,14 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   borderStyle = 'classic',
   className = ''
 }) => {
+  const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
+  const [showBorderSelector, setShowBorderSelector] = useState(false);
+
+  // Synchroniser l'état local avec la prop borderStyle
+  useEffect(() => {
+    setCurrentBorderStyle(borderStyle);
+  }, [borderStyle]);
+
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
 
@@ -28,13 +38,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     disabled
   });
 
-  // Rendu Canvas
+  // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
   const { canvasRef } = useSmartWheelRenderer({
     segments,
     theme: resolvedTheme,
     wheelState,
     size,
-    borderStyle
+    borderStyle: currentBorderStyle
   });
 
   const handleSpin = () => {
@@ -72,6 +82,28 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             <div className="text-center text-gray-500 bg-white/80 backdrop-blur-sm rounded-lg p-4">
               <p className="text-sm">Aucun segment configuré</p>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sélecteur de style de bordure */}
+      <div className="flex flex-col items-center space-y-3">
+        <button
+          onClick={() => setShowBorderSelector(!showBorderSelector)}
+          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          Style: {BORDER_STYLES[currentBorderStyle]?.name || 'Classique'}
+        </button>
+
+        {showBorderSelector && (
+          <div className="p-4 bg-white rounded-xl shadow-lg border">
+            <BorderStyleSelector
+              currentStyle={currentBorderStyle}
+              onStyleChange={(style: string) => {
+                setCurrentBorderStyle(style);
+                setShowBorderSelector(false);
+              }}
+            />
           </div>
         )}
       </div>
