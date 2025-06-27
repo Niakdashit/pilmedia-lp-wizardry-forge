@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,7 @@ interface BrandData {
   url: string;
   title: string;
   description: string;
+  logo?: string;
   colors: {
     primary: string;
     secondary: string;
@@ -67,7 +69,6 @@ async function extractBrandData(url: string): Promise<BrandData> {
 
   console.log('ScrapingBee API Key configured:', scrapingBeeApiKey ? 'Yes' : 'No');
 
-  // Simplified ScrapingBee request using GET method
   const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent(url)}`;
   
   console.log('Calling ScrapingBee with URL:', scrapingBeeUrl.replace(scrapingBeeApiKey, 'HIDDEN'));
@@ -81,7 +82,6 @@ async function extractBrandData(url: string): Promise<BrandData> {
     });
 
     console.log('ScrapingBee response status:', response.status);
-    console.log('ScrapingBee response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -92,7 +92,22 @@ async function extractBrandData(url: string): Promise<BrandData> {
     const html = await response.text();
     console.log('HTML content length:', html.length);
     
-    return parseBrandData(url, html);
+    const brandData = parseBrandData(url, html);
+    
+    // Extract and upload logo if found
+    if (brandData.logo) {
+      try {
+        const uploadedLogoUrl = await uploadLogo(brandData.logo, url);
+        brandData.logo = uploadedLogoUrl;
+        console.log('Logo uploaded successfully:', uploadedLogoUrl);
+      } catch (logoError) {
+        console.error('Failed to upload logo:', logoError);
+        // Continue without logo if upload fails
+        brandData.logo = undefined;
+      }
+    }
+    
+    return brandData;
   } catch (fetchError) {
     console.error('ScrapingBee fetch error:', fetchError);
     
@@ -118,9 +133,12 @@ async function extractBrandData(url: string): Promise<BrandData> {
 }
 
 function parseBrandData(url: string, html: string): BrandData {
-  // Simple HTML parsing - in production, you'd use a proper HTML parser
+  // Extract title
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   const descriptionMatch = html.match(/<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"']+)["\'][^>]*>/i);
+  
+  // Extract logo - try multiple methods
+  let logoUrl = extractLogo(html, url);
   
   // Extract headings
   const headingMatches = html.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi) || [];
@@ -140,6 +158,7 @@ function parseBrandData(url: string, html: string): BrandData {
     url,
     title: titleMatch ? titleMatch[1].trim() : 'Campagne de Marque',
     description: descriptionMatch ? descriptionMatch[1].trim() : 'Campagne générée automatiquement',
+    logo: logoUrl,
     colors: {
       primary: '#841b60',
       secondary: '#6d164f',
@@ -152,6 +171,99 @@ function parseBrandData(url: string, html: string): BrandData {
       ctaTexts: ctaTexts.length > 0 ? ctaTexts : ['Participer', 'Découvrir', 'Jouer']
     }
   };
+}
+
+function extractLogo(html: string, baseUrl: string): string | undefined {
+  // Try multiple strategies to find logo
+  const logoSelectors = [
+    // Common logo class names and attributes
+    /<img[^>]*class[^>]*logo[^>]*src=["\']([^"']+)["\'][^>]*>/i,
+    /<img[^>]*src=["\']([^"']+)["\'][^>]*class[^>]*logo[^>]*>/i,
+    /<img[^>]*alt[^>]*logo[^>]*src=["\']([^"']+)["\'][^>]*>/i,
+    /<img[^>]*src=["\']([^"']+)["\'][^>]*alt[^>]*logo[^>]*>/i,
+    // Open Graph image
+    /<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"']+)["\'][^>]*>/i,
+    // Twitter card image
+    /<meta[^>]*name=["\']twitter:image["\'][^>]*content=["\']([^"']+)["\'][^>]*>/i,
+    // Favicon
+    /<link[^>]*rel=["\']icon["\'][^>]*href=["\']([^"']+)["\'][^>]*>/i,
+    /<link[^>]*rel=["\']shortcut icon["\'][^>]*href=["\']([^"']+)["\'][^>]*>/i,
+    // Apple touch icon
+    /<link[^>]*rel=["\']apple-touch-icon["\'][^>]*href=["\']([^"']+)["\'][^>]*>/i
+  ];
+
+  for (const selector of logoSelectors) {
+    const match = html.match(selector);
+    if (match && match[1]) {
+      const logoUrl = match[1];
+      // Convert relative URLs to absolute
+      if (logoUrl.startsWith('//')) {
+        return `https:${logoUrl}`;
+      } else if (logoUrl.startsWith('/')) {
+        const domain = new URL(baseUrl).origin;
+        return `${domain}${logoUrl}`;
+      } else if (logoUrl.startsWith('http')) {
+        return logoUrl;
+      } else {
+        return new URL(logoUrl, baseUrl).href;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+async function uploadLogo(logoUrl: string, brandUrl: string): Promise<string> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration missing');
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  try {
+    // Download the logo
+    console.log('Downloading logo from:', logoUrl);
+    const logoResponse = await fetch(logoUrl);
+    
+    if (!logoResponse.ok) {
+      throw new Error(`Failed to download logo: ${logoResponse.status}`);
+    }
+
+    const logoBlob = await logoResponse.blob();
+    const logoBuffer = await logoBlob.arrayBuffer();
+    
+    // Generate a unique filename
+    const domain = new URL(brandUrl).hostname.replace('www.', '');
+    const timestamp = Date.now();
+    const extension = logoUrl.split('.').pop()?.split('?')[0] || 'png';
+    const filename = `${domain}_${timestamp}.${extension}`;
+
+    // Upload to Supabase Storage
+    console.log('Uploading logo to storage:', filename);
+    const { data, error } = await supabase.storage
+      .from('brand-logos')
+      .upload(filename, logoBuffer, {
+        contentType: logoBlob.type || 'image/png',
+        upsert: true
+      });
+
+    if (error) {
+      throw new Error(`Storage upload failed: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('brand-logos')
+      .getPublicUrl(filename);
+
+    return publicUrlData.publicUrl;
+  } catch (error) {
+    console.error('Logo upload error:', error);
+    throw error;
+  }
 }
 
 async function generateGameConcept(brandData: BrandData) {
@@ -168,6 +280,7 @@ BRAND DATA:
 - URL: ${brandData.url}
 - Title: ${brandData.title}
 - Description: ${brandData.description}
+- Logo: ${brandData.logo ? 'Available' : 'Not available'}
 - Key Content: ${brandData.content.headings.join(', ')}
 - CTA Examples: ${brandData.content.ctaTexts.join(', ')}
 
@@ -176,12 +289,14 @@ REQUIREMENTS:
 2. Create prizes relevant to the brand's industry
 3. Generate engaging French copy that sounds professional
 4. Create game configuration appropriate for the chosen type
+5. Include logo URL if available
 
 RESPOND WITH VALID JSON ONLY (no markdown formatting):
 {
   "gameType": "wheel|quiz|scratch|jackpot",
   "gameName": "Nom du jeu en français",
   "theme": "Description du thème",
+  "logo": "${brandData.logo || ''}",
   "colors": {
     "primary": "#841b60",
     "secondary": "#6d164f", 

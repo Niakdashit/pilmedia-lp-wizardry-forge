@@ -1,158 +1,119 @@
 
 import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
-import { CampaignType } from './campaignTypes';
 
-export interface TransformedCampaignData {
-  type: CampaignType;
-  name: string;
-  description: string;
-  design: any;
-  gameConfig: any;
-  screens: any;
-  buttonConfig: any;
-  formFields: any[];
-}
-
-export const transformBrandGameToCampaign = (
-  gameConcept: GeneratedGameConcept
-): TransformedCampaignData => {
-  const baseConfig = {
-    type: gameConcept.gameType as CampaignType,
-    name: gameConcept.gameName,
-    description: gameConcept.content.description,
+export const transformBrandGameToCampaign = (concept: GeneratedGameConcept) => {
+  console.log('Transforming brand game concept:', concept);
+  
+  // Base campaign structure
+  const baseCampaign = {
+    id: `brand-${Date.now()}`,
+    name: concept.gameName,
+    type: concept.gameType,
+    title: concept.content.title,
+    description: concept.content.description,
+    status: 'draft',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     design: {
-      background: gameConcept.colors.background,
-      primaryColor: gameConcept.colors.primary,
-      secondaryColor: gameConcept.colors.secondary,
-      titleColor: gameConcept.colors.primary,
-      buttonColor: gameConcept.colors.primary,
-      fontFamily: gameConcept.design.fontFamily,
-      borderRadius: gameConcept.design.borderRadius,
-      customColors: {
-        primary: gameConcept.colors.primary,
-        secondary: gameConcept.colors.secondary,
-        accent: gameConcept.colors.accent,
-        text: '#ffffff'
-      },
-      textStyles: {
-        title: {
-          fontFamily: gameConcept.design.fontFamily,
-          fontSize: '28px',
-          fontWeight: 'bold',
-          textAlign: 'center' as const,
-          color: gameConcept.colors.primary,
-          lineHeight: '1.2'
-        },
-        description: {
-          fontFamily: gameConcept.design.fontFamily,
-          fontSize: '16px',
-          fontWeight: 'normal',
-          textAlign: 'center' as const,
-          color: gameConcept.colors.secondary,
-          lineHeight: '1.5'
-        }
-      }
-    },
-    screens: {
-      1: {
-        title: gameConcept.content.title,
-        description: gameConcept.content.description,
-        buttonText: gameConcept.content.buttonText,
-        showTitle: true,
-        showDescription: true
-      },
-      3: {
-        title: 'Félicitations !',
-        description: gameConcept.content.successMessage,
-        showTitle: true,
-        showDescription: true
-      }
+      customColors: concept.colors,
+      centerLogo: concept.logo,
+      logoUrl: concept.logo,
+      ...concept.design
     },
     buttonConfig: {
-      color: gameConcept.colors.primary,
-      borderColor: gameConcept.colors.primary,
-      borderWidth: 2,
-      borderRadius: 8,
-      size: 'medium' as const,
-      text: gameConcept.content.buttonText,
-      visible: true
+      text: concept.content.buttonText,
+      color: concept.colors.primary,
+      textColor: concept.colors.accent,
+      borderColor: concept.colors.primary
     },
-    formFields: [
-      { id: 'prenom', label: 'Prénom', type: 'text', required: true },
-      { id: 'nom', label: 'Nom', type: 'text', required: true },
-      { id: 'email', label: 'Email', type: 'email', required: true }
-    ]
+    content: {
+      title: concept.content.title,
+      description: concept.content.description,
+      successMessage: concept.content.successMessage,
+      buttonText: concept.content.buttonText
+    }
   };
 
-  // Game-specific configurations
-  switch (gameConcept.gameType) {
+  // Add game-specific configuration
+  const gameConfig = {
+    ...baseCampaign,
+    gameConfig: {
+      [concept.gameType]: {
+        ...concept.gameConfig,
+        buttonLabel: concept.content.buttonText,
+        buttonColor: concept.colors.primary,
+        logo: concept.logo
+      }
+    }
+  };
+
+  // Add specific configurations based on game type
+  switch (concept.gameType) {
     case 'wheel':
       return {
-        ...baseConfig,
-        gameConfig: {
-          wheel: {
-            segments: gameConcept.gameConfig.segments || [],
-            speed: 'medium',
-            mode: 'random',
-            borderColor: gameConcept.colors.primary,
-            borderWidth: 3
+        ...gameConfig,
+        config: {
+          roulette: {
+            borderColor: concept.colors.primary,
+            borderOutlineColor: concept.colors.accent,
+            segmentColor1: concept.colors.primary,
+            segmentColor2: concept.colors.secondary,
+            centerLogo: concept.logo,
+            segments: concept.gameConfig.segments?.map((segment, index) => ({
+              ...segment,
+              id: index,
+              winProbability: segment.probability || 0.1
+            })) || []
           }
         }
       };
-
+      
     case 'quiz':
       return {
-        ...baseConfig,
+        ...gameConfig,
         gameConfig: {
           quiz: {
-            questions: gameConcept.gameConfig.questions || [],
-            shuffleQuestions: true,
-            shuffleAnswers: true,
-            timeLimit: 30,
-            passingScore: 70
+            questions: concept.gameConfig.questions || [],
+            prizes: concept.gameConfig.prizes,
+            rules: concept.gameConfig.rules,
+            logo: concept.logo,
+            colors: concept.colors
           }
         }
       };
-
+      
     case 'scratch':
       return {
-        ...baseConfig,
+        ...gameConfig,
         gameConfig: {
           scratch: {
-            cards: gameConcept.gameConfig.prizes.map((prize, index) => ({
-              id: index + 1,
-              prize,
-              isWinner: index === 0,
-              revealPercentage: 50
-            })),
-            surfaceColor: gameConcept.colors.secondary,
-            scratchColor: gameConcept.colors.primary
+            prizes: concept.gameConfig.prizes,
+            rules: concept.gameConfig.rules,
+            logo: concept.logo,
+            colors: concept.colors,
+            backgroundColor: concept.colors.background,
+            scratchColor: concept.colors.secondary
           }
         }
       };
-
+      
     case 'jackpot':
       return {
-        ...baseConfig,
+        ...gameConfig,
         gameConfig: {
           jackpot: {
-            symbols: gameConcept.gameConfig.prizes.slice(0, 5),
-            winCondition: 'three_of_a_kind',
-            spinSpeed: 'medium',
-            reelCount: 3
+            prizes: concept.gameConfig.prizes,
+            rules: concept.gameConfig.rules,
+            logo: concept.logo,
+            colors: concept.colors,
+            containerBackgroundColor: concept.colors.background,
+            backgroundColor: concept.colors.accent,
+            borderColor: concept.colors.primary
           }
         }
       };
-
+      
     default:
-      return {
-        ...baseConfig,
-        gameConfig: {
-          [gameConcept.gameType]: {
-            prizes: gameConcept.gameConfig.prizes,
-            rules: gameConcept.gameConfig.rules
-          }
-        }
-      };
+      return gameConfig;
   }
 };

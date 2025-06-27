@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Globe, Sparkles, Eye, ArrowRight, Loader2 } from 'lucide-react';
+import { Globe, Sparkles, Eye, ArrowRight, Loader2, Image } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 import { GeneratedGameConcept } from '../../services/openAIGameGeneratorService';
 
@@ -70,7 +70,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                 Générer une Campagne de Marque
               </h2>
               <p className="text-gray-600 max-w-md mx-auto">
-                Saisissez l'URL du site web d'une marque pour générer automatiquement un jeu marketing entièrement personnalisé
+                Saisissez l'URL du site web d'une marque pour générer automatiquement un jeu marketing entièrement personnalisé avec logo et couleurs extraits
               </p>
             </div>
 
@@ -124,7 +124,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 text-[#841b60] animate-spin mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Génération en cours...</h3>
-            <p className="text-gray-600">Analyse du site web et création du concept de jeu...</p>
+            <p className="text-gray-600">Extraction du logo, analyse du site web et création du concept de jeu...</p>
           </div>
         );
 
@@ -133,28 +133,56 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
           <div className="space-y-6">
             <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Campagne Générée !</h3>
-              <p className="text-gray-600">Votre campagne de marque est prête</p>
+              <p className="text-gray-600">Votre campagne de marque est prête avec logo et couleurs automatiquement extraits</p>
             </div>
 
             {gameConcept && (
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
                 <div className="space-y-4">
                   <div 
-                    className="p-4 rounded-lg border-2"
+                    className="p-4 rounded-lg border-2 relative"
                     style={{ 
                       backgroundColor: gameConcept.colors.background,
                       borderColor: gameConcept.colors.primary 
                     }}
                   >
-                    <h4 className="font-bold text-lg mb-2" style={{ color: gameConcept.colors.primary }}>
-                      {gameConcept.gameName}
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Type: {gameConcept.gameType} • Thème: {gameConcept.theme}
-                    </p>
-                    <p className="text-sm" style={{ color: gameConcept.colors.secondary }}>
-                      {gameConcept.content.description}
-                    </p>
+                    {/* Logo display */}
+                    {gameConcept.logo && (
+                      <div className="absolute top-4 right-4">
+                        <img 
+                          src={gameConcept.logo} 
+                          alt="Logo de la marque" 
+                          className="w-12 h-12 object-contain rounded-md border border-gray-200 bg-white p-1"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex items-start gap-3">
+                      {gameConcept.logo && (
+                        <img 
+                          src={gameConcept.logo} 
+                          alt="Logo de la marque" 
+                          className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white p-2"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-bold text-lg mb-2" style={{ color: gameConcept.colors.primary }}>
+                          {gameConcept.gameName}
+                        </h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Type: {gameConcept.gameType} • Thème: {gameConcept.theme}
+                        </p>
+                        <p className="text-sm" style={{ color: gameConcept.colors.secondary }}>
+                          {gameConcept.content.description}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -178,6 +206,15 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                       ))}
                     </div>
                   </div>
+
+                  {gameConcept.logo && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <Image className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-700 font-medium">Logo automatiquement extrait et intégré</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -207,7 +244,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
               <Eye className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Campagne Appliquée !</h3>
-            <p className="text-gray-600">Votre campagne de marque est maintenant prête pour l'édition et la prévisualisation</p>
+            <p className="text-gray-600">Votre campagne de marque avec logo automatique est maintenant prête pour l'édition et la prévisualisation</p>
           </div>
         );
 
