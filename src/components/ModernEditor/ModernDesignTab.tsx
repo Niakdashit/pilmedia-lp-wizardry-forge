@@ -212,16 +212,13 @@ const ModernDesignTab: React.FC<ModernDesignTabProps> = ({
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">Style de bordure</h3>
           <BorderStyleSelector
-            currentStyle={campaign.gameConfig?.wheel?.borderStyle || 'classic'}
+            currentStyle={campaign.design?.wheelBorderStyle || 'classic'}
             onStyleChange={(style) =>
               setCampaign({
                 ...campaign,
-                gameConfig: {
-                  ...campaign.gameConfig,
-                  wheel: {
-                    ...campaign.gameConfig?.wheel,
-                    borderStyle: style
-                  }
+                design: {
+                  ...campaign.design,
+                  wheelBorderStyle: style
                 }
               })
             }
