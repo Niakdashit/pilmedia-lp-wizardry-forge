@@ -1,461 +1,203 @@
+
 import React from 'react';
-import { Bold, Italic, Underline, Plus, Trash2, Image } from 'lucide-react';
+import { Palette, Image, Paintbrush } from 'lucide-react';
 import ImageUpload from '../common/ImageUpload';
+import WheelStyleSelector from '../configurators/WheelStyleSelector';
+
 interface ModernDesignTabProps {
   campaign: any;
-  setCampaign: (campaign: any) => void;
+  setCampaign: React.Dispatch<React.SetStateAction<any>>;
 }
+
 const ModernDesignTab: React.FC<ModernDesignTabProps> = ({
   campaign,
   setCampaign
 }) => {
   const design = campaign.design || {};
-  const customTexts = design.customTexts || [];
-  const customImages = design.customImages || [];
-  const getRadiusValue = () => {
-    const raw = design.borderRadius || '8px';
-    if (typeof raw === 'number') return raw;
-    if (raw.includes('rem')) {
-      const rem = parseFloat(raw);
-      return isNaN(rem) ? 8 : rem * 16;
-    }
-    const num = parseInt(raw, 10);
-    return isNaN(num) ? 8 : num;
-  };
-  const handleBackgroundImageChange = (imageUrl: string) => {
-    setCampaign({
-      ...campaign,
+
+  const updateDesign = (updates: any) => {
+    setCampaign((prev: any) => ({
+      ...prev,
       design: {
-        ...design,
-        backgroundImage: imageUrl
+        ...prev.design,
+        ...updates
       }
-    });
+    }));
   };
-  const handleMobileBackgroundImageChange = (imageUrl: string) => {
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        mobileBackgroundImage: imageUrl
-      }
-    });
-  };
-  const getInitialPosition = (type: 'text' | 'image') => {
-    const basePosition = {
-      x: 100,
-      y: 100
-    };
-    const offset = type === 'text' ? customTexts.length * 20 : customImages.length * 20;
-    return {
-      x: basePosition.x + offset,
-      y: basePosition.y + offset
-    };
-  };
-  const addCustomText = () => {
-    const position = getInitialPosition('text');
-    const newText = {
-      id: Date.now(),
-      enabled: true,
-      text: `Texte personnalisé ${customTexts.length + 1}`,
-      x: position.x,
-      y: position.y,
-      size: 'base',
-      color: '#000000',
-      fontFamily: 'Inter, sans-serif',
-      bold: false,
-      italic: false,
-      underline: false,
-      showFrame: false,
-      frameColor: '#ffffff',
-      frameBorderColor: '#e5e7eb'
-    };
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        customTexts: [...customTexts, newText]
-      }
-    });
-  };
-  const addCustomImage = () => {
-    const position = getInitialPosition('image');
-    const newImage = {
-      id: Date.now(),
-      src: '',
-      x: position.x,
-      y: position.y,
-      width: 100,
-      height: 100,
-      rotation: 0
-    };
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        customImages: [...customImages, newImage]
-      }
-    });
-  };
-  const removeCustomText = (id: number) => {
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        customTexts: customTexts.filter((text: any) => text.id !== id)
-      }
-    });
-  };
-  const removeCustomImage = (id: number) => {
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        customImages: customImages.filter((img: any) => img.id !== id)
-      }
-    });
-  };
-  const handleCustomTextChange = (id: number, field: string, value: any) => {
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        customTexts: customTexts.map((text: any) => text.id === id ? {
-          ...text,
-          [field]: value
-        } : text)
-      }
-    });
-  };
-  const handleCustomImageChange = (id: number, field: string, value: any) => {
-    setCampaign({
-      ...campaign,
-      design: {
-        ...design,
-        customImages: customImages.map((img: any) => img.id === id ? {
-          ...img,
-          [field]: value
-        } : img)
-      }
-    });
-  };
-  const fontSizeOptions = [{
-    value: 'xs',
-    label: '10px'
-  }, {
-    value: 'sm',
-    label: '12px'
-  }, {
-    value: 'base',
-    label: '14px'
-  }, {
-    value: 'lg',
-    label: '16px'
-  }, {
-    value: 'xl',
-    label: '18px'
-  }, {
-    value: '2xl',
-    label: '20px'
-  }, {
-    value: '3xl',
-    label: '24px'
-  }, {
-    value: '4xl',
-    label: '28px'
-  }, {
-    value: '5xl',
-    label: '32px'
-  }, {
-    value: '6xl',
-    label: '36px'
-  }, {
-    value: '7xl',
-    label: '48px'
-  }, {
-    value: '8xl',
-    label: '60px'
-  }, {
-    value: '9xl',
-    label: '72px'
-  }];
-  const fontFamilyOptions = [{
-    value: 'Inter, sans-serif',
-    label: 'Inter'
-  }, {
-    value: 'Arial, sans-serif',
-    label: 'Arial'
-  }, {
-    value: 'Helvetica, sans-serif',
-    label: 'Helvetica'
-  }, {
-    value: 'Georgia, serif',
-    label: 'Georgia'
-  }, {
-    value: 'Times New Roman, serif',
-    label: 'Times New Roman'
-  }, {
-    value: 'Courier New, monospace',
-    label: 'Courier New'
-  }, {
-    value: 'Verdana, sans-serif',
-    label: 'Verdana'
-  }, {
-    value: 'Trebuchet MS, sans-serif',
-    label: 'Trebuchet MS'
-  }, {
-    value: 'Palatino, serif',
-    label: 'Palatino'
-  }, {
-    value: 'Impact, sans-serif',
-    label: 'Impact'
-  }];
-  return <div className="space-y-8 px-[5px]">
+
+  return (
+    <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Design</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+          <Palette className="w-6 h-6 mr-2 text-[#841b60]" />
+          Design et apparence
+        </h2>
+        <p className="text-gray-600">Personnalisez l'apparence visuelle de votre campagne</p>
       </div>
 
-      {/* Background Settings */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Arrière-plan</h3>
+      {/* Style de la roue */}
+      {campaign.type === 'wheel' && (
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <Paintbrush className="w-5 h-5 mr-2" />
+            Style de la roue
+          </h3>
+          <WheelStyleSelector
+            selectedStyle={campaign.wheelStyle || 'roulette_casino.svg'}
+            setSelectedStyle={(style) => setCampaign((prev: any) => ({ ...prev, wheelStyle: style }))}
+          />
+        </div>
+      )}
+
+      {/* Couleurs principales */}
+      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900">Couleurs principales</h3>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Couleur de fond
-          </label>
-          <input type="color" value={design.background || '#f8fafc'} onChange={e => setCampaign({
-          ...campaign,
-          design: {
-            ...design,
-            background: e.target.value
-          }
-        })} className="w-full h-10 rounded-lg border border-gray-300" />
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Couleur principale</label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={design.primaryColor || '#841b60'}
+                onChange={(e) => updateDesign({ primaryColor: e.target.value })}
+                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={design.primaryColor || '#841b60'}
+                onChange={(e) => updateDesign({ primaryColor: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              />
+            </div>
+          </div>
 
-        <div>
-          <ImageUpload value={design.backgroundImage || ''} onChange={handleBackgroundImageChange} label="Image de fond (Desktop/Tablette)" />
-        </div>
-
-      <div>
-        <ImageUpload value={design.mobileBackgroundImage || ''} onChange={handleMobileBackgroundImageChange} label="Image de fond (Mobile)" />
-      </div>
-      </div>
-
-      {/* Game Style Settings */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Style du jeu</h3>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Couleur du cadre
-          </label>
-          <input type="color" value={design.blockColor || '#ffffff'} onChange={e => setCampaign({
-          ...campaign,
-          design: {
-            ...design,
-            blockColor: e.target.value
-          }
-        })} className="w-full h-10 rounded-lg border border-gray-300" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Couleur de bordure
-          </label>
-          <input type="color" value={design.borderColor || '#e5e7eb'} onChange={e => setCampaign({
-          ...campaign,
-          design: {
-            ...design,
-            borderColor: e.target.value
-          }
-        })} className="w-full h-10 rounded-lg border border-gray-300" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Rayon de bordure
-          </label>
-          <input type="range" min="0" max="32" value={getRadiusValue()} onChange={e => setCampaign({
-          ...campaign,
-          design: {
-            ...design,
-            borderRadius: `${e.target.value}px`
-          }
-        })} className="w-full" />
-          <div className="text-xs text-gray-500 text-center">
-            {getRadiusValue()}px
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Couleur secondaire</label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={design.secondaryColor || '#6d164f'}
+                onChange={(e) => updateDesign({ secondaryColor: e.target.value })}
+                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={design.secondaryColor || '#6d164f'}
+                onChange={(e) => updateDesign({ secondaryColor: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Couleur des boutons
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Couleur de fond</label>
+          <div className="flex items-center space-x-3">
+            <input
+              type="color"
+              value={design.backgroundColor || '#ebf4f7'}
+              onChange={(e) => updateDesign({ backgroundColor: e.target.value })}
+              className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              value={design.backgroundColor || '#ebf4f7'}
+              onChange={(e) => updateDesign({ backgroundColor: e.target.value })}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Image de fond (Desktop/Tablette uniquement) */}
+      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 flex items-center">
+          <Image className="w-5 h-5 mr-2" />
+          Image de fond (Desktop/Tablette)
+        </h3>
+        
+        <ImageUpload
+          label="Image de fond principale"
+          value={design.backgroundImage || ''}
+          onChange={(value) => updateDesign({ backgroundImage: value })}
+        />
+        
+        <p className="text-xs text-gray-500">
+          Cette image sera utilisée sur desktop et tablette. Format paysage recommandé (1920x1080px).
+        </p>
+
+        {design.backgroundImage && (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Mode d'affichage</label>
+              <select
+                value={design.backgroundMode || 'cover'}
+                onChange={(e) => updateDesign({ backgroundMode: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              >
+                <option value="cover">Couvrir (image rognée si nécessaire)</option>
+                <option value="contain">Contenir (image entière visible)</option>
+                <option value="stretch">Étirer (déformation possible)</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Position de l'image</label>
+              <select
+                value={design.backgroundPosition || 'center'}
+                onChange={(e) => updateDesign({ backgroundPosition: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              >
+                <option value="center">Centre</option>
+                <option value="top">Haut</option>
+                <option value="bottom">Bas</option>
+                <option value="left">Gauche</option>
+                <option value="right">Droite</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Effets visuels */}
+      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900">Effets visuels</h3>
+        
+        <div className="space-y-3">
+          <label className="flex items-center space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={design.enableShadows || false}
+              onChange={(e) => updateDesign({ enableShadows: e.target.checked })}
+              className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+            />
+            <span className="text-sm text-gray-700">Activer les ombres</span>
           </label>
-          <input type="color" value={design.buttonColor || design.primaryColor || '#841b60'} onChange={e => setCampaign({
-          ...campaign,
-          design: {
-            ...design,
-            buttonColor: e.target.value
-          }
-        })} className="w-full h-10 rounded-lg border border-gray-300" />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Couleur du texte des boutons
+          <label className="flex items-center space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={design.enableAnimations || true}
+              onChange={(e) => updateDesign({ enableAnimations: e.target.checked })}
+              className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+            />
+            <span className="text-sm text-gray-700">Activer les animations</span>
           </label>
-          <input type="color" value={design.buttonTextColor || '#ffffff'} onChange={e => setCampaign({
-          ...campaign,
-          design: {
-            ...design,
-            buttonTextColor: e.target.value
-          }
-        })} className="w-full h-10 rounded-lg border border-gray-300" />
+
+          <label className="flex items-center space-x-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={design.enableGradients || false}
+              onChange={(e) => updateDesign({ enableGradients: e.target.checked })}
+              className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+            />
+            <span className="text-sm text-gray-700">Utiliser des dégradés</span>
+          </label>
         </div>
       </div>
-
-      {/* Custom Texts Settings */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Textes personnalisés</h3>
-          <button onClick={addCustomText} className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <Plus className="w-4 h-4" />
-            <span>Ajouter</span>
-          </button>
-        </div>
-
-        {customTexts.length === 0 && <p className="text-gray-500 text-sm">Aucun texte personnalisé. Cliquez sur "Ajouter" pour en créer un.</p>}
-
-        {customTexts.map((customText: any, index: number) => <div key={customText.id} className="space-y-4 bg-gray-50 p-4 rounded-lg border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Texte #{index + 1}
-                </label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={customText.enabled || false} onChange={e => handleCustomTextChange(customText.id, 'enabled', e.target.checked)} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-              
-              <button onClick={() => removeCustomText(customText.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer ce texte">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            {customText.enabled && <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Texte
-                  </label>
-                  <input type="text" value={customText.text || 'Texte personnalisé'} onChange={e => handleCustomTextChange(customText.id, 'text', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Entrez votre texte" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Police
-                  </label>
-                  <select value={customText.fontFamily || 'Inter, sans-serif'} onChange={e => handleCustomTextChange(customText.id, 'fontFamily', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    {fontFamilyOptions.map(option => <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Taille
-                  </label>
-                  <select value={customText.size || 'base'} onChange={e => handleCustomTextChange(customText.id, 'size', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    {fontSizeOptions.map(option => <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Style du texte
-                  </label>
-                  <div className="flex space-x-2">
-                    <button type="button" onClick={() => handleCustomTextChange(customText.id, 'bold', !customText.bold)} className={`flex items-center justify-center w-10 h-10 rounded-lg border-2 transition-colors ${customText.bold ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`} title="Gras">
-                      <Bold className="w-4 h-4" />
-                    </button>
-                    
-                    <button type="button" onClick={() => handleCustomTextChange(customText.id, 'italic', !customText.italic)} className={`flex items-center justify-center w-10 h-10 rounded-lg border-2 transition-colors ${customText.italic ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`} title="Italique">
-                      <Italic className="w-4 h-4" />
-                    </button>
-                    
-                    <button type="button" onClick={() => handleCustomTextChange(customText.id, 'underline', !customText.underline)} className={`flex items-center justify-center w-10 h-10 rounded-lg border-2 transition-colors ${customText.underline ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'}`} title="Souligné">
-                      <Underline className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Couleur du texte
-                  </label>
-                  <input type="color" value={customText.color || '#000000'} onChange={e => handleCustomTextChange(customText.id, 'color', e.target.value)} className="w-full h-10 rounded-lg border border-gray-300" />
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">
-                      Cadre de fond
-                    </label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" checked={customText.showFrame || false} onChange={e => handleCustomTextChange(customText.id, 'showFrame', e.target.checked)} className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  {customText.showFrame && <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Couleur du cadre
-                        </label>
-                        <input type="color" value={customText.frameColor || '#ffffff'} onChange={e => handleCustomTextChange(customText.id, 'frameColor', e.target.value)} className="w-full h-8 rounded border border-gray-300" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Couleur bordure
-                        </label>
-                        <input type="color" value={customText.frameBorderColor || '#e5e7eb'} onChange={e => handleCustomTextChange(customText.id, 'frameBorderColor', e.target.value)} className="w-full h-8 rounded border border-gray-300" />
-                      </div>
-                    </div>}
-                </div>
-              </div>}
-          </div>)}
-      </div>
-
-      {/* Custom Images Settings */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Images personnalisées</h3>
-          <button onClick={addCustomImage} className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-            <Image className="w-4 h-4" />
-            <span>Ajouter</span>
-          </button>
-        </div>
-
-        {customImages.length === 0 && <p className="text-gray-500 text-sm">Aucune image personnalisée. Cliquez sur "Ajouter" pour en créer une.</p>}
-
-        {customImages.map((customImage: any, index: number) => <div key={customImage.id} className="space-y-4 bg-gray-50 p-4 rounded-lg border">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">
-                Image #{index + 1}
-              </label>
-              
-              <button onClick={() => removeCustomImage(customImage.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer cette image">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div>
-              <ImageUpload value={customImage.src || ''} onChange={imageUrl => handleCustomImageChange(customImage.id, 'src', imageUrl)} label="Image" />
-            </div>
-          </div>)}
-      </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ModernDesignTab;
