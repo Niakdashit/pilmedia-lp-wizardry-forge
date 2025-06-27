@@ -145,20 +145,6 @@ export class BrandContentGenerator {
 
   // Méthode pour intégration future avec OpenAI
   async generateWithAI(brandInfo: BrandInfo): Promise<GeneratedContent> {
-    const prompt = `
-    Générez du contenu personnalisé pour une carte à gratter pour la marque suivante :
-    - Nom: ${brandInfo.name}
-    - Industrie: ${brandInfo.industry}
-    - Style: ${brandInfo.style}
-    - Audience: ${brandInfo.targetAudience}
-    
-    Incluez :
-    1. 5 messages de victoire personnalisés
-    2. 3 messages de défaite encourageants
-    3. 3 textes pour la surface à gratter
-    4. Configuration de style adaptée à la marque
-    `;
-
     // TODO: Intégrer l'appel à l'API OpenAI
     // const response = await openai.chat.completions.create({
     //   model: "gpt-4",

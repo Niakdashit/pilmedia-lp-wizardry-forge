@@ -104,7 +104,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
     setState(prev => ({ ...prev, isScratching: false }));
   }, []);
 
-  const reset = useCallback(() => {
+  const resetScratchCard = useCallback(() => {
     clearCanvas();
     setState({
       isScratching: false,
@@ -174,4 +174,4 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
   );
 };
 
-export { reset as resetScratchCard } from './ScratchCard';
+export { resetScratchCard } from './ScratchCard';

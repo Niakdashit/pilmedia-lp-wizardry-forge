@@ -5,7 +5,6 @@ import { RevealContent } from '../components/RevealContent';
 import { BrandContentGenerator, BrandInfo } from '../generators/BrandContentGenerator';
 
 const ModernScratchCardExample: React.FC = () => {
-  const [isCompleted, setIsCompleted] = useState(false);
   const [result, setResult] = useState<'win' | 'lose'>('win');
 
   // Configuration de marque exemple
@@ -21,18 +20,14 @@ const ModernScratchCardExample: React.FC = () => {
     targetAudience: 'Femmes 25-45 ans'
   };
 
-  const generator = BrandContentGenerator.getInstance();
-
   const handleComplete = (percentage: number) => {
     console.log(`Carte grattée à ${percentage}%`);
     // Simulation du résultat
     const isWin = Math.random() > 0.5;
     setResult(isWin ? 'win' : 'lose');
-    setIsCompleted(true);
   };
 
   const reset = () => {
-    setIsCompleted(false);
     setResult('win');
   };
 
