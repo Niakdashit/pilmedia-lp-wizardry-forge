@@ -295,18 +295,18 @@ export const useSmartWheelRenderer = ({
     ctx.save();
     
     // Positionner le pointeur pour qu'il touche presque les segments
-    const pointerDistance = radius - 3; // Encore plus proche des segments
+    const pointerDistance = radius - 5; // Plus proche des segments
     ctx.translate(centerX, centerY - pointerDistance);
     
-    // Taille encore plus grande du pointeur
-    const pointerWidth = size * 0.06; // Largeur augmentée de 0.04 à 0.06
-    const pointerHeight = size * 0.12; // Hauteur augmentée de 0.08 à 0.12
+    // Taille augmentée du pointeur
+    const pointerWidth = size * 0.04; // Largeur proportionnelle à la taille de la roue
+    const pointerHeight = size * 0.08; // Hauteur proportionnelle à la taille de la roue
     
-    // Dessiner l'ombre du pointeur plus prononcée
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    // Dessiner l'ombre du pointeur
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
     
     // Dessiner le pointeur principal
     ctx.fillStyle = theme.colors.accent;
@@ -323,16 +323,16 @@ export const useSmartWheelRenderer = ({
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
     
-    // Bordure du pointeur plus épaisse
+    // Bordure du pointeur
     ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.stroke();
     
     // Ajouter un effet de brillance
     if (theme.effects.gradient) {
       const gradient = ctx.createLinearGradient(-pointerWidth, -pointerHeight, pointerWidth, 0);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
       gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
       
       ctx.fillStyle = gradient;
