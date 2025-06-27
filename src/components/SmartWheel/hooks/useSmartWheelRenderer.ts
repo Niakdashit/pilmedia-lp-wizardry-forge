@@ -77,6 +77,9 @@ export const useSmartWheelRenderer = ({
     // Dessiner les bordures stylisées
     drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime);
 
+    // Dessiner l'ombre intérieure
+    drawInnerShadow(ctx, centerX, centerY, maxRadius);
+
     // Dessiner le centre
     drawCenter(ctx, centerX, centerY, size, theme);
 
@@ -222,6 +225,26 @@ export const useSmartWheelRenderer = ({
         break;
     }
 
+    ctx.restore();
+  };
+
+  // Nouvelle fonction pour dessiner l'ombre intérieure
+  const drawInnerShadow = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) => {
+    ctx.save();
+    
+    // Créer un gradient radial pour l'ombre intérieure
+    const shadowGradient = ctx.createRadialGradient(
+      centerX, centerY, radius - 15,
+      centerX, centerY, radius
+    );
+    shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = shadowGradient;
+    ctx.fill();
+    
     ctx.restore();
   };
 

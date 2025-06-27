@@ -4,6 +4,7 @@ import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
+import { BorderStyleSelector } from './components/BorderStyleSelector';
 import { BORDER_STYLES } from './utils/borderStyles';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
@@ -18,6 +19,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   borderStyle = 'classic',
   className = ''
 }) => {
+  const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
 
   // Résoudre le thème
@@ -31,13 +33,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     disabled
   });
 
-  // Rendu Canvas
+  // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
   const { canvasRef } = useSmartWheelRenderer({
     segments,
     theme: resolvedTheme,
     wheelState,
     size,
-    borderStyle
+    borderStyle: currentBorderStyle
   });
 
   const handleSpin = () => {
@@ -85,35 +87,18 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           onClick={() => setShowBorderSelector(!showBorderSelector)}
           className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
         >
-          Style: {BORDER_STYLES[borderStyle]?.name || 'Classique'}
+          Style: {BORDER_STYLES[currentBorderStyle]?.name || 'Classique'}
         </button>
 
         {showBorderSelector && (
-          <div className="grid grid-cols-3 gap-2 p-4 bg-white rounded-xl shadow-lg border">
-            {Object.entries(BORDER_STYLES).map(([key, style]) => (
-              <button
-                key={key}
-                onClick={() => {
-                  // Cette fonctionnalité sera implémentée par le parent
-                  setShowBorderSelector(false);
-                }}
-                className={`p-2 text-xs rounded-lg border-2 transition-all ${
-                  borderStyle === key 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div 
-                  className="w-8 h-8 rounded-full mx-auto mb-1"
-                  style={{ 
-                    background: style.type === 'gradient' 
-                      ? `linear-gradient(45deg, ${style.colors.join(', ')})`
-                      : style.colors[0]
-                  }}
-                />
-                {style.name}
-              </button>
-            ))}
+          <div className="p-4 bg-white rounded-xl shadow-lg border">
+            <BorderStyleSelector
+              currentStyle={currentBorderStyle}
+              onStyleChange={(style) => {
+                setCurrentBorderStyle(style);
+                setShowBorderSelector(false);
+              }}
+            />
           </div>
         )}
       </div>
