@@ -133,11 +133,11 @@ export const useModernCampaignEditor = () => {
               // Handle wheel configuration specifically
               ...(existingCampaignType === 'wheel' && validatedData.config?.roulette ? {
                 wheel: {
-                  ...(existingCampaignType === 'wheel' && defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig ? defaultCampaign.gameConfig.wheel : {}),
+                  ...(defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig && defaultCampaign.gameConfig.wheel ? defaultCampaign.gameConfig.wheel : {}),
                   ...validatedData.config.roulette,
                   segments: Array.isArray(validatedData.config.roulette.segments) 
                     ? validatedData.config.roulette.segments 
-                    : (existingCampaignType === 'wheel' && defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig && defaultCampaign.gameConfig.wheel ? defaultCampaign.gameConfig.wheel.segments : []) || []
+                    : (defaultCampaign.gameConfig && 'wheel' in defaultCampaign.gameConfig && defaultCampaign.gameConfig.wheel && defaultCampaign.gameConfig.wheel.segments ? defaultCampaign.gameConfig.wheel.segments : [])
                 }
               } : {})
             },
