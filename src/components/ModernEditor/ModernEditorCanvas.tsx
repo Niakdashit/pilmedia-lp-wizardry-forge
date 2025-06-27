@@ -1,13 +1,10 @@
 
-import React, { useState, useRef } from 'react';
-import { Plus } from 'lucide-react';
-import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
-import TextElement from './TextElement';
-import ImageElement from './ImageElement';
-import CanvasHeader from './components/CanvasHeader';
-import CanvasFooter from './components/CanvasFooter';
+import React from 'react';
 import GridToggle from './components/GridToggle';
+import FloatingActionButton from './components/FloatingActionButton';
+import CanvasContent from './components/CanvasContent';
 import { useCanvasElements } from './hooks/useCanvasElements';
+import { useCanvasState } from './hooks/useCanvasState';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
 
 interface ModernEditorCanvasProps {
@@ -25,9 +22,15 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
   gameSize,
   gamePosition
 }) => {
-  const [showGridLines, setShowGridLines] = useState(false);
-  const [showAddMenu, setShowAddMenu] = useState(false);
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const {
+    showGridLines,
+    setShowGridLines,
+    showAddMenu,
+    setShowAddMenu,
+    canvasRef,
+    handleCanvasClick,
+    toggleAddMenu
+  } = useCanvasState();
 
   const {
     selectedElement,
@@ -64,13 +67,6 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
     '9xl': '72px'
   };
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setSelectedElement(null);
-      setShowAddMenu(false);
-    }
-  };
-
   const handleAddText = () => {
     addTextElement();
     setShowAddMenu(false);
@@ -81,9 +77,11 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
     setShowAddMenu(false);
   };
 
-  const toggleAddMenu = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowAddMenu(!showAddMenu);
+  const handleCanvasClickWithDeselect = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setSelectedElement(null);
+      setShowAddMenu(false);
+    }
   };
 
   // Hauteur fixe, largeur responsive
@@ -125,7 +123,7 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
         {/* Canvas background */}
         <div
           ref={canvasRef}
-          onClick={handleCanvasClick}
+          onClick={handleCanvasClickWithDeselect}
           className="relative w-full h-full overflow-hidden"
           style={{
             background: `linear-gradient(135deg, ${enhancedCampaign.design?.background || '#f8fafc'} 0%, ${enhancedCampaign.design?.background || '#f8fafc'}88 100%)`,
@@ -134,121 +132,36 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
             backgroundSize: showGridLines ? '20px 20px' : 'auto'
           }}
         >
-          <CanvasHeader
+          <CanvasContent
+            enhancedCampaign={enhancedCampaign}
+            gameSize={gameSize}
+            gamePosition={gamePosition}
+            previewDevice={previewDevice}
+            customTexts={customTexts}
+            customImages={customImages}
+            selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
+            updateTextElement={updateTextElement}
+            updateImageElement={updateImageElement}
+            deleteTextElement={deleteTextElement}
+            deleteImageElement={deleteImageElement}
+            getElementDeviceConfig={getElementDeviceConfig}
+            containerRef={canvasRef}
+            sizeMap={sizeMap}
             headerBanner={headerBanner}
             headerText={headerText}
-            sizeMap={sizeMap}
-          />
-
-          <div className="flex-1 flex relative h-full">
-            <GameCanvasPreview
-              campaign={enhancedCampaign}
-              gameSize={gameSize}
-              className="w-full h-full"
-              key={`preview-${gameSize}-${gamePosition}-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.design)}-${JSON.stringify(enhancedCampaign.gameConfig)}-${previewDevice}`}
-              previewDevice={previewDevice}
-            />
-            
-            {/* Custom Text Elements - Rendus en temps réel */}
-            {customTexts.map((customText: any) => (
-              customText?.enabled && (
-                <TextElement
-                  key={`text-${customText.id}-${previewDevice}`}
-                  element={customText}
-                  isSelected={selectedElement?.type === 'text' && selectedElement?.id === customText.id}
-                  onSelect={() => {
-                    setSelectedElement({ type: 'text', id: customText.id });
-                    console.log('Text element selected:', customText.id);
-                  }}
-                  onUpdate={(updates) => {
-                    console.log('Updating text element:', customText.id, updates);
-                    updateTextElement(customText.id, updates);
-                  }}
-                  onDelete={() => {
-                    console.log('Deleting text element:', customText.id);
-                    deleteTextElement(customText.id);
-                  }}
-                  containerRef={canvasRef}
-                  sizeMap={sizeMap}
-                  getElementDeviceConfig={getElementDeviceConfig}
-                />
-              )
-            ))}
-
-            {/* Custom Image Elements - Rendus en temps réel */}
-            {customImages.map((customImage: any) => (
-              customImage?.src && (
-                <ImageElement
-                  key={`image-${customImage.id}-${previewDevice}`}
-                  element={customImage}
-                  isSelected={selectedElement?.type === 'image' && selectedElement?.id === customImage.id}
-                  onSelect={() => {
-                    setSelectedElement({ type: 'image', id: customImage.id });
-                    console.log('Image element selected:', customImage.id);
-                  }}
-                  onUpdate={(updates) => {
-                    console.log('Updating image element:', customImage.id, updates);
-                    updateImageElement(customImage.id, updates);
-                  }}
-                  onDelete={() => {
-                    console.log('Deleting image element:', customImage.id);
-                    deleteImageElement(customImage.id);
-                  }}
-                  containerRef={canvasRef}
-                  getElementDeviceConfig={getElementDeviceConfig}
-                />
-              )
-            ))}
-          </div>
-
-          <CanvasFooter
             footerBanner={footerBanner}
             footerText={footerText}
-            sizeMap={sizeMap}
           />
         </div>
 
         {/* Floating action button - Canva style */}
-        <div className="absolute bottom-8 right-8" style={{ zIndex: 50 }}>
-          <div className="relative">
-            {/* Add menu */}
-            {showAddMenu && (
-              <div
-                className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-gray-200/50 p-2 min-w-48"
-                style={{ zIndex: 60 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={handleAddText}
-                  className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-sm">T</span>
-                  </div>
-                  <span className="font-medium text-gray-900">Ajouter du texte</span>
-                </button>
-                <button
-                  onClick={handleAddImage}
-                  className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 font-semibold text-sm">📷</span>
-                  </div>
-                  <span className="font-medium text-gray-900">Ajouter une image</span>
-                </button>
-              </div>
-            )}
-
-            {/* Main add button */}
-            <button
-              onClick={toggleAddMenu}
-              className="w-14 h-14 bg-gradient-to-r from-[#841b60] to-[#6d164f] hover:from-[#6d164f] hover:to-[#841b60] text-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center transform hover:scale-105"
-              type="button"
-            >
-              <Plus className={`w-6 h-6 transition-transform duration-300 ${showAddMenu ? 'rotate-45' : ''}`} />
-            </button>
-          </div>
-        </div>
+        <FloatingActionButton
+          showAddMenu={showAddMenu}
+          onToggleMenu={toggleAddMenu}
+          onAddText={handleAddText}
+          onAddImage={handleAddImage}
+        />
 
         {/* Grid toggle */}
         <div className="absolute top-6 right-6" style={{ zIndex: 20 }}>
