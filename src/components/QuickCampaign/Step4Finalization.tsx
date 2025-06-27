@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, Rocket, Eye, Edit } from 'lucide-react';
+import { Settings, Rocket, Eye } from 'lucide-react';
 import { useQuickCampaignStore } from '../../stores/quickCampaignStore';
 import { useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../../hooks/useCampaigns';
@@ -37,37 +37,19 @@ const Step4Finalization: React.FC = () => {
       
       console.log('QuickCampaign data being transferred:', quickCampaign);
       
-      // Sauvegarder d'abord la campagne
-      const savedCampaign = await saveCampaign(quickCampaign);
+      // Store the campaign data in localStorage for immediate access
+      localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
       
-      console.log('Campaign saved, redirecting to modern editor');
+      // For quick preview, we'll use a special ID
+      const campaignId = 'quick-preview';
       
-      // Rediriger vers l'éditeur moderne avec l'ID de la campagne sauvegardée
-      navigate(`/modern-campaign/${savedCampaign.id}`);
+      console.log('Redirecting to modern editor with campaign data');
+      
+      // Redirect to modern editor with the special preview ID
+      navigate(`/modern-campaign/${campaignId}`);
       
     } catch (error) {
       console.error('Erreur lors de la redirection vers les paramètres avancés:', error);
-      
-      // Fallback: utiliser l'ID de prévisualisation
-      const quickCampaign = generatePreviewCampaign();
-      localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
-      navigate(`/modern-campaign/quick-preview`);
-    }
-  };
-
-  const handleEditInModernEditor = async () => {
-    try {
-      // Générer et sauvegarder la campagne
-      const quickCampaign = generatePreviewCampaign();
-      const savedCampaign = await saveCampaign(quickCampaign);
-      
-      console.log('Redirecting to modern editor for editing:', savedCampaign.id);
-      
-      // Rediriger directement vers l'éditeur moderne
-      navigate(`/modern-campaign/${savedCampaign.id}`);
-      
-    } catch (error) {
-      console.error('Erreur lors de la redirection vers l\'éditeur:', error);
     }
   };
 
@@ -122,7 +104,7 @@ const Step4Finalization: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Actions disponibles</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Aperçu */}
             <button
               onClick={handlePreview}
@@ -133,21 +115,7 @@ const Step4Finalization: React.FC = () => {
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Aperçu</h3>
               <p className="text-sm text-gray-600 text-center">
-                Prévisualiser votre campagne
-              </p>
-            </button>
-
-            {/* Éditeur moderne */}
-            <button
-              onClick={handleEditInModernEditor}
-              className="flex flex-col items-center p-6 border-2 border-indigo-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200"
-            >
-              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-                <Edit className="w-6 h-6 text-indigo-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Éditeur</h3>
-              <p className="text-sm text-gray-600 text-center">
-                Éditer avec drag & drop
+                Prévisualiser votre campagne avant publication
               </p>
             </button>
 
@@ -159,9 +127,9 @@ const Step4Finalization: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                 <Settings className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Paramètres</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Paramètres avancés</h3>
               <p className="text-sm text-gray-600 text-center">
-                Configuration avancée
+                Peaufiner votre campagne avec l'éditeur complet
               </p>
             </button>
 
@@ -178,7 +146,7 @@ const Step4Finalization: React.FC = () => {
                 {isPublishing ? 'Publication...' : 'Publier'}
               </h3>
               <p className="text-sm text-gray-600 text-center">
-                Publier immédiatement
+                Publier votre campagne immédiatement
               </p>
             </button>
           </div>
