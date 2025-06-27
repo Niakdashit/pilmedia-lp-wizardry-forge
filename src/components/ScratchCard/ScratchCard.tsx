@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ScratchCardProps, ScratchCardState } from './types';
 import { useScratchCanvas } from './hooks/useScratchCanvas';
@@ -32,8 +31,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
   const {
     initCanvas,
     handleScratch,
-    getScratchPercentage,
-    clearCanvas
+    getScratchPercentage
   } = useScratchCanvas({
     canvasRef,
     scratchColor,
