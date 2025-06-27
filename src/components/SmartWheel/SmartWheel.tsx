@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
