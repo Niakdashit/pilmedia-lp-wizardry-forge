@@ -1,29 +1,57 @@
+
 import React from 'react';
 import { BORDER_STYLES } from '../utils/borderStyles';
+
 interface BorderStyleSelectorProps {
   currentStyle: string;
   onStyleChange: (style: string) => void;
   className?: string;
 }
+
 const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
   currentStyle,
   onStyleChange,
   className = ''
 }) => {
-  return <div className={`space-y-4 ${className}`}>
-      
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <h4 className="font-medium text-gray-900">Style de bordure</h4>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {Object.entries(BORDER_STYLES).map(([key, style]) => <button key={key} onClick={() => onStyleChange(key)} className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${currentStyle === key ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
+        {Object.entries(BORDER_STYLES).map(([key, style]) => (
+          <button
+            key={key}
+            onClick={() => onStyleChange(key)}
+            className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+              currentStyle === key 
+                ? 'border-blue-500 bg-blue-50 shadow-md' 
+                : 'border-gray-200 hover:border-gray-300 bg-white'
+            }`}
+          >
             <div className="flex flex-col items-center space-y-2">
               {/* Aperçu visuel du style */}
-              <div className="w-12 h-12 rounded-full border-4 flex items-center justify-center" style={{
-            borderImage: style.type === 'gradient' ? `linear-gradient(45deg, ${style.colors.join(', ')}) 1` : undefined,
-            borderColor: style.type !== 'gradient' ? style.colors[0] : undefined,
-            background: style.type === 'metallic' || style.type === 'luxury' ? `linear-gradient(135deg, ${style.colors.join(', ')})` : style.type === 'neon' ? style.colors[0] : '#f9fafb',
-            boxShadow: style.effects.glow ? `0 0 20px ${style.colors[0]}40` : style.effects.shadow ? '0 4px 8px rgba(0,0,0,0.1)' : undefined
-          }}>
-                {style.effects.metallic && <div className="w-2 h-2 bg-white/60 rounded-full" />}
+              <div 
+                className="w-12 h-12 rounded-full border-4 flex items-center justify-center"
+                style={{ 
+                  borderImage: style.type === 'gradient' 
+                    ? `linear-gradient(45deg, ${style.colors.join(', ')}) 1`
+                    : undefined,
+                  borderColor: style.type !== 'gradient' ? style.colors[0] : undefined,
+                  background: style.type === 'metallic' || style.type === 'luxury'
+                    ? `linear-gradient(135deg, ${style.colors.join(', ')})`
+                    : style.type === 'neon'
+                    ? style.colors[0]
+                    : '#f9fafb',
+                  boxShadow: style.effects.glow 
+                    ? `0 0 20px ${style.colors[0]}40`
+                    : style.effects.shadow 
+                    ? '0 4px 8px rgba(0,0,0,0.1)'
+                    : undefined
+                }}
+              >
+                {style.effects.metallic && (
+                  <div className="w-2 h-2 bg-white/60 rounded-full" />
+                )}
               </div>
               
               {/* Nom du style */}
@@ -33,23 +61,34 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
               
               {/* Indicateurs d'effets */}
               <div className="flex space-x-1">
-                {style.effects.glow && <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full" title="Effet de lueur" />}
-                {style.effects.metallic && <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" title="Effet métallique" />}
-                {style.effects.animated && <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" title="Animé" />}
+                {style.effects.glow && (
+                  <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full" title="Effet de lueur" />
+                )}
+                {style.effects.metallic && (
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" title="Effet métallique" />
+                )}
+                {style.effects.animated && (
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" title="Animé" />
+                )}
               </div>
             </div>
-          </button>)}
+          </button>
+        ))}
       </div>
       
       {/* Description du style sélectionné */}
-      {BORDER_STYLES[currentStyle] && <div className="p-3 bg-gray-50 rounded-lg">
+      {BORDER_STYLES[currentStyle] && (
+        <div className="p-3 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">
             <strong>{BORDER_STYLES[currentStyle].name}</strong>
             {BORDER_STYLES[currentStyle].effects.metallic && ' - Effet métallique'}
             {BORDER_STYLES[currentStyle].effects.glow && ' - Effet de lueur'}
             {BORDER_STYLES[currentStyle].effects.animated && ' - Animation'}
           </p>
-        </div>}
-    </div>;
+        </div>
+      )}
+    </div>
+  );
 };
+
 export default BorderStyleSelector;

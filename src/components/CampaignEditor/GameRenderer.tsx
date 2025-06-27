@@ -84,9 +84,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
                      gameSize === 'medium' ? 300 : 
                      gameSize === 'large' ? 400 : 500;
 
-    // Récupérer le style de bordure depuis la campagne
-    const borderStyle = enhancedCampaign.design?.wheelBorderStyle || 'classic';
-
     return (
       <div className={className} style={containerStyle}>
         {gameBackgroundImage && showBackgroundOverlay && (
@@ -101,7 +98,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             theme="modern"
             size={wheelSize}
             brandColors={brandColors}
-            borderStyle={borderStyle}
             onResult={(segment) => {
               console.log('Segment gagné dans l\'éditeur:', segment);
             }}

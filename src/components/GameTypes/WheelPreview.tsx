@@ -1,22 +1,28 @@
 
-import React from 'react';
-import { SmartWheel } from '../SmartWheel';
-import { useGameSize } from '../../hooks/useGameSize';
+import React, { useMemo } from 'react';
+import WheelContainer from './WheelComponents/WheelContainer';
+import WheelButton from './WheelComponents/WheelButton';
+import WheelFormModal from './WheelComponents/WheelFormModal';
+import WheelPreviewContent from './WheelComponents/WheelPreviewContent';
+import { useWheelPreviewLogic } from './WheelComponents/WheelPreviewLogic';
+import { getWheelPreviewConfig } from './WheelComponents/WheelPreviewConfig';
+
+interface InstantWinConfig {
+  mode: "instant_winner";
+  winProbability: number;
+  maxWinners?: number;
+  winnersCount?: number;
+}
 
 interface WheelPreviewProps {
   campaign: any;
-  config: {
-    mode: 'instant_winner';
-    winProbability: number;
-    maxWinners?: number;
-    winnersCount: number;
-  };
+  config: InstantWinConfig;
   onFinish?: (result: 'win' | 'lose') => void;
+  disabled?: boolean;
   onStart?: () => void;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
-  gamePosition?: string;
+  gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
-  disabled?: boolean;
   disableForm?: boolean;
 }
 
@@ -24,70 +30,144 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   campaign,
   config,
   onFinish,
+  disabled = false,
   onStart,
-  gameSize = 'medium',
-  disabled = false
+  gameSize = 'small',
+  gamePosition = 'center',
+  previewDevice = 'desktop',
+  disableForm = false
 }) => {
-  const { getGameDimensions } = useGameSize(gameSize);
-  const gameDimensions = getGameDimensions();
+  const {
+    formValidated,
+    showFormModal,
+    setShowFormModal,
+    showValidationMessage,
+    canvasSize,
+    segments,
+    rotation,
+    spinning,
+    fields,
+    participationLoading,
+    handleFormSubmit,
+    handleWheelClick
+  } = useWheelPreviewLogic({
+    campaign,
+    config,
+    onFinish,
+    disabled,
+    onStart,
+    gameSize,
+    gamePosition,
+    previewDevice,
+    disableForm
+  });
 
-  // Récupérer les segments depuis la configuration de la campagne
-  const segments = campaign.gameConfig?.wheel?.segments || 
-                  campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: '#ff6b6b' },
-    { id: '2', label: 'Prix 2', color: '#4ecdc4' },
-    { id: '3', label: 'Prix 3', color: '#45b7d1' },
-    { id: '4', label: 'Dommage', color: '#feca57' }
-  ];
+  const {
+    centerImage,
+    centerLogo,
+    theme,
+    borderColor,
+    borderOutlineColor,
+    customColors,
+    buttonConfig
+  } = getWheelPreviewConfig(campaign);
 
-  // Convertir les segments au format SmartWheel
-  const smartWheelSegments = segments.map((segment: any, index: number) => ({
-    id: segment.id || index.toString(),
-    label: segment.label,
-    color: segment.color,
-    textColor: segment.textColor || '#ffffff'
-  }));
-
-  // Couleurs de marque depuis la campagne
-  const brandColors = {
-    primary: campaign.design?.customColors?.primary || '#841b60',
-    secondary: campaign.design?.customColors?.secondary || '#4ecdc4',
-    accent: campaign.design?.customColors?.accent || '#45b7d1'
-  };
-
-  const wheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-
-  const handleResult = () => {
-    if (onFinish) {
-      // Logique de win/lose basée sur la probabilité configurée
-      const isWin = Math.random() < config.winProbability;
-      onFinish(isWin ? 'win' : 'lose');
+  // Calculer dynamiquement si on doit afficher le message d'absence de segments
+  const hasNoConfiguredSegments = useMemo(() => {
+    const segmentCount = segments?.length || 0;
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Nombre de segments:', segmentCount);
     }
-  };
+    return segmentCount === 0;
+  }, [segments]);
 
-  const handleSpin = () => {
-    if (onStart) {
-      onStart();
+  // Debug des segments
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('WheelPreview - Segments reçus:', segments);
+    console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
+    console.log('WheelPreview - formValidated:', formValidated);
+    console.log('WheelPreview - disableForm:', disableForm);
+  }
+
+  // Gestion du clic sur le bouton - logique simplifiée
+  const handleButtonClick = () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Bouton cliqué, formValidated:', formValidated, 'disableForm:', disableForm);
     }
+    
+    // Si le formulaire est désactivé, on valide automatiquement
+    if (disableForm) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreview - Formulaire désactivé, lancement direct');
+      }
+      handleWheelClick();
+      return;
+    }
+
+    // Si le formulaire n'est pas validé, on affiche la modale
+    if (!formValidated) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreview - Formulaire non validé, ouverture de la modale');
+      }
+      setShowFormModal(true);
+      return;
+    }
+
+    // Si le formulaire est validé, on lance la roue
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Formulaire validé, lancement de la roue');
+    }
+    handleWheelClick();
   };
 
   return (
-    <div className="flex justify-center items-center w-full h-full">
-      <SmartWheel
-        segments={smartWheelSegments}
-        theme="modern"
-        size={wheelSize}
-        brandColors={brandColors}
-        onResult={handleResult}
-        onSpin={handleSpin}
-        disabled={disabled}
-        customButton={{
-          text: campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
-          color: brandColors.primary,
-          textColor: '#ffffff'
-        }}
-      />
-    </div>
+    <WheelContainer previewDevice={previewDevice}>
+      {hasNoConfiguredSegments && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 text-gray-600 text-center p-4">
+          Ajoutez des segments pour activer la roue
+        </div>
+      )}
+      
+      <div className="flex flex-col items-center justify-center w-full h-full">
+        <div className="flex-1 flex items-center justify-center">
+          <WheelPreviewContent
+            segments={segments}
+            rotation={rotation}
+            spinning={spinning}
+            centerImage={centerImage}
+            centerLogo={centerLogo}
+            theme={theme}
+            customColors={customColors}
+            borderColor={borderColor}
+            borderOutlineColor={borderOutlineColor}
+            canvasSize={canvasSize}
+            showValidationMessage={showValidationMessage}
+            onWheelClick={handleButtonClick}
+          />
+        </div>
+
+        <div className="flex-shrink-0 pb-4">
+          <WheelButton
+            buttonConfig={buttonConfig}
+            spinning={spinning}
+            disabled={disabled || hasNoConfiguredSegments}
+            formValidated={formValidated}
+            onClick={handleButtonClick}
+          />
+        </div>
+      </div>
+
+      {!disableForm && (
+        <WheelFormModal
+          showFormModal={showFormModal}
+          onClose={() => setShowFormModal(false)}
+          campaign={campaign}
+          fields={fields}
+          participationLoading={participationLoading}
+          onSubmit={handleFormSubmit}
+        />
+      )}
+    </WheelContainer>
   );
 };
 

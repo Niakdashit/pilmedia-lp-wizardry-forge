@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
@@ -72,17 +71,26 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
   };
 
   const handleAddText = () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Ajout de texte déclenché');
+    }
     addTextElement();
     setShowAddMenu(false);
   };
 
   const handleAddImage = () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Ajout d'image déclenché");
+    }
     addImageElement();
     setShowAddMenu(false);
   };
 
   const toggleAddMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Toggle menu:', !showAddMenu);
+    }
     setShowAddMenu(!showAddMenu);
   };
 
@@ -149,25 +157,16 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
               previewDevice={previewDevice}
             />
             
-            {/* Custom Text Elements - Rendus en temps réel */}
+            {/* Custom Text Elements */}
             {customTexts.map((customText: any) => (
               customText?.enabled && (
                 <TextElement
                   key={`text-${customText.id}-${previewDevice}`}
                   element={customText}
                   isSelected={selectedElement?.type === 'text' && selectedElement?.id === customText.id}
-                  onSelect={() => {
-                    setSelectedElement({ type: 'text', id: customText.id });
-                    console.log('Text element selected:', customText.id);
-                  }}
-                  onUpdate={(updates) => {
-                    console.log('Updating text element:', customText.id, updates);
-                    updateTextElement(customText.id, updates);
-                  }}
-                  onDelete={() => {
-                    console.log('Deleting text element:', customText.id);
-                    deleteTextElement(customText.id);
-                  }}
+                  onSelect={() => setSelectedElement({ type: 'text', id: customText.id })}
+                  onUpdate={(updates) => updateTextElement(customText.id, updates)}
+                  onDelete={() => deleteTextElement(customText.id)}
                   containerRef={canvasRef}
                   sizeMap={sizeMap}
                   getElementDeviceConfig={getElementDeviceConfig}
@@ -175,29 +174,18 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
               )
             ))}
 
-            {/* Custom Image Elements - Rendus en temps réel */}
+            {/* Custom Image Elements */}
             {customImages.map((customImage: any) => (
-              customImage?.src && (
-                <ImageElement
-                  key={`image-${customImage.id}-${previewDevice}`}
-                  element={customImage}
-                  isSelected={selectedElement?.type === 'image' && selectedElement?.id === customImage.id}
-                  onSelect={() => {
-                    setSelectedElement({ type: 'image', id: customImage.id });
-                    console.log('Image element selected:', customImage.id);
-                  }}
-                  onUpdate={(updates) => {
-                    console.log('Updating image element:', customImage.id, updates);
-                    updateImageElement(customImage.id, updates);
-                  }}
-                  onDelete={() => {
-                    console.log('Deleting image element:', customImage.id);
-                    deleteImageElement(customImage.id);
-                  }}
-                  containerRef={canvasRef}
-                  getElementDeviceConfig={getElementDeviceConfig}
-                />
-              )
+              <ImageElement
+                key={`image-${customImage.id}-${previewDevice}`}
+                element={customImage}
+                isSelected={selectedElement?.type === 'image' && selectedElement?.id === customImage.id}
+                onSelect={() => setSelectedElement({ type: 'image', id: customImage.id })}
+                onUpdate={(updates) => updateImageElement(customImage.id, updates)}
+                onDelete={() => deleteImageElement(customImage.id)}
+                containerRef={canvasRef}
+                getElementDeviceConfig={getElementDeviceConfig}
+              />
             ))}
           </div>
 
