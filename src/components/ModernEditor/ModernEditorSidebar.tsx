@@ -82,7 +82,7 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
   const primaryTabs = tabs.filter(tab => tab.category === 'primary');
   const secondaryTabs = tabs.filter(tab => tab.category === 'secondary');
 
-  const renderTabButton = (tab: TabConfig, index: number, totalInCategory: number) => {
+  const renderTabButton = (tab: TabConfig) => {
     const Icon = tab.icon;
     const isActive = activeTab === tab.id;
     const isCompleted = tab.priority < (tabs.find(t => t.id === activeTab)?.priority || 1);
@@ -171,7 +171,7 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 mb-3">
             🎯 Configuration essentielle
           </div>
-          {primaryTabs.map((tab, index) => renderTabButton(tab, index, primaryTabs.length))}
+          {primaryTabs.map((tab) => renderTabButton(tab))}
         </div>
 
         {/* Séparateur */}
@@ -182,7 +182,7 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 mb-3">
             ⚙️ Configuration avancée
           </div>
-          {secondaryTabs.map((tab, index) => renderTabButton(tab, index, secondaryTabs.length))}
+          {secondaryTabs.map((tab) => renderTabButton(tab))}
         </div>
       </div>
       

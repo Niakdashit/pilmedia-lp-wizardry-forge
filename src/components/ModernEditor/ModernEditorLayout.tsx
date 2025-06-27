@@ -43,9 +43,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
         onSave={onSave}
         onPreview={onPreview}
         isLoading={isLoading}
-        campaignType={campaignType}
         isNewCampaign={isNewCampaign}
-        gameTypeLabels={gameTypeLabels}
       />
 
       {/* Main content */}
