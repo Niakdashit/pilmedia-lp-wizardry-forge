@@ -1,62 +1,45 @@
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { CampaignType } from '../../utils/campaignTypes';
+import { useNavigate } from 'react-router-dom';
 import GameSelectionStep from './steps/GameSelectionStep';
+import BrandGeneratorStep from './steps/BrandGeneratorStep';
 import BrandAssetsStep from './steps/BrandAssetsStep';
+import AdvancedStep from './steps/AdvancedStep';
 import GenerationStep from './steps/GenerationStep';
 import PreviewStep from './steps/PreviewStep';
 import PublishStep from './steps/PublishStep';
-import { Settings, Upload, Wand2, Eye, Sparkles } from 'lucide-react';
 
 export interface WizardData {
-  selectedGame?: CampaignType;
+  gameType?: string;
+  brandGenerated?: boolean;
+  generatedCampaignData?: any;
   logo?: string;
   desktopVisual?: string;
   mobileVisual?: string;
   websiteUrl?: string;
   productName?: string;
-  generatedCampaign?: any;
-  generatedQuiz?: any;
-  customizations?: any;
+  manualContent?: string;
   extractedBrandTheme?: any;
-  manualContent?: string; // <-- Ajouté pour correction TS
+  [key: string]: any;
 }
 
 const ModernWizard: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
-  const [wizardData, setWizardData] = useState<WizardData>({
-    selectedGame: searchParams.get('type') as CampaignType || undefined
-  });
+  const [wizardData, setWizardData] = useState<WizardData>({});
 
-  const steps = [{
-    id: 'mechanic',
-    label: 'Mécanique',
-    icon: Settings
-  }, {
-    id: 'content',
-    label: 'Contenus',
-    icon: Upload
-  }, {
-    id: 'generation',
-    label: 'Génération',
-    icon: Wand2
-  }, {
-    id: 'preview',
-    label: 'Aperçu',
-    icon: Eye
-  }, {
-    id: 'publish',
-    label: 'Publication',
-    icon: Sparkles
-  }];
+  const steps = [
+    'game-selection',
+    'brand-generator', 
+    'brand-assets',
+    'advanced',
+    'generation',
+    'preview',
+    'publish'
+  ];
 
   const updateWizardData = (data: Partial<WizardData>) => {
-    setWizardData(prev => ({
-      ...prev,
-      ...data
-    }));
+    setWizardData(prev => ({ ...prev, ...data }));
   };
 
   const nextStep = () => {
@@ -71,95 +54,118 @@ const ModernWizard: React.FC = () => {
     }
   };
 
-  const goToStep = (stepIndex: number) => {
-    setCurrentStep(stepIndex);
+  const skipStep = () => {
+    nextStep();
   };
 
-  const renderCurrentStep = () => {
-    const commonProps = {
-      wizardData,
-      updateWizardData,
-      nextStep,
-      prevStep,
-      goToStep,
-      currentStep,
-      totalSteps: steps.length
-    };
+  const handleBrandGenerated = (campaignData: any) => {
+    updateWizardData({ 
+      brandGenerated: true,
+      generatedCampaignData: campaignData,
+      gameType: campaignData.type
+    });
+    // Skip to generation step since we have everything
+    setCurrentStep(4);
+  };
 
-    switch (steps[currentStep].id) {
-      case 'mechanic':
-        return <GameSelectionStep {...commonProps} />;
-      case 'content':
-        return <BrandAssetsStep {...commonProps} />;
+  const renderStep = () => {
+    switch (steps[currentStep]) {
+      case 'game-selection':
+        return (
+          <GameSelectionStep
+            wizardData={wizardData}
+            updateWizardData={updateWizardData}
+            nextStep={nextStep}
+          />
+        );
+
+      case 'brand-generator':
+        return (
+          <BrandGeneratorStep
+            onNext={handleBrandGenerated}
+            onPrev={prevStep}
+            onSkip={skipStep}
+          />
+        );
+
+      case 'brand-assets':
+        return (
+          <BrandAssetsStep
+            wizardData={wizardData}
+            updateWizardData={updateWizardData}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+
+      case 'advanced':
+        return (
+          <AdvancedStep
+            wizardData={wizardData}
+            updateWizardData={updateWizardData}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+
       case 'generation':
-        return <GenerationStep {...commonProps} />;
+        return (
+          <GenerationStep
+            wizardData={wizardData}
+            updateWizardData={updateWizardData}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+
       case 'preview':
-        return <PreviewStep {...commonProps} />;
+        return (
+          <PreviewStep
+            wizardData={wizardData}
+            updateWizardData={updateWizardData}
+            nextStep={nextStep}
+            prevStep={prevStep}
+          />
+        );
+
       case 'publish':
-        return <PublishStep {...commonProps} />;
+        return (
+          <PublishStep
+            wizardData={wizardData}
+            updateWizardData={updateWizardData}
+            onFinish={() => navigate('/gamification')}
+            prevStep={prevStep}
+          />
+        );
+
       default:
-        return <GameSelectionStep {...commonProps} />;
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl px-0 py-px mx-0">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#141e29] mb-3">Créer une nouvelle campagne</h1>
-          <p className="text-lg text-gray-600 max-w-2xl">
-            Configurez votre expérience interactive en quelques étapes simples
-          </p>
-        </div>
-        
-        {/* Stepper */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-100/50 mb-8">
-          <div className="flex items-center justify-center max-w-4xl mx-auto">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = currentStep === index;
-              const isCompleted = currentStep > index;
-              const isAccessible = index <= currentStep + 1;
-
-              return (
-                <React.Fragment key={step.id}>
-                  <button
-                    onClick={() => isAccessible && goToStep(index)}
-                    disabled={!isAccessible}
-                    className={`flex flex-col items-center space-y-2 px-4 py-3 rounded-xl transition-all duration-200 ${
-                      isActive
-                        ? 'bg-[#951b6d] text-white shadow-md'
-                        : isCompleted
-                        ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : isAccessible
-                        ? 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                        : 'bg-gray-25 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      isActive ? 'bg-white/20' : isCompleted ? 'bg-emerald-100' : 'bg-white'
-                    }`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-xs font-medium">{step.label}</span>
-                  </button>
-                  
-                  {index < steps.length - 1 && (
-                    <div className={`w-12 h-px ${
-                      currentStep > index ? 'bg-emerald-300' : 'bg-gray-200'
-                    }`} />
-                  )}
-                </React.Fragment>
-              );
-            })}
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0]">
+      {/* Progress Bar */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-lg font-semibold text-gray-900">Créateur de Campagne</h1>
+            <span className="text-sm text-gray-500">
+              Étape {currentStep + 1} sur {steps.length}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-[#841b60] to-[#6d164f] h-2 rounded-full transition-all duration-500"
+              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            />
           </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="space-y-6">
-          {renderCurrentStep()}
-        </div>
+      {/* Step Content */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {renderStep()}
       </div>
     </div>
   );
