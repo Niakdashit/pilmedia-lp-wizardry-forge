@@ -133,35 +133,18 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     />;
   }
 
-  // Style du conteneur principal pour assurer un bon centrage
-  const containerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    minHeight: '500px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-    boxSizing: 'border-box',
-    overflow: 'visible'
-  };
-
   return (
-    <div style={containerStyle}>
-      {/* Jeu */}
-      <div className="w-full h-full flex items-center justify-center">
-        <GameRenderer 
-          campaign={campaign} 
-          formValidated={formValidated} 
-          showValidationMessage={showValidationMessage} 
-          previewMode={previewMode} 
-          mobileConfig={mobileConfig} 
-          onGameFinish={handleGameFinish} 
-          onGameStart={handleGameStart} 
-          onGameButtonClick={handleGameButtonClick} 
-        />
-      </div>
+    <div className="w-full h-full flex items-center justify-center">
+      <GameRenderer 
+        campaign={campaign} 
+        formValidated={formValidated} 
+        showValidationMessage={showValidationMessage} 
+        previewMode={previewMode} 
+        mobileConfig={mobileConfig} 
+        onGameFinish={handleGameFinish} 
+        onGameStart={handleGameStart} 
+        onGameButtonClick={handleGameButtonClick} 
+      />
 
       {/* Modal de formulaire pour tous les jeux unlocked */}
       <FormHandler

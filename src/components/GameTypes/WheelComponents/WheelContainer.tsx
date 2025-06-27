@@ -11,7 +11,9 @@ const WheelContainer: React.FC<WheelContainerProps> = ({ children, previewDevice
 
   return (
     <div className={`relative flex items-center justify-center w-full h-full ${minHeight} overflow-visible`}>
-      {children}
+      <div className="flex items-center justify-center w-full h-full">
+        {children}
+      </div>
     </div>
   );
 };

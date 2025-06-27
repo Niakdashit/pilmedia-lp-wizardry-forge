@@ -36,7 +36,7 @@ const WheelPreviewContent: React.FC<WheelPreviewContentProps> = ({
   onWheelClick
 }) => {
   return (
-    <div className="flex items-center justify-center w-full h-full relative cursor-pointer" onClick={onWheelClick}>
+    <div className="flex items-center justify-center relative cursor-pointer" onClick={onWheelClick}>
       <div className="relative flex items-center justify-center">
         <WheelCanvas
           segments={segments}

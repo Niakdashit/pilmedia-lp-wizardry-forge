@@ -75,21 +75,21 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   } = getWheelPreviewConfig(campaign);
 
   // Calculer dynamiquement si on doit afficher le message d'absence de segments
-    const hasNoConfiguredSegments = useMemo(() => {
-      const segmentCount = segments?.length || 0;
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('WheelPreview - Nombre de segments:', segmentCount);
-      }
-      return segmentCount === 0;
-    }, [segments]);
+  const hasNoConfiguredSegments = useMemo(() => {
+    const segmentCount = segments?.length || 0;
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('WheelPreview - Nombre de segments:', segmentCount);
+    }
+    return segmentCount === 0;
+  }, [segments]);
 
   // Debug des segments
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('WheelPreview - Segments reçus:', segments);
-      console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
-      console.log('WheelPreview - formValidated:', formValidated);
-      console.log('WheelPreview - disableForm:', disableForm);
-    }
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('WheelPreview - Segments reçus:', segments);
+    console.log('WheelPreview - hasNoConfiguredSegments:', hasNoConfiguredSegments);
+    console.log('WheelPreview - formValidated:', formValidated);
+    console.log('WheelPreview - disableForm:', disableForm);
+  }
 
   // Gestion du clic sur le bouton - logique simplifiée
   const handleButtonClick = () => {
@@ -99,18 +99,18 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     
     // Si le formulaire est désactivé, on valide automatiquement
     if (disableForm) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('WheelPreview - Formulaire désactivé, lancement direct');
-        }
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreview - Formulaire désactivé, lancement direct');
+      }
       handleWheelClick();
       return;
     }
 
     // Si le formulaire n'est pas validé, on affiche la modale
     if (!formValidated) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('WheelPreview - Formulaire non validé, ouverture de la modale');
-        }
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('WheelPreview - Formulaire non validé, ouverture de la modale');
+      }
       setShowFormModal(true);
       return;
     }
@@ -130,11 +130,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         </div>
       )}
       
-      <div className="flex flex-col items-center justify-center space-y-6 w-full h-full">
-        <div
-          className="flex-1 flex items-center justify-center"
-          style={{ width: containerWidth, height: containerHeight }}
-        >
+      <div className="flex flex-col items-center justify-center w-full h-full">
+        <div className="flex-1 flex items-center justify-center">
           <WheelPreviewContent
             segments={segments}
             rotation={rotation}
