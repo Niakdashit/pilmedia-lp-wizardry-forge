@@ -103,6 +103,7 @@ const Wheel: React.FC<WheelProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
+        borderStyle={config?.wheel?.borderStyle || 'classic'}
         customButton={{
           text: config?.buttonLabel || 'Faire tourner',
           color: brandColors.primary,
