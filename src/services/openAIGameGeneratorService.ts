@@ -35,8 +35,18 @@ export interface GeneratedGameConcept {
     borderRadius: string;
     shadows: boolean;
     animations: boolean;
+    premiumEffects?: {
+      gradient?: boolean;
+      glassmorphism?: boolean;
+      microInteractions?: boolean;
+    };
   };
   tone: string;
+  marketingStrategy?: {
+    engagementTactics: string[];
+    socialProof: boolean;
+    gamificationLevel: string;
+  };
 }
 
 export interface BrandAnalysisResult {
@@ -52,6 +62,12 @@ export interface BrandAnalysisResult {
   description: string;
   suggestedGameType: 'wheel' | 'quiz' | 'scratch' | 'jackpot';
   suggestedPrizes: string[];
+  brandAnalysis: {
+    personality: string;
+    targetAudience: string;
+    marketingTone: string;
+    visualStyle: string;
+  };
 }
 
 export class OpenAIGameGeneratorService {
@@ -61,19 +77,26 @@ export class OpenAIGameGeneratorService {
     this.apiKey = apiKey;
   }
 
-  async generateGameFromBrand(brandData: BrandAnalysisResult): Promise<GeneratedGameConcept> {
+  async generateStudioLevelGameFromBrand(brandData: BrandAnalysisResult): Promise<GeneratedGameConcept> {
     const prompt = `
-    Generate a complete marketing game concept based on this brand analysis:
+    Créer un concept de jeu marketing de niveau studio basé sur cette analyse de marque:
     
-    Brand: ${brandData.brandName}
-    Industry: ${brandData.industry}
+    Marque: ${brandData.brandName}
+    Industrie: ${brandData.industry}
     Description: ${brandData.description}
-    Colors: ${JSON.stringify(brandData.colors)}
-    Logo: ${brandData.logo ? 'Available' : 'Not available'}
-    Suggested Game Type: ${brandData.suggestedGameType}
-    Suggested Prizes: ${brandData.suggestedPrizes.join(', ')}
+    Couleurs: ${JSON.stringify(brandData.colors)}
+    Logo: ${brandData.logo ? 'Disponible' : 'Non disponible'}
+    Type de jeu suggéré: ${brandData.suggestedGameType}
+    Prix suggérés: ${brandData.suggestedPrizes.join(', ')}
     
-    Create a game concept that matches the brand identity perfectly.
+    Analyse de marque:
+    - Personnalité: ${brandData.brandAnalysis.personality}
+    - Audience cible: ${brandData.brandAnalysis.targetAudience}
+    - Ton marketing: ${brandData.brandAnalysis.marketingTone}
+    - Style visuel: ${brandData.brandAnalysis.visualStyle}
+    
+    Créer un concept de jeu qui rivalise avec les meilleures agences créatives.
+    Le concept doit être premium, engageant et parfaitement aligné sur l'identité de marque.
     `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -87,15 +110,15 @@ export class OpenAIGameGeneratorService {
         messages: [
           {
             role: 'system',
-            content: 'You are a marketing game designer. Create engaging game concepts that match brand identities.'
+            content: 'Tu es un directeur artistique expert en campagnes marketing premium. Tu crées des concepts de jeu sophistiqués de niveau studio qui rivalisent avec les meilleures agences créatives.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 1500
+        temperature: 0.8,
+        max_tokens: 2500
       })
     });
 

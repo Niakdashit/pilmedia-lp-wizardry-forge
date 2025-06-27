@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Globe, Sparkles, Eye, ArrowRight, Loader2, Image } from 'lucide-react';
+import { Globe, Sparkles, Eye, ArrowRight, Loader2, Image, Palette, Zap } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 import { GeneratedGameConcept } from '../../services/openAIGameGeneratorService';
 
@@ -30,7 +30,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
       setError(null);
       setStep('generating');
 
-      console.log('Calling brand-game-generator function with URL:', url);
+      console.log('Generating studio-level campaign for URL:', url);
       
       const { data, error: functionError } = await supabase.functions.invoke('brand-game-generator', {
         body: { url }
@@ -40,7 +40,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
         throw new Error(functionError.message);
       }
 
-      console.log('Generated game concept:', data);
+      console.log('Studio-level campaign generated:', data);
       setGameConcept(data);
       setStep('preview');
     } catch (err) {
@@ -61,17 +61,53 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
     switch (step) {
       case 'input':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#841b60] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-white" />
+              <div className="w-20 h-20 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                <Sparkles className="w-10 h-10 text-white" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 rounded-full animate-pulse opacity-50"></div>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Générer une Campagne de Marque
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                Générateur de Campagnes Studio
               </h2>
-              <p className="text-gray-600 max-w-md mx-auto">
-                Saisissez l'URL du site web d'une marque pour générer automatiquement un jeu marketing entièrement personnalisé avec logo et couleurs extraits
+              <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                Créez automatiquement des campagnes marketing de niveau professionnel en analysant 
+                n'importe quel site web. Notre IA génère des designs premium avec logo, couleurs et 
+                contenu parfaitement adaptés à l'identité de marque.
               </p>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-purple-600" />
+                Niveau Studio - Fonctionnalités Premium
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                <div className="flex items-start gap-3">
+                  <Palette className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Extraction automatique des couleurs de marque</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Image className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Intégration native du logo en haute qualité</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Copy marketing professionnel généré par IA</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Eye className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Optimisation mobile et desktop avancée</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Zap className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Effets premium et micro-interactions</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Globe className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>Analyse comportementale de l'audience</span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -86,14 +122,20 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://exemple.com"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent transition-all"
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Exemples : nike.com, coca-cola.com, apple.com, etc.
+                </p>
               </div>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-600 text-sm">{error}</p>
+                  <p className="text-red-600 text-sm flex items-center gap-2">
+                    <span className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">!</span>
+                    {error}
+                  </p>
                 </div>
               )}
 
@@ -109,10 +151,10 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                 <button
                   onClick={handleGenerate}
                   disabled={!url}
-                  className="flex-1 px-6 py-3 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Générer la Campagne
+                  Générer Campagne Studio
                 </button>
               </div>
             </div>
@@ -121,38 +163,67 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
 
       case 'generating':
         return (
-          <div className="text-center py-12">
-            <Loader2 className="w-12 h-12 text-[#841b60] animate-spin mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Génération en cours...</h3>
-            <p className="text-gray-600">Extraction du logo, analyse du site web et création du concept de jeu...</p>
+          <div className="text-center py-16">
+            <div className="relative mb-8">
+              <Loader2 className="w-16 h-16 text-[#841b60] animate-spin mx-auto" />
+              <div className="absolute inset-0 w-16 h-16 border-4 border-purple-200 rounded-full mx-auto"></div>
+            </div>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Création en cours...
+            </h3>
+            <div className="space-y-3 text-gray-600 max-w-md mx-auto">
+              <div className="flex items-center justify-center gap-2 animate-pulse">
+                <div className="w-2 h-2 bg-[#841b60] rounded-full"></div>
+                <span>Analyse du site web et extraction du logo</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 animate-pulse" style={{animationDelay: '0.5s'}}>
+                <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                <span>Génération du concept créatif premium</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 animate-pulse" style={{animationDelay: '1s'}}>
+                <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+                <span>Optimisation de l'expérience utilisateur</span>
+              </div>
+            </div>
           </div>
         );
 
       case 'preview':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Campagne Générée !</h3>
-              <p className="text-gray-600">Votre campagne de marque est prête avec logo et couleurs automatiquement extraits</p>
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                Campagne Studio Générée !
+              </h3>
+              <p className="text-gray-600">
+                Votre campagne premium est prête avec une qualité digne des meilleures agences
+              </p>
             </div>
 
             {gameConcept && (
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
-                <div className="space-y-4">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 border">
+                <div className="space-y-6">
+                  {/* Premium Campaign Preview */}
                   <div 
-                    className="p-4 rounded-lg border-2 relative"
+                    className="p-6 rounded-xl border-2 relative overflow-hidden"
                     style={{ 
                       backgroundColor: gameConcept.colors.background,
-                      borderColor: gameConcept.colors.primary 
+                      borderColor: gameConcept.colors.primary,
+                      backgroundImage: gameConcept.design.premiumEffects?.gradient ? 
+                        `linear-gradient(135deg, ${gameConcept.colors.primary}15, ${gameConcept.colors.secondary}15)` : 
+                        'none'
                     }}
                   >
-                    {/* Logo display */}
+                    {/* Logo showcase */}
                     {gameConcept.logo && (
-                      <div className="absolute top-4 right-4">
+                      <div className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
                         <img 
                           src={gameConcept.logo} 
                           alt="Logo de la marque" 
-                          className="w-12 h-12 object-contain rounded-md border border-gray-200 bg-white p-1"
+                          className="w-12 h-12 object-contain"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
@@ -160,58 +231,103 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                       </div>
                     )}
                     
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-4">
                       {gameConcept.logo && (
-                        <img 
-                          src={gameConcept.logo} 
-                          alt="Logo de la marque" 
-                          className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white p-2"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={gameConcept.logo} 
+                            alt="Logo de la marque" 
+                            className="w-20 h-20 object-contain rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
                       )}
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg mb-2" style={{ color: gameConcept.colors.primary }}>
-                          {gameConcept.gameName}
-                        </h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Type: {gameConcept.gameType} • Thème: {gameConcept.theme}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h4 
+                            className="font-bold text-xl"
+                            style={{ color: gameConcept.colors.primary }}
+                          >
+                            {gameConcept.gameName}
+                          </h4>
+                          <span className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                            STUDIO
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          <span className="font-medium">Type:</span> {gameConcept.gameType} • 
+                          <span className="font-medium"> Thème:</span> {gameConcept.theme} • 
+                          <span className="font-medium"> Niveau:</span> Premium
                         </p>
-                        <p className="text-sm" style={{ color: gameConcept.colors.secondary }}>
+                        <p 
+                          className="text-sm leading-relaxed"
+                          style={{ color: gameConcept.colors.secondary }}
+                        >
                           {gameConcept.content.description}
                         </p>
                       </div>
                     </div>
                   </div>
 
+                  {/* Studio Features */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <h5 className="font-medium text-gray-700 mb-1">Titre:</h5>
-                      <p className="text-gray-600">{gameConcept.content.title}</p>
+                    <div className="bg-white p-4 rounded-lg border">
+                      <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <Palette className="w-4 h-4 text-purple-500" />
+                        Design Premium
+                      </h5>
+                      <div className="space-y-1 text-gray-600">
+                        <p>✓ Effets visuels avancés</p>
+                        <p>✓ Micro-interactions</p>
+                        <p>✓ Animations fluides</p>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="font-medium text-gray-700 mb-1">Bouton:</h5>
-                      <p className="text-gray-600">{gameConcept.content.buttonText}</p>
+                    <div className="bg-white p-4 rounded-lg border">
+                      <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-indigo-500" />
+                        Expérience Utilisateur
+                      </h5>
+                      <div className="space-y-1 text-gray-600">
+                        <p>✓ Optimisation mobile</p>
+                        <p>✓ Interface intuitive</p>
+                        <p>✓ Performance optimisée</p>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Prizes Preview */}
                   <div>
-                    <h5 className="font-medium text-gray-700 mb-2">Prix:</h5>
+                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-green-500" />
+                      Prix Premium Suggérés:
+                    </h5>
                     <div className="flex flex-wrap gap-2">
-                      {gameConcept.gameConfig.prizes.slice(0, 3).map((prize, index) => (
-                        <span key={index} className="bg-gray-200 rounded-full px-3 py-1 text-sm">
+                      {gameConcept.gameConfig.prizes.slice(0, 4).map((prize, index) => (
+                        <span 
+                          key={index} 
+                          className="bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-300 rounded-full px-4 py-2 text-sm font-medium text-gray-700 shadow-sm"
+                        >
                           {prize}
                         </span>
                       ))}
                     </div>
                   </div>
 
+                  {/* Logo Integration Success */}
                   {gameConcept.logo && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <Image className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-700 font-medium">Logo automatiquement extrait et intégré</span>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Image className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-green-800">Logo Intégré avec Succès</p>
+                          <p className="text-sm text-green-700">
+                            Logo automatiquement extrait et optimisé pour tous les formats
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -224,11 +340,11 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                 onClick={() => setStep('input')}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Générer à Nouveau
+                Générer une Autre
               </button>
               <button
                 onClick={handleApply}
-                className="flex-1 px-6 py-3 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 font-medium"
               >
                 <ArrowRight className="w-5 h-5" />
                 Appliquer dans l'Éditeur
@@ -239,12 +355,17 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
 
       case 'complete':
         return (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Eye className="w-8 h-8 text-white" />
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Eye className="w-10 h-10 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Campagne Appliquée !</h3>
-            <p className="text-gray-600">Votre campagne de marque avec logo automatique est maintenant prête pour l'édition et la prévisualisation</p>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Campagne Studio Appliquée !
+            </h3>
+            <p className="text-gray-600 max-w-md mx-auto leading-relaxed">
+              Votre campagne de niveau professionnel avec logo automatique et design premium 
+              est maintenant prête pour l'édition et la prévisualisation
+            </p>
           </div>
         );
 
@@ -254,9 +375,11 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-        {renderStep()}
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="p-8">
+          {renderStep()}
+        </div>
       </div>
     </div>
   );
