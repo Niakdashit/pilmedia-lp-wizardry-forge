@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Gamepad2, Palette, FileText, Smartphone, Settings } from 'lucide-react';
+import { Settings, Gamepad2, Palette, FormInput, Sliders, Smartphone } from 'lucide-react';
 import { CampaignType } from '../../utils/campaignTypes';
 
 interface ModernEditorSidebarProps {
@@ -22,11 +22,12 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
   onTabChange
 }) => {
   const tabs: TabConfig[] = [
+    { id: 'general', label: 'Général', icon: Settings, description: 'Informations de base' },
     { id: 'game', label: 'Jeu', icon: Gamepad2, description: 'Configuration du jeu' },
-    { id: 'appearance', label: 'Apparence', icon: Palette, description: 'Couleurs et style' },
-    { id: 'content', label: 'Contenu', icon: FileText, description: 'Textes et images' },
-    { id: 'mobile', label: 'Mobile', icon: Smartphone, description: 'Vue mobile' },
-    { id: 'settings', label: 'Paramètres', icon: Settings, description: 'Général et planning' }
+    { id: 'gameconfig', label: 'Layout', icon: Sliders, description: 'Taille et position' },
+    { id: 'design', label: 'Design', icon: Palette, description: 'Couleurs et style' },
+    { id: 'form', label: 'Formulaire', icon: FormInput, description: 'Champs de saisie' },
+    { id: 'mobile', label: 'Mobile', icon: Smartphone, description: 'Vue mobile' }
   ];
 
   return (
