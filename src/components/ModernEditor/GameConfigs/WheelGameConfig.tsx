@@ -104,15 +104,6 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
     });
   };
 
-  // Compter les segments gagnants
-  const winningSegments = segments.filter((s: any) => 
-    s.isWinning !== false && 
-    !s.label.toLowerCase().includes('dommage') && 
-    !s.label.toLowerCase().includes('perdu') && 
-    !s.label.toLowerCase().includes('essaie') && 
-    !s.label.toLowerCase().includes('rejouer')
-  ).length;
-
   return (
     <div className="space-y-6">
       {/* Configuration générale */}
