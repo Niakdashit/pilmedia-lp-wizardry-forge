@@ -1,6 +1,9 @@
 
 import React from 'react';
-import { MousePointer, ArrowUp, ArrowDown, Minus, ExternalLink, Send } from 'lucide-react';
+import { MousePointer } from 'lucide-react';
+import ButtonPlacement from './MobileButtons/ButtonPlacement';
+import ButtonAction from './MobileButtons/ButtonAction';
+import ButtonStyle from './MobileButtons/ButtonStyle';
 
 interface MobileButtonsProps {
   campaign: any;
@@ -24,32 +27,10 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
         <h3 className="text-lg font-medium text-gray-900">Buttons & Actions</h3>
       </div>
 
-      {/* Button Placement */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Placement du bouton principal
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { value: 'top', label: 'En haut', icon: ArrowUp },
-            { value: 'center', label: 'Centré', icon: Minus },
-            { value: 'bottom', label: 'En bas', icon: ArrowDown }
-          ].map((position) => (
-            <button
-              key={position.value}
-              onClick={() => updateMobileConfig('buttonPlacement', position.value)}
-              className={`p-4 border-2 rounded-lg text-center transition-colors ${
-                mobileConfig.buttonPlacement === position.value
-                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <position.icon className="w-5 h-5 mx-auto mb-2" />
-              <div className="text-sm font-medium">{position.label}</div>
-            </button>
-          ))}
-        </div>
-      </div>
+      <ButtonPlacement
+        placement={mobileConfig.buttonPlacement || 'bottom'}
+        onPlacementChange={(placement) => updateMobileConfig('buttonPlacement', placement)}
+      />
 
       {/* Button Text */}
       <div>
@@ -65,162 +46,25 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
         />
       </div>
 
-      {/* Button Action Type */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Action du bouton
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { value: 'submit', label: 'Soumettre', icon: Send },
-            { value: 'link', label: 'Lien externe', icon: ExternalLink }
-          ].map((action) => (
-            <button
-              key={action.value}
-              onClick={() => updateMobileConfig('buttonActionType', action.value)}
-              className={`p-3 border-2 rounded-lg flex items-center justify-center space-x-2 transition-colors ${
-                mobileConfig.buttonActionType === action.value
-                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <action.icon className="w-4 h-4" />
-              <span className="text-sm font-medium">{action.label}</span>
-            </button>
-          ))}
-        </div>
-        {mobileConfig.buttonActionType === 'link' && (
-          <input
-            type="url"
-            placeholder="https://votre-lien.com"
-            value={mobileConfig.buttonLink || ''}
-            onChange={(e) => updateMobileConfig('buttonLink', e.target.value)}
-            className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-          />
-        )}
-      </div>
+      <ButtonAction
+        actionType={mobileConfig.buttonActionType || 'submit'}
+        actionLink={mobileConfig.buttonLink || ''}
+        onActionTypeChange={(type) => updateMobileConfig('buttonActionType', type)}
+        onActionLinkChange={(link) => updateMobileConfig('buttonLink', link)}
+      />
 
-      {/* Button Style */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Style du bouton
-        </label>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="color"
-                value={mobileConfig.buttonColor || '#841b60'}
-                onChange={(e) => updateMobileConfig('buttonColor', e.target.value)}
-                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-              />
-              <input
-                type="text"
-                value={mobileConfig.buttonColor || '#841b60'}
-                onChange={(e) => updateMobileConfig('buttonColor', e.target.value)}
-                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#841b60]"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Couleur du texte</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="color"
-                value={mobileConfig.buttonTextColor || '#ffffff'}
-                onChange={(e) => updateMobileConfig('buttonTextColor', e.target.value)}
-                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-              />
-              <input
-                type="text"
-                value={mobileConfig.buttonTextColor || '#ffffff'}
-                onChange={(e) => updateMobileConfig('buttonTextColor', e.target.value)}
-                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#841b60]"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Button Shape */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Forme du bouton
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { value: 'rounded-md', label: 'Arrondi léger' },
-            { value: 'rounded-lg', label: 'Arrondi moyen' },
-            { value: 'rounded-full', label: 'Arrondi complet' }
-          ].map((shape) => (
-            <button
-              key={shape.value}
-              onClick={() => updateMobileConfig('buttonShape', shape.value)}
-              className={`p-3 border-2 rounded-lg text-center transition-colors ${
-                mobileConfig.buttonShape === shape.value
-                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="text-sm font-medium">{shape.label}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Button Size */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Taille du bouton
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { value: 'small', label: 'Petit', classes: 'px-4 py-2 text-sm' },
-            { value: 'medium', label: 'Moyen', classes: 'px-6 py-3 text-base' },
-            { value: 'large', label: 'Grand', classes: 'px-8 py-4 text-lg' }
-          ].map((size) => (
-            <button
-              key={size.value}
-              onClick={() => updateMobileConfig('buttonSize', size.value)}
-              className={`p-3 border-2 rounded-lg text-center transition-colors ${
-                mobileConfig.buttonSize === size.value
-                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="text-sm font-medium">{size.label}</div>
-              <div className="text-xs text-gray-500 mt-1">{size.classes}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Button Shadow */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Ombre du bouton
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { value: 'none', label: 'Aucune' },
-            { value: 'shadow-md', label: 'Légère' },
-            { value: 'shadow-lg', label: 'Forte' }
-          ].map((shadow) => (
-            <button
-              key={shadow.value}
-              onClick={() => updateMobileConfig('buttonShadow', shadow.value)}
-              className={`p-3 border-2 rounded-lg text-center transition-colors ${
-                mobileConfig.buttonShadow === shadow.value
-                  ? 'border-[#841b60] bg-[#f9f0f5] text-[#841b60]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="text-sm font-medium">{shadow.label}</div>
-            </button>
-          ))}
-        </div>
-      </div>
+      <ButtonStyle
+        buttonColor={mobileConfig.buttonColor || '#841b60'}
+        buttonTextColor={mobileConfig.buttonTextColor || '#ffffff'}
+        buttonShape={mobileConfig.buttonShape || 'rounded-lg'}
+        buttonSize={mobileConfig.buttonSize || 'medium'}
+        buttonShadow={mobileConfig.buttonShadow || 'shadow-md'}
+        onButtonColorChange={(color) => updateMobileConfig('buttonColor', color)}
+        onButtonTextColorChange={(color) => updateMobileConfig('buttonTextColor', color)}
+        onButtonShapeChange={(shape) => updateMobileConfig('buttonShape', shape)}
+        onButtonSizeChange={(size) => updateMobileConfig('buttonSize', size)}
+        onButtonShadowChange={(shadow) => updateMobileConfig('buttonShadow', shadow)}
+      />
 
       {/* Button Spacing */}
       <div>
