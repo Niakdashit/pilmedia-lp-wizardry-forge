@@ -8,6 +8,7 @@ import { useQuickCampaignStore } from '../../../stores/quickCampaignStore';
 import ConstrainedContainer from './components/ConstrainedContainer';
 import { DEVICE_CONSTRAINTS } from './utils/previewConstraints';
 import { shouldUseUnlockedFunnel, shouldUseStandardFunnel } from '../../../utils/funnelMatcher';
+import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 
 interface PreviewContentProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -40,6 +41,23 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
 }) => {
   const { backgroundImageUrl, gamePosition } = useQuickCampaignStore();
   const constraints = DEVICE_CONSTRAINTS[selectedDevice];
+
+  // Size mapping for text elements
+  const sizeMap: Record<string, string> = {
+    xs: '10px',
+    sm: '12px',
+    base: '14px',
+    lg: '16px',
+    xl: '18px',
+    '2xl': '20px',
+    '3xl': '24px',
+    '4xl': '28px',
+    '5xl': '32px',
+    '6xl': '36px',
+    '7xl': '48px',
+    '8xl': '60px',
+    '9xl': '72px'
+  };
 
   // Configuration cohérente des couleurs
   const enhancedCampaign = React.useMemo(() => {
@@ -97,6 +115,10 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
     };
   }, [mockCampaign, selectedGameType, customColors, jackpotColors, backgroundImageUrl, gamePosition]);
 
+  // Extract custom elements
+  const customTexts = enhancedCampaign.design?.customTexts || [];
+  const customImages = enhancedCampaign.design?.customImages || [];
+
   const getFunnelComponent = () => {
     console.log('Selecting funnel for game type:', selectedGameType);
     
@@ -109,21 +131,41 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
     
     if (useUnlockedFunnel) {
       return (
-        <FunnelUnlockedGame
-          campaign={enhancedCampaign}
-          previewMode={selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-          modalContained={false}
-          key={`unlocked-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
-        />
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <FunnelUnlockedGame
+            campaign={enhancedCampaign}
+            previewMode={selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+            modalContained={false}
+            key={`unlocked-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
+          />
+          
+          {/* Render custom elements on top */}
+          <CustomElementsRenderer
+            customTexts={customTexts}
+            customImages={customImages}
+            previewDevice={selectedDevice}
+            sizeMap={sizeMap}
+          />
+        </div>
       );
     }
     
     if (useStandardFunnel) {
       return (
-        <FunnelStandard
-          campaign={enhancedCampaign}
-          key={`standard-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
-        />
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <FunnelStandard
+            campaign={enhancedCampaign}
+            key={`standard-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
+          />
+          
+          {/* Render custom elements on top */}
+          <CustomElementsRenderer
+            customTexts={customTexts}
+            customImages={customImages}
+            previewDevice={selectedDevice}
+            sizeMap={sizeMap}
+          />
+        </div>
       );
     }
 

@@ -6,6 +6,7 @@ import { Jackpot } from '../GameTypes';
 import ScratchPreview from '../GameTypes/ScratchPreview';
 import DicePreview from '../GameTypes/DicePreview';
 import QuizPreview from '../GameTypes/QuizPreview';
+import CustomElementsRenderer from '../ModernEditor/components/CustomElementsRenderer';
 
 interface GameCanvasPreviewProps {
   campaign: any;
@@ -26,6 +27,27 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 }) => {
   const resolvedBackground =
     gameBackgroundImage || getCampaignBackgroundImage(campaign, previewDevice);
+
+  // Size mapping for text elements
+  const sizeMap: Record<string, string> = {
+    xs: '10px',
+    sm: '12px',
+    base: '14px',
+    lg: '16px',
+    xl: '18px',
+    '2xl': '20px',
+    '3xl': '24px',
+    '4xl': '28px',
+    '5xl': '32px',
+    '6xl': '36px',
+    '7xl': '48px',
+    '8xl': '60px',
+    '9xl': '72px'
+  };
+
+  // Extract custom elements
+  const customTexts = campaign.design?.customTexts || [];
+  const customImages = campaign.design?.customImages || [];
 
   const getContainerStyle = (): React.CSSProperties => {
     return {
@@ -177,6 +199,14 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       }}>
         {renderPreviewGame()}
       </div>
+
+      {/* Render custom elements on top */}
+      <CustomElementsRenderer
+        customTexts={customTexts}
+        customImages={customImages}
+        previewDevice={previewDevice}
+        sizeMap={sizeMap}
+      />
     </div>
   );
 };
