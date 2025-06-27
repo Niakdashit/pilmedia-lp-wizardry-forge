@@ -1,49 +1,35 @@
 
 import React from 'react';
 import Modal from '../../common/Modal';
-import DynamicContactForm from '../../forms/DynamicContactForm';
-import { FieldConfig as DynamicFormFieldConfig } from '../../forms/DynamicContactForm';
-
-interface FieldConfig {
-  id: string;
-  label: string;
-  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'radio';
-  required?: boolean;
-  options?: string[];
-}
+import DynamicContactForm, { FieldConfig } from '../../forms/DynamicContactForm';
 
 interface FormHandlerProps {
   showFormModal: boolean;
+  onClose: () => void;
   campaign: any;
   fields: FieldConfig[];
   participationLoading: boolean;
-  modalContained: boolean;
-  onClose: () => void;
-  onSubmit: (formData: Record<string, string>) => void;
+  modalContained?: boolean;
+  onSubmit: (formData: Record<string, string>) => Promise<void>;
 }
 
 const FormHandler: React.FC<FormHandlerProps> = ({
   showFormModal,
+  onClose,
   campaign,
   fields,
   participationLoading,
-  modalContained,
-  onClose,
+  modalContained = true,
   onSubmit
 }) => {
   if (!showFormModal) return null;
 
-  // Convertir les fields vers le format attendu par DynamicContactForm
-  // Exclure le type 'radio' qui n'est pas supporté
-  const convertedFields: DynamicFormFieldConfig[] = fields
-    .filter(field => field.type !== 'radio') // Filtrer les champs radio non supportés
-    .map(field => ({
-      id: field.id,
-      label: field.label,
-      type: field.type as 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox',
-      required: field.required,
-      options: field.options
-    }));
+  // Récupérer les couleurs de design de la campagne
+  const design = campaign.design || {};
+  const customColors = design.customColors || {};
+  const buttonColor = customColors.primary || design.buttonColor || "#841b60";
+  const borderColor = customColors.primary || design.borderColor || "#E5E7EB";
+  const focusColor = buttonColor;
 
   return (
     <Modal
@@ -52,13 +38,26 @@ const FormHandler: React.FC<FormHandlerProps> = ({
       contained={modalContained}
     >
       <DynamicContactForm
-        fields={convertedFields}
+        fields={fields}
         submitLabel={participationLoading ? 'Chargement...' : campaign.screens?.[1]?.buttonText || "C'est parti !"}
         onSubmit={onSubmit}
         textStyles={{
-          label: campaign.design.textStyles?.label,
-          button: campaign.design.textStyles?.button
+          label: {
+            color: design.textStyles?.label?.color || '#374151',
+            fontFamily: design.fontFamily || 'inherit',
+            ...design.textStyles?.label
+          },
+          button: {
+            backgroundColor: buttonColor,
+            color: '#ffffff',
+            borderRadius: design.borderRadius || '8px',
+            fontFamily: design.fontFamily || 'inherit',
+            fontWeight: '600',
+            ...design.textStyles?.button
+          }
         }}
+        inputBorderColor={borderColor}
+        inputFocusColor={focusColor}
       />
     </Modal>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
@@ -146,7 +145,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         onGameButtonClick={handleGameButtonClick} 
       />
 
-      {/* Modal de formulaire pour tous les jeux unlocked */}
+      {/* Modal de formulaire pour tous les jeux unlocked - avec styles appliqués */}
       <FormHandler
         showFormModal={showFormModal}
         campaign={campaign}

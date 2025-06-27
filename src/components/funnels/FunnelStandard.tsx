@@ -29,6 +29,13 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
     ? campaign.formFields 
     : DEFAULT_FIELDS;
 
+  // Récupérer les couleurs de design de la campagne
+  const design = campaign.design || {};
+  const customColors = design.customColors || {};
+  const buttonColor = customColors.primary || design.buttonColor || "#841b60";
+  const borderColor = customColors.primary || design.borderColor || "#E5E7EB";
+  const focusColor = buttonColor;
+
   const getContrastColor = (bgColor: string) => {
     try {
       const color = Color(bgColor);
@@ -113,10 +120,10 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
             onClick={handleStart}
             className="px-8 py-3 font-medium transition-colors duration-200 hover:opacity-90"
             style={{
-              backgroundColor: campaign.design.buttonColor,
+              backgroundColor: buttonColor,
               borderRadius: campaign.design.borderRadius,
               ...campaign.design.textStyles?.button,
-              color: campaign.design.textStyles?.button?.color || getContrastColor(campaign.design.buttonColor)
+              color: campaign.design.textStyles?.button?.color || getContrastColor(buttonColor)
             }}
           >
             {campaign.screens[0]?.buttonText || 'Participate'}
@@ -132,7 +139,7 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
               className="p-8 rounded-2xl shadow-xl border-2"
               style={{
                 backgroundColor: '#ffffff',
-                borderColor: '#e5e7eb'
+                borderColor: borderColor
               }}
             >
               <h2
@@ -148,9 +155,22 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
                 submitLabel={participationLoading ? "Chargement..." : (campaign.screens[1]?.buttonText || "Continuer")}
                 onSubmit={handleFormSubmit}
                 textStyles={{
-                  label: campaign.design.textStyles?.label,
-                  button: campaign.design.textStyles?.button
+                  label: {
+                    color: design.textStyles?.label?.color || '#374151',
+                    fontFamily: design.fontFamily || 'inherit',
+                    ...design.textStyles?.label
+                  },
+                  button: {
+                    backgroundColor: buttonColor,
+                    color: '#ffffff',
+                    borderRadius: design.borderRadius || '8px',
+                    fontFamily: design.fontFamily || 'inherit',
+                    fontWeight: '600',
+                    ...design.textStyles?.button
+                  }
                 }}
+                inputBorderColor={borderColor}
+                inputFocusColor={focusColor}
               />
             </div>
           ) : (
@@ -168,9 +188,22 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
                 submitLabel={participationLoading ? "Chargement..." : (campaign.screens[1]?.buttonText || "Continuer")}
                 onSubmit={handleFormSubmit}
                 textStyles={{
-                  label: campaign.design.textStyles?.label,
-                  button: campaign.design.textStyles?.button
+                  label: {
+                    color: design.textStyles?.label?.color || '#374151',
+                    fontFamily: design.fontFamily || 'inherit',
+                    ...design.textStyles?.label
+                  },
+                  button: {
+                    backgroundColor: buttonColor,
+                    color: '#ffffff',
+                    borderRadius: design.borderRadius || '8px',
+                    fontFamily: design.fontFamily || 'inherit',
+                    fontWeight: '600',
+                    ...design.textStyles?.button
+                  }
                 }}
+                inputBorderColor={borderColor}
+                inputFocusColor={focusColor}
               />
             </div>
           )}
@@ -185,8 +218,8 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
             onClick={handleEnd}
             className="px-6 py-3 transition-colors duration-200 hover:opacity-90"
             style={{
-              backgroundColor: campaign.design.buttonColor,
-              color: campaign.design.textStyles?.button?.color || getContrastColor(campaign.design.buttonColor),
+              backgroundColor: buttonColor,
+              color: campaign.design.textStyles?.button?.color || getContrastColor(buttonColor),
               borderRadius: campaign.design.borderRadius,
               ...campaign.design.textStyles?.button
             }}
@@ -220,8 +253,8 @@ const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
             onClick={() => setStep('start')}
             className="px-6 py-3 font-medium transition-colors duration-200 hover:opacity-90"
             style={{
-              backgroundColor: campaign.design.buttonColor,
-              color: campaign.design.textStyles?.button?.color || getContrastColor(campaign.design.buttonColor),
+              backgroundColor: buttonColor,
+              color: campaign.design.textStyles?.button?.color || getContrastColor(buttonColor),
               borderRadius: campaign.design.borderRadius,
               ...campaign.design.textStyles?.button
             }}
