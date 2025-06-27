@@ -1,15 +1,18 @@
+
 import React from 'react';
-import ModernGeneralTab from './ModernGeneralTab';
 import ModernGameTab from './ModernGameTab';
-import ModernGameConfigTab from './ModernGameConfigTab';
-import ModernDesignTab from './ModernDesignTab';
+import ModernAppearanceTab from './ModernAppearanceTab';
+import ModernContentTab from './ModernContentTab';
 import ModernFormTab from './ModernFormTab';
 import ModernMobileTab from './ModernMobileTab';
+import ModernSettingsTab from './ModernSettingsTab';
+
 interface ModernEditorPanelProps {
   activeStep: string;
   campaign: any;
   setCampaign: (updater: (prev: any) => any) => void;
 }
+
 const ModernEditorPanel: React.FC<ModernEditorPanelProps> = ({
   activeStep,
   campaign,
@@ -38,6 +41,7 @@ const ModernEditorPanel: React.FC<ModernEditorPanelProps> = ({
       });
     }
   };
+
   const safeCampaign = campaign || {
     design: {},
     type: 'wheel',
@@ -45,39 +49,35 @@ const ModernEditorPanel: React.FC<ModernEditorPanelProps> = ({
     buttonConfig: {},
     gameConfig: {}
   };
+
   const renderContent = () => {
     switch (activeStep) {
-      case 'general':
-        return <ModernGeneralTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       case 'game':
         return <ModernGameTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
-      case 'gameconfig':
-        return <ModernGameConfigTab gameSize={safeCampaign.gameSize || 'medium'} gamePosition={safeCampaign.gamePosition || 'center'} onGameSizeChange={size => safeSetCampaign((prev: any) => ({
-          ...prev,
-          gameSize: size
-        }))} onGamePositionChange={position => safeSetCampaign((prev: any) => ({
-          ...prev,
-          gamePosition: position
-        }))} buttonConfig={safeCampaign.buttonConfig || {}} onButtonConfigChange={config => safeSetCampaign((prev: any) => ({
-          ...prev,
-          buttonConfig: config
-        }))} />;
-      case 'design':
-        return <ModernDesignTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
+      case 'appearance':
+        return <ModernAppearanceTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
+      case 'content':
+        return <ModernContentTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       case 'form':
         return <ModernFormTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       case 'mobile':
         return <ModernMobileTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
+      case 'settings':
+        return <ModernSettingsTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       default:
         return <div className="p-4 text-center text-gray-500">
             Sélectionnez un onglet pour commencer
           </div>;
     }
   };
-  return <div className="h-full overflow-y-auto">
+
+  return (
+    <div className="h-full overflow-y-auto">
       <div className="p-2 px-[10px]">
         {renderContent()}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ModernEditorPanel;

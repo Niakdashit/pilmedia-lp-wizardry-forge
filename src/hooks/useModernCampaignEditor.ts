@@ -14,7 +14,7 @@ export const useModernCampaignEditor = () => {
   const isNewCampaign = id === 'new';
   const campaignType = searchParams.get('type') as CampaignType || 'wheel';
   
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState('game'); // Changed from 'general' to 'game'
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isLoading, setIsLoading] = useState(false);
