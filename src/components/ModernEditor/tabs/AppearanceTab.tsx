@@ -21,13 +21,24 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
   ];
 
   const updateDesign = (updates: any) => {
-    setCampaign((prev: any) => ({
-      ...prev,
-      design: {
-        ...prev.design,
-        ...updates
+    setCampaign((prev: any) => {
+      const newCampaign = {
+        ...prev,
+        design: {
+          ...prev.design,
+          ...updates
+        }
+      };
+      
+      // Force un re-render pour la synchronisation
+      newCampaign._lastUpdate = Date.now();
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('AppearanceTab - Mise à jour design:', updates);
       }
-    }));
+      
+      return newCampaign;
+    });
   };
 
   const colorPresets = [
@@ -39,17 +50,17 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 space-y-4 h-full overflow-y-auto">
       {/* Titre et description */}
       <div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Apparence et style</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Apparence et style</h3>
+        <p className="text-xs text-gray-600">
           Personnalisez l'apparence visuelle de votre campagne
         </p>
       </div>
 
       {/* Sous-onglets */}
-      <div className="bg-gray-50 p-1 rounded-xl">
+      <div className="bg-gray-50 p-1 rounded-lg">
         <nav className="flex space-x-1">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
@@ -57,13 +68,13 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id as any)}
-                className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center space-x-1 py-2 px-2 rounded-md font-medium text-xs transition-all duration-200 ${
                   activeSubTab === tab.id
                     ? 'bg-white text-[#841b60] shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3 h-3" />
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             );
@@ -72,18 +83,18 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
       </div>
 
       {/* Contenu des sous-onglets */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 flex-1">
         {activeSubTab === 'colors' && (
-          <div className="space-y-6">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <Palette className="w-5 h-5 text-[#841b60] mr-2" />
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900 flex items-center text-sm">
+              <Palette className="w-4 h-4 text-[#841b60] mr-2" />
               Palette de couleurs
             </h4>
 
             {/* Couleurs actuelles */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Couleur primaire</label>
+                <label className="text-xs font-medium text-gray-700">Couleur primaire</label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="color"
@@ -94,7 +105,7 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         primary: e.target.value
                       }
                     })}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                    className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
                   />
                   <input
                     type="text"
@@ -105,13 +116,13 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         primary: e.target.value
                       }
                     })}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                    className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Couleur secondaire</label>
+                <label className="text-xs font-medium text-gray-700">Couleur secondaire</label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="color"
@@ -122,7 +133,7 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         secondary: e.target.value
                       }
                     })}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                    className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
                   />
                   <input
                     type="text"
@@ -133,13 +144,13 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         secondary: e.target.value
                       }
                     })}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                    className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Couleur d'accent</label>
+                <label className="text-xs font-medium text-gray-700">Couleur d'accent</label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="color"
@@ -150,7 +161,7 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         accent: e.target.value
                       }
                     })}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                    className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
                   />
                   <input
                     type="text"
@@ -161,16 +172,16 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         accent: e.target.value
                       }
                     })}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                    className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                   />
                 </div>
               </div>
             </div>
 
             {/* Presets de couleurs */}
-            <div className="space-y-3">
-              <h5 className="font-medium text-gray-900">Palettes prédéfinies</h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <h5 className="font-medium text-gray-900 text-sm">Palettes prédéfinies</h5>
+              <div className="grid grid-cols-1 gap-2">
                 {colorPresets.map((preset) => (
                   <button
                     key={preset.name}
@@ -181,14 +192,14 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
                         accent: preset.accent
                       }
                     })}
-                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#841b60] hover:shadow-sm transition-all"
+                    className="flex items-center space-x-2 p-2 border border-gray-200 rounded-md hover:border-[#841b60] hover:shadow-sm transition-all"
                   >
                     <div className="flex space-x-1">
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primary }}></div>
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.secondary }}></div>
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.accent }}></div>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: preset.primary }}></div>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: preset.secondary }}></div>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: preset.accent }}></div>
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{preset.name}</span>
+                    <span className="text-xs font-medium text-gray-700">{preset.name}</span>
                   </button>
                 ))}
               </div>
@@ -197,40 +208,40 @@ const AppearanceTab: React.FC<AppearanceTabProps> = ({
         )}
 
         {activeSubTab === 'themes' && (
-          <div className="space-y-6">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <Brush className="w-5 h-5 text-[#841b60] mr-2" />
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900 flex items-center text-sm">
+              <Brush className="w-4 h-4 text-[#841b60] mr-2" />
               Thèmes prédéfinis
             </h4>
-            <div className="text-center py-8 text-gray-500">
-              <Brush className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Thèmes prédéfinis à venir</p>
+            <div className="text-center py-6 text-gray-500">
+              <Brush className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <p className="text-xs">Thèmes prédéfinis à venir</p>
             </div>
           </div>
         )}
 
         {activeSubTab === 'backgrounds' && (
-          <div className="space-y-6">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <ImageIcon className="w-5 h-5 text-[#841b60] mr-2" />
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900 flex items-center text-sm">
+              <ImageIcon className="w-4 h-4 text-[#841b60] mr-2" />
               Arrière-plans
             </h4>
-            <div className="text-center py-8 text-gray-500">
-              <ImageIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Gestion des arrière-plans à venir</p>
+            <div className="text-center py-6 text-gray-500">
+              <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <p className="text-xs">Gestion des arrière-plans à venir</p>
             </div>
           </div>
         )}
 
         {activeSubTab === 'effects' && (
-          <div className="space-y-6">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <Sparkles className="w-5 h-5 text-[#841b60] mr-2" />
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900 flex items-center text-sm">
+              <Sparkles className="w-4 h-4 text-[#841b60] mr-2" />
               Effets et animations
             </h4>
-            <div className="text-center py-8 text-gray-500">
-              <Sparkles className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Effets visuels à venir</p>
+            <div className="text-center py-6 text-gray-500">
+              <Sparkles className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <p className="text-xs">Effets visuels à venir</p>
             </div>
           </div>
         )}

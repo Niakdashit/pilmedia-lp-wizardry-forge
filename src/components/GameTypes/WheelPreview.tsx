@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SmartWheel } from '../SmartWheel';
+import SmartWheelWrapper from '../SmartWheel/components/SmartWheelWrapper';
 import { useGameSize } from '../../hooks/useGameSize';
 
 interface WheelPreviewProps {
@@ -32,60 +32,58 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const gameDimensions = getGameDimensions();
 
   // Récupérer les segments depuis la configuration de la campagne
-  const segments = campaign.gameConfig?.wheel?.segments || 
-                  campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: '#ff6b6b' },
-    { id: '2', label: 'Prix 2', color: '#4ecdc4' },
-    { id: '3', label: 'Prix 3', color: '#45b7d1' },
-    { id: '4', label: 'Dommage', color: '#feca57' }
-  ];
-
-  // Convertir les segments au format SmartWheel
-  const smartWheelSegments = segments.map((segment: any, index: number) => ({
-    id: segment.id || index.toString(),
-    label: segment.label,
-    color: segment.color,
-    textColor: segment.textColor || '#ffffff'
-  }));
+  const segments = React.useMemo(() => {
+    return campaign.gameConfig?.wheel?.segments || 
+           campaign.config?.roulette?.segments || [];
+  }, [campaign.gameConfig?.wheel?.segments, campaign.config?.roulette?.segments, campaign._lastUpdate]);
 
   // Couleurs de marque depuis la campagne
-  const brandColors = {
-    primary: campaign.design?.customColors?.primary || '#841b60',
-    secondary: campaign.design?.customColors?.secondary || '#4ecdc4',
-    accent: campaign.design?.customColors?.accent || '#45b7d1'
-  };
+  const brandColors = React.useMemo(() => {
+    return {
+      primary: campaign.design?.customColors?.primary || '#841b60',
+      secondary: campaign.design?.customColors?.secondary || '#4ecdc4',
+      accent: campaign.design?.customColors?.accent || '#45b7d1'
+    };
+  }, [campaign.design?.customColors, campaign._lastUpdate]);
 
   const wheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
 
-  const handleResult = () => {
+  const handleResult = React.useCallback(() => {
     if (onFinish) {
       // Logique de win/lose basée sur la probabilité configurée
       const isWin = Math.random() < config.winProbability;
       onFinish(isWin ? 'win' : 'lose');
     }
-  };
+  }, [onFinish, config.winProbability]);
 
-  const handleSpin = () => {
+  const handleSpin = React.useCallback(() => {
     if (onStart) {
       onStart();
     }
-  };
+  }, [onStart]);
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('WheelPreview render:', {
+      segments: segments.length,
+      brandColors,
+      wheelSize,
+      lastUpdate: campaign._lastUpdate
+    });
+  }
 
   return (
     <div className="flex justify-center items-center w-full h-full">
-      <SmartWheel
-        segments={smartWheelSegments}
-        theme="modern"
+      <SmartWheelWrapper
+        campaign={campaign}
+        segments={segments}
         size={wheelSize}
+        gameSize={gameSize}
         brandColors={brandColors}
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
-        customButton={{
-          text: campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
-          color: brandColors.primary,
-          textColor: '#ffffff'
-        }}
+        buttonLabel={campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner'}
+        lastUpdate={campaign._lastUpdate}
       />
     </div>
   );

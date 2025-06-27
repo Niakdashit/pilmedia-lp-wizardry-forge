@@ -24,29 +24,41 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
   ];
 
   const handleGameSizeChange = (size: GameSize) => {
-    setCampaign((prev: any) => ({ ...prev, gameSize: size }));
+    setCampaign((prev: any) => {
+      const newCampaign = { ...prev, gameSize: size };
+      newCampaign._lastUpdate = Date.now();
+      return newCampaign;
+    });
   };
 
   const handleGamePositionChange = (position: GamePosition) => {
-    setCampaign((prev: any) => ({ ...prev, gamePosition: position }));
+    setCampaign((prev: any) => {
+      const newCampaign = { ...prev, gamePosition: position };
+      newCampaign._lastUpdate = Date.now();
+      return newCampaign;
+    });
   };
 
   const handleButtonConfigChange = (config: any) => {
-    setCampaign((prev: any) => ({ ...prev, buttonConfig: config }));
+    setCampaign((prev: any) => {
+      const newCampaign = { ...prev, buttonConfig: config };
+      newCampaign._lastUpdate = Date.now();
+      return newCampaign;
+    });
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 space-y-4 h-full overflow-y-auto">
       {/* Titre et description */}
       <div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Placement et responsive</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Placement et responsive</h3>
+        <p className="text-xs text-gray-600">
           Configurez la taille, la position et l'adaptation responsive de votre jeu
         </p>
       </div>
 
-      {/* Sous-onglets avec design amélioré */}
-      <div className="bg-gray-50 p-1 rounded-xl">
+      {/* Sous-onglets */}
+      <div className="bg-gray-50 p-1 rounded-lg">
         <nav className="flex space-x-1">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
@@ -54,13 +66,13 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id as any)}
-                className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center space-x-1 py-2 px-2 rounded-md font-medium text-xs transition-all duration-200 ${
                   activeSubTab === tab.id
                     ? 'bg-white text-[#841b60] shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3 h-3" />
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             );
@@ -69,12 +81,12 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
       </div>
 
       {/* Contenu des sous-onglets */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 flex-1">
         {activeSubTab === 'size' && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Maximize2 className="w-5 h-5 text-[#841b60]" />
-              <h4 className="font-medium text-gray-900">Taille du jeu</h4>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 mb-3">
+              <Maximize2 className="w-4 h-4 text-[#841b60]" />
+              <h4 className="font-medium text-gray-900 text-sm">Taille du jeu</h4>
             </div>
             <GameSizeSelector
               selectedSize={campaign.gameSize || 'medium'}
@@ -84,10 +96,10 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
         )}
         
         {activeSubTab === 'position' && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Navigation className="w-5 h-5 text-[#841b60]" />
-              <h4 className="font-medium text-gray-900">Position du jeu</h4>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 mb-3">
+              <Navigation className="w-4 h-4 text-[#841b60]" />
+              <h4 className="font-medium text-gray-900 text-sm">Position du jeu</h4>
             </div>
             <GamePositionSelector
               selectedPosition={campaign.gamePosition || 'center'}
@@ -97,10 +109,10 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
         )}
 
         {activeSubTab === 'buttons' && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <MousePointer className="w-5 h-5 text-[#841b60]" />
-              <h4 className="font-medium text-gray-900">Configuration des boutons</h4>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 mb-3">
+              <MousePointer className="w-4 h-4 text-[#841b60]" />
+              <h4 className="font-medium text-gray-900 text-sm">Configuration des boutons</h4>
             </div>
             <ButtonConfigTab
               buttonConfig={campaign.buttonConfig || {}}
@@ -110,39 +122,39 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
         )}
 
         {activeSubTab === 'responsive' && (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <Eye className="w-5 h-5 text-[#841b60]" />
-              <h4 className="font-medium text-gray-900">Adaptation responsive</h4>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <Eye className="w-4 h-4 text-[#841b60]" />
+              <h4 className="font-medium text-gray-900 text-sm">Adaptation responsive</h4>
             </div>
 
             {/* Preview des différentes tailles d'écran */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Monitor className="w-8 h-8 mx-auto text-gray-600 mb-2" />
-                <h5 className="font-medium text-gray-900 mb-1">Desktop</h5>
-                <p className="text-sm text-gray-500">≥ 1024px</p>
-                <div className="mt-3 text-xs text-gray-600">
+            <div className="grid grid-cols-1 gap-3">
+              <div className="text-center p-3 border border-gray-200 rounded-md">
+                <Monitor className="w-6 h-6 mx-auto text-gray-600 mb-2" />
+                <h5 className="font-medium text-gray-900 mb-1 text-sm">Desktop</h5>
+                <p className="text-xs text-gray-500">≥ 1024px</p>
+                <div className="mt-2 text-xs text-gray-600">
                   Taille: {campaign.gameSize || 'medium'}<br />
                   Position: {campaign.gamePosition || 'center'}
                 </div>
               </div>
 
-              <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Tablet className="w-8 h-8 mx-auto text-gray-600 mb-2" />
-                <h5 className="font-medium text-gray-900 mb-1">Tablette</h5>
-                <p className="text-sm text-gray-500">768px - 1023px</p>
-                <div className="mt-3 text-xs text-gray-600">
+              <div className="text-center p-3 border border-gray-200 rounded-md">
+                <Tablet className="w-6 h-6 mx-auto text-gray-600 mb-2" />
+                <h5 className="font-medium text-gray-900 mb-1 text-sm">Tablette</h5>
+                <p className="text-xs text-gray-500">768px - 1023px</p>
+                <div className="mt-2 text-xs text-gray-600">
                   Auto-adapté<br />
                   Centré automatiquement
                 </div>
               </div>
 
-              <div className="text-center p-4 border border-gray-200 rounded-lg">
-                <Smartphone className="w-8 h-8 mx-auto text-gray-600 mb-2" />
-                <h5 className="font-medium text-gray-900 mb-1">Mobile</h5>
-                <p className="text-sm text-gray-500">≤ 767px</p>
-                <div className="mt-3 text-xs text-gray-600">
+              <div className="text-center p-3 border border-gray-200 rounded-md">
+                <Smartphone className="w-6 h-6 mx-auto text-gray-600 mb-2" />
+                <h5 className="font-medium text-gray-900 mb-1 text-sm">Mobile</h5>
+                <p className="text-xs text-gray-500">≤ 767px</p>
+                <div className="mt-2 text-xs text-gray-600">
                   Optimisé mobile<br />
                   Pleine largeur
                 </div>
@@ -150,9 +162,9 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
             </div>
 
             {/* Options responsive avancées */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h5 className="font-medium text-blue-900 mb-2">Optimisations automatiques</h5>
-              <ul className="text-sm text-blue-700 space-y-1">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <h5 className="font-medium text-blue-900 mb-2 text-sm">Optimisations automatiques</h5>
+              <ul className="text-xs text-blue-700 space-y-1">
                 <li>• Adaptation automatique de la taille sur mobile</li>
                 <li>• Centrage intelligent sur tablette</li>
                 <li>• Maintien des proportions sur tous les écrans</li>
@@ -164,9 +176,9 @@ const PlacementTab: React.FC<PlacementTabProps> = ({
       </div>
 
       {/* Conseils et astuces */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-        <h5 className="font-medium text-purple-900 mb-2">💡 Conseils de placement</h5>
-        <div className="text-sm text-purple-700 space-y-1">
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-md p-3">
+        <h5 className="font-medium text-purple-900 mb-2 text-sm">💡 Conseils de placement</h5>
+        <div className="text-xs text-purple-700 space-y-1">
           <p>• <strong>Taille moyenne</strong> : Idéale pour la plupart des cas</p>
           <p>• <strong>Position centrale</strong> : Attire l'attention optimale</p>
           <p>• <strong>Boutons contrastés</strong> : Améliore la conversion</p>
