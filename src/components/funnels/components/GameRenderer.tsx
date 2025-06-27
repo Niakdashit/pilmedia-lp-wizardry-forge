@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
@@ -55,14 +56,19 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const baseMinHeight = Math.max(GAME_SIZES[gameSize].height + 100, 400);
 
   const handleGameComplete = (result: 'win' | 'lose') => {
+    console.log('Game completed with result:', result);
     onGameFinish(result);
   };
 
   const handleGameStartInternal = () => {
+    console.log('Game started');
     onGameStart();
   };
 
   const renderGameComponent = () => {
+    console.log('Rendering game component for type:', campaign.type);
+    console.log('Form validated:', formValidated);
+    
     switch (campaign.type) {
       case 'wheel':
         return (
@@ -142,7 +148,13 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           />
         );
       default:
-        return <div className="text-center text-gray-500">Jeu non supporté: {campaign.type}</div>;
+        console.warn('Unsupported game type:', campaign.type);
+        return (
+          <div className="text-center text-gray-500 bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h3 className="font-semibold mb-2">Jeu non supporté</h3>
+            <p className="text-sm">Le type "{campaign.type}" n'est pas encore implémenté dans ce funnel.</p>
+          </div>
+        );
     }
   };
 
@@ -186,6 +198,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       {!formValidated && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
         <div 
           onClick={() => {
+            console.log('Game overlay clicked - triggering form');
             onGameButtonClick();
           }}
           className="absolute inset-0 flex items-center justify-center z-30 rounded-lg cursor-pointer bg-black/0" 

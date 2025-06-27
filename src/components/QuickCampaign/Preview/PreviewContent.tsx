@@ -7,6 +7,7 @@ import CampaignPreviewFrame from './CampaignPreviewFrame';
 import { useQuickCampaignStore } from '../../../stores/quickCampaignStore';
 import ConstrainedContainer from './components/ConstrainedContainer';
 import { DEVICE_CONSTRAINTS } from './utils/previewConstraints';
+import { shouldUseUnlockedFunnel, shouldUseStandardFunnel } from '../../../utils/funnelMatcher';
 
 interface PreviewContentProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -38,7 +39,6 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
   jackpotColors
 }) => {
   const { backgroundImageUrl, gamePosition } = useQuickCampaignStore();
-  const unlockedTypes = ['wheel', 'scratch', 'jackpot', 'dice'];
   const constraints = DEVICE_CONSTRAINTS[selectedDevice];
 
   // Configuration cohérente des couleurs
@@ -98,24 +98,47 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
   }, [mockCampaign, selectedGameType, customColors, jackpotColors, backgroundImageUrl, gamePosition]);
 
   const getFunnelComponent = () => {
-    const funnel = enhancedCampaign.funnel || (unlockedTypes.includes(selectedGameType) ? 'unlocked_game' : 'standard');
+    console.log('Selecting funnel for game type:', selectedGameType);
     
-    if (funnel === 'unlocked_game') {
+    // Utiliser le système funnelMatcher pour déterminer le bon funnel
+    const useUnlockedFunnel = shouldUseUnlockedFunnel(selectedGameType);
+    const useStandardFunnel = shouldUseStandardFunnel(selectedGameType);
+    
+    console.log('Should use unlocked funnel:', useUnlockedFunnel);
+    console.log('Should use standard funnel:', useStandardFunnel);
+    
+    if (useUnlockedFunnel) {
       return (
         <FunnelUnlockedGame
           campaign={enhancedCampaign}
           previewMode={selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
           modalContained={false}
-          key={`funnel-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
+          key={`unlocked-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
         />
       );
     }
     
+    if (useStandardFunnel) {
+      return (
+        <FunnelStandard
+          campaign={enhancedCampaign}
+          key={`standard-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
+        />
+      );
+    }
+
+    // Fallback pour types non reconnus
+    console.warn(`Type de jeu "${selectedGameType}" non reconnu par le système de funnels`);
     return (
-      <FunnelStandard
-        campaign={enhancedCampaign}
-        key={`standard-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
-      />
+      <div className="flex items-center justify-center w-full h-full">
+        <div className="text-center text-red-500 bg-red-50 p-6 rounded-lg border border-red-200">
+          <h3 className="font-semibold mb-2">Type de jeu non supporté</h3>
+          <p className="text-sm">Le type "{selectedGameType}" n'est pas configuré pour utiliser un funnel.</p>
+          <p className="text-xs mt-2 text-gray-600">
+            Types supportés: wheel, scratch, jackpot, dice (unlocked) | form, quiz, memory, puzzle (standard)
+          </p>
+        </div>
+      </div>
     );
   };
 
