@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
+import React from 'react';
 import ModernEditorSidebar from './ModernEditorSidebar';
 import ModernEditorPanel from './ModernEditorPanel';
-import AIAssistantSidebar from './AIAssistantSidebar';
+import OptimizedPreviewCanvas from './components/OptimizedPreviewCanvas';
 import EditorHeader from './components/EditorHeader';
-import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
+import PreviewDeviceButtons from './components/PreviewDeviceButtons';
+
 interface ModernEditorLayoutProps {
   campaign: any;
   setCampaign: (updater: (prev: any) => any) => void;
@@ -19,6 +20,7 @@ interface ModernEditorLayoutProps {
   isNewCampaign: boolean;
   gameTypeLabels: Record<string, string>;
 }
+
 const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
   campaign,
   setCampaign,
@@ -29,79 +31,75 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
   onSave,
   onPreview,
   isLoading,
+  campaignType,
   isNewCampaign,
-  campaignType
+  gameTypeLabels
 }) => {
-  const [showAIAssistant] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const handleAIGenerate = async () => {
-    setIsGenerating(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsGenerating(false);
-  };
-  return <div className="flex flex-col min-w-0 h-screen">
+  return (
+    <div className="w-full h-screen bg-[#ebf4f7] flex flex-col overflow-hidden">
       {/* Header */}
-      <EditorHeader campaign={campaign} onSave={onSave} onPreview={onPreview} isLoading={isLoading} isNewCampaign={isNewCampaign} selectedDevice={previewDevice} onDeviceChange={onDeviceChange} />
+      <EditorHeader
+        campaign={campaign}
+        onSave={onSave}
+        onPreview={onPreview}
+        isLoading={isLoading}
+        campaignType={campaignType}
+        isNewCampaign={isNewCampaign}
+        gameTypeLabels={gameTypeLabels}
+      />
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Editor Sidebar - largeur réduite de 280px à 260px */}
-        <div className="w-[390px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
-          <div className="flex h-full">
-            {/* Navigation tabs - alignés à gauche */}
-            <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
-              <ModernEditorSidebar activeTab={activeTab} onTabChange={onTabChange} campaignType={campaignType as any} />
-            </div>
-
-            {/* Panel content - prend le reste de l'espace du sidebar */}
-            <div className="flex-1 overflow-y-auto">
-              <ModernEditorPanel activeStep={activeTab} campaign={campaign} setCampaign={setCampaign} />
-            </div>
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Configuration Panel */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          {/* Sidebar Navigation */}
+          <div className="w-20 bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200">
+            <ModernEditorSidebar
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              campaignType={campaignType as any}
+            />
+          </div>
+          
+          {/* Configuration Panel */}
+          <div className="flex-1 overflow-hidden">
+            <ModernEditorPanel
+              activeStep={activeTab}
+              campaign={campaign}
+              setCampaign={setCampaign}
+            />
           </div>
         </div>
 
-        {/* Zone centrale - dimensions optimisées pour l'aperçu */}
-        <div className="flex-1 flex flex-col min-w-0 bg-gray-50/50">
-          {/* Barre d'outils centrée */}
-          <div className="bg-white/50 border-b border-gray-200/50 px-4 py-2 flex-shrink-0">
-            <div className="flex justify-center items-center">
-              <h2 className="text-sm font-medium text-gray-600">
-                Aperçu en temps réel
-              </h2>
+        {/* Preview Section */}
+        <div className="flex-1 flex flex-col bg-white">
+          {/* Preview Header */}
+          <div className="h-16 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Aperçu en temps réel</h3>
+              <p className="text-sm text-gray-600">
+                {campaign?.name || 'Campagne sans nom'} • {gameTypeLabels[campaignType] || campaignType}
+              </p>
             </div>
+            
+            <PreviewDeviceButtons
+              selectedDevice={previewDevice}
+              onDeviceChange={onDeviceChange}
+            />
           </div>
 
-          {/* Zone de prévisualisation - dimensions dynamiques */}
-          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden flex-shrink-0" style={{
-            width: previewDevice === 'mobile' ? '400px' : previewDevice === 'tablet' ? '800px' : '100%',
-            height: previewDevice === 'mobile' ? '700px' : previewDevice === 'tablet' ? '600px' : '100%',
-            maxWidth: '1400px',
-            maxHeight: '900px'
-          }}>
-              <GameCanvasPreview campaign={campaign} gameSize={campaign.gameSize || 'medium'} previewDevice={previewDevice} className="w-full h-full" key={`preview-${activeTab}-${JSON.stringify(campaign.gameConfig)}-${previewDevice}`} />
-            </div>
+          {/* Preview Canvas */}
+          <div className="flex-1 relative overflow-hidden">
+            <OptimizedPreviewCanvas
+              campaign={campaign}
+              selectedDevice={previewDevice}
+              className="w-full h-full"
+            />
           </div>
-
-          {/* AI Assistant Sidebar - positionné absolument */}
-          <AnimatePresence>
-            {showAIAssistant && <motion.div initial={{
-            opacity: 0,
-            x: 300
-          }} animate={{
-            opacity: 1,
-            x: 0
-          }} exit={{
-            opacity: 0,
-            x: 300
-          }} transition={{
-            duration: 0.3
-          }} className="absolute top-4 right-4 w-80 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 p-6 z-10">
-                <AIAssistantSidebar campaign={campaign} setCampaign={setCampaign} isGenerating={isGenerating} onGenerate={handleAIGenerate} />
-              </motion.div>}
-          </AnimatePresence>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ModernEditorLayout;
