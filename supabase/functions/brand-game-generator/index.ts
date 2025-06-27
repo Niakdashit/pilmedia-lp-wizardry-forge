@@ -67,7 +67,7 @@ async function extractBrandData(url: string): Promise<BrandData> {
 
   console.log('ScrapingBee API Key configured:', scrapingBeeApiKey ? 'Yes' : 'No');
 
-  // Simplified ScrapingBee request
+  // Simplified ScrapingBee request using GET method
   const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent(url)}`;
   
   console.log('Calling ScrapingBee with URL:', scrapingBeeUrl.replace(scrapingBeeApiKey, 'HIDDEN'));
@@ -177,7 +177,7 @@ REQUIREMENTS:
 3. Generate engaging French copy that sounds professional
 4. Create game configuration appropriate for the chosen type
 
-RESPOND WITH VALID JSON ONLY:
+RESPOND WITH VALID JSON ONLY (no markdown formatting):
 {
   "gameType": "wheel|quiz|scratch|jackpot",
   "gameName": "Nom du jeu en français",
@@ -220,7 +220,7 @@ RESPOND WITH VALID JSON ONLY:
       messages: [
         {
           role: 'system',
-          content: 'You are a French marketing game designer. Generate complete game concepts that match brand identity perfectly. Always respond with valid JSON only in French.'
+          content: 'You are a French marketing game designer. Generate complete game concepts that match brand identity perfectly. Always respond with valid JSON only, no markdown code blocks or formatting.'
         },
         {
           role: 'user',
@@ -237,12 +237,18 @@ RESPOND WITH VALID JSON ONLY:
   }
 
   const data = await response.json();
-  const content = data.choices[0].message.content;
+  let content = data.choices[0].message.content;
+  
+  // Clean up any markdown formatting from OpenAI response
+  content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   
   try {
-    return JSON.parse(content);
+    const parsedContent = JSON.parse(content);
+    console.log('Successfully parsed OpenAI response');
+    return parsedContent;
   } catch (parseError) {
     console.error('Failed to parse OpenAI response:', content);
+    console.error('Parse error:', parseError);
     throw new Error('Invalid JSON response from OpenAI');
   }
 }
