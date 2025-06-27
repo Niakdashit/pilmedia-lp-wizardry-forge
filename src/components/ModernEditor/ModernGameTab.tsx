@@ -7,7 +7,6 @@ import PuzzleGameConfig from './GameConfigs/PuzzleGameConfig';
 import QuizGameConfig from './GameConfigs/QuizGameConfig';
 import DiceGameConfig from './GameConfigs/DiceGameConfig';
 import ScratchGameConfig from './GameConfigs/ScratchGameConfig';
-import ModernGameConfigTab from './ModernGameConfigTab';
 
 interface ModernGameTabProps {
   campaign: any;
@@ -35,27 +34,23 @@ const ModernGameTab: React.FC<ModernGameTabProps> = ({
       case 'scratch':
         return <ScratchGameConfig campaign={campaign} setCampaign={setCampaign} />;
       default:
-        return <div className="text-gray-500">Configuration non disponible pour ce type de jeu</div>;
+        return (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-3">
+              <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center">
+                <span className="text-2xl">🎮</span>
+              </div>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Type de jeu non configuré</h3>
+            <p className="text-gray-500">Configuration non disponible pour ce type de jeu</p>
+          </div>
+        );
     }
   };
 
   return (
-    <div className="space-y-8">
-      {/* Configuration du jeu et positionnement */}
-      <ModernGameConfigTab
-        gameSize={campaign.gameSize || 'medium'}
-        gamePosition={campaign.gamePosition || 'center'}
-        onGameSizeChange={(size) => setCampaign((prev: any) => ({ ...prev, gameSize: size }))}
-        onGamePositionChange={(position) => setCampaign((prev: any) => ({ ...prev, gamePosition: position }))}
-        buttonConfig={campaign.buttonConfig || {}}
-        onButtonConfigChange={(config) => setCampaign((prev: any) => ({ ...prev, buttonConfig: config }))}
-      />
-
-      {/* Configuration spécifique au jeu */}
-      <div className="border-t border-gray-200 pt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Configuration spécifique</h3>
-        {renderGameConfig()}
-      </div>
+    <div className="p-6">
+      {renderGameConfig()}
     </div>
   );
 };
