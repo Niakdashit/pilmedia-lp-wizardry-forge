@@ -14,13 +14,13 @@ const QuickCampaign: React.FC = () => {
   const handleBrandGenerated = (concept: GeneratedGameConcept) => {
     const campaignData = transformBrandGameToCampaign(concept);
     
-    // Update the store with generated data - using available store methods
+    // Update the store with generated data - using the correct structure
     store.setSelectedGameType(campaignData.type);
     store.setCustomColors({
-      primary: campaignData.design.primaryColor,
-      secondary: campaignData.design.secondaryColor,
+      primary: campaignData.design.customColors.primary,
+      secondary: campaignData.design.customColors.secondary,
       accent: campaignData.design.customColors.accent,
-      textColor: campaignData.design.customColors.text
+      textColor: campaignData.design.customColors.primary // Use primary color as text color fallback
     });
     store.setCampaignName(campaignData.name);
 
