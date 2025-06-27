@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import QuickCampaignCreator from '../components/QuickCampaign/QuickCampaignCreator';
@@ -16,12 +15,14 @@ const QuickCampaign: React.FC = () => {
     const campaignData = transformBrandGameToCampaign(concept);
     
     // Update the store with generated data - using available store methods
-    store.setGameType(campaignData.type);
-    store.setDesign(campaignData.design);
-    store.setGameConfig(campaignData.gameConfig);
-    store.setScreens(campaignData.screens);
-    store.setButtonConfig(campaignData.buttonConfig);
-    store.setFormFields(campaignData.formFields);
+    store.setSelectedGameType(campaignData.type);
+    store.setCustomColors({
+      primary: campaignData.design.primaryColor,
+      secondary: campaignData.design.secondaryColor,
+      accent: campaignData.design.customColors.accent,
+      textColor: campaignData.design.customColors.text
+    });
+    store.setCampaignName(campaignData.name);
 
     setShowBrandGenerator(false);
     setShowWelcome(false);
