@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { RotateCcw, Users, Plus, Minus } from 'lucide-react';
+import { RotateCcw, Palette, Users } from 'lucide-react';
+import { SmartWheel } from '../../SmartWheel';
 
 interface WheelGameConfigProps {
   campaign: any;
@@ -11,15 +12,9 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
   campaign,
   setCampaign
 }) => {
-  // Couleurs par défaut alternées (2 couleurs max)
-  const defaultColors = [
-    campaign.design?.customColors?.primary || '#841b60', 
-    campaign.design?.customColors?.secondary || '#4ecdc4'
-  ];
-
   // Assurer que les segments existent avec une structure par défaut
   const segments = campaign.gameConfig?.wheel?.segments || campaign.config?.roulette?.segments || [];
-  
+
   const updateWheelConfig = (updates: any) => {
     setCampaign((prev: any) => {
       const newCampaign = {
@@ -40,29 +35,28 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
           }
         }
       };
-
+      
       // Force un re-render en créant un nouvel objet avec un timestamp
       newCampaign._lastUpdate = Date.now();
+      
       if (process.env.NODE_ENV !== 'production') {
         console.log('WheelGameConfig - Mise à jour:', updates);
         console.log('WheelGameConfig - Nouveaux segments:', newCampaign.gameConfig.wheel.segments);
       }
+      
       return newCampaign;
     });
   };
 
   const addSegmentPair = () => {
+    const colors = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
     const currentCount = segments.length;
-
-    // Utiliser les couleurs alternées par défaut (max 2 couleurs)
-    const winningColor = defaultColors[0]; // Toujours couleur 1 pour les gagnants
-    const losingColor = defaultColors[1]; // Toujours couleur 2 pour les perdants
-
+    
     // Ajouter une paire de segments (un gagnant et un perdant)
     const winningSegment = {
       id: `${Date.now()}-win`,
-      label: `Cadeau ${Math.floor(currentCount / 2) + 1}`,
-      color: winningColor,
+      label: `Prix ${Math.floor(currentCount / 2) + 1}`,
+      color: colors[currentCount % colors.length],
       textColor: '#ffffff',
       probability: 1,
       isWinning: true
@@ -71,12 +65,12 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
     const losingSegment = {
       id: `${Date.now()}-lose`,
       label: 'Dommage',
-      color: losingColor,
+      color: colors[(currentCount + 1) % colors.length],
       textColor: '#ffffff',
       probability: 1,
       isWinning: false
     };
-
+    
     const newSegments = [...segments, winningSegment, losingSegment];
     updateWheelConfig({ segments: newSegments });
   };
@@ -90,191 +84,97 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
 
   const updateSegment = (index: number, field: string, value: any) => {
     const newSegments = [...segments];
-    newSegments[index] = {
-      ...newSegments[index],
-      [field]: value
-    };
-
+    newSegments[index] = { ...newSegments[index], [field]: value };
+    
     // Si on change le label d'un segment, déterminer automatiquement s'il est gagnant ou perdant
     if (field === 'label') {
       const isLosingLabel = value.toLowerCase().includes('dommage') || 
-                           value.toLowerCase().includes('perdu') || 
-                           value.toLowerCase().includes('essaie') || 
+                           value.toLowerCase().includes('perdu') ||
+                           value.toLowerCase().includes('essaie') ||
                            value.toLowerCase().includes('rejouer');
       newSegments[index].isWinning = !isLosingLabel;
     }
-
-    // Appliquer les couleurs par défaut selon le type de segment
-    if (field === 'color' || field === 'label') {
-      const isLosing = newSegments[index].isWinning === false || 
-                      newSegments[index].label.toLowerCase().includes('dommage');
-
-      // Utiliser les couleurs par défaut si pas de couleur personnalisée
-      if (!newSegments[index].customColor) {
-        newSegments[index].color = isLosing ? defaultColors[1] : defaultColors[0];
-      }
-    }
-
+    
     updateWheelConfig({ segments: newSegments });
   };
 
   // Compter les segments gagnants et perdants
-  const winningSegments = segments.filter((s: any) => 
-    s.isWinning !== false && 
+  const winningSegments = segments.filter((s: any) => s.isWinning !== false && 
     !s.label.toLowerCase().includes('dommage') && 
-    !s.label.toLowerCase().includes('perdu') && 
-    !s.label.toLowerCase().includes('essaie') && 
-    !s.label.toLowerCase().includes('rejouer')
-  ).length;
+    !s.label.toLowerCase().includes('perdu') &&
+    !s.label.toLowerCase().includes('essaie') &&
+    !s.label.toLowerCase().includes('rejouer')).length;
+  const losingSegments = segments.length - winningSegments;
+
+  // Préparer les couleurs de marque pour le SmartWheel
+  const brandColors = {
+    primary: campaign.design?.customColors?.primary || '#841b60',
+    secondary: campaign.design?.customColors?.secondary || '#4ecdc4',
+    accent: campaign.design?.customColors?.accent || '#45b7d1'
+  };
 
   return (
-    <div className="space-y-6 h-full overflow-y-auto p-6">
-      {/* Titre principal */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Configuration de la roue</h3>
-        <p className="text-sm text-gray-600">Personnalisez les segments et le comportement de votre roue</p>
-      </div>
-
-      {/* Résumé de configuration */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-purple-900">📊 Résumé de la configuration</h4>
+    <div className="space-y-6">
+      {/* Prévisualisation avec le nouveau SmartWheel */}
+      <div className="space-y-4 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+        <h4 className="font-medium text-gray-900 flex items-center">
+          <Palette className="w-4 h-4 mr-2" />
+          Prévisualisation de la roue
+        </h4>
+        
+        <div className="flex justify-center">
+          <SmartWheel
+            segments={segments}
+            theme="modern"
+            size={300}
+            brandColors={brandColors}
+            onResult={(segment) => {
+              console.log('Segment gagné:', segment);
+            }}
+            customButton={{
+              text: campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+              color: brandColors.primary,
+              textColor: '#ffffff'
+            }}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-purple-700 font-medium">Total segments:</span>
-            <span className="ml-2 text-purple-900 font-bold">{segments.length}</span>
-          </div>
-          <div>
-            <span className="text-purple-700 font-medium">Segments gagnants:</span>
-            <span className="ml-2 text-green-600 font-bold">{winningSegments}</span>
-          </div>
-          <div>
-            <span className="text-purple-700 font-medium">Couleur primaire:</span>
-            <div className="inline-block w-4 h-4 rounded-full ml-2 border" style={{ backgroundColor: defaultColors[0] }}></div>
-          </div>
-          <div>
-            <span className="text-purple-700 font-medium">Couleur secondaire:</span>
-            <div className="inline-block w-4 h-4 rounded-full ml-2 border" style={{ backgroundColor: defaultColors[1] }}></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Gestion des segments - Section principale */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="font-semibold text-gray-900">🎯 Segments de la roue</h4>
-          <div className="flex space-x-2">
+        
+        {segments.length === 0 && (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-500 mb-2">Aucun segment configuré</p>
             <button
               onClick={addSegmentPair}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium"
+              className="px-4 py-2 text-sm bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
             >
-              <Plus className="w-4 h-4" />
-              <span>Ajouter paire</span>
-            </button>
-            {segments.length >= 2 && (
-              <button
-                onClick={removeSegmentPair}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-              >
-                <Minus className="w-4 h-4" />
-                <span>Retirer paire</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {segments.length > 0 ? (
-          <div className="space-y-3 max-h-60 overflow-y-auto">
-            {segments.map((segment: any, index: number) => {
-              const isLosingSegment = segment.isWinning === false || 
-                                     segment.label.toLowerCase().includes('dommage') || 
-                                     segment.label.toLowerCase().includes('perdu') || 
-                                     segment.label.toLowerCase().includes('essaie') || 
-                                     segment.label.toLowerCase().includes('rejouer');
-
-              const segmentColor = segment.color || (isLosingSegment ? defaultColors[1] : defaultColors[0]);
-
-              return (
-                <div
-                  key={segment.id || index}
-                  className={`flex items-center space-x-3 p-3 border rounded-lg transition-colors ${
-                    isLosingSegment ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
-                  }`}
-                >
-                  <div className={`w-3 h-3 rounded-full ${isLosingSegment ? 'bg-red-400' : 'bg-green-400'}`} />
-                  
-                  <input
-                    type="color"
-                    value={segmentColor}
-                    onChange={(e) => {
-                      updateSegment(index, 'color', e.target.value);
-                      // Marquer comme couleur personnalisée
-                      const newSegments = [...segments];
-                      newSegments[index].customColor = true;
-                      updateWheelConfig({ segments: newSegments });
-                    }}
-                    className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                    title="Couleur segment"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={segment.label || ''}
-                    onChange={(e) => updateSegment(index, 'label', e.target.value)}
-                    placeholder={isLosingSegment ? "Texte perdant" : "Texte gagnant"}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                  />
-                  
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                    isLosingSegment ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                  }`}>
-                    {isLosingSegment ? 'Perdant' : 'Gagnant'}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span className="text-2xl">🎯</span>
-            </div>
-            <p className="text-sm mb-4">Aucun segment configuré</p>
-            <button
-              onClick={addSegmentPair}
-              className="px-6 py-2 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
-            >
-              Créer la première paire
+              Ajouter la première paire
             </button>
           </div>
         )}
 
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs text-blue-700">
-            <strong>💡 Astuce :</strong> Les segments alternent automatiquement entre 2 couleurs. 
-            Couleur 1 (gagnants) : <span style={{ color: defaultColors[0] }}>{defaultColors[0]}</span> • 
-            Couleur 2 (perdants) : <span style={{ color: defaultColors[1] }}>{defaultColors[1]}</span>
-          </p>
-        </div>
+        {segments.length > 0 && (
+          <div className="text-center py-2">
+            <div className="text-sm text-gray-600 mb-2">
+              <span className="text-green-600 font-medium">{winningSegments} segments gagnants</span> • 
+              <span className="text-red-600 font-medium ml-1">{losingSegments} segments perdants</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Comportement de la roue - Section secondaire */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-          <RotateCcw className="w-5 h-5 mr-2 text-[#841b60]" />
-          ⚙️ Comportement de la roue
-        </h4>
+      {/* Configuration générale */}
+      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+        <h4 className="font-medium text-gray-900">Configuration générale</h4>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="flex items-center text-sm font-medium text-gray-700">
+              <RotateCcw className="w-4 h-4 mr-2" />
               Vitesse de rotation
             </label>
             <select
               value={campaign.gameConfig?.wheel?.speed || 'medium'}
               onChange={(e) => updateWheelConfig({ speed: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             >
               <option value="slow">Lente</option>
               <option value="medium">Moyenne</option>
@@ -284,13 +184,13 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
 
           <div className="space-y-2">
             <label className="flex items-center text-sm font-medium text-gray-700">
-              <Users className="w-4 h-4 mr-1" />
+              <Users className="w-4 h-4 mr-2" />
               Mode de jeu
             </label>
             <select
               value={campaign.gameConfig?.wheel?.mode || 'random'}
               onChange={(e) => updateWheelConfig({ mode: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             >
               <option value="random">Aléatoire</option>
               <option value="instant_winner">Gagnant instantané</option>
@@ -300,7 +200,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         </div>
 
         {campaign.gameConfig?.wheel?.mode === 'instant_winner' && (
-          <div className="mt-4 space-y-2">
+          <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
               Probabilité de gain (0.1 = 10%)
             </label>
@@ -311,12 +211,12 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
               max="1"
               value={campaign.gameConfig?.wheel?.winProbability || 0.1}
               onChange={(e) => updateWheelConfig({ winProbability: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             />
           </div>
         )}
 
-        <div className="mt-4 space-y-2">
+        <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">
             Texte du bouton
           </label>
@@ -324,10 +224,98 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             type="text"
             value={campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner'}
             onChange={(e) => updateWheelConfig({ buttonLabel: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             placeholder="Faire tourner"
           />
         </div>
+      </div>
+
+      {/* Gestion des segments par paires */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="flex items-center text-sm font-medium text-gray-700">
+            <Palette className="w-4 h-4 mr-2" />
+            Segments de la roue ({segments.length} segments)
+          </label>
+          <div className="flex space-x-2">
+            <button
+              onClick={addSegmentPair}
+              className="px-3 py-1 text-sm bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+            >
+              + Ajouter une paire
+            </button>
+            {segments.length >= 2 && (
+              <button
+                onClick={removeSegmentPair}
+                className="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                - Retirer une paire
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {segments.map((segment: any, index: number) => {
+            const isLosingSegment = segment.isWinning === false || 
+              segment.label.toLowerCase().includes('dommage') ||
+              segment.label.toLowerCase().includes('perdu') ||
+              segment.label.toLowerCase().includes('essaie') ||
+              segment.label.toLowerCase().includes('rejouer');
+
+            return (
+              <div key={segment.id || index} className={`flex items-center space-x-2 p-3 border rounded-lg ${
+                isLosingSegment ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
+              }`}>
+                <div className={`w-3 h-3 rounded-full ${isLosingSegment ? 'bg-red-400' : 'bg-green-400'}`} />
+                <input
+                  type="color"
+                  value={segment.color || '#841b60'}
+                  onChange={(e) => updateSegment(index, 'color', e.target.value)}
+                  className="w-8 h-8 rounded border border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={segment.label || ''}
+                  onChange={(e) => updateSegment(index, 'label', e.target.value)}
+                  placeholder={isLosingSegment ? "Texte perdant" : "Texte gagnant"}
+                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] focus:border-transparent"
+                />
+                <input
+                  type="color"
+                  value={segment.textColor || '#ffffff'}
+                  onChange={(e) => updateSegment(index, 'textColor', e.target.value)}
+                  title="Couleur du texte"
+                  className="w-8 h-8 rounded border border-gray-300"
+                />
+                {campaign.gameConfig?.wheel?.mode === 'probability' && (
+                  <input
+                    type="number"
+                    min="1"
+                    value={segment.probability || 1}
+                    onChange={(e) => updateSegment(index, 'probability', parseInt(e.target.value))}
+                    className="w-16 px-2 py-1 text-sm border border-gray-300 rounded"
+                    title="Poids"
+                  />
+                )}
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  isLosingSegment ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                }`}>
+                  {isLosingSegment ? 'Perdant' : 'Gagnant'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {segments.length > 0 && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <strong>💡 Conseil :</strong> Les segments sont ajoutés par paires (1 gagnant + 1 perdant). 
+              Les segments contenant "Dommage", "Perdu", "Essaie" ou "Rejouer" sont automatiquement considérés comme perdants.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
