@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Trash2, RotateCw, Target, Lock, Unlock } from 'lucide-react';
+import { Trash2, Target, RotateCw, Lock, Unlock } from 'lucide-react';
 
 interface ImageElementControlsProps {
   aspectRatioLocked: boolean;
@@ -34,8 +34,12 @@ const ImageElementControls: React.FC<ImageElementControlsProps> = ({
           e.stopPropagation();
           onToggleAspectRatio();
         }}
-        className={`p-1 rounded ${aspectRatioLocked ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
-        title={aspectRatioLocked ? "Déverrouiller les proportions" : "Verrouiller les proportions"}
+        className={`p-1 rounded ${
+          aspectRatioLocked 
+            ? 'bg-green-100 text-green-600' 
+            : 'hover:bg-gray-100 text-gray-600'
+        }`}
+        title={aspectRatioLocked ? 'Proportions verrouillées' : 'Proportions libres'}
       >
         {aspectRatioLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
       </button>
@@ -44,8 +48,8 @@ const ImageElementControls: React.FC<ImageElementControlsProps> = ({
           e.stopPropagation();
           onRotate();
         }}
-        className="p-1 hover:bg-gray-100 rounded"
-        title="Rotation"
+        className="p-1 hover:bg-purple-100 text-purple-600 rounded"
+        title="Faire tourner (+15°)"
       >
         <RotateCw className="w-3 h-3" />
       </button>

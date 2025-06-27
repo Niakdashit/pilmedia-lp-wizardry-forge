@@ -2,38 +2,50 @@
 import React from 'react';
 
 interface ImageElementResizeHandlesProps {
-  onResizeStart: (e: React.MouseEvent, direction: string) => void;
+  onResizeStart: (handle: string) => (e: React.MouseEvent) => void;
 }
 
 const ImageElementResizeHandles: React.FC<ImageElementResizeHandlesProps> = ({
   onResizeStart
 }) => {
+  const handleStyle = "absolute w-2 h-2 bg-blue-500 border border-white rounded-sm cursor-pointer hover:bg-blue-600";
+
   return (
     <>
-      {/* Main resize handle */}
+      {/* Corner handles */}
       <div
-        className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded cursor-se-resize hover:bg-blue-600 flex items-center justify-center"
-        onMouseDown={(e) => onResizeStart(e, 'se')}
-        title="Redimensionner"
-      >
-        <div className="w-2 h-2 bg-white rounded-sm"></div>
-      </div>
+        className={`${handleStyle} -top-1 -left-1 cursor-nw-resize`}
+        onMouseDown={onResizeStart('nw')}
+      />
+      <div
+        className={`${handleStyle} -top-1 -right-1 cursor-ne-resize`}
+        onMouseDown={onResizeStart('ne')}
+      />
+      <div
+        className={`${handleStyle} -bottom-1 -left-1 cursor-sw-resize`}
+        onMouseDown={onResizeStart('sw')}
+      />
+      <div
+        className={`${handleStyle} -bottom-1 -right-1 cursor-se-resize`}
+        onMouseDown={onResizeStart('se')}
+      />
       
-      {/* Corner resize handles for better UX */}
+      {/* Edge handles */}
       <div
-        className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded cursor-ne-resize hover:bg-blue-600"
-        onMouseDown={(e) => onResizeStart(e, 'ne')}
-        title="Redimensionner"
+        className={`${handleStyle} -top-1 left-1/2 transform -translate-x-1/2 cursor-n-resize`}
+        onMouseDown={onResizeStart('n')}
       />
       <div
-        className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded cursor-sw-resize hover:bg-blue-600"
-        onMouseDown={(e) => onResizeStart(e, 'sw')}
-        title="Redimensionner"
+        className={`${handleStyle} -bottom-1 left-1/2 transform -translate-x-1/2 cursor-s-resize`}
+        onMouseDown={onResizeStart('s')}
       />
       <div
-        className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded cursor-nw-resize hover:bg-blue-600"
-        onMouseDown={(e) => onResizeStart(e, 'nw')}
-        title="Redimensionner"
+        className={`${handleStyle} -left-1 top-1/2 transform -translate-y-1/2 cursor-w-resize`}
+        onMouseDown={onResizeStart('w')}
+      />
+      <div
+        className={`${handleStyle} -right-1 top-1/2 transform -translate-y-1/2 cursor-e-resize`}
+        onMouseDown={onResizeStart('e')}
       />
     </>
   );
