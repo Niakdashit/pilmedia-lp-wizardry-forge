@@ -65,26 +65,56 @@ async function extractBrandData(url: string): Promise<BrandData> {
     throw new Error('ScrapingBee API key not configured');
   }
 
-  const response = await fetch('https://app.scrapingbee.com/api/v1/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      api_key: scrapingBeeApiKey,
-      url: url,
-      render_js: true,
-      premium_proxy: true,
-      country_code: 'US'
-    })
-  });
+  console.log('ScrapingBee API Key configured:', scrapingBeeApiKey ? 'Yes' : 'No');
 
-  if (!response.ok) {
-    throw new Error(`ScrapingBee API error: ${response.status}`);
+  // Simplified ScrapingBee request
+  const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${scrapingBeeApiKey}&url=${encodeURIComponent(url)}`;
+  
+  console.log('Calling ScrapingBee with URL:', scrapingBeeUrl.replace(scrapingBeeApiKey, 'HIDDEN'));
+
+  try {
+    const response = await fetch(scrapingBeeUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html',
+      }
+    });
+
+    console.log('ScrapingBee response status:', response.status);
+    console.log('ScrapingBee response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('ScrapingBee error response:', errorText);
+      throw new Error(`ScrapingBee API error: ${response.status} - ${errorText}`);
+    }
+
+    const html = await response.text();
+    console.log('HTML content length:', html.length);
+    
+    return parseBrandData(url, html);
+  } catch (fetchError) {
+    console.error('ScrapingBee fetch error:', fetchError);
+    
+    // Fallback: Return default brand data if ScrapingBee fails
+    console.log('Using fallback brand data due to ScrapingBee failure');
+    return {
+      url,
+      title: 'Campagne de Marque',
+      description: 'Campagne générée automatiquement',
+      colors: {
+        primary: '#841b60',
+        secondary: '#6d164f',
+        accent: '#ffffff',
+        background: '#f8fafc'
+      },
+      content: {
+        headings: ['Découvrez notre marque', 'Offres exclusives', 'Participez et gagnez'],
+        descriptions: ['Une expérience unique vous attend', 'Des prix exceptionnels à gagner'],
+        ctaTexts: ['Participer', 'Découvrir', 'Jouer']
+      }
+    };
   }
-
-  const html = await response.text();
-  return parseBrandData(url, html);
 }
 
 function parseBrandData(url: string, html: string): BrandData {
@@ -108,8 +138,8 @@ function parseBrandData(url: string, html: string): BrandData {
 
   return {
     url,
-    title: titleMatch ? titleMatch[1].trim() : 'Brand Campaign',
-    description: descriptionMatch ? descriptionMatch[1].trim() : 'Generated brand campaign',
+    title: titleMatch ? titleMatch[1].trim() : 'Campagne de Marque',
+    description: descriptionMatch ? descriptionMatch[1].trim() : 'Campagne générée automatiquement',
     colors: {
       primary: '#841b60',
       secondary: '#6d164f',
@@ -117,8 +147,8 @@ function parseBrandData(url: string, html: string): BrandData {
       background: '#f8fafc'
     },
     content: {
-      headings,
-      descriptions: headings.slice(0, 3), // Use headings as descriptions for now
+      headings: headings.length > 0 ? headings : ['Découvrez notre marque', 'Offres exclusives', 'Participez et gagnez'],
+      descriptions: headings.slice(0, 3).length > 0 ? headings.slice(0, 3) : ['Une expérience unique vous attend', 'Des prix exceptionnels à gagner'],
       ctaTexts: ctaTexts.length > 0 ? ctaTexts : ['Participer', 'Découvrir', 'Jouer']
     }
   };
