@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
@@ -21,6 +21,11 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 }) => {
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
+
+  // Synchroniser l'état local avec la prop borderStyle
+  useEffect(() => {
+    setCurrentBorderStyle(borderStyle);
+  }, [borderStyle]);
 
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
