@@ -59,9 +59,8 @@ export const useSmartWheelRenderer = ({
 
     const centerX = size / 2;
     const centerY = size / 2;
-    // Ajuster le rayon pour éliminer l'écart avec la bordure
-    const maxRadius = (size / 2) - 20; // Rayon maximum pour les segments
-    const borderRadius = maxRadius + 10; // Bordure proche des segments
+    const maxRadius = (size / 2) - 20;
+    const borderRadius = maxRadius + 10;
 
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
@@ -294,17 +293,57 @@ export const useSmartWheelRenderer = ({
 
   const drawPointer = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
     ctx.save();
-    ctx.translate(centerX, centerY - radius - 10);
+    
+    // Positionner le pointeur pour qu'il touche presque les segments
+    const pointerDistance = radius - 5; // Plus proche des segments
+    ctx.translate(centerX, centerY - pointerDistance);
+    
+    // Taille augmentée du pointeur
+    const pointerWidth = size * 0.04; // Largeur proportionnelle à la taille de la roue
+    const pointerHeight = size * 0.08; // Hauteur proportionnelle à la taille de la roue
+    
+    // Dessiner l'ombre du pointeur
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    // Dessiner le pointeur principal
     ctx.fillStyle = theme.colors.accent;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(-10, -20);
-    ctx.lineTo(10, -20);
+    ctx.lineTo(-pointerWidth, -pointerHeight);
+    ctx.lineTo(pointerWidth, -pointerHeight);
     ctx.closePath();
     ctx.fill();
+    
+    // Réinitialiser l'ombre
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Bordure du pointeur
     ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
+    
+    // Ajouter un effet de brillance
+    if (theme.effects.gradient) {
+      const gradient = ctx.createLinearGradient(-pointerWidth, -pointerHeight, pointerWidth, 0);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-pointerWidth, -pointerHeight);
+      ctx.lineTo(pointerWidth, -pointerHeight);
+      ctx.closePath();
+      ctx.fill();
+    }
+    
     ctx.restore();
   };
 

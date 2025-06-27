@@ -1,92 +1,98 @@
 
-import React, { useState } from 'react';
-import { Settings, Maximize2, Navigation, MousePointer } from 'lucide-react';
-import GameSizeSelector, { GameSize } from '../configurators/GameSizeSelector';
-import GamePositionSelector, { GamePosition } from '../configurators/GamePositionSelector';
-import ButtonConfigTab from './ButtonConfigTab';
+import React from 'react';
 
 interface ModernGameConfigTabProps {
-  gameSize: GameSize;
-  gamePosition: GamePosition;
-  onGameSizeChange: (size: GameSize) => void;
-  onGamePositionChange: (position: GamePosition) => void;
+  gameSize: string;
+  gamePosition: string;
+  onGameSizeChange: (size: string) => void;
+  onGamePositionChange: (position: string) => void;
   buttonConfig: any;
   onButtonConfigChange: (config: any) => void;
 }
 
 const ModernGameConfigTab: React.FC<ModernGameConfigTabProps> = ({
-  gameSize,
-  gamePosition,
-  onGameSizeChange,
-  onGamePositionChange,
   buttonConfig,
   onButtonConfigChange
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'size' | 'position' | 'buttons'>('size');
-
-  const subTabs = [
-    { id: 'size', label: 'Taille du jeu', icon: Maximize2 },
-    { id: 'position', label: 'Position du jeu', icon: Navigation },
-    { id: 'buttons', label: 'Configuration boutons', icon: MousePointer }
-  ];
-
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-          <Settings className="w-6 h-6 mr-2" />
-          Configuration du jeu
-        </h2>
-        <p className="text-sm text-gray-600">
-          Ajustez la taille, la position du jeu et les boutons
-        </p>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Configuration du layout</h2>
+        <p className="text-gray-600 text-sm">Configurez l'apparence et le comportement des boutons</p>
       </div>
 
-      {/* Sous-onglets */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {subTabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSubTab(tab.id as 'size' | 'position' | 'buttons')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                  activeSubTab === tab.id
-                    ? 'border-[#841b60] text-[#841b60]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Contenu des sous-onglets */}
-      <div className="mt-6">
-        {activeSubTab === 'size' && (
-          <GameSizeSelector
-            selectedSize={gameSize}
-            onSizeChange={onGameSizeChange}
-          />
-        )}
+      {/* Configuration des boutons */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-gray-900">Configuration des boutons</h3>
         
-        {activeSubTab === 'position' && (
-          <GamePositionSelector
-            selectedPosition={gamePosition}
-            onPositionChange={onGamePositionChange}
-          />
-        )}
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Texte du bouton principal
+            </label>
+            <input
+              type="text"
+              value={buttonConfig?.text || 'Jouer'}
+              onChange={(e) => onButtonConfigChange({ ...buttonConfig, text: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              placeholder="Jouer"
+            />
+          </div>
 
-        {activeSubTab === 'buttons' && (
-          <ButtonConfigTab
-            buttonConfig={buttonConfig}
-            onButtonConfigChange={onButtonConfigChange}
-          />
-        )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Couleur du bouton
+            </label>
+            <input
+              type="color"
+              value={buttonConfig?.color || '#841b60'}
+              onChange={(e) => onButtonConfigChange({ ...buttonConfig, color: e.target.value })}
+              className="w-full h-10 rounded-lg border border-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Couleur du texte
+            </label>
+            <input
+              type="color"
+              value={buttonConfig?.textColor || '#ffffff'}
+              onChange={(e) => onButtonConfigChange({ ...buttonConfig, textColor: e.target.value })}
+              className="w-full h-10 rounded-lg border border-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Taille du bouton
+            </label>
+            <select
+              value={buttonConfig?.size || 'medium'}
+              onChange={(e) => onButtonConfigChange({ ...buttonConfig, size: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            >
+              <option value="small">Petit</option>
+              <option value="medium">Moyen</option>
+              <option value="large">Grand</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Style du bouton
+            </label>
+            <select
+              value={buttonConfig?.style || 'solid'}
+              onChange={(e) => onButtonConfigChange({ ...buttonConfig, style: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            >
+              <option value="solid">Plein</option>
+              <option value="outline">Contour</option>
+              <option value="ghost">Transparent</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );
