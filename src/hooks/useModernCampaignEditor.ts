@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
@@ -120,13 +121,10 @@ export const useModernCampaignEditor = () => {
             design: {
               ...defaultCampaign.design,
               ...validatedData.design,
-              // Fix property mapping - use existing properties or fallback to defaults
               primaryColor: validatedData.customColors?.primary || validatedData.design?.primaryColor || defaultCampaign.design.primaryColor,
               secondaryColor: validatedData.customColors?.secondary || validatedData.design?.secondaryColor || defaultCampaign.design.secondaryColor,
-              // Use existing accentColor or fallback to primary
               accentColor: validatedData.customColors?.accent || validatedData.design?.accentColor || validatedData.customColors?.primary || defaultCampaign.design.primaryColor,
-              // Use existing textPrimaryColor or fallback to textColor
-              textPrimaryColor: validatedData.customColors?.textColor || validatedData.design?.textPrimaryColor || defaultCampaign.design.textPrimaryColor,
+              textColor: validatedData.customColors?.textColor || validatedData.design?.textColor || defaultCampaign.design.textColor || '#000000',
               centerLogo: validatedData.logoUrl || validatedData.design?.centerLogo,
               backgroundImage: validatedData.backgroundImageUrl || validatedData.design?.backgroundImage,
               customColors: validatedData.customColors || {}
@@ -134,8 +132,8 @@ export const useModernCampaignEditor = () => {
             gameConfig: {
               ...defaultCampaign.gameConfig,
               ...validatedData.gameConfig,
-              // Fix wheel property access - ensure it exists in gameConfig
-              ...(validatedData.config?.roulette && existingCampaignType === 'wheel' ? {
+              // Handle wheel configuration specifically
+              ...(existingCampaignType === 'wheel' && validatedData.config?.roulette ? {
                 wheel: {
                   ...defaultCampaign.gameConfig?.wheel,
                   ...validatedData.config.roulette,
@@ -149,8 +147,7 @@ export const useModernCampaignEditor = () => {
               ...defaultCampaign.buttonConfig,
               ...validatedData.buttonConfig,
               color: validatedData.customColors?.accent || validatedData.buttonConfig?.color || defaultCampaign.buttonConfig?.color,
-              // Fix textColor property - ensure it exists in buttonConfig
-              textColor: validatedData.customColors?.textColor || validatedData.buttonConfig?.textColor || defaultCampaign.buttonConfig?.textColor || '#ffffff'
+              backgroundColor: validatedData.customColors?.accent || validatedData.buttonConfig?.backgroundColor || defaultCampaign.buttonConfig?.color || '#3b82f6'
             },
             screens: {
               ...defaultCampaign.screens,
