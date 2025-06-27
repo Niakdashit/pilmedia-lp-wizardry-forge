@@ -14,6 +14,7 @@ interface WheelProps {
   winRate?: number;
   disabled?: boolean;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  campaign?: any; // Ajouter le campaign pour récupérer le style de bordure
 }
 
 const Wheel: React.FC<WheelProps> = ({ 
@@ -23,7 +24,8 @@ const Wheel: React.FC<WheelProps> = ({
   onFinish,
   onStart,
   disabled = false,
-  gameSize = 'small'
+  gameSize = 'small',
+  campaign
 }) => {
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();
@@ -77,6 +79,11 @@ const Wheel: React.FC<WheelProps> = ({
     accent: '#45b7d1'
   };
 
+  // Récupérer le style de bordure depuis la campaign ou utiliser le style par défaut
+  const borderStyle = campaign?.design?.wheelBorderStyle || 
+                      config?.wheel?.borderStyle || 
+                      'classic';
+
   if (!isPreview) {
     return (
       <div className="space-y-6">
@@ -103,7 +110,7 @@ const Wheel: React.FC<WheelProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
-        borderStyle={config?.wheel?.borderStyle || 'classic'}
+        borderStyle={borderStyle}
         customButton={{
           text: config?.buttonLabel || 'Faire tourner',
           color: brandColors.primary,
