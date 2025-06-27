@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { RotateCcw, Palette, Users } from 'lucide-react';
+import { SmartWheel } from '../../SmartWheel';
 
 interface WheelGameConfigProps {
   campaign: any;
@@ -50,7 +51,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
   const addSegment = () => {
     const colors = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
     const newSegment = {
-      id: Date.now(),
+      id: Date.now().toString(),
       label: `Segment ${segments.length + 1}`,
       color: colors[segments.length % colors.length],
       textColor: '#ffffff',
@@ -72,8 +73,52 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
     updateWheelConfig({ segments: newSegments });
   };
 
+  // Préparer les couleurs de marque pour le SmartWheel
+  const brandColors = {
+    primary: campaign.design?.customColors?.primary || '#841b60',
+    secondary: campaign.design?.customColors?.secondary || '#4ecdc4',
+    accent: campaign.design?.customColors?.accent || '#45b7d1'
+  };
+
   return (
     <div className="space-y-6">
+      {/* Prévisualisation avec le nouveau SmartWheel */}
+      <div className="space-y-4 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+        <h4 className="font-medium text-gray-900 flex items-center">
+          <Palette className="w-4 h-4 mr-2" />
+          Prévisualisation de la nouvelle roue
+        </h4>
+        
+        <div className="flex justify-center">
+          <SmartWheel
+            segments={segments}
+            theme="modern"
+            size={300}
+            brandColors={brandColors}
+            onResult={(segment) => {
+              console.log('Segment gagné:', segment);
+            }}
+            customButton={{
+              text: campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+              color: brandColors.primary,
+              textColor: '#ffffff'
+            }}
+          />
+        </div>
+        
+        {segments.length === 0 && (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-500 mb-2">Aucun segment configuré</p>
+            <button
+              onClick={addSegment}
+              className="px-4 py-2 text-sm bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+            >
+              Ajouter un premier segment
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Configuration générale */}
       <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-medium text-gray-900">Configuration générale</h4>
@@ -128,35 +173,18 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             />
           </div>
         )}
-      </div>
 
-      {/* Couleurs de la roue */}
-      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium text-gray-900">Apparence de la roue</h4>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Couleur de bordure</label>
-            <input
-              type="color"
-              value={campaign.gameConfig?.wheel?.borderColor || '#000000'}
-              onChange={(e) => updateWheelConfig({ borderColor: e.target.value })}
-              className="w-full h-10 rounded-lg border border-gray-300"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Épaisseur bordure</label>
-            <input
-              type="range"
-              min="0"
-              max="10"
-              value={campaign.gameConfig?.wheel?.borderWidth || 2}
-              onChange={(e) => updateWheelConfig({ borderWidth: parseInt(e.target.value) })}
-              className="w-full"
-            />
-            <span className="text-xs text-gray-500">{campaign.gameConfig?.wheel?.borderWidth || 2}px</span>
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Texte du bouton
+          </label>
+          <input
+            type="text"
+            value={campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner'}
+            onChange={(e) => updateWheelConfig({ buttonLabel: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            placeholder="Faire tourner"
+          />
         </div>
       </div>
 
@@ -218,13 +246,6 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             </div>
           ))}
         </div>
-
-        {segments.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">Aucun segment configuré</p>
-            <p className="text-xs">Cliquez sur "Ajouter" pour créer votre premier segment</p>
-          </div>
-        )}
       </div>
     </div>
   );

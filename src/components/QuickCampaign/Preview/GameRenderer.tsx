@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { synchronizeCampaignWithColors } from './utils/campaignSynchronizer';
 import GameSwitcher from './components/GameSwitcher';
+import { SmartWheel } from '../../SmartWheel';
 
 interface GameRendererProps {
   gameType: string;
@@ -67,6 +69,40 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     justifyContent: 'center',
     overflow: 'hidden'
   };
+
+  // Si c'est une roue, utiliser le nouveau SmartWheel
+  if (gameType === 'wheel') {
+    const segments = synchronizedCampaign.gameConfig?.wheel?.segments || 
+                    synchronizedCampaign.config?.roulette?.segments || [
+      { id: '1', label: 'Cadeau 1', color: finalColors.primary },
+      { id: '2', label: 'Cadeau 2', color: finalColors.secondary },
+      { id: '3', label: 'Cadeau 3', color: finalColors.accent || finalColors.primary },
+      { id: '4', label: 'Cadeau 4', color: finalColors.primary },
+    ];
+
+    const wheelSize = gameSize === 'small' ? 200 : 
+                     gameSize === 'medium' ? 300 : 
+                     gameSize === 'large' ? 400 : 500;
+
+    return (
+      <div style={containerStyle}>
+        <SmartWheel
+          segments={segments}
+          theme="modern"
+          size={wheelSize}
+          brandColors={finalColors}
+          onResult={(segment) => {
+            console.log('Segment gagné en preview:', segment);
+          }}
+          customButton={{
+            text: synchronizedCampaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+            color: finalColors.primary,
+            textColor: '#ffffff'
+          }}
+        />
+      </div>
+    );
+  }
 
   // Clé de rendu forcé pour la mise à jour des couleurs
   const renderKey = `${gameType}-${JSON.stringify(finalColors)}-${Date.now()}`;

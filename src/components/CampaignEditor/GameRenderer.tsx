@@ -7,6 +7,7 @@ import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
 import { useGamePositionCalculator } from './GamePositionCalculator';
 import useCenteredStyles from '../../hooks/useCenteredStyles';
 import { shouldUseUnlockedFunnel, shouldUseStandardFunnel } from '../../utils/funnelMatcher';
+import { SmartWheel } from '../SmartWheel';
 
 interface GameRendererProps {
   campaign: any;
@@ -66,6 +67,49 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     containerStyle.backgroundSize = 'cover';
     containerStyle.backgroundPosition = 'center';
     containerStyle.backgroundRepeat = 'no-repeat';
+  }
+
+  // Si c'est une roue, utiliser directement le SmartWheel
+  if (enhancedCampaign.type === 'wheel') {
+    const segments = enhancedCampaign.gameConfig?.wheel?.segments || 
+                    enhancedCampaign.config?.roulette?.segments || [];
+
+    const brandColors = {
+      primary: enhancedCampaign.design?.customColors?.primary || '#841b60',
+      secondary: enhancedCampaign.design?.customColors?.secondary || '#4ecdc4',
+      accent: enhancedCampaign.design?.customColors?.accent || '#45b7d1'
+    };
+
+    const wheelSize = gameSize === 'small' ? 200 : 
+                     gameSize === 'medium' ? 300 : 
+                     gameSize === 'large' ? 400 : 500;
+
+    return (
+      <div className={className} style={containerStyle}>
+        {gameBackgroundImage && showBackgroundOverlay && (
+          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+        )}
+        <div
+          className="relative z-10 w-full h-full flex items-center justify-center"
+          style={{ ...wrapperStyle, ...getPositionStyles() }}
+        >
+          <SmartWheel
+            segments={segments}
+            theme="modern"
+            size={wheelSize}
+            brandColors={brandColors}
+            onResult={(segment) => {
+              console.log('Segment gagné dans l\'éditeur:', segment);
+            }}
+            customButton={{
+              text: enhancedCampaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+              color: brandColors.primary,
+              textColor: '#ffffff'
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   // Pour les types utilisant le funnel standard
