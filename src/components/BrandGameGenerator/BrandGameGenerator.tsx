@@ -1,17 +1,15 @@
 
 import React, { useState } from 'react';
 import { Globe, Sparkles, Eye, ArrowRight, Loader2 } from 'lucide-react';
-import { ScrapingBeeService, BrandData } from '../../services/scrapingBeeService';
-import { OpenAIGameGeneratorService, GeneratedGameConcept } from '../../services/openAIGameGeneratorService';
-import BrandPreview from './BrandPreview';
-import GeneratedGamePreview from './GeneratedGamePreview';
+import { supabase } from '../../integrations/supabase/client';
+import { GeneratedGameConcept } from '../../services/openAIGameGeneratorService';
 
 interface BrandGameGeneratorProps {
   onGameGenerated: (concept: GeneratedGameConcept) => void;
   onCancel?: () => void;
 }
 
-type GenerationStep = 'input' | 'extracting' | 'generating' | 'preview' | 'complete';
+type GenerationStep = 'input' | 'generating' | 'preview' | 'complete';
 
 const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
   onGameGenerated,
@@ -19,39 +17,35 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
 }) => {
   const [step, setStep] = useState<GenerationStep>('input');
   const [url, setUrl] = useState('');
-  const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [gameConcept, setGameConcept] = useState<GeneratedGameConcept | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [apiKeys, setApiKeys] = useState({
-    scrapingBee: '',
-    openAI: ''
-  });
 
   const handleGenerate = async () => {
-    if (!url || !apiKeys.scrapingBee || !apiKeys.openAI) {
-      setError('Please provide URL and API keys');
+    if (!url) {
+      setError('Veuillez saisir une URL');
       return;
     }
 
     try {
       setError(null);
-      setStep('extracting');
-
-      // Step 1: Extract brand data
-      const scrapingBee = new ScrapingBeeService(apiKeys.scrapingBee);
-      const extractedBrandData = await scrapingBee.extractBrandData(url);
-      setBrandData(extractedBrandData);
-
       setStep('generating');
 
-      // Step 2: Generate game concept
-      const openAI = new OpenAIGameGeneratorService(apiKeys.openAI);
-      const generatedConcept = await openAI.generateGameConcept(extractedBrandData);
-      setGameConcept(generatedConcept);
+      console.log('Calling brand-game-generator function with URL:', url);
+      
+      const { data, error: functionError } = await supabase.functions.invoke('brand-game-generator', {
+        body: { url }
+      });
 
+      if (functionError) {
+        throw new Error(functionError.message);
+      }
+
+      console.log('Generated game concept:', data);
+      setGameConcept(data);
       setStep('preview');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      console.error('Generation error:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la génération');
       setStep('input');
     }
   };
@@ -73,17 +67,17 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Generate Brand Campaign
+                Générer une Campagne de Marque
               </h2>
               <p className="text-gray-600 max-w-md mx-auto">
-                Enter a brand's website URL to automatically generate a fully branded marketing game
+                Saisissez l'URL du site web d'une marque pour générer automatiquement un jeu marketing entièrement personnalisé
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Brand Website URL
+                  URL du site web de la marque
                 </label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -91,36 +85,8 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                     type="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com"
+                    placeholder="https://exemple.com"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ScrapingBee API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKeys.scrapingBee}
-                    onChange={(e) => setApiKeys(prev => ({ ...prev, scrapingBee: e.target.value }))}
-                    placeholder="Enter ScrapingBee API key"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    OpenAI API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKeys.openAI}
-                    onChange={(e) => setApiKeys(prev => ({ ...prev, openAI: e.target.value }))}
-                    placeholder="Enter OpenAI API key"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -137,41 +103,28 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                     onClick={onCancel}
                     className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    Cancel
+                    Annuler
                   </button>
                 )}
                 <button
                   onClick={handleGenerate}
-                  disabled={!url || !apiKeys.scrapingBee || !apiKeys.openAI}
+                  disabled={!url}
                   className="flex-1 px-6 py-3 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Generate Campaign
+                  Générer la Campagne
                 </button>
               </div>
             </div>
           </div>
         );
 
-      case 'extracting':
+      case 'generating':
         return (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 text-[#841b60] animate-spin mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Extracting Brand Data</h3>
-            <p className="text-gray-600">Analyzing website content, colors, and design...</p>
-          </div>
-        );
-
-      case 'generating':
-        return (
-          <div className="space-y-8">
-            <div className="text-center py-8">
-              <Sparkles className="w-12 h-12 text-[#841b60] animate-pulse mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Generating Game Concept</h3>
-              <p className="text-gray-600">Creating the perfect marketing game for this brand...</p>
-            </div>
-            
-            {brandData && <BrandPreview brandData={brandData} />}
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Génération en cours...</h3>
+            <p className="text-gray-600">Analyse du site web et création du concept de jeu...</p>
           </div>
         );
 
@@ -179,28 +132,69 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Campaign Generated!</h3>
-              <p className="text-gray-600">Review your branded campaign and apply it to start editing</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Campagne Générée !</h3>
+              <p className="text-gray-600">Votre campagne de marque est prête</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {brandData && <BrandPreview brandData={brandData} />}
-              {gameConcept && <GeneratedGamePreview gameConcept={gameConcept} />}
-            </div>
+            {gameConcept && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
+                <div className="space-y-4">
+                  <div 
+                    className="p-4 rounded-lg border-2"
+                    style={{ 
+                      backgroundColor: gameConcept.colors.background,
+                      borderColor: gameConcept.colors.primary 
+                    }}
+                  >
+                    <h4 className="font-bold text-lg mb-2" style={{ color: gameConcept.colors.primary }}>
+                      {gameConcept.gameName}
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Type: {gameConcept.gameType} • Thème: {gameConcept.theme}
+                    </p>
+                    <p className="text-sm" style={{ color: gameConcept.colors.secondary }}>
+                      {gameConcept.content.description}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-medium text-gray-700 mb-1">Titre:</h5>
+                      <p className="text-gray-600">{gameConcept.content.title}</p>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-gray-700 mb-1">Bouton:</h5>
+                      <p className="text-gray-600">{gameConcept.content.buttonText}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-gray-700 mb-2">Prix:</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {gameConcept.gameConfig.prizes.slice(0, 3).map((prize, index) => (
+                        <span key={index} className="bg-gray-200 rounded-full px-3 py-1 text-sm">
+                          {prize}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-3">
               <button
                 onClick={() => setStep('input')}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Generate Again
+                Générer à Nouveau
               </button>
               <button
                 onClick={handleApply}
                 className="flex-1 px-6 py-3 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors flex items-center justify-center gap-2"
               >
                 <ArrowRight className="w-5 h-5" />
-                Apply to Editor
+                Appliquer dans l'Éditeur
               </button>
             </div>
           </div>
@@ -212,8 +206,8 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Eye className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Campaign Applied!</h3>
-            <p className="text-gray-600">Your branded campaign is now ready for editing and preview</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Campagne Appliquée !</h3>
+            <p className="text-gray-600">Votre campagne de marque est maintenant prête pour l'édition et la prévisualisation</p>
           </div>
         );
 
