@@ -55,8 +55,8 @@ export const useWheelAnimation = ({
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / theme.animation.duration, 1);
 
-      // Fonction d'easing cubic-bezier
-      const easeProgress = cubicBezier(0.23, 1, 0.32, 1)(progress);
+      // Fonction d'easing - ease-out cubic
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
       
       const currentRotation = wheelState.rotation + (targetRotation - wheelState.rotation) * easeProgress;
 
@@ -101,18 +101,5 @@ export const useWheelAnimation = ({
     wheelState,
     spin,
     reset
-  };
-};
-
-// Fonction cubic-bezier simplifiée
-const cubicBezier = (x1: number, y1: number, x2: number, y2: number) => {
-  return (t: number) => {
-    const u = 1 - t;
-    const tt = t * t;
-    const uu = u * u;
-    const uuu = uu * u;
-    const ttt = tt * t;
-    
-    return 3 * uu * t * y1 + 3 * u * tt * y2 + ttt;
   };
 };
