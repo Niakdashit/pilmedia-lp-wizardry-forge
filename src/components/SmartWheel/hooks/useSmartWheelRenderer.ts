@@ -59,33 +59,35 @@ export const useSmartWheelRenderer = ({
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const radius = (size / 2) - 60;
+    // Ajuster le rayon pour éliminer l'écart avec la bordure
+    const maxRadius = (size / 2) - 20; // Rayon maximum pour les segments
+    const borderRadius = maxRadius + 10; // Bordure proche des segments
 
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
 
     // Dessiner l'arrière-plan
-    drawBackground(ctx, centerX, centerY, radius, theme);
+    drawBackground(ctx, centerX, centerY, borderRadius, theme);
 
     // Dessiner les segments
     if (segments.length > 0) {
-      drawSegments(ctx, segments, centerX, centerY, radius, wheelState, theme);
+      drawSegments(ctx, segments, centerX, centerY, maxRadius, wheelState, theme);
     }
 
     // Dessiner les bordures stylisées
-    drawStyledBorder(ctx, centerX, centerY, radius, borderStyle, animationTime);
+    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime);
 
     // Dessiner le centre
     drawCenter(ctx, centerX, centerY, size, theme);
 
     // Dessiner le pointeur
-    drawPointer(ctx, centerX, centerY, radius, theme);
+    drawPointer(ctx, centerX, centerY, maxRadius, theme);
 
   }, [segments, theme, wheelState, size, borderStyle, animationTime]);
 
   const drawBackground = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
     if (theme.effects.gradient) {
-      const bgGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius + 40);
+      const bgGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius + 20);
       bgGradient.addColorStop(0, theme.colors.background);
       bgGradient.addColorStop(1, darkenColor(theme.colors.background, 0.1));
       ctx.fillStyle = bgGradient;
@@ -94,7 +96,7 @@ export const useSmartWheelRenderer = ({
     }
     
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + 40, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, radius + 20, 0, 2 * Math.PI);
     ctx.fill();
   };
 
@@ -109,7 +111,7 @@ export const useSmartWheelRenderer = ({
       const segmentColor = segment.color || 
         (index % 2 === 0 ? theme.colors.primary : theme.colors.secondary);
 
-      // Dessiner le segment
+      // Dessiner le segment - utiliser le rayon complet
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
@@ -129,8 +131,8 @@ export const useSmartWheelRenderer = ({
       
       ctx.fill();
 
-      // Bordure du segment
-      ctx.strokeStyle = theme.colors.border;
+      // Bordure fine entre segments
+      ctx.strokeStyle = theme.colors.background;
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -141,14 +143,13 @@ export const useSmartWheelRenderer = ({
 
   const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
-    const borderRadius = radius + 35;
 
     ctx.save();
 
     switch (borderStyleConfig.type) {
       case 'solid':
         ctx.beginPath();
-        ctx.arc(centerX, centerY, borderRadius, 0, 2 * Math.PI);
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = borderStyleConfig.colors[0];
         ctx.lineWidth = borderStyleConfig.width;
         if (borderStyleConfig.effects.shadow) {
@@ -160,9 +161,9 @@ export const useSmartWheelRenderer = ({
 
       case 'metallic':
       case 'luxury':
-        const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, borderRadius);
+        const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
         ctx.beginPath();
-        ctx.arc(centerX, centerY, borderRadius, 0, 2 * Math.PI);
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = metallicGradient;
         ctx.lineWidth = borderStyleConfig.width;
         
@@ -176,47 +177,47 @@ export const useSmartWheelRenderer = ({
         // Effet métallique avec highlights
         if (borderStyleConfig.effects.metallic) {
           ctx.beginPath();
-          ctx.arc(centerX, centerY, borderRadius - 2, 0, 2 * Math.PI);
+          ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
           ctx.lineWidth = 1;
           ctx.stroke();
         }
 
         if (borderStyleConfig.effects.glow) {
-          createNeonEffect(ctx, centerX, centerY, borderRadius, borderStyleConfig.colors[0], 0.5);
+          createNeonEffect(ctx, centerX, centerY, radius, borderStyleConfig.colors[0], 0.5);
         }
         break;
 
       case 'neon':
-        createNeonEffect(ctx, centerX, centerY, borderRadius, borderStyleConfig.colors[0]);
+        createNeonEffect(ctx, centerX, centerY, radius, borderStyleConfig.colors[0]);
         break;
 
       case 'gradient':
         if (borderStyleName === 'rainbow') {
-          const rainbowGradient = createRainbowGradient(ctx, centerX, centerY, borderRadius, animationTime);
+          const rainbowGradient = createRainbowGradient(ctx, centerX, centerY, radius, animationTime);
           ctx.beginPath();
-          ctx.arc(centerX, centerY, borderRadius, 0, 2 * Math.PI);
+          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
           ctx.strokeStyle = rainbowGradient;
           ctx.lineWidth = borderStyleConfig.width;
           ctx.stroke();
         } else {
           const gradient = ctx.createLinearGradient(
-            centerX - borderRadius, centerY - borderRadius,
-            centerX + borderRadius, centerY + borderRadius
+            centerX - radius, centerY - radius,
+            centerX + radius, centerY + radius
           );
           borderStyleConfig.colors.forEach((color, index) => {
             gradient.addColorStop(index / (borderStyleConfig.colors.length - 1), color);
           });
           
           ctx.beginPath();
-          ctx.arc(centerX, centerY, borderRadius, 0, 2 * Math.PI);
+          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
           ctx.strokeStyle = gradient;
           ctx.lineWidth = borderStyleConfig.width;
           ctx.stroke();
         }
 
         if (borderStyleConfig.effects.glow) {
-          createNeonEffect(ctx, centerX, centerY, borderRadius, borderStyleConfig.colors[0], 0.3);
+          createNeonEffect(ctx, centerX, centerY, radius, borderStyleConfig.colors[0], 0.3);
         }
         break;
     }
