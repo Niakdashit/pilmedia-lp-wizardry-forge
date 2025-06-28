@@ -21,7 +21,7 @@ const BrandButton: React.FC<BrandButtonProps> = ({
   className = '',
   type = 'button'
 }) => {
-  const { primaryColor, secondaryColor, textColor, accentColor } = useBrandTheme();
+  const { primaryColor, secondaryColor, textColor } = useBrandTheme();
 
   const getButtonStyle = () => {
     switch (variant) {
@@ -76,10 +76,7 @@ const BrandButton: React.FC<BrandButtonProps> = ({
         focus:ring-2 focus:ring-offset-2
         ${className}
       `}
-      style={{
-        ...getButtonStyle(),
-        focusRingColor: primaryColor + '50'
-      }}
+      style={getButtonStyle()}
     >
       {children}
     </button>
