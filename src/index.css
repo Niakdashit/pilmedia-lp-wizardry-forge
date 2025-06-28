@@ -1,8 +1,54 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Variables CSS pour les couleurs de marque */
+:root {
+  --brand-primary: #841b60;
+  --brand-secondary: #dc2626;
+  --brand-accent: #ffffff;
+  --brand-text: #ffffff;
+}
+
+/* Classes utilitaires pour les couleurs de marque */
+@layer utilities {
+  .bg-brand-primary {
+    background-color: var(--brand-primary);
+  }
+  
+  .bg-brand-secondary {
+    background-color: var(--brand-secondary);
+  }
+  
+  .bg-brand-accent {
+    background-color: var(--brand-accent);
+  }
+  
+  .text-brand-primary {
+    color: var(--brand-primary);
+  }
+  
+  .text-brand-secondary {
+    color: var(--brand-secondary);
+  }
+  
+  .text-brand {
+    color: var(--brand-text);
+  }
+  
+  .border-brand-primary {
+    border-color: var(--brand-primary);
+  }
+  
+  .border-brand-secondary {
+    border-color: var(--brand-secondary);
+  }
+  
+  .ring-brand-primary {
+    --tw-ring-color: var(--brand-primary);
+  }
+}
 
 /* Masquer la scrollbar tout en gardant la fonctionnalité de scroll */
 .scrollbar-hide {
