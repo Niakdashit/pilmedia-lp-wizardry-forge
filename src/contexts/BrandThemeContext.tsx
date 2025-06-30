@@ -112,7 +112,6 @@ export const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
     root.style.setProperty('--brand-text', brandTheme.customColors.text);
   };
 
-  // Application du thème par défaut
   useEffect(() => {
     if (defaultUrl) {
       applyThemeFromUrl(defaultUrl);
