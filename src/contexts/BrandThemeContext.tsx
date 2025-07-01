@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { generateBrandThemeFromUrl, BrandTheme } from '../utils/BrandStyleAnalyzer';
 import { getExactBrandColors } from '../components/QuickCampaign/Preview/utils/exactColorExtractor';
@@ -18,10 +19,10 @@ interface BrandThemeProviderProps {
   defaultUrl?: string;
 }
 
-export const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({ 
+export const BrandThemeProvider = ({ 
   children, 
   defaultUrl 
-}) => {
+}: BrandThemeProviderProps) => {
   const [theme, setTheme] = useState<BrandTheme | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
