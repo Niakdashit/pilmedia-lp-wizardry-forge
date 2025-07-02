@@ -18,10 +18,10 @@ interface BrandThemeProviderProps {
   defaultUrl?: string;
 }
 
-export const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({ 
+function BrandThemeProvider({ 
   children, 
   defaultUrl 
-}) => {
+}: BrandThemeProviderProps): React.JSX.Element {
   const [theme, setTheme] = useState<BrandTheme | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +132,9 @@ export const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
       {children}
     </BrandThemeContext.Provider>
   );
-};
+}
+
+export { BrandThemeProvider };
 
 export const useBrandTheme = () => {
   const context = useContext(BrandThemeContext);
