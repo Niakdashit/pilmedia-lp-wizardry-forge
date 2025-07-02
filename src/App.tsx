@@ -13,15 +13,15 @@ function App() {
     <AppProvider>
       <BrandThemeProvider>
         <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Gamification />} />
-              <Route path="/gamification" element={<Gamification />} />
-              <Route path="/campaign-editor/:campaignId" element={<CampaignEditor />} />
-              <Route path="/modern-campaign/:campaignId" element={<ModernCampaignEditor />} />
-              <Route path="/quick-campaign" element={<QuickCampaign />} />
-            </Routes>
-          </Layout>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Gamification />} />
+              <Route path="gamification" element={<Gamification />} />
+              <Route path="campaign-editor/:campaignId" element={<CampaignEditor />} />
+              <Route path="modern-campaign/:campaignId" element={<ModernCampaignEditor />} />
+              <Route path="quick-campaign" element={<QuickCampaign />} />
+            </Route>
+          </Routes>
         </Router>
       </BrandThemeProvider>
     </AppProvider>
