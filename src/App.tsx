@@ -1,7 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
-import { BrandThemeProvider } from './contexts/BrandThemeContext';
+import BrandThemeProvider from './contexts/BrandThemeContext';
 import Layout from './components/Layout/Layout';
 import CampaignEditor from './pages/CampaignEditor';
 import Gamification from './pages/Gamification';

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as React from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { generateBrandThemeFromUrl, BrandTheme } from '../utils/BrandStyleAnalyzer';
 import { getExactBrandColors } from '../components/QuickCampaign/Preview/utils/exactColorExtractor';
 
@@ -18,10 +19,8 @@ interface BrandThemeProviderProps {
   defaultUrl?: string;
 }
 
-function BrandThemeProvider({ 
-  children, 
-  defaultUrl 
-}: BrandThemeProviderProps): React.JSX.Element {
+function BrandThemeProvider(props: BrandThemeProviderProps): React.JSX.Element {
+  const { children, defaultUrl } = props;
   const [theme, setTheme] = useState<BrandTheme | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +133,7 @@ function BrandThemeProvider({
   );
 }
 
-export { BrandThemeProvider };
+export default BrandThemeProvider;
 
 export const useBrandTheme = () => {
   const context = useContext(BrandThemeContext);
