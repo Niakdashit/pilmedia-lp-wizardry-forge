@@ -109,7 +109,7 @@ html, body {
 
 @layer base {
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-gray-50 text-gray-900 font-sans;
   }
   
   /* Assurer que tous les contenants respectent la largeur de l'écran */
@@ -134,7 +134,7 @@ html, body {
   
   /* Ensure dropdowns have proper z-index and background */
   .dropdown-menu {
-    @apply z-50 bg-popover border border-border rounded-lg shadow-lg;
+    @apply z-50 bg-white border border-gray-200 rounded-lg shadow-lg;
   }
   
   /* Button avec couleurs de marque */

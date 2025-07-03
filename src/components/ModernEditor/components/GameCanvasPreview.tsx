@@ -187,7 +187,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 
   return (
     <div 
-      className="flex items-center justify-center bg-background rounded-lg overflow-hidden animate-fade-in"
+      className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden animate-fade-in"
       style={{
         width: gameDimensions.width,
         height: gameDimensions.height,
