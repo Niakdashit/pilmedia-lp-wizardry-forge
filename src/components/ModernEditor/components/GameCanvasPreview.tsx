@@ -30,8 +30,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
           containerClass: 'bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl',
           screenClass: 'bg-black rounded-[2rem] p-1',
           innerClass: 'bg-white rounded-[1.5rem] overflow-auto relative',
-          maxWidth: 375,
-          maxHeight: 667,
+          maxWidth: 450,  // Increased for better visibility
+          maxHeight: 850, // Increased for better visibility
           showNotch: true,
           showHomeIndicator: true
         };
@@ -40,8 +40,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
           containerClass: 'bg-gray-800 rounded-2xl p-4 shadow-2xl',
           screenClass: 'bg-black rounded-xl p-2',
           innerClass: 'bg-white rounded-lg overflow-auto relative',
-          maxWidth: 768,
-          maxHeight: 1024,
+          maxWidth: 900,  // Increased for better visibility
+          maxHeight: 1200, // Increased for better visibility
           showNotch: false,
           showHomeIndicator: false
         };
