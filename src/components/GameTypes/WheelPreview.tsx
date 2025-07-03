@@ -18,6 +18,7 @@ interface WheelPreviewProps {
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
   disabled?: boolean;
   disableForm?: boolean;
+  borderStyle?: string;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -26,7 +27,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   onFinish,
   onStart,
   gameSize = 'medium',
-  disabled = false
+  disabled = false,
+  borderStyle = 'classic'
 }) => {
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();
@@ -81,10 +83,11 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
+        borderStyle={borderStyle}
         customButton={{
-          text: campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
-          color: brandColors.primary,
-          textColor: '#ffffff'
+          text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
+          color: campaign.buttonConfig?.color || brandColors.primary,
+          textColor: campaign.buttonConfig?.textColor || '#ffffff'
         }}
       />
     </div>

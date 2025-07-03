@@ -24,16 +24,40 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 }) => {
   // Style responsif basé sur le device
   const containerStyles = useMemo(() => {
+    const backgroundImage = campaign?.design?.backgroundImage || campaign?.design?.background;
+    const gamePosition = campaign?.gamePosition || 'center';
+    const offsetX = campaign?.design?.gameOffsetX || 0;
+    const offsetY = campaign?.design?.gameOffsetY || 0;
+    
+    // Position mapping pour le jeu
+    const positionStyles = {
+      'top-left': { alignItems: 'flex-start', justifyContent: 'flex-start' },
+      'top-center': { alignItems: 'flex-start', justifyContent: 'center' },
+      'top-right': { alignItems: 'flex-start', justifyContent: 'flex-end' },
+      'center-left': { alignItems: 'center', justifyContent: 'flex-start' },
+      'center': { alignItems: 'center', justifyContent: 'center' },
+      'center-right': { alignItems: 'center', justifyContent: 'flex-end' },
+      'bottom-left': { alignItems: 'flex-end', justifyContent: 'flex-start' },
+      'bottom-center': { alignItems: 'flex-end', justifyContent: 'center' },
+      'bottom-right': { alignItems: 'flex-end', justifyContent: 'flex-end' }
+    };
+
     return {
       width: '100%',
       height: '100%',
-      maxWidth: '100%',
-      maxHeight: '100%',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
+      ...positionStyles[gamePosition as keyof typeof positionStyles],
+      position: 'relative' as const,
+      overflow: 'hidden',
+      backgroundColor: campaign?.design?.backgroundColor || '#f3f4f6',
+      backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
+      transform: offsetX || offsetY ? `translate(${offsetX}px, ${offsetY}px)` : undefined
     };
-  }, [previewDevice]);
+  }, [campaign, previewDevice]);
 
   // Configuration unifiée du jeu
   const gameConfig = useMemo(() => {
@@ -53,7 +77,6 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       winnersCount: campaign.gameConfig?.winnersCount || 0
     };
     
-    console.log('GameCanvasPreview - Config générée:', config);
     return config;
   }, [campaign?.gameConfig]);
 
@@ -83,7 +106,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       onFinish: handleGameFinish,
       previewDevice,
       gameSize: campaign.gameSize || 'medium',
-      gamePosition: campaign.gamePosition || 'center'
+      gamePosition: campaign.gamePosition || 'center',
+      borderStyle: campaign.design?.wheelBorderStyle || 'classic'
     };
 
     try {

@@ -19,7 +19,8 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
       design: {
         ...design,
         backgroundImage: imageUrl
-      }
+      },
+      _lastUpdate: Date.now() // Force re-render of preview
     });
   };
 
@@ -37,7 +38,8 @@ const BackgroundSettings: React.FC<BackgroundSettingsProps> = ({
           onChange={(e) =>
             setCampaign({
               ...campaign,
-              design: { ...design, background: e.target.value }
+              design: { ...design, background: e.target.value },
+              _lastUpdate: Date.now()
             })
           }
           className="w-full h-10 rounded-lg border border-gray-300"
