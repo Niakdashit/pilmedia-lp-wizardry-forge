@@ -34,7 +34,7 @@ const QuickCampaign: React.FC = () => {
 
   if (showBrandGenerator) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
         <BrandGameGenerator
           onGameGenerated={handleBrandGenerated}
           onCancel={() => setShowBrandGenerator(false)}
@@ -45,7 +45,7 @@ const QuickCampaign: React.FC = () => {
 
   if (showWelcome) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-[#841b60] to-[#6d164f] rounded-full flex items-center justify-center mx-auto mb-6">

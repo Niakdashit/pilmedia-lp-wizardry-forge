@@ -4,6 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { BrandThemeProvider } from './contexts/BrandThemeContext';
 import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Admin/AdminLayout';
+import EditorOnlyLayout from './components/Layout/EditorOnlyLayout';
 import Dashboard from './pages/Dashboard';
 import CampaignEditor from './pages/CampaignEditor';
 import Campaigns from './pages/Campaigns';
@@ -37,6 +38,7 @@ function App() {
       <BrandThemeProvider>
         <Router>
           <Routes>
+            {/* Routes principales avec sidebar de navigation */}
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
@@ -50,13 +52,38 @@ function App() {
               <Route path="studies" element={<Studies />} />
               <Route path="account" element={<Account />} />
               <Route path="campaign-editor/:campaignId" element={<CampaignEditor />} />
-              <Route path="modern-campaign/:campaignId" element={<ModernCampaignEditor />} />
-              {/* Route spécifique pour quick-preview */}
-              <Route path="modern-campaign/quick-preview" element={<ModernCampaignEditor />} />
-              <Route path="modern-editor/:campaignId" element={<ModernEditorPage />} />
-              <Route path="modern-wizard" element={<ModernWizardPage />} />
-              <Route path="quick-campaign" element={<QuickCampaign />} />
             </Route>
+
+            {/* Routes éditeur en plein écran sans sidebar principale */}
+            <Route path="/quick-campaign" element={
+              <EditorOnlyLayout title="Création rapide de campagne" backPath="/campaigns">
+                <QuickCampaign />
+              </EditorOnlyLayout>
+            } />
+            
+            <Route path="/modern-campaign/:campaignId" element={
+              <EditorOnlyLayout title="Éditeur moderne" backPath="/campaigns">
+                <ModernCampaignEditor />
+              </EditorOnlyLayout>
+            } />
+            
+            <Route path="/modern-campaign/quick-preview" element={
+              <EditorOnlyLayout title="Aperçu rapide" backPath="/quick-campaign">
+                <ModernCampaignEditor />
+              </EditorOnlyLayout>
+            } />
+            
+            <Route path="/modern-editor/:campaignId" element={
+              <EditorOnlyLayout title="Éditeur avancé" backPath="/campaigns">
+                <ModernEditorPage />
+              </EditorOnlyLayout>
+            } />
+            
+            <Route path="/modern-wizard" element={
+              <EditorOnlyLayout title="Assistant de création" backPath="/campaigns">
+                <ModernWizardPage />
+              </EditorOnlyLayout>
+            } />
             
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Admin />} />

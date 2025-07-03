@@ -39,7 +39,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsGenerating(false);
   };
-  return <div className="flex flex-col min-w-0 h-screen">
+  return <div className="flex flex-col min-w-0 h-full">
       {/* Header */}
       <EditorHeader campaign={campaign} onSave={onSave} onPreview={onPreview} isLoading={isLoading} isNewCampaign={isNewCampaign} selectedDevice={previewDevice} onDeviceChange={onDeviceChange} />
 
