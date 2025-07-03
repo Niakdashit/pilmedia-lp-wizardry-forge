@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import { AlertCircle } from 'lucide-react';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import QuizPreview from '../../GameTypes/QuizPreview';
@@ -200,4 +200,4 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   );
 };
 
-export default GameCanvasPreview;
+export default memo(GameCanvasPreview);

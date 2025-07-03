@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModernEditorSidebar from './ModernEditorSidebar';
 import ModernEditorPanel from './ModernEditorPanel';
 import AIAssistantSidebar from './AIAssistantSidebar';
 import EditorHeader from './components/EditorHeader';
-import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
+import GameCanvasPreview from './components/GameCanvasPreview';
 interface ModernEditorLayoutProps {
   campaign: any;
   setCampaign: (updater: (prev: any) => any) => void;
@@ -34,6 +34,20 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 }) => {
   const [showAIAssistant] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Enhanced setCampaign to show loading feedback
+  const enhancedSetCampaign = (updater: any) => {
+    setIsGenerating(true);
+    setCampaign(updater);
+    // Clear loading after a short delay to show feedback
+    setTimeout(() => setIsGenerating(false), 300);
+  };
+  
+  // Optimize preview key to reduce unnecessary re-renders
+  const previewKey = useMemo(() => 
+    `preview-${activeTab}-${campaign._lastUpdate || 0}-${previewDevice}`,
+    [activeTab, campaign._lastUpdate, previewDevice]
+  );
   const handleAIGenerate = async () => {
     setIsGenerating(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -45,8 +59,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor Sidebar - largeur réduite de 280px à 260px */}
-        <div className="w-[390px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
+        {/* Editor Sidebar - responsive width */}
+        <div className="w-[320px] lg:w-[390px] bg-white/95 backdrop-blur-sm border-r border-gray-200/50 shadow-sm flex-shrink-0 px-[6px] mx-0">
           <div className="flex h-full">
             {/* Navigation tabs - alignés à gauche */}
             <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
@@ -55,7 +69,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 
             {/* Panel content - prend le reste de l'espace du sidebar */}
             <div className="flex-1 overflow-y-auto">
-              <ModernEditorPanel activeStep={activeTab} campaign={campaign} setCampaign={setCampaign} />
+              <ModernEditorPanel activeStep={activeTab} campaign={campaign} setCampaign={enhancedSetCampaign} />
             </div>
           </div>
         </div>
@@ -72,14 +86,22 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
           </div>
 
           {/* Zone de prévisualisation - dimensions dynamiques */}
-          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden flex-shrink-0" style={{
-            width: previewDevice === 'mobile' ? '400px' : previewDevice === 'tablet' ? '800px' : '100%',
-            height: previewDevice === 'mobile' ? '700px' : previewDevice === 'tablet' ? '600px' : '100%',
-            maxWidth: '1400px',
-            maxHeight: '900px'
+          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden flex-shrink-0 relative" style={{
+            width: previewDevice === 'mobile' ? '320px' : previewDevice === 'tablet' ? '700px' : '100%',
+            height: previewDevice === 'mobile' ? '600px' : previewDevice === 'tablet' ? '500px' : '100%',
+            maxWidth: '1200px',
+            maxHeight: '800px'
           }}>
-              <GameCanvasPreview campaign={campaign} gameSize={campaign.gameSize || 'medium'} previewDevice={previewDevice} className="w-full h-full" key={`preview-${activeTab}-${JSON.stringify(campaign.gameConfig)}-${previewDevice}`} />
+              {isGenerating && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
+                    <span className="text-sm text-gray-600">Mise à jour...</span>
+                  </div>
+                </div>
+              )}
+              <GameCanvasPreview campaign={campaign} previewDevice={previewDevice} key={previewKey} />
             </div>
           </div>
 

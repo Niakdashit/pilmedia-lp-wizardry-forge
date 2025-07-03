@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import ModernGeneralTab from './ModernGeneralTab';
 import ModernGameTab from './ModernGameTab';
 import ModernGameConfigTab from './ModernGameConfigTab';
@@ -80,4 +80,4 @@ const ModernEditorPanel: React.FC<ModernEditorPanelProps> = ({
       </div>
     </div>;
 };
-export default ModernEditorPanel;
+export default memo(ModernEditorPanel);
