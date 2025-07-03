@@ -22,25 +22,18 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   disableForm = true,
   onGameFinish
 }) => {
-  // Calcul optimisé des dimensions basé sur le device
-  const gameDimensions = useMemo(() => {
-    const baseSize = previewDevice === 'mobile' ? 280 : previewDevice === 'tablet' ? 400 : 500;
-    const gameSize = campaign?.gameSize || 'medium';
-    
-    const sizeMultipliers: Record<string, number> = {
-      small: 0.8,
-      medium: 1,
-      large: 1.2,
-      xlarge: 1.4
-    };
-    
-    const finalSize = Math.floor(baseSize * (sizeMultipliers[gameSize] || 1));
-    
+  // Style responsif basé sur le device
+  const containerStyles = useMemo(() => {
     return {
-      width: finalSize,
-      height: finalSize
+      width: '100%',
+      height: '100%',
+      maxWidth: '100%',
+      maxHeight: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     };
-  }, [previewDevice, campaign?.gameSize]);
+  }, [previewDevice]);
 
   // Configuration unifiée du jeu
   const gameConfig = useMemo(() => {
@@ -187,13 +180,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 
   return (
     <div 
-      className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden animate-fade-in"
-      style={{
-        width: gameDimensions.width,
-        height: gameDimensions.height,
-        minWidth: 200,
-        minHeight: 200
-      }}
+      className="w-full h-full flex items-center justify-center animate-fade-in"
+      style={containerStyles}
     >
       {renderGameComponent()}
     </div>
