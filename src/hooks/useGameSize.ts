@@ -26,14 +26,18 @@ export const useGameSize = (size: GameSize = 'medium') => {
       
       switch (device) {
         case 'mobile':
+          // Mobile: smaller wheel but maintains game size proportions
+          const mobileScale = Math.min(280 / baseDimensions.width, 280 / baseDimensions.height);
           return {
-            width: Math.min(baseDimensions.width, 250),
-            height: Math.min(baseDimensions.height, 250)
+            width: Math.floor(baseDimensions.width * mobileScale),
+            height: Math.floor(baseDimensions.height * mobileScale)
           };
         case 'tablet':
+          // Tablet: medium wheel size while respecting game size
+          const tabletScale = Math.min(400 / baseDimensions.width, 400 / baseDimensions.height);
           return {
-            width: Math.min(baseDimensions.width, 350),
-            height: Math.min(baseDimensions.height, 350)
+            width: Math.floor(baseDimensions.width * tabletScale),
+            height: Math.floor(baseDimensions.height * tabletScale)
           };
         case 'desktop':
         default:

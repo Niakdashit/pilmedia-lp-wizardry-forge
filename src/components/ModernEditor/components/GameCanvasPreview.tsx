@@ -27,9 +27,9 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     switch (previewDevice) {
       case 'mobile':
         return {
-          containerClass: 'bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl max-w-sm mx-auto',
+          containerClass: 'bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl',
           screenClass: 'bg-black rounded-[2rem] p-1',
-          innerClass: 'bg-white rounded-[1.5rem] overflow-hidden relative',
+          innerClass: 'bg-white rounded-[1.5rem] overflow-auto relative',
           maxWidth: 375,
           maxHeight: 667,
           showNotch: true,
@@ -37,9 +37,9 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
         };
       case 'tablet':
         return {
-          containerClass: 'bg-gray-800 rounded-2xl p-4 shadow-2xl max-w-2xl mx-auto',
+          containerClass: 'bg-gray-800 rounded-2xl p-4 shadow-2xl',
           screenClass: 'bg-black rounded-xl p-2',
-          innerClass: 'bg-white rounded-lg overflow-hidden relative',
+          innerClass: 'bg-white rounded-lg overflow-auto relative',
           maxWidth: 768,
           maxHeight: 1024,
           showNotch: false,
@@ -238,47 +238,53 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
+    <div className="w-full h-full flex items-center justify-center">
       {previewDevice === 'desktop' ? (
-        // Desktop - full size preview
-        <div 
-          className="w-full h-full animate-fade-in"
-          style={gameContentStyles}
-        >
-          {renderGameComponent()}
+        // Desktop - full size preview with white container
+        <div className="w-full h-full p-4">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden">
+            <div 
+              className="w-full h-full animate-fade-in"
+              style={gameContentStyles}
+            >
+              {renderGameComponent()}
+            </div>
+          </div>
         </div>
       ) : (
-        // Mobile/Tablet - device frame
-        <div className={deviceStyles.containerClass}>
-          <div className={deviceStyles.screenClass}>
-            <div className={deviceStyles.innerClass}>
-              {/* Device-specific elements */}
-              {deviceStyles.showNotch && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-4 bg-black rounded-b-lg z-20"></div>
-              )}
-              
-              {deviceStyles.showNotch && (
-                <div className="absolute top-1 left-2 right-2 flex justify-between items-center text-xs font-medium z-20 text-black">
-                  <span>9:41</span>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-4 h-2 border border-black rounded-sm">
-                      <div className="w-3 h-1 bg-green-500 rounded-sm"></div>
+        // Mobile/Tablet - device frame only, no white container
+        <div className="w-full h-full flex items-center justify-center p-4">
+          <div className={deviceStyles.containerClass}>
+            <div className={deviceStyles.screenClass}>
+              <div className={deviceStyles.innerClass}>
+                {/* Device-specific elements */}
+                {deviceStyles.showNotch && (
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-4 bg-black rounded-b-lg z-20"></div>
+                )}
+                
+                {deviceStyles.showNotch && (
+                  <div className="absolute top-1 left-2 right-2 flex justify-between items-center text-xs font-medium z-20 text-black">
+                    <span>9:41</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-4 h-2 border border-black rounded-sm">
+                        <div className="w-3 h-1 bg-green-500 rounded-sm"></div>
+                      </div>
                     </div>
                   </div>
+                )}
+                
+                {/* Game content - direct style application */}
+                <div 
+                  className="w-full h-full animate-fade-in overflow-auto"
+                  style={gameContentStyles}
+                >
+                  {renderGameComponent()}
                 </div>
-              )}
-              
-              {/* Game content */}
-              <div 
-                className="w-full h-full animate-fade-in"
-                style={gameContentStyles}
-              >
-                {renderGameComponent()}
+                
+                {deviceStyles.showHomeIndicator && (
+                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gray-400 rounded-full z-20"></div>
+                )}
               </div>
-              
-              {deviceStyles.showHomeIndicator && (
-                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gray-400 rounded-full z-20"></div>
-              )}
             </div>
           </div>
         </div>

@@ -88,8 +88,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
           </div>
 
           {/* Zone de prévisualisation - pleine largeur avec spacing propre */}
-          <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
-            <div className="relative w-full h-full flex items-center justify-center" style={{ marginRight: '24px' }}>
+          <div className="flex-1 flex items-center justify-center overflow-hidden">
+            <div className="relative w-full h-full flex items-center justify-center">
               {isGenerating && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
                   <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
                   </div>
                 </div>
               )}
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 <GameCanvasPreview campaign={campaign} previewDevice={previewDevice} key={previewKey} />
               </div>
             </div>

@@ -14,7 +14,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   brandColors,
   customButton,
   borderStyle = 'classic',
-  className = ''
+  className = '',
+  maxSize
 }) => {
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
@@ -26,6 +27,9 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
+
+  // Calculate actual size respecting maxSize constraint
+  const actualSize = maxSize ? Math.min(size, maxSize) : size;
 
   // Animation de la roue
   const {
@@ -45,7 +49,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     segments,
     theme: resolvedTheme,
     wheelState,
-    size,
+    size: actualSize,
     borderStyle: currentBorderStyle
   });
   const handleSpin = () => {
@@ -60,8 +64,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   return <div className={`flex flex-col items-center space-y-6 ${className}`}>
       {/* Container de la roue */}
       <div className="relative flex items-center justify-center" style={{
-      width: size,
-      height: size
+      width: actualSize,
+      height: actualSize
     }}>
         <canvas ref={canvasRef} className="rounded-full" style={{
         filter: wheelState.isSpinning ? 'brightness(1.1) saturate(1.2)' : 'none',

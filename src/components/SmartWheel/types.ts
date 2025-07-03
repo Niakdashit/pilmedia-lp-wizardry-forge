@@ -51,6 +51,7 @@ export interface SmartWheelProps {
   };
   borderStyle?: string; // Nouveau prop pour le style de bordure
   className?: string;
+  maxSize?: number; // Limite la taille maximum de la roue
 }
 
 export interface WheelState {

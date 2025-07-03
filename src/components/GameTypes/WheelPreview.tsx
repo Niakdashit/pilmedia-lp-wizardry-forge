@@ -27,11 +27,12 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   onFinish,
   onStart,
   gameSize = 'medium',
+  previewDevice = 'desktop',
   disabled = false,
   borderStyle = 'classic'
 }) => {
-  const { getGameDimensions } = useGameSize(gameSize);
-  const gameDimensions = getGameDimensions();
+  const { getResponsiveDimensions } = useGameSize(gameSize);
+  const gameDimensions = getResponsiveDimensions(previewDevice);
 
   // Récupérer les segments depuis la configuration de la campagne
   const segments = campaign.gameConfig?.wheel?.segments || 
@@ -79,6 +80,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         segments={smartWheelSegments}
         theme="modern"
         size={wheelSize}
+        maxSize={Math.min(gameDimensions.width, gameDimensions.height)}
         brandColors={brandColors}
         onResult={handleResult}
         onSpin={handleSpin}
