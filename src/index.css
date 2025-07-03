@@ -3,50 +3,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Variables CSS pour les couleurs de marque */
+/* Variables CSS pour les couleurs de marque - Format HSL */
 :root {
-  --brand-primary: #841b60;
-  --brand-secondary: #dc2626;
-  --brand-accent: #ffffff;
-  --brand-text: #ffffff;
+  --brand-primary: 309 78% 31%;      /* #841b60 en HSL */
+  --brand-secondary: 0 74% 50%;      /* #dc2626 en HSL */
+  --brand-accent: 0 0% 100%;         /* #ffffff en HSL */
+  --brand-text: 0 0% 100%;           /* #ffffff en HSL */
+  
+  /* Variables complémentaires pour cohérence */
+  --primary: 309 78% 31%;
+  --secondary: 0 74% 50%;
+  --accent: 0 0% 100%;
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 309 78% 31%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 309 78% 31%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 309 78% 31%;
 }
 
 /* Classes utilitaires pour les couleurs de marque */
 @layer utilities {
   .bg-brand-primary {
-    background-color: var(--brand-primary);
+    background-color: hsl(var(--brand-primary));
   }
   
   .bg-brand-secondary {
-    background-color: var(--brand-secondary);
+    background-color: hsl(var(--brand-secondary));
   }
   
   .bg-brand-accent {
-    background-color: var(--brand-accent);
+    background-color: hsl(var(--brand-accent));
   }
   
   .text-brand-primary {
-    color: var(--brand-primary);
+    color: hsl(var(--brand-primary));
   }
   
   .text-brand-secondary {
-    color: var(--brand-secondary);
+    color: hsl(var(--brand-secondary));
   }
   
   .text-brand {
-    color: var(--brand-text);
+    color: hsl(var(--brand-text));
   }
   
   .border-brand-primary {
-    border-color: var(--brand-primary);
+    border-color: hsl(var(--brand-primary));
   }
   
   .border-brand-secondary {
-    border-color: var(--brand-secondary);
+    border-color: hsl(var(--brand-secondary));
   }
   
   .ring-brand-primary {
-    --tw-ring-color: var(--brand-primary);
+    --tw-ring-color: hsl(var(--brand-primary));
   }
 }
 
@@ -72,7 +109,7 @@ html, body {
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    @apply bg-background text-foreground font-sans;
   }
   
   /* Assurer que tous les contenants respectent la largeur de l'écran */
@@ -97,7 +134,16 @@ html, body {
   
   /* Ensure dropdowns have proper z-index and background */
   .dropdown-menu {
-    @apply z-50 bg-white border border-gray-200 rounded-lg shadow-lg;
+    @apply z-50 bg-popover border border-border rounded-lg shadow-lg;
+  }
+  
+  /* Button avec couleurs de marque */
+  .btn-brand-primary {
+    @apply bg-brand-primary text-brand hover:bg-brand-primary/90 border-brand-primary;
+  }
+  
+  .btn-brand-secondary {
+    @apply bg-brand-secondary text-white hover:bg-brand-secondary/90 border-brand-secondary;
   }
 }
 
@@ -124,4 +170,35 @@ html, body {
 
 .animate-sparkle {
   animation: sparkle 2s ease-in-out infinite;
+}
+
+/* Animations pour l'éditeur moderne */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }

@@ -23,8 +23,8 @@ export const loadCampaign = async (
         
         const validatedData = validateQuickCampaignData(parsedData);
         if (!validatedData) {
-          console.error('QuickCampaign data validation failed');
-          return null;
+          console.error('QuickCampaign data validation failed, using default campaign');
+          return getDefaultCampaign(campaignType, false);
         }
         
         const existingCampaignType = (validatedData.type as CampaignType) || campaignType;
@@ -74,7 +74,8 @@ export const loadCampaign = async (
         console.log('Final merged campaign:', mergedCampaign);
         return mergedCampaign;
       } else {
-        console.log('No QuickCampaign data found in localStorage');
+        console.log('No QuickCampaign data found in localStorage, using default campaign');
+        return getDefaultCampaign(campaignType, false);
       }
     }
 

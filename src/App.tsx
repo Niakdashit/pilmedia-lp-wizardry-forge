@@ -51,6 +51,8 @@ function App() {
               <Route path="account" element={<Account />} />
               <Route path="campaign-editor/:campaignId" element={<CampaignEditor />} />
               <Route path="modern-campaign/:campaignId" element={<ModernCampaignEditor />} />
+              {/* Route spécifique pour quick-preview */}
+              <Route path="modern-campaign/quick-preview" element={<ModernCampaignEditor />} />
               <Route path="modern-editor/:campaignId" element={<ModernEditorPage />} />
               <Route path="modern-wizard" element={<ModernWizardPage />} />
               <Route path="quick-campaign" element={<QuickCampaign />} />
