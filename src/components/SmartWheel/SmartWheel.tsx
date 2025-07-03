@@ -4,7 +4,6 @@ import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
 import BorderStyleSelector from './components/BorderStyleSelector';
-import { BORDER_STYLES } from './utils/borderStyles';
 const SmartWheel: React.FC<SmartWheelProps> = ({
   segments,
   theme = 'modern',

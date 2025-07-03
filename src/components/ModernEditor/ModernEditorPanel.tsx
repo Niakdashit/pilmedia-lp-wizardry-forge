@@ -52,16 +52,26 @@ const ModernEditorPanel: React.FC<ModernEditorPanelProps> = ({
       case 'game':
         return <ModernGameTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       case 'gameconfig':
-        return <ModernGameConfigTab gameSize={safeCampaign.gameSize || 'medium'} gamePosition={safeCampaign.gamePosition || 'center'} onGameSizeChange={size => safeSetCampaign((prev: any) => ({
-          ...prev,
-          gameSize: size
-        }))} onGamePositionChange={position => safeSetCampaign((prev: any) => ({
-          ...prev,
-          gamePosition: position
-        }))} buttonConfig={safeCampaign.buttonConfig || {}} onButtonConfigChange={config => safeSetCampaign((prev: any) => ({
-          ...prev,
-          buttonConfig: config
-        }))} />;
+        return <ModernGameConfigTab 
+          gameSize={safeCampaign.gameSize || 'medium'} 
+          gamePosition={safeCampaign.gamePosition || 'center'} 
+          onGameSizeChange={size => safeSetCampaign((prev: any) => ({
+            ...prev,
+            gameSize: size,
+            _lastUpdate: Date.now()
+          }))} 
+          onGamePositionChange={position => safeSetCampaign((prev: any) => ({
+            ...prev,
+            gamePosition: position,
+            _lastUpdate: Date.now()
+          }))} 
+          buttonConfig={safeCampaign.buttonConfig || {}} 
+          onButtonConfigChange={config => safeSetCampaign((prev: any) => ({
+            ...prev,
+            buttonConfig: config,
+            _lastUpdate: Date.now()
+          }))} 
+        />;
       case 'design':
         return <ModernDesignTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       case 'form':

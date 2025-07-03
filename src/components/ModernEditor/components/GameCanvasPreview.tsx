@@ -22,8 +22,44 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   disableForm = true,
   onGameFinish
 }) => {
-  // Style responsif basé sur le device
-  const containerStyles = useMemo(() => {
+  // Device-specific styles and dimensions
+  const deviceStyles = useMemo(() => {
+    switch (previewDevice) {
+      case 'mobile':
+        return {
+          containerClass: 'bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl max-w-sm mx-auto',
+          screenClass: 'bg-black rounded-[2rem] p-1',
+          innerClass: 'bg-white rounded-[1.5rem] overflow-hidden relative',
+          maxWidth: 375,
+          maxHeight: 667,
+          showNotch: true,
+          showHomeIndicator: true
+        };
+      case 'tablet':
+        return {
+          containerClass: 'bg-gray-800 rounded-2xl p-4 shadow-2xl max-w-2xl mx-auto',
+          screenClass: 'bg-black rounded-xl p-2',
+          innerClass: 'bg-white rounded-lg overflow-hidden relative',
+          maxWidth: 768,
+          maxHeight: 1024,
+          showNotch: false,
+          showHomeIndicator: false
+        };
+      default:
+        return {
+          containerClass: 'w-full h-full',
+          screenClass: 'w-full h-full',
+          innerClass: 'w-full h-full overflow-hidden relative',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          showNotch: false,
+          showHomeIndicator: false
+        };
+    }
+  }, [previewDevice]);
+
+  // Game content styles with positioning
+  const gameContentStyles = useMemo(() => {
     const backgroundImage = campaign?.design?.backgroundImage || campaign?.design?.background;
     const gamePosition = campaign?.gamePosition || 'center';
     const offsetX = campaign?.design?.gameOffsetX || 0;
@@ -49,12 +85,11 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       ...positionStyles[gamePosition as keyof typeof positionStyles],
       position: 'relative' as const,
       overflow: 'hidden',
-      backgroundColor: campaign?.design?.backgroundColor || '#f3f4f6',
+      backgroundColor: campaign?.design?.backgroundColor || campaign?.design?.background || '#f3f4f6',
       backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
-      borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
       transform: offsetX || offsetY ? `translate(${offsetX}px, ${offsetY}px)` : undefined
     };
   }, [campaign, previewDevice]);
@@ -203,11 +238,51 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   };
 
   return (
-    <div 
-      className="w-full h-full flex items-center justify-center animate-fade-in"
-      style={containerStyles}
-    >
-      {renderGameComponent()}
+    <div className="w-full h-full flex items-center justify-center p-4">
+      {previewDevice === 'desktop' ? (
+        // Desktop - full size preview
+        <div 
+          className="w-full h-full animate-fade-in"
+          style={gameContentStyles}
+        >
+          {renderGameComponent()}
+        </div>
+      ) : (
+        // Mobile/Tablet - device frame
+        <div className={deviceStyles.containerClass}>
+          <div className={deviceStyles.screenClass}>
+            <div className={deviceStyles.innerClass}>
+              {/* Device-specific elements */}
+              {deviceStyles.showNotch && (
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-4 bg-black rounded-b-lg z-20"></div>
+              )}
+              
+              {deviceStyles.showNotch && (
+                <div className="absolute top-1 left-2 right-2 flex justify-between items-center text-xs font-medium z-20 text-black">
+                  <span>9:41</span>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-4 h-2 border border-black rounded-sm">
+                      <div className="w-3 h-1 bg-green-500 rounded-sm"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Game content */}
+              <div 
+                className="w-full h-full animate-fade-in"
+                style={gameContentStyles}
+              >
+                {renderGameComponent()}
+              </div>
+              
+              {deviceStyles.showHomeIndicator && (
+                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gray-400 rounded-full z-20"></div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
