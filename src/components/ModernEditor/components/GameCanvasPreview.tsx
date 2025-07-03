@@ -27,21 +27,21 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     switch (previewDevice) {
       case 'mobile':
         return {
-          containerClass: 'bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl',
+          containerClass: 'bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl',
           screenClass: 'bg-black rounded-[2rem] p-1',
           innerClass: 'bg-white rounded-[1.5rem] overflow-auto relative',
-          maxWidth: 550,  // Taille Qualifio-like pour mobile
-          maxHeight: 1000, // Taille Qualifio-like pour mobile
+          maxWidth: 450,  // Qualifio standard mobile
+          maxHeight: 900, // Qualifio standard mobile
           showNotch: true,
           showHomeIndicator: true
         };
       case 'tablet':
         return {
-          containerClass: 'bg-gray-800 rounded-2xl p-4 shadow-2xl',
-          screenClass: 'bg-black rounded-xl p-2',
+          containerClass: 'bg-gray-800 rounded-2xl p-3 shadow-2xl',
+          screenClass: 'bg-black rounded-xl p-1',
           innerClass: 'bg-white rounded-lg overflow-auto relative',
-          maxWidth: 1000,  // Taille Qualifio-like pour tablette
-          maxHeight: 1400, // Taille Qualifio-like pour tablette
+          maxWidth: 750,  // Qualifio standard tablet
+          maxHeight: 1000, // Qualifio standard tablet
           showNotch: false,
           showHomeIndicator: false
         };
@@ -253,8 +253,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
         </div>
       ) : (
         // Mobile/Tablet - device frame only, no white container
-        <div className="w-full h-full flex items-center justify-center p-4">
-          <div className={deviceStyles.containerClass}>
+        <div className="w-full h-full flex items-center justify-center p-2">
+          <div 
+            className={deviceStyles.containerClass}
+            style={{
+              width: deviceStyles.maxWidth,
+              height: deviceStyles.maxHeight,
+              maxWidth: '90%',
+              maxHeight: '90%'
+            }}
+          >
             <div className={deviceStyles.screenClass}>
               <div className={deviceStyles.innerClass}>
                 {/* Device-specific elements */}
