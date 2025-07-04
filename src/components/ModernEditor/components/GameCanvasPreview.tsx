@@ -27,21 +27,21 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     switch (previewDevice) {
       case 'mobile':
         return {
-          containerClass: 'bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl',
+          containerClass: 'bg-gray-900 rounded-[2.5rem] p-1 shadow-2xl',
           screenClass: 'bg-black rounded-[2rem] p-1',
           innerClass: 'bg-white rounded-[1.5rem] overflow-auto relative',
-          maxWidth: 450,  // Qualifio standard mobile
-          maxHeight: 900, // Qualifio standard mobile
+          maxWidth: 520,  // Qualifio-like mobile size
+          maxHeight: 1100, // Qualifio-like mobile height
           showNotch: true,
           showHomeIndicator: true
         };
       case 'tablet':
         return {
-          containerClass: 'bg-gray-800 rounded-2xl p-3 shadow-2xl',
+          containerClass: 'bg-gray-800 rounded-2xl p-2 shadow-2xl',
           screenClass: 'bg-black rounded-xl p-1',
           innerClass: 'bg-white rounded-lg overflow-auto relative',
-          maxWidth: 750,  // Qualifio standard tablet
-          maxHeight: 1000, // Qualifio standard tablet
+          maxWidth: 850,  // Qualifio-like tablet size
+          maxHeight: 1200, // Qualifio-like tablet height
           showNotch: false,
           showHomeIndicator: false
         };
@@ -259,8 +259,8 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             style={{
               width: deviceStyles.maxWidth,
               height: deviceStyles.maxHeight,
-              maxWidth: '90%',
-              maxHeight: '90%'
+              maxWidth: '95%',
+              maxHeight: '95%'
             }}
           >
             <div className={deviceStyles.screenClass}>
