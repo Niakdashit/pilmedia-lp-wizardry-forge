@@ -21,25 +21,25 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   const getDeviceStyles = () => {
     if (device === 'mobile') {
       return {
-        frame: "bg-gray-900 rounded-[2rem] p-2 shadow-2xl",
-        inner: "bg-black rounded-[1.5rem] p-1",
-        screen: "bg-white rounded-[1.25rem] overflow-hidden relative"
+        frame: "bg-gray-900 rounded-[2.5rem] p-1 shadow-2xl",
+        inner: "bg-black rounded-[2rem] p-1",
+        screen: "bg-white rounded-[1.5rem] overflow-hidden relative"
       };
     }
     
     return {
-      frame: "bg-gray-800 rounded-xl p-3 shadow-2xl",
-      inner: "bg-black rounded-lg p-2",
-      screen: "bg-white rounded-md overflow-hidden relative"
+      frame: "bg-gray-800 rounded-2xl p-2 shadow-2xl",
+      inner: "bg-black rounded-xl p-1",
+      screen: "bg-white rounded-lg overflow-hidden relative"
     };
   };
 
   const styles = getDeviceStyles();
   
-  // Calculer les dimensions avec un padding pour le frame
-  const framePadding = device === 'mobile' ? 32 : 24;
-  const frameWidth = Math.min(maxWidth + framePadding, window.innerWidth * 0.8);
-  const frameHeight = Math.min(maxHeight + framePadding, window.innerHeight * 0.8);
+  // Calculer les dimensions avec un padding réduit pour le frame
+  const framePadding = device === 'mobile' ? 16 : 20;
+  const frameWidth = Math.min(maxWidth + framePadding, window.innerWidth * 0.95);
+  const frameHeight = Math.min(maxHeight + framePadding, window.innerHeight * 0.95);
 
   return (
     <div 

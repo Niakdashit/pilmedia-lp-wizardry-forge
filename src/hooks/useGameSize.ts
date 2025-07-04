@@ -26,15 +26,15 @@ export const useGameSize = (size: GameSize = 'medium') => {
       
       switch (device) {
         case 'mobile':
-          // Mobile: realistic iPhone size - much larger for better UX
-          const mobileScale = Math.min(500 / baseDimensions.width, 500 / baseDimensions.height);
+          // Mobile: Qualifio standard size for optimal UX
+          const mobileScale = Math.min(520 / baseDimensions.width, 1100 / baseDimensions.height);
           return {
             width: Math.floor(baseDimensions.width * mobileScale),
             height: Math.floor(baseDimensions.height * mobileScale)
           };
         case 'tablet':
-          // Tablet: realistic iPad size - much larger for better UX
-          const tabletScale = Math.min(700 / baseDimensions.width, 700 / baseDimensions.height);
+          // Tablet: Qualifio standard size for optimal UX
+          const tabletScale = Math.min(850 / baseDimensions.width, 1200 / baseDimensions.height);
           return {
             width: Math.floor(baseDimensions.width * tabletScale),
             height: Math.floor(baseDimensions.height * tabletScale)
