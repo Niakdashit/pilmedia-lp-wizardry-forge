@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { useInteractiveDragDrop } from '../hooks/useInteractiveDragDrop';
 import InteractiveCustomElementsRenderer from './InteractiveCustomElementsRenderer';
@@ -104,31 +105,25 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full overflow-hidden"
+      className="absolute inset-0 w-full h-full overflow-hidden pointer-events-auto"
       onClick={handleContainerClick}
       style={{
-        cursor: dragState.isDragging ? 'grabbing' : 'default'
+        cursor: dragState.isDragging ? 'grabbing' : 'default',
+        zIndex: 1000
       }}
     >
-      {/* Original content */}
-      <div className="relative w-full h-full">
-        {children}
-      </div>
-      
       {/* Interactive elements overlay */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="relative w-full h-full pointer-events-auto">
-          <InteractiveCustomElementsRenderer
-            customTexts={campaign.design?.customTexts || []}
-            customImages={campaign.design?.customImages || []}
-            previewDevice={previewDevice}
-            sizeMap={sizeMap}
-            selectedElementId={selectedElementId}
-            onElementSelect={handleElementSelect}
-            onDragStart={handleDragStart}
-            dragState={dragState}
-          />
-        </div>
+      <div className="relative w-full h-full">
+        <InteractiveCustomElementsRenderer
+          customTexts={campaign.design?.customTexts || []}
+          customImages={campaign.design?.customImages || []}
+          previewDevice={previewDevice}
+          sizeMap={sizeMap}
+          selectedElementId={selectedElementId}
+          onElementSelect={handleElementSelect}
+          onDragStart={handleDragStart}
+          dragState={dragState}
+        />
       </div>
 
       {/* Drag feedback */}

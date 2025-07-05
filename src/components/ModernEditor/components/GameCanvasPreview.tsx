@@ -1,3 +1,4 @@
+
 import React, { useCallback, memo, useState } from 'react';
 import DeviceFrame from './DeviceFrame';
 import GameRenderer from './GameRenderer';
@@ -91,37 +92,37 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
           <DeviceTransition device={previewDevice} isChanging={isChangingDevice}>
             <GameConfigProvider campaign={campaign}>
               {(gameConfig) => (
-          <DeviceFrame device={previewDevice}>
-            <GamePositioner campaign={campaign}>
-              <GameRenderer
-                campaign={campaign}
-                gameConfig={gameConfig}
-                previewDevice={previewDevice}
-                disableForm={disableForm}
-                onGameFinish={handleGameFinish}
-              />
-              
-              {/* Always render custom elements */}
-              {!isDragDropEnabled && (
-                <CustomElementsRenderer
-                  customTexts={campaign.design?.customTexts || []}
-                  customImages={campaign.design?.customImages || []}
-                  previewDevice={previewDevice}
-                  sizeMap={sizeMap}
-                />
-              )}
-            </GamePositioner>
-            
-            {/* Interactive overlay when drag&drop is enabled */}
-            {isDragDropEnabled && setCampaign && (
-              <InteractiveDragDropOverlay
-                campaign={campaign}
-                setCampaign={setCampaign}
-                previewDevice={previewDevice}
-                isEnabled={isDragDropEnabled}
-              />
-            )}
-          </DeviceFrame>
+                <DeviceFrame device={previewDevice}>
+                  <GamePositioner campaign={campaign}>
+                    <GameRenderer
+                      campaign={campaign}
+                      gameConfig={gameConfig}
+                      previewDevice={previewDevice}
+                      disableForm={disableForm}
+                      onGameFinish={handleGameFinish}
+                    />
+                    
+                    {/* Always render custom elements when not in interactive mode */}
+                    {!isDragDropEnabled && (
+                      <CustomElementsRenderer
+                        customTexts={campaign.design?.customTexts || []}
+                        customImages={campaign.design?.customImages || []}
+                        previewDevice={previewDevice}
+                        sizeMap={sizeMap}
+                      />
+                    )}
+                  </GamePositioner>
+                  
+                  {/* Interactive overlay when drag&drop is enabled */}
+                  {isDragDropEnabled && setCampaign && (
+                    <InteractiveDragDropOverlay
+                      campaign={campaign}
+                      setCampaign={setCampaign}
+                      previewDevice={previewDevice}
+                      isEnabled={isDragDropEnabled}
+                    />
+                  )}
+                </DeviceFrame>
               )}
             </GameConfigProvider>
           </DeviceTransition>

@@ -16,8 +16,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
           style={{
             imageRendering: 'crisp-edges',
             transform: 'translateZ(0)', // Force hardware acceleration for crisp rendering
-            minWidth: '1400px', // Increased minimum width
-            minHeight: '900px', // Increased minimum height
+            minWidth: '1600px', // Increased further for better background display
+            minHeight: '1000px', // Increased further for better background display
             maxWidth: '1800px', // Maximum width to prevent too large
             maxHeight: '1200px' // Maximum height to prevent too large
           }}

@@ -32,8 +32,8 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
     return {
       width: '100%',
       height: '100%',
-      minWidth: '1400px', // Ensure minimum size for background
-      minHeight: '900px',
+      minWidth: '1600px', // Increased to match DeviceFrame
+      minHeight: '1000px', // Increased to match DeviceFrame
       display: 'flex',
       ...positionStyles[gamePosition as keyof typeof positionStyles],
       position: 'relative' as const,
