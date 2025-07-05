@@ -32,15 +32,15 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
     return {
       width: '100%',
       height: '100%',
-      minWidth: '1600px', // Increased to match DeviceFrame
-      minHeight: '1000px', // Increased to match DeviceFrame
+      minWidth: '1400px',
+      minHeight: '900px',
       display: 'flex',
       ...positionStyles[gamePosition as keyof typeof positionStyles],
       position: 'relative' as const,
       overflow: 'hidden',
       backgroundColor: campaign?.design?.backgroundColor || campaign?.design?.background || '#f3f4f6',
       backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-      backgroundSize: 'cover', // Preserve aspect ratio while covering space
+      backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
       transform: offsetX || offsetY ? `translate(${offsetX}px, ${offsetY}px)` : undefined
@@ -49,7 +49,7 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
 
   return (
     <div 
-      className="w-full h-full animate-fade-in overflow-auto"
+      className="w-full h-full overflow-auto"
       style={getGameContentStyles()}
     >
       {children}

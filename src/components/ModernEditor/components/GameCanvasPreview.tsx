@@ -77,7 +77,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col relative">
-      {/* Drag & Drop Toggle - only show if we have custom elements and setCampaign is available */}
+      {/* Drag & Drop Toggle */}
       {hasCustomElements && setCampaign && (
         <div className="absolute top-2 right-2 z-30">
           <DragDropToggle
@@ -127,7 +127,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             </GameConfigProvider>
           </DeviceTransition>
           
-          {/* Feedback overlay */}
+          {/* Feedback overlay - SANS EFFET DE FLOU */}
           <PreviewFeedback
             device={previewDevice}
             isLoading={isLoading}

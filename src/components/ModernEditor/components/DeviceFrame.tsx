@@ -14,12 +14,10 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
         <div 
           className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden transition-all duration-300"
           style={{
-            imageRendering: 'crisp-edges',
-            transform: 'translateZ(0)', // Force hardware acceleration for crisp rendering
-            minWidth: '1600px', // Increased further for better background display
-            minHeight: '1000px', // Increased further for better background display
-            maxWidth: '1800px', // Maximum width to prevent too large
-            maxHeight: '1200px' // Maximum height to prevent too large
+            minWidth: '1400px',
+            minHeight: '900px',
+            maxWidth: '1800px',
+            maxHeight: '1200px'
           }}
         >
           {children}
@@ -54,22 +52,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
       <div 
         className={`${styles.frame} transition-all duration-300 hover:shadow-3xl`}
         style={{
-          width: Math.round(maxWidth), // Round to avoid fractional pixels
+          width: Math.round(maxWidth),
           height: Math.round(maxHeight),
           maxWidth: '95%',
-          maxHeight: '95%',
-          imageRendering: 'crisp-edges',
-          transform: 'translateZ(0)' // Force hardware acceleration
+          maxHeight: '95%'
         }}
       >
         <div className={`${styles.inner} transition-all duration-200`}>
-          <div 
-            className={`${styles.screen} transition-all duration-200`}
-            style={{
-              imageRendering: 'crisp-edges',
-              transform: 'translateZ(0)'
-            }}
-          >
+          <div className={`${styles.screen} transition-all duration-200`}>
             {/* Device-specific elements */}
             {device === 'mobile' && (
               <>

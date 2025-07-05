@@ -1,107 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Loader2, Monitor, Smartphone, Tablet } from 'lucide-react';
+
+import React from 'react';
+import { AlertCircle, Loader2, Monitor, Tablet, Smartphone } from 'lucide-react';
 
 interface PreviewFeedbackProps {
   device: 'desktop' | 'tablet' | 'mobile';
   isLoading?: boolean;
   error?: string | null;
-  showRealSizeIndicator?: boolean;
   onClose?: () => void;
+  showRealSizeIndicator?: boolean;
 }
 
 const PreviewFeedback: React.FC<PreviewFeedbackProps> = ({
   device,
   isLoading = false,
   error = null,
-  showRealSizeIndicator = true,
-  onClose
+  onClose,
+  showRealSizeIndicator = false
 }) => {
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showRealSize, setShowRealSize] = useState(showRealSizeIndicator && device !== 'desktop');
-
-  useEffect(() => {
-    if (!isLoading && !error) {
-      setShowSuccess(true);
-      const timer = setTimeout(() => setShowSuccess(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, error]);
-
   const getDeviceIcon = () => {
     switch (device) {
-      case 'mobile': return <Smartphone className="w-4 h-4" />;
-      case 'tablet': return <Tablet className="w-4 h-4" />;
-      default: return <Monitor className="w-4 h-4" />;
+      case 'mobile':
+        return <Smartphone className="w-4 h-4" />;
+      case 'tablet':
+        return <Tablet className="w-4 h-4" />;
+      default:
+        return <Monitor className="w-4 h-4" />;
     }
   };
 
-  const getRealSizeText = () => {
+  const getDeviceLabel = () => {
     switch (device) {
-      case 'mobile': return 'Taille réelle mobile (520×1100)';
-      case 'tablet': return 'Taille réelle tablette (850×1200)';
-      default: return '';
+      case 'mobile':
+        return 'Mobile';
+      case 'tablet':
+        return 'Tablette';
+      default:
+        return 'Desktop';
     }
   };
 
   return (
-    <div className="absolute top-4 right-4 z-30 space-y-2">
-      {/* Loading State */}
+    <>
+      {/* Loading indicator - SANS BACKDROP FLOU */}
       {isLoading && (
-        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 px-3 py-2 animate-fade-in">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Chargement du preview...</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
+          <div className="flex items-center space-x-2 bg-white rounded-lg shadow-lg px-4 py-2 border">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+            <span className="text-sm font-medium text-gray-700">
+              Chargement de l'aperçu...
+            </span>
           </div>
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error message */}
       {error && (
-        <div className="bg-red-50/95 backdrop-blur-sm rounded-lg shadow-lg border border-red-200 px-3 py-2 animate-fade-in">
-          <div className="flex items-center justify-between space-x-2">
-            <div className="flex items-center space-x-2 text-sm text-red-700">
-              <AlertCircle className="w-4 h-4" />
-              <span>Erreur de preview</span>
+        <div className="absolute top-4 left-4 right-4 z-50">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 shadow-lg">
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-red-800">
+                  Erreur d'aperçu
+                </h4>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
+              </div>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="text-red-400 hover:text-red-600 transition-colors"
+                  aria-label="Fermer"
+                >
+                  ×
+                </button>
+              )}
             </div>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="text-red-400 hover:text-red-600 text-xs"
-              >
-                ×
-              </button>
-            )}
-          </div>
-          <p className="text-xs text-red-600 mt-1 max-w-xs">{error}</p>
-        </div>
-      )}
-
-      {/* Success State */}
-      {showSuccess && !isLoading && !error && (
-        <div className="bg-green-50/95 backdrop-blur-sm rounded-lg shadow-lg border border-green-200 px-3 py-2 animate-fade-in">
-          <div className="flex items-center space-x-2 text-sm text-green-700">
-            <CheckCircle className="w-4 h-4" />
-            <span>Preview chargé</span>
           </div>
         </div>
       )}
 
-      {/* Real Size Indicator */}
-      {showRealSize && !isLoading && !error && (
-        <div className="bg-blue-50/95 backdrop-blur-sm rounded-lg shadow-lg border border-blue-200 px-3 py-2 animate-fade-in">
-          <div className="flex items-center space-x-2 text-sm text-blue-700">
+      {/* Device indicator */}
+      {showRealSizeIndicator && (
+        <div className="absolute bottom-4 left-4 z-40">
+          <div className="bg-gray-900/90 text-white rounded-lg px-3 py-2 text-xs font-medium flex items-center space-x-2 shadow-lg">
             {getDeviceIcon()}
-            <span>{getRealSizeText()}</span>
-            <button
-              onClick={() => setShowRealSize(false)}
-              className="text-blue-400 hover:text-blue-600 text-xs ml-2"
-            >
-              ×
-            </button>
+            <span>{getDeviceLabel()}</span>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
