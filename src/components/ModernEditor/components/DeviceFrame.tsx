@@ -10,7 +10,13 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   if (device === 'desktop') {
     return (
       <div className="w-full h-full p-4">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden transition-all duration-300">
+        <div 
+          className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden transition-all duration-300"
+          style={{
+            imageRendering: 'crisp-edges',
+            transform: 'translateZ(0)' // Force hardware acceleration for crisp rendering
+          }}
+        >
           {children}
         </div>
       </div>
@@ -43,14 +49,22 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
       <div 
         className={`${styles.frame} transition-all duration-300 hover:shadow-3xl`}
         style={{
-          width: maxWidth,
-          height: maxHeight,
+          width: Math.round(maxWidth), // Round to avoid fractional pixels
+          height: Math.round(maxHeight),
           maxWidth: '95%',
-          maxHeight: '95%'
+          maxHeight: '95%',
+          imageRendering: 'crisp-edges',
+          transform: 'translateZ(0)' // Force hardware acceleration
         }}
       >
         <div className={`${styles.inner} transition-all duration-200`}>
-          <div className={`${styles.screen} transition-all duration-200`}>
+          <div 
+            className={`${styles.screen} transition-all duration-200`}
+            style={{
+              imageRendering: 'crisp-edges',
+              transform: 'translateZ(0)'
+            }}
+          >
             {/* Device-specific elements */}
             {device === 'mobile' && (
               <>

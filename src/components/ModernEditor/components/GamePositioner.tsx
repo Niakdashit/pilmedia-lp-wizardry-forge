@@ -37,7 +37,7 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
       overflow: 'hidden',
       backgroundColor: campaign?.design?.backgroundColor || campaign?.design?.background || '#f3f4f6',
       backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-      backgroundSize: 'cover',
+      backgroundSize: '100% 100%', // Force background to cover entire space
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
       transform: offsetX || offsetY ? `translate(${offsetX}px, ${offsetY}px)` : undefined

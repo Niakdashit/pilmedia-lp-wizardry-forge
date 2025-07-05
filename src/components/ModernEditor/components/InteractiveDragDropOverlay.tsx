@@ -111,7 +111,9 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       }}
     >
       {/* Original content */}
-      {children}
+      <div className="relative w-full h-full">
+        {children}
+      </div>
       
       {/* Interactive elements overlay */}
       <div className="absolute inset-0 pointer-events-none">
