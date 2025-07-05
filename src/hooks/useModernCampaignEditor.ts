@@ -1,16 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { CampaignType } from '../utils/campaignTypes';
 import { useCampaigns } from './useCampaigns';
 import { getDefaultCampaign } from '../components/ModernEditor/utils/defaultCampaign';
 import { loadCampaign } from './useModernCampaignEditor/campaignLoader';
-import { createSaveHandler } from './useModernCampaignEditor/saveHandler';
+import { useOptimizedCampaignState } from '../components/ModernEditor/hooks/useOptimizedCampaignState';
+import { usePreviewOptimization } from '../components/ModernEditor/hooks/usePreviewOptimization';
 
 export const useModernCampaignEditor = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const location = window.location.pathname;
   
   // Gestion spéciale pour quick-preview
@@ -26,19 +26,30 @@ export const useModernCampaignEditor = () => {
   
   const { saveCampaign, getCampaign } = useCampaigns();
   
-  const [campaign, setCampaign] = useState<any>(() => {
-    console.log('Initializing campaign with campaignType:', campaignType);
-    const defaultCampaign = getDefaultCampaign(campaignType, isNewCampaign);
-    return {
-      ...defaultCampaign,
-      _lastUpdate: Date.now(),
-      _initialized: true
-    };
+  // Initialize with optimized state management
+  const initialCampaign = getDefaultCampaign(campaignType, isNewCampaign);
+  const {
+    campaign,
+    setCampaign,
+    isModified,
+    isSaving,
+    previewKey,
+    forceSave
+  } = useOptimizedCampaignState(initialCampaign, {
+    autosaveDelay: 3000,
+    onSave: async (campaignToSave) => {
+      if (isNewCampaign) return;
+      await saveCampaign(campaignToSave);
+    },
+    onError: (error) => {
+      console.error('Auto-save error:', error);
+    }
   });
 
+  // Preview optimization
+  const { optimizedPreviewConfig, isPreviewLoading } = usePreviewOptimization(campaign, previewDevice);
+
   useEffect(() => {
-    console.log('useEffect triggered with actualId:', actualId, 'isNewCampaign:', isNewCampaign, 'isQuickPreview:', isQuickPreview);
-    
     if (!isNewCampaign && actualId) {
       handleLoadCampaign(actualId);
     }
@@ -52,26 +63,20 @@ export const useModernCampaignEditor = () => {
       if (loadedCampaign) {
         setCampaign({
           ...loadedCampaign,
-          _lastUpdate: Date.now(),
           _loaded: true
         });
       } else if (campaignId === 'quick-preview') {
-        // Fallback pour quick-preview sans données
-        console.warn('No quick-preview data found, using default campaign');
         const fallbackCampaign = getDefaultCampaign(campaignType, false);
         setCampaign({
           ...fallbackCampaign,
-          _lastUpdate: Date.now(),
           _fallback: true
         });
       }
     } catch (error) {
       console.error('Error loading campaign:', error);
-      // Fallback en cas d'erreur
       const errorFallbackCampaign = getDefaultCampaign(campaignType, false);
       setCampaign({
         ...errorFallbackCampaign,
-        _lastUpdate: Date.now(),
         _error: true,
         _errorMessage: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -79,10 +84,6 @@ export const useModernCampaignEditor = () => {
       setIsLoading(false);
     }
   };
-
-  const handleSave = createSaveHandler(campaign, saveCampaign, navigate, isNewCampaign, setCampaign);
-
-  console.log('Current campaign state:', campaign);
 
   return {
     campaign,
@@ -93,9 +94,24 @@ export const useModernCampaignEditor = () => {
     setShowPreviewModal,
     previewDevice,
     setPreviewDevice,
-    isLoading,
+    isLoading: isLoading || isSaving,
     campaignType,
     isNewCampaign,
-    handleSave
+    handleSave: async (showToast = true) => {
+      try {
+        await forceSave();
+        if (showToast) {
+          // Show success feedback
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        throw error;
+      }
+    },
+    isModified,
+    isSaving,
+    previewKey,
+    optimizedPreviewConfig,
+    isPreviewLoading
   };
 };

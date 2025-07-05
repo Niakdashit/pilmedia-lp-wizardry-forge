@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModernEditorSidebar from './ModernEditorSidebar';
 import ModernEditorPanel from './ModernEditorPanel';
@@ -18,6 +18,8 @@ interface ModernEditorLayoutProps {
   campaignType: string;
   isNewCampaign: boolean;
   gameTypeLabels: Record<string, string>;
+  previewKey?: string;
+  isPreviewLoading?: boolean;
 }
 const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
   campaign,
@@ -30,7 +32,9 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
   onPreview,
   isLoading,
   isNewCampaign,
-  campaignType
+  campaignType,
+  previewKey,
+  isPreviewLoading = false
 }) => {
   const [showAIAssistant] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -43,11 +47,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
     setTimeout(() => setIsGenerating(false), 300);
   };
   
-  // Optimize preview key to reduce unnecessary re-renders
-  const previewKey = useMemo(() => 
-    `preview-${activeTab}-${campaign._lastUpdate || 0}-${previewDevice}`,
-    [activeTab, campaign._lastUpdate, previewDevice]
-  );
+  // Use provided preview key or fallback
+  const optimizedPreviewKey = previewKey || `fallback-${Date.now()}`;
   const handleAIGenerate = async () => {
     setIsGenerating(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -90,16 +91,23 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
           {/* Zone de prévisualisation - pleine largeur avec spacing propre */}
           <div className="flex-1 flex items-center justify-center overflow-hidden">
             <div className="relative w-full h-full flex items-center justify-center">
-              {isGenerating && (
+              {(isGenerating || isPreviewLoading) && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
-                    <span className="text-sm text-gray-600">Mise à jour...</span>
+                    <span className="text-sm text-gray-600">
+                      {isPreviewLoading ? 'Optimisation...' : 'Mise à jour...'}
+                    </span>
                   </div>
                 </div>
               )}
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                <GameCanvasPreview campaign={campaign} previewDevice={previewDevice} key={previewKey} />
+                <GameCanvasPreview 
+                  campaign={campaign} 
+                  previewDevice={previewDevice} 
+                  key={optimizedPreviewKey}
+                  isLoading={isPreviewLoading}
+                />
               </div>
             </div>
           </div>
@@ -125,4 +133,4 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
       </div>
     </div>;
 };
-export default ModernEditorLayout;
+export default memo(ModernEditorLayout);

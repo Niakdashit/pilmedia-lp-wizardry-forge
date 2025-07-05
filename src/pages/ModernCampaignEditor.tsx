@@ -6,8 +6,6 @@ import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
 import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
 
 const ModernCampaignEditor: React.FC = () => {
-  console.log('ModernCampaignEditor rendering');
-  
   try {
     const {
       campaign,
@@ -21,18 +19,17 @@ const ModernCampaignEditor: React.FC = () => {
       isLoading,
       campaignType,
       isNewCampaign,
-      handleSave
+      handleSave,
+      previewKey,
+      isPreviewLoading
     } = useModernCampaignEditor();
 
-    console.log('Editor state:', { campaign, activeTab, isLoading, campaignType, isNewCampaign });
-
     if (!campaign) {
-      console.log('No campaign loaded, showing loading state');
       return (
         <div className="w-full h-full flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement de la campagne...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement de la campagne...</p>
           </div>
         </div>
       );
@@ -53,6 +50,8 @@ const ModernCampaignEditor: React.FC = () => {
           campaignType={campaignType}
           isNewCampaign={isNewCampaign}
           gameTypeLabels={gameTypeLabels}
+          previewKey={previewKey}
+          isPreviewLoading={isPreviewLoading}
         />
 
         {/* Preview Modal */}
