@@ -107,6 +107,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
                   previewDevice={previewDevice} 
                   key={optimizedPreviewKey}
                   isLoading={isPreviewLoading}
+                  setCampaign={enhancedSetCampaign}
                 />
               </div>
             </div>
