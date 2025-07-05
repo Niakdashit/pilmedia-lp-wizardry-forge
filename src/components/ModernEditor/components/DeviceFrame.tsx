@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DEVICE_CONSTRAINTS } from '../../QuickCampaign/Preview/utils/previewConstraints';
 
@@ -15,8 +16,10 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
           style={{
             imageRendering: 'crisp-edges',
             transform: 'translateZ(0)', // Force hardware acceleration for crisp rendering
-            minWidth: '1000px',
-            minHeight: '700px'
+            minWidth: '1400px', // Increased minimum width
+            minHeight: '900px', // Increased minimum height
+            maxWidth: '1800px', // Maximum width to prevent too large
+            maxHeight: '1200px' // Maximum height to prevent too large
           }}
         >
           {children}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface GamePositionerProps {
@@ -31,6 +32,8 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
     return {
       width: '100%',
       height: '100%',
+      minWidth: '1400px', // Ensure minimum size for background
+      minHeight: '900px',
       display: 'flex',
       ...positionStyles[gamePosition as keyof typeof positionStyles],
       position: 'relative' as const,
