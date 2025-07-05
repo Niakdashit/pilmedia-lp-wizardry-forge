@@ -14,7 +14,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
           className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden transition-all duration-300"
           style={{
             imageRendering: 'crisp-edges',
-            transform: 'translateZ(0)' // Force hardware acceleration for crisp rendering
+            transform: 'translateZ(0)', // Force hardware acceleration for crisp rendering
+            minWidth: '1000px',
+            minHeight: '700px'
           }}
         >
           {children}
