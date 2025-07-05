@@ -5,6 +5,9 @@ import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../funnels/FunnelStandard';
 import FormPreview from '../GameTypes/FormPreview';
 import { createSynchronizedQuizCampaign } from '../../utils/quizConfigSync';
+import PreviewLoadingState from './components/PreviewLoadingState';
+import DeviceTransition from './components/DeviceTransition';
+import PreviewErrorBoundary from './components/ErrorBoundary';
 
 interface ModernPreviewModalProps {
   isOpen: boolean;
@@ -18,8 +21,25 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
   campaign
 }) => {
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isChangingDevice, setIsChangingDevice] = useState(false);
 
   if (!isOpen) return null;
+
+  // Handle device change with loading state
+  const handleDeviceChange = (newDevice: 'desktop' | 'tablet' | 'mobile') => {
+    if (newDevice === device) return;
+    
+    setIsChangingDevice(true);
+    setIsLoading(true);
+    
+    // Simulate loading for better UX
+    setTimeout(() => {
+      setDevice(newDevice);
+      setIsLoading(false);
+      setIsChangingDevice(false);
+    }, 200);
+  };
 
   const getDeviceStyles = () => {
     switch (device) {
@@ -105,26 +125,29 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
             <h2 className="text-lg font-semibold">Aperçu - {campaign.name}</h2>
             <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setDevice('desktop')}
-                className={`p-2 rounded-md transition-colors ${
-                  device === 'desktop' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                onClick={() => handleDeviceChange('desktop')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  device === 'desktop' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
                 }`}
+                disabled={isChangingDevice}
               >
                 <Monitor className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setDevice('tablet')}
-                className={`p-2 rounded-md transition-colors ${
-                  device === 'tablet' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                onClick={() => handleDeviceChange('tablet')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  device === 'tablet' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
                 }`}
+                disabled={isChangingDevice}
               >
                 <Tablet className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setDevice('mobile')}
-                className={`p-2 rounded-md transition-colors ${
-                  device === 'mobile' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                onClick={() => handleDeviceChange('mobile')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  device === 'mobile' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
                 }`}
+                disabled={isChangingDevice}
               >
                 <Smartphone className="w-4 h-4" />
               </button>
@@ -141,27 +164,38 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
         {/* Preview Content */}
         <div className="flex-1 overflow-hidden bg-gray-100">
           <div className="w-full h-full flex items-center justify-center p-8">
-            <div 
-              className="shadow-2xl rounded-2xl overflow-hidden border border-gray-200"
-              style={getDeviceStyles()}
-            >
-              <div style={getContainerStyle()}>
-                {campaign.design?.backgroundImage && (
-                  <div className="absolute inset-0 bg-black opacity-20" style={{ zIndex: 1 }} />
-                )}
-                <div
-                  className="relative z-10 w-full h-full"
-                  style={{ 
-                    minHeight: device === 'desktop' ? '600px' : '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  {getFunnelComponent()}
-                </div>
-              </div>
-            </div>
+            <PreviewErrorBoundary>
+              {isLoading ? (
+                <PreviewLoadingState
+                  device={device}
+                  message={`Chargement preview ${device}...`}
+                />
+              ) : (
+                <DeviceTransition device={device} isChanging={isChangingDevice}>
+                  <div 
+                    className="shadow-2xl rounded-2xl overflow-hidden border border-gray-200 transition-all duration-300"
+                    style={getDeviceStyles()}
+                  >
+                    <div style={getContainerStyle()}>
+                      {campaign.design?.backgroundImage && (
+                        <div className="absolute inset-0 bg-black opacity-20" style={{ zIndex: 1 }} />
+                      )}
+                      <div
+                        className="relative z-10 w-full h-full"
+                        style={{ 
+                          minHeight: device === 'desktop' ? '600px' : '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {getFunnelComponent()}
+                      </div>
+                    </div>
+                  </div>
+                </DeviceTransition>
+              )}
+            </PreviewErrorBoundary>
           </div>
         </div>
       </div>
