@@ -26,7 +26,7 @@ const ModernCampaignEditor: React.FC = () => {
 
     if (!campaign) {
       return (
-        <div className="w-full h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-full h-full flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Chargement de la campagne...</p>
@@ -36,7 +36,7 @@ const ModernCampaignEditor: React.FC = () => {
     }
 
     return (
-      <div className="w-full h-screen overflow-hidden bg-gray-50">
+      <div className="w-full h-full overflow-hidden">
         <ModernEditorLayout
           campaign={campaign}
           setCampaign={setCampaign}
@@ -67,7 +67,7 @@ const ModernCampaignEditor: React.FC = () => {
   } catch (error) {
     console.error('Error in ModernCampaignEditor:', error);
       return (
-        <div className="w-full h-screen bg-red-50 flex items-center justify-center">
+        <div className="w-full h-full bg-red-50 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600 mb-4">Erreur de l'éditeur</h1>
             <p className="text-red-500 mb-4">L'éditeur moderne n'a pas pu se charger correctement.</p>
@@ -75,10 +75,10 @@ const ModernCampaignEditor: React.FC = () => {
               {error instanceof Error ? error.message : 'Erreur inconnue'}
             </pre>
             <button 
-              onClick={() => window.location.href = '/campaigns'}
+              onClick={() => window.location.href = '/quick-campaign'}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Retour aux campagnes
+              Retour à QuickCampaign
             </button>
           </div>
         </div>

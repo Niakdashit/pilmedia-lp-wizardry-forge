@@ -126,11 +126,9 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
         />
       </div>
 
-      {/* Drag feedback - SANS MASQUE FLOU */}
+      {/* Drag feedback */}
       {dragState.isDragging && (
-        <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium shadow-lg z-50 pointer-events-none">
-          Déplacement en cours...
-        </div>
+        <div className="absolute inset-0 bg-blue-500/5 pointer-events-none animate-pulse" />
       )}
 
       {/* Selection indicator */}

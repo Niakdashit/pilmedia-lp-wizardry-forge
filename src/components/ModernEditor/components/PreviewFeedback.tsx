@@ -41,10 +41,10 @@ const PreviewFeedback: React.FC<PreviewFeedbackProps> = ({
 
   return (
     <>
-      {/* Loading indicator - SANS BACKDROP */}
+      {/* Loading indicator - SANS BACKDROP FLOU */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-          <div className="flex items-center space-x-2 bg-white/95 rounded-lg shadow-lg px-4 py-2 border backdrop-blur-sm">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-50">
+          <div className="flex items-center space-x-2 bg-white rounded-lg shadow-lg px-4 py-2 border">
             <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
             <span className="text-sm font-medium text-gray-700">
               Chargement de l'aperçu...
