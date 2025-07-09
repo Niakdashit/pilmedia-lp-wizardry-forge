@@ -75,7 +75,7 @@ export const useInteractiveDragDrop = ({
           _lastUpdate: Date.now()
         };
       });
-    }, 16), // ~60fps
+    }, 8), // ~120fps pour un drag vraiment fluide
     [setCampaign, previewDevice]
   );
 
@@ -127,8 +127,16 @@ export const useInteractiveDragDrop = ({
     const currentX = clientX - containerRect.left;
     const currentY = clientY - containerRect.top;
 
-    // Calculate the new position directly based on mouse position
-    // Get current element position
+    const offsetX = currentX - dragStartRef.current.x;
+    const offsetY = currentY - dragStartRef.current.y;
+
+    // Update drag state immediately for visual feedback
+    setDragState(prev => ({
+      ...prev,
+      currentOffset: { x: offsetX, y: offsetY }
+    }));
+
+    // Get current element position and update
     const design = campaign.design || {};
     const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
     const elements = design[arrayKey] || [];
@@ -142,32 +150,21 @@ export const useInteractiveDragDrop = ({
         ? element[previewDevice] 
         : element;
       
-      const elementRect = document.querySelector(`[data-element-id="${dragState.draggedElementId}"]`);
-      let offsetX = 0;
-      let offsetY = 0;
+      const currentElementX = deviceConfig.x || 0;
+      const currentElementY = deviceConfig.y || 0;
       
-      if (elementRect) {
-        const rect = elementRect.getBoundingClientRect();
-        offsetX = currentX - (rect.left - containerRect.left + rect.width / 2);
-        offsetY = currentY - (rect.top - containerRect.top + rect.height / 2);
-      }
-      
-      const newX = Math.max(0, currentX - offsetX);
-      const newY = Math.max(0, currentY - offsetY);
+      const newX = Math.max(0, currentElementX + offsetX);
+      const newY = Math.max(0, currentElementY + offsetY);
 
-      console.log('🚀 Moving element to:', { newX, newY });
-
-      setDragState(prev => ({
-        ...prev,
-        currentOffset: { x: newX - (deviceConfig.x || 0), y: newY - (deviceConfig.y || 0) }
-      }));
-
+      // Update position in real-time with throttling for performance
       throttledUpdate(dragState.draggedElementId!, dragState.draggedElementType!, newX, newY);
     }
   }, [dragState, containerRef, campaign, throttledUpdate, previewDevice]);
 
   const handleDragEnd = useCallback(() => {
     if (!dragState.isDragging) return;
+
+    console.log('✅ Drag ended');
 
     setDragState({
       isDragging: false,
@@ -179,6 +176,9 @@ export const useInteractiveDragDrop = ({
 
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+    
+    // Reset drag start ref
+    dragStartRef.current = { x: 0, y: 0 };
   }, [dragState.isDragging]);
 
   const handleElementSelect = useCallback((elementId: string) => {
