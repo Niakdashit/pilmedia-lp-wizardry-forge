@@ -45,8 +45,8 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
     if (!customText?.enabled) return null;
 
     const config = getElementDeviceConfig(customText);
-    const isSelected = selectedElementId === customText.id;
-    const isDragged = dragState.draggedElementId === customText.id;
+    const isSelected = selectedElementId === customText.id.toString();
+    const isDragged = dragState.draggedElementId === customText.id.toString();
     
     const textStyle: React.CSSProperties = {
       position: 'absolute',
@@ -65,7 +65,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       maxWidth: '400px',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
-      transform: getDragTransform(customText.id),
+      transform: getDragTransform(customText.id.toString()),
       transition: isDragged ? 'none' : 'all 0.2s ease',
       outline: isSelected ? '2px solid #3b82f6' : 'none',
       outlineOffset: '2px',
@@ -87,18 +87,19 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
     return (
       <div
         key={`interactive-text-${customText.id}-${previewDevice}`}
+        data-element-id={customText.id}
         style={textStyle}
         onClick={(e) => {
           e.stopPropagation();
-          onElementSelect(customText.id);
+          onElementSelect(customText.id.toString());
         }}
         onMouseDown={(e) => {
           e.preventDefault();
-          onDragStart(e, customText.id, 'text');
+          onDragStart(e, customText.id.toString(), 'text');
         }}
         onTouchStart={(e) => {
           e.preventDefault();
-          onDragStart(e, customText.id, 'text');
+          onDragStart(e, customText.id.toString(), 'text');
         }}
         className="group hover:shadow-lg"
       >
@@ -118,8 +119,8 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
     if (!customImage?.src) return null;
 
     const config = getElementDeviceConfig(customImage);
-    const isSelected = selectedElementId === customImage.id;
-    const isDragged = dragState.draggedElementId === customImage.id;
+    const isSelected = selectedElementId === customImage.id.toString();
+    const isDragged = dragState.draggedElementId === customImage.id.toString();
     
     const containerStyle: React.CSSProperties = {
       position: 'absolute',
@@ -127,7 +128,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       top: `${config.y || 0}px`,
       width: `${config.width || 100}px`,
       height: `${config.height || 100}px`,
-      transform: `rotate(${config.rotation || 0}deg) ${getDragTransform(customImage.id)}`,
+      transform: `rotate(${config.rotation || 0}deg) ${getDragTransform(customImage.id.toString())}`,
       zIndex: isSelected ? 1000 : (isDragged ? 999 : 199),
       cursor: 'grab',
       borderRadius: '6px',
@@ -143,18 +144,19 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
     return (
       <div
         key={`interactive-image-${customImage.id}-${previewDevice}`}
+        data-element-id={customImage.id}
         style={containerStyle}
         onClick={(e) => {
           e.stopPropagation();
-          onElementSelect(customImage.id);
+          onElementSelect(customImage.id.toString());
         }}
         onMouseDown={(e) => {
           e.preventDefault();
-          onDragStart(e, customImage.id, 'image');
+          onDragStart(e, customImage.id.toString(), 'image');
         }}
         onTouchStart={(e) => {
           e.preventDefault();
-          onDragStart(e, customImage.id, 'image');
+          onDragStart(e, customImage.id.toString(), 'image');
         }}
         className="group hover:shadow-lg"
       >

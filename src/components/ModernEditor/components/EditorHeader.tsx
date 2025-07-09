@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Eye, Save, Share2, MoreHorizontal } from 'lucide-react';
+import { Eye, Save, Share2, MoreHorizontal, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PreviewDeviceButtons from './PreviewDeviceButtons';
 
 interface EditorHeaderProps {
@@ -22,12 +23,28 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   selectedDevice = 'desktop',
   onDeviceChange = () => {}
 }) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate('/campaigns');
+  };
+
   return (
     <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0 z-50">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Left section - Titre de la campagne */}
+          {/* Left section - Bouton retour et titre */}
           <div className="flex items-center space-x-4 flex-shrink-0">
+            <button
+              onClick={handleBack}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Retour</span>
+            </button>
+            
+            <div className="h-6 w-px bg-gray-300" />
+            
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-gray-900 truncate">
                 {campaign.name || (isNewCampaign ? 'Nouvelle Campagne' : 'Campagne')}
