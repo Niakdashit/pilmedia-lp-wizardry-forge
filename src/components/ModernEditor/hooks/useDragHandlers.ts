@@ -1,37 +1,28 @@
-import { useState, useCallback, useRef } from 'react';
 
-interface DragState {
-  isDragging: boolean;
-  draggedElementId: string | null;
-  draggedElementType: 'text' | 'image' | null;
-  startPosition: { x: number; y: number };
-  currentOffset: { x: number; y: number };
-}
+import { useCallback } from 'react';
+import { DragState } from './types/dragDropTypes';
 
-interface UseInteractiveDragDropProps {
-  campaign: any;
-  setCampaign: (updater: (prev: any) => any) => void;
+interface UseDragHandlersProps {
+  dragState: DragState;
+  dragStartRef: React.MutableRefObject<{ x: number; y: number }>;
+  updateDragState: (newState: Partial<DragState>) => void;
+  resetDragState: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
+  setCampaign: (updater: (prev: any) => any) => void;
   previewDevice: 'desktop' | 'tablet' | 'mobile';
+  setSelectedElementId: (id: string | null) => void;
 }
 
-export const useInteractiveDragDrop = ({
-  setCampaign,
+export const useDragHandlers = ({
+  dragState,
+  dragStartRef,
+  updateDragState,
+  resetDragState,
   containerRef,
-  previewDevice
-}: UseInteractiveDragDropProps) => {
-  const [dragState, setDragState] = useState<DragState>({
-    isDragging: false,
-    draggedElementId: null,
-    draggedElementType: null,
-    startPosition: { x: 0, y: 0 },
-    currentOffset: { x: 0, y: 0 }
-  });
-
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-
+  setCampaign,
+  previewDevice,
+  setSelectedElementId
+}: UseDragHandlersProps) => {
   const handleDragStart = useCallback((
     e: React.MouseEvent | React.TouchEvent,
     elementId: string,
@@ -58,7 +49,7 @@ export const useInteractiveDragDrop = ({
 
     dragStartRef.current = { x: startX, y: startY };
     setSelectedElementId(elementId);
-    setDragState({
+    updateDragState({
       isDragging: true,
       draggedElementId: elementId,
       draggedElementType: elementType,
@@ -68,7 +59,7 @@ export const useInteractiveDragDrop = ({
 
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
-  }, [containerRef]);
+  }, [containerRef, dragStartRef, updateDragState, setSelectedElementId]);
 
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!dragState.isDragging || !containerRef.current || !dragState.draggedElementId) return;
@@ -80,11 +71,9 @@ export const useInteractiveDragDrop = ({
     const currentX = clientX - containerRect.left;
     const currentY = clientY - containerRect.top;
 
-    // Calculate new absolute position (follow mouse exactly)
     const newX = Math.max(0, currentX);
     const newY = Math.max(0, currentY);
 
-    // Update position immediately without throttling for instant feedback
     setCampaign((prev: any) => {
       const design = prev.design || {};
       const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
@@ -132,36 +121,14 @@ export const useInteractiveDragDrop = ({
 
     console.log('✅ Drag ended');
 
-    setDragState({
-      isDragging: false,
-      draggedElementId: null,
-      draggedElementType: null,
-      startPosition: { x: 0, y: 0 },
-      currentOffset: { x: 0, y: 0 }
-    });
-
+    resetDragState();
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-    
-    // Reset drag start ref
-    dragStartRef.current = { x: 0, y: 0 };
-  }, [dragState.isDragging]);
-
-  const handleElementSelect = useCallback((elementId: string) => {
-    setSelectedElementId(selectedElementId === elementId ? null : elementId);
-  }, [selectedElementId]);
-
-  const handleDeselectAll = useCallback(() => {
-    setSelectedElementId(null);
-  }, []);
+  }, [dragState.isDragging, resetDragState]);
 
   return {
-    dragState,
-    selectedElementId,
     handleDragStart,
     handleDragMove,
-    handleDragEnd,
-    handleElementSelect,
-    handleDeselectAll
+    handleDragEnd
   };
 };
