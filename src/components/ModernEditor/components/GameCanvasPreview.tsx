@@ -127,14 +127,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
             </GameConfigProvider>
           </DeviceTransition>
           
-          {/* Feedback overlay - SANS EFFET DE FLOU */}
-          <PreviewFeedback
-            device={previewDevice}
-            isLoading={isLoading}
-            error={error}
-            onClose={clearError}
-            showRealSizeIndicator={true}
-          />
+          {/* Feedback overlay - SANS MASQUE NI FLOU */}
+          {(isLoading || error) && (
+            <PreviewFeedback
+              device={previewDevice}
+              isLoading={isLoading}
+              error={error}
+              onClose={clearError}
+              showRealSizeIndicator={false}
+            />
+          )}
         </PreviewErrorBoundary>
       </div>
     </div>
