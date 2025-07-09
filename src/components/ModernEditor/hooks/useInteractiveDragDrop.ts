@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef } from 'react';
-import { throttle } from 'lodash-es';
 
 interface DragState {
   isDragging: boolean;
@@ -17,7 +16,6 @@ interface UseInteractiveDragDropProps {
 }
 
 export const useInteractiveDragDrop = ({
-  campaign,
   setCampaign,
   containerRef,
   previewDevice
@@ -33,51 +31,6 @@ export const useInteractiveDragDrop = ({
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Throttled position update for smooth performance
-  const throttledUpdate = useCallback(
-    throttle((elementId: string, elementType: 'text' | 'image', newX: number, newY: number) => {
-      setCampaign((prev: any) => {
-        const design = prev.design || {};
-        const arrayKey = elementType === 'text' ? 'customTexts' : 'customImages';
-        const elements = design[arrayKey] || [];
-        
-        const updatedElements = elements.map((element: any) => {
-          // Convert elementId to number for comparison
-          const numericElementId = typeof elementId === 'string' ? parseInt(elementId) : elementId;
-          if (element.id === numericElementId) {
-            // Update device-specific or global position
-            if (previewDevice !== 'desktop') {
-              return {
-                ...element,
-                [previewDevice]: {
-                  ...element[previewDevice],
-                  x: Math.max(0, Math.round(newX)),
-                  y: Math.max(0, Math.round(newY))
-                }
-              };
-            } else {
-              return {
-                ...element,
-                x: Math.max(0, Math.round(newX)),
-                y: Math.max(0, Math.round(newY))
-              };
-            }
-          }
-          return element;
-        });
-
-        return {
-          ...prev,
-          design: {
-            ...design,
-            [arrayKey]: updatedElements
-          },
-          _lastUpdate: Date.now()
-        };
-      });
-    }, 8), // ~120fps pour un drag vraiment fluide
-    [setCampaign, previewDevice]
-  );
 
   const handleDragStart = useCallback((
     e: React.MouseEvent | React.TouchEvent,
@@ -118,7 +71,7 @@ export const useInteractiveDragDrop = ({
   }, [containerRef]);
 
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!dragState.isDragging || !containerRef.current) return;
+    if (!dragState.isDragging || !containerRef.current || !dragState.draggedElementId) return;
 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -127,39 +80,52 @@ export const useInteractiveDragDrop = ({
     const currentX = clientX - containerRect.left;
     const currentY = clientY - containerRect.top;
 
-    const offsetX = currentX - dragStartRef.current.x;
-    const offsetY = currentY - dragStartRef.current.y;
+    // Calculate new absolute position (follow mouse exactly)
+    const newX = Math.max(0, currentX);
+    const newY = Math.max(0, currentY);
 
-    // Update drag state immediately for visual feedback
-    setDragState(prev => ({
-      ...prev,
-      currentOffset: { x: offsetX, y: offsetY }
-    }));
-
-    // Get current element position and update
-    const design = campaign.design || {};
-    const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
-    const elements = design[arrayKey] || [];
-    const numericDraggedId = typeof dragState.draggedElementId === 'string' 
-      ? parseInt(dragState.draggedElementId) 
-      : dragState.draggedElementId;
-    const element = elements.find((el: any) => el.id === numericDraggedId);
-    
-    if (element) {
-      const deviceConfig = previewDevice !== 'desktop' && element[previewDevice] 
-        ? element[previewDevice] 
-        : element;
+    // Update position immediately without throttling for instant feedback
+    setCampaign((prev: any) => {
+      const design = prev.design || {};
+      const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
+      const elements = design[arrayKey] || [];
       
-      const currentElementX = deviceConfig.x || 0;
-      const currentElementY = deviceConfig.y || 0;
-      
-      const newX = Math.max(0, currentElementX + offsetX);
-      const newY = Math.max(0, currentElementY + offsetY);
+      const updatedElements = elements.map((element: any) => {
+        const numericElementId = typeof dragState.draggedElementId === 'string' 
+          ? parseInt(dragState.draggedElementId) 
+          : dragState.draggedElementId;
+        
+        if (element.id === numericElementId) {
+          if (previewDevice !== 'desktop') {
+            return {
+              ...element,
+              [previewDevice]: {
+                ...element[previewDevice],
+                x: Math.round(newX),
+                y: Math.round(newY)
+              }
+            };
+          } else {
+            return {
+              ...element,
+              x: Math.round(newX),
+              y: Math.round(newY)
+            };
+          }
+        }
+        return element;
+      });
 
-      // Update position in real-time with throttling for performance
-      throttledUpdate(dragState.draggedElementId!, dragState.draggedElementType!, newX, newY);
-    }
-  }, [dragState, containerRef, campaign, throttledUpdate, previewDevice]);
+      return {
+        ...prev,
+        design: {
+          ...design,
+          [arrayKey]: updatedElements
+        },
+        _lastUpdate: Date.now()
+      };
+    });
+  }, [dragState, containerRef, setCampaign, previewDevice]);
 
   const handleDragEnd = useCallback(() => {
     if (!dragState.isDragging) return;
