@@ -1,6 +1,6 @@
 import React from 'react';
-import { Eye, Save, Share2, MoreHorizontal, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Eye, Save, Share2, MoreHorizontal } from 'lucide-react';
+
 import PreviewDeviceButtons from './PreviewDeviceButtons';
 interface EditorHeaderProps {
   campaign: any;
@@ -20,10 +20,6 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   selectedDevice = 'desktop',
   onDeviceChange = () => {}
 }) => {
-  const navigate = useNavigate();
-  const handleBack = () => {
-    navigate('/campaigns');
-  };
   return <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0 z-50">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
