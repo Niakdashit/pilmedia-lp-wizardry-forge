@@ -42,7 +42,9 @@ export const useInteractiveDragDrop = ({
         const elements = design[arrayKey] || [];
         
         const updatedElements = elements.map((element: any) => {
-          if (element.id === elementId) {
+          // Convert elementId to number for comparison
+          const numericElementId = typeof elementId === 'string' ? parseInt(elementId) : elementId;
+          if (element.id === numericElementId) {
             // Update device-specific or global position
             if (previewDevice !== 'desktop') {
               return {
@@ -85,14 +87,21 @@ export const useInteractiveDragDrop = ({
     e.preventDefault();
     e.stopPropagation();
 
+    console.log('🎯 Drag start for element:', elementId, 'type:', elementType);
+
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      console.log('❌ No container ref');
+      return;
+    }
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const startX = clientX - containerRect.left;
     const startY = clientY - containerRect.top;
+
+    console.log('📍 Drag start position:', { startX, startY });
 
     dragStartRef.current = { x: startX, y: startY };
     setSelectedElementId(elementId);
@@ -118,30 +127,40 @@ export const useInteractiveDragDrop = ({
     const currentX = clientX - containerRect.left;
     const currentY = clientY - containerRect.top;
 
-    const offsetX = currentX - dragStartRef.current.x;
-    const offsetY = currentY - dragStartRef.current.y;
-
-    setDragState(prev => ({
-      ...prev,
-      currentOffset: { x: offsetX, y: offsetY }
-    }));
-
+    // Calculate the new position directly based on mouse position
     // Get current element position
     const design = campaign.design || {};
     const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
     const elements = design[arrayKey] || [];
-    const element = elements.find((el: any) => el.id === dragState.draggedElementId);
+    const numericDraggedId = typeof dragState.draggedElementId === 'string' 
+      ? parseInt(dragState.draggedElementId) 
+      : dragState.draggedElementId;
+    const element = elements.find((el: any) => el.id === numericDraggedId);
     
     if (element) {
       const deviceConfig = previewDevice !== 'desktop' && element[previewDevice] 
         ? element[previewDevice] 
         : element;
       
-      const currentElementX = deviceConfig.x || 0;
-      const currentElementY = deviceConfig.y || 0;
+      const elementRect = document.querySelector(`[data-element-id="${dragState.draggedElementId}"]`);
+      let offsetX = 0;
+      let offsetY = 0;
       
-      const newX = currentElementX + offsetX;
-      const newY = currentElementY + offsetY;
+      if (elementRect) {
+        const rect = elementRect.getBoundingClientRect();
+        offsetX = currentX - (rect.left - containerRect.left + rect.width / 2);
+        offsetY = currentY - (rect.top - containerRect.top + rect.height / 2);
+      }
+      
+      const newX = Math.max(0, currentX - offsetX);
+      const newY = Math.max(0, currentY - offsetY);
+
+      console.log('🚀 Moving element to:', { newX, newY });
+
+      setDragState(prev => ({
+        ...prev,
+        currentOffset: { x: newX - (deviceConfig.x || 0), y: newY - (deviceConfig.y || 0) }
+      }));
 
       throttledUpdate(dragState.draggedElementId!, dragState.draggedElementType!, newX, newY);
     }
