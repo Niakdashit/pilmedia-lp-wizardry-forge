@@ -60,7 +60,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       overflow: 'hidden',
       backgroundColor: campaign.design?.background || '#ebf4f7',
       backgroundImage: resolvedBackground ? `url(${resolvedBackground})` : undefined,
-      backgroundSize: 'cover',
+      backgroundSize: 'contain', // Changed from 'cover' to 'contain'
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
       borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',

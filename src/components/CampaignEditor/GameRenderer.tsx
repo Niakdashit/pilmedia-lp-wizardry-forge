@@ -64,7 +64,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   if (gameBackgroundImage || enhancedCampaign.design?.backgroundImage) {
     const bgImage = gameBackgroundImage || enhancedCampaign.design?.backgroundImage;
     containerStyle.backgroundImage = `url(${bgImage})`;
-    containerStyle.backgroundSize = 'cover';
+    containerStyle.backgroundSize = 'contain'; // Changed from 'cover' to 'contain'
     containerStyle.backgroundPosition = 'center';
     containerStyle.backgroundRepeat = 'no-repeat';
   }

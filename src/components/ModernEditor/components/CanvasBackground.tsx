@@ -42,7 +42,7 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
     const styleWithBackground = {
       ...baseStyle,
       backgroundImage,
-      backgroundSize: 'cover',
+      backgroundSize: 'contain', // Changed from 'cover' to 'contain'
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
     };
