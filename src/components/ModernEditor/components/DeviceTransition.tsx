@@ -39,10 +39,10 @@ const DeviceTransition: React.FC<DeviceTransitionProps> = ({
     const baseClasses = 'transition-all duration-300 ease-in-out';
     
     if (isTransitioning) {
-      return `${baseClasses} opacity-80 scale-95 blur-sm`;
+      return `${baseClasses} opacity-80 scale-95`;
     }
     
-    return `${baseClasses} opacity-100 scale-100 blur-0`;
+    return `${baseClasses} opacity-100 scale-100`;
   };
 
   return (
@@ -51,7 +51,7 @@ const DeviceTransition: React.FC<DeviceTransitionProps> = ({
       
       {/* Overlay pendant la transition */}
       {isTransitioning && (
-        <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] rounded-lg animate-fade-in z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-white/10 rounded-lg animate-fade-in z-10 pointer-events-none" />
       )}
     </div>
   );
