@@ -19,11 +19,13 @@ const CampaignPreviewFrame: React.FC<CampaignPreviewFrameProps> = ({
   const containerStyle: React.CSSProperties = {
     backgroundColor: '#ffffff',
     backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
-    backgroundSize: 'contain', // Changed from 'cover' to 'contain'
+    backgroundSize: 'contain',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     border: '1px solid #e5e7eb',
     borderRadius: selectedDevice === 'mobile' ? '24px' : '12px',
+    minHeight: '100%', // Ensure minimum height
+    height: 'auto', // Allow height to adapt
   };
 
   return (
@@ -37,7 +39,8 @@ const CampaignPreviewFrame: React.FC<CampaignPreviewFrameProps> = ({
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          minHeight: '100%'
         }}
       >
         {children}

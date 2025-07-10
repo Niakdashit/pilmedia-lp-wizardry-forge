@@ -42,9 +42,10 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
     const styleWithBackground = {
       ...baseStyle,
       backgroundImage,
-      backgroundSize: 'contain', // Changed from 'cover' to 'contain'
+      backgroundSize: 'contain',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'local', // Prevent background scrolling issues
     };
 
     switch (previewDevice) {
@@ -55,7 +56,8 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
           maxHeight: '1024px',
           margin: '0 auto',
           border: '1px solid #e5e7eb',
-          borderRadius: '12px'
+          borderRadius: '12px',
+          aspectRatio: 'auto' // Allow natural aspect ratio
         };
       case 'mobile':
         return {
@@ -64,10 +66,14 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
           maxHeight: '812px',
           margin: '0 auto',
           border: '1px solid #e5e7eb',
-          borderRadius: '20px'
+          borderRadius: '20px',
+          aspectRatio: 'auto'
         };
       default:
-        return styleWithBackground;
+        return {
+          ...styleWithBackground,
+          aspectRatio: 'auto'
+        };
     }
   };
 
