@@ -19,13 +19,14 @@ const CampaignPreviewFrame: React.FC<CampaignPreviewFrameProps> = ({
   const containerStyle: React.CSSProperties = {
     backgroundColor: '#ffffff',
     backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
-    backgroundSize: '100% auto', // Force image to take full width
-    backgroundPosition: 'center top',
-    backgroundRepeat: 'no-repeat',
+    backgroundSize: '100% auto !important', // Force image to take full width
+    backgroundPosition: 'center top !important',
+    backgroundRepeat: 'no-repeat !important',
     border: '1px solid #e5e7eb',
     borderRadius: selectedDevice === 'mobile' ? '24px' : '12px',
-    minHeight: '100%', // Ensure minimum height
-    height: 'auto', // Allow height to adapt
+    minHeight: '100vh',
+    height: '100vh',
+    width: '100%',
   };
 
   return (
