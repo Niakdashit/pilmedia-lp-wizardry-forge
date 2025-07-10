@@ -42,8 +42,8 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
     const styleWithBackground = {
       ...baseStyle,
       backgroundImage,
-      backgroundSize: 'contain',
-      backgroundPosition: 'center',
+      backgroundSize: '100% auto', // Force image to take full width
+      backgroundPosition: 'center top',
       backgroundRepeat: 'no-repeat',
       backgroundAttachment: 'local', // Prevent background scrolling issues
     };

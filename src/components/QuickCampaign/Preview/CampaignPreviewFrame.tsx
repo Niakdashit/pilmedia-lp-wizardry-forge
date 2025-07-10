@@ -19,8 +19,8 @@ const CampaignPreviewFrame: React.FC<CampaignPreviewFrameProps> = ({
   const containerStyle: React.CSSProperties = {
     backgroundColor: '#ffffff',
     backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
-    backgroundSize: 'contain',
-    backgroundPosition: 'center',
+    backgroundSize: '100% auto', // Force image to take full width
+    backgroundPosition: 'center top',
     backgroundRepeat: 'no-repeat',
     border: '1px solid #e5e7eb',
     borderRadius: selectedDevice === 'mobile' ? '24px' : '12px',
