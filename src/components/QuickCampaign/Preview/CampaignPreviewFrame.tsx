@@ -19,7 +19,7 @@ const CampaignPreviewFrame: React.FC<CampaignPreviewFrameProps> = ({
   const containerStyle: React.CSSProperties = {
     backgroundColor: '#ffffff',
     backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
-    backgroundSize: 'cover',
+    backgroundSize: 'contain', // Changed from 'cover' to 'contain'
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     border: '1px solid #e5e7eb',
