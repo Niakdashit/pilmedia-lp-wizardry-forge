@@ -41,7 +41,12 @@ const CampaignPreviewFrame: React.FC<CampaignPreviewFrameProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '100%'
+          minHeight: '100%',
+          backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
+          backgroundSize: '100% auto',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'scroll'
         }}
       >
         {children}
