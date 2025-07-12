@@ -40,8 +40,8 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
       default:
         return {
           ...baseStyles,
-          width: campaign.settings?.width ? `${campaign.settings.width}px` : '810px',
-          height: campaign.settings?.height ? `${campaign.settings.height}px` : '1200px',
+          width: '900px',
+          height: '1100px',
           maxWidth: '100%',
         };
     }

@@ -14,13 +14,12 @@ interface FormData {
 }
 
 const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
-  const [gameState, setGameState] = useState<'home' | 'form' | 'wheel' | 'result'>('home');
+  const gameMode = campaign.game?.mode || 'mode1';
+  const [gameState, setGameState] = useState<'home' | 'form' | 'wheel' | 'result'>(gameMode === 'mode2' ? 'wheel' : 'home');
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', phone: '' });
   const [wheelResult, setWheelResult] = useState<string>('');
   const [isSpinning, setIsSpinning] = useState(false);
-
-  const wheelMode = campaign.game?.wheelMode || 'mode1';
   const segments = (campaign.game?.wheelSegments || [
     { id: '1', label: 'Prix 1', color: '#ff6b6b' },
     { id: '2', label: 'Prix 2', color: '#4ecdc4' },
@@ -34,11 +33,22 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
   }));
 
   const getWheelSize = () => {
-    switch (previewDevice) {
-      case 'mobile': return 180;
-      case 'tablet': return 220;
-      case 'desktop': return 280;
-      default: return 220;
+    if (gameMode === 'mode2') {
+      // Tailles plus grandes pour mode 2 (dans la bannière)
+      switch (previewDevice) {
+        case 'mobile': return 200;
+        case 'tablet': return 280;
+        case 'desktop': return 350;
+        default: return 280;
+      }
+    } else {
+      // Tailles normales pour mode 1
+      switch (previewDevice) {
+        case 'mobile': return 180;
+        case 'tablet': return 220;
+        case 'desktop': return 280;
+        default: return 220;
+      }
     }
   };
 
@@ -55,7 +65,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
     e.preventDefault();
     if (!formData.name || !formData.email) return;
 
-    if (wheelMode === 'mode1') {
+    if (gameMode === 'mode1') {
       setGameState('wheel');
     } else {
       setShowModal(false);
@@ -69,7 +79,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
   };
 
   const handleWheelSpin = () => {
-    if (wheelMode === 'mode2' && !formData.name) {
+    if (gameMode === 'mode2' && !formData.name) {
       setShowModal(true);
       return;
     }
@@ -77,7 +87,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
   };
 
   const resetGame = () => {
-    setGameState('home');
+    setGameState(gameMode === 'mode2' ? 'wheel' : 'home');
     setFormData({ name: '', email: '', phone: '' });
     setWheelResult('');
     setIsSpinning(false);
@@ -142,7 +152,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
   );
 
   // Mode 1: Page d'accueil → Formulaire → Roue → Résultat
-  if (wheelMode === 'mode1') {
+  if (gameMode === 'mode1') {
     if (gameState === 'home') {
       return (
         <div className="text-center space-y-6">
@@ -214,7 +224,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
   }
 
   // Mode 2: Roue visible avec modal formulaire
-  if (wheelMode === 'mode2') {
+  if (gameMode === 'mode2') {
     if (gameState === 'result') {
       return (
         <div className="space-y-6">
@@ -246,14 +256,8 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
     }
 
     return (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-gray-800 leading-relaxed mb-6" style={{ whiteSpace: 'pre-wrap' }}>
-              {campaign.content?.text || 'Tentez votre chance à notre jeu de la roue de la fortune !'}
-            </div>
-          </div>
-        
-        <div className="flex justify-center">
+      <div className="relative w-full h-full flex items-center justify-center">
+        <div className="text-center">
           <SmartWheel
             segments={segments}
             size={getWheelSize()}
@@ -261,7 +265,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
             onSpin={handleWheelSpin}
             disabled={isSpinning}
             customButton={{
-              text: 'FAIRE TOURNER',
+              text: 'Cliquez sur le bouton central pour faire tourner la roue !',
               color: 'linear-gradient(135deg, #f97316, #dc2626)',
               textColor: '#ffffff'
             }}
