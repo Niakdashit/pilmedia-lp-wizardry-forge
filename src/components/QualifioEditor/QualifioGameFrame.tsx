@@ -1,5 +1,6 @@
 import React from 'react';
 import { Facebook, X } from 'lucide-react';
+import WheelGame from './WheelGame';
 
 interface QualifioGameFrameProps {
   campaign: any;
@@ -171,12 +172,17 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
           </p>
         </div>
 
-        {/* Bouton de participation */}
-        <div className="text-center">
-          <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
-            {campaign.prize?.buttonText || 'PARTICIPER !'}
-          </button>
-        </div>
+        {/* Zone de jeu */}
+        {campaign.game?.type === 'wheel' ? (
+          <WheelGame campaign={campaign} previewDevice={previewDevice} />
+        ) : (
+          /* Bouton de participation par défaut */
+          <div className="text-center">
+            <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
+              {campaign.prize?.buttonText || 'PARTICIPER !'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
