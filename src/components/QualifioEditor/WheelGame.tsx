@@ -257,20 +257,18 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
 
     return (
       <div className="relative w-full h-full flex items-center justify-center">
-        <div className="text-center">
-          <SmartWheel
-            segments={segments}
-            size={getWheelSize()}
-            onResult={handleWheelResult}
-            onSpin={handleWheelSpin}
-            disabled={isSpinning}
-            customButton={{
-              text: 'Cliquez sur le bouton central pour faire tourner la roue !',
-              color: 'linear-gradient(135deg, #f97316, #dc2626)',
-              textColor: '#ffffff'
-            }}
-          />
-        </div>
+        <SmartWheel
+          segments={segments}
+          size={getWheelSize()}
+          onResult={handleWheelResult}
+          onSpin={handleWheelSpin}
+          disabled={isSpinning}
+          customButton={{
+            text: 'Cliquez sur le bouton central pour faire tourner la roue !',
+            color: 'linear-gradient(135deg, #f97316, #dc2626)',
+            textColor: '#ffffff'
+          }}
+        />
 
         {/* Modal formulaire */}
         {showModal && (
