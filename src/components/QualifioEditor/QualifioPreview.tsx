@@ -12,12 +12,48 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
   const getDeviceStyles = () => {
     switch (device) {
       case 'mobile':
-        return { maxWidth: '375px', margin: '0 auto' };
+        return { 
+          maxWidth: '375px', 
+          margin: '0 auto',
+          transform: 'scale(0.9)',
+          transformOrigin: 'top center'
+        };
       case 'tablet':
-        return { maxWidth: '768px', margin: '0 auto' };
+        return { 
+          maxWidth: '768px', 
+          margin: '0 auto',
+          transform: 'scale(0.7)',
+          transformOrigin: 'top center'
+        };
       case 'desktop':
       default:
-        return { maxWidth: '1024px', margin: '0 auto' };
+        return { 
+          maxWidth: '1200px', 
+          margin: '0 auto',
+          transform: 'scale(0.6)',
+          transformOrigin: 'top center'
+        };
+    }
+  };
+
+  const getContentDimensions = () => {
+    switch (device) {
+      case 'mobile':
+        return { 
+          width: '375px',
+          minHeight: '667px'
+        };
+      case 'tablet':
+        return { 
+          width: '768px', 
+          minHeight: '1024px'
+        };
+      case 'desktop':
+      default:
+        return { 
+          width: '1200px',
+          minHeight: '800px'
+        };
     }
   };
 
@@ -39,8 +75,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
             className="relative bg-cover bg-center rounded-lg shadow-2xl overflow-hidden"
             style={{ 
               backgroundImage: `url(${summerBeachImage})`,
-              width: device === 'mobile' ? '320px' : device === 'tablet' ? '500px' : '600px',
-              height: device === 'mobile' ? '400px' : device === 'tablet' ? '500px' : '600px'
+              ...getContentDimensions()
             }}
           >
             {/* Social buttons top left */}
@@ -82,7 +117,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
             className="rounded-lg shadow-2xl overflow-hidden"
             style={{ 
               backgroundColor: config.backgroundColor || '#ffffff',
-              width: device === 'mobile' ? '320px' : device === 'tablet' ? '500px' : '600px'
+              ...getContentDimensions()
             }}
           >
             {/* Header avec image de fond */}
@@ -90,7 +125,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
               className="relative bg-cover bg-center"
               style={{ 
                 backgroundImage: `url(${summerBeachImage})`,
-                height: device === 'mobile' ? '250px' : device === 'tablet' ? '300px' : '350px'
+                height: device === 'mobile' ? '300px' : device === 'tablet' ? '400px' : '500px'
               }}
             >
               {/* Social buttons top left */}
