@@ -12,7 +12,6 @@ import Gamification from './pages/Gamification';
 import ModernCampaignEditor from './pages/ModernCampaignEditor';
 import ModernEditorPage from './pages/ModernEditorPage';
 import ModernWizardPage from './pages/ModernWizardPage';
-import QualifioEditorPage from './pages/QualifioEditorPage';
 import QuickCampaign from './pages/QuickCampaign';
 import Newsletter from './pages/Newsletter';
 import Statistics from './pages/Statistics';
@@ -83,12 +82,6 @@ function App() {
             <Route path="/modern-wizard" element={
               <EditorOnlyLayout title="Assistant de création" backPath="/campaigns">
                 <ModernWizardPage />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/qualifio-editor/:campaignId" element={
-              <EditorOnlyLayout title="Éditeur Qualifio" backPath="/gamification">
-                <QualifioEditorPage />
               </EditorOnlyLayout>
             } />
             
