@@ -17,11 +17,11 @@ const QualifioFooter: React.FC<QualifioFooterProps> = ({ campaign }) => {
   };
 
   return (
-    <div className="bg-white border-t border-gray-200 px-6 py-4">
+    <div className="bg-slate-700 border-t border-gray-600 px-6 py-4">
       <div className="flex items-center justify-end space-x-4">
         <button
           onClick={handleSave}
-          className="flex items-center space-x-2 px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          className="flex items-center space-x-2 px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Save className="w-4 h-4" />
           <span className="font-medium">Sauvegarder le template</span>
