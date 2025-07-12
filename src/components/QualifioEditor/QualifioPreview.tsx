@@ -23,8 +23,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
   };
 
   return (
-    <div className="flex-1 bg-slate-700 flex items-center justify-center p-8">
-      <div className={`${getDeviceClass()} w-full`}>
+    <div className="flex-1 bg-slate-700 flex items-start justify-center p-8 overflow-auto">
+      <div className={`${getDeviceClass()} w-full flex justify-center`}>
         <QualifioGameFrame
           campaign={campaign}
           previewDevice={previewDevice}

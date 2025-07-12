@@ -98,7 +98,7 @@ const QualifioGeneralTab: React.FC<QualifioGeneralTabProps> = ({
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center">
+          <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center relative">
             {campaign.banner?.image ? (
               <div className="relative">
                 <img
@@ -116,6 +116,12 @@ const QualifioGeneralTab: React.FC<QualifioGeneralTabProps> = ({
                     </div>
                   </div>
                 </div>
+                <button
+                  onClick={() => setCampaign({...campaign, banner: {...campaign.banner, image: null}})}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
               </div>
             ) : (
               <div className="text-gray-400">
@@ -130,10 +136,12 @@ const QualifioGeneralTab: React.FC<QualifioGeneralTabProps> = ({
               className="hidden"
               id="banner-upload"
             />
-            <label
-              htmlFor="banner-upload"
-              className="absolute inset-0 cursor-pointer"
-            />
+            {!campaign.banner?.image && (
+              <label
+                htmlFor="banner-upload"
+                className="absolute inset-0 cursor-pointer"
+              />
+            )}
           </div>
 
           <div>

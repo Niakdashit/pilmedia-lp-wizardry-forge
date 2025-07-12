@@ -13,9 +13,11 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
   const getFrameStyles = () => {
     const baseStyles = {
       backgroundColor: campaign.settings?.backgroundColor || '#ffffff',
-      borderRadius: '8px',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      overflow: 'hidden'
+      borderRadius: previewDevice === 'mobile' ? '24px' : '12px',
+      border: '1px solid #e5e7eb',
+      overflow: 'auto',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      position: 'relative' as const,
     };
 
     switch (previewDevice) {
@@ -23,20 +25,77 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
         return {
           ...baseStyles,
           width: '375px',
-          maxHeight: '667px'
+          height: '812px',
+          maxWidth: '100%',
         };
       case 'tablet':
         return {
           ...baseStyles,
           width: '768px',
-          maxHeight: '1024px'
+          height: '1024px',
+          maxWidth: '100%',
         };
       case 'desktop':
       default:
         return {
           ...baseStyles,
-          width: `${campaign.settings?.width || 810}px`,
-          height: `${campaign.settings?.height || 1200}px`
+          width: campaign.settings?.width ? `${campaign.settings.width}px` : '810px',
+          height: campaign.settings?.height ? `${campaign.settings.height}px` : '1200px',
+          maxWidth: '100%',
+        };
+    }
+  };
+
+  const getBannerHeight = () => {
+    switch (previewDevice) {
+      case 'mobile':
+        return '200px';
+      case 'tablet':
+        return '280px';
+      case 'desktop':
+      default:
+        return '350px';
+    }
+  };
+
+  const getContentPadding = () => {
+    switch (previewDevice) {
+      case 'mobile':
+        return '16px';
+      case 'tablet':
+        return '24px';
+      case 'desktop':
+      default:
+        return '32px';
+    }
+  };
+
+  const getTextSize = () => {
+    switch (previewDevice) {
+      case 'mobile':
+        return {
+          title: 'text-lg',
+          body: 'text-sm',
+          link: 'text-sm',
+          prize: 'text-sm',
+          button: 'text-base'
+        };
+      case 'tablet':
+        return {
+          title: 'text-xl',
+          body: 'text-base',
+          link: 'text-base',
+          prize: 'text-base',
+          button: 'text-lg'
+        };
+      case 'desktop':
+      default:
+        return {
+          title: 'text-2xl',
+          body: 'text-base',
+          link: 'text-base',
+          prize: 'text-base',
+          button: 'text-lg'
         };
     }
   };
@@ -48,8 +107,9 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
     >
       {/* Bannière avec image de fond */}
       <div
-        className="relative h-64 w-full flex items-center justify-center"
+        className="relative w-full flex items-center justify-center"
         style={{
+          height: getBannerHeight(),
           backgroundImage: campaign.banner?.image ? `url(${campaign.banner.image})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundSize: '100% auto',
           backgroundPosition: 'center top',
@@ -89,8 +149,8 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
       </div>
 
       {/* Contenu texte */}
-      <div className="p-6">
-        <div className="text-sm text-gray-800 leading-relaxed mb-6">
+      <div style={{ padding: getContentPadding() }}>
+        <div className={`${getTextSize().body} text-gray-800 leading-relaxed mb-6`}>
           {campaign.content?.text || 'Texte de présentation de votre jeu...'}
         </div>
 
@@ -98,7 +158,7 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
         <div className="text-center mb-4">
           <a
             href={campaign.publisher?.url || '#'}
-            className="text-red-600 font-medium hover:underline"
+            className={`${getTextSize().link} text-red-600 font-medium hover:underline`}
           >
             {campaign.publisher?.name || 'editions.flammarion.com'}
           </a>
@@ -106,14 +166,14 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
 
         {/* Description du lot */}
         <div className="text-center mb-6">
-          <p className="text-sm font-medium italic text-gray-800">
+          <p className={`${getTextSize().prize} font-medium italic text-gray-800`}>
             {campaign.prize?.description || 'Jouez et tentez de remporter un prix !'}
           </p>
         </div>
 
         {/* Bouton de participation */}
         <div className="text-center">
-          <button className="px-8 py-3 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition-colors shadow-md">
+          <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
             {campaign.prize?.buttonText || 'PARTICIPER !'}
           </button>
         </div>
