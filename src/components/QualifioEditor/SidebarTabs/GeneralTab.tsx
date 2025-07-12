@@ -10,6 +10,39 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
   return (
     <div className="space-y-6">
       <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Configuration générale</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mode de jeu
+            </label>
+            <select
+              value={config.gameMode}
+              onChange={(e) => onConfigUpdate({ gameMode: e.target.value as EditorConfig['gameMode'] })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="mode1-sequential">Mode 1 - Séquentiel (Descriptif + Zone de jeu)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mode d'affichage
+            </label>
+            <select
+              value={config.displayMode}
+              onChange={(e) => onConfigUpdate({ displayMode: e.target.value as EditorConfig['displayMode'] })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="mode1-banner-game">Mode 1 - Bannière + zone de texte</option>
+              <option value="mode2-background">Mode 2 - Fond seul (paysage)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Largeur (px)
         </label>
