@@ -78,19 +78,19 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({ config, onConfigUpdate }) => 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Couleur des graphiques
+              Couleur de fond du concours
             </label>
             <div className="flex gap-2">
               <input
                 type="color"
-                value={config.graphicsColor || '#000000'}
-                onChange={(e) => onConfigUpdate({ graphicsColor: e.target.value })}
+                value={config.backgroundColor || '#ffffff'}
+                onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
                 className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
               />
               <input
                 type="text"
-                value={config.graphicsColor || '#000000'}
-                onChange={(e) => onConfigUpdate({ graphicsColor: e.target.value })}
+                value={config.backgroundColor || '#ffffff'}
+                onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
               />
             </div>

@@ -1,8 +1,8 @@
 import React from 'react';
-import SummerReadingContest from '../components/SummerReadingContest/SummerReadingContest';
+import QualifioEditorLayout from '../components/QualifioEditor/QualifioEditorLayout';
 
 const QualifioEditor: React.FC = () => {
-  return <SummerReadingContest />;
+  return <QualifioEditorLayout />;
 };
 
 export default QualifioEditor;
