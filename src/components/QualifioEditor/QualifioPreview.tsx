@@ -12,27 +12,31 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
   config
 }) => {
   const getDeviceDimensions = () => {
+    const base = { width: config.width || 810, height: config.height || 1200 };
     switch (device) {
       case 'mobile':
-        return { width: 375, height: 667, scale: 0.8 };
+        return { ...base, scale: 0.8 };
       case 'tablet':
-        return { width: 768, height: 1024, scale: 0.7 };
+        return { ...base, scale: 0.7 };
       case 'desktop':
       default:
-        return { width: config.width || 810, height: config.height || 1200, scale: 0.6 };
+        return { ...base, scale: 0.6 };
     }
   };
 
   const { width, height, scale } = getDeviceDimensions();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-full bg-slate-800 rounded-lg p-8">
+    <div
+      className="flex flex-col items-center justify-center h-screen bg-slate-800 rounded-lg p-8"
+      style={{ maxWidth: '90vw', marginLeft: 'auto', marginRight: 'auto' }}
+    >
       {/* Device Frame */}
       <div
-        className="bg-white rounded-lg shadow-2xl overflow-hidden"
+        className="bg-white rounded-lg shadow-2xl overflow-y-auto sm:overflow-hidden w-[95%] max-w-[810px] sm:w-[600px] sm:max-w-[810px] md:w-[810px]"
         style={{
-          width: width * scale,
-          height: height * scale,
+          width,
+          height,
           transform: `scale(${scale})`,
           transformOrigin: 'center center'
         }}
@@ -87,7 +91,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-8 space-y-6">
             {/* Main Text */}
             <div 
               className={`text-sm leading-relaxed ${config.centerText ? 'text-center' : 'text-left'}`}
