@@ -35,10 +35,10 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
 
   const getWheelSize = () => {
     switch (previewDevice) {
-      case 'mobile': return 200;
-      case 'tablet': return 280;
-      case 'desktop': return 320;
-      default: return 280;
+      case 'mobile': return 180;
+      case 'tablet': return 220;
+      case 'desktop': return 280;
+      default: return 220;
     }
   };
 
@@ -124,7 +124,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
       <div className="flex gap-2">
         <button
           type="submit"
-          className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+          className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white py-2 px-4 rounded-lg hover:from-orange-600 hover:to-red-700 transition-all transform hover:scale-105"
         >
           Valider
         </button>
@@ -146,12 +146,12 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
     if (gameState === 'home') {
       return (
         <div className="text-center space-y-6">
-          <div className="text-gray-800 leading-relaxed mb-6">
+          <div className="text-gray-800 leading-relaxed mb-6" style={{ whiteSpace: 'pre-wrap' }}>
             {campaign.content?.text || 'Tentez votre chance à notre jeu de la roue de la fortune !'}
           </div>
           <button 
             onClick={() => setGameState('form')}
-            className="px-8 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-md"
+            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-lg hover:from-orange-600 hover:to-red-700 transition-all shadow-lg transform hover:scale-105"
           >
             {campaign.prize?.buttonText || 'PARTICIPER !'}
           </button>
@@ -182,7 +182,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
               disabled={isSpinning}
               customButton={{
                 text: 'FAIRE TOURNER',
-                color: '#dc2626',
+                color: 'linear-gradient(135deg, #f97316, #dc2626)',
                 textColor: '#ffffff'
               }}
             />
@@ -246,12 +246,12 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
     }
 
     return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <div className="text-gray-800 leading-relaxed mb-6">
-            {campaign.content?.text || 'Tentez votre chance à notre jeu de la roue de la fortune !'}
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="text-gray-800 leading-relaxed mb-6" style={{ whiteSpace: 'pre-wrap' }}>
+              {campaign.content?.text || 'Tentez votre chance à notre jeu de la roue de la fortune !'}
+            </div>
           </div>
-        </div>
         
         <div className="flex justify-center">
           <SmartWheel
@@ -262,7 +262,7 @@ const WheelGame: React.FC<WheelGameProps> = ({ campaign, previewDevice }) => {
             disabled={isSpinning}
             customButton={{
               text: 'FAIRE TOURNER',
-              color: '#dc2626',
+              color: 'linear-gradient(135deg, #f97316, #dc2626)',
               textColor: '#ffffff'
             }}
           />

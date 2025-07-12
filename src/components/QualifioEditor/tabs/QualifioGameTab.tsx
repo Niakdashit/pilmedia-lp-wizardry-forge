@@ -47,14 +47,32 @@ const QualifioGameTab: React.FC<QualifioGameTabProps> = ({
         <div className="space-y-4">
           <div>
             <label className="text-sm text-gray-600 mb-2 block">Mode d'affichage</label>
-            <select 
-              value={campaign.game?.wheelMode || 'mode1'} 
-              onChange={(e) => updateGameConfig('wheelMode', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-            >
-              <option value="mode1">Mode 1 - Page d'accueil puis formulaire</option>
-              <option value="mode2">Mode 2 - Roue visible avec modal formulaire</option>
-            </select>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => updateGameConfig('wheelMode', 'mode1')}
+                className={`flex-1 p-3 border-2 rounded-lg text-center transition-all ${
+                  (campaign.game?.wheelMode || 'mode1') === 'mode1'
+                    ? 'border-orange-500 bg-orange-50 text-orange-700'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <div className="w-8 h-8 bg-gray-600 rounded mx-auto mb-2"></div>
+                <div className="text-xs font-medium">Mode 1</div>
+                <div className="text-xs text-gray-500">Page puis formulaire</div>
+              </button>
+              <button
+                onClick={() => updateGameConfig('wheelMode', 'mode2')}
+                className={`flex-1 p-3 border-2 rounded-lg text-center transition-all ${
+                  campaign.game?.wheelMode === 'mode2'
+                    ? 'border-orange-500 bg-orange-50 text-orange-700'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <div className="w-8 h-8 border-2 border-gray-600 rounded mx-auto mb-2"></div>
+                <div className="text-xs font-medium">Mode 2</div>
+                <div className="text-xs text-gray-500">Roue avec modal</div>
+              </button>
+            </div>
           </div>
 
           <div>

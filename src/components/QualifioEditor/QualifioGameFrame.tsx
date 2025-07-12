@@ -50,24 +50,24 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
   const getBannerHeight = () => {
     switch (previewDevice) {
       case 'mobile':
-        return '200px';
+        return '180px';
       case 'tablet':
-        return '280px';
+        return '240px';
       case 'desktop':
       default:
-        return '350px';
+        return '300px';
     }
   };
 
   const getContentPadding = () => {
     switch (previewDevice) {
       case 'mobile':
-        return '16px';
+        return '12px';
       case 'tablet':
-        return '24px';
+        return '20px';
       case 'desktop':
       default:
-        return '32px';
+        return '24px';
     }
   };
 
@@ -149,11 +149,11 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
         </div>
       </div>
 
-      {/* Contenu texte */}
-      <div style={{ padding: getContentPadding() }}>
-        <div className={`${getTextSize().body} text-gray-800 leading-relaxed mb-6`}>
-          {campaign.content?.text || 'Texte de présentation de votre jeu...'}
-        </div>
+        {/* Contenu texte */}
+        <div style={{ padding: getContentPadding() }}>
+          <div className={`${getTextSize().body} text-gray-800 leading-relaxed mb-6`} style={{ whiteSpace: 'pre-wrap' }}>
+            {campaign.content?.text || 'Texte de présentation de votre jeu...'}
+          </div>
 
         {/* Lien éditeur */}
         <div className="text-center mb-4">

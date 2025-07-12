@@ -145,11 +145,23 @@ const QualifioGeneralTab: React.FC<QualifioGeneralTabProps> = ({
           </div>
 
           <div>
-            <label className="text-sm text-gray-600 mb-2 block">Description de l'image</label>
+            <label className="text-sm text-gray-600 mb-2 block">Texte de description (éditable)</label>
             <textarea
-              placeholder="Description de l'image"
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm h-16"
+              value={campaign.content?.text || ''}
+              onChange={(e) => setCampaign({
+                ...campaign,
+                content: {
+                  ...campaign.content,
+                  text: e.target.value
+                }
+              })}
+              placeholder="Entrez votre texte de description ici..."
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm h-32 resize-y"
+              style={{ whiteSpace: 'pre-wrap' }}
             />
+            <div className="text-xs text-gray-500 mt-1">
+              Les sauts de ligne sont conservés. Utilisez Entrée pour créer de nouveaux paragraphes.
+            </div>
           </div>
 
           <div>
