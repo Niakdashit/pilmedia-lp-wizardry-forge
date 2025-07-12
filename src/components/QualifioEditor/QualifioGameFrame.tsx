@@ -172,43 +172,43 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
         )}
       </div>
 
-        {/* Contenu texte */}
-        <div style={{ padding: getContentPadding() }}>
-          <div className={`${getTextSize().body} text-gray-800 leading-relaxed mb-6`} style={{ whiteSpace: 'pre-wrap' }}>
-            {campaign.content?.text || 'Texte de présentation de votre jeu...'}
-          </div>
-
-        {/* Lien éditeur */}
-        <div className="text-center mb-4">
-          <a
-            href={campaign.publisher?.url || '#'}
-            className={`${getTextSize().link} text-red-600 font-medium hover:underline`}
-          >
-            {campaign.publisher?.name || 'editions.flammarion.com'}
-          </a>
-        </div>
-
-        {/* Description du lot */}
-        <div className="text-center mb-6">
-          <p className={`${getTextSize().prize} font-medium italic text-gray-800`}>
-            {campaign.prize?.description || 'Jouez et tentez de remporter un prix !'}
-          </p>
-        </div>
-
-        {/* Zone de jeu - Uniquement pour Mode 1 */}
+        {/* Contenu texte - Uniquement pour Mode 1 */}
         {campaign.game?.mode !== 'mode2' && (
-          campaign.game?.type === 'wheel' ? (
-            <WheelGame campaign={campaign} previewDevice={previewDevice} />
-          ) : (
-            /* Bouton de participation par défaut */
-            <div className="text-center">
-              <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
-                {campaign.prize?.buttonText || 'PARTICIPER !'}
-              </button>
+          <div style={{ padding: getContentPadding() }}>
+            <div className={`${getTextSize().body} text-gray-800 leading-relaxed mb-6`} style={{ whiteSpace: 'pre-wrap' }}>
+              {campaign.content?.text || 'Texte de présentation de votre jeu...'}
             </div>
-          )
+
+            {/* Lien éditeur */}
+            <div className="text-center mb-4">
+              <a
+                href={campaign.publisher?.url || '#'}
+                className={`${getTextSize().link} text-red-600 font-medium hover:underline`}
+              >
+                {campaign.publisher?.name || 'editions.flammarion.com'}
+              </a>
+            </div>
+
+            {/* Description du lot */}
+            <div className="text-center mb-6">
+              <p className={`${getTextSize().prize} font-medium italic text-gray-800`}>
+                {campaign.prize?.description || 'Jouez et tentez de remporter un prix !'}
+              </p>
+            </div>
+
+            {/* Zone de jeu - Uniquement pour Mode 1 */}
+            {campaign.game?.type === 'wheel' ? (
+              <WheelGame campaign={campaign} previewDevice={previewDevice} />
+            ) : (
+              /* Bouton de participation par défaut */
+              <div className="text-center">
+                <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
+                  {campaign.prize?.buttonText || 'PARTICIPER !'}
+                </button>
+              </div>
+            )}
+          </div>
         )}
-      </div>
     </div>
   );
 };
