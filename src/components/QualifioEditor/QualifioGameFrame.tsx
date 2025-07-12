@@ -48,14 +48,30 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
   };
 
   const getBannerHeight = () => {
-    switch (previewDevice) {
-      case 'mobile':
-        return '180px';
-      case 'tablet':
-        return '240px';
-      case 'desktop':
-      default:
-        return '300px';
+    const gameMode = campaign.game?.mode || 'mode1';
+    
+    if (gameMode === 'mode2') {
+      // Mode 2: bannière paysage comme une page web
+      switch (previewDevice) {
+        case 'mobile':
+          return '250px';
+        case 'tablet':
+          return '400px';
+        case 'desktop':
+        default:
+          return '500px';
+      }
+    } else {
+      // Mode 1: bannière minimum 1500x744
+      switch (previewDevice) {
+        case 'mobile':
+          return '186px'; // Ratio 1500x744 adapté
+        case 'tablet':
+          return '381px'; // Ratio 1500x744 adapté
+        case 'desktop':
+        default:
+          return '744px'; // Hauteur exacte demandée
+      }
     }
   };
 
@@ -112,8 +128,8 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
         style={{
           height: getBannerHeight(),
           backgroundImage: campaign.banner?.image ? `url(${campaign.banner.image})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          backgroundSize: '100% auto',
-          backgroundPosition: 'center top',
+          backgroundSize: campaign.game?.mode === 'mode2' ? 'cover' : '100% auto',
+          backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       >
@@ -134,19 +150,26 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
           </button>
         </div>
 
-        {/* Titres superposés */}
-        <div className="text-center z-10">
-          <div className="inline-block bg-pink-200 bg-opacity-90 px-4 py-2 rounded mb-2">
-            <h1 className="text-lg font-bold text-gray-800">
-              {campaign.banner?.title || 'GRAND JEU'}
-            </h1>
+        {/* Mode 2: Jeu directement dans la bannière */}
+        {campaign.game?.mode === 'mode2' ? (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <WheelGame campaign={campaign} previewDevice={previewDevice} />
           </div>
-          <div className="inline-block bg-yellow-100 bg-opacity-90 px-4 py-2 rounded">
-            <h2 className="text-sm font-medium text-gray-700">
-              {campaign.banner?.subtitle || 'LECTURES DE L\'ÉTÉ'}
-            </h2>
+        ) : (
+          /* Mode 1: Titres superposés */
+          <div className="text-center z-10">
+            <div className="inline-block bg-pink-200 bg-opacity-90 px-4 py-2 rounded mb-2">
+              <h1 className="text-lg font-bold text-gray-800">
+                {campaign.banner?.title || 'GRAND JEU'}
+              </h1>
+            </div>
+            <div className="inline-block bg-yellow-100 bg-opacity-90 px-4 py-2 rounded">
+              <h2 className="text-sm font-medium text-gray-700">
+                {campaign.banner?.subtitle || 'LECTURES DE L\'ÉTÉ'}
+              </h2>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
         {/* Contenu texte */}
@@ -172,16 +195,18 @@ const QualifioGameFrame: React.FC<QualifioGameFrameProps> = ({
           </p>
         </div>
 
-        {/* Zone de jeu */}
-        {campaign.game?.type === 'wheel' ? (
-          <WheelGame campaign={campaign} previewDevice={previewDevice} />
-        ) : (
-          /* Bouton de participation par défaut */
-          <div className="text-center">
-            <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
-              {campaign.prize?.buttonText || 'PARTICIPER !'}
-            </button>
-          </div>
+        {/* Zone de jeu - Uniquement pour Mode 1 */}
+        {campaign.game?.mode !== 'mode2' && (
+          campaign.game?.type === 'wheel' ? (
+            <WheelGame campaign={campaign} previewDevice={previewDevice} />
+          ) : (
+            /* Bouton de participation par défaut */
+            <div className="text-center">
+              <button className={`px-8 py-3 bg-red-600 text-white font-bold ${getTextSize().button} rounded-lg hover:bg-red-700 transition-colors shadow-md`}>
+                {campaign.prize?.buttonText || 'PARTICIPER !'}
+              </button>
+            </div>
+          )
         )}
       </div>
     </div>
