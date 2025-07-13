@@ -90,10 +90,14 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-all duration-200 flex-shrink-0 ${
                   activeTab === tab.id 
-                    ? 'bg-sidebar-active text-white' 
-                    : 'bg-sidebar-background text-sidebar-text-muted hover:bg-sidebar-border hover:text-sidebar-text-primary'
+                    ? 'text-white' 
+                    : 'text-sidebar-text-muted hover:bg-sidebar-hover hover:text-sidebar-text-primary'
                 }`}
-                style={{ minWidth: 'auto' }}
+                style={{
+                  backgroundColor: activeTab === tab.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
+                  border: activeTab === tab.id ? '1px solid hsl(var(--sidebar-active))' : '1px solid hsl(var(--sidebar-border))',
+                  minWidth: 'auto'
+                }}
               >
                 <tab.icon className="w-4 h-4" />
                 <span className="whitespace-nowrap">{tab.label}</span>

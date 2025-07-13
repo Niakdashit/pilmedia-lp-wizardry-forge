@@ -24,6 +24,11 @@ export interface CustomText {
   height?: number;
 }
 
+export interface DeviceConfig {
+  fontSize: number;
+  backgroundImage?: string;
+}
+
 export interface EditorConfig {
   // General
   width: number;
@@ -70,6 +75,13 @@ export interface EditorConfig {
   customCSS?: string;
   customJS?: string;
   trackingTags?: string;
+  
+  // Device-specific configurations
+  deviceConfig?: {
+    mobile: DeviceConfig;
+    tablet: DeviceConfig;
+    desktop: DeviceConfig;
+  };
 }
 
 const QualifioEditorLayout: React.FC = () => {
@@ -97,7 +109,21 @@ const QualifioEditorLayout: React.FC = () => {
     footerColor: '#f8f9fa',
     customCSS: '',
     customJS: '',
-    trackingTags: ''
+    trackingTags: '',
+    deviceConfig: {
+      mobile: {
+        fontSize: 14,
+        backgroundImage: undefined
+      },
+      tablet: {
+        fontSize: 16,
+        backgroundImage: undefined
+      },
+      desktop: {
+        fontSize: 18,
+        backgroundImage: undefined
+      }
+    }
   });
 
   const updateConfig = (updates: Partial<EditorConfig>) => {
