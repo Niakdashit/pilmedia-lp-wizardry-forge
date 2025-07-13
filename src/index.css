@@ -211,7 +211,7 @@ html, body {
 
   /* Nouveaux styles pour les onglets horizontaux */
   .sidebar-tab-horizontal {
-    @apply relative transition-all duration-300 ease-out w-full text-left group;
+    @apply relative transition-all duration-300 ease-out w-full text-left;
     background: hsl(var(--sidebar-surface));
     border: 1px solid hsl(var(--sidebar-border));
     border-radius: 12px;

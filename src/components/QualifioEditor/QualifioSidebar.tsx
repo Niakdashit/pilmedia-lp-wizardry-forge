@@ -87,7 +87,7 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`sidebar-tab-horizontal ${
+              className={`sidebar-tab-horizontal group ${
                 activeTab === tab.id ? 'active' : ''
               }`}
             >
