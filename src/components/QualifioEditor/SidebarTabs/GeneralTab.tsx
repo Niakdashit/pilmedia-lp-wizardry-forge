@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImageIcon } from 'lucide-react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
@@ -10,31 +11,28 @@ interface GeneralTabProps {
 const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Configuration générale</h3>
+      <h3 className="section-title">Configuration générale</h3>
+      
+      {/* Game Configuration */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Paramètres du jeu</h4>
         
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mode de jeu
-            </label>
+          <div className="form-group-premium">
+            <label>Mode de jeu</label>
             <select
               value={config.gameMode}
               onChange={(e) => onConfigUpdate({ gameMode: e.target.value as EditorConfig['gameMode'] })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="mode1-sequential">Mode 1 - Séquentiel (Descriptif + Zone de jeu)</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mode d'affichage
-            </label>
+          <div className="form-group-premium">
+            <label>Mode d'affichage</label>
             <select
               value={config.displayMode}
               onChange={(e) => onConfigUpdate({ displayMode: e.target.value as EditorConfig['displayMode'] })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="mode1-banner-game">Mode 1 - Bannière + zone de texte</option>
               <option value="mode2-background">Mode 2 - Fond seul (paysage)</option>
@@ -43,128 +41,132 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Largeur (px)
-        </label>
-        <input
-          type="number"
-          value={config.width}
-          onChange={(e) => onConfigUpdate({ width: parseInt(e.target.value) || 810 })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+      {/* Dimensions */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Dimensions</h4>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="form-group-premium">
+            <label>Largeur (px)</label>
+            <input
+              type="number"
+              value={config.width}
+              onChange={(e) => onConfigUpdate({ width: parseInt(e.target.value) || 810 })}
+              placeholder="810"
+            />
+          </div>
+
+          <div className="form-group-premium">
+            <label>Hauteur (px)</label>
+            <input
+              type="number"
+              value={config.height}
+              onChange={(e) => onConfigUpdate({ height: parseInt(e.target.value) || 1200 })}
+              placeholder="1200"
+            />
+          </div>
+        </div>
+
+        <div className="form-group-premium">
+          <label>Position d'ancrage</label>
+          <select
+            value={config.anchor}
+            onChange={(e) => onConfigUpdate({ anchor: e.target.value as 'fixed' | 'center' })}
+          >
+            <option value="fixed">Position fixe</option>
+            <option value="center">Centré</option>
+          </select>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Hauteur (px)
-        </label>
-        <input
-          type="number"
-          value={config.height}
-          onChange={(e) => onConfigUpdate({ height: parseInt(e.target.value) || 1200 })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Ancre
-        </label>
-        <select
-          value={config.anchor}
-          onChange={(e) => onConfigUpdate({ anchor: e.target.value as 'fixed' | 'center' })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="fixed">Fixe</option>
-          <option value="center">Centre</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Bannière
-        </label>
-        <div className="space-y-4 p-4 border border-gray-200 rounded-lg">
-          <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+      {/* Banner Configuration */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Bannière</h4>
+        
+        <div className="space-y-4">
+          <div className="w-full h-40 bg-sidebar-surface rounded-xl flex items-center justify-center border-2 border-dashed border-sidebar-border overflow-hidden">
             {config.bannerImage ? (
               <img src={config.bannerImage} alt="Banner" className="max-w-full max-h-full object-contain" />
             ) : (
-              <span className="text-gray-500">Image de bannière</span>
+              <div className="text-center">
+                <ImageIcon className="w-8 h-8 text-sidebar-text mx-auto mb-2" />
+                <span className="text-sidebar-text text-sm">Cliquez pour ajouter une image</span>
+              </div>
             )}
           </div>
           
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Description de l'image</label>
+          <div className="form-group-premium">
+            <label>Description de l'image</label>
             <textarea
               value={config.bannerDescription || ''}
               onChange={(e) => onConfigUpdate({ bannerDescription: e.target.value })}
-              placeholder="Description de l'image"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              placeholder="Décrivez votre image pour l'accessibilité..."
               rows={3}
             />
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Lien de la bannière (facultatif)</label>
+          <div className="form-group-premium">
+            <label>Lien de redirection (optionnel)</label>
             <input
               type="url"
               value={config.bannerLink || ''}
               onChange={(e) => onConfigUpdate({ bannerLink: e.target.value })}
               placeholder="https://www.qualifio.com"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
             />
           </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Couleur de fond</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={config.backgroundColor || '#ffffff'}
-                  onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={config.backgroundColor || '#ffffff'}
-                  onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
-                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                />
-              </div>
+      {/* Colors */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Couleurs</h4>
+        
+        <div className="space-y-4">
+          <div className="form-group-premium">
+            <label>Couleur de fond</label>
+            <div className="color-input-group">
+              <input
+                type="color"
+                value={config.backgroundColor || '#ffffff'}
+                onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
+              />
+              <input
+                type="text"
+                value={config.backgroundColor || '#ffffff'}
+                onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
+                placeholder="#ffffff"
+              />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Outline color</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={config.outlineColor || '#ffffff'}
-                  onChange={(e) => onConfigUpdate({ outlineColor: e.target.value })}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={config.outlineColor || '#ffffff'}
-                  onChange={(e) => onConfigUpdate({ outlineColor: e.target.value })}
-                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                />
-              </div>
+          <div className="form-group-premium">
+            <label>Couleur de contour</label>
+            <div className="color-input-group">
+              <input
+                type="color"
+                value={config.outlineColor || '#ffffff'}
+                onChange={(e) => onConfigUpdate({ outlineColor: e.target.value })}
+              />
+              <input
+                type="text"
+                value={config.outlineColor || '#ffffff'}
+                onChange={(e) => onConfigUpdate({ outlineColor: e.target.value })}
+                placeholder="#ffffff"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Style de bordure de la roue */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-4">
-          Style de bordure de la roue
-        </label>
-        <BorderStyleSelector
-          currentStyle={config.borderStyle || 'classic'}
-          onStyleChange={(style) => onConfigUpdate({ borderStyle: style })}
-        />
+      {/* Wheel Border Style */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Style de la roue</h4>
+        <div className="p-4 rounded-xl bg-sidebar-bg">
+          <BorderStyleSelector
+            currentStyle={config.borderStyle || 'classic'}
+            onStyleChange={(style) => onConfigUpdate({ borderStyle: style })}
+          />
+        </div>
       </div>
     </div>
   );

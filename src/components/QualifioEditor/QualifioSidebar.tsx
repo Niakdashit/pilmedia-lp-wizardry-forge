@@ -50,32 +50,49 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   };
 
   return (
-    <div className="w-96 bg-white border-r border-gray-200 flex flex-col h-screen">
+    <div className="w-96 sidebar-premium flex flex-col h-screen">
+      {/* Premium Header */}
+      <div className="px-6 py-6 border-b border-sidebar-border/50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sidebar-active to-sidebar-icon-active flex items-center justify-center">
+            <Settings className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h2 className="text-sidebar-text-primary font-semibold text-lg">Éditeur</h2>
+            <p className="text-sidebar-text text-xs">Configuration avancée</p>
+          </div>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="py-4 border-b border-sidebar-border/30">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${
-              activeTab === tab.id
-                ? 'bg-amber-100 text-amber-800 border-r-2 border-amber-500'
-                : 'hover:bg-gray-50 text-gray-700'
+            className={`sidebar-tab w-full flex items-center justify-between text-left group ${
+              activeTab === tab.id ? 'active' : ''
             }`}
           >
             <div className="flex items-center gap-3">
-              <tab.icon className="w-4 h-4" />
-              <span className="font-medium">{tab.label}</span>
+              <tab.icon className={`w-4 h-4 transition-colors ${
+                activeTab === tab.id 
+                  ? 'text-sidebar-icon-active' 
+                  : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
+              }`} />
+              <span className="font-medium text-sm">{tab.label}</span>
             </div>
-            <ChevronRight className={`w-4 h-4 transition-transform ${
-              activeTab === tab.id ? 'rotate-90' : ''
+            <ChevronRight className={`w-3 h-3 transition-all duration-300 ${
+              activeTab === tab.id 
+                ? 'rotate-90 text-sidebar-icon-active' 
+                : 'text-sidebar-icon group-hover:text-sidebar-text-primary group-hover:translate-x-1'
             }`} />
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto sidebar-content">
         {renderTabContent()}
       </div>
     </div>
