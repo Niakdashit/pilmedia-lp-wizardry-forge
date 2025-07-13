@@ -29,7 +29,7 @@
   /* Variables complémentaires pour cohérence */
   --primary: 309 78% 31%;            /* #841b60 */
   --secondary: 0 0% 100%;            /* #ffffff */
-  --accent: 202 45% 91%;             /* #ebf4f7 */
+  --accent: 202 45% 91%;             /* #ebf4f7 pour les éléments atténués */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --muted: 202 45% 91%;              /* #ebf4f7 pour les éléments atténués */
@@ -206,6 +206,38 @@ html, body {
         border-radius: 2px;
         box-shadow: 0 0 8px hsl(var(--sidebar-glow));
       }
+    }
+  }
+
+  /* Nouveaux styles pour les onglets horizontaux */
+  .sidebar-tab-horizontal {
+    @apply relative transition-all duration-300 ease-out w-full text-left group;
+    background: hsl(var(--sidebar-surface));
+    border: 1px solid hsl(var(--sidebar-border));
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: hsl(var(--sidebar-text));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 60px;
+    
+    &:hover {
+      background: hsl(var(--sidebar-hover));
+      color: hsl(var(--sidebar-text-primary));
+      border-color: hsl(var(--sidebar-active) / 0.3);
+      box-shadow: 0 2px 8px hsl(var(--sidebar-shadow));
+      transform: translateY(-1px);
+    }
+    
+    &.active {
+      background: hsl(var(--sidebar-active-bg));
+      color: hsl(var(--sidebar-active));
+      border: 2px solid hsl(var(--sidebar-active));
+      box-shadow: 
+        0 0 0 2px hsl(var(--sidebar-active) / 0.1),
+        0 4px 16px hsl(var(--sidebar-glow));
+      transform: translateY(-2px);
     }
   }
 

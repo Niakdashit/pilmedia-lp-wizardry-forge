@@ -81,31 +81,31 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
         </div>
       </div>
 
-      {/* Navigation des onglets */}
-      <div className="py-6 border-b" style={{ borderColor: 'hsl(var(--sidebar-border) / 0.5)' }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`sidebar-tab w-full flex items-center justify-between text-left group ${
-              activeTab === tab.id ? 'active' : ''
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <tab.icon className={`w-5 h-5 transition-colors ${
-                activeTab === tab.id 
-                  ? 'text-sidebar-active' 
-                  : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
-              }`} />
-              <span className="font-medium text-base">{tab.label}</span>
-            </div>
-            <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
-              activeTab === tab.id 
-                ? 'rotate-90 text-sidebar-active' 
-                : 'text-sidebar-icon group-hover:text-sidebar-text-primary group-hover:translate-x-1'
-            }`} />
-          </button>
-        ))}
+      {/* Navigation des onglets - Layout horizontal en grille */}
+      <div className="p-6 border-b" style={{ borderColor: 'hsl(var(--sidebar-border) / 0.5)' }}>
+        <div className="grid grid-cols-2 gap-3">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`sidebar-tab-horizontal ${
+                activeTab === tab.id ? 'active' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <tab.icon className={`w-4 h-4 transition-colors ${
+                  activeTab === tab.id 
+                    ? 'text-sidebar-active' 
+                    : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
+                }`} />
+                <span className="font-medium text-sm truncate">{tab.label}</span>
+              </div>
+              {activeTab === tab.id && (
+                <div className="w-2 h-2 rounded-full bg-sidebar-active"></div>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Contenu des onglets */}
