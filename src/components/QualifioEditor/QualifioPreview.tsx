@@ -174,7 +174,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
                 text={text}
                 onUpdate={handleTextUpdate}
                 onDelete={handleTextDelete}
-                deviceConfig={deviceConfig}
+                isSelected={selectedTextId === text.id}
+                onSelect={setSelectedTextId}
               />
             ))}
           </div>
