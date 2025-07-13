@@ -1,107 +1,222 @@
-import React from 'react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import React, { useState } from 'react';
+import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
+import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
 
 interface GameZoneTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
 
-const GameZoneTab: React.FC<GameZoneTabProps> = ({ config, onConfigUpdate }) => {
+const GameZoneTab: React.FC<GameZoneTabProps> = ({
+  config,
+  onConfigUpdate
+}) => {
+  const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
+
+  const handleBackgroundImageUpload = (device: DeviceType, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      onConfigUpdate({
+        deviceConfig: {
+          mobile: { fontSize: 14, ...config.deviceConfig?.mobile },
+          tablet: { fontSize: 16, ...config.deviceConfig?.tablet },
+          desktop: { fontSize: 18, ...config.deviceConfig?.desktop },
+          [device]: {
+            fontSize: 16,
+            ...config.deviceConfig?.[device],
+            backgroundImage: imageUrl
+          }
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFontSizeChange = (device: DeviceType, fontSize: number) => {
+    onConfigUpdate({
+      deviceConfig: {
+        mobile: { fontSize: 14, ...config.deviceConfig?.mobile },
+        tablet: { fontSize: 16, ...config.deviceConfig?.tablet },
+        desktop: { fontSize: 18, ...config.deviceConfig?.desktop },
+        [device]: {
+          fontSize: 16,
+          ...config.deviceConfig?.[device],
+          fontSize
+        }
+      }
+    });
+  };
+
+  const devices = [
+    { id: 'desktop' as DeviceType, label: 'PC', icon: Monitor },
+    { id: 'tablet' as DeviceType, label: 'Tablette', icon: Tablet },
+    { id: 'mobile' as DeviceType, label: 'Mobile', icon: Smartphone }
+  ];
+
+  const currentDeviceConfig = config.deviceConfig?.[selectedDevice];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Apparence</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Largeur (%)
-            </label>
-            <input
-              type="number"
-              defaultValue={100}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+    <div className="sidebar-content">
+      <h3 className="section-title">Zone de jeu</h3>
+      
+      {/* Device Selector */}
+      <div className="premium-card">
+        <label className="block text-sm font-medium mb-4">Appareil sélectionné</label>
+        <div className="flex gap-2 mb-6">
+          {devices.map((device) => (
+            <button
+              key={device.id}
+              onClick={() => setSelectedDevice(device.id)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedDevice === device.id
+                  ? 'text-white'
+                  : 'text-sidebar-text-muted hover:text-sidebar-text-primary'
+              }`}
+              style={{
+                backgroundColor: selectedDevice === device.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
+                border: selectedDevice === device.id ? '1px solid hsl(var(--sidebar-active))' : '1px solid hsl(var(--sidebar-border))'
+              }}
+            >
+              <device.icon className="w-4 h-4" />
+              {device.label}
+            </button>
+          ))}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hauteur minimum (px)
-            </label>
-            <input
-              type="number"
-              defaultValue={400}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-
+        {/* Background Image Upload */}
+        <div className="form-group-premium">
+          <label htmlFor="backgroundImage">Image de fond ({devices.find(d => d.id === selectedDevice)?.label})</label>
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="centerText"
-                checked={config.centerText || false}
-                onChange={(e) => onConfigUpdate({ centerText: e.target.checked })}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="centerText" className="text-sm text-gray-700">
-                Centrer le texte
-              </label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="centerForm"
-                checked={config.centerForm || false}
-                onChange={(e) => onConfigUpdate({ centerForm: e.target.checked })}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="centerForm" className="text-sm text-gray-700">
-                Centrer le questionnaire
-              </label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="centerGameZone"
-                checked={config.centerGameZone || false}
-                onChange={(e) => onConfigUpdate({ centerGameZone: e.target.checked })}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="centerGameZone" className="text-sm text-gray-700">
-                Centrer le formulaire
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Couleur de fond du concours
+            <input
+              type="file"
+              id="backgroundImage"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleBackgroundImageUpload(selectedDevice, file);
+                }
+              }}
+              className="hidden"
+            />
+            <label
+              htmlFor="backgroundImage"
+              className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors"
+              style={{ borderColor: 'hsl(var(--sidebar-border))' }}
+            >
+              <Upload className="w-5 h-5" />
+              <span>Choisir une image</span>
             </label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={config.backgroundColor || '#ffffff'}
-                onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
-                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-              />
-              <input
-                type="text"
-                value={config.backgroundColor || '#ffffff'}
-                onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
-            </div>
+            {currentDeviceConfig?.backgroundImage && (
+              <div className="relative">
+                <img
+                  src={currentDeviceConfig.backgroundImage}
+                  alt="Aperçu"
+                  className="w-full h-24 object-cover rounded-lg"
+                />
+                <button
+                  onClick={() => handleBackgroundImageUpload(selectedDevice, new File([], ''))}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Font Size Control */}
+        <div className="form-group-premium">
+          <label htmlFor="fontSize">Taille de police ({devices.find(d => d.id === selectedDevice)?.label})</label>
+          <input
+            type="number"
+            id="fontSize"
+            value={currentDeviceConfig?.fontSize || 16}
+            onChange={(e) => handleFontSizeChange(selectedDevice, parseInt(e.target.value))}
+            min="8"
+            max="72"
+            className="w-full"
+          />
         </div>
       </div>
 
-      <div>
-        <button className="w-full bg-amber-500 text-white py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors">
-          + Positionnement avancé
-        </button>
+      {/* Existing controls */}
+      <div className="premium-card">
+        <div className="form-group-premium">
+          <label htmlFor="width">Largeur (px)</label>
+          <input
+            type="number"
+            id="width"
+            value={config.width}
+            onChange={(e) => onConfigUpdate({ width: parseInt(e.target.value) })}
+            min="200"
+            max="1200"
+          />
+        </div>
+
+        <div className="form-group-premium">
+          <label htmlFor="height">Hauteur minimum (px)</label>
+          <input
+            type="number"
+            id="height"
+            value={config.height}
+            onChange={(e) => onConfigUpdate({ height: parseInt(e.target.value) })}
+            min="300"
+            max="2000"
+          />
+        </div>
+
+        <div className="form-group-premium">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={config.centerText}
+              onChange={(e) => onConfigUpdate({ centerText: e.target.checked })}
+            />
+            Centrer le texte
+          </label>
+        </div>
+
+        <div className="form-group-premium">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={config.centerForm}
+              onChange={(e) => onConfigUpdate({ centerForm: e.target.checked })}
+            />
+            Centrer le questionnaire
+          </label>
+        </div>
+
+        <div className="form-group-premium">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={config.centerGameZone}
+              onChange={(e) => onConfigUpdate({ centerGameZone: e.target.checked })}
+            />
+            Centrer le formulaire
+          </label>
+        </div>
+
+        <div className="form-group-premium">
+          <label htmlFor="backgroundColor">Couleur de fond du concours</label>
+          <div className="color-input-group">
+            <input
+              type="color"
+              id="backgroundColor"
+              value={config.backgroundColor}
+              onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
+            />
+            <input
+              type="text"
+              value={config.backgroundColor}
+              onChange={(e) => onConfigUpdate({ backgroundColor: e.target.value })}
+              placeholder="#ffffff"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
