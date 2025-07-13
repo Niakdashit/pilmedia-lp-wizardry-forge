@@ -11,20 +11,20 @@
   --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
   --brand-text: 0 0% 100%;           /* #ffffff en HSL */
   
-  /* Premium Sidebar Design System avec couleurs harmonieuses */
-  --sidebar-bg: 309 20% 15%;         /* Fond sombre élégant basé sur la marque */
-  --sidebar-surface: 309 15% 20%;    /* Surface légèrement plus claire */
-  --sidebar-hover: 309 25% 25%;      /* Hover subtil */
+  /* Premium Sidebar Design System - Thème blanc avec accents violets */
+  --sidebar-bg: 0 0% 100%;           /* Fond blanc pur */
+  --sidebar-surface: 0 0% 98%;       /* Surface légèrement grisée */
+  --sidebar-hover: 309 78% 97%;      /* Hover très subtil avec teinte violette */
   --sidebar-active: 309 78% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
-  --sidebar-active-bg: 309 78% 31% / 0.1;  /* Background actif très subtil */
-  --sidebar-border: 309 15% 25%;     /* Bordures discrètes */
-  --sidebar-text: 0 0% 70%;          /* Texte gris clair lisible */
-  --sidebar-text-primary: 0 0% 95%;  /* Texte principal blanc cassé */
-  --sidebar-text-muted: 0 0% 55%;    /* Texte atténué */
-  --sidebar-icon: 0 0% 65%;          /* Icônes grises */
+  --sidebar-active-bg: 309 78% 97%;  /* Background actif très subtil */
+  --sidebar-border: 0 0% 92%;        /* Bordures grises claires */
+  --sidebar-text: 0 0% 15%;          /* Texte sombre pour contraste */
+  --sidebar-text-primary: 0 0% 10%;  /* Texte principal très sombre */
+  --sidebar-text-muted: 0 0% 45%;    /* Texte atténué gris */
+  --sidebar-icon: 0 0% 35%;          /* Icônes grises */
   --sidebar-icon-active: 309 78% 31%; /* Icônes actives - couleur principale */
-  --sidebar-shadow: 0 0% 0% / 0.15;  /* Ombres plus prononcées */
-  --sidebar-glow: 309 78% 31% / 0.2; /* Lueur de la couleur principale */
+  --sidebar-shadow: 0 0% 0% / 0.08;  /* Ombres douces */
+  --sidebar-glow: 309 78% 31% / 0.15; /* Lueur violette subtile */
   
   /* Variables complémentaires pour cohérence */
   --primary: 309 78% 31%;            /* #841b60 */
@@ -162,14 +162,11 @@ html, body {
     @apply bg-brand-secondary text-brand-primary hover:bg-brand-accent border-brand-secondary;
   }
 
-  /* Premium Sidebar Components avec design élégant */
+  /* Premium Sidebar Components - Thème blanc élégant */
   .sidebar-premium {
-    background: linear-gradient(180deg, hsl(var(--sidebar-bg)), hsl(var(--sidebar-surface)));
+    background: hsl(var(--sidebar-bg));
     border-right: 1px solid hsl(var(--sidebar-border));
-    backdrop-filter: blur(20px);
-    box-shadow: 
-      4px 0 24px hsl(var(--sidebar-shadow)),
-      inset -1px 0 0 hsl(var(--sidebar-border) / 0.1);
+    box-shadow: 2px 0 16px hsl(var(--sidebar-shadow));
   }
 
   .sidebar-tab {
@@ -185,17 +182,16 @@ html, body {
       background: hsl(var(--sidebar-hover));
       color: hsl(var(--sidebar-text-primary));
       transform: translateX(2px);
-      box-shadow: 0 2px 12px hsl(var(--sidebar-shadow));
+      box-shadow: 0 2px 8px hsl(var(--sidebar-shadow));
     }
     
     &.active {
       background: hsl(var(--sidebar-active-bg));
-      color: hsl(var(--sidebar-text-primary));
-      border: 1px solid hsl(var(--sidebar-active) / 0.3);
+      color: hsl(var(--sidebar-active));
+      border: 1px solid hsl(var(--sidebar-active) / 0.2);
       box-shadow: 
-        0 0 0 1px hsl(var(--sidebar-active) / 0.2),
-        0 4px 20px hsl(var(--sidebar-glow)),
-        inset 0 1px 0 hsl(var(--sidebar-active) / 0.1);
+        0 0 0 1px hsl(var(--sidebar-active) / 0.1),
+        0 2px 12px hsl(var(--sidebar-glow));
       transform: translateX(4px);
       
       &::before {
@@ -204,11 +200,11 @@ html, body {
         left: -16px;
         top: 50%;
         transform: translateY(-50%);
-        width: 4px;
-        height: 32px;
+        width: 3px;
+        height: 24px;
         background: hsl(var(--sidebar-active));
         border-radius: 2px;
-        box-shadow: 0 0 12px hsl(var(--sidebar-glow));
+        box-shadow: 0 0 8px hsl(var(--sidebar-glow));
       }
     }
   }
@@ -249,7 +245,7 @@ html, body {
     
     input, select, textarea {
       @apply w-full px-4 py-3 rounded-xl border transition-all duration-200;
-      background: hsl(var(--sidebar-surface));
+      background: hsl(var(--sidebar-bg));
       border: 1px solid hsl(var(--sidebar-border));
       color: hsl(var(--sidebar-text-primary));
       font-size: 14px;
@@ -262,13 +258,13 @@ html, body {
         outline: none;
         border-color: hsl(var(--sidebar-active));
         box-shadow: 
-          0 0 0 3px hsl(var(--sidebar-active) / 0.15),
-          0 2px 12px hsl(var(--sidebar-shadow));
-        background: hsl(var(--sidebar-bg));
+          0 0 0 3px hsl(var(--sidebar-active) / 0.1),
+          0 2px 8px hsl(var(--sidebar-shadow));
+        background: hsl(var(--sidebar-surface));
       }
       
       &:hover:not(:focus) {
-        border-color: hsl(var(--sidebar-text) / 0.5);
+        border-color: hsl(var(--sidebar-active) / 0.3);
       }
     }
   }
@@ -279,16 +275,14 @@ html, body {
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 
-      0 2px 12px hsl(var(--sidebar-shadow)),
-      inset 0 1px 0 hsl(var(--sidebar-border) / 0.1);
+    box-shadow: 0 1px 3px hsl(var(--sidebar-shadow));
     transition: all 0.3s ease-out;
     
     &:hover {
-      border-color: hsl(var(--sidebar-active) / 0.3);
+      border-color: hsl(var(--sidebar-active) / 0.2);
       box-shadow: 
-        0 4px 20px hsl(var(--sidebar-shadow)),
-        0 0 0 1px hsl(var(--sidebar-active) / 0.1);
+        0 2px 8px hsl(var(--sidebar-shadow)),
+        0 0 0 1px hsl(var(--sidebar-active) / 0.05);
     }
   }
 
@@ -317,13 +311,13 @@ html, body {
       &:hover {
         border-color: hsl(var(--sidebar-active)) !important;
         transform: scale(1.05);
-        box-shadow: 0 0 12px hsl(var(--sidebar-glow));
+        box-shadow: 0 0 8px hsl(var(--sidebar-glow));
       }
       
       &:focus {
         outline: none;
         border-color: hsl(var(--sidebar-active)) !important;
-        box-shadow: 0 0 0 3px hsl(var(--sidebar-active) / 0.2);
+        box-shadow: 0 0 0 3px hsl(var(--sidebar-active) / 0.15);
       }
     }
     

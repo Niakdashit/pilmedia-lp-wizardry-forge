@@ -52,21 +52,37 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
 
   return (
     <div className="w-96 sidebar-premium flex flex-col h-screen">
-      {/* Header élégant avec espacement amélioré */}
-      <div className="px-8 py-8 border-b border-sidebar-border/30">
+      {/* Header élégant blanc avec accents violets */}
+      <div className="px-8 py-8 border-b" style={{ borderColor: 'hsl(var(--sidebar-border))' }}>
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-active/10 flex items-center justify-center border border-sidebar-active/20">
-            <Settings className="w-5 h-5 text-sidebar-active" />
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center border"
+            style={{ 
+              backgroundColor: 'hsl(var(--sidebar-active) / 0.1)',
+              borderColor: 'hsl(var(--sidebar-active) / 0.2)'
+            }}
+          >
+            <Settings className="w-5 h-5" style={{ color: 'hsl(var(--sidebar-active))' }} />
           </div>
           <div>
-            <h2 className="text-sidebar-text-primary font-semibold text-xl tracking-tight">Éditeur</h2>
-            <p className="text-sidebar-text-muted text-sm mt-1">Configuration avancée</p>
+            <h2 
+              className="font-semibold text-xl tracking-tight"
+              style={{ color: 'hsl(var(--sidebar-text-primary))' }}
+            >
+              Éditeur
+            </h2>
+            <p 
+              className="text-sm mt-1"
+              style={{ color: 'hsl(var(--sidebar-text-muted))' }}
+            >
+              Configuration avancée
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Navigation des onglets avec espacement optimisé */}
-      <div className="py-6 border-b border-sidebar-border/20">
+      {/* Navigation des onglets */}
+      <div className="py-6 border-b" style={{ borderColor: 'hsl(var(--sidebar-border) / 0.5)' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
