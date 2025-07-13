@@ -6,39 +6,39 @@
 /* Variables CSS pour les couleurs de marque - Format HSL */
 :root {
   --brand-primary: 309 78% 31%;      /* #841b60 en HSL */
-  --brand-secondary: 0 74% 50%;      /* #dc2626 en HSL */
-  --brand-accent: 0 0% 100%;         /* #ffffff en HSL */
+  --brand-secondary: 0 0% 100%;      /* #ffffff en HSL */
+  --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
   --brand-text: 0 0% 100%;           /* #ffffff en HSL */
   
-  /* Premium Sidebar Design System */
-  --sidebar-bg: 250 3% 5%;           /* #0d0e11 - Dark elegant */
-  --sidebar-surface: 248 8% 9%;      /* #161820 - Card surface */
-  --sidebar-hover: 247 8% 12%;       /* #1e212a - Hover state */
-  --sidebar-active: 309 78% 31%;     /* Primary accent */
-  --sidebar-active-bg: 309 78% 31% / 0.1;  /* Active background */
-  --sidebar-border: 240 6% 16%;      /* #262a36 - Subtle borders */
-  --sidebar-text: 220 9% 64%;        /* #9ca3af - Secondary text */
-  --sidebar-text-primary: 220 9% 90%; /* #e5e7eb - Primary text */
-  --sidebar-icon: 220 9% 50%;        /* #6b7280 - Icons */
-  --sidebar-icon-active: 309 78% 70%; /* Active icons */
-  --sidebar-shadow: 0 0% 0% / 0.1;   /* Shadows */
-  --sidebar-glow: 309 78% 60% / 0.15; /* Accent glow */
+  /* Premium Sidebar Design System avec couleurs de marque */
+  --sidebar-bg: 309 78% 31%;         /* #841b60 - Couleur principale */
+  --sidebar-surface: 309 65% 35%;    /* Variante plus claire du principal */
+  --sidebar-hover: 309 55% 40%;      /* Hover state plus clair */
+  --sidebar-active: 202 45% 91%;     /* #ebf4f7 - Accent */
+  --sidebar-active-bg: 202 45% 91% / 0.15;  /* Active background */
+  --sidebar-border: 309 60% 45%;     /* Bordure subtile */
+  --sidebar-text: 0 0% 85%;          /* Texte secondaire blanc cassé */
+  --sidebar-text-primary: 0 0% 100%; /* #ffffff - Texte principal */
+  --sidebar-icon: 0 0% 80%;          /* Icônes blanches atténuées */
+  --sidebar-icon-active: 309 78% 31%; /* Icônes actives - couleur principale */
+  --sidebar-shadow: 0 0% 0% / 0.1;   /* Ombres */
+  --sidebar-glow: 202 45% 91% / 0.2; /* Accent glow */
   
   /* Variables complémentaires pour cohérence */
-  --primary: 309 78% 31%;
-  --secondary: 0 74% 50%;
-  --accent: 0 0% 100%;
+  --primary: 309 78% 31%;            /* #841b60 */
+  --secondary: 0 0% 100%;            /* #ffffff */
+  --accent: 202 45% 91%;             /* #ebf4f7 */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
+  --muted: 202 45% 91%;              /* #ebf4f7 pour les éléments atténués */
   --muted-foreground: 215.4 16.3% 46.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 309 78% 31%;
+  --border: 202 35% 85%;             /* Bordures plus subtiles avec accent */
+  --input: 202 35% 85%;
+  --ring: 309 78% 31%;               /* Focus ring avec couleur principale */
   --radius: 0.5rem;
 }
 
@@ -157,10 +157,10 @@ html, body {
   }
   
   .btn-brand-secondary {
-    @apply bg-brand-secondary text-white hover:bg-brand-secondary/90 border-brand-secondary;
+    @apply bg-brand-secondary text-brand-primary hover:bg-brand-accent border-brand-secondary;
   }
 
-  /* Premium Sidebar Components */
+  /* Premium Sidebar Components avec couleurs de marque exactes */
   .sidebar-premium {
     background: hsl(var(--sidebar-bg));
     border-right: 1px solid hsl(var(--sidebar-border));
@@ -205,8 +205,8 @@ html, body {
         width: 3px;
         height: 24px;
         background: linear-gradient(180deg, 
-          hsl(var(--sidebar-active)), 
-          hsl(var(--sidebar-icon-active))
+          hsl(var(--brand-accent)), 
+          hsl(var(--brand-accent))
         );
         border-radius: 2px;
         box-shadow: 0 0 8px hsl(var(--sidebar-glow));
@@ -260,9 +260,9 @@ html, body {
       
       &:focus {
         outline: none;
-        border-color: hsl(var(--sidebar-active));
+        border-color: hsl(var(--brand-accent));
         box-shadow: 
-          0 0 0 3px hsl(var(--sidebar-active) / 0.1),
+          0 0 0 3px hsl(var(--brand-accent) / 0.1),
           0 2px 8px hsl(var(--sidebar-shadow));
         background: hsl(var(--sidebar-surface));
       }
@@ -283,7 +283,7 @@ html, body {
     transition: all 0.2s ease-out;
     
     &:hover {
-      border-color: hsl(var(--sidebar-active) / 0.3);
+      border-color: hsl(var(--brand-accent) / 0.3);
       box-shadow: 0 4px 16px hsl(var(--sidebar-shadow));
     }
   }
@@ -310,7 +310,7 @@ html, body {
       transition: all 0.2s ease-out;
       
       &:hover {
-        border-color: hsl(var(--sidebar-active)) !important;
+        border-color: hsl(var(--brand-accent)) !important;
         transform: scale(1.05);
       }
     }

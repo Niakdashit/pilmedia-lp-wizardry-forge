@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronRight, Settings, Image, Type, MousePointer, Code, FileText } from 'lucide-react';
 import type { EditorConfig } from './QualifioEditorLayout';
@@ -51,11 +52,11 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
 
   return (
     <div className="w-96 sidebar-premium flex flex-col h-screen">
-      {/* Premium Header */}
+      {/* Premium Header avec couleurs de marque */}
       <div className="px-6 py-6 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sidebar-active to-sidebar-icon-active flex items-center justify-center">
-            <Settings className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center">
+            <Settings className="w-4 h-4 text-brand-primary" />
           </div>
           <div>
             <h2 className="text-sidebar-text-primary font-semibold text-lg">Éditeur</h2>
@@ -77,14 +78,14 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
             <div className="flex items-center gap-3">
               <tab.icon className={`w-4 h-4 transition-colors ${
                 activeTab === tab.id 
-                  ? 'text-sidebar-icon-active' 
+                  ? 'text-brand-primary' 
                   : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
               }`} />
               <span className="font-medium text-sm">{tab.label}</span>
             </div>
             <ChevronRight className={`w-3 h-3 transition-all duration-300 ${
               activeTab === tab.id 
-                ? 'rotate-90 text-sidebar-icon-active' 
+                ? 'rotate-90 text-brand-primary' 
                 : 'text-sidebar-icon group-hover:text-sidebar-text-primary group-hover:translate-x-1'
             }`} />
           </button>
