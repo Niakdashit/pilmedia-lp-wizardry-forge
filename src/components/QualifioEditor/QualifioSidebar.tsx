@@ -83,27 +83,20 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
       {/* Navigation des onglets - Layout horizontal avec scroll */}
       <div className="p-6 border-b" style={{ borderColor: 'hsl(var(--sidebar-border) / 0.5)' }}>
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-sidebar-border scrollbar-track-transparent">
-          <div className="flex gap-3 min-w-max pb-2">
+          <div className="flex gap-2 min-w-max pb-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`sidebar-tab-horizontal group flex-shrink-0 ${
-                  activeTab === tab.id ? 'active' : ''
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-all duration-200 flex-shrink-0 ${
+                  activeTab === tab.id 
+                    ? 'bg-sidebar-active text-white' 
+                    : 'bg-sidebar-background text-sidebar-text-muted hover:bg-sidebar-border hover:text-sidebar-text-primary'
                 }`}
-                style={{ minWidth: '140px' }}
+                style={{ minWidth: 'auto' }}
               >
-                <div className="flex items-center gap-3">
-                  <tab.icon className={`w-4 h-4 transition-colors ${
-                    activeTab === tab.id 
-                      ? 'text-sidebar-active' 
-                      : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
-                  }`} />
-                  <span className="font-medium text-sm truncate">{tab.label}</span>
-                </div>
-                {activeTab === tab.id && (
-                  <div className="w-2 h-2 rounded-full bg-sidebar-active"></div>
-                )}
+                <tab.icon className="w-4 h-4" />
+                <span className="whitespace-nowrap">{tab.label}</span>
               </button>
             ))}
           </div>
