@@ -40,7 +40,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         tablet: { fontSize: 16, ...config.deviceConfig?.tablet },
         desktop: { fontSize: 18, ...config.deviceConfig?.desktop },
         [device]: {
-          fontSize: 16,
           ...config.deviceConfig?.[device],
           fontSize
         }
