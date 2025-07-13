@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Facebook, X } from 'lucide-react';
 import type { DeviceType, EditorConfig } from './QualifioEditorLayout';
+import WheelPreviewContent from '../GameTypes/WheelComponents/WheelPreviewContent';
 import summerBeachImage from '../../assets/summer-beach.jpg';
 
 interface QualifioPreviewProps {
@@ -9,6 +10,45 @@ interface QualifioPreviewProps {
 }
 
 const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => {
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [showValidationMessage, setShowValidationMessage] = useState(false);
+
+  // Segments par défaut pour la roue
+  const defaultSegments = [
+    { id: 1, text: "Livre gratuit", color: "#FF6B6B", probability: 20 },
+    { id: 2, text: "Réduction 10%", color: "#4ECDC4", probability: 25 },
+    { id: 3, text: "Réduction 20%", color: "#45B7D1", probability: 15 },
+    { id: 4, text: "Livre dédicacé", color: "#96CEB4", probability: 10 },
+    { id: 5, text: "Réessayez", color: "#FECA57", probability: 30 }
+  ];
+
+  const handleWheelClick = () => {
+    if (spinning) return;
+    
+    setSpinning(true);
+    const spinAmount = Math.random() * 360 + 1440; // 4+ tours
+    setWheelRotation(prev => prev + spinAmount);
+    
+    setTimeout(() => {
+      setSpinning(false);
+      setShowValidationMessage(true);
+      setTimeout(() => setShowValidationMessage(false), 3000);
+    }, 3000);
+  };
+
+  const getWheelSize = () => {
+    switch (device) {
+      case 'mobile':
+        return 200;
+      case 'tablet':
+        return 280;
+      case 'desktop':
+      default:
+        return 320;
+    }
+  };
+
   const getDeviceStyles = () => {
     switch (device) {
       case 'mobile':
@@ -104,16 +144,21 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
               </button>
             </div>
 
-            {/* Instructions overlay centered */}
+            {/* Roue de la fortune overlay centered */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white max-w-md px-4">
                 <p className="text-lg font-medium mb-6 drop-shadow-lg">Cliquez sur le bouton central pour faire tourner la roue !</p>
-                <button 
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg hover:scale-105 transition-transform"
-                  style={{ backgroundColor: 'hsl(0, 84%, 55%)' }}
-                >
-                  ↻
-                </button>
+                <WheelPreviewContent
+                  segments={defaultSegments}
+                  rotation={wheelRotation}
+                  spinning={spinning}
+                  theme="modern"
+                  borderColor="#333333"
+                  borderOutlineColor="#ffffff"
+                  canvasSize={getWheelSize()}
+                  showValidationMessage={showValidationMessage}
+                  onWheelClick={handleWheelClick}
+                />
               </div>
             </div>
           </div>
@@ -152,6 +197,23 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
                 >
                   Règlement
                 </button>
+              </div>
+
+              {/* Roue de la fortune overlay pour Mode 1 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <WheelPreviewContent
+                    segments={defaultSegments}
+                    rotation={wheelRotation}
+                    spinning={spinning}
+                    theme="modern"
+                    borderColor="#333333"
+                    borderOutlineColor="#ffffff"
+                    canvasSize={getWheelSize() * 0.8} // Slightly smaller for mode 1
+                    showValidationMessage={showValidationMessage}
+                    onWheelClick={handleWheelClick}
+                  />
+                </div>
               </div>
             </div>
 
