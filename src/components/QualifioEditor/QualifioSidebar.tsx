@@ -52,21 +52,21 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
 
   return (
     <div className="w-96 sidebar-premium flex flex-col h-screen">
-      {/* Premium Header avec couleurs de marque */}
-      <div className="px-6 py-6 border-b border-sidebar-border/50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center">
-            <Settings className="w-4 h-4 text-brand-primary" />
+      {/* Header élégant avec espacement amélioré */}
+      <div className="px-8 py-8 border-b border-sidebar-border/30">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-sidebar-active/10 flex items-center justify-center border border-sidebar-active/20">
+            <Settings className="w-5 h-5 text-sidebar-active" />
           </div>
           <div>
-            <h2 className="text-sidebar-text-primary font-semibold text-lg">Éditeur</h2>
-            <p className="text-sidebar-text text-xs">Configuration avancée</p>
+            <h2 className="text-sidebar-text-primary font-semibold text-xl tracking-tight">Éditeur</h2>
+            <p className="text-sidebar-text-muted text-sm mt-1">Configuration avancée</p>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="py-4 border-b border-sidebar-border/30">
+      {/* Navigation des onglets avec espacement optimisé */}
+      <div className="py-6 border-b border-sidebar-border/20">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -75,24 +75,24 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
               activeTab === tab.id ? 'active' : ''
             }`}
           >
-            <div className="flex items-center gap-3">
-              <tab.icon className={`w-4 h-4 transition-colors ${
+            <div className="flex items-center gap-4">
+              <tab.icon className={`w-5 h-5 transition-colors ${
                 activeTab === tab.id 
-                  ? 'text-brand-primary' 
+                  ? 'text-sidebar-active' 
                   : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
               }`} />
-              <span className="font-medium text-sm">{tab.label}</span>
+              <span className="font-medium text-base">{tab.label}</span>
             </div>
-            <ChevronRight className={`w-3 h-3 transition-all duration-300 ${
+            <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
               activeTab === tab.id 
-                ? 'rotate-90 text-brand-primary' 
+                ? 'rotate-90 text-sidebar-active' 
                 : 'text-sidebar-icon group-hover:text-sidebar-text-primary group-hover:translate-x-1'
             }`} />
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* Contenu des onglets */}
       <div className="flex-1 overflow-y-auto sidebar-content">
         {renderTabContent()}
       </div>

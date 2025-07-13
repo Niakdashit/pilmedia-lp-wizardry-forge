@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
@@ -10,19 +11,20 @@
   --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
   --brand-text: 0 0% 100%;           /* #ffffff en HSL */
   
-  /* Premium Sidebar Design System avec couleurs de marque */
-  --sidebar-bg: 309 78% 31%;         /* #841b60 - Couleur principale */
-  --sidebar-surface: 309 65% 35%;    /* Variante plus claire du principal */
-  --sidebar-hover: 309 55% 40%;      /* Hover state plus clair */
-  --sidebar-active: 202 45% 91%;     /* #ebf4f7 - Accent */
-  --sidebar-active-bg: 202 45% 91% / 0.15;  /* Active background */
-  --sidebar-border: 309 60% 45%;     /* Bordure subtile */
-  --sidebar-text: 0 0% 85%;          /* Texte secondaire blanc cassé */
-  --sidebar-text-primary: 0 0% 100%; /* #ffffff - Texte principal */
-  --sidebar-icon: 0 0% 80%;          /* Icônes blanches atténuées */
+  /* Premium Sidebar Design System avec couleurs harmonieuses */
+  --sidebar-bg: 309 20% 15%;         /* Fond sombre élégant basé sur la marque */
+  --sidebar-surface: 309 15% 20%;    /* Surface légèrement plus claire */
+  --sidebar-hover: 309 25% 25%;      /* Hover subtil */
+  --sidebar-active: 309 78% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
+  --sidebar-active-bg: 309 78% 31% / 0.1;  /* Background actif très subtil */
+  --sidebar-border: 309 15% 25%;     /* Bordures discrètes */
+  --sidebar-text: 0 0% 70%;          /* Texte gris clair lisible */
+  --sidebar-text-primary: 0 0% 95%;  /* Texte principal blanc cassé */
+  --sidebar-text-muted: 0 0% 55%;    /* Texte atténué */
+  --sidebar-icon: 0 0% 65%;          /* Icônes grises */
   --sidebar-icon-active: 309 78% 31%; /* Icônes actives - couleur principale */
-  --sidebar-shadow: 0 0% 0% / 0.1;   /* Ombres */
-  --sidebar-glow: 202 45% 91% / 0.2; /* Accent glow */
+  --sidebar-shadow: 0 0% 0% / 0.15;  /* Ombres plus prononcées */
+  --sidebar-glow: 309 78% 31% / 0.2; /* Lueur de la couleur principale */
   
   /* Variables complémentaires pour cohérence */
   --primary: 309 78% 31%;            /* #841b60 */
@@ -160,14 +162,14 @@ html, body {
     @apply bg-brand-secondary text-brand-primary hover:bg-brand-accent border-brand-secondary;
   }
 
-  /* Premium Sidebar Components avec couleurs de marque exactes */
+  /* Premium Sidebar Components avec design élégant */
   .sidebar-premium {
-    background: hsl(var(--sidebar-bg));
+    background: linear-gradient(180deg, hsl(var(--sidebar-bg)), hsl(var(--sidebar-surface)));
     border-right: 1px solid hsl(var(--sidebar-border));
     backdrop-filter: blur(20px);
     box-shadow: 
       4px 0 24px hsl(var(--sidebar-shadow)),
-      inset -1px 0 0 hsl(var(--sidebar-border));
+      inset -1px 0 0 hsl(var(--sidebar-border) / 0.1);
   }
 
   .sidebar-tab {
@@ -175,48 +177,45 @@ html, body {
     background: transparent;
     border: none;
     border-radius: 12px;
-    margin: 4px 12px;
-    padding: 14px 16px;
+    margin: 2px 16px;
+    padding: 16px 20px;
     color: hsl(var(--sidebar-text));
     
     &:hover {
       background: hsl(var(--sidebar-hover));
       color: hsl(var(--sidebar-text-primary));
       transform: translateX(2px);
-      box-shadow: 0 2px 8px hsl(var(--sidebar-shadow));
+      box-shadow: 0 2px 12px hsl(var(--sidebar-shadow));
     }
     
     &.active {
       background: hsl(var(--sidebar-active-bg));
-      color: hsl(var(--sidebar-icon-active));
-      border: 1px solid hsl(var(--sidebar-active) / 0.2);
+      color: hsl(var(--sidebar-text-primary));
+      border: 1px solid hsl(var(--sidebar-active) / 0.3);
       box-shadow: 
-        0 0 0 1px hsl(var(--sidebar-active) / 0.1),
-        0 4px 16px hsl(var(--sidebar-glow)),
+        0 0 0 1px hsl(var(--sidebar-active) / 0.2),
+        0 4px 20px hsl(var(--sidebar-glow)),
         inset 0 1px 0 hsl(var(--sidebar-active) / 0.1);
       transform: translateX(4px);
       
       &::before {
         content: '';
         position: absolute;
-        left: -12px;
+        left: -16px;
         top: 50%;
         transform: translateY(-50%);
-        width: 3px;
-        height: 24px;
-        background: linear-gradient(180deg, 
-          hsl(var(--brand-accent)), 
-          hsl(var(--brand-accent))
-        );
+        width: 4px;
+        height: 32px;
+        background: hsl(var(--sidebar-active));
         border-radius: 2px;
-        box-shadow: 0 0 8px hsl(var(--sidebar-glow));
+        box-shadow: 0 0 12px hsl(var(--sidebar-glow));
       }
     }
   }
 
   .sidebar-content {
     background: hsl(var(--sidebar-bg));
-    padding: 24px;
+    padding: 28px 24px;
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--sidebar-border)) transparent;
     
@@ -239,12 +238,13 @@ html, body {
   }
 
   .form-group-premium {
-    @apply space-y-3 mb-6;
+    @apply space-y-3 mb-8;
     
     label {
       @apply block text-sm font-medium;
       color: hsl(var(--sidebar-text-primary));
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      letter-spacing: 0.025em;
     }
     
     input, select, textarea {
@@ -255,20 +255,20 @@ html, body {
       font-size: 14px;
       
       &::placeholder {
-        color: hsl(var(--sidebar-text));
+        color: hsl(var(--sidebar-text-muted));
       }
       
       &:focus {
         outline: none;
-        border-color: hsl(var(--brand-accent));
+        border-color: hsl(var(--sidebar-active));
         box-shadow: 
-          0 0 0 3px hsl(var(--brand-accent) / 0.1),
-          0 2px 8px hsl(var(--sidebar-shadow));
-        background: hsl(var(--sidebar-surface));
+          0 0 0 3px hsl(var(--sidebar-active) / 0.15),
+          0 2px 12px hsl(var(--sidebar-shadow));
+        background: hsl(var(--sidebar-bg));
       }
       
       &:hover:not(:focus) {
-        border-color: hsl(var(--sidebar-text));
+        border-color: hsl(var(--sidebar-text) / 0.5);
       }
     }
   }
@@ -277,32 +277,37 @@ html, body {
     background: hsl(var(--sidebar-surface));
     border: 1px solid hsl(var(--sidebar-border));
     border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px hsl(var(--sidebar-shadow));
-    transition: all 0.2s ease-out;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 
+      0 2px 12px hsl(var(--sidebar-shadow)),
+      inset 0 1px 0 hsl(var(--sidebar-border) / 0.1);
+    transition: all 0.3s ease-out;
     
     &:hover {
-      border-color: hsl(var(--brand-accent) / 0.3);
-      box-shadow: 0 4px 16px hsl(var(--sidebar-shadow));
+      border-color: hsl(var(--sidebar-active) / 0.3);
+      box-shadow: 
+        0 4px 20px hsl(var(--sidebar-shadow)),
+        0 0 0 1px hsl(var(--sidebar-active) / 0.1);
     }
   }
 
   .section-title {
     color: hsl(var(--sidebar-text-primary));
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
     border-bottom: 1px solid hsl(var(--sidebar-border));
+    letter-spacing: -0.025em;
   }
 
   .color-input-group {
     @apply flex gap-3 items-center;
     
     input[type="color"] {
-      width: 48px !important;
-      height: 48px !important;
+      width: 52px !important;
+      height: 52px !important;
       border-radius: 12px !important;
       border: 2px solid hsl(var(--sidebar-border)) !important;
       background: none !important;
@@ -310,8 +315,15 @@ html, body {
       transition: all 0.2s ease-out;
       
       &:hover {
-        border-color: hsl(var(--brand-accent)) !important;
+        border-color: hsl(var(--sidebar-active)) !important;
         transform: scale(1.05);
+        box-shadow: 0 0 12px hsl(var(--sidebar-glow));
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: hsl(var(--sidebar-active)) !important;
+        box-shadow: 0 0 0 3px hsl(var(--sidebar-active) / 0.2);
       }
     }
     
@@ -319,6 +331,12 @@ html, body {
       flex: 1 !important;
       font-family: 'JetBrains Mono', monospace !important;
       font-size: 13px !important;
+      background: hsl(var(--sidebar-bg)) !important;
+      border: 1px solid hsl(var(--sidebar-border)) !important;
+      
+      &:focus {
+        background: hsl(var(--sidebar-surface)) !important;
+      }
     }
   }
 }
