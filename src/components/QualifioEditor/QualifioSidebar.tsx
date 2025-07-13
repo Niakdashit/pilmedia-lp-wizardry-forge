@@ -80,30 +80,33 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
         </div>
       </div>
 
-      {/* Navigation des onglets - Layout horizontal en grille */}
+      {/* Navigation des onglets - Layout horizontal avec scroll */}
       <div className="p-6 border-b" style={{ borderColor: 'hsl(var(--sidebar-border) / 0.5)' }}>
-        <div className="grid grid-cols-2 gap-3">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`sidebar-tab-horizontal group ${
-                activeTab === tab.id ? 'active' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <tab.icon className={`w-4 h-4 transition-colors ${
-                  activeTab === tab.id 
-                    ? 'text-sidebar-active' 
-                    : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
-                }`} />
-                <span className="font-medium text-sm truncate">{tab.label}</span>
-              </div>
-              {activeTab === tab.id && (
-                <div className="w-2 h-2 rounded-full bg-sidebar-active"></div>
-              )}
-            </button>
-          ))}
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-sidebar-border scrollbar-track-transparent">
+          <div className="flex gap-3 min-w-max pb-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`sidebar-tab-horizontal group flex-shrink-0 ${
+                  activeTab === tab.id ? 'active' : ''
+                }`}
+                style={{ minWidth: '140px' }}
+              >
+                <div className="flex items-center gap-3">
+                  <tab.icon className={`w-4 h-4 transition-colors ${
+                    activeTab === tab.id 
+                      ? 'text-sidebar-active' 
+                      : 'text-sidebar-icon group-hover:text-sidebar-text-primary'
+                  }`} />
+                  <span className="font-medium text-sm truncate">{tab.label}</span>
+                </div>
+                {activeTab === tab.id && (
+                  <div className="w-2 h-2 rounded-full bg-sidebar-active"></div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
