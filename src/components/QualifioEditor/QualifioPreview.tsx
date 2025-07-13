@@ -1,15 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Facebook, X } from 'lucide-react';
-import type { DeviceType, EditorConfig } from './QualifioEditorLayout';
+import type { DeviceType, EditorConfig, CustomText } from './QualifioEditorLayout';
 import { SmartWheel } from '../SmartWheel';
+import EditableText from './EditableText';
 import summerBeachImage from '../../assets/summer-beach.jpg';
 
 interface QualifioPreviewProps {
   device: DeviceType;
   config: EditorConfig;
+  onConfigUpdate?: (updates: Partial<EditorConfig>) => void;
 }
 
-const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => {
+const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate }) => {
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+
+  const handleTextUpdate = (updatedText: CustomText) => {
+    if (!onConfigUpdate) return;
+    
+    const updatedTexts = config.customTexts?.map(text => 
+      text.id === updatedText.id ? updatedText : text
+    ) || [];
+    
+    onConfigUpdate({ customTexts: updatedTexts });
+  };
+
+  const handleTextDelete = (textId: string) => {
+    if (!onConfigUpdate) return;
+    
+    const updatedTexts = config.customTexts?.filter(text => text.id !== textId) || [];
+    onConfigUpdate({ customTexts: updatedTexts });
+    setSelectedTextId(null);
+  };
   // Segments pour la roue
   const wheelSegments = [
     { id: '1', label: 'Prix 3', color: '#4ECDC4' },
@@ -108,6 +129,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
               backgroundImage: `url(${summerBeachImage})`,
               ...getContentDimensions()
             }}
+            onClick={() => setSelectedTextId(null)}
           >
             {/* Social buttons top left */}
             <div className="absolute top-4 left-4 flex gap-2">
@@ -144,15 +166,28 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
                 }}
               />
             </div>
+            
+            {/* Custom editable texts */}
+            {config.customTexts?.map((text) => (
+              <EditableText
+                key={text.id}
+                text={text}
+                onUpdate={handleTextUpdate}
+                onDelete={handleTextDelete}
+                isSelected={selectedTextId === text.id}
+                onSelect={setSelectedTextId}
+              />
+            ))}
           </div>
         ) : (
           // Mode 1 - Bannière + zone de texte
           <div 
-            className="flex flex-col"
+            className="flex flex-col relative"
             style={{ 
               backgroundColor: '#ffffff',
               ...getContentDimensions()
             }}
+            onClick={() => setSelectedTextId(null)}
           >
             {/* Header avec image de fond */}
             <div 
@@ -236,6 +271,18 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
                 </div>
               </div>
             </div>
+            
+            {/* Custom editable texts - positioned absolutely over the whole layout */}
+            {config.customTexts?.map((text) => (
+              <EditableText
+                key={text.id}
+                text={text}
+                onUpdate={handleTextUpdate}
+                onDelete={handleTextDelete}
+                isSelected={selectedTextId === text.id}
+                onSelect={setSelectedTextId}
+              />
+            ))}
           </div>
         )}
       </div>

@@ -8,6 +8,22 @@ import DeviceSelector from './DeviceSelector';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
+export interface CustomText {
+  id: string;
+  content: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  fontFamily: string;
+  color: string;
+  fontWeight: 'normal' | 'bold';
+  fontStyle: 'normal' | 'italic';
+  textDecoration: 'none' | 'underline';
+  backgroundColor?: string;
+  width?: number;
+  height?: number;
+}
+
 export interface EditorConfig {
   // General
   width: number;
@@ -33,10 +49,27 @@ export interface EditorConfig {
   publisherLink?: string;
   prizeText?: string;
   
+  // Custom texts
+  customTexts?: CustomText[];
+  
   // Layout
   centerText?: boolean;
   centerForm?: boolean;
   centerGameZone?: boolean;
+  
+  // Buttons
+  participateButtonText?: string;
+  participateButtonColor?: string;
+  participateButtonTextColor?: string;
+  
+  // Footer
+  footerText?: string;
+  footerColor?: string;
+  
+  // Custom code
+  customCSS?: string;
+  customJS?: string;
+  trackingTags?: string;
 }
 
 const QualifioEditorLayout: React.FC = () => {
@@ -50,12 +83,21 @@ const QualifioEditorLayout: React.FC = () => {
     storyText: `Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser.`,
     publisherLink: 'editions.flammarion.com',
     prizeText: 'Jouez et tentez de remporter l\'un des 10 exemplaires de "Les notes invisibles" d\'une valeur unitaire de 21 euros !',
+    customTexts: [],
     centerText: false,
     centerForm: true,
     centerGameZone: true,
     backgroundColor: '#ffffff',
     outlineColor: '#ffffff',
-    borderStyle: 'classic'
+    borderStyle: 'classic',
+    participateButtonText: 'PARTICIPER !',
+    participateButtonColor: '#ff6b35',
+    participateButtonTextColor: '#ffffff',
+    footerText: '',
+    footerColor: '#f8f9fa',
+    customCSS: '',
+    customJS: '',
+    trackingTags: ''
   });
 
   const updateConfig = (updates: Partial<EditorConfig>) => {
@@ -109,6 +151,7 @@ const QualifioEditorLayout: React.FC = () => {
           <QualifioPreview 
             device={selectedDevice}
             config={config}
+            onConfigUpdate={updateConfig}
           />
         </div>
       </div>
