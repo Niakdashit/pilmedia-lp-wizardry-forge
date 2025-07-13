@@ -10,6 +10,7 @@ interface QualifioPreviewProps {
 }
 
 const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => {
+  // Force refresh to clear cache issues
   const handleWheelComplete = () => {
     console.log('Roue terminée!');
   };
