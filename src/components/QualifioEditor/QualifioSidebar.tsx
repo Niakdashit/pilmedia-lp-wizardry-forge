@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Settings, Image, Type, MousePointer, Code, FileText } from 'lucide-react';
 import type { EditorConfig } from './QualifioEditorLayout';
@@ -51,7 +50,7 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   };
 
   return (
-    <div className="w-96 sidebar-premium flex flex-col min-h-screen">
+    <div className="w-96 sidebar-premium flex flex-col h-screen">
       {/* Header élégant blanc avec accents violets */}
       <div className="px-8 py-8 border-b" style={{ borderColor: 'hsl(var(--sidebar-border))' }}>
         <div className="flex items-center gap-4">
