@@ -1,147 +1,250 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Draggable from 'react-draggable';
-import { Trash2 } from 'lucide-react';
-import type { CustomText } from './QualifioEditorLayout';
+import { X, Move } from 'lucide-react';
+import type { CustomText, DeviceType } from './QualifioEditorLayout';
 
 interface EditableTextProps {
   text: CustomText;
   onUpdate: (text: CustomText) => void;
   onDelete: (id: string) => void;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
+  deviceConfig?: {
+    fontSize: number;
+    backgroundImage?: string;
+  };
 }
 
-const EditableText: React.FC<EditableTextProps> = ({ 
-  text, 
-  onUpdate, 
-  onDelete, 
-  isSelected, 
-  onSelect 
+const EditableText: React.FC<EditableTextProps> = ({
+  text,
+  onUpdate,
+  onDelete,
+  deviceConfig
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(text.content);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ width: 0, height: 0, x: 0, y: 0 });
   const textRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Apply device-specific font size
+  const deviceFontSize = deviceConfig?.fontSize || text.fontSize;
 
   useEffect(() => {
-    setEditContent(text.content);
-  }, [text.content]);
-
-  const handleDoubleClick = () => {
-    setIsEditing(true);
-    onSelect(text.id);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      setIsEditing(false);
-      onUpdate({ ...text, content: editContent });
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
     }
-    if (e.key === 'Escape') {
-      setIsEditing(false);
-      setEditContent(text.content);
-    }
-  };
+  }, [isEditing]);
 
-  const handleBlur = () => {
-    setIsEditing(false);
-    onUpdate({ ...text, content: editContent });
-  };
-
-  const handleDrag = (_: any, data: any) => {
-    onUpdate({
-      ...text,
-      x: data.x,
-      y: data.y
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isEditing) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - text.x,
+      y: e.clientY - text.y
     });
   };
 
-  const textStyle: React.CSSProperties = {
-    fontSize: `${text.fontSize}px`,
-    fontFamily: text.fontFamily,
-    color: text.color,
-    fontWeight: text.fontWeight,
-    fontStyle: text.fontStyle,
-    textDecoration: text.textDecoration,
-    backgroundColor: text.backgroundColor || 'transparent',
-    width: text.width ? `${text.width}px` : 'auto',
-    height: text.height ? `${text.height}px` : 'auto',
-    minWidth: '50px',
-    minHeight: '20px',
-    padding: '4px',
-    border: isSelected ? '2px dashed #3b82f6' : '2px solid transparent',
-    borderRadius: '4px',
-    cursor: isEditing ? 'text' : 'move',
-    display: 'inline-block',
-    position: 'relative'
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      width: text.width || 200,
+      height: text.height || 50,
+      x: e.clientX,
+      y: e.clientY
+    });
   };
 
-  return (
-    <Draggable
-      position={{ x: text.x, y: text.y }}
-      onDrag={handleDrag}
-      disabled={isEditing}
-      bounds="parent"
-    >
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      onUpdate({
+        ...text,
+        x: Math.max(0, e.clientX - dragStart.x),
+        y: Math.max(0, e.clientY - dragStart.y)
+      });
+    }
+    
+    if (isResizing) {
+      const deltaX = e.clientX - resizeStart.x;
+      const deltaY = e.clientY - resizeStart.y;
+      
+      onUpdate({
+        ...text,
+        width: Math.max(100, resizeStart.width + deltaX),
+        height: Math.max(30, resizeStart.height + deltaY)
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+  };
+
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, isResizing, dragStart, resizeStart]);
+
+  const handleContentChange = (content: string) => {
+    onUpdate({ ...text, content });
+  };
+
+  const handleStyleChange = (property: keyof CustomText, value: any) => {
+    onUpdate({ ...text, [property]: value });
+  };
+
+  if (isEditing) {
+    return (
       <div
         ref={textRef}
-        style={textStyle}
-        onClick={() => onSelect(text.id)}
-        onDoubleClick={handleDoubleClick}
-        className="group"
+        className="absolute border-2 border-blue-500 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg z-50"
+        style={{
+          left: text.x,
+          top: text.y,
+          width: text.width || 250,
+          minHeight: text.height || 120
+        }}
       >
-        {isEditing ? (
-          <input
-            type="text"
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            autoFocus
-            style={{
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              width: '100%',
-              fontSize: 'inherit',
-              fontFamily: 'inherit',
-              color: 'inherit',
-              fontWeight: 'inherit',
-              fontStyle: 'inherit',
-              textDecoration: 'inherit'
-            }}
-          />
-        ) : (
-          <span>{text.content}</span>
-        )}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-gray-700">Édition du texte</span>
+          <button
+            onClick={() => setIsEditing(false)}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
         
-        {isSelected && !isEditing && (
+        <textarea
+          ref={inputRef}
+          value={text.content}
+          onChange={(e) => handleContentChange(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{
+            fontSize: deviceFontSize,
+            fontFamily: text.fontFamily,
+            fontWeight: text.fontWeight,
+            fontStyle: text.fontStyle,
+            color: text.color,
+            minHeight: '80px'
+          }}
+          placeholder="Saisir le texte..."
+        />
+        
+        <div className="mt-3 space-y-3">
+          <div className="flex gap-3 items-center">
+            <label className="text-xs font-medium text-gray-600">Couleur:</label>
+            <input
+              type="color"
+              value={text.color}
+              onChange={(e) => handleStyleChange('color', e.target.value)}
+              className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+            />
+          </div>
+          
+          <div className="flex gap-3">
+            <select
+              value={text.fontWeight}
+              onChange={(e) => handleStyleChange('fontWeight', e.target.value)}
+              className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="normal">Normal</option>
+              <option value="bold">Gras</option>
+            </select>
+            
+            <select
+              value={text.fontStyle}
+              onChange={(e) => handleStyleChange('fontStyle', e.target.value)}
+              className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="normal">Normal</option>
+              <option value="italic">Italique</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={textRef}
+      className="absolute group cursor-move select-none hover:outline hover:outline-2 hover:outline-blue-400 transition-all"
+      style={{
+        left: text.x,
+        top: text.y,
+        width: text.width || 'auto',
+        minHeight: text.height || 'auto'
+      }}
+      onMouseDown={handleMouseDown}
+      onDoubleClick={() => setIsEditing(true)}
+    >
+      <div
+        className="relative p-2 rounded transition-all"
+        style={{
+          fontSize: deviceFontSize,
+          fontFamily: text.fontFamily,
+          fontWeight: text.fontWeight,
+          fontStyle: text.fontStyle,
+          color: text.color,
+          backgroundColor: text.backgroundColor || 'transparent',
+          textDecoration: text.textDecoration,
+          minWidth: '100px',
+          wordWrap: 'break-word'
+        }}
+      >
+        {text.content || 'Double-cliquez pour éditer'}
+        
+        {/* Control buttons */}
+        <div className="absolute -top-10 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-lg shadow-lg p-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+            className="w-7 h-7 bg-blue-500 text-white rounded flex items-center justify-center text-xs hover:bg-blue-600 transition-colors"
+            title="Éditer"
+          >
+            ✎
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(text.id);
             }}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-            style={{ fontSize: '12px' }}
+            className="w-7 h-7 bg-red-500 text-white rounded flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+            title="Supprimer"
           >
-            <Trash2 className="w-3 h-3" />
+            <X className="w-3 h-3" />
           </button>
-        )}
+        </div>
+
+        {/* Resize handle */}
+        <div
+          className="absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 rounded-full cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity border-2 border-white shadow-lg"
+          onMouseDown={handleResizeMouseDown}
+          title="Redimensionner"
+        />
         
-        {/* Resize handles */}
-        {isSelected && !isEditing && (
-          <>
-            <div
-              className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 cursor-se-resize"
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                // Handle resize logic here if needed
-              }}
-            />
-          </>
-        )}
+        {/* Move handle */}
+        <div
+          className="absolute -top-2 -left-2 w-4 h-4 bg-green-500 rounded-full cursor-move opacity-0 group-hover:opacity-100 transition-opacity border-2 border-white shadow-lg flex items-center justify-center"
+          title="Déplacer"
+        >
+          <Move className="w-2 h-2 text-white" />
+        </div>
       </div>
-    </Draggable>
+    </div>
   );
 };
 
