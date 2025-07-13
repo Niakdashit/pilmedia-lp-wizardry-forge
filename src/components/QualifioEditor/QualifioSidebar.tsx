@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ChevronRight, Settings, Image, Type, MousePointer, Code, FileText } from 'lucide-react';
+import { Settings, Image, Type, MousePointer, Code, FileText } from 'lucide-react';
 import type { EditorConfig } from './QualifioEditorLayout';
 import GeneralTab from './SidebarTabs/GeneralTab';
 import GameZoneTab from './SidebarTabs/GameZoneTab';
