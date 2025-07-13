@@ -1,4 +1,5 @@
 import React from 'react';
+import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface GeneralTabProps {
@@ -153,6 +154,17 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Style de bordure de la roue */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-4">
+          Style de bordure de la roue
+        </label>
+        <BorderStyleSelector
+          currentStyle={config.borderStyle || 'classic'}
+          onStyleChange={(style) => onConfigUpdate({ borderStyle: style })}
+        />
       </div>
     </div>
   );

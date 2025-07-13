@@ -1,7 +1,7 @@
 import React from 'react';
 import { Facebook, X } from 'lucide-react';
 import type { DeviceType, EditorConfig } from './QualifioEditorLayout';
-import ModernWheel from './ModernWheel';
+import { SmartWheel } from '../SmartWheel';
 import summerBeachImage from '../../assets/summer-beach.jpg';
 
 interface QualifioPreviewProps {
@@ -10,9 +10,16 @@ interface QualifioPreviewProps {
 }
 
 const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => {
-  // Force refresh to clear cache issues
-  const handleWheelComplete = () => {
-    console.log('Roue terminée!');
+  // Segments pour la roue
+  const wheelSegments = [
+    { id: '1', label: 'Prix 3', color: '#4ECDC4' },
+    { id: '2', label: 'Dommage', color: '#F7B731' },
+    { id: '3', label: 'Prix 1', color: '#E74C3C' },
+    { id: '4', label: 'Prix 2', color: '#26D0CE' }
+  ];
+
+  const handleWheelResult = (segment: any) => {
+    console.log('Segment sélectionné:', segment);
   };
 
   const getWheelSize = () => {
@@ -124,9 +131,17 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
 
             {/* Roue de la fortune overlay centered */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <ModernWheel 
-                size={getWheelSize()} 
-                onComplete={handleWheelComplete}
+              <SmartWheel 
+                segments={wheelSegments}
+                size={getWheelSize()}
+                theme="modern"
+                borderStyle={config.borderStyle || 'classic'}
+                onResult={handleWheelResult}
+                customButton={{
+                  text: "Remplir le formulaire",
+                  color: "#8E44AD",
+                  textColor: "#ffffff"
+                }}
               />
             </div>
           </div>
@@ -169,9 +184,17 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config }) => 
 
               {/* Roue de la fortune overlay pour Mode 1 */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <ModernWheel 
-                  size={getWheelSize() * 0.8} 
-                  onComplete={handleWheelComplete}
+                <SmartWheel 
+                  segments={wheelSegments}
+                  size={getWheelSize() * 0.8}
+                  theme="modern"
+                  borderStyle={config.borderStyle || 'classic'}
+                  onResult={handleWheelResult}
+                  customButton={{
+                    text: "Remplir le formulaire",
+                    color: "#8E44AD",
+                    textColor: "#ffffff"
+                  }}
                 />
               </div>
             </div>

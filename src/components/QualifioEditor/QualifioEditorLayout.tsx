@@ -24,6 +24,9 @@ export interface EditorConfig {
   backgroundColor?: string;
   outlineColor?: string;
   
+  // Wheel settings
+  borderStyle?: string;
+  
   // Text content
   storyText?: string;
   publisherLink?: string;
@@ -50,7 +53,8 @@ const QualifioEditorLayout: React.FC = () => {
     centerForm: true,
     centerGameZone: true,
     backgroundColor: '#ffffff',
-    outlineColor: '#ffffff'
+    outlineColor: '#ffffff',
+    borderStyle: 'classic'
   });
 
   const updateConfig = (updates: Partial<EditorConfig>) => {
