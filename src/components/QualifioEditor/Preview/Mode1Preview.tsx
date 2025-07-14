@@ -4,7 +4,6 @@ import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayo
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
 import RulesButton from './RulesButton';
-import WheelContainer from './WheelContainer';
 import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
 
@@ -58,7 +57,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       }}
       onClick={onContainerClick}
     >
-      {/* Header avec image de fond */}
+      {/* Header avec image de fond - sans la roue maintenant */}
       <BackgroundContainer
         device={device}
         config={config}
@@ -69,13 +68,6 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       >
         <SocialButtons />
         <RulesButton />
-        <WheelContainer 
-          device={device} 
-          config={config} 
-          isMode1={true}
-          isVisible={showWheel}
-          onResult={handleWheelResult}
-        />
       </BackgroundContainer>
 
       {/* Content zone avec gestion des états - s'adapte à son contenu */}
@@ -83,10 +75,13 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         <ContentArea 
           config={config} 
           isMode1={true}
+          device={device}
           onShowWheel={handleShowWheel}
           onHideWheel={handleHideWheel}
           wheelResult={wheelResult}
           onWheelResultClose={handleWheelResultClose}
+          showWheel={showWheel}
+          onWheelResult={handleWheelResult}
         />
       </div>
       

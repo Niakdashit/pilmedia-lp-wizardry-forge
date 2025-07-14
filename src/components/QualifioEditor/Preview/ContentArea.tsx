@@ -1,11 +1,14 @@
+
 import React, { useState } from 'react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
 import WheelResult from './WheelResult';
+import WheelContainer from './WheelContainer';
 
 interface ContentAreaProps {
   config: EditorConfig;
   isMode1?: boolean;
+  device?: DeviceType;
   onShowWheel?: () => void;
   onHideWheel?: () => void;
   wheelResult?: {
@@ -14,6 +17,8 @@ interface ContentAreaProps {
     color: string;
   } | null;
   onWheelResultClose?: () => void;
+  showWheel?: boolean;
+  onWheelResult?: (result: { id: string; label: string; color: string }) => void;
 }
 
 type Mode1State = 'form' | 'wheel' | 'result' | 'initial';
@@ -21,10 +26,13 @@ type Mode1State = 'form' | 'wheel' | 'result' | 'initial';
 const ContentArea: React.FC<ContentAreaProps> = ({ 
   config, 
   isMode1 = false,
+  device = 'desktop',
   onShowWheel,
   onHideWheel,
   wheelResult,
-  onWheelResultClose
+  onWheelResultClose,
+  showWheel = false,
+  onWheelResult
 }) => {
   const [mode1State, setMode1State] = useState<Mode1State>('initial');
 
@@ -57,12 +65,23 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       );
     }
 
+    // État roue : affichage de la roue dans l'espace blanc
     if (mode1State === 'wheel') {
       return (
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center text-gray-600">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
+          <div className="text-center text-gray-600 mb-4">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
+          </div>
+          
+          <div className="flex items-center justify-center">
+            <WheelContainer 
+              device={device} 
+              config={config} 
+              isMode1={true}
+              isVisible={true}
+              onResult={onWheelResult}
+            />
           </div>
         </div>
       );
