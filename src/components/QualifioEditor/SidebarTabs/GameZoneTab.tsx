@@ -93,17 +93,18 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         <div className="form-group-premium">
           <label htmlFor="backgroundImage">Image de fond ({devices.find(d => d.id === selectedDevice)?.label})</label>
           <div className="space-y-3">
-            <input type="file" id="backgroundImage" accept="image/*" onChange={e => {
+            <input type="file" id={`backgroundImage-${selectedDevice}`} accept="image/*" onChange={e => {
             const file = e.target.files?.[0];
+            console.log('File selected for', selectedDevice, ':', file);
             if (file) {
               handleBackgroundImageUpload(selectedDevice, file);
             }
           }} className="hidden" />
-            <label htmlFor="backgroundImage" className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors" style={{
+            <label htmlFor={`backgroundImage-${selectedDevice}`} className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors" style={{
             borderColor: 'hsl(var(--sidebar-border))'
           }}>
               <Upload className="w-5 h-5" />
-              <span>Choisir une image</span>
+              <span>Choisir une image ({selectedDevice})</span>
             </label>
             {currentDeviceConfig?.backgroundImage && <div className="relative">
                 <img src={currentDeviceConfig.backgroundImage} alt="Aperçu" className="w-full h-24 object-cover rounded-lg" />
