@@ -52,7 +52,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   return (
     <div 
-      className="w-full min-h-screen flex flex-col"
+      className="w-full flex flex-col"
       style={{ 
         backgroundColor: '#ffffff'
       }}
@@ -71,7 +71,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       </div>
 
       {/* Content zone - s'adapte automatiquement au contenu */}
-      <div className="flex-1 bg-white min-h-fit">
+      <div className="bg-white">
         <ContentArea 
           config={config} 
           isMode1={true}
