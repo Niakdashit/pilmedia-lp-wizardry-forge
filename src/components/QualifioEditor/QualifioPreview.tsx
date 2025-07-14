@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Facebook, X } from 'lucide-react';
 import type { DeviceType, EditorConfig, CustomText } from './QualifioEditorLayout';
 import { SmartWheel } from '../SmartWheel';
@@ -12,6 +12,8 @@ interface QualifioPreviewProps {
 }
 
 const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate }) => {
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+
   const handleTextUpdate = (updatedText: CustomText) => {
     if (!onConfigUpdate) return;
     
@@ -27,12 +29,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
     
     const updatedTexts = config.customTexts?.filter(text => text.id !== textId) || [];
     onConfigUpdate({ customTexts: updatedTexts });
-  };
-
-  // Get background image based on device and config
-  const getBackgroundImage = () => {
-    const deviceConfig = config.deviceConfig?.[device];
-    return deviceConfig?.backgroundImage || config.bannerImage || summerBeachImage;
+    setSelectedTextId(null);
   };
   // Segments pour la roue
   const wheelSegments = [
@@ -129,9 +126,10 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
           <div 
             className="relative bg-cover bg-center"
             style={{ 
-              backgroundImage: `url(${getBackgroundImage()})`,
+              backgroundImage: `url(${summerBeachImage})`,
               ...getContentDimensions()
             }}
+            onClick={() => setSelectedTextId(null)}
           >
             {/* Social buttons top left */}
             <div className="absolute top-4 left-4 flex gap-2">
@@ -176,6 +174,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
                 text={text}
                 onUpdate={handleTextUpdate}
                 onDelete={handleTextDelete}
+                isSelected={selectedTextId === text.id}
+                onSelect={setSelectedTextId}
               />
             ))}
           </div>
@@ -187,13 +187,13 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
               backgroundColor: '#ffffff',
               ...getContentDimensions()
             }}
-            
+            onClick={() => setSelectedTextId(null)}
           >
             {/* Header avec image de fond */}
             <div 
               className="relative bg-cover bg-center flex-shrink-0"
               style={{ 
-                backgroundImage: `url(${getBackgroundImage()})`,
+                backgroundImage: `url(${summerBeachImage})`,
                 height: device === 'mobile' ? '50%' : device === 'tablet' ? '45%' : '60%'
               }}
             >
@@ -279,6 +279,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
                 text={text}
                 onUpdate={handleTextUpdate}
                 onDelete={handleTextDelete}
+                isSelected={selectedTextId === text.id}
+                onSelect={setSelectedTextId}
               />
             ))}
           </div>

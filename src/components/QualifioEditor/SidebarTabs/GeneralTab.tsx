@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImageIcon } from 'lucide-react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
@@ -78,6 +79,43 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
         </div>
       </div>
 
+      {/* Banner Configuration */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Bannière</h4>
+        
+        <div className="space-y-4">
+          <div className="w-full h-40 bg-sidebar-surface rounded-xl flex items-center justify-center border-2 border-dashed border-sidebar-border overflow-hidden">
+            {config.bannerImage ? (
+              <img src={config.bannerImage} alt="Banner" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="text-center">
+                <ImageIcon className="w-8 h-8 text-sidebar-text mx-auto mb-2" />
+                <span className="text-sidebar-text text-sm">Cliquez pour ajouter une image</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="form-group-premium">
+            <label>Description de l'image</label>
+            <textarea
+              value={config.bannerDescription || ''}
+              onChange={(e) => onConfigUpdate({ bannerDescription: e.target.value })}
+              placeholder="Décrivez votre image pour l'accessibilité..."
+              rows={3}
+            />
+          </div>
+
+          <div className="form-group-premium">
+            <label>Lien de redirection (optionnel)</label>
+            <input
+              type="url"
+              value={config.bannerLink || ''}
+              onChange={(e) => onConfigUpdate({ bannerLink: e.target.value })}
+              placeholder="https://www.qualifio.com"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Colors */}
       <div className="premium-card">
