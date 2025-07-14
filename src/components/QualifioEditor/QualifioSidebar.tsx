@@ -62,32 +62,7 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   };
   return <div className="w-96 sidebar-premium flex flex-col h-screen">
       {/* Header élégant blanc avec accents violets */}
-      <div className="px-8 py-8 border-b" style={{
-      borderColor: 'hsl(var(--sidebar-border))'
-    }}>
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center border" style={{
-          backgroundColor: 'hsl(var(--sidebar-active) / 0.1)',
-          borderColor: 'hsl(var(--sidebar-active) / 0.2)'
-        }}>
-            <Settings className="w-5 h-5" style={{
-            color: 'hsl(var(--sidebar-active))'
-          }} />
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl tracking-tight" style={{
-            color: 'hsl(var(--sidebar-text-primary))'
-          }}>
-              Éditeur
-            </h2>
-            <p className="text-sm mt-1" style={{
-            color: 'hsl(var(--sidebar-text-muted))'
-          }}>
-              Configuration avancée
-            </p>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Navigation des onglets - Layout horizontal avec scroll */}
       <div className="p-6 border-b" style={{
