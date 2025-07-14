@@ -174,15 +174,11 @@ const QualifioEditorLayout: React.FC = () => {
         
         {/* Preview Area */}
         <div className="flex-1 p-6">
-          <div className="flex justify-center">
-            <div style={{ width: `${config.width}px` }}>
-              <QualifioPreview 
-                device={selectedDevice}
-                config={config}
-                onConfigUpdate={updateConfig}
-              />
-            </div>
-          </div>
+          <QualifioPreview 
+            device={selectedDevice}
+            config={config}
+            onConfigUpdate={updateConfig}
+          />
         </div>
       </div>
     </div>
