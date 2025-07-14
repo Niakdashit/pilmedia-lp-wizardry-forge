@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Move } from 'lucide-react';
-import type { CustomText, DeviceType } from './QualifioEditorLayout';
+import type { CustomText } from './QualifioEditorLayout';
 
 interface EditableTextProps {
   text: CustomText;

@@ -70,6 +70,9 @@ export interface EditorConfig {
   // Footer
   footerText?: string;
   footerColor?: string;
+  footerImage?: string;
+  footerImageDescription?: string;
+  footerImageLink?: string;
   
   // Custom code
   customCSS?: string;
