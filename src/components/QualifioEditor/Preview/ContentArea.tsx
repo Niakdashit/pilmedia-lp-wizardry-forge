@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
@@ -55,7 +54,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   if (isMode1) {
     if (wheelResult) {
       return (
-        <div className="p-6 flex items-center justify-center min-h-[50vh]">
+        <div className="p-6 flex items-center justify-center min-h-fit">
           <WheelResult result={wheelResult} onPlayAgain={handlePlayAgain} />
         </div>
       );
@@ -64,7 +63,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     // État roue : affichage de la roue avec assez d'espace
     if (mode1State === 'wheel') {
       return (
-        <div className="p-6 flex flex-col justify-center items-center min-h-[60vh]">
+        <div className="p-6 flex flex-col justify-center items-center min-h-fit py-8">
           <div className="text-center text-gray-600 mb-8">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
@@ -98,7 +97,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       }];
 
       return (
-        <div className="p-6 min-h-[50vh] flex items-center justify-center">
+        <div className="p-6 min-h-fit flex items-center justify-center">
           <div className="w-full max-w-md">
             <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
               Formulaire de participation
@@ -124,7 +123,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
     // État initial : affichage du contenu avec bouton participer
     return (
-      <div className="p-6 py-8 min-h-[45vh]">
+      <div className="p-6 py-8 min-h-fit">
         <div className="space-y-4 max-w-2xl mx-auto">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800">
