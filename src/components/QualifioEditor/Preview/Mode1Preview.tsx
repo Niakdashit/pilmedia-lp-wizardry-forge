@@ -22,25 +22,15 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   onTextDelete,
   onContainerClick 
 }) => {
-  const [showWheel, setShowWheel] = useState(false);
   const [wheelResult, setWheelResult] = useState<{
     id: string;
     label: string;
     color: string;
   } | null>(null);
 
-  const handleShowWheel = () => {
-    setShowWheel(true);
-  };
-
-  const handleHideWheel = () => {
-    setShowWheel(false);
-  };
-
   const handleWheelResult = (result: { id: string; label: string; color: string }) => {
     console.log('Résultat de la roue:', result);
     setWheelResult(result);
-    setShowWheel(false);
   };
 
   const handleWheelResultClose = () => {
@@ -76,8 +66,6 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           config={config} 
           isMode1={true}
           device={device}
-          onShowWheel={handleShowWheel}
-          onHideWheel={handleHideWheel}
           wheelResult={wheelResult}
           onWheelResultClose={handleWheelResultClose}
           onWheelResult={handleWheelResult}
