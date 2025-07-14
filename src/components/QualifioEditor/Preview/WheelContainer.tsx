@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SmartWheel } from '../../SmartWheel';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
@@ -47,7 +48,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   }
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
+    <div className="flex items-center justify-center w-full h-full">
       <SmartWheel 
         segments={wheelSegments}
         size={getWheelSize() * (isMode1 ? 0.8 : 1)}

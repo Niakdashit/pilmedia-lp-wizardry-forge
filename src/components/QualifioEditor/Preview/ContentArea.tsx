@@ -62,16 +62,16 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       );
     }
 
-    // État roue : affichage de la roue dans l'espace blanc
+    // État roue : affichage de la roue centrée dans l'espace blanc uniquement
     if (mode1State === 'wheel') {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
-          <div className="text-center text-gray-600 mb-4">
+        <div className="flex-1 flex flex-col justify-center items-center p-6 bg-white">
+          <div className="text-center text-gray-600 mb-6">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
           </div>
           
-          <div className="flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center w-full max-w-md">
             <WheelContainer 
               device={device} 
               config={config} 
@@ -92,7 +92,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       ];
 
       return (
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 bg-white">
           <div className="max-w-md mx-auto">
             <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
               Formulaire de participation
@@ -118,7 +118,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
     // État initial : affichage du contenu avec bouton participer
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 bg-white">
         <div className="space-y-4">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800">
@@ -160,7 +160,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
   // Affichage normal pour Mode 2
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-6 bg-white">
       <div className="space-y-4">
         {/* Story text */}
         <div className="text-sm leading-relaxed text-gray-800">
