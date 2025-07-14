@@ -1,11 +1,95 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { EditorConfig } from '../QualifioEditorLayout';
+import ContactForm from './ContactForm';
+import WheelResult from './WheelResult';
 
 interface ContentAreaProps {
   config: EditorConfig;
+  isMode1?: boolean;
+  onShowWheel?: () => void;
+  onHideWheel?: () => void;
+  wheelResult?: {
+    id: string;
+    label: string;
+    color: string;
+  } | null;
+  onWheelResultClose?: () => void;
 }
 
-const ContentArea: React.FC<ContentAreaProps> = ({ config }) => {
+type Mode1State = 'initial' | 'form' | 'wheel' | 'result';
+
+const ContentArea: React.FC<ContentAreaProps> = ({ 
+  config, 
+  isMode1 = false,
+  onShowWheel,
+  onHideWheel,
+  wheelResult,
+  onWheelResultClose
+}) => {
+  const [mode1State, setMode1State] = useState<Mode1State>('initial');
+
+  const handleParticipateClick = () => {
+    if (isMode1) {
+      setMode1State('form');
+      onHideWheel?.();
+    }
+  };
+
+  const handleFormSubmit = (formData: { name: string; email: string }) => {
+    console.log('Form submitted:', formData);
+    setMode1State('wheel');
+    onShowWheel?.();
+  };
+
+  const handleFormCancel = () => {
+    setMode1State('initial');
+    onHideWheel?.();
+  };
+
+  const handlePlayAgain = () => {
+    setMode1State('initial');
+    onHideWheel?.();
+    onWheelResultClose?.();
+  };
+
+  // Pour Mode 1, gestion des différents états
+  if (isMode1) {
+    if (wheelResult) {
+      return (
+        <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
+          <WheelResult 
+            result={wheelResult}
+            onPlayAgain={handlePlayAgain}
+          />
+        </div>
+      );
+    }
+
+    if (mode1State === 'form') {
+      return (
+        <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
+          <ContactForm 
+            onSubmit={handleFormSubmit}
+            onCancel={handleFormCancel}
+          />
+        </div>
+      );
+    }
+
+    if (mode1State === 'wheel') {
+      // L'espace est occupé par la roue, on peut afficher un message ou rien
+      return (
+        <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
+          <div className="text-center text-gray-600">
+            <p className="text-lg font-medium">Faites tourner la roue !</p>
+            <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // État initial pour Mode 1 ou affichage normal pour Mode 2
   return (
     <div className="flex-1 p-6 overflow-auto">
       <div className="space-y-4">
@@ -35,6 +119,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({ config }) => {
         {/* Participate button */}
         <div className="text-center pt-4">
           <button 
+            onClick={handleParticipateClick}
             className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300"
             style={{ backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)' }}
           >

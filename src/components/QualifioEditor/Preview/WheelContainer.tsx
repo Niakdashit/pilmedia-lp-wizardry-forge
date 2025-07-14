@@ -6,9 +6,17 @@ interface WheelContainerProps {
   device: DeviceType;
   config: EditorConfig;
   isMode1?: boolean;
+  isVisible?: boolean;
+  onResult?: (segment: { id: string; label: string; color: string }) => void;
 }
 
-const WheelContainer: React.FC<WheelContainerProps> = ({ device, config, isMode1 = false }) => {
+const WheelContainer: React.FC<WheelContainerProps> = ({ 
+  device, 
+  config, 
+  isMode1 = false, 
+  isVisible = true,
+  onResult 
+}) => {
   const wheelSegments = [
     { id: '1', label: 'Prix 3', color: '#4ECDC4' },
     { id: '2', label: 'Dommage', color: '#F7B731' },
@@ -18,6 +26,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({ device, config, isMode1
 
   const handleWheelResult = (segment: any) => {
     console.log('Segment sélectionné:', segment);
+    onResult?.(segment);
   };
 
   const getWheelSize = () => {
@@ -32,6 +41,11 @@ const WheelContainer: React.FC<WheelContainerProps> = ({ device, config, isMode1
     }
   };
 
+  // Pour Mode 1, on cache la roue si isVisible est false
+  if (isMode1 && !isVisible) {
+    return null;
+  }
+
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <SmartWheel 
@@ -41,7 +55,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({ device, config, isMode1
         borderStyle={config.borderStyle || 'classic'}
         onResult={handleWheelResult}
         customButton={{
-          text: "Remplir le formulaire",
+          text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: "#8E44AD",
           textColor: "#ffffff"
         }}

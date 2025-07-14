@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
@@ -22,6 +22,31 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   onTextDelete,
   onContainerClick 
 }) => {
+  const [showWheel, setShowWheel] = useState(false);
+  const [wheelResult, setWheelResult] = useState<{
+    id: string;
+    label: string;
+    color: string;
+  } | null>(null);
+
+  const handleShowWheel = () => {
+    setShowWheel(true);
+  };
+
+  const handleHideWheel = () => {
+    setShowWheel(false);
+  };
+
+  const handleWheelResult = (result: { id: string; label: string; color: string }) => {
+    console.log('Résultat de la roue:', result);
+    setWheelResult(result);
+    setShowWheel(false);
+  };
+
+  const handleWheelResultClose = () => {
+    setWheelResult(null);
+  };
+
   return (
     <div 
       className="flex flex-col relative"
@@ -43,11 +68,24 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       >
         <SocialButtons />
         <RulesButton />
-        <WheelContainer device={device} config={config} isMode1={true} />
+        <WheelContainer 
+          device={device} 
+          config={config} 
+          isMode1={true}
+          isVisible={showWheel}
+          onResult={handleWheelResult}
+        />
       </BackgroundContainer>
 
-      {/* Content zone */}
-      <ContentArea config={config} />
+      {/* Content zone avec gestion des états */}
+      <ContentArea 
+        config={config} 
+        isMode1={true}
+        onShowWheel={handleShowWheel}
+        onHideWheel={handleHideWheel}
+        wheelResult={wheelResult}
+        onWheelResultClose={handleWheelResultClose}
+      />
       
       {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (
