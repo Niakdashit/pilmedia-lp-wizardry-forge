@@ -132,6 +132,9 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
             className="relative bg-cover bg-center"
             style={{ 
               backgroundImage: `url(${getBackgroundImage()})`,
+              backgroundSize: device === 'desktop' ? 'cover' : 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
               ...getContentDimensions()
             }}
             onClick={() => setSelectedTextId(null)}
@@ -199,6 +202,9 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
               className="relative bg-cover bg-center flex-shrink-0"
               style={{ 
                 backgroundImage: `url(${getBackgroundImage()})`,
+                backgroundSize: device === 'desktop' ? 'cover' : 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
                 height: device === 'mobile' ? '50%' : device === 'tablet' ? '45%' : '60%'
               }}
             >
