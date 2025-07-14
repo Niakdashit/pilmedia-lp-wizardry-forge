@@ -1,9 +1,12 @@
+
 import React from 'react';
 import type { DeviceType } from '../QualifioEditorLayout';
+
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
 }
+
 const DeviceFrame: React.FC<DeviceFrameProps> = ({
   device,
   children
@@ -13,20 +16,20 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       case 'mobile':
         return {
           width: '375px',
-          minHeight: '667px',
+          height: '667px', // Taille fixe pour iPhone 8/SE
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflow: 'auto'
+          overflow: 'hidden' // Empêche le débordement du frame
         };
       case 'tablet':
         return {
           width: '768px',
-          minHeight: '1024px',
+          height: '1024px', // Taille fixe pour iPad
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflow: 'auto'
+          overflow: 'hidden'
         };
       case 'desktop':
       default:
@@ -40,6 +43,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
     }
   };
+
   const containerStyles = {
     backgroundColor: 'hsl(210, 20%, 98%)',
     minHeight: '100vh',
@@ -48,10 +52,28 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     justifyContent: 'center',
     padding: '20px'
   };
-  return <div style={containerStyles} className="py-0 my-0 rounded-sm">
+
+  return (
+    <div style={containerStyles} className="py-0 my-0 rounded-sm">
       <div style={getDeviceStyles()}>
-        {children}
+        {/* Pour mobile et tablet, on ajoute le scroll à l'intérieur */}
+        {device === 'mobile' || device === 'tablet' ? (
+          <div 
+            style={{
+              width: '100%',
+              height: '100%',
+              overflow: 'auto', // Permet le scroll du contenu
+              position: 'relative'
+            }}
+          >
+            {children}
+          </div>
+        ) : (
+          children
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default DeviceFrame;
