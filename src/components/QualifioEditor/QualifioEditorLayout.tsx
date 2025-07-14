@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -82,6 +81,15 @@ export interface EditorConfig {
     tablet: DeviceConfig;
     desktop: DeviceConfig;
   };
+
+  formFields?: Array<{
+    id: string;
+    label: string;
+    type: 'text' | 'email' | 'tel' | 'select' | 'textarea' | 'checkbox';
+    required?: boolean;
+    options?: string[];
+    placeholder?: string;
+  }>;
 }
 
 const QualifioEditorLayout: React.FC = () => {
