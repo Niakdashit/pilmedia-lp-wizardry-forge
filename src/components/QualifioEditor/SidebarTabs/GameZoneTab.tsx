@@ -11,26 +11,33 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const handleBackgroundImageUpload = (device: DeviceType, file: File) => {
+    if (!file || file.size === 0) {
+      // Supprimer l'image si fichier vide
+      onConfigUpdate({
+        deviceConfig: {
+          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+          desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+          [device]: {
+            ...config.deviceConfig?.[device],
+            backgroundImage: undefined
+          }
+        }
+      });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = e => {
       const imageUrl = e.target?.result as string;
+      console.log(`Uploading image for ${device}:`, imageUrl?.substring(0, 50) + '...');
+      
       onConfigUpdate({
         deviceConfig: {
-          mobile: {
-            fontSize: 14,
-            ...config.deviceConfig?.mobile
-          },
-          tablet: {
-            fontSize: 16,
-            ...config.deviceConfig?.tablet
-          },
-          desktop: {
-            fontSize: 18,
-            ...config.deviceConfig?.desktop
-          },
+          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+          desktop: config.deviceConfig?.desktop || { fontSize: 18 },
           [device]: {
-            fontSize: config.deviceConfig?.[device]?.fontSize || 
-              (device === 'mobile' ? 14 : device === 'tablet' ? 16 : 18),
             ...config.deviceConfig?.[device],
             backgroundImage: imageUrl
           }
@@ -42,18 +49,9 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
   const handleFontSizeChange = (device: DeviceType, fontSize: number) => {
     onConfigUpdate({
       deviceConfig: {
-        mobile: {
-          fontSize: 14,
-          ...config.deviceConfig?.mobile
-        },
-        tablet: {
-          fontSize: 16,
-          ...config.deviceConfig?.tablet
-        },
-        desktop: {
-          fontSize: 18,
-          ...config.deviceConfig?.desktop
-        },
+        mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+        tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+        desktop: config.deviceConfig?.desktop || { fontSize: 18 },
         [device]: {
           ...config.deviceConfig?.[device],
           fontSize
