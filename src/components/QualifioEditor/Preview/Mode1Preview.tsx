@@ -39,15 +39,16 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   return (
     <div 
-      className="flex flex-col relative h-full"
+      className="flex flex-col relative min-h-full"
       style={{ 
         backgroundColor: '#ffffff',
         width: '100%',
+        height: 'auto',
         minHeight: '100%'
       }}
       onClick={onContainerClick}
     >
-      {/* Header avec image de fond - sans la roue maintenant */}
+      {/* Header avec image de fond - hauteur fixe */}
       <BackgroundContainer
         device={device}
         config={config}
@@ -61,7 +62,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       </BackgroundContainer>
 
       {/* Content zone avec gestion des états - s'adapte à son contenu */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col" style={{ minHeight: 'fit-content' }}>
         <ContentArea 
           config={config} 
           isMode1={true}

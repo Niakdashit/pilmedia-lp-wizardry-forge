@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
@@ -7,7 +8,6 @@ interface ContentAreaProps {
   config: EditorConfig;
   isMode1?: boolean;
   device?: DeviceType;
-  onShowWheel?: () => void;
   onHideWheel?: () => void;
   wheelResult?: {
     id: string;
@@ -26,7 +26,6 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   config,
   isMode1 = false,
   device = 'desktop',
-  onShowWheel,
   onHideWheel,
   wheelResult,
   onWheelResultClose,
@@ -39,7 +38,6 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   const handleFormSubmit = (formData: Record<string, string>) => {
     console.log('Form submitted:', formData);
     setMode1State('wheel');
-    onShowWheel?.();
   };
   const handlePlayAgain = () => {
     setMode1State('initial');
@@ -50,20 +48,20 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   // Pour Mode 1, gestion des différents états
   if (isMode1) {
     if (wheelResult) {
-      return <div className="flex-1 flex items-center justify-center p-4">
+      return <div className="flex-1 flex items-center justify-center p-4 min-h-0">
           <WheelResult result={wheelResult} onPlayAgain={handlePlayAgain} />
         </div>;
     }
 
-    // État roue : affichage de la roue centrée dans l'espace blanc uniquement
+    // État roue : affichage de la roue centrée dans l'espace blanc avec hauteur adaptative
     if (mode1State === 'wheel') {
-      return <div className="flex-1 flex flex-col justify-center items-center p-6 bg-white">
+      return <div className="flex-1 flex flex-col justify-center items-center p-6 bg-white min-h-0" style={{ minHeight: 'fit-content' }}>
           <div className="text-center text-gray-600 mb-6">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
           </div>
           
-          <div className="flex-1 flex items-center justify-center w-full max-w-md">
+          <div className="flex flex-col items-center justify-center w-full max-w-md space-y-4">
             <WheelContainer device={device} config={config} isMode1={true} isVisible={true} onResult={onWheelResult} />
           </div>
         </div>;
@@ -82,7 +80,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         type: 'email' as const,
         required: true
       }];
-      return <div className="flex-1 p-6 bg-white">
+      return <div className="flex-1 p-6 bg-white min-h-0">
           <div className="max-w-md mx-auto">
             <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
               Formulaire de participation
@@ -101,7 +99,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     }
 
     // État initial : affichage du contenu avec bouton participer
-    return <div className="flex-1 p-6 bg-white py-[23px] my-0">
+    return <div className="flex-1 p-6 bg-white py-[23px] my-0 min-h-0">
         <div className="space-y-4">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800">
@@ -137,7 +135,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   }
 
   // Affichage normal pour Mode 2
-  return <div className="flex-1 p-6 bg-white">
+  return <div className="flex-1 p-6 bg-white min-h-0">
       <div className="space-y-4">
         {/* Story text */}
         <div className="text-sm leading-relaxed text-gray-800">

@@ -48,7 +48,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   }
 
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
       <SmartWheel 
         segments={wheelSegments}
         size={getWheelSize() * (isMode1 ? 0.8 : 1)}
