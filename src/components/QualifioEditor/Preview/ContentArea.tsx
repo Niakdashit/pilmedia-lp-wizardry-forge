@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
@@ -124,9 +125,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     // État initial : affichage du contenu avec bouton participer
     return (
       <div className="p-6 py-8 min-h-fit">
-        <div className="space-y-4 max-w-2xl mx-auto">
+        <div className="space-y-4 w-full">
           {/* Story text */}
-          <div className="text-sm leading-relaxed text-gray-800">
+          <div className="text-sm leading-relaxed text-gray-800 text-justify">
             <p>
               {config.storyText || "Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser."}
             </p>
@@ -165,9 +166,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
   // Affichage normal pour Mode 2
   return <div className="flex-1 p-6 bg-white min-h-0">
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         {/* Story text */}
-        <div className="text-sm leading-relaxed text-gray-800">
+        <div className="text-sm leading-relaxed text-gray-800 text-justify">
           <p>
             {config.storyText || "Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser."}
           </p>
