@@ -74,6 +74,8 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
         backgroundSize: getBackgroundSize(),
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        margin: 0,
+        padding: 0,
         ...getContentDimensions(),
         ...style
       }}
