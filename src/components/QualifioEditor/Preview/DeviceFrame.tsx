@@ -13,30 +13,30 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       case 'mobile':
         return {
           width: '375px',
-          height: '667px',
+          minHeight: '667px',
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflow: 'hidden'
+          overflow: 'auto'
         };
       case 'tablet':
         return {
           width: '768px',
-          height: '1024px',
+          minHeight: '1024px',
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflow: 'hidden'
+          overflow: 'auto'
         };
       case 'desktop':
       default:
         return {
           width: '1200px',
-          height: '800px',
+          minHeight: '800px',
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
-          overflow: 'hidden'
+          overflow: 'auto'
         };
     }
   };
@@ -44,7 +44,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     backgroundColor: 'hsl(210, 20%, 98%)',
     minHeight: '100vh',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     padding: '20px'
   };
