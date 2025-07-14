@@ -80,7 +80,6 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           onHideWheel={handleHideWheel}
           wheelResult={wheelResult}
           onWheelResultClose={handleWheelResultClose}
-          showWheel={showWheel}
           onWheelResult={handleWheelResult}
         />
       </div>

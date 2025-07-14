@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
@@ -17,7 +16,6 @@ interface ContentAreaProps {
     color: string;
   } | null;
   onWheelResultClose?: () => void;
-  showWheel?: boolean;
   onWheelResult?: (result: { id: string; label: string; color: string }) => void;
 }
 
@@ -31,7 +29,6 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   onHideWheel,
   wheelResult,
   onWheelResultClose,
-  showWheel = false,
   onWheelResult
 }) => {
   const [mode1State, setMode1State] = useState<Mode1State>('initial');
