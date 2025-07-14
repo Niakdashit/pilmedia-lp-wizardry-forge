@@ -48,7 +48,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     justifyContent: 'center',
     padding: '20px'
   };
-  return <div style={containerStyles} className="py-0 my-0">
+  return <div style={containerStyles} className="py-0 my-0 rounded-sm">
       <div style={getDeviceStyles()}>
         {children}
       </div>
