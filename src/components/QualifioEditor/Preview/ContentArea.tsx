@@ -4,6 +4,7 @@ import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
 import WheelResult from './WheelResult';
 import WheelContainer from './WheelContainer';
+
 interface ContentAreaProps {
   config: EditorConfig;
   isMode1?: boolean;
@@ -21,7 +22,9 @@ interface ContentAreaProps {
     color: string;
   }) => void;
 }
+
 type Mode1State = 'form' | 'wheel' | 'result' | 'initial';
+
 const ContentArea: React.FC<ContentAreaProps> = ({
   config,
   isMode1 = false,
@@ -32,13 +35,16 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   onWheelResult
 }) => {
   const [mode1State, setMode1State] = useState<Mode1State>('initial');
+
   const handleParticipateClick = () => {
     setMode1State('form');
   };
+
   const handleFormSubmit = (formData: Record<string, string>) => {
     console.log('Form submitted:', formData);
     setMode1State('wheel');
   };
+
   const handlePlayAgain = () => {
     setMode1State('initial');
     onHideWheel?.();
@@ -48,14 +54,17 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   // Pour Mode 1, gestion des différents états
   if (isMode1) {
     if (wheelResult) {
-      return <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+      return (
+        <div className="p-6 flex items-center justify-center" style={{ minHeight: '60vh' }}>
           <WheelResult result={wheelResult} onPlayAgain={handlePlayAgain} />
-        </div>;
+        </div>
+      );
     }
 
-    // État roue : affichage de la roue centrée dans l'espace blanc avec hauteur adaptative
+    // État roue : affichage de la roue centrée dans l'espace blanc avec hauteur suffisante
     if (mode1State === 'wheel') {
-      return <div className="flex-1 flex flex-col justify-center items-center p-6 bg-white min-h-0" style={{ minHeight: 'fit-content' }}>
+      return (
+        <div className="p-6 flex flex-col justify-center items-center" style={{ minHeight: '60vh' }}>
           <div className="text-center text-gray-600 mb-6">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
@@ -64,7 +73,8 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           <div className="flex flex-col items-center justify-center w-full max-w-md space-y-4">
             <WheelContainer device={device} config={config} isMode1={true} isVisible={true} onResult={onWheelResult} />
           </div>
-        </div>;
+        </div>
+      );
     }
 
     // État formulaire : affichage uniquement du formulaire
@@ -80,26 +90,35 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         type: 'email' as const,
         required: true
       }];
-      return <div className="flex-1 p-6 bg-white min-h-0">
+
+      return (
+        <div className="p-6" style={{ minHeight: '40vh' }}>
           <div className="max-w-md mx-auto">
             <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
               Formulaire de participation
             </h3>
             
-            <DynamicContactForm fields={formFields} onSubmit={handleFormSubmit} submitLabel="Participer" textStyles={{
-            button: {
-              backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)',
-              color: 'white',
-              borderRadius: '0.5rem',
-              fontWeight: 'bold'
-            }
-          }} />
+            <DynamicContactForm 
+              fields={formFields} 
+              onSubmit={handleFormSubmit} 
+              submitLabel="Participer" 
+              textStyles={{
+                button: {
+                  backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)',
+                  color: 'white',
+                  borderRadius: '0.5rem',
+                  fontWeight: 'bold'
+                }
+              }} 
+            />
           </div>
-        </div>;
+        </div>
+      );
     }
 
     // État initial : affichage du contenu avec bouton participer
-    return <div className="flex-1 p-6 bg-white py-[23px] my-0 min-h-0">
+    return (
+      <div className="p-6 py-[23px]">
         <div className="space-y-4">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800">
@@ -111,8 +130,8 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           {/* Publisher link */}
           <div className="text-center pt-2">
             <a href="#" className="font-semibold text-sm" style={{
-            color: 'hsl(0, 84%, 55%)'
-          }}>
+              color: 'hsl(0, 84%, 55%)'
+            }}>
               {config.publisherLink || "editions-flammarion.com"}
             </a>
           </div>
@@ -124,14 +143,19 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
           {/* Participate button */}
           <div className="text-center pt-4">
-            <button onClick={handleParticipateClick} className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" style={{
-            backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)'
-          }}>
+            <button 
+              onClick={handleParticipateClick} 
+              className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" 
+              style={{
+                backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)'
+              }}
+            >
               {config.participateButtonText || "PARTICIPER !"}
             </button>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
 
   // Affichage normal pour Mode 2
@@ -169,4 +193,5 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       </div>
     </div>;
 };
+
 export default ContentArea;

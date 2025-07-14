@@ -39,12 +39,11 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   return (
     <div 
-      className="flex flex-col relative min-h-full"
+      className="flex flex-col relative"
       style={{ 
         backgroundColor: '#ffffff',
         width: '100%',
-        height: 'auto',
-        minHeight: '100%'
+        minHeight: '100vh'
       }}
       onClick={onContainerClick}
     >
@@ -54,15 +53,15 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         config={config}
         className="flex-shrink-0"
         style={{
-          height: device === 'mobile' ? '40%' : device === 'tablet' ? '40%' : '50%'
+          height: device === 'mobile' ? '40vh' : device === 'tablet' ? '40vh' : '50vh'
         }}
       >
         <SocialButtons />
         <RulesButton />
       </BackgroundContainer>
 
-      {/* Content zone avec gestion des états - s'adapte à son contenu */}
-      <div className="flex-1 flex flex-col" style={{ minHeight: 'fit-content' }}>
+      {/* Content zone avec gestion des états - s'adapte automatiquement au contenu */}
+      <div className="flex-grow bg-white">
         <ContentArea 
           config={config} 
           isMode1={true}
