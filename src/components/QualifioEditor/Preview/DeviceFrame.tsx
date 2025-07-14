@@ -15,17 +15,17 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     switch (device) {
       case 'mobile':
         return {
-          width: '375px',
-          height: '667px', // Taille fixe pour iPhone 8/SE
+          width: '319px', // 375px réduit de 15%
+          height: '567px', // 667px réduit de 15%
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflow: 'hidden' // Empêche le débordement du frame
+          overflow: 'hidden'
         };
       case 'tablet':
         return {
-          width: '768px',
-          height: '1024px', // Taille fixe pour iPad
+          width: '653px', // 768px réduit de 15%
+          height: '870px', // 1024px réduit de 15%
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
@@ -34,8 +34,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       case 'desktop':
       default:
         return {
-          width: '1200px',
-          minHeight: '800px',
+          width: '1020px', // 1200px réduit de 15%
+          minHeight: '680px', // 800px réduit de 15%
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
