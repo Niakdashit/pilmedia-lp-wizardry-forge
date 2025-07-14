@@ -59,17 +59,16 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       onClick={onContainerClick}
     >
       {/* Header avec image de fond - hauteur responsive */}
-      <div className="flex-shrink-0" style={{ height: getHeaderHeight() }}>
-        <BackgroundContainer
-          device={device}
-          config={config}
-          className="w-full h-full"
-          isMode1={true}
-        >
-          <SocialButtons />
-          <RulesButton />
-        </BackgroundContainer>
-      </div>
+      <BackgroundContainer
+        device={device}
+        config={config}
+        className="w-full"
+        style={{ height: getHeaderHeight() }}
+        isMode1={true}
+      >
+        <SocialButtons />
+        <RulesButton />
+      </BackgroundContainer>
 
       {/* Content zone - s'adapte automatiquement au contenu */}
       <div className="bg-white">
