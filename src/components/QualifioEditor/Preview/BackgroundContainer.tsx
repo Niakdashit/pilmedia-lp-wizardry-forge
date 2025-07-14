@@ -57,12 +57,21 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     };
   };
 
+  const getBackgroundSize = () => {
+    // Pour desktop, utiliser 'contain' pour afficher l'image entièrement
+    if (device === 'desktop') {
+      return 'contain';
+    }
+    // Pour mobile et tablet, garder 'cover'
+    return 'cover';
+  };
+
   return (
     <div 
-      className={`relative bg-cover bg-center ${className}`}
+      className={`relative bg-center ${className}`}
       style={{ 
         backgroundImage: `url(${getBackgroundImage()})`,
-        backgroundSize: device === 'desktop' ? 'cover' : 'cover',
+        backgroundSize: getBackgroundSize(),
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         ...getContentDimensions(),
