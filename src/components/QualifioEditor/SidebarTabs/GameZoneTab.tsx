@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
 import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
 interface GameZoneTabProps {
@@ -10,8 +10,33 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
   onConfigUpdate
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
+  
+  // Créer des refs séparés pour chaque device
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const tabletInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  // Fonction pour obtenir la ref correspondant au device
+  const getInputRef = (device: DeviceType) => {
+    switch (device) {
+      case 'desktop': return desktopInputRef;
+      case 'tablet': return tabletInputRef;
+      case 'mobile': return mobileInputRef;
+      default: return desktopInputRef;
+    }
+  };
+
+  // Fonction pour déclencher la sélection de fichier
+  const triggerFileSelect = (device: DeviceType) => {
+    console.log('Triggering file select for:', device);
+    const inputRef = getInputRef(device);
+    inputRef.current?.click();
+  };
+
   const handleBackgroundImageUpload = (device: DeviceType, file: File) => {
+    console.log('handleBackgroundImageUpload called for:', device, 'with file:', file);
+    
     if (!file || file.size === 0) {
+      console.log('No file or empty file, removing image for:', device);
       // Supprimer l'image si fichier vide
       onConfigUpdate({
         deviceConfig: {
@@ -27,12 +52,13 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       return;
     }
 
+    console.log('Reading file for:', device, 'File size:', file.size);
     const reader = new FileReader();
     reader.onload = e => {
       const imageUrl = e.target?.result as string;
-      console.log(`Uploading image for ${device}:`, imageUrl?.substring(0, 50) + '...');
+      console.log(`Image loaded for ${device}:`, imageUrl?.substring(0, 50) + '...');
       
-      onConfigUpdate({
+      const newConfig = {
         deviceConfig: {
           mobile: config.deviceConfig?.mobile || { fontSize: 14 },
           tablet: config.deviceConfig?.tablet || { fontSize: 16 },
@@ -42,8 +68,16 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
             backgroundImage: imageUrl
           }
         }
-      });
+      };
+      
+      console.log('Updating config for:', device, 'New config:', newConfig);
+      onConfigUpdate(newConfig);
     };
+    
+    reader.onerror = (error) => {
+      console.error('Error reading file for:', device, error);
+    };
+    
     reader.readAsDataURL(file);
   };
   const handleFontSizeChange = (device: DeviceType, fontSize: number) => {
@@ -89,29 +123,78 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
             </button>)}
         </div>
 
-        {/* Background Image Upload */}
+        {/* Background Image Upload - Inputs séparés pour chaque device */}
         <div className="form-group-premium">
-          <label htmlFor="backgroundImage">Image de fond ({devices.find(d => d.id === selectedDevice)?.label})</label>
+          <label>Image de fond ({devices.find(d => d.id === selectedDevice)?.label})</label>
           <div className="space-y-3">
-            <input type="file" id={`backgroundImage-${selectedDevice}`} accept="image/*" onChange={e => {
-            const file = e.target.files?.[0];
-            console.log('File selected for', selectedDevice, ':', file);
-            if (file) {
-              handleBackgroundImageUpload(selectedDevice, file);
-            }
-          }} className="hidden" />
-            <label htmlFor={`backgroundImage-${selectedDevice}`} className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors" style={{
-            borderColor: 'hsl(var(--sidebar-border))'
-          }}>
+            {/* Input caché pour desktop */}
+            <input 
+              ref={desktopInputRef}
+              type="file" 
+              accept="image/*" 
+              onChange={e => {
+                const file = e.target.files?.[0];
+                console.log('Desktop file selected:', file);
+                if (file) {
+                  handleBackgroundImageUpload('desktop', file);
+                }
+              }} 
+              className="hidden" 
+            />
+            
+            {/* Input caché pour tablet */}
+            <input 
+              ref={tabletInputRef}
+              type="file" 
+              accept="image/*" 
+              onChange={e => {
+                const file = e.target.files?.[0];
+                console.log('Tablet file selected:', file);
+                if (file) {
+                  handleBackgroundImageUpload('tablet', file);
+                }
+              }} 
+              className="hidden" 
+            />
+            
+            {/* Input caché pour mobile */}
+            <input 
+              ref={mobileInputRef}
+              type="file" 
+              accept="image/*" 
+              onChange={e => {
+                const file = e.target.files?.[0];
+                console.log('Mobile file selected:', file);
+                if (file) {
+                  handleBackgroundImageUpload('mobile', file);
+                }
+              }} 
+              className="hidden" 
+            />
+            
+            {/* Bouton de sélection visible */}
+            <button 
+              type="button"
+              onClick={() => triggerFileSelect(selectedDevice)}
+              className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors w-full" 
+              style={{ borderColor: 'hsl(var(--sidebar-border))' }}
+            >
               <Upload className="w-5 h-5" />
               <span>Choisir une image ({selectedDevice})</span>
-            </label>
-            {currentDeviceConfig?.backgroundImage && <div className="relative">
+            </button>
+            
+            {/* Aperçu de l'image */}
+            {currentDeviceConfig?.backgroundImage && (
+              <div className="relative">
                 <img src={currentDeviceConfig.backgroundImage} alt="Aperçu" className="w-full h-24 object-cover rounded-lg" />
-                <button onClick={() => handleBackgroundImageUpload(selectedDevice, new File([], ''))} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
+                <button 
+                  onClick={() => handleBackgroundImageUpload(selectedDevice, new File([], ''))} 
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
                   ×
                 </button>
-              </div>}
+              </div>
+            )}
           </div>
         </div>
 
