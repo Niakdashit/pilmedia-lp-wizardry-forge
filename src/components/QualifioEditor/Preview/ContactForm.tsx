@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 
 interface ContactFormProps {
   onSubmit: (formData: { name: string; email: string }) => void;
-  onCancel?: () => void;
 }
 
-const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, onCancel }) => {
+const ContactForm: React.FC<ContactFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: ''
@@ -48,12 +47,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <div className="w-full bg-white p-4 rounded-lg shadow-lg">
+    <div className="w-full">
       <h3 className="text-lg font-bold text-center mb-4 text-gray-800">
         Formulaire de participation
       </h3>
       
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
             Nom complet *
@@ -92,21 +91,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="flex gap-2 pt-3">
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
-            >
-              Annuler
-            </button>
-          )}
+        <div className="pt-2">
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-semibold text-sm"
+            className="w-full px-4 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-semibold"
           >
-            Valider
+            Participer
           </button>
         </div>
       </form>
