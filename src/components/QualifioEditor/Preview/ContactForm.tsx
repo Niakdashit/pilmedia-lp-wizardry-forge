@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 
 interface ContactFormProps {
   onSubmit: (formData: { name: string; email: string }) => void;
-  onCancel?: () => void;
 }
 
-const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, onCancel }) => {
+const ContactForm: React.FC<ContactFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: ''
@@ -92,19 +91,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="flex gap-2 pt-3">
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
-            >
-              Annuler
-            </button>
-          )}
+        <div className="pt-3">
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-semibold text-sm"
+            className="w-full px-4 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-semibold"
           >
             Valider
           </button>
