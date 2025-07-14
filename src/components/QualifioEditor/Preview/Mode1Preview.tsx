@@ -37,31 +37,41 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
     setWheelResult(null);
   };
 
+  // Calcul des hauteurs selon l'appareil
+  const getHeaderHeight = () => {
+    switch (device) {
+      case 'mobile':
+        return '50vh';
+      case 'tablet':
+        return '45vh';
+      case 'desktop':
+      default:
+        return '55vh';
+    }
+  };
+
   return (
     <div 
-      className="flex flex-col relative"
+      className="w-full min-h-screen flex flex-col"
       style={{ 
-        backgroundColor: '#ffffff',
-        width: '100%',
-        minHeight: '100vh'
+        backgroundColor: '#ffffff'
       }}
       onClick={onContainerClick}
     >
-      {/* Header avec image de fond - hauteur fixe */}
-      <BackgroundContainer
-        device={device}
-        config={config}
-        className="flex-shrink-0"
-        style={{
-          height: device === 'mobile' ? '40vh' : device === 'tablet' ? '40vh' : '50vh'
-        }}
-      >
-        <SocialButtons />
-        <RulesButton />
-      </BackgroundContainer>
+      {/* Header avec image de fond - hauteur responsive */}
+      <div className="flex-shrink-0" style={{ height: getHeaderHeight() }}>
+        <BackgroundContainer
+          device={device}
+          config={config}
+          className="w-full h-full"
+        >
+          <SocialButtons />
+          <RulesButton />
+        </BackgroundContainer>
+      </div>
 
-      {/* Content zone avec gestion des états - s'adapte automatiquement au contenu */}
-      <div className="flex-grow bg-white">
+      {/* Content zone - s'adapte automatiquement au contenu */}
+      <div className="flex-1 bg-white min-h-fit">
         <ContentArea 
           config={config} 
           isMode1={true}

@@ -55,29 +55,35 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   if (isMode1) {
     if (wheelResult) {
       return (
-        <div className="p-6 flex items-center justify-center" style={{ minHeight: '60vh' }}>
+        <div className="p-6 flex items-center justify-center min-h-[50vh]">
           <WheelResult result={wheelResult} onPlayAgain={handlePlayAgain} />
         </div>
       );
     }
 
-    // État roue : affichage de la roue centrée dans l'espace blanc avec hauteur suffisante
+    // État roue : affichage de la roue avec assez d'espace
     if (mode1State === 'wheel') {
       return (
-        <div className="p-6 flex flex-col justify-center items-center" style={{ minHeight: '60vh' }}>
-          <div className="text-center text-gray-600 mb-6">
+        <div className="p-6 flex flex-col justify-center items-center min-h-[60vh]">
+          <div className="text-center text-gray-600 mb-8">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
           </div>
           
-          <div className="flex flex-col items-center justify-center w-full max-w-md space-y-4">
-            <WheelContainer device={device} config={config} isMode1={true} isVisible={true} onResult={onWheelResult} />
+          <div className="flex flex-col items-center justify-center w-full space-y-6">
+            <WheelContainer 
+              device={device} 
+              config={config} 
+              isMode1={true} 
+              isVisible={true} 
+              onResult={onWheelResult} 
+            />
           </div>
         </div>
       );
     }
 
-    // État formulaire : affichage uniquement du formulaire
+    // État formulaire : affichage du formulaire avec assez d'espace
     if (mode1State === 'form') {
       const formFields = config.formFields || [{
         id: 'name',
@@ -92,8 +98,8 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       }];
 
       return (
-        <div className="p-6" style={{ minHeight: '40vh' }}>
-          <div className="max-w-md mx-auto">
+        <div className="p-6 min-h-[50vh] flex items-center justify-center">
+          <div className="w-full max-w-md">
             <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
               Formulaire de participation
             </h3>
@@ -118,8 +124,8 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
     // État initial : affichage du contenu avec bouton participer
     return (
-      <div className="p-6 py-[23px]">
-        <div className="space-y-4">
+      <div className="p-6 py-8 min-h-[45vh]">
+        <div className="space-y-4 max-w-2xl mx-auto">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800">
             <p>
@@ -142,7 +148,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           </div>
 
           {/* Participate button */}
-          <div className="text-center pt-4">
+          <div className="text-center pt-6 pb-4">
             <button 
               onClick={handleParticipateClick} 
               className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" 
