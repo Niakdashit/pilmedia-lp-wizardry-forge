@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import summerBeachImage from '../../../assets/summer-beach.jpg';
 
@@ -20,27 +19,15 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   style = {},
   onClick
 }) => {
-  const [aspectRatio, setAspectRatio] = useState<number>(1500 / 744); // Default ratio
-
   const getBackgroundImage = () => {
     const deviceBackgroundImage = config.deviceConfig?.[device]?.backgroundImage;
     return deviceBackgroundImage || summerBeachImage;
   };
 
-  // Load image to get its natural dimensions
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      setAspectRatio(img.naturalWidth / img.naturalHeight);
-    };
-    img.src = getBackgroundImage();
-  }, [config.deviceConfig?.[device]?.backgroundImage]);
-
   const getContentDimensions = () => {
     return { 
       width: '100%',
-      height: `${100 / aspectRatio}vw`, // Height based on viewport width and aspect ratio
-      maxHeight: '60vh' // Prevent it from being too tall on very wide screens
+      height: '100%'
     };
   };
 
@@ -49,7 +36,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       className={`relative bg-cover bg-center ${className}`}
       style={{ 
         backgroundImage: `url(${getBackgroundImage()})`,
-        backgroundSize: 'cover',
+        backgroundSize: device === 'desktop' ? 'cover' : 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         ...getContentDimensions(),
