@@ -43,6 +43,11 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
     console.log('Segment sélectionné:', segment);
   };
 
+  const getBackgroundImage = () => {
+    const deviceBackgroundImage = config.deviceConfig?.[device]?.backgroundImage;
+    return deviceBackgroundImage || summerBeachImage;
+  };
+
   const getWheelSize = () => {
     switch (device) {
       case 'mobile':
@@ -126,7 +131,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
           <div 
             className="relative bg-cover bg-center"
             style={{ 
-              backgroundImage: `url(${summerBeachImage})`,
+              backgroundImage: `url(${getBackgroundImage()})`,
               ...getContentDimensions()
             }}
             onClick={() => setSelectedTextId(null)}
@@ -193,7 +198,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
             <div 
               className="relative bg-cover bg-center flex-shrink-0"
               style={{ 
-                backgroundImage: `url(${summerBeachImage})`,
+                backgroundImage: `url(${getBackgroundImage()})`,
                 height: device === 'mobile' ? '50%' : device === 'tablet' ? '45%' : '60%'
               }}
             >
