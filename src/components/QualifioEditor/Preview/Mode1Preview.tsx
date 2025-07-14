@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
@@ -49,11 +50,11 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   return (
     <div 
-      className="flex flex-col relative"
+      className="flex flex-col relative h-full"
       style={{ 
         backgroundColor: '#ffffff',
         width: '100%',
-        height: '100%'
+        minHeight: '100%'
       }}
       onClick={onContainerClick}
     >
@@ -63,7 +64,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         config={config}
         className="flex-shrink-0"
         style={{
-          height: device === 'mobile' ? '50%' : device === 'tablet' ? '45%' : '60%'
+          height: device === 'mobile' ? '40%' : device === 'tablet' ? '40%' : '50%'
         }}
       >
         <SocialButtons />
@@ -77,15 +78,17 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         />
       </BackgroundContainer>
 
-      {/* Content zone avec gestion des états */}
-      <ContentArea 
-        config={config} 
-        isMode1={true}
-        onShowWheel={handleShowWheel}
-        onHideWheel={handleHideWheel}
-        wheelResult={wheelResult}
-        onWheelResultClose={handleWheelResultClose}
-      />
+      {/* Content zone avec gestion des états - s'adapte à son contenu */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <ContentArea 
+          config={config} 
+          isMode1={true}
+          onShowWheel={handleShowWheel}
+          onHideWheel={handleHideWheel}
+          wheelResult={wheelResult}
+          onWheelResultClose={handleWheelResultClose}
+        />
+      </div>
       
       {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (

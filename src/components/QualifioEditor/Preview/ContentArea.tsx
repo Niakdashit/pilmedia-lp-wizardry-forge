@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 import ContactForm from './ContactForm';
@@ -56,7 +57,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   if (isMode1) {
     if (wheelResult) {
       return (
-        <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center p-4">
           <WheelResult 
             result={wheelResult}
             onPlayAgain={handlePlayAgain}
@@ -67,19 +68,20 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
     if (mode1State === 'form') {
       return (
-        <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
-          <ContactForm 
-            onSubmit={handleFormSubmit}
-            onCancel={handleFormCancel}
-          />
+        <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+          <div className="w-full max-w-md">
+            <ContactForm 
+              onSubmit={handleFormSubmit}
+              onCancel={handleFormCancel}
+            />
+          </div>
         </div>
       );
     }
 
     if (mode1State === 'wheel') {
-      // L'espace est occupé par la roue, on peut afficher un message ou rien
       return (
-        <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center text-gray-600">
             <p className="text-lg font-medium">Faites tourner la roue !</p>
             <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
@@ -91,7 +93,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
   // État initial pour Mode 1 ou affichage normal pour Mode 2
   return (
-    <div className="flex-1 p-6 overflow-auto">
+    <div className="flex-1 p-6">
       <div className="space-y-4">
         {/* Story text */}
         <div className="text-sm leading-relaxed text-gray-800">
