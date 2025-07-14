@@ -1,17 +1,16 @@
 import React from 'react';
 import type { DeviceType } from '../QualifioEditorLayout';
+
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
 }
-const DeviceFrame: React.FC<DeviceFrameProps> = ({
-  device,
-  children
-}) => {
+
+const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   const getDeviceStyles = () => {
     switch (device) {
       case 'mobile':
-        return {
+        return { 
           width: '375px',
           height: '667px',
           margin: '20px auto',
@@ -20,9 +19,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           overflow: 'hidden'
         };
       case 'tablet':
-        return {
+        return { 
           width: '768px',
-          height: '1024px',
+          height: '1024px', 
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
@@ -30,7 +29,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
       case 'desktop':
       default:
-        return {
+        return { 
           width: '1200px',
           height: '800px',
           margin: '20px auto',
@@ -40,6 +39,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
     }
   };
+
   const containerStyles = {
     backgroundColor: 'hsl(210, 20%, 98%)',
     minHeight: '100vh',
@@ -48,10 +48,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     justifyContent: 'center',
     padding: '20px'
   };
-  return <div style={containerStyles} className="py-0 my-0">
+
+  return (
+    <div style={containerStyles}>
       <div style={getDeviceStyles()}>
         {children}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default DeviceFrame;
