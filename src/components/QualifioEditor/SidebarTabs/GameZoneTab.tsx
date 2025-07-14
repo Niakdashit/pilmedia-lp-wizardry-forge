@@ -29,7 +29,8 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
             ...config.deviceConfig?.desktop
           },
           [device]: {
-            fontSize: 16,
+            fontSize: config.deviceConfig?.[device]?.fontSize || 
+              (device === 'mobile' ? 14 : device === 'tablet' ? 16 : 18),
             ...config.deviceConfig?.[device],
             backgroundImage: imageUrl
           }

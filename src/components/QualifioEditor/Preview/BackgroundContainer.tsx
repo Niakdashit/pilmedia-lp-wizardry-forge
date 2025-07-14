@@ -21,6 +21,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
 }) => {
   const getBackgroundImage = () => {
     const deviceBackgroundImage = config.deviceConfig?.[device]?.backgroundImage;
+    console.log(`Device: ${device}, Background Image:`, deviceBackgroundImage);
     return deviceBackgroundImage || summerBeachImage;
   };
 
