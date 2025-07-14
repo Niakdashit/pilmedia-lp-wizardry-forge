@@ -46,7 +46,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         return '45vh';
       case 'desktop':
       default:
-        return '55vh';
+        return 'auto'; // Changé pour permettre la hauteur automatique basée sur l'image
     }
   };
 
@@ -64,6 +64,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           device={device}
           config={config}
           className="w-full h-full"
+          isMode1={true}
         >
           <SocialButtons />
           <RulesButton />
