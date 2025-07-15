@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, ArrowLeft, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import QualifioSidebar from './QualifioSidebar';
 import QualifioPreview from './QualifioPreview';
@@ -131,6 +131,18 @@ export interface EditorConfig {
 
 const QualifioEditorLayout: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      setSidebarCollapsed(isMobile);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const toggleSidebar = () => setSidebarCollapsed(prev => !prev);
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
     height: 1200,
@@ -185,7 +197,13 @@ const QualifioEditorLayout: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link 
+            <button
+              onClick={toggleSidebar}
+              className="md:hidden text-gray-600"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <Link
               to="/gamification"
               className="flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
             >
@@ -216,11 +234,24 @@ const QualifioEditorLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex">
         {/* Sidebar */}
-        <QualifioSidebar 
-          config={config}
-          onConfigUpdate={updateConfig}
+        <div
+          className={`fixed md:static inset-y-0 left-0 z-40 transition-transform transform duration-300 ease-in-out ${
+            sidebarCollapsed ? '-translate-x-full md:translate-x-0' : 'translate-x-0'
+          }`}
+        >
+          <QualifioSidebar
+            config={config}
+            onConfigUpdate={updateConfig}
+          />
+        </div>
+        {/* Overlay for mobile */}
+        <div
+          onClick={toggleSidebar}
+          className={`md:hidden fixed inset-0 bg-black/30 transition-opacity z-30 ${
+            sidebarCollapsed ? 'pointer-events-none opacity-0' : 'opacity-100'
+          }`}
         />
-        
+
         {/* Preview Area */}
         <div className="flex-1 p-6">
           <QualifioPreview 
