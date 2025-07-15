@@ -125,7 +125,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     // État initial : affichage du contenu avec bouton participer
     return (
       <div className="px-6 pb-8 min-h-fit">
-        <div className="space-y-4 w-full">
+        <div className="w-full">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800 text-justify">
             <p>
