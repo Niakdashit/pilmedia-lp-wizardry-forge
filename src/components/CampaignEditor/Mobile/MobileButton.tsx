@@ -9,35 +9,102 @@ interface MobileButtonProps {
 const getButtonAbsoluteStyle = (mobileConfig: any) => {
   const buttonPlacement = mobileConfig.buttonPlacement || 'bottom';
   const horizontalPadding = Math.max(12, mobileConfig.horizontalPadding ?? 16);
+  const gamePosition = mobileConfig.gamePosition || 'center';
+  const gameVerticalOffset = mobileConfig.gameVerticalOffset || 0;
+  const gameHorizontalOffset = mobileConfig.gameHorizontalOffset || 0;
+  
+  // Fonction pour déterminer la position optimale du bouton
+  const getOptimalButtonPosition = () => {
+    // Si la roue est déplacée vers le bas (plus de 5%), positionner le bouton en haut
+    if (gameVerticalOffset > 5) {
+      return 'top';
+    }
+    
+    // Si la roue est déplacée vers le haut (moins de -5%), positionner le bouton en bas  
+    if (gameVerticalOffset < -5) {
+      return 'bottom';
+    }
+    
+    // Pour les positions horizontales extrêmes (±50%), positionner à l'opposé
+    if (gameHorizontalOffset >= 50) {
+      return 'left';
+    }
+    
+    if (gameHorizontalOffset <= -50) {
+      return 'right';
+    }
+    
+    // Position de base selon les positions prédéfinies de la roue
+    switch (gamePosition) {
+      case 'top':
+        return 'bottom';
+      case 'bottom':
+        return 'top';
+      case 'left':
+        return 'right';
+      case 'right':
+        return 'left';
+      default:
+        return buttonPlacement;
+    }
+  };
+  
+  const optimalPlacement = getOptimalButtonPosition();
   
   const baseStyle: React.CSSProperties = {
     position: 'absolute',
     zIndex: 100,
-    left: horizontalPadding,
-    right: horizontalPadding,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     pointerEvents: 'auto' as const
   };
 
-  switch (buttonPlacement) {
+  switch (optimalPlacement) {
     case 'top':
       return {
         ...baseStyle,
-        top: '20px'
+        top: '20px',
+        left: horizontalPadding,
+        right: horizontalPadding
+      };
+    case 'bottom':
+      return {
+        ...baseStyle,
+        bottom: '20px',
+        left: horizontalPadding,
+        right: horizontalPadding
+      };
+    case 'left':
+      return {
+        ...baseStyle,
+        left: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: 'auto'
+      };
+    case 'right':
+      return {
+        ...baseStyle,
+        right: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: 'auto'
       };
     case 'center':
       return {
         ...baseStyle,
         top: '50%',
+        left: horizontalPadding,
+        right: horizontalPadding,
         transform: 'translateY(-50%)'
       };
-    case 'bottom':
     default:
       return {
         ...baseStyle,
-        bottom: '20px'
+        bottom: '20px',
+        left: horizontalPadding,
+        right: horizontalPadding
       };
   }
 };
