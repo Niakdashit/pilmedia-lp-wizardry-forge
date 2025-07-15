@@ -52,7 +52,16 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       };
     }
     
-    // Comportement par défaut pour tous les autres cas
+    // Pour Mode 2, s'assurer que le conteneur remplit complètement l'espace disponible
+    if (!isMode1) {
+      return {
+        width: '100%',
+        height: '100vh', // Hauteur complète de l'écran
+        minHeight: '100vh' // S'assurer qu'il n'y a pas de réduction
+      };
+    }
+    
+    // Comportement par défaut pour les autres cas
     return { 
       width: '100%',
       height: '100%'
