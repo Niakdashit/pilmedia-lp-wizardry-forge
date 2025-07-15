@@ -50,13 +50,17 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     };
 
     return {
-      transform: `translate(${gamePosition.x}%, ${gamePosition.y}%)`,
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: `translate(-50%, -50%) translate(${gamePosition.x}%, ${gamePosition.y}%)`,
       transformOrigin: 'center center',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       width: '100%',
       height: '100%',
+      overflow: 'hidden',
       minHeight: getMinHeight(),
       padding: getPadding(),
       boxSizing: 'border-box',
