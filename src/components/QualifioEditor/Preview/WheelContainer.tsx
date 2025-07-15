@@ -53,6 +53,9 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     return null;
   }
 
+  // Récupérer la position du jeu depuis la configuration
+  const gamePosition = config.deviceConfig?.[device]?.gamePosition;
+
   return (
     <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
       <SmartWheel 
@@ -61,6 +64,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         theme="modern"
         borderStyle={config.borderStyle || 'classic'}
         onResult={handleWheelResult}
+        gamePosition={gamePosition}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: "#8E44AD",

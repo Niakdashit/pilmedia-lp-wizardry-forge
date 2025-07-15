@@ -8,6 +8,7 @@ import QuizPreview from '../../GameTypes/QuizPreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
+
 interface GameRendererProps {
   gameType: EditorConfig['gameType'];
   config: EditorConfig;

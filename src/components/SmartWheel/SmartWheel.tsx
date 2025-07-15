@@ -15,7 +15,9 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   customButton,
   borderStyle = 'classic',
   className = '',
-  maxSize
+  maxSize,
+  buttonPosition,
+  gamePosition
 }) => {
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
@@ -58,10 +60,57 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     }
     spin();
   };
+
+  // Fonction pour déterminer la position optimale du bouton
+  const getOptimalButtonPosition = () => {
+    // Si buttonPosition est explicitement défini, l'utiliser
+    if (buttonPosition) return buttonPosition;
+    
+    // Sinon, utiliser la logique automatique basée sur gamePosition
+    if (!gamePosition) return 'bottom';
+    
+    const { x, y } = gamePosition;
+    
+    // Priorité 1: Position verticale - Si la roue dépasse 5% vers le bas
+    if (y > 5) {
+      return 'top';
+    }
+    
+    // Priorité 2: Position horizontale extrême (±50%)
+    if (x >= 50) {
+      return 'left'; // Roue à droite, bouton à gauche
+    }
+    
+    if (x <= -50) {
+      return 'right'; // Roue à gauche, bouton à droite
+    }
+    
+    // Position par défaut
+    return 'bottom';
+  };
+
+  const finalButtonPosition = getOptimalButtonPosition();
+
+  // Styles de disposition selon la position du bouton
+  const getLayoutClasses = () => {
+    switch (finalButtonPosition) {
+      case 'top':
+        return 'flex flex-col-reverse items-center space-y-reverse space-y-6';
+      case 'left':
+        return 'flex flex-row items-center space-x-6';
+      case 'right':
+        return 'flex flex-row-reverse items-center space-x-reverse space-x-6';
+      case 'bottom':
+      default:
+        return 'flex flex-col items-center space-y-6';
+    }
+  };
+
   const buttonText = customButton?.text || 'Faire tourner';
   const buttonColor = customButton?.color || resolvedTheme.colors.primary;
   const buttonTextColor = customButton?.textColor || '#ffffff';
-  return <div className={`flex flex-col items-center space-y-6 ${className}`}>
+
+  return <div className={`${getLayoutClasses()} ${className}`}>
       {/* Container de la roue */}
       <div className="relative flex items-center justify-center" style={{
       width: actualSize,

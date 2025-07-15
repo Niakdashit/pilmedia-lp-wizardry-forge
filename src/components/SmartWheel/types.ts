@@ -52,6 +52,8 @@ export interface SmartWheelProps {
   borderStyle?: string; // Nouveau prop pour le style de bordure
   className?: string;
   maxSize?: number; // Limite la taille maximum de la roue
+  buttonPosition?: 'top' | 'bottom' | 'left' | 'right'; // Position du bouton
+  gamePosition?: { x: number; y: number; scale: number }; // Position du jeu pour auto-repositionnement
 }
 
 export interface WheelState {
