@@ -44,7 +44,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({
   };
 
   return (
-    <div className={`w-full flex items-center justify-center min-h-[400px] p-4 ${className}`}>
+    <div className={`quiz-preview-container ${className}`}>
       <QuizContainer 
         config={finalConfig}
         design={enhancedDesign}

@@ -53,7 +53,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   // Pour Mode 1, gestion des différents états
   if (isMode1) {
     if (wheelResult) {
-      return <div className="px-6 pb-6 flex items-center justify-center min-h-fit">
+      return <div className="content-area-result">
           <WheelResult result={wheelResult} onPlayAgain={handlePlayAgain} />
         </div>;
     }
@@ -80,13 +80,13 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         puzzle: 'Remettez les pièces dans le bon ordre',
         form: 'Complétez tous les champs requis'
       };
-      return <div className="px-6 pb-8 flex flex-col justify-center items-center min-h-fit">
-          <div className="text-center text-gray-600 mb-8 my-0 py-[15px]">
-            <p className="text-lg font-medium">{gameNames[config.gameType] || 'Jouez !'}</p>
-            <p className="text-sm mt-2">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
+      return <div className="content-area-game">
+          <div className="game-instructions">
+            <p className="game-title">{gameNames[config.gameType] || 'Jouez !'}</p>
+            <p className="game-subtitle">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
           
-          <div className="flex flex-col items-center justify-center w-full space-y-6">
+          <div className="game-wrapper">
             <GameRenderer gameType={config.gameType} config={config} device={device} onResult={onWheelResult} />
           </div>
         </div>;
@@ -105,15 +105,15 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         type: 'email' as const,
         required: true
       }];
-      return <div className="px-6 pb-6 min-h-fit flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
+      return <div className="content-area-form">
+          <div className="form-container">
+            <h3 className="form-title">
               Formulaire de participation
             </h3>
             
             <DynamicContactForm fields={formFields} onSubmit={handleFormSubmit} submitLabel="Participer" textStyles={{
             button: {
-              backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)',
+              backgroundColor: config.participateButtonColor || 'hsl(var(--brand-primary))',
               color: 'white',
               borderRadius: '0.5rem',
               fontWeight: 'bold'
@@ -124,10 +124,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     }
 
     // État initial : affichage du contenu avec bouton participer
-    return <div style={{
-      margin: 0,
-      paddingTop: 0
-    }} className="px-6 pt-0 mt-0 min-h-fit my-[21px]">
+    return <div className="content-area-mode1">
         <div className="w-full">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800 text-justify">

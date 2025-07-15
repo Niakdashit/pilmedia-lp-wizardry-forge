@@ -143,7 +143,7 @@ const Jackpot: React.FC<JackpotProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6">
+    <div className="flex flex-col items-center justify-center space-y-4 py-2">
       {/* Conteneur des slots avec effets 3D */}
       <div style={slotsContainerStyle}>
         <div style={innerZoneStyle}>
