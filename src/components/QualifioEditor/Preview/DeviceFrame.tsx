@@ -7,6 +7,7 @@ interface DeviceFrameProps {
 }
 const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   const { maxWidth, maxHeight } = DEVICE_CONSTRAINTS[device];
+  const scaleFactor = device === "desktop" ? 0.9 : 1;
 
   const getFrameBorders = () => {
     switch (device) {
@@ -21,8 +22,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   };
 
   const frameStyles: React.CSSProperties = {
-    width: Math.min(maxWidth, window.innerWidth),
-    height: Math.min(maxHeight, window.innerHeight),
+    width: Math.min(maxWidth, window.innerWidth) * scaleFactor,
+    height: Math.min(maxHeight, window.innerHeight) * scaleFactor,
     ...getFrameBorders(),
     overflow: "hidden",
   };
