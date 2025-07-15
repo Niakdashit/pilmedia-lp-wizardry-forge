@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
 import WheelResult from './WheelResult';
-import WheelContainer from './WheelContainer';
+import GameRenderer from './GameRenderer';
 
 interface ContentAreaProps {
   config: EditorConfig;
@@ -42,7 +42,13 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
   const handleFormSubmit = (formData: Record<string, string>) => {
     console.log('Form submitted:', formData);
-    setMode1State('wheel');
+    // Pour les mécaniques basées sur des jeux, passer au jeu
+    if (config.gameType !== 'form') {
+      setMode1State('wheel');
+    } else {
+      // Pour le formulaire, rester sur le formulaire ou afficher un message de succès
+      console.log('Form game completed');
+    }
   };
 
   const handlePlayAgain = () => {
@@ -61,22 +67,43 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       );
     }
 
-    // État roue : affichage de la roue avec assez d'espace
+    // État jeu : affichage de la mécanique sélectionnée
     if (mode1State === 'wheel') {
+      const gameNames = {
+        wheel: 'Faites tourner la roue !',
+        quiz: 'Répondez aux questions !',
+        scratch: 'Grattez votre carte !',
+        jackpot: 'Tentez le jackpot !',
+        dice: 'Lancez les dés !',
+        memory: 'Trouvez les paires !',
+        puzzle: 'Reconstituez le puzzle !',
+        form: 'Remplissez le formulaire !'
+      };
+
+      const gameInstructions = {
+        wheel: 'Cliquez sur le bouton au centre pour jouer',
+        quiz: 'Répondez correctement pour gagner',
+        scratch: 'Grattez la surface pour découvrir votre lot',
+        jackpot: 'Alignez les symboles pour gagner',
+        dice: 'Obtenez un numéro gagnant',
+        memory: 'Trouvez toutes les paires dans le temps imparti',
+        puzzle: 'Remettez les pièces dans le bon ordre',
+        form: 'Complétez tous les champs requis'
+      };
+
       return (
         <div className="px-6 pb-8 flex flex-col justify-center items-center min-h-fit">
           <div className="text-center text-gray-600 mb-8">
-            <p className="text-lg font-medium">Faites tourner la roue !</p>
-            <p className="text-sm mt-2">Cliquez sur le bouton au centre pour jouer</p>
+            <p className="text-lg font-medium">{gameNames[config.gameType] || 'Jouez !'}</p>
+            <p className="text-sm mt-2">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
           
           <div className="flex flex-col items-center justify-center w-full space-y-6">
-            <WheelContainer 
-              device={device} 
-              config={config} 
-              isMode1={true} 
-              isVisible={true} 
-              onResult={onWheelResult} 
+            <GameRenderer 
+              gameType={config.gameType}
+              config={config}
+              device={device}
+              onResult={onWheelResult}
             />
           </div>
         </div>
