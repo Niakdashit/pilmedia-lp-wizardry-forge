@@ -15,6 +15,13 @@ const getButtonAbsoluteStyle = (mobileConfig: any) => {
   
   // Fonction pour déterminer la position optimale du bouton
   const getOptimalButtonPosition = () => {
+    console.log('🔍 REPOSITIONNEMENT DEBUG:', {
+      gameVerticalOffset,
+      gameHorizontalOffset, 
+      gamePosition,
+      buttonPlacement
+    });
+    
     // Priorité 1: Position verticale - Si la roue dépasse 5% vers le bas
     if (gameVerticalOffset > 5) {
       return 'top';
