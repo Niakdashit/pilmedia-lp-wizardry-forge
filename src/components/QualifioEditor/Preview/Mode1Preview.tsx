@@ -71,17 +71,15 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         </BackgroundContainer>
       </div>
 
-      {/* Content zone - s'adapte automatiquement au contenu */}
-      <div className="bg-white" style={{ marginTop: 0, paddingTop: 0 }}>
-        <ContentArea 
-          config={config} 
-          isMode1={true}
-          device={device}
-          wheelResult={wheelResult}
-          onWheelResultClose={handleWheelResultClose}
-          onWheelResult={handleWheelResult}
-        />
-      </div>
+      {/* Content zone - connecté directement à la bannière */}
+      <ContentArea 
+        config={config} 
+        isMode1={true}
+        device={device}
+        wheelResult={wheelResult}
+        onWheelResultClose={handleWheelResultClose}
+        onWheelResult={handleWheelResult}
+      />
       
       {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (
