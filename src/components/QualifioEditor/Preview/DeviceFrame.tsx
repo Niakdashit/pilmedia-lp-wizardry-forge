@@ -39,7 +39,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
-          overflow: 'auto'
+          overflow: 'hidden'
         };
     }
   };
