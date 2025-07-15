@@ -81,12 +81,12 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         form: 'Complétez tous les champs requis'
       };
       return <div className="content-area-game">
-          <div className="game-instructions">
-            <p className="game-title">{gameNames[config.gameType] || 'Jouez !'}</p>
-            <p className="game-subtitle">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
+          <div className="game-instructions mb-4">
+            <p className="game-title text-lg font-bold text-center mb-1">{gameNames[config.gameType] || 'Jouez !'}</p>
+            <p className="game-subtitle text-sm text-center text-gray-600">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
           
-          <div className="game-wrapper">
+          <div className="game-wrapper flex justify-center">
             <GameRenderer gameType={config.gameType} config={config} device={device} onResult={onWheelResult} />
           </div>
         </div>;
