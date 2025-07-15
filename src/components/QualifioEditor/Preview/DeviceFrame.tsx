@@ -53,12 +53,11 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   };
   return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
-        {/* Pour mobile et tablet, on ajoute le scroll à l'intérieur avec scrollbar masquée */}
+        {/* Pour mobile et tablet, contenu fixe sans scroll */}
         {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
         width: '100%',
         height: '100%',
-        overflow: 'auto',
-        // Permet le scroll du contenu
+        overflow: 'hidden',
         position: 'relative'
       }}>
             {children}
