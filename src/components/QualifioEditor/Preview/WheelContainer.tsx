@@ -57,7 +57,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const gamePosition = config.deviceConfig?.[device]?.gamePosition;
 
   return (
-    <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
+    <div className="w-full h-full overflow-hidden" style={{ minHeight: 'fit-content' }}>
       <SmartWheel 
         segments={wheelSegments}
         size={getWheelSize() * (isMode1 ? 0.8 : 1)}
