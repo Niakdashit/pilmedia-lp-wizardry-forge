@@ -68,20 +68,20 @@ const DicePreview: React.FC<DicePreviewProps> = ({ config = {} }) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 text-center">
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Jeu de Dés</h3>
-        <div className="text-sm text-gray-600">
+    <div className="dice-preview-container">
+      <div className="dice-header">
+        <h3 className="dice-title">Jeu de Dés</h3>
+        <div className="dice-info">
           <p>Combinaisons gagnantes: {winningCombinations.join(', ')}</p>
           <p>Lancers: {rollCount}</p>
         </div>
       </div>
 
-      <div className="flex justify-center space-x-4 mb-6">
+      <div className="dice-grid">
         {diceValues.slice(0, numberOfDice).map((value, index) => (
           <motion.div
             key={index}
-            className="relative"
+            className="dice-wrapper"
             animate={isRolling ? { rotate: 360 } : { rotate: 0 }}
             transition={{ 
               duration: isRolling ? 0.1 : 0.5,
@@ -93,7 +93,7 @@ const DicePreview: React.FC<DicePreviewProps> = ({ config = {} }) => {
               width="80"
               height="80"
               viewBox="0 0 100 100"
-              className="drop-shadow-lg"
+              className="dice-svg"
             >
               <rect
                 x="5"
@@ -101,8 +101,8 @@ const DicePreview: React.FC<DicePreviewProps> = ({ config = {} }) => {
                 width="90"
                 height="90"
                 rx="15"
-                fill="#841b60"
-                stroke="#6d1650"
+                fill="hsl(var(--brand-primary))"
+                stroke="hsl(var(--brand-primary) / 0.8)"
                 strokeWidth="2"
               />
               {getDiceFace(value)}
@@ -111,8 +111,8 @@ const DicePreview: React.FC<DicePreviewProps> = ({ config = {} }) => {
         ))}
       </div>
 
-      <div className="mb-4">
-        <div className="text-lg font-semibold text-gray-700 mb-2">
+      <div className="dice-results">
+        <div className="dice-total">
           Total: {diceValues.slice(0, numberOfDice).reduce((a, b) => a + b, 0)}
         </div>
         
@@ -120,16 +120,12 @@ const DicePreview: React.FC<DicePreviewProps> = ({ config = {} }) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`p-3 rounded-lg ${
-              result === 'win' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}
+            className={`dice-result ${result === 'win' ? 'dice-result-win' : 'dice-result-lose'}`}
           >
-            <div className="text-2xl mb-1">
+            <div className="dice-result-icon">
               {result === 'win' ? '🎉' : '😔'}
             </div>
-            <p className="font-bold">
+            <p className="dice-result-text">
               {result === 'win' 
                 ? config?.winMessage || 'Vous avez gagné !' 
                 : config?.loseMessage || 'Dommage, réessayez !'}
@@ -141,11 +137,7 @@ const DicePreview: React.FC<DicePreviewProps> = ({ config = {} }) => {
       <button
         onClick={rollDice}
         disabled={isRolling}
-        className={`px-6 py-3 rounded-lg font-bold text-white transition-all ${
-          isRolling
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-[#841b60] hover:bg-[#6d1650] transform hover:scale-105'
-        }`}
+        className={`dice-button ${isRolling ? 'dice-button-disabled' : ''}`}
       >
         {isRolling ? 'Lancement...' : 'Lancer les dés'}
       </button>

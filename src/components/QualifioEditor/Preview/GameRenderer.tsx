@@ -29,6 +29,25 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
   // Calculer les styles de transformation
   const getGameContainerStyle = (): React.CSSProperties => {
+    // Tailles responsives standardisées
+    const getMinHeight = () => {
+      switch (device) {
+        case 'mobile': return '300px';
+        case 'tablet': return '350px';
+        case 'desktop': return '400px';
+        default: return '400px';
+      }
+    };
+    
+    const getPadding = () => {
+      switch (device) {
+        case 'mobile': return '16px';
+        case 'tablet': return '24px';
+        case 'desktop': return '32px';
+        default: return '24px';
+      }
+    };
+
     return {
       transform: `translate(${gamePosition.x}%, ${gamePosition.y}%) scale(${gamePosition.scale})`,
       transformOrigin: 'center center',
@@ -37,9 +56,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       alignItems: 'center',
       width: '100%',
       height: '100%',
-      minHeight: '400px',
-      // Hauteur minimum pour assurer une bonne visibilité
-      transition: 'transform 0.3s ease-in-out'
+      minHeight: getMinHeight(),
+      padding: getPadding(),
+      boxSizing: 'border-box',
+      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
     };
   };
   const renderGameComponent = () => {
@@ -172,7 +192,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>;
     }
   };
-  return <div style={getGameContainerStyle()} className="py-[3px] my-[4px]">
+  return <div style={getGameContainerStyle()} className="game-container">
       {renderGameComponent()}
     </div>;
 };
