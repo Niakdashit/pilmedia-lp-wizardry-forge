@@ -32,9 +32,11 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
     // Handle container click if needed
   };
 
+  const isMode2 = config.displayMode === 'mode2-background';
+
   return (
-    <DeviceFrame device={device}>
-      {config.displayMode === 'mode2-background' ? (
+    <DeviceFrame device={device} isMode2={isMode2}>
+      {isMode2 ? (
         <Mode2Preview
           device={device}
           config={config}

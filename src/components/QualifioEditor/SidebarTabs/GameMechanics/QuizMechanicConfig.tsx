@@ -64,14 +64,14 @@ const QuizMechanicConfig: React.FC<QuizMechanicConfigProps> = ({ config, onConfi
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Paramètres du quiz</h4>
         
         <div className="form-group-premium">
-          <label>Score minimum pour gagner (%)</label>
+          <label>Score minimum pour gagner (%): {config.quizPassingScore || 70}%</label>
           <input
-            type="number"
+            type="range"
             value={config.quizPassingScore || 70}
             onChange={(e) => onConfigUpdate({ quizPassingScore: parseInt(e.target.value) || 70 })}
             min="0"
             max="100"
-            className="w-full"
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
           />
         </div>
       </div>

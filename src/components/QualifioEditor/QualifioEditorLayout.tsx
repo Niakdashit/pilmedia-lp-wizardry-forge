@@ -214,7 +214,7 @@ const QualifioEditorLayout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex">
+      <div className="flex min-h-screen">
         {/* Sidebar */}
         <QualifioSidebar 
           config={config}

@@ -3,10 +3,12 @@ import type { DeviceType } from '../QualifioEditorLayout';
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
+  isMode2?: boolean;
 }
 const DeviceFrame: React.FC<DeviceFrameProps> = ({
   device,
-  children
+  children,
+  isMode2 = false
 }) => {
   const getDeviceStyles = () => {
     switch (device) {
@@ -32,13 +34,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       default:
         return {
           width: '1020px',
-          // 1200px réduit de 15%
           minHeight: '680px',
-          // 800px réduit de 15%
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative' as const,
+          left: '50%',
+          transform: 'translateX(-50%)'
         };
     }
   };
@@ -51,11 +54,11 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   };
   return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
-        {/* Pour mobile et tablet, contenu fixe sans scroll */}
+        {/* Mode 1: scroll autorisé si nécessaire, Mode 2: pas de scroll */}
         {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
         width: '100%',
         height: '100%',
-        overflow: 'hidden',
+        overflow: isMode2 ? 'hidden' : 'auto', // Mode 2: pas de scroll, Mode 1: scroll autorisé
         position: 'relative'
       }}>
             {children}
