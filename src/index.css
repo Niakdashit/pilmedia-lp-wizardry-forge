@@ -203,19 +203,19 @@ html, body {
   }
 
   .game-instructions {
-    @apply text-center text-gray-600 mb-8;
+    @apply text-center text-gray-600 mb-4;
   }
 
   .game-title {
-    @apply text-lg font-medium;
+    @apply text-lg font-medium mb-1;
   }
 
   .game-subtitle {
-    @apply text-sm mt-2;
+    @apply text-sm;
   }
 
   .game-wrapper {
-    @apply flex flex-col items-center justify-center w-full;
+    @apply flex flex-col items-center justify-center w-full min-h-[350px] py-2;
   }
 
   /* Styles uniformes pour les previews de jeux */
