@@ -72,7 +72,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       </div>
 
       {/* Content zone - s'adapte automatiquement au contenu */}
-      <div className="bg-white">
+      <div className="bg-white" style={{ marginTop: 0, paddingTop: 0 }}>
         <ContentArea 
           config={config} 
           isMode1={true}
