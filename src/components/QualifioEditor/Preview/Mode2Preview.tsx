@@ -3,7 +3,7 @@ import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayo
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
 import RulesButton from './RulesButton';
-import WheelContainer from './WheelContainer';
+import GameRenderer from './GameRenderer';
 import EditableText from '../EditableText';
 
 interface Mode2PreviewProps {
@@ -29,7 +29,11 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
     >
       <SocialButtons />
       <RulesButton />
-      <WheelContainer device={device} config={config} />
+      <GameRenderer 
+        gameType={config.gameType} 
+        config={config} 
+        device={device} 
+      />
       
       {/* Custom editable texts */}
       {config.customTexts?.map((text) => (
