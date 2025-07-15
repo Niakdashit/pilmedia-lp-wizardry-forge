@@ -47,7 +47,6 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     }
   };
   const containerStyles = {
-    backgroundColor: 'hsl(210, 20%, 98%)',
     minHeight: '100vh',
     display: 'flex',
     alignItems: 'flex-start',
