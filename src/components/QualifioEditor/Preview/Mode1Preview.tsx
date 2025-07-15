@@ -58,6 +58,12 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       }}
       onClick={onContainerClick}
     >
+      {/* Bande blanche pour les boutons sociaux et règlement */}
+      <div className="w-full bg-white py-2 px-4 flex justify-between items-center border-b border-gray-100">
+        <SocialButtons />
+        <RulesButton />
+      </div>
+
       {/* Header avec image de fond - hauteur responsive */}
       <div style={{ height: getHeaderHeight() }}>
         <BackgroundContainer
@@ -66,8 +72,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           className="w-full h-full"
           isMode1={true}
         >
-          <SocialButtons />
-          <RulesButton />
+          {null}
         </BackgroundContainer>
       </div>
 
