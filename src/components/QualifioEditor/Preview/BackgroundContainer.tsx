@@ -42,22 +42,22 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   }, [isMode1, device, config.deviceConfig]);
 
   const getContentDimensions = () => {
-    // Pour Mode 1 en desktop, utiliser le ratio exact de l'image pour éviter les espaces blancs
-    if (isMode1 && device === 'desktop' && imageAspectRatio) {
-      // Utiliser la largeur du viewport et calculer la hauteur proportionnelle
-      return {
-        width: '100%',
-        height: `${100 / imageAspectRatio}vw`,
-        maxHeight: '70vh' // Limiter la hauteur pour éviter les bannières trop hautes
-      };
-    }
-    
-    // Pour Mode 2, s'assurer que le conteneur remplit complètement l'espace disponible
+    // Pour Mode 2, TOUJOURS remplir complètement l'espace disponible
     if (!isMode1) {
       return {
         width: '100%',
         height: '100%',
-        minHeight: '100%'
+        minHeight: '100vh',
+        minWidth: '100%'
+      };
+    }
+    
+    // Pour Mode 1 en desktop, utiliser le ratio exact de l'image pour éviter les espaces blancs
+    if (device === 'desktop' && imageAspectRatio) {
+      return {
+        width: '100%',
+        height: `${100 / imageAspectRatio}vw`,
+        maxHeight: '70vh'
       };
     }
     
