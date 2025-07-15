@@ -22,9 +22,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       case 'tablet':
         return {
           width: '653px',
-          // 768px réduit de 15%
           height: '870px',
-          // 1024px réduit de 15%
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',

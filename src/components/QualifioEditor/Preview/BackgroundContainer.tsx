@@ -46,8 +46,8 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     if (!isMode1) {
       return {
         width: '100%',
-        height: '100vh',
-        minHeight: '100vh',
+        height: '100%',
+        minHeight: '100%',
         minWidth: '100%'
       };
     }
