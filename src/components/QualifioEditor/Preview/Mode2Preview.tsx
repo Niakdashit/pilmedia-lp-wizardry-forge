@@ -28,11 +28,11 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
       onClick={onContainerClick}
       className="overflow-hidden"
     >
-      {/* Boutons positionnés en haut de la zone d'aperçu */}
-      <div className="absolute top-4 left-4 z-10">
+      {/* Boutons positionnés en haut de la zone d'aperçu, en dessous de la barre de statut */}
+      <div className="absolute top-12 left-4 z-10">
         <SocialButtons />
       </div>
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-12 right-4 z-10">
         <RulesButton />
       </div>
       
