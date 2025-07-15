@@ -81,7 +81,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         form: 'Complétez tous les champs requis'
       };
       return <div className="px-6 pb-8 flex flex-col justify-center items-center min-h-fit">
-          <div className="text-center text-gray-600 mb-8">
+          <div className="text-center text-gray-600 mb-8 my-0 py-[15px]">
             <p className="text-lg font-medium">{gameNames[config.gameType] || 'Jouez !'}</p>
             <p className="text-sm mt-2">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
