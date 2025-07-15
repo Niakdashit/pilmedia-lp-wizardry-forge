@@ -98,6 +98,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   };
 
   const finalButtonPosition = getOptimalButtonPosition();
+  console.log('🔵 Position finale du bouton:', finalButtonPosition);
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {
