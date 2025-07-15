@@ -75,7 +75,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   };
 
   return (
-    <div className="wheel-preview-container">
+    <div className="flex justify-center items-center w-full h-full">
       <SmartWheel
         segments={smartWheelSegments}
         theme="modern"

@@ -81,13 +81,13 @@ const FormPreview: React.FC<FormPreviewProps> = ({
   }
 
   return (
-    <div className={`form-preview-container ${className}`}>
+    <div className={`flex items-center justify-center ${className}`}>
       <div style={containerStyle}>
-        <div className="form-preview-header">
-          <h2 className="form-preview-title">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
             {campaign.screens?.[1]?.title || 'Vos informations'}
           </h2>
-          <p className="form-preview-description">
+          <p className="text-gray-600 text-sm">
             {campaign.screens?.[1]?.description || 'Remplissez le formulaire ci-dessous'}
           </p>
         </div>

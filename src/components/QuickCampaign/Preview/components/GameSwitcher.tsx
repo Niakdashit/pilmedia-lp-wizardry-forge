@@ -61,25 +61,6 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
     40
   );
 
-  // Fonctions pour une responsivité cohérente
-  const getPadding = () => {
-    switch (previewDevice) {
-      case 'mobile': return '16px';
-      case 'tablet': return '24px';
-      case 'desktop': return '32px';
-      default: return '24px';
-    }
-  };
-
-  const getMinHeight = () => {
-    switch (previewDevice) {
-      case 'mobile': return '300px';
-      case 'tablet': return '350px';
-      case 'desktop': return '400px';
-      default: return '400px';
-    }
-  };
-
   const baseContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -89,10 +70,9 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
     height: '100%',
     maxWidth: `${gameConstraints.width}px`,
     maxHeight: `${gameConstraints.height}px`,
-    padding: getPadding(),
+    padding: '20px',
     boxSizing: 'border-box',
     position: 'relative',
-    minHeight: getMinHeight()
   };
 
   const gameContentStyle: React.CSSProperties = {
@@ -101,8 +81,8 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
     justifyContent: 'center',
     width: '100%',
     height: '100%',
-    maxWidth: `${gameConstraints.width - (parseInt(getPadding()) * 2)}px`,
-    maxHeight: `${gameConstraints.height - (parseInt(getPadding()) * 2)}px`,
+    maxWidth: `${gameConstraints.width - 40}px`,
+    maxHeight: `${gameConstraints.height - 40}px`,
     overflow: 'hidden',
   };
 
