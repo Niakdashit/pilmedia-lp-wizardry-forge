@@ -34,7 +34,8 @@ export interface EditorConfig {
   height: number;
   anchor: 'fixed' | 'center';
   
-  // Game modes
+  // Game type and modes
+  gameType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
   gameMode: 'mode1-sequential' | 'mode2-background';
   displayMode: 'mode1-banner-game' | 'mode2-background';
   
@@ -90,6 +91,37 @@ export interface EditorConfig {
     options?: string[];
     placeholder?: string;
   }>;
+
+  // Game-specific configurations
+  wheelSegments?: any[];
+  quizQuestions?: any[];
+  quizPassingScore?: number;
+  scratchCards?: any[];
+  scratchSurfaceColor?: string;
+  scratchPercentage?: number;
+  jackpotSymbols?: string[];
+  jackpotWinningCombination?: string[];
+  jackpotBackgroundColor?: string;
+  jackpotBorderColor?: string;
+  jackpotBorderWidth?: number;
+  diceSides?: number;
+  diceWinningNumbers?: number[];
+  diceColor?: string;
+  diceDotColor?: string;
+  memoryPairs?: any[];
+  memoryGridSize?: string;
+  memoryTimeLimit?: number;
+  memoryCardBackColor?: string;
+  puzzleImage?: string;
+  puzzlePieces?: number;
+  puzzleTimeLimit?: number;
+  puzzleShowPreview?: boolean;
+  puzzleAutoShuffle?: boolean;
+  puzzleDifficulty?: string;
+  puzzleBackgroundColor?: string;
+  formTitle?: string;
+  formSuccessMessage?: string;
+  formShowProgress?: boolean;
 }
 
 const QualifioEditorLayout: React.FC = () => {
@@ -98,6 +130,7 @@ const QualifioEditorLayout: React.FC = () => {
     width: 810,
     height: 1200,
     anchor: 'fixed',
+    gameType: 'wheel',
     gameMode: 'mode1-sequential',
     displayMode: 'mode1-banner-game',
     storyText: `Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser.`,

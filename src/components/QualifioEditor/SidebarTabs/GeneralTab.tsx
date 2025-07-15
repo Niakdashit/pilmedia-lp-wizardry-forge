@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText } from 'lucide-react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
@@ -9,9 +9,39 @@ interface GeneralTabProps {
 }
 
 const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
+  const gameTypes = [
+    { value: 'wheel', label: 'Roue de la fortune', icon: Target },
+    { value: 'quiz', label: 'Quiz', icon: HelpCircle },
+    { value: 'scratch', label: 'Carte à gratter', icon: Cookie },
+    { value: 'jackpot', label: 'Machine à sous', icon: Target },
+    { value: 'dice', label: 'Dés', icon: Dice6 },
+    { value: 'memory', label: 'Memory', icon: Brain },
+    { value: 'puzzle', label: 'Puzzle', icon: Puzzle },
+    { value: 'form', label: 'Formulaire', icon: FileText },
+  ];
+
   return (
     <div className="space-y-6">
       <h3 className="section-title">Configuration générale</h3>
+      
+      {/* Game Type Selection */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Mécanique de jeu</h4>
+        
+        <div className="form-group-premium">
+          <label>Type de jeu</label>
+          <select
+            value={config.gameType}
+            onChange={(e) => onConfigUpdate({ gameType: e.target.value as EditorConfig['gameType'] })}
+          >
+            {gameTypes.map((gameType) => (
+              <option key={gameType.value} value={gameType.value}>
+                {gameType.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
       
       {/* Game Configuration */}
       <div className="premium-card">
