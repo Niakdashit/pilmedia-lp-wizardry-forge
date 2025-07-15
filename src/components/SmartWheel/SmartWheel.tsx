@@ -71,20 +71,26 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     
     const { x, y } = gamePosition;
     
+    console.log('🎯 Position actuelle:', { x, y });
+    
     // Priorité 1: Position verticale - Si la roue dépasse 5% vers le bas
     if (y > 5) {
+      console.log('📍 Bouton repositionné en HAUT (Y > 5%)');
       return 'top';
     }
     
     // Priorité 2: Position horizontale extrême (±50%)
     if (x >= 50) {
+      console.log('📍 Bouton repositionné à GAUCHE (roue à droite, X >= 50%)');
       return 'left'; // Roue à droite, bouton à gauche
     }
     
     if (x <= -50) {
+      console.log('📍 Bouton repositionné à DROITE (roue à gauche, X <= -50%)');
       return 'right'; // Roue à gauche, bouton à droite
     }
     
+    console.log('📍 Bouton en position par défaut: BOTTOM');
     // Position par défaut
     return 'bottom';
   };
