@@ -12,10 +12,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     switch (device) {
       case 'mobile':
         return {
-          width: '405px',
-          // Optimisé pour 1080x1920 (ratio 9:16)
-          height: '720px',
-          // Taille suffisante pour afficher 1080x1920 sans scroll
+          width: '350px',
+          height: '622px',
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
