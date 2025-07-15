@@ -15,36 +15,47 @@ const getButtonAbsoluteStyle = (mobileConfig: any) => {
   
   // Fonction pour déterminer la position optimale du bouton
   const getOptimalButtonPosition = () => {
+    console.log('DEBUG: gameVerticalOffset:', gameVerticalOffset, 'gameHorizontalOffset:', gameHorizontalOffset, 'gamePosition:', gamePosition);
+    
     // Si la roue est déplacée vers le bas (plus de 5%), positionner le bouton en haut
     if (gameVerticalOffset > 5) {
+      console.log('DEBUG: Bouton repositionné en HAUT (roue vers le bas)');
       return 'top';
     }
     
     // Si la roue est déplacée vers le haut (moins de -5%), positionner le bouton en bas  
     if (gameVerticalOffset < -5) {
+      console.log('DEBUG: Bouton repositionné en BAS (roue vers le haut)');
       return 'bottom';
     }
     
     // Pour les positions horizontales extrêmes (±50%), positionner à l'opposé
     if (gameHorizontalOffset >= 50) {
+      console.log('DEBUG: Bouton repositionné à GAUCHE (roue vers la droite)');
       return 'left';
     }
     
     if (gameHorizontalOffset <= -50) {
+      console.log('DEBUG: Bouton repositionné à DROITE (roue vers la gauche)');
       return 'right';
     }
     
     // Position de base selon les positions prédéfinies de la roue
     switch (gamePosition) {
       case 'top':
+        console.log('DEBUG: Bouton repositionné en BAS (position roue: top)');
         return 'bottom';
       case 'bottom':
+        console.log('DEBUG: Bouton repositionné en HAUT (position roue: bottom)');
         return 'top';
       case 'left':
+        console.log('DEBUG: Bouton repositionné à DROITE (position roue: left)');
         return 'right';
       case 'right':
+        console.log('DEBUG: Bouton repositionné à GAUCHE (position roue: right)');
         return 'left';
       default:
+        console.log('DEBUG: Position par défaut maintenue:', buttonPlacement);
         return buttonPlacement;
     }
   };
