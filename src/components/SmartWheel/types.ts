@@ -54,6 +54,7 @@ export interface SmartWheelProps {
   maxSize?: number; // Limite la taille maximum de la roue
   buttonPosition?: 'top' | 'bottom' | 'left' | 'right'; // Position du bouton
   gamePosition?: { x: number; y: number; scale: number }; // Position du jeu pour auto-repositionnement
+  isMode1?: boolean; // Mode 1 (normal) ou Mode 2 (avec formulaire)
 }
 
 export interface WheelState {
