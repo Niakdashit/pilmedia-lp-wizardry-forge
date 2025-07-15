@@ -15,47 +15,32 @@ const getButtonAbsoluteStyle = (mobileConfig: any) => {
   
   // Fonction pour déterminer la position optimale du bouton
   const getOptimalButtonPosition = () => {
-    console.log('DEBUG: gameVerticalOffset:', gameVerticalOffset, 'gameHorizontalOffset:', gameHorizontalOffset, 'gamePosition:', gamePosition);
-    
-    // Si la roue est déplacée vers le bas (plus de 5%), positionner le bouton en haut
+    // Priorité 1: Position verticale - Si la roue dépasse 5% vers le bas
     if (gameVerticalOffset > 5) {
-      console.log('DEBUG: Bouton repositionné en HAUT (roue vers le bas)');
       return 'top';
     }
     
-    // Si la roue est déplacée vers le haut (moins de -5%), positionner le bouton en bas  
-    if (gameVerticalOffset < -5) {
-      console.log('DEBUG: Bouton repositionné en BAS (roue vers le haut)');
-      return 'bottom';
-    }
-    
-    // Pour les positions horizontales extrêmes (±50%), positionner à l'opposé
+    // Priorité 2: Position horizontale extrême (±50%)
     if (gameHorizontalOffset >= 50) {
-      console.log('DEBUG: Bouton repositionné à GAUCHE (roue vers la droite)');
-      return 'left';
+      return 'left'; // Roue à droite, bouton à gauche
     }
     
     if (gameHorizontalOffset <= -50) {
-      console.log('DEBUG: Bouton repositionné à DROITE (roue vers la gauche)');
-      return 'right';
+      return 'right'; // Roue à gauche, bouton à droite
     }
     
-    // Position de base selon les positions prédéfinies de la roue
+    // Priorité 3: Position de base selon la position prédéfinie de la roue
     switch (gamePosition) {
       case 'top':
-        console.log('DEBUG: Bouton repositionné en BAS (position roue: top)');
         return 'bottom';
       case 'bottom':
-        console.log('DEBUG: Bouton repositionné en HAUT (position roue: bottom)');
         return 'top';
       case 'left':
-        console.log('DEBUG: Bouton repositionné à DROITE (position roue: left)');
         return 'right';
       case 'right':
-        console.log('DEBUG: Bouton repositionné à GAUCHE (position roue: right)');
         return 'left';
       default:
-        console.log('DEBUG: Position par défaut maintenue:', buttonPlacement);
+        // Si aucune condition spéciale, garder la position configurée
         return buttonPlacement;
     }
   };
@@ -120,7 +105,7 @@ const getButtonAbsoluteStyle = (mobileConfig: any) => {
   }
 };
 
-const getButtonStyle = (mobileConfig: any) => {
+const getButtonStyle = (mobileConfig: any, isLateralPosition = false) => {
   const buttonSize = mobileConfig.buttonSize || 'medium';
   const buttonWidth = mobileConfig.buttonWidth || 80;
   
@@ -140,8 +125,10 @@ const getButtonStyle = (mobileConfig: any) => {
     boxShadow: mobileConfig.buttonShadow === 'none' ? 'none' :
               mobileConfig.buttonShadow === 'shadow-lg' ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' :
               '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    width: `${buttonWidth}%`,
-    maxWidth: '100%',
+    // Pour les positions latérales, utiliser une largeur fixe au lieu d'un pourcentage
+    width: isLateralPosition ? 'auto' : `${buttonWidth}%`,
+    maxWidth: isLateralPosition ? '120px' : '100%',
+    minWidth: isLateralPosition ? '80px' : '100px',
     whiteSpace: 'normal' as const,
     wordWrap: 'break-word' as const,
     lineHeight: 1.4,
@@ -150,18 +137,36 @@ const getButtonStyle = (mobileConfig: any) => {
     cursor: 'pointer',
     transition: 'all 0.2s ease-in-out',
     minHeight: '40px',
-    minWidth: '100px',
     wordBreak: 'break-word' as const,
     hyphens: 'auto' as const
   };
 };
 
 const MobileButton: React.FC<MobileButtonProps> = ({ mobileConfig, campaign }) => {
+  const gameVerticalOffset = mobileConfig.gameVerticalOffset || 0;
+  const gameHorizontalOffset = mobileConfig.gameHorizontalOffset || 0;
+  const gamePosition = mobileConfig.gamePosition || 'center';
+  
+  // Déterminer si c'est une position latérale
+  const isLateralPosition = () => {
+    // Vérifier les conditions de repositionnement horizontal
+    if (gameHorizontalOffset >= 50 || gameHorizontalOffset <= -50) {
+      return true;
+    }
+    
+    // Vérifier les positions prédéfinies latérales
+    if ((gamePosition === 'left' || gamePosition === 'right') && Math.abs(gameVerticalOffset) <= 5) {
+      return true;
+    }
+    
+    return false;
+  };
+  
   return (
     <div style={getButtonAbsoluteStyle(mobileConfig)}>
       <button
         className="transition-colors"
-        style={getButtonStyle(mobileConfig)}
+        style={getButtonStyle(mobileConfig, isLateralPosition())}
       >
         {mobileConfig.buttonText || campaign.gameConfig?.[campaign.type]?.buttonLabel || 'Lancer'}
       </button>
