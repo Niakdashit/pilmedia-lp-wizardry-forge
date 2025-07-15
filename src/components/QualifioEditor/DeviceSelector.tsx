@@ -23,15 +23,15 @@ const DeviceSelector: React.FC<DeviceSelectorProps> = ({
         <button
           key={type}
           onClick={() => onDeviceChange(type)}
-          className={`flex items-center gap-1 px-2 py-1.5 rounded-md transition-all text-xs ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
             selectedDevice === type
               ? 'bg-white text-primary shadow-sm'
               : 'text-gray-600 hover:text-gray-800'
           }`}
           title={label}
         >
-          <Icon className="w-3 h-3" />
-          <span className="font-medium">{label}</span>
+          <Icon className="w-4 h-4" />
+          <span className="text-sm font-medium">{label}</span>
         </button>
       ))}
     </div>
