@@ -17,7 +17,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflow: 'hidden'
+          overflowY: 'auto'
         };
       case 'tablet':
         return {
@@ -26,7 +26,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflow: 'hidden'
+          overflowY: 'auto'
         };
       case 'desktop':
       default:
@@ -55,7 +55,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
         width: '100%',
         height: '100%',
-        overflow: 'hidden',
+        overflowY: 'auto',
         position: 'relative'
       }}>
             {children}
