@@ -27,7 +27,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     scale: 1.0
   };
 
-  // Calculer les styles de transformation
+  // Calculer les styles de transformation (sans scale CSS)
   const getGameContainerStyle = (): React.CSSProperties => {
     // Tailles responsives standardisées
     const getMinHeight = () => {
@@ -49,7 +49,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     };
 
     return {
-      transform: `translate(${gamePosition.x}%, ${gamePosition.y}%) scale(${gamePosition.scale})`,
+      transform: `translate(${gamePosition.x}%, ${gamePosition.y}%)`,
       transformOrigin: 'center center',
       display: 'flex',
       justifyContent: 'center',
@@ -65,7 +65,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const renderGameComponent = () => {
     switch (gameType) {
       case 'wheel':
-        return <WheelContainer device={device} config={config} isMode1={true} isVisible={true} onResult={onResult} />;
+        return <WheelContainer device={device} config={config} isMode1={true} isVisible={true} onResult={onResult} scale={gamePosition.scale} />;
       case 'jackpot':
         return <Jackpot isPreview={true} buttonLabel="Lancer le Jackpot" buttonColor={config.participateButtonColor || '#ec4899'} backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} borderColor={config.jackpotBorderColor || '#ffd700'} borderWidth={config.jackpotBorderWidth || 4} slotBorderColor="#ffffff" slotBorderWidth={2} slotBackgroundColor="#ffffff" containerBackgroundColor="#1f2937" onStart={() => console.log('Jackpot started')} onFinish={result => {
           console.log('Jackpot finished:', result);

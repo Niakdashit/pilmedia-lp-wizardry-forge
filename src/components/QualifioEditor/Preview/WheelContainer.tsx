@@ -9,6 +9,7 @@ interface WheelContainerProps {
   isMode1?: boolean;
   isVisible?: boolean;
   onResult?: (segment: { id: string; label: string; color: string }) => void;
+  scale?: number;
 }
 
 const WheelContainer: React.FC<WheelContainerProps> = ({ 
@@ -16,7 +17,8 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   config, 
   isMode1 = false, 
   isVisible = true,
-  onResult 
+  onResult,
+  scale = 1.0
 }) => {
   const wheelSegments = [
     { id: '1', label: 'Prix 3', color: '#4ECDC4' },
@@ -31,15 +33,19 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   };
 
   const getWheelSize = () => {
-    switch (device) {
-      case 'mobile':
-        return 200;
-      case 'tablet':
-        return 280;
-      case 'desktop':
-      default:
-        return 320;
-    }
+    const baseSize = (() => {
+      switch (device) {
+        case 'mobile':
+          return 200;
+        case 'tablet':
+          return 280;
+        case 'desktop':
+        default:
+          return 320;
+      }
+    })();
+    // Appliquer l'échelle structurellement plutôt qu'en CSS
+    return Math.round(baseSize * scale);
   };
 
   // Pour Mode 1, on cache la roue si isVisible est false
