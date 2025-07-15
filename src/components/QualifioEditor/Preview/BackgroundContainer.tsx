@@ -73,7 +73,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     if (isMode1 && device === 'desktop') {
       return 'contain';
     }
-    // Pour Mode 2 ou mobile/tablet, toujours utiliser 'cover' pour remplir complètement
+    // Pour Mode 2, TOUJOURS utiliser 'cover' pour remplir complètement, quel que soit l'appareil
     return 'cover';
   };
 
