@@ -1,66 +1,45 @@
 import React from 'react';
 import type { DeviceType } from '../QualifioEditorLayout';
+import { DEVICE_CONSTRAINTS } from '../../QuickCampaign/Preview/utils/previewConstraints';
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
 }
-const DeviceFrame: React.FC<DeviceFrameProps> = ({
-  device,
-  children
-}) => {
-  const getDeviceStyles = () => {
+const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
+  const { maxWidth, maxHeight } = DEVICE_CONSTRAINTS[device];
+
+  const getFrameBorders = () => {
     switch (device) {
       case 'mobile':
-        return {
-          width: '350px',
-          height: '622px',
-          margin: '20px auto',
-          border: '8px solid #333',
-          borderRadius: '25px',
-          overflowY: 'auto'
-        };
+        return { border: '8px solid #333', borderRadius: '25px' };
       case 'tablet':
-        return {
-          width: '653px',
-          height: '870px',
-          margin: '20px auto',
-          border: '12px solid #333',
-          borderRadius: '20px',
-          overflowY: 'auto'
-        };
+        return { border: '12px solid #333', borderRadius: '20px' };
       case 'desktop':
       default:
-        return {
-          width: '1020px',
-          // 1200px réduit de 15%
-          minHeight: '680px',
-          // 800px réduit de 15%
-          margin: '20px auto',
-          border: '2px solid #ddd',
-          borderRadius: '8px',
-          overflow: 'hidden'
-        };
+        return { border: '2px solid #ddd', borderRadius: '8px' };
     }
   };
-  const containerStyles = {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px'
+
+  const frameStyles: React.CSSProperties = {
+    width: Math.min(maxWidth, window.innerWidth),
+    height: Math.min(maxHeight, window.innerHeight),
+    ...getFrameBorders(),
+    overflow: 'hidden'
   };
-  return <div style={containerStyles} className="py-0 my-0 rounded">
-      <div style={getDeviceStyles()}>
-        {/* Pour mobile et tablet, contenu fixe sans scroll */}
-        {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        position: 'relative'
-      }}>
-            {children}
-          </div> : children}
+
+  const innerStyles: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+    position: 'relative'
+  };
+
+  return (
+    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+      <div style={frameStyles}>
+        <div style={innerStyles}>{children}</div>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default DeviceFrame;
