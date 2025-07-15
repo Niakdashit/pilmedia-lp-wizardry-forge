@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
 import WheelResult from './WheelResult';
 import GameRenderer from './GameRenderer';
-
 interface ContentAreaProps {
   config: EditorConfig;
   isMode1?: boolean;
@@ -22,9 +20,7 @@ interface ContentAreaProps {
     color: string;
   }) => void;
 }
-
 type Mode1State = 'form' | 'wheel' | 'result' | 'initial';
-
 const ContentArea: React.FC<ContentAreaProps> = ({
   config,
   isMode1 = false,
@@ -35,11 +31,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   onWheelResult
 }) => {
   const [mode1State, setMode1State] = useState<Mode1State>('initial');
-
   const handleParticipateClick = () => {
     setMode1State('form');
   };
-
   const handleFormSubmit = (formData: Record<string, string>) => {
     console.log('Form submitted:', formData);
     // Pour les mécaniques basées sur des jeux, passer au jeu
@@ -50,7 +44,6 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       console.log('Form game completed');
     }
   };
-
   const handlePlayAgain = () => {
     setMode1State('initial');
     onHideWheel?.();
@@ -60,11 +53,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   // Pour Mode 1, gestion des différents états
   if (isMode1) {
     if (wheelResult) {
-      return (
-        <div className="px-6 pb-6 flex items-center justify-center min-h-fit">
+      return <div className="px-6 pb-6 flex items-center justify-center min-h-fit">
           <WheelResult result={wheelResult} onPlayAgain={handlePlayAgain} />
-        </div>
-      );
+        </div>;
     }
 
     // État jeu : affichage de la mécanique sélectionnée
@@ -79,7 +70,6 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         puzzle: 'Reconstituez le puzzle !',
         form: 'Remplissez le formulaire !'
       };
-
       const gameInstructions = {
         wheel: 'Cliquez sur le bouton au centre pour jouer',
         quiz: 'Répondez correctement pour gagner',
@@ -90,24 +80,16 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         puzzle: 'Remettez les pièces dans le bon ordre',
         form: 'Complétez tous les champs requis'
       };
-
-      return (
-        <div className="px-6 pb-8 flex flex-col justify-center items-center min-h-fit">
+      return <div className="px-6 pb-8 flex flex-col justify-center items-center min-h-fit">
           <div className="text-center text-gray-600 mb-8">
             <p className="text-lg font-medium">{gameNames[config.gameType] || 'Jouez !'}</p>
             <p className="text-sm mt-2">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
           
           <div className="flex flex-col items-center justify-center w-full space-y-6">
-            <GameRenderer 
-              gameType={config.gameType}
-              config={config}
-              device={device}
-              onResult={onWheelResult}
-            />
+            <GameRenderer gameType={config.gameType} config={config} device={device} onResult={onWheelResult} />
           </div>
-        </div>
-      );
+        </div>;
     }
 
     // État formulaire : affichage du formulaire avec assez d'espace
@@ -123,35 +105,29 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         type: 'email' as const,
         required: true
       }];
-
-      return (
-        <div className="px-6 pb-6 min-h-fit flex items-center justify-center">
+      return <div className="px-6 pb-6 min-h-fit flex items-center justify-center">
           <div className="w-full max-w-md">
             <h3 className="text-lg font-bold text-center mb-6 text-gray-800">
               Formulaire de participation
             </h3>
             
-            <DynamicContactForm 
-              fields={formFields} 
-              onSubmit={handleFormSubmit} 
-              submitLabel="Participer" 
-              textStyles={{
-                button: {
-                  backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)',
-                  color: 'white',
-                  borderRadius: '0.5rem',
-                  fontWeight: 'bold'
-                }
-              }} 
-            />
+            <DynamicContactForm fields={formFields} onSubmit={handleFormSubmit} submitLabel="Participer" textStyles={{
+            button: {
+              backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)',
+              color: 'white',
+              borderRadius: '0.5rem',
+              fontWeight: 'bold'
+            }
+          }} />
           </div>
-        </div>
-      );
+        </div>;
     }
 
     // État initial : affichage du contenu avec bouton participer
-    return (
-      <div className="px-6 pt-0 mt-0 min-h-fit" style={{ margin: 0, paddingTop: 0 }}>
+    return <div style={{
+      margin: 0,
+      paddingTop: 0
+    }} className="px-6 pt-0 mt-0 min-h-fit my-[21px]">
         <div className="w-full">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800 text-justify">
@@ -163,8 +139,8 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           {/* Publisher link */}
           <div className="text-center pt-2">
             <a href="#" className="font-semibold text-sm" style={{
-              color: 'hsl(0, 84%, 55%)'
-            }}>
+            color: 'hsl(0, 84%, 55%)'
+          }}>
               {config.publisherLink || "editions-flammarion.com"}
             </a>
           </div>
@@ -176,19 +152,14 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
           {/* Participate button */}
           <div className="text-center pt-6 pb-4">
-            <button 
-              onClick={handleParticipateClick} 
-              className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" 
-              style={{
-                backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)'
-              }}
-            >
+            <button onClick={handleParticipateClick} className="px-8 py-3 text-white font-bold text-lg rounded uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-300" style={{
+            backgroundColor: config.participateButtonColor || 'hsl(0, 84%, 55%)'
+          }}>
               {config.participateButtonText || "PARTICIPER !"}
             </button>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Affichage normal pour Mode 2
@@ -226,5 +197,4 @@ const ContentArea: React.FC<ContentAreaProps> = ({
       </div>
     </div>;
 };
-
 export default ContentArea;
