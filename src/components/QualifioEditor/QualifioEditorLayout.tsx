@@ -26,6 +26,11 @@ export interface CustomText {
 export interface DeviceConfig {
   fontSize: number;
   backgroundImage?: string;
+  gamePosition?: {
+    x: number; // Position horizontale (-100 à 100)
+    y: number; // Position verticale (-100 à 100)
+    scale: number; // Échelle (0.5 à 2.0)
+  };
 }
 
 export interface EditorConfig {
@@ -154,15 +159,18 @@ const QualifioEditorLayout: React.FC = () => {
     deviceConfig: {
       mobile: {
         fontSize: 14,
-        backgroundImage: undefined
+        backgroundImage: undefined,
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       },
       tablet: {
         fontSize: 16,
-        backgroundImage: undefined
+        backgroundImage: undefined,
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       },
       desktop: {
         fontSize: 18,
-        backgroundImage: undefined
+        backgroundImage: undefined,
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       }
     }
   });

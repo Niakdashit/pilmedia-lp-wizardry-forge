@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
 import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
+import GamePositionControls from '../Controls/GamePositionControls';
 interface GameZoneTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
@@ -203,6 +204,15 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
           <label htmlFor="fontSize">Taille de police ({devices.find(d => d.id === selectedDevice)?.label})</label>
           <input type="number" id="fontSize" value={currentDeviceConfig?.fontSize || 16} onChange={e => handleFontSizeChange(selectedDevice, parseInt(e.target.value))} min="8" max="72" className="w-full" />
         </div>
+      </div>
+
+      {/* Game Position Controls */}
+      <div className="premium-card">
+        <GamePositionControls
+          config={config}
+          selectedDevice={selectedDevice}
+          onConfigUpdate={onConfigUpdate}
+        />
       </div>
 
       {/* Existing controls */}
