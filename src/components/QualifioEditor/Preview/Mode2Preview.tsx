@@ -26,9 +26,16 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
       device={device}
       config={config}
       onClick={onContainerClick}
+      className="overflow-hidden"
     >
-      <SocialButtons />
-      <RulesButton />
+      {/* Boutons positionnés en haut de la zone d'aperçu */}
+      <div className="absolute top-4 left-4 z-10">
+        <SocialButtons />
+      </div>
+      <div className="absolute top-4 right-4 z-10">
+        <RulesButton />
+      </div>
+      
       <GameRenderer 
         gameType={config.gameType} 
         config={config} 
