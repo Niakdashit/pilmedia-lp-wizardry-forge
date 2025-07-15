@@ -79,15 +79,17 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
       return 'top';
     }
     
-    // Priorité 2: Position horizontale extrême (±50%)
-    if (x >= 50) {
-      console.log('📍 Bouton repositionné à GAUCHE (roue à droite, X >= 50%)');
-      return 'left'; // Roue à droite, bouton à gauche
+    // Priorité 2: Position horizontale 
+    // Si X > 0 : roue est à droite, bouton à gauche
+    if (x > 0) {
+      console.log('📍 Bouton repositionné à GAUCHE (roue à droite, X > 0)');
+      return 'left';
     }
     
-    if (x <= -50) {
-      console.log('📍 Bouton repositionné à DROITE (roue à gauche, X <= -50%)');
-      return 'right'; // Roue à gauche, bouton à droite
+    // Si X < 0 : roue est à gauche, bouton à droite  
+    if (x < 0) {
+      console.log('📍 Bouton repositionné à DROITE (roue à gauche, X < 0)');
+      return 'right';
     }
     
     console.log('📍 Bouton en position par défaut: BOTTOM');
