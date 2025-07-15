@@ -45,7 +45,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   const containerStyles = {
     minHeight: '100vh',
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
     padding: '20px'
   };
