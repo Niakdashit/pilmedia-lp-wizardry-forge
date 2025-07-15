@@ -1,6 +1,6 @@
-import React from 'react';
-import type { DeviceType } from '../QualifioEditorLayout';
-import { DEVICE_CONSTRAINTS } from '../../QuickCampaign/Preview/utils/previewConstraints';
+import React from "react";
+import type { DeviceType } from "../QualifioEditorLayout";
+import { DEVICE_CONSTRAINTS } from "../../QuickCampaign/Preview/utils/previewConstraints";
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
@@ -10,13 +10,13 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
 
   const getFrameBorders = () => {
     switch (device) {
-      case 'mobile':
-        return { border: '8px solid #333', borderRadius: '25px' };
-      case 'tablet':
-        return { border: '12px solid #333', borderRadius: '20px' };
-      case 'desktop':
+      case "mobile":
+        return { border: "8px solid #333", borderRadius: "25px" };
+      case "tablet":
+        return { border: "12px solid #333", borderRadius: "20px" };
+      case "desktop":
       default:
-        return { border: '2px solid #ddd', borderRadius: '8px' };
+        return { border: "2px solid #ddd", borderRadius: "8px" };
     }
   };
 
@@ -24,14 +24,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
     width: Math.min(maxWidth, window.innerWidth),
     height: Math.min(maxHeight, window.innerHeight),
     ...getFrameBorders(),
-    overflow: 'hidden'
+    overflow: "hidden",
   };
 
   const innerStyles: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    overflow: 'hidden',
-    position: 'relative'
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    position: "relative",
   };
 
   return (
