@@ -42,16 +42,13 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   }, [isMode1, device, config.deviceConfig]);
 
   const getContentDimensions = () => {
-    // Pour Mode 1 en desktop, utiliser une hauteur fixe basée sur l'image
+    // Pour Mode 1 en desktop, utiliser le ratio exact de l'image pour éviter les espaces blancs
     if (isMode1 && device === 'desktop' && imageAspectRatio) {
-      // Hauteur fixe de 400px maximum pour éviter les espaces variables
-      const maxHeight = 400;
-      const calculatedHeight = 100 / imageAspectRatio;
-      const finalHeight = Math.min(maxHeight, calculatedHeight);
-      
+      // Utiliser la largeur du viewport et calculer la hauteur proportionnelle
       return {
         width: '100%',
-        height: `${finalHeight}px`
+        height: `${100 / imageAspectRatio}vw`,
+        maxHeight: '70vh' // Limiter la hauteur pour éviter les bannières trop hautes
       };
     }
     
@@ -63,7 +60,11 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   };
 
   const getBackgroundSize = () => {
-    // Utiliser 'cover' pour tous les appareils pour éviter les espaces blancs
+    // Pour desktop en Mode 1, utiliser 'contain' pour afficher l'image entièrement
+    if (isMode1 && device === 'desktop') {
+      return 'contain';
+    }
+    // Pour mobile et tablet, garder 'cover'
     return 'cover';
   };
 
