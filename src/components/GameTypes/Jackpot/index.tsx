@@ -19,7 +19,6 @@ const Jackpot: React.FC<JackpotProps> = ({
   backgroundImage,
   backgroundColor = "#f3f4f6",
   borderStyle = "classic",
-  borderColor = "#ffd700",
   slotBorderColor = "#ffffff",
   slotBorderWidth = 2,
   slotBackgroundColor = "#ffffff",
@@ -201,7 +200,7 @@ const Jackpot: React.FC<JackpotProps> = ({
           onRoll={roll}
           buttonLabel={buttonLabel}
           buttonColor={buttonColor}
-          borderColor={borderColor}
+          borderStyle={borderStyle}
           disabled={disabled}
         />
       </div>
