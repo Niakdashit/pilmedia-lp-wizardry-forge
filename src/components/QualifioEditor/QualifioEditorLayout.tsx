@@ -107,6 +107,7 @@ export interface EditorConfig {
   jackpotSymbols?: string[];
   jackpotWinningCombination?: string[];
   jackpotBackgroundColor?: string;
+  jackpotBorderStyle?: string;
   jackpotBorderColor?: string;
   jackpotBorderWidth?: number;
   diceSides?: number;
@@ -148,6 +149,7 @@ const QualifioEditorLayout: React.FC = () => {
     backgroundColor: '#ffffff',
     outlineColor: '#ffffff',
     borderStyle: 'classic',
+    jackpotBorderStyle: 'classic',
     participateButtonText: 'PARTICIPER !',
     participateButtonColor: '#ff6b35',
     participateButtonTextColor: '#ffffff',

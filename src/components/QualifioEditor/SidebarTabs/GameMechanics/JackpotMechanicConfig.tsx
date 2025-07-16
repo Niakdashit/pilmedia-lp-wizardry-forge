@@ -1,4 +1,5 @@
 import React from 'react';
+import BorderStyleSelector from '../../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../../QualifioEditorLayout';
 
 interface JackpotMechanicConfigProps {
@@ -28,6 +29,17 @@ const JackpotMechanicConfig: React.FC<JackpotMechanicConfigProps> = ({ config, o
 
   return (
     <div className="space-y-6">
+      {/* Jackpot Border Style */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Style des bordures</h4>
+        <div className="p-4 rounded-xl bg-sidebar-bg">
+          <BorderStyleSelector
+            currentStyle={config.jackpotBorderStyle || 'classic'}
+            onStyleChange={(style) => onConfigUpdate({ jackpotBorderStyle: style })}
+          />
+        </div>
+      </div>
+
       {/* Jackpot Settings */}
       <div className="premium-card">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Paramètres du jackpot</h4>
@@ -48,35 +60,6 @@ const JackpotMechanicConfig: React.FC<JackpotMechanicConfigProps> = ({ config, o
                 placeholder="#1a1a2e"
               />
             </div>
-          </div>
-
-          <div className="form-group-premium">
-            <label>Couleur des bordures</label>
-            <div className="color-input-group">
-              <input
-                type="color"
-                value={config.jackpotBorderColor || '#ffd700'}
-                onChange={(e) => onConfigUpdate({ jackpotBorderColor: e.target.value })}
-              />
-              <input
-                type="text"
-                value={config.jackpotBorderColor || '#ffd700'}
-                onChange={(e) => onConfigUpdate({ jackpotBorderColor: e.target.value })}
-                placeholder="#ffd700"
-              />
-            </div>
-          </div>
-
-          <div className="form-group-premium">
-            <label>Épaisseur des bordures (px)</label>
-            <input
-              type="number"
-              value={config.jackpotBorderWidth || 3}
-              onChange={(e) => onConfigUpdate({ jackpotBorderWidth: parseInt(e.target.value) || 3 })}
-              min="1"
-              max="10"
-              className="w-full"
-            />
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ export interface JackpotProps {
   buttonColor?: string;
   backgroundImage?: string;
   backgroundColor?: string;
+  borderStyle?: string;
   borderColor?: string;
   borderWidth?: number;
   slotBorderColor?: string;

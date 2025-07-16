@@ -6,6 +6,7 @@ import JackpotControls from "./JackpotControls";
 import { JackpotProps, GameResult } from "./types";
 import { SYMBOLS, ROLL_INTERVAL_MS, ROLL_DURATION_MS } from "./constants";
 import { getSlotSize, getSlotGap } from "./utils";
+import { getBorderStyle } from "../../SmartWheel/utils/borderStyles";
 
 const Jackpot: React.FC<JackpotProps> = ({
   isPreview,
@@ -17,8 +18,8 @@ const Jackpot: React.FC<JackpotProps> = ({
   buttonColor = "#ec4899",
   backgroundImage,
   backgroundColor = "#f3f4f6",
+  borderStyle = "classic",
   borderColor = "#ffd700",
-  borderWidth = 4,
   slotBorderColor = "#ffffff",
   slotBorderWidth = 2,
   slotBackgroundColor = "#ffffff",
@@ -83,11 +84,54 @@ const Jackpot: React.FC<JackpotProps> = ({
   // Calculer la largeur nécessaire pour les 3 slots + gaps
   const slotsContainerWidth = (slotSize * 3) + (slotGap * 2);
 
-  // Style pour le conteneur des slots avec effets 3D - utilisant les couleurs reçues en props
+  // Obtenir le style de bordure sélectionné
+  const currentBorderStyle = getBorderStyle(borderStyle);
+
+  // Créer les styles CSS pour les effets de bordure
+  const getBorderStyles = () => {
+    const style = currentBorderStyle;
+    const baseStyles: React.CSSProperties = {
+      borderWidth: `${style.width}px`,
+      borderStyle: 'solid',
+    };
+
+    // Appliquer les couleurs selon le type
+    switch (style.type) {
+      case 'gradient':
+        baseStyles.borderImage = `linear-gradient(45deg, ${style.colors.join(', ')}) 1`;
+        break;
+      case 'metallic':
+      case 'luxury':
+        baseStyles.borderColor = style.colors[0];
+        baseStyles.background = `linear-gradient(135deg, ${style.colors.join(', ')})`;
+        break;
+      case 'neon':
+        baseStyles.borderColor = style.colors[0];
+        if (style.effects.glow) {
+          baseStyles.boxShadow = `0 0 20px ${style.colors[0]}60, 0 0 40px ${style.colors[0]}40, inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1)`;
+        }
+        break;
+      default:
+        baseStyles.borderColor = style.colors[0];
+    }
+
+    // Ajouter l'effet d'ombre si spécifié
+    if (style.effects.shadow && !style.effects.glow) {
+      baseStyles.boxShadow = `0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.1)`;
+    }
+
+    // Ajouter l'animation si spécifiée
+    if (style.effects.animated) {
+      baseStyles.animation = 'pulse 2s infinite';
+    }
+
+    return baseStyles;
+  };
+
+  // Style pour le conteneur des slots avec effets 3D - utilisant les styles de bordure
   const slotsContainerStyle: React.CSSProperties = {
-    width: slotsContainerWidth + (borderWidth * 2) + 24,
-    height: slotSize + (borderWidth * 2) + 24,
-    border: `${borderWidth}px solid ${borderColor}`,
+    width: slotsContainerWidth + (currentBorderStyle.width * 2) + 24,
+    height: slotSize + (currentBorderStyle.width * 2) + 24,
     borderRadius: '16px',
     backgroundColor: containerBackgroundColor,
     display: 'flex',
@@ -95,19 +139,7 @@ const Jackpot: React.FC<JackpotProps> = ({
     justifyContent: 'center',
     padding: '12px',
     position: 'relative',
-    // Effets 3D et ombres comme la roue
-    boxShadow: `
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      0 4px 16px rgba(0, 0, 0, 0.2),
-      inset 0 2px 4px rgba(255, 255, 255, 0.1),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.1)
-    `,
-    background: `
-      linear-gradient(145deg, 
-        ${containerBackgroundColor}, 
-        ${containerBackgroundColor}dd
-      )
-    `,
+    ...getBorderStyles(),
   };
 
   // Ajouter l'image de fond si disponible
