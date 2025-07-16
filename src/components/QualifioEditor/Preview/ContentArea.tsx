@@ -105,7 +105,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         type: 'email' as const,
         required: true
       }];
-      return <div className="content-area-form my-[45px] py-[16px]">
+      return <div className="content-area-form">
           <div className="form-container">
             <h3 className="form-title">
               Formulaire de participation
