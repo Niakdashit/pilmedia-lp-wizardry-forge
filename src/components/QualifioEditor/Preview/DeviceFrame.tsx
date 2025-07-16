@@ -32,9 +32,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       default:
         return {
           width: '1020px',
-          // 1200px réduit de 15%
-          minHeight: '680px',
-          // Hauteur minimum au lieu de fixe
+          height: '680px',
+          // Hauteur fixe pour que l'image de fond remplisse complètement
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
