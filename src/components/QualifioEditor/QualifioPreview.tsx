@@ -32,8 +32,10 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
     // Handle container click if needed
   };
 
+  const fitContentDesktop = config.displayMode === 'mode1-banner-game';
+
   return (
-    <DeviceFrame device={device}>
+    <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
       {config.displayMode === 'mode2-background' ? (
         <Mode2Preview
           device={device}

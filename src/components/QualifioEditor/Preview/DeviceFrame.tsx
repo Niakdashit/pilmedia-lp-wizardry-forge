@@ -3,10 +3,16 @@ import type { DeviceType } from '../QualifioEditorLayout';
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
+  /**
+   * When true, the desktop frame adapts its height to
+   * the content and disables internal scrolling.
+   */
+  fitContentDesktop?: boolean;
 }
 const DeviceFrame: React.FC<DeviceFrameProps> = ({
   device,
-  children
+  children,
+  fitContentDesktop = false
 }) => {
   const getDeviceStyles = (): React.CSSProperties => {
     switch (device) {
@@ -30,6 +36,15 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
       case 'desktop':
       default:
+        if (fitContentDesktop) {
+          return {
+            width: '1020px',
+            margin: '20px auto',
+            border: '2px solid #ddd',
+            borderRadius: '8px',
+            overflowY: 'visible' as const
+          };
+        }
         return {
           width: '1020px',
           height: '680px',
