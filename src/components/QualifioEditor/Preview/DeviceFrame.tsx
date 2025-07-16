@@ -48,7 +48,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     justifyContent: 'center',
     padding: '20px'
   };
-  return <div style={containerStyles} className="rounded py-0 my-[3px]">
+  return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
         {/* Pour mobile et tablet, contenu fixe sans scroll */}
         {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
