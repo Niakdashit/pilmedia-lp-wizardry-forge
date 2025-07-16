@@ -90,7 +90,7 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
       </div>
 
       {/* Contenu des onglets */}
-      <div className="flex-1 overflow-y-auto sidebar-content my-[3px] py-[153px]">
+      <div className="flex-1 overflow-y-auto sidebar-content my-0 py-0">
         {renderTabContent()}
       </div>
     </div>;
