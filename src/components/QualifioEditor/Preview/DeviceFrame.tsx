@@ -33,12 +33,12 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         return {
           width: '1020px',
           // 1200px réduit de 15%
-          height: '680px',
-          // 800px réduit de 15%
+          minHeight: '680px',
+          // Hauteur minimum au lieu de fixe
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
-          overflow: 'hidden' as const
+          overflowY: 'auto' as const
         };
     }
   };
