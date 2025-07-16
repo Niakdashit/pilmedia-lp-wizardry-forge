@@ -8,7 +8,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   device,
   children
 }) => {
-  const getDeviceStyles = () => {
+  const getDeviceStyles = (): React.CSSProperties => {
     switch (device) {
       case 'mobile':
         return {
@@ -17,7 +17,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflowY: 'auto'
+          overflowY: 'auto' as const
         };
       case 'tablet':
         return {
@@ -26,19 +26,19 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflowY: 'auto'
+          overflowY: 'auto' as const
         };
       case 'desktop':
       default:
         return {
           width: '1020px',
           // 1200px réduit de 15%
-          minHeight: '680px',
+          height: '680px',
           // 800px réduit de 15%
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
-          overflow: 'hidden'
+          overflow: 'hidden' as const
         };
     }
   };
