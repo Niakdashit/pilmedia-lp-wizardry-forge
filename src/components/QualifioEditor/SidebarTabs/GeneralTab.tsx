@@ -1,7 +1,8 @@
 import React from 'react';
-import { ImageIcon, Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText } from 'lucide-react';
+import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText, Upload } from 'lucide-react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../QualifioEditorLayout';
+import { generateBrandThemeFromFile } from '../../../utils/BrandStyleAnalyzer';
 
 interface GeneralTabProps {
   config: EditorConfig;
@@ -9,6 +10,31 @@ interface GeneralTabProps {
 }
 
 const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
+  const handleBannerUpload = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const imageUrl = e.target?.result as string;
+      
+      try {
+        // Extract colors from banner image
+        const brandTheme = await generateBrandThemeFromFile(file);
+        
+        onConfigUpdate({
+          bannerImage: imageUrl,
+          brandAssets: {
+            ...config.brandAssets,
+            primaryColor: brandTheme.customColors.primary,
+            secondaryColor: brandTheme.customColors.secondary,
+          }
+        });
+      } catch (error) {
+        console.error('Error extracting colors from banner image:', error);
+        // Fallback: just update the image without color extraction
+        onConfigUpdate({ bannerImage: imageUrl });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
   const gameTypes = [
     { value: 'wheel', label: 'Roue de la fortune', icon: Target },
     { value: 'quiz', label: 'Quiz', icon: HelpCircle },
@@ -114,14 +140,33 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Bannière</h4>
         
         <div className="space-y-4">
-          <div className="w-full h-40 bg-sidebar-surface rounded-xl flex items-center justify-center border-2 border-dashed border-sidebar-border overflow-hidden">
+          <div className="w-full h-40 bg-sidebar-surface rounded-xl flex items-center justify-center border-2 border-dashed border-sidebar-border overflow-hidden relative">
             {config.bannerImage ? (
-              <img src={config.bannerImage} alt="Banner" className="max-w-full max-h-full object-contain" />
+              <>
+                <img src={config.bannerImage} alt="Banner" className="max-w-full max-h-full object-contain" />
+                <button 
+                  onClick={() => onConfigUpdate({ bannerImage: undefined })}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
+              </>
             ) : (
-              <div className="text-center">
-                <ImageIcon className="w-8 h-8 text-sidebar-text mx-auto mb-2" />
+              <label className="cursor-pointer text-center w-full h-full flex flex-col items-center justify-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleBannerUpload(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <Upload className="w-8 h-8 text-sidebar-text mx-auto mb-2" />
                 <span className="text-sidebar-text text-sm">Cliquez pour ajouter une image</span>
-              </div>
+              </label>
             )}
           </div>
           

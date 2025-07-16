@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
 import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
 import GamePositionControls from '../Controls/GamePositionControls';
+import { generateBrandThemeFromFile } from '../../../utils/BrandStyleAnalyzer';
 interface GameZoneTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
@@ -33,7 +34,7 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
     inputRef.current?.click();
   };
 
-  const handleBackgroundImageUpload = (device: DeviceType, file: File) => {
+  const handleBackgroundImageUpload = async (device: DeviceType, file: File) => {
     console.log('handleBackgroundImageUpload called for:', device, 'with file:', file);
     
     if (!file || file.size === 0) {
@@ -55,24 +56,50 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
 
     console.log('Reading file for:', device, 'File size:', file.size);
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async (e) => {
       const imageUrl = e.target?.result as string;
       console.log(`Image loaded for ${device}:`, imageUrl?.substring(0, 50) + '...');
       
-      const newConfig = {
-        deviceConfig: {
-          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-          desktop: config.deviceConfig?.desktop || { fontSize: 18 },
-          [device]: {
-            ...config.deviceConfig?.[device],
-            backgroundImage: imageUrl
+      try {
+        // Extract colors from background image
+        const brandTheme = await generateBrandThemeFromFile(file);
+        
+        const newConfig = {
+          deviceConfig: {
+            mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+            tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+            desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+            [device]: {
+              ...config.deviceConfig?.[device],
+              backgroundImage: imageUrl
+            }
+          },
+          // Update brand assets with extracted colors
+          brandAssets: {
+            ...config.brandAssets,
+            primaryColor: brandTheme.customColors.primary,
+            secondaryColor: brandTheme.customColors.secondary,
           }
-        }
-      };
-      
-      console.log('Updating config for:', device, 'New config:', newConfig);
-      onConfigUpdate(newConfig);
+        };
+        
+        console.log('Updating config for:', device, 'New config:', newConfig);
+        onConfigUpdate(newConfig);
+      } catch (error) {
+        console.error('Error extracting colors from background image:', error);
+        // Fallback: just update the image without color extraction
+        const newConfig = {
+          deviceConfig: {
+            mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+            tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+            desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+            [device]: {
+              ...config.deviceConfig?.[device],
+              backgroundImage: imageUrl
+            }
+          }
+        };
+        onConfigUpdate(newConfig);
+      }
     };
     
     reader.onerror = (error) => {
