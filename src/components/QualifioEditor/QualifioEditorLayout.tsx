@@ -81,6 +81,14 @@ export interface EditorConfig {
   customJS?: string;
   trackingTags?: string;
   
+  // Brand assets
+  brandAssets?: {
+    logo?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
+  };
+  
   // Device-specific configurations
   deviceConfig?: {
     mobile: DeviceConfig;

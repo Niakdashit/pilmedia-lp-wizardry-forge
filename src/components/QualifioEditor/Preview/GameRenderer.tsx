@@ -64,14 +64,32 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     };
   };
   const renderGameComponent = () => {
+    // Récupérer les couleurs de la marque si disponibles
+    const brandColors = config.brandAssets || {};
+    const primaryColor = brandColors.primaryColor || config.participateButtonColor || '#841b60';
+    const secondaryColor = brandColors.secondaryColor || '#ffffff';
+
     switch (gameType) {
       case 'wheel':
         return <WheelContainer device={device} config={config} isMode1={false} isVisible={true} onResult={onResult} scale={gamePosition.scale} />;
       case 'jackpot':
-        return <Jackpot isPreview={true} buttonLabel="Lancer le Jackpot" buttonColor={config.participateButtonColor || '#ec4899'} backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} borderStyle={config.jackpotBorderStyle || 'classic'} slotBorderColor="#ffffff" slotBorderWidth={2} slotBackgroundColor="#ffffff" containerBackgroundColor="#1f2937" onStart={() => console.log('Jackpot started')} onFinish={result => {
-          console.log('Jackpot finished:', result);
-          onResult?.(result);
-        }} disabled={false} />;
+        return <Jackpot 
+          isPreview={true} 
+          buttonLabel="Lancer le Jackpot" 
+          buttonColor={primaryColor} 
+          backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} 
+          borderStyle={config.jackpotBorderStyle || 'classic'} 
+          slotBorderColor={secondaryColor} 
+          slotBorderWidth={2} 
+          slotBackgroundColor={secondaryColor} 
+          containerBackgroundColor="#1f2937" 
+          onStart={() => console.log('Jackpot started')} 
+          onFinish={result => {
+            console.log('Jackpot finished:', result);
+            onResult?.(result);
+          }} 
+          disabled={false} 
+        />;
       case 'scratch':
         return <ScratchPreview config={{
           cards: config.scratchCards?.map((card, index) => ({
@@ -91,14 +109,14 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         }} onFinish={result => {
           console.log('Scratch finished:', result);
           onResult?.(result);
-        }} onStart={() => console.log('Scratch started')} disabled={false} buttonLabel="Gratter" buttonColor={config.participateButtonColor || '#841b60'} gameSize="medium" autoStart={false} isModal={false} />;
+        }} onStart={() => console.log('Scratch started')} disabled={false} buttonLabel="Gratter" buttonColor={primaryColor} gameSize="medium" autoStart={false} isModal={false} />;
       case 'dice':
         return <DicePreview config={{
           diceCount: 2,
           winningConditions: config.diceWinningNumbers || [7, 11],
           winMessage: 'Vous avez gagné !',
           loseMessage: 'Dommage, réessayez !',
-          diceColor: config.diceColor || '#841b60'
+          diceColor: primaryColor
         }} />;
       case 'quiz':
         return <QuizPreview config={{
@@ -127,8 +145,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           }],
           passingScore: config.quizPassingScore || 70
         }} design={{
-          primaryColor: config.participateButtonColor || '#841b60',
-          backgroundColor: '#ffffff',
+          primaryColor: primaryColor,
+          backgroundColor: secondaryColor,
           titleColor: '#1f2937',
           textColor: '#374151'
         }} />;
@@ -149,7 +167,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           }],
           gridSize: config.memoryGridSize || '4x3',
           timeLimit: config.memoryTimeLimit || 60,
-          cardBackColor: config.memoryCardBackColor || '#3b82f6'
+          cardBackColor: primaryColor
         }} />;
       case 'puzzle':
         return <PuzzlePreview config={{
@@ -174,10 +192,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             required: true
           }],
           design: {
-            buttonColor: config.participateButtonColor || '#841b60',
-            buttonTextColor: '#ffffff',
+            buttonColor: primaryColor,
+            buttonTextColor: secondaryColor,
             borderColor: '#E5E7EB',
-            blockColor: '#ffffff',
+            blockColor: secondaryColor,
             borderRadius: '16px'
           }
         }} gameSize="medium" />;

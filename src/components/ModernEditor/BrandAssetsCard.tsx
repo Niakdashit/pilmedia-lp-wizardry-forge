@@ -1,6 +1,7 @@
 
-import React from 'react';
-import { Palette, Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { Palette, Upload, Sparkles } from 'lucide-react';
+import { generateBrandThemeFromFile } from '../../utils/BrandStyleAnalyzer';
 
 interface BrandAssetsCardProps {
   campaign: any;
@@ -8,10 +9,63 @@ interface BrandAssetsCardProps {
 }
 
 const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign }) => {
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  
   // Ensure brandAssets exists with default values
   const brandAssets = campaign.brandAssets || {
     primaryColor: '#841b60',
     secondaryColor: '#ffffff'
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    setIsExtracting(true);
+    
+    try {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setLogoPreview(previewUrl);
+      
+      // Extract brand theme from image
+      const brandTheme = await generateBrandThemeFromFile(file);
+      
+      // Update campaign with extracted colors and logo
+      setCampaign((prev: any) => ({
+        ...prev,
+        brandAssets: {
+          ...prev.brandAssets,
+          logo: previewUrl,
+          primaryColor: brandTheme.customColors.primary,
+          secondaryColor: brandTheme.customColors.secondary,
+          accentColor: brandTheme.customColors.accent
+        }
+      }));
+      
+      console.log('✅ Couleurs extraites:', brandTheme.customColors);
+    } catch (error) {
+      console.error('❌ Erreur extraction couleurs:', error);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleLogoUpload(file);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      handleLogoUpload(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   return (
@@ -23,11 +77,43 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
       
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#841b60] transition-colors cursor-pointer">
-            <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600">Glissez votre logo ici</p>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Logo {isExtracting && <span className="text-[#841b60]">(Extraction en cours...)</span>}
+          </label>
+          <div 
+            className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#841b60] transition-colors cursor-pointer relative overflow-hidden"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={() => document.getElementById('logo-input')?.click()}
+          >
+            {logoPreview ? (
+              <div className="relative">
+                <img 
+                  src={logoPreview} 
+                  alt="Logo preview" 
+                  className="max-h-20 mx-auto rounded-lg"
+                />
+                {isExtracting && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                    <Sparkles className="w-6 h-6 text-white animate-pulse" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600">Glissez votre logo ici</p>
+                <p className="text-xs text-gray-500 mt-1">Les couleurs seront automatiquement extraites</p>
+              </>
+            )}
           </div>
+          <input
+            id="logo-input"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
         
         <div className="grid grid-cols-2 gap-4">
