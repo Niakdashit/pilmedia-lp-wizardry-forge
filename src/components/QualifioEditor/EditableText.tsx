@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import type { CustomText } from './QualifioEditorLayout';
@@ -22,6 +23,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   const [editContent, setEditContent] = useState(text.content);
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,6 +78,52 @@ const EditableText: React.FC<EditableTextProps> = ({
     });
   };
 
+  const handleResize = (e: React.MouseEvent, direction: string) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = text.width || 200;
+    const startHeight = text.height || 50;
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+      
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      
+      if (direction.includes('right')) {
+        newWidth = Math.max(50, startWidth + deltaX);
+      }
+      if (direction.includes('left')) {
+        newWidth = Math.max(50, startWidth - deltaX);
+      }
+      if (direction.includes('bottom')) {
+        newHeight = Math.max(20, startHeight + deltaY);
+      }
+      if (direction.includes('top')) {
+        newHeight = Math.max(20, startHeight - deltaY);
+      }
+      
+      onUpdate({
+        ...text,
+        width: newWidth,
+        height: newHeight
+      });
+    };
+    
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   const handleToolbarUpdate = (updates: Partial<CustomText>) => {
     onUpdate({ ...text, ...updates });
   };
@@ -104,11 +152,13 @@ const EditableText: React.FC<EditableTextProps> = ({
     padding: '8px',
     border: isSelected && !isEditing ? '2px solid #3b82f6' : '2px solid transparent',
     borderRadius: '4px',
-    cursor: isEditing ? 'text' : 'move',
+    cursor: isEditing ? 'text' : (isResizing ? 'resize' : 'move'),
     display: 'inline-block',
     position: 'relative',
     boxShadow: isSelected && !isEditing ? '0 0 0 1px rgba(59, 130, 246, 0.3)' : 'none',
-    userSelect: isEditing ? 'text' : 'none'
+    userSelect: isEditing ? 'text' : 'none',
+    overflow: 'hidden',
+    wordWrap: 'break-word'
   };
 
   return (
@@ -116,7 +166,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       <Draggable
         position={{ x: text.x, y: text.y }}
         onDrag={handleDrag}
-        disabled={isEditing}
+        disabled={isEditing || isResizing}
         bounds="parent"
         defaultClassName="absolute"
       >
@@ -150,6 +200,47 @@ const EditableText: React.FC<EditableTextProps> = ({
             />
           ) : (
             <span style={{ whiteSpace: 'pre-wrap' }}>{text.content}</span>
+          )}
+          
+          {/* Poignées de redimensionnement */}
+          {isSelected && !isEditing && (
+            <>
+              {/* Coin supérieur gauche */}
+              <div
+                className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-full cursor-nw-resize"
+                onMouseDown={(e) => handleResize(e, 'top-left')}
+              />
+              
+              {/* Coin supérieur droit */}
+              <div
+                className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full cursor-ne-resize"
+                onMouseDown={(e) => handleResize(e, 'top-right')}
+              />
+              
+              {/* Coin inférieur gauche */}
+              <div
+                className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-500 rounded-full cursor-sw-resize"
+                onMouseDown={(e) => handleResize(e, 'bottom-left')}
+              />
+              
+              {/* Coin inférieur droit */}
+              <div
+                className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-500 rounded-full cursor-se-resize"
+                onMouseDown={(e) => handleResize(e, 'bottom-right')}
+              />
+              
+              {/* Poignée droite */}
+              <div
+                className="absolute top-1/2 -right-1 w-2 h-4 bg-blue-500 rounded-sm cursor-e-resize transform -translate-y-1/2"
+                onMouseDown={(e) => handleResize(e, 'right')}
+              />
+              
+              {/* Poignée bas */}
+              <div
+                className="absolute -bottom-1 left-1/2 w-4 h-2 bg-blue-500 rounded-sm cursor-s-resize transform -translate-x-1/2"
+                onMouseDown={(e) => handleResize(e, 'bottom')}
+              />
+            </>
           )}
         </div>
       </Draggable>
