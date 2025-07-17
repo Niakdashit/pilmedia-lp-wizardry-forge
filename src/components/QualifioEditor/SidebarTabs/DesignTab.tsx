@@ -14,7 +14,7 @@ const DesignTab: React.FC<DesignTabProps> = ({ config, onConfigUpdate }) => {
       const imageUrl = e.target?.result as string;
       const newImage = {
         id: Date.now().toString(),
-        url: imageUrl,
+        src: imageUrl, // Changé de 'url' à 'src' pour correspondre à EditableImage
         x: 50,
         y: 50,
         width: 150,
@@ -79,8 +79,8 @@ const DesignTab: React.FC<DesignTabProps> = ({ config, onConfigUpdate }) => {
                   <div key={image.id} className="relative group">
                     <div className="w-full aspect-square bg-sidebar-surface rounded-lg overflow-hidden border border-sidebar-border">
                       <img 
-                        src={image.url} 
-                        alt="Image personnalisée" 
+                        src={image.src} 
+                        alt="Image personnalisée"
                         className="w-full h-full object-cover"
                       />
                     </div>
