@@ -27,6 +27,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
     label: string;
     color: string;
   } | null>(null);
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
 
   const handleWheelResult = (result: { id: string; label: string; color: string }) => {
     console.log('Résultat de la roue:', result);
@@ -35,6 +36,11 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   const handleWheelResultClose = () => {
     setWheelResult(null);
+  };
+
+  const handleContainerClick = () => {
+    setSelectedTextId(null);
+    onContainerClick();
   };
 
   // Calcul des hauteurs selon l'appareil
@@ -52,11 +58,11 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   return (
     <div 
-      className="w-full flex flex-col"
+      className="w-full flex flex-col relative"
       style={{ 
         backgroundColor: '#ffffff'
       }}
-      onClick={onContainerClick}
+      onClick={handleContainerClick}
     >
       {/* Bande blanche pour les boutons sociaux et règlement */}
       <div className="w-full bg-white py-2 px-4 flex justify-between items-center border-b border-gray-100">
@@ -88,14 +94,21 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       
       {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (
-        <EditableText
+        <div
           key={text.id}
-          text={text}
-          onUpdate={onTextUpdate}
-          onDelete={onTextDelete}
-          isSelected={false}
-          onSelect={() => {}}
-        />
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 10 }}
+        >
+          <div className="relative w-full h-full pointer-events-auto">
+            <EditableText
+              text={text}
+              onUpdate={onTextUpdate}
+              onDelete={onTextDelete}
+              isSelected={selectedTextId === text.id}
+              onSelect={setSelectedTextId}
+            />
+          </div>
+        </div>
       ))}
     </div>
   );

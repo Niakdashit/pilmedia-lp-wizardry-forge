@@ -40,6 +40,17 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
 
   return (
     <div className="space-y-6">
+      {/* Ajouter du texte - Style Canva */}
+      <div className="premium-card">
+        <button
+          onClick={addCustomText}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md"
+        >
+          <Type className="w-5 h-5" />
+          Ajouter du texte
+        </button>
+      </div>
+
       {/* Textes par défaut */}
       <div className="premium-card">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Textes par défaut</h4>

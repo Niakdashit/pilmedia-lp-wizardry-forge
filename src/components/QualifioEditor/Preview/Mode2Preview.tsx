@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
@@ -21,12 +21,18 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   onTextDelete,
   onContainerClick 
 }) => {
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+
+  const handleContainerClick = () => {
+    setSelectedTextId(null);
+    onContainerClick();
+  };
   return (
     <BackgroundContainer
       device={device}
       config={config}
-      onClick={onContainerClick}
-      className="overflow-hidden"
+      onClick={handleContainerClick}
+      className="overflow-hidden relative"
     >
       {/* Boutons positionnés en haut de la zone d'aperçu, en dessous de la barre de statut */}
       <div className="absolute top-12 left-4 z-10">
@@ -42,16 +48,23 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         device={device} 
       />
       
-      {/* Custom editable texts */}
+      {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (
-        <EditableText
+        <div
           key={text.id}
-          text={text}
-          onUpdate={onTextUpdate}
-          onDelete={onTextDelete}
-          isSelected={false}
-          onSelect={() => {}}
-        />
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 20 }}
+        >
+          <div className="relative w-full h-full pointer-events-auto">
+            <EditableText
+              text={text}
+              onUpdate={onTextUpdate}
+              onDelete={onTextDelete}
+              isSelected={selectedTextId === text.id}
+              onSelect={setSelectedTextId}
+            />
+          </div>
+        </div>
       ))}
     </BackgroundContainer>
   );
