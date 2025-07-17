@@ -83,22 +83,59 @@ function applyMaskWithFeathering(
   outputCtx.putImageData(imageData, 0, 0);
 }
 
+// Fonction pour détecter la compatibilité WebGPU
+async function getOptimalDevice(): Promise<string> {
+  try {
+    // Vérifier si WebGPU est disponible
+    if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
+      const adapter = await (navigator as any).gpu?.requestAdapter();
+      if (adapter) {
+        console.log('WebGPU détecté et disponible');
+        return 'webgpu';
+      }
+    }
+  } catch (error) {
+    console.warn('WebGPU non disponible, utilisation du CPU:', error);
+  }
+  
+  console.log('Utilisation du CPU pour le traitement');
+  return 'cpu';
+}
+
 export const removeBackground = async (imageElement: HTMLImageElement): Promise<Blob> => {
   try {
     console.log('Démarrage de la suppression d\'arrière-plan...');
     
+    // Détecter le meilleur périphérique disponible
+    const device = await getOptimalDevice();
+    
     // Réutiliser le modèle en cache si disponible
     if (!segmenterCache) {
       console.log('Chargement du modèle de segmentation...');
-      segmenterCache = await pipeline(
-        'image-segmentation', 
-        'Xenova/segformer-b0-finetuned-ade-512-512',
-        {
-          device: 'webgpu',
-          dtype: 'fp16' // Utiliser une précision moindre pour de meilleures performances
-        }
-      );
-      console.log('Modèle chargé avec succès');
+      
+      const modelOptions: any = {
+        device: device,
+        dtype: device === 'webgpu' ? 'fp16' : 'fp32'
+      };
+      
+      try {
+        segmenterCache = await pipeline(
+          'image-segmentation', 
+          'Xenova/segformer-b0-finetuned-ade-512-512',
+          modelOptions
+        );
+        console.log(`Modèle chargé avec succès sur ${device}`);
+      } catch (modelError) {
+        console.warn('Erreur lors du chargement avec le premier modèle, tentative avec un modèle plus simple...');
+        
+        // Fallback vers un modèle plus simple
+        segmenterCache = await pipeline(
+          'image-segmentation', 
+          'Xenova/segformer-b0-finetuned-ade-512-512',
+          { device: 'cpu', dtype: 'fp32' }
+        );
+        console.log('Modèle de fallback chargé sur CPU');
+      }
     }
     
     // Préparer l'image
@@ -118,7 +155,7 @@ export const removeBackground = async (imageElement: HTMLImageElement): Promise<
     const result = await segmenterCache(imageData);
     
     if (!result || !Array.isArray(result) || result.length === 0 || !result[0].mask) {
-      throw new Error('Résultat de segmentation invalide');
+      throw new Error('Résultat de segmentation invalide - le modèle n\'a pas pu traiter l\'image');
     }
     
     console.log('Segmentation terminée, application du masque...');
@@ -199,7 +236,25 @@ export const removeBackground = async (imageElement: HTMLImageElement): Promise<
     });
   } catch (error) {
     console.error('Erreur lors de la suppression d\'arrière-plan:', error);
-    throw new Error(`Échec de la suppression d'arrière-plan: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    
+    // Messages d'erreur plus spécifiques
+    let errorMessage = 'Erreur inconnue';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('fetch')) {
+        errorMessage = 'Impossible de télécharger le modèle. Vérifiez votre connexion internet.';
+      } else if (error.message.includes('WebGL') || error.message.includes('WebGPU')) {
+        errorMessage = 'Votre navigateur ne supporte pas l\'accélération matérielle requise.';
+      } else if (error.message.includes('memory') || error.message.includes('OOM')) {
+        errorMessage = 'Image trop volumineuse. Essayez avec une image plus petite.';
+      } else if (error.message.includes('segmentation')) {
+        errorMessage = 'Le modèle n\'a pas pu analyser cette image. Essayez avec une autre image.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
+    throw new Error(`Échec de la suppression d'arrière-plan: ${errorMessage}`);
   }
 };
 
