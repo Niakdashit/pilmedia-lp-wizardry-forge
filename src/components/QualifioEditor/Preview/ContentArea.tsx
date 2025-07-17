@@ -91,7 +91,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
             <p className="game-subtitle text-sm text-center text-gray-600">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
           
-          <div className="game-wrapper flex justify-center">
+          <div className="game-wrapper flex justify-center py-0">
             <GameRenderer gameType={config.gameType} config={config} device={device} onResult={onWheelResult} isMode1={true} />
           </div>
         </div>;
