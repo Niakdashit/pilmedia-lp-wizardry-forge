@@ -13,10 +13,11 @@ let segmenterCache: any = null;
 function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, image: HTMLImageElement) {
   let width = image.naturalWidth;
   let height = image.naturalHeight;
+  let scale = 1;
 
   // Redimensionner si l'image est trop grande
   if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
-    const scale = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
+    scale = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
     width = Math.round(width * scale);
     height = Math.round(height * scale);
   }
@@ -44,7 +45,6 @@ function applyMaskWithFeathering(
   // Créer un masque flou pour des contours plus doux
   const smoothMask = new Float32Array(mask.data.length);
   const kernelSize = 3;
-  const kernel = new Array(kernelSize * kernelSize).fill(1 / (kernelSize * kernelSize));
   
   // Appliquer un flou gaussien simple sur le masque
   for (let y = 0; y < height; y++) {
