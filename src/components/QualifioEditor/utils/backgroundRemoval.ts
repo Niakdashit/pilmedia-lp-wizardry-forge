@@ -1,4 +1,3 @@
-
 import { pipeline, env } from '@huggingface/transformers';
 
 // Configure transformers.js pour une meilleure performance
@@ -9,6 +8,9 @@ const MAX_IMAGE_DIMENSION = 512; // Réduit pour de meilleures performances
 
 // Cache pour le modèle
 let segmenterCache: any = null;
+
+// Type pour les dispositifs supportés
+type SupportedDevice = 'webgpu' | 'wasm';
 
 function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, image: HTMLImageElement) {
   let width = image.naturalWidth;
@@ -85,7 +87,7 @@ function applyMaskWithFeathering(
 }
 
 // Fonction pour détecter la compatibilité WebGPU
-async function getOptimalDevice(): Promise<string> {
+async function getOptimalDevice(): Promise<SupportedDevice> {
   try {
     // Vérifier si WebGPU est disponible
     if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
