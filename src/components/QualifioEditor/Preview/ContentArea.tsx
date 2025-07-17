@@ -85,9 +85,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         puzzle: 'Remettez les pièces dans le bon ordre',
         form: 'Complétez tous les champs requis'
       };
-      return <div className="content-area-game">
-          <div className="game-instructions mb-4">
-            <p className="game-title text-lg font-bold text-center mb-1">{gameNames[config.gameType] || 'Jouez !'}</p>
+      return <div className="content-area-game py-6">
+          <div className="game-instructions mb-6">
+            <p className="game-title text-xl font-bold text-center mb-2">{gameNames[config.gameType] || 'Jouez !'}</p>
             <p className="game-subtitle text-sm text-center text-gray-600">{gameInstructions[config.gameType] || 'Bonne chance !'}</p>
           </div>
           
@@ -110,9 +110,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         type: 'email' as const,
         required: true
       }];
-      return <div className="content-area-form">
+      return <div className="content-area-form py-6">
           <div className="form-container">
-            <h3 className="form-title">
+            <h3 className="form-title text-xl font-bold text-center mb-6">
               Formulaire de participation
             </h3>
             
@@ -129,7 +129,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     }
 
     // État initial : affichage du contenu avec bouton participer
-    return <div className="content-area-mode1 py-[17px]">
+    return <div className="content-area-mode1 py-6">
         <div className="w-full">
           {/* Story text */}
           <div className="text-sm leading-relaxed text-gray-800 text-justify">
