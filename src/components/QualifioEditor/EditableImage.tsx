@@ -5,9 +5,9 @@ import ImageToolbar from './ImageToolbar';
 interface EditableImageProps {
   image: any;
   onUpdate: (image: any) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   isSelected: boolean;
-  onSelect: (id: number) => void;
+  onSelect: (id: string) => void;
 }
 
 const EditableImage: React.FC<EditableImageProps> = ({ 

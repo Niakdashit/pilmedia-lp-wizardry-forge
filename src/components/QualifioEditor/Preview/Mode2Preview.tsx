@@ -13,7 +13,7 @@ interface Mode2PreviewProps {
   onTextUpdate: (updatedText: CustomText) => void;
   onTextDelete: (textId: string) => void;
   onImageUpdate: (updatedImage: any) => void;
-  onImageDelete: (imageId: number) => void;
+  onImageDelete: (imageId: string) => void;
   onContainerClick: () => void;
 }
 
@@ -27,7 +27,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   onContainerClick 
 }) => {
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
-  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
   const handleContainerClick = () => {
     setSelectedTextId(null);

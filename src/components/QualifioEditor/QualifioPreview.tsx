@@ -43,11 +43,11 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
     });
   };
 
-  const handleImageDelete = (imageId: number) => {
+  const handleImageDelete = (imageId: string) => {
     if (!onConfigUpdate) return;
     
     const updatedImages = config.design?.customImages?.filter(image => image.id !== imageId) || [];
-    onConfigUpdate({ 
+    onConfigUpdate({
       design: { 
         ...config.design, 
         customImages: updatedImages 
