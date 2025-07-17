@@ -28,6 +28,33 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
     onConfigUpdate({ customTexts: updatedTexts });
   };
 
+  const handleImageUpdate = (updatedImage: any) => {
+    if (!onConfigUpdate) return;
+    
+    const updatedImages = config.design?.customImages?.map(image => 
+      image.id === updatedImage.id ? updatedImage : image
+    ) || [];
+    
+    onConfigUpdate({ 
+      design: { 
+        ...config.design, 
+        customImages: updatedImages 
+      } 
+    });
+  };
+
+  const handleImageDelete = (imageId: number) => {
+    if (!onConfigUpdate) return;
+    
+    const updatedImages = config.design?.customImages?.filter(image => image.id !== imageId) || [];
+    onConfigUpdate({ 
+      design: { 
+        ...config.design, 
+        customImages: updatedImages 
+      } 
+    });
+  };
+
   const handleContainerClick = () => {
     // Handle container click if needed
   };
@@ -42,6 +69,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
           config={config}
           onTextUpdate={handleTextUpdate}
           onTextDelete={handleTextDelete}
+          onImageUpdate={handleImageUpdate}
+          onImageDelete={handleImageDelete}
           onContainerClick={handleContainerClick}
         />
       ) : (
@@ -50,6 +79,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
           config={config}
           onTextUpdate={handleTextUpdate}
           onTextDelete={handleTextDelete}
+          onImageUpdate={handleImageUpdate}
+          onImageDelete={handleImageDelete}
           onContainerClick={handleContainerClick}
         />
       )}

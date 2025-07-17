@@ -62,6 +62,11 @@ export interface EditorConfig {
   // Custom texts
   customTexts?: CustomText[];
   
+  // Design elements
+  design?: {
+    customImages?: any[];
+  };
+  
   // Layout
   centerText?: boolean;
   centerForm?: boolean;

@@ -74,15 +74,20 @@ const CustomImagesManager: React.FC<CustomImagesManagerProps> = ({
         <h3 className="text-lg font-semibold text-gray-900">Images personnalisées</h3>
         <button
           onClick={addCustomImage}
-          className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
         >
-          <Image className="w-4 h-4" />
-          <span>Ajouter</span>
+          <Image className="w-5 h-5" />
+          <span>Ajouter une image</span>
         </button>
       </div>
 
       {customImages.length === 0 && (
-        <p className="text-gray-500 text-sm">Aucune image personnalisée. Cliquez sur "Ajouter" pour en créer une.</p>
+        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <Image className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+          <p className="text-gray-500 text-sm mb-2">Aucune image personnalisée</p>
+          <p className="text-gray-400 text-xs">Cliquez sur "Ajouter une image" pour commencer</p>
+          <p className="text-gray-400 text-xs mt-1">Les images seront déplaçables comme sur Canva !</p>
+        </div>
       )}
 
       {customImages.map((customImage: any, index: number) => (

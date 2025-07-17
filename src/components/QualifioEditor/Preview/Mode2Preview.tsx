@@ -5,12 +5,15 @@ import SocialButtons from './SocialButtons';
 import RulesButton from './RulesButton';
 import GameRenderer from './GameRenderer';
 import EditableText from '../EditableText';
+import EditableImage from '../EditableImage';
 
 interface Mode2PreviewProps {
   device: DeviceType;
   config: EditorConfig;
   onTextUpdate: (updatedText: CustomText) => void;
   onTextDelete: (textId: string) => void;
+  onImageUpdate: (updatedImage: any) => void;
+  onImageDelete: (imageId: number) => void;
   onContainerClick: () => void;
 }
 
@@ -19,12 +22,16 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   config, 
   onTextUpdate, 
   onTextDelete,
+  onImageUpdate,
+  onImageDelete,
   onContainerClick 
 }) => {
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
 
   const handleContainerClick = () => {
     setSelectedTextId(null);
+    setSelectedImageId(null);
     onContainerClick();
   };
   return (
@@ -48,6 +55,25 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         device={device} 
       />
       
+      {/* Custom editable images - positioned absolutely over the whole layout */}
+      {config.design?.customImages?.map((image: any) => (
+        <div
+          key={image.id}
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 19 }}
+        >
+          <div className="relative w-full h-full pointer-events-auto">
+            <EditableImage
+              image={image}
+              onUpdate={onImageUpdate}
+              onDelete={onImageDelete}
+              isSelected={selectedImageId === image.id}
+              onSelect={setSelectedImageId}
+            />
+          </div>
+        </div>
+      ))}
+
       {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (
         <div

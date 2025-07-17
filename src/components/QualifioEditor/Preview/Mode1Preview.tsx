@@ -6,12 +6,15 @@ import SocialButtons from './SocialButtons';
 import RulesButton from './RulesButton';
 import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
+import EditableImage from '../EditableImage';
 
 interface Mode1PreviewProps {
   device: DeviceType;
   config: EditorConfig;
   onTextUpdate: (updatedText: CustomText) => void;
   onTextDelete: (textId: string) => void;
+  onImageUpdate: (updatedImage: any) => void;
+  onImageDelete: (imageId: number) => void;
   onContainerClick: () => void;
 }
 
@@ -20,6 +23,8 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   config, 
   onTextUpdate, 
   onTextDelete,
+  onImageUpdate,
+  onImageDelete,
   onContainerClick 
 }) => {
   const [wheelResult, setWheelResult] = useState<{
@@ -28,6 +33,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
     color: string;
   } | null>(null);
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
 
   const handleWheelResult = (result: { id: string; label: string; color: string }) => {
     console.log('Résultat de la roue:', result);
@@ -40,6 +46,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   const handleContainerClick = () => {
     setSelectedTextId(null);
+    setSelectedImageId(null);
     onContainerClick();
   };
 
@@ -92,6 +99,25 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         onWheelResult={handleWheelResult}
       />
       
+      {/* Custom editable images - positioned absolutely over the whole layout */}
+      {config.design?.customImages?.map((image: any) => (
+        <div
+          key={image.id}
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 9 }}
+        >
+          <div className="relative w-full h-full pointer-events-auto">
+            <EditableImage
+              image={image}
+              onUpdate={onImageUpdate}
+              onDelete={onImageDelete}
+              isSelected={selectedImageId === image.id}
+              onSelect={setSelectedImageId}
+            />
+          </div>
+        </div>
+      ))}
+
       {/* Custom editable texts - positioned absolutely over the whole layout */}
       {config.customTexts?.map((text) => (
         <div
