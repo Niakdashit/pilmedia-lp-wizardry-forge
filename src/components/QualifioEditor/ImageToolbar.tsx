@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Trash2, RotateCw, Copy, Layers, Eye, Scissors } from 'lucide-react';
+import { Trash2, RotateCw, Copy, Layers, Eye, Scissors, Loader2 } from 'lucide-react';
 import { removeBackground, loadImage } from './utils/backgroundRemoval';
 
 interface ImageToolbarProps {
@@ -19,6 +20,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
+  const [backgroundRemovalProgress, setBackgroundRemovalProgress] = useState('');
 
   const handleRotate = () => {
     const newRotation = (image.rotation || 0) + 90;
@@ -35,15 +37,12 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   };
 
   const handleDuplicate = () => {
-    // Create a copy with offset position
     const newImage = {
       ...image,
       id: Date.now().toString(),
       x: image.x + 20,
       y: image.y + 20
     };
-    
-    // This would need to be handled at a higher level
     console.log('Duplicate image:', newImage);
   };
 
@@ -59,25 +58,39 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
     if (!image.src || isRemovingBackground) return;
     
     setIsRemovingBackground(true);
+    setBackgroundRemovalProgress('Préparation...');
+    
     try {
-      // Convert image URL to blob
+      setBackgroundRemovalProgress('Chargement de l\'image...');
       const response = await fetch(image.src);
       const blob = await response.blob();
       
-      // Load as image element
+      setBackgroundRemovalProgress('Analyse de l\'image...');
       const imageElement = await loadImage(blob);
       
-      // Remove background
+      setBackgroundRemovalProgress('Suppression de l\'arrière-plan...');
       const resultBlob = await removeBackground(imageElement);
       
-      // Convert to URL
+      setBackgroundRemovalProgress('Finalisation...');
       const newImageUrl = URL.createObjectURL(resultBlob);
       
-      // Update image
       onUpdate({ src: newImageUrl });
+      setBackgroundRemovalProgress('Terminé !');
+      
+      setTimeout(() => {
+        setBackgroundRemovalProgress('');
+      }, 1000);
+      
     } catch (error) {
       console.error('Failed to remove background:', error);
-      alert('Échec de la suppression de l\'arrière-plan. Veuillez réessayer.');
+      setBackgroundRemovalProgress('');
+      
+      // Message d'erreur plus informatif
+      const errorMessage = error instanceof Error 
+        ? `Erreur: ${error.message}` 
+        : 'Échec de la suppression de l\'arrière-plan. Vérifiez que l\'image est valide et réessayez.';
+      
+      alert(errorMessage);
     } finally {
       setIsRemovingBackground(false);
     }
@@ -95,7 +108,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
       <div
         className="fixed z-50 bg-gray-900 text-white rounded-lg shadow-xl border border-gray-700"
         style={{
-          left: Math.min(position.x, window.innerWidth - 450),
+          left: Math.min(position.x, window.innerWidth - 480),
           top: Math.max(10, position.y),
         }}
       >
@@ -149,19 +162,27 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center px-2">
-            {/* Background Removal */}
-            <button
-              onClick={handleRemoveBackground}
-              disabled={isRemovingBackground}
-              className="p-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50"
-              title="Supprimer l'arrière-plan"
-            >
-              {isRemovingBackground ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Scissors className="w-4 h-4" />
+            {/* Background Removal avec indicateur de progression */}
+            <div className="relative">
+              <button
+                onClick={handleRemoveBackground}
+                disabled={isRemovingBackground}
+                className="p-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Supprimer l'arrière-plan (IA)"
+              >
+                {isRemovingBackground ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Scissors className="w-4 h-4" />
+                )}
+              </button>
+              
+              {backgroundRemovalProgress && (
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                  {backgroundRemovalProgress}
+                </div>
               )}
-            </button>
+            </div>
 
             {/* Copy */}
             <button
@@ -176,7 +197,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
             <button
               onClick={handleRotate}
               className="p-2 rounded hover:bg-gray-700 transition-colors"
-              title="Faire pivoter"
+              title="Faire pivoter (90°)"
             >
               <RotateCw className="w-4 h-4" />
             </button>
@@ -186,7 +207,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="p-2 rounded hover:bg-gray-700 transition-colors"
-                title="Calques"
+                title="Gestion des calques"
               >
                 <Layers className="w-4 h-4" />
               </button>
@@ -213,7 +234,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
             <button
               onClick={onDelete}
               className="p-2 rounded hover:bg-red-600 text-red-400 transition-colors ml-1"
-              title="Supprimer"
+              title="Supprimer l'image"
             >
               <Trash2 className="w-4 h-4" />
             </button>

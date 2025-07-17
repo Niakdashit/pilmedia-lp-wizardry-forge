@@ -60,6 +60,7 @@ const EditableImage: React.FC<EditableImageProps> = ({
 
   const handleResizeStart = useCallback((e: React.MouseEvent, corner: string) => {
     e.stopPropagation();
+    e.preventDefault();
     setIsResizing(true);
     setShowToolbar(false);
     
@@ -72,7 +73,8 @@ const EditableImage: React.FC<EditableImageProps> = ({
         startHeight: image.height || 150,
         startLeft: image.x || 0,
         startTop: image.y || 0,
-        corner
+        corner,
+        aspectRatio: (image.width || 150) / (image.height || 150)
       });
     }
   }, [image.width, image.height, image.x, image.y]);
@@ -80,6 +82,7 @@ const EditableImage: React.FC<EditableImageProps> = ({
   const handleResizeMove = useCallback((e: MouseEvent) => {
     if (!isResizing || !resizeStartData) return;
 
+    e.preventDefault();
     const deltaX = e.clientX - resizeStartData.startX;
     const deltaY = e.clientY - resizeStartData.startY;
     
@@ -88,46 +91,101 @@ const EditableImage: React.FC<EditableImageProps> = ({
     let newX = resizeStartData.startLeft;
     let newY = resizeStartData.startTop;
 
-    // Handle different resize corners and edges
-    if (resizeStartData.corner.includes('right')) {
-      newWidth = Math.max(20, resizeStartData.startWidth + deltaX);
-    }
-    if (resizeStartData.corner.includes('left')) {
-      newWidth = Math.max(20, resizeStartData.startWidth - deltaX);
-      newX = resizeStartData.startLeft + (resizeStartData.startWidth - newWidth);
-    }
-    if (resizeStartData.corner.includes('bottom')) {
-      newHeight = Math.max(20, resizeStartData.startHeight + deltaY);
-    }
-    if (resizeStartData.corner.includes('top')) {
-      newHeight = Math.max(20, resizeStartData.startHeight - deltaY);
-      newY = resizeStartData.startTop + (resizeStartData.startHeight - newHeight);
+    // Maintenir les proportions si Shift est pressé
+    const maintainAspectRatio = e.shiftKey;
+
+    switch (resizeStartData.corner) {
+      case 'top-left':
+        newWidth = Math.max(20, resizeStartData.startWidth - deltaX);
+        newHeight = Math.max(20, resizeStartData.startHeight - deltaY);
+        if (maintainAspectRatio) {
+          const ratio = Math.min(newWidth / resizeStartData.startWidth, newHeight / resizeStartData.startHeight);
+          newWidth = resizeStartData.startWidth * ratio;
+          newHeight = resizeStartData.startHeight * ratio;
+        }
+        newX = resizeStartData.startLeft + (resizeStartData.startWidth - newWidth);
+        newY = resizeStartData.startTop + (resizeStartData.startHeight - newHeight);
+        break;
+      case 'top-right':
+        newWidth = Math.max(20, resizeStartData.startWidth + deltaX);
+        newHeight = Math.max(20, resizeStartData.startHeight - deltaY);
+        if (maintainAspectRatio) {
+          const ratio = Math.max(newWidth / resizeStartData.startWidth, newHeight / resizeStartData.startHeight);
+          newWidth = resizeStartData.startWidth * ratio;
+          newHeight = resizeStartData.startHeight * ratio;
+        }
+        newY = resizeStartData.startTop + (resizeStartData.startHeight - newHeight);
+        break;
+      case 'bottom-left':
+        newWidth = Math.max(20, resizeStartData.startWidth - deltaX);
+        newHeight = Math.max(20, resizeStartData.startHeight + deltaY);
+        if (maintainAspectRatio) {
+          const ratio = Math.max(newWidth / resizeStartData.startWidth, newHeight / resizeStartData.startHeight);
+          newWidth = resizeStartData.startWidth * ratio;
+          newHeight = resizeStartData.startHeight * ratio;
+        }
+        newX = resizeStartData.startLeft + (resizeStartData.startWidth - newWidth);
+        break;
+      case 'bottom-right':
+        newWidth = Math.max(20, resizeStartData.startWidth + deltaX);
+        newHeight = Math.max(20, resizeStartData.startHeight + deltaY);
+        if (maintainAspectRatio) {
+          const ratio = Math.max(newWidth / resizeStartData.startWidth, newHeight / resizeStartData.startHeight);
+          newWidth = resizeStartData.startWidth * ratio;
+          newHeight = resizeStartData.startHeight * ratio;
+        }
+        break;
+      case 'top':
+        newHeight = Math.max(20, resizeStartData.startHeight - deltaY);
+        newY = resizeStartData.startTop + (resizeStartData.startHeight - newHeight);
+        break;
+      case 'bottom':
+        newHeight = Math.max(20, resizeStartData.startHeight + deltaY);
+        break;
+      case 'left':
+        newWidth = Math.max(20, resizeStartData.startWidth - deltaX);
+        newX = resizeStartData.startLeft + (resizeStartData.startWidth - newWidth);
+        break;
+      case 'right':
+        newWidth = Math.max(20, resizeStartData.startWidth + deltaX);
+        break;
     }
 
     onUpdate({
       ...image,
-      width: newWidth,
-      height: newHeight,
-      x: newX,
-      y: newY
+      width: Math.round(newWidth),
+      height: Math.round(newHeight),
+      x: Math.round(newX),
+      y: Math.round(newY)
     });
   }, [isResizing, resizeStartData, image, onUpdate]);
 
-  const handleResizeEnd = useCallback(() => {
+  const handleResizeEnd = useCallback((e: MouseEvent) => {
+    e.preventDefault();
     setIsResizing(false);
     setResizeStartData(null);
   }, []);
 
   React.useEffect(() => {
     if (isResizing) {
-      document.addEventListener('mousemove', handleResizeMove);
-      document.addEventListener('mouseup', handleResizeEnd);
+      document.addEventListener('mousemove', handleResizeMove, { passive: false });
+      document.addEventListener('mouseup', handleResizeEnd, { passive: false });
+      document.body.style.cursor = resizeStartData?.corner?.includes('right') && resizeStartData?.corner?.includes('bottom') ? 'nw-resize' :
+                                   resizeStartData?.corner?.includes('left') && resizeStartData?.corner?.includes('bottom') ? 'ne-resize' :
+                                   resizeStartData?.corner?.includes('right') && resizeStartData?.corner?.includes('top') ? 'sw-resize' :
+                                   resizeStartData?.corner?.includes('left') && resizeStartData?.corner?.includes('top') ? 'se-resize' :
+                                   resizeStartData?.corner === 'top' || resizeStartData?.corner === 'bottom' ? 'ns-resize' :
+                                   'ew-resize';
+      document.body.style.userSelect = 'none';
+      
       return () => {
         document.removeEventListener('mousemove', handleResizeMove);
         document.removeEventListener('mouseup', handleResizeEnd);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
       };
     }
-  }, [isResizing, handleResizeMove, handleResizeEnd]);
+  }, [isResizing, handleResizeMove, handleResizeEnd, resizeStartData]);
 
   const handleToolbarUpdate = useCallback((updates: any) => {
     onUpdate({ ...image, ...updates });
@@ -148,7 +206,7 @@ const EditableImage: React.FC<EditableImageProps> = ({
     transform: `rotate(${image.rotation || 0}deg)`,
     border: isSelected ? '2px solid #3b82f6' : '2px solid transparent',
     borderRadius: '4px',
-    cursor: isDragging ? 'grabbing' : 'grab',
+    cursor: isDragging ? 'grabbing' : isResizing ? 'crosshair' : 'grab',
     position: 'relative',
     boxShadow: isSelected ? '0 0 0 1px rgba(59, 130, 246, 0.3)' : 'none',
     userSelect: 'none',
@@ -161,6 +219,31 @@ const EditableImage: React.FC<EditableImageProps> = ({
   if (!image.src) {
     return null;
   }
+
+  const getResizeHandleStyle = (position: string) => {
+    const baseStyle = "absolute w-3 h-3 bg-blue-500 border-2 border-white rounded-full shadow-lg z-20 hover:bg-blue-600 transition-colors";
+    
+    switch (position) {
+      case 'top-left':
+        return `${baseStyle} -top-1.5 -left-1.5 cursor-nw-resize`;
+      case 'top-right':
+        return `${baseStyle} -top-1.5 -right-1.5 cursor-ne-resize`;
+      case 'bottom-left':
+        return `${baseStyle} -bottom-1.5 -left-1.5 cursor-sw-resize`;
+      case 'bottom-right':
+        return `${baseStyle} -bottom-1.5 -right-1.5 cursor-se-resize`;
+      case 'top':
+        return `${baseStyle} -top-1.5 left-1/2 transform -translate-x-1/2 cursor-n-resize`;
+      case 'bottom':
+        return `${baseStyle} -bottom-1.5 left-1/2 transform -translate-x-1/2 cursor-s-resize`;
+      case 'left':
+        return `${baseStyle} -left-1.5 top-1/2 transform -translate-y-1/2 cursor-w-resize`;
+      case 'right':
+        return `${baseStyle} -right-1.5 top-1/2 transform -translate-y-1/2 cursor-e-resize`;
+      default:
+        return baseStyle;
+    }
+  };
 
   return (
     <>
@@ -195,44 +278,51 @@ const EditableImage: React.FC<EditableImageProps> = ({
             }}
           />
           
-          {/* Poignées de redimensionnement */}
+          {/* Poignées de redimensionnement améliorées */}
           {isSelected && !isDragging && (
             <>
               {/* Coins */}
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize -top-1 -left-1 z-10"
+                className={getResizeHandleStyle('top-left')}
                 onMouseDown={(e) => handleResizeStart(e, 'top-left')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize -top-1 -right-1 z-10"
+                className={getResizeHandleStyle('top-right')}
                 onMouseDown={(e) => handleResizeStart(e, 'top-right')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize -bottom-1 -left-1 z-10"
+                className={getResizeHandleStyle('bottom-left')}
                 onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize -bottom-1 -right-1 z-10"
+                className={getResizeHandleStyle('bottom-right')}
                 onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
               />
               
               {/* Milieux des côtés */}
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-n-resize -top-1 left-1/2 transform -translate-x-1/2 z-10"
+                className={getResizeHandleStyle('top')}
                 onMouseDown={(e) => handleResizeStart(e, 'top')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-s-resize -bottom-1 left-1/2 transform -translate-x-1/2 z-10"
+                className={getResizeHandleStyle('bottom')}
                 onMouseDown={(e) => handleResizeStart(e, 'bottom')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-w-resize -left-1 top-1/2 transform -translate-y-1/2 z-10"
+                className={getResizeHandleStyle('left')}
                 onMouseDown={(e) => handleResizeStart(e, 'left')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-e-resize -right-1 top-1/2 transform -translate-y-1/2 z-10"
+                className={getResizeHandleStyle('right')}
                 onMouseDown={(e) => handleResizeStart(e, 'right')}
               />
+
+              {/* Indicateur pour maintenir les proportions */}
+              {isResizing && (
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                  Maintenez Shift pour garder les proportions
+                </div>
+              )}
             </>
           )}
         </div>
