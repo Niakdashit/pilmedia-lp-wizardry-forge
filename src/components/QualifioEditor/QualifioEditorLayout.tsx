@@ -195,7 +195,7 @@ const QualifioEditorLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-accent flex flex-col">
+    <div className="min-h-screen bg-brand-accent">
       {/* Header avec couleurs de marque */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -229,15 +229,15 @@ const QualifioEditorLayout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col md:flex-row">
+      <div className="flex">
         {/* Sidebar */}
-        <QualifioSidebar
+        <QualifioSidebar 
           config={config}
           onConfigUpdate={updateConfig}
         />
         
         {/* Preview Area */}
-        <div className="flex-1 p-4 sm:p-6 w-full">
+        <div className="flex-1 p-6">
           <QualifioPreview 
             device={selectedDevice}
             config={config}
