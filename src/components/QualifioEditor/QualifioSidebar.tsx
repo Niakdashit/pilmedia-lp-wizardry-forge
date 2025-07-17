@@ -74,7 +74,7 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
         return null;
     }
   };
-  return <div className="w-full lg:w-96 sidebar-premium flex flex-col h-auto lg:h-screen">
+  return <div className="w-full md:w-96 sidebar-premium flex flex-col h-auto lg:h-screen">
       {/* Header élégant blanc avec accents violets */}
       
 
