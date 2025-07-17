@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Image, Type, MousePointer, Code, FileText, Gamepad2 } from 'lucide-react';
+import { Settings, Image, Type, MousePointer, Code, FileText, Gamepad2, Palette } from 'lucide-react';
 import type { EditorConfig } from './QualifioEditorLayout';
 import GeneralTab from './SidebarTabs/GeneralTab';
 import GameZoneTab from './SidebarTabs/GameZoneTab';
@@ -8,11 +8,12 @@ import TextsTab from './SidebarTabs/TextsTab';
 import ButtonsTab from './SidebarTabs/ButtonsTab';
 import FooterTab from './SidebarTabs/FooterTab';
 import CodeTab from './SidebarTabs/CodeTab';
+import DesignTab from './SidebarTabs/DesignTab';
 interface QualifioSidebarProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-type TabType = 'general' | 'gameZone' | 'gameMechanics' | 'texts' | 'buttons' | 'footer' | 'code';
+type TabType = 'general' | 'design' | 'gameZone' | 'gameMechanics' | 'texts' | 'buttons' | 'footer' | 'code';
 const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   config,
   onConfigUpdate
@@ -22,6 +23,10 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
     id: 'general' as TabType,
     label: 'Général',
     icon: Settings
+  }, {
+    id: 'design' as TabType,
+    label: 'Design',
+    icon: Palette
   }, {
     id: 'gameZone' as TabType,
     label: 'Zone de jeu',
@@ -51,6 +56,8 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
     switch (activeTab) {
       case 'general':
         return <GeneralTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'design':
+        return <DesignTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'gameZone':
         return <GameZoneTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'gameMechanics':
