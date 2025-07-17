@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bold, Italic, Underline, Trash2 } from 'lucide-react';
 import type { CustomText } from './QualifioEditorLayout';
+import { simpleFontSizes, getFontsByCategory, fontCategories } from '../../config/fonts';
 
 interface TextToolbarProps {
   text: CustomText;
@@ -17,18 +18,6 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
   onDelete,
   onClose
 }) => {
-  const fontSizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
-  const fontFamilies = [
-    'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Nunito', 'Source Sans Pro', 
-    'Raleway', 'Ubuntu', 'Work Sans', 'Fira Sans', 'Rubik', 'Quicksand', 'Comfortaa', 'Kanit', 
-    'Exo 2', 'Arial', 'Helvetica', 'Verdana', 'Playfair Display', 'Merriweather', 'Georgia', 
-    'Times New Roman', 'Palatino', 'Oswald', 'Bebas Neue', 'Anton', 'Fjalla One', 'Russo One', 
-    'Righteous', 'Impact', 'Orbitron', 'Audiowide', 'Dancing Script', 'Pacifico', 'Lobster', 
-    'Great Vibes', 'Sacramento', 'Satisfy', 'Cookie', 'Caveat', 'Kalam', 'Architects Daughter', 
-    'Shadows Into Light', 'Indie Flower', 'Permanent Marker', 'Fredoka One', 'Bungee', 'Bangers', 
-    'Creepster', 'Amatic SC', 'Press Start 2P', 'Comic Sans MS', 'Anonymous Pro', 'Courier New', 
-    'JetBrains Mono', 'Belleza', 'Binate', 'Trebuchet MS'
-  ];
 
   return (
     <>
@@ -52,7 +41,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
           onChange={(e) => onUpdate({ fontSize: parseInt(e.target.value) })}
           className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none w-16"
         >
-          {fontSizes.map(size => (
+          {simpleFontSizes.map(size => (
             <option key={size} value={size}>{size}</option>
           ))}
         </select>
@@ -63,10 +52,23 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
         <select
           value={text.fontFamily}
           onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-          className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none max-w-24"
+          className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none max-w-32"
         >
-          {fontFamilies.map(font => (
-            <option key={font} value={font}>{font}</option>
+          <optgroup label="Populaires">
+            {getFontsByCategory('sans-serif').slice(0, 10).map(font => (
+              <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                {font.label}
+              </option>
+            ))}
+          </optgroup>
+          {Object.entries(fontCategories).map(([category, label]) => (
+            <optgroup key={category} label={label}>
+              {getFontsByCategory(category as any).map(font => (
+                <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                  {font.label}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
 
