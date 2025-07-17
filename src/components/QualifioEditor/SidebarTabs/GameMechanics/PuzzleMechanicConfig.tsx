@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Upload } from 'lucide-react';
 import type { EditorConfig } from '../../QualifioEditorLayout';
@@ -120,7 +121,7 @@ const PuzzleMechanicConfig: React.FC<PuzzleMechanicConfigProps> = ({ config, onC
             <label>Niveau de difficulté</label>
             <select
               value={config.puzzleDifficulty || 'medium'}
-              onChange={(e) => onConfigUpdate({ puzzleDifficulty: e.target.value })}
+              onChange={(e) => onConfigUpdate({ puzzleDifficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
               className="w-full"
             >
               <option value="easy">Facile (bordures visibles)</option>

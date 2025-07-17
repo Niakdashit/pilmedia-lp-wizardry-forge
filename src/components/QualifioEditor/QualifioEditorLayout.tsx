@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 
 export type DeviceType = 'desktop' | 'tablet' | 'mobile';
@@ -14,7 +13,7 @@ export interface GamePosition {
 
 export interface DeviceConfig {
   fontSize: number;
-  gamePosition: GamePosition;
+  gamePosition?: GamePosition;
   backgroundImage?: string;
 }
 
@@ -84,6 +83,7 @@ export interface EditorConfig {
   
   // Background and design
   backgroundColor?: string;
+  outlineColor?: string;
   
   // Footer
   footerText?: string;
@@ -180,4 +180,3 @@ const QualifioEditorLayout: React.FC<QualifioEditorLayoutProps> = () => {
 };
 
 export default QualifioEditorLayout;
-

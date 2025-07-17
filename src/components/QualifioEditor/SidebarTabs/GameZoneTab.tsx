@@ -1,12 +1,15 @@
+
 import React, { useState, useRef } from 'react';
 import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
-import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
+import type { EditorConfig, DeviceType, DeviceConfig } from '../QualifioEditorLayout';
 import GamePositionControls from '../Controls/GamePositionControls';
 import { generateBrandThemeFromFile } from '../../../utils/BrandStyleAnalyzer';
+
 interface GameZoneTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
+
 const GameZoneTab: React.FC<GameZoneTabProps> = ({
   config,
   onConfigUpdate
@@ -17,6 +20,16 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const tabletInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper function to get default DeviceConfig
+  const getDefaultDeviceConfig = (device: DeviceType): DeviceConfig => {
+    const baseFontSize = device === 'mobile' ? 14 : device === 'tablet' ? 16 : 18;
+    return {
+      fontSize: baseFontSize,
+      gamePosition: { x: 0, y: 0, scale: 1 }
+    };
+  };
+
   // Fonction pour obtenir la ref correspondant au device
   const getInputRef = (device: DeviceType) => {
     switch (device) {
@@ -42,11 +55,11 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       // Supprimer l'image si fichier vide
       onConfigUpdate({
         deviceConfig: {
-          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-          desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+          mobile: config.deviceConfig?.mobile || getDefaultDeviceConfig('mobile'),
+          tablet: config.deviceConfig?.tablet || getDefaultDeviceConfig('tablet'),
+          desktop: config.deviceConfig?.desktop || getDefaultDeviceConfig('desktop'),
           [device]: {
-            ...config.deviceConfig?.[device],
+            ...config.deviceConfig?.[device] || getDefaultDeviceConfig(device),
             backgroundImage: undefined
           }
         }
@@ -66,11 +79,11 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         
         const newConfig = {
           deviceConfig: {
-            mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-            tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-            desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+            mobile: config.deviceConfig?.mobile || getDefaultDeviceConfig('mobile'),
+            tablet: config.deviceConfig?.tablet || getDefaultDeviceConfig('tablet'),
+            desktop: config.deviceConfig?.desktop || getDefaultDeviceConfig('desktop'),
             [device]: {
-              ...config.deviceConfig?.[device],
+              ...config.deviceConfig?.[device] || getDefaultDeviceConfig(device),
               backgroundImage: imageUrl
             }
           },
@@ -89,11 +102,11 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         // Fallback: just update the image without color extraction
         const newConfig = {
           deviceConfig: {
-            mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-            tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-            desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+            mobile: config.deviceConfig?.mobile || getDefaultDeviceConfig('mobile'),
+            tablet: config.deviceConfig?.tablet || getDefaultDeviceConfig('tablet'),
+            desktop: config.deviceConfig?.desktop || getDefaultDeviceConfig('desktop'),
             [device]: {
-              ...config.deviceConfig?.[device],
+              ...config.deviceConfig?.[device] || getDefaultDeviceConfig(device),
               backgroundImage: imageUrl
             }
           }
@@ -108,19 +121,21 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
     
     reader.readAsDataURL(file);
   };
+
   const handleFontSizeChange = (device: DeviceType, fontSize: number) => {
     onConfigUpdate({
       deviceConfig: {
-        mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-        tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-        desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+        mobile: config.deviceConfig?.mobile || getDefaultDeviceConfig('mobile'),
+        tablet: config.deviceConfig?.tablet || getDefaultDeviceConfig('tablet'),
+        desktop: config.deviceConfig?.desktop || getDefaultDeviceConfig('desktop'),
         [device]: {
-          ...config.deviceConfig?.[device],
+          ...config.deviceConfig?.[device] || getDefaultDeviceConfig(device),
           fontSize
         }
       }
     });
   };
+
   const devices = [{
     id: 'desktop' as DeviceType,
     label: 'PC',
@@ -134,21 +149,31 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
     label: 'Mobile',
     icon: Smartphone
   }];
-  const currentDeviceConfig = config.deviceConfig?.[selectedDevice];
-  return <div className="sidebar-content my-0 py-0">
-      
-      
+
+  const currentDeviceConfig = config.deviceConfig?.[selectedDevice] || getDefaultDeviceConfig(selectedDevice);
+
+  return (
+    <div className="sidebar-content my-0 py-0">
       {/* Device Selector */}
       <div className="premium-card py-0">
         <label className="block text-sm font-medium mb-4">Appareil sélectionné</label>
         <div className="flex gap-2 mb-6">
-          {devices.map(device => <button key={device.id} onClick={() => setSelectedDevice(device.id)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedDevice === device.id ? 'text-white' : 'text-sidebar-text-muted hover:text-sidebar-text-primary'}`} style={{
-          backgroundColor: selectedDevice === device.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
-          border: selectedDevice === device.id ? '1px solid hsl(var(--sidebar-active))' : '1px solid hsl(var(--sidebar-border))'
-        }}>
+          {devices.map(device => (
+            <button 
+              key={device.id} 
+              onClick={() => setSelectedDevice(device.id)} 
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedDevice === device.id ? 'text-white' : 'text-sidebar-text-muted hover:text-sidebar-text-primary'
+              }`} 
+              style={{
+                backgroundColor: selectedDevice === device.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
+                border: selectedDevice === device.id ? '1px solid hsl(var(--sidebar-active))' : '1px solid hsl(var(--sidebar-border))'
+              }}
+            >
               <device.icon className="w-4 h-4" />
               {device.label}
-            </button>)}
+            </button>
+          ))}
         </div>
 
         {/* Background Image Upload - Inputs séparés pour chaque device */}
@@ -229,7 +254,15 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         {/* Font Size Control */}
         <div className="form-group-premium">
           <label htmlFor="fontSize">Taille de police ({devices.find(d => d.id === selectedDevice)?.label})</label>
-          <input type="number" id="fontSize" value={currentDeviceConfig?.fontSize || 16} onChange={e => handleFontSizeChange(selectedDevice, parseInt(e.target.value))} min="8" max="72" className="w-full" />
+          <input 
+            type="number" 
+            id="fontSize" 
+            value={currentDeviceConfig?.fontSize || 16} 
+            onChange={e => handleFontSizeChange(selectedDevice, parseInt(e.target.value))} 
+            min="8" 
+            max="72" 
+            className="w-full" 
+          />
         </div>
       </div>
 
@@ -246,41 +279,57 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       <div className="premium-card">
         <div className="form-group-premium">
           <label htmlFor="width">Largeur (px)</label>
-          <input type="number" id="width" value={config.width} onChange={e => onConfigUpdate({
-          width: parseInt(e.target.value)
-        })} min="200" max="1200" />
+          <input 
+            type="number" 
+            id="width" 
+            value={config.width} 
+            onChange={e => onConfigUpdate({ width: parseInt(e.target.value) })} 
+            min="200" 
+            max="1200" 
+          />
         </div>
 
         <div className="form-group-premium">
           <label htmlFor="height">Hauteur minimum (px)</label>
-          <input type="number" id="height" value={config.height} onChange={e => onConfigUpdate({
-          height: parseInt(e.target.value)
-        })} min="300" max="2000" />
+          <input 
+            type="number" 
+            id="height" 
+            value={config.height} 
+            onChange={e => onConfigUpdate({ height: parseInt(e.target.value) })} 
+            min="300" 
+            max="2000" 
+          />
         </div>
 
         <div className="form-group-premium">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={config.centerText} onChange={e => onConfigUpdate({
-            centerText: e.target.checked
-          })} />
+            <input 
+              type="checkbox" 
+              checked={config.centerText} 
+              onChange={e => onConfigUpdate({ centerText: e.target.checked })} 
+            />
             Centrer le texte
           </label>
         </div>
 
         <div className="form-group-premium">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={config.centerForm} onChange={e => onConfigUpdate({
-            centerForm: e.target.checked
-          })} />
+            <input 
+              type="checkbox" 
+              checked={config.centerForm} 
+              onChange={e => onConfigUpdate({ centerForm: e.target.checked })} 
+            />
             Centrer le questionnaire
           </label>
         </div>
 
         <div className="form-group-premium">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={config.centerGameZone} onChange={e => onConfigUpdate({
-            centerGameZone: e.target.checked
-          })} />
+            <input 
+              type="checkbox" 
+              checked={config.centerGameZone} 
+              onChange={e => onConfigUpdate({ centerGameZone: e.target.checked })} 
+            />
             Centrer le formulaire
           </label>
         </div>
@@ -288,15 +337,23 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         <div className="form-group-premium">
           <label htmlFor="backgroundColor">Couleur de fond du concours</label>
           <div className="color-input-group">
-            <input type="color" id="backgroundColor" value={config.backgroundColor} onChange={e => onConfigUpdate({
-            backgroundColor: e.target.value
-          })} />
-            <input type="text" value={config.backgroundColor} onChange={e => onConfigUpdate({
-            backgroundColor: e.target.value
-          })} placeholder="#ffffff" />
+            <input 
+              type="color" 
+              id="backgroundColor" 
+              value={config.backgroundColor} 
+              onChange={e => onConfigUpdate({ backgroundColor: e.target.value })} 
+            />
+            <input 
+              type="text" 
+              value={config.backgroundColor} 
+              onChange={e => onConfigUpdate({ backgroundColor: e.target.value })} 
+              placeholder="#ffffff" 
+            />
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default GameZoneTab;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import BorderStyleSelector from '../../../SmartWheel/components/BorderStyleSelector';
@@ -58,7 +59,7 @@ const WheelMechanicConfig: React.FC<WheelMechanicConfigProps> = ({ config, onCon
         <div className="p-4 rounded-xl bg-sidebar-bg">
           <BorderStyleSelector
             currentStyle={config.borderStyle || 'classic'}
-            onStyleChange={(style) => onConfigUpdate({ borderStyle: style })}
+            onStyleChange={(style) => onConfigUpdate({ borderStyle: style as 'classic' | 'modern' })}
           />
         </div>
       </div>

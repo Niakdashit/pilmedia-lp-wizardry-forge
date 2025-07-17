@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText, Upload } from 'lucide-react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
@@ -35,6 +36,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
     };
     reader.readAsDataURL(file);
   };
+
   const gameTypes = [
     { value: 'wheel', label: 'Roue de la fortune', icon: Target },
     { value: 'quiz', label: 'Quiz', icon: HelpCircle },
@@ -78,7 +80,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
             <label>Mode de jeu</label>
             <select
               value={config.gameMode}
-              onChange={(e) => onConfigUpdate({ gameMode: e.target.value as EditorConfig['gameMode'] })}
+              onChange={(e) => onConfigUpdate({ gameMode: e.target.value })}
             >
               <option value="mode1-sequential">Mode 1 - Séquentiel (Descriptif + Zone de jeu)</option>
             </select>
@@ -127,7 +129,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
           <label>Position d'ancrage</label>
           <select
             value={config.anchor}
-            onChange={(e) => onConfigUpdate({ anchor: e.target.value as 'fixed' | 'center' })}
+            onChange={(e) => onConfigUpdate({ anchor: e.target.value })}
           >
             <option value="fixed">Position fixe</option>
             <option value="center">Centré</option>
@@ -239,7 +241,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
         <div className="p-4 rounded-xl bg-sidebar-bg">
           <BorderStyleSelector
             currentStyle={config.borderStyle || 'classic'}
-            onStyleChange={(style) => onConfigUpdate({ borderStyle: style })}
+            onStyleChange={(style) => onConfigUpdate({ borderStyle: style as 'classic' | 'modern' })}
           />
         </div>
       </div>

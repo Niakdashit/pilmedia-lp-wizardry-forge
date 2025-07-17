@@ -1,120 +1,66 @@
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
-export const useTextResize = (
-  text: any,
-  onUpdate: (updates: any) => void
-) => {
-  const [isResizing, setIsResizing] = useState(false);
-  const resizeStartRef = useRef<{
-    startX: number;
-    startY: number;
-    startWidth: number;
-    startHeight: number;
-    startFontSize: number;
-    handle: string;
-    aspectRatio: number;
-  } | null>(null);
+interface UseTextResizeProps {
+  minFontSize?: number;
+  maxFontSize?: number;
+  step?: number;
+}
 
-  const handleResizeStart = useCallback((handle: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+export const useTextResize = ({
+  minFontSize = 8,
+  maxFontSize = 72,
+  step = 1
+}: UseTextResizeProps = {}) => {
+  const [fontSize, setFontSize] = useState(16);
 
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = text.width || 200;
-    const startHeight = text.height || 50;
-    const startFontSize = text.fontSize || 16;
-    const aspectRatio = startWidth / startHeight;
+  const increaseFontSize = useCallback(() => {
+    setFontSize(current => Math.min(current + step, maxFontSize));
+  }, [step, maxFontSize]);
 
-    resizeStartRef.current = {
-      startX,
-      startY,
-      startWidth,
-      startHeight,
-      startFontSize,
-      handle,
-      aspectRatio
-    };
-    
-    setIsResizing(true);
+  const decreaseFontSize = useCallback(() => {
+    setFontSize(current => Math.max(current - step, minFontSize));
+  }, [step, minFontSize]);
 
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!resizeStartRef.current) return;
+  const setFontSizeValue = useCallback((size: number) => {
+    const clampedSize = Math.max(minFontSize, Math.min(size, maxFontSize));
+    setFontSize(clampedSize);
+  }, [minFontSize, maxFontSize]);
 
-      const { startX, startY, startWidth, startHeight, startFontSize, handle, aspectRatio } = resizeStartRef.current;
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
+  const resizeText = useCallback((
+    element: HTMLElement, 
+    containerWidth: number, 
+    containerHeight: number
+  ) => {
+    if (!element) return;
 
-      let newWidth = startWidth;
-      let newHeight = startHeight;
-      let newX = text.x;
-      let newY = text.y;
+    let currentSize = fontSize;
+    element.style.fontSize = `${currentSize}px`;
 
-      // Calculate new dimensions based on handle
-      switch (handle) {
-        case 'se': // Bottom-right
-          newWidth = Math.max(50, startWidth + deltaX);
-          newHeight = Math.max(20, startHeight + deltaY);
-          break;
-        case 'sw': // Bottom-left
-          newWidth = Math.max(50, startWidth - deltaX);
-          newHeight = Math.max(20, startHeight + deltaY);
-          newX = text.x + (startWidth - newWidth);
-          break;
-        case 'ne': // Top-right
-          newWidth = Math.max(50, startWidth + deltaX);
-          newHeight = Math.max(20, startHeight - deltaY);
-          newY = text.y + (startHeight - newHeight);
-          break;
-        case 'nw': // Top-left
-          newWidth = Math.max(50, startWidth - deltaX);
-          newHeight = Math.max(20, startHeight - deltaY);
-          newX = text.x + (startWidth - newWidth);
-          newY = text.y + (startHeight - newHeight);
-          break;
-        case 'n': // Top
-          newHeight = Math.max(20, startHeight - deltaY);
-          newY = text.y + deltaY;
-          break;
-        case 's': // Bottom
-          newHeight = Math.max(20, startHeight + deltaY);
-          break;
-        case 'w': // Left
-          newWidth = Math.max(50, startWidth - deltaX);
-          newX = text.x + deltaX;
-          break;
-        case 'e': // Right
-          newWidth = Math.max(50, startWidth + deltaX);
-          break;
-      }
+    // Increase font size until text overflows
+    while (
+      element.scrollWidth <= containerWidth && 
+      element.scrollHeight <= containerHeight && 
+      currentSize < maxFontSize
+    ) {
+      currentSize += step;
+      element.style.fontSize = `${currentSize}px`;
+    }
 
-      // Calculer la nouvelle taille de police proportionnellement
-      const scaleFactor = Math.min(newWidth / startWidth, newHeight / startHeight);
-      const newFontSize = Math.max(8, Math.min(72, startFontSize * scaleFactor));
+    // Decrease if we overflowed
+    if (element.scrollWidth > containerWidth || element.scrollHeight > containerHeight) {
+      currentSize -= step;
+      element.style.fontSize = `${currentSize}px`;
+    }
 
-      onUpdate({
-        x: newX,
-        y: newY,
-        width: newWidth,
-        height: newHeight,
-        fontSize: newFontSize
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      resizeStartRef.current = null;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [text, onUpdate]);
+    setFontSize(currentSize);
+  }, [fontSize, maxFontSize, step]);
 
   return {
-    isResizing,
-    handleResizeStart
+    fontSize,
+    setFontSize: setFontSizeValue,
+    increaseFontSize,
+    decreaseFontSize,
+    resizeText
   };
 };
