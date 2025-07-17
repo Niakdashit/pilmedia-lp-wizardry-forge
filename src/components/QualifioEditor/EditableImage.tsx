@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import Draggable from 'react-draggable';
 import ImageToolbar from './ImageToolbar';
@@ -69,10 +70,12 @@ const EditableImage: React.FC<EditableImageProps> = ({
         startY: e.clientY,
         startWidth: image.width || 150,
         startHeight: image.height || 150,
+        startLeft: image.x || 0,
+        startTop: image.y || 0,
         corner
       });
     }
-  }, [image.width, image.height]);
+  }, [image.width, image.height, image.x, image.y]);
 
   const handleResizeMove = useCallback((e: MouseEvent) => {
     if (!isResizing || !resizeStartData) return;
@@ -82,24 +85,31 @@ const EditableImage: React.FC<EditableImageProps> = ({
     
     let newWidth = resizeStartData.startWidth;
     let newHeight = resizeStartData.startHeight;
+    let newX = resizeStartData.startLeft;
+    let newY = resizeStartData.startTop;
 
+    // Handle different resize corners and edges
     if (resizeStartData.corner.includes('right')) {
       newWidth = Math.max(20, resizeStartData.startWidth + deltaX);
     }
     if (resizeStartData.corner.includes('left')) {
       newWidth = Math.max(20, resizeStartData.startWidth - deltaX);
+      newX = resizeStartData.startLeft + (resizeStartData.startWidth - newWidth);
     }
     if (resizeStartData.corner.includes('bottom')) {
       newHeight = Math.max(20, resizeStartData.startHeight + deltaY);
     }
     if (resizeStartData.corner.includes('top')) {
       newHeight = Math.max(20, resizeStartData.startHeight - deltaY);
+      newY = resizeStartData.startTop + (resizeStartData.startHeight - newHeight);
     }
 
     onUpdate({
       ...image,
       width: newWidth,
-      height: newHeight
+      height: newHeight,
+      x: newX,
+      y: newY
     });
   }, [isResizing, resizeStartData, image, onUpdate]);
 
@@ -143,6 +153,8 @@ const EditableImage: React.FC<EditableImageProps> = ({
     boxShadow: isSelected ? '0 0 0 1px rgba(59, 130, 246, 0.3)' : 'none',
     userSelect: 'none',
     objectFit: 'cover' as const,
+    opacity: image.opacity || 1,
+    zIndex: image.zIndex || 0,
     transition: isDragging || isResizing ? 'none' : 'all 0.1s ease'
   };
 
@@ -168,7 +180,8 @@ const EditableImage: React.FC<EditableImageProps> = ({
           className="group relative"
           style={{ 
             width: `${image.width || 150}px`, 
-            height: `${image.height || 150}px` 
+            height: `${image.height || 150}px`,
+            zIndex: image.zIndex || 0
           }}
         >
           <img
@@ -187,37 +200,37 @@ const EditableImage: React.FC<EditableImageProps> = ({
             <>
               {/* Coins */}
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize -top-1 -left-1"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize -top-1 -left-1 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'top-left')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize -top-1 -right-1"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize -top-1 -right-1 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'top-right')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize -bottom-1 -left-1"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize -bottom-1 -left-1 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize -bottom-1 -right-1"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize -bottom-1 -right-1 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
               />
               
               {/* Milieux des côtés */}
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-n-resize -top-1 left-1/2 transform -translate-x-1/2"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-n-resize -top-1 left-1/2 transform -translate-x-1/2 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'top')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-s-resize -bottom-1 left-1/2 transform -translate-x-1/2"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-s-resize -bottom-1 left-1/2 transform -translate-x-1/2 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'bottom')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-w-resize -left-1 top-1/2 transform -translate-y-1/2"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-w-resize -left-1 top-1/2 transform -translate-y-1/2 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'left')}
               />
               <div
-                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-e-resize -right-1 top-1/2 transform -translate-y-1/2"
+                className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-e-resize -right-1 top-1/2 transform -translate-y-1/2 z-10"
                 onMouseDown={(e) => handleResizeStart(e, 'right')}
               />
             </>
@@ -225,7 +238,7 @@ const EditableImage: React.FC<EditableImageProps> = ({
         </div>
       </Draggable>
 
-      {/* Toolbar Canva-style améliorée */}
+      {/* Toolbar */}
       {showToolbar && (
         <ImageToolbar
           image={image}

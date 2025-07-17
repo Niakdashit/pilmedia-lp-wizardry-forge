@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
-import { Trash2, RotateCw, Copy, Layers, Eye } from 'lucide-react';
+import { Trash2, RotateCw, Copy, Layers, Eye, Scissors } from 'lucide-react';
+import { removeBackground, loadImage } from '../utils/backgroundRemoval';
 
 interface ImageToolbarProps {
   image: any;
@@ -17,6 +19,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   onClose
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
 
   const handleRotate = () => {
     const newRotation = (image.rotation || 0) + 90;
@@ -24,7 +27,8 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   };
 
   const handleSizeChange = (dimension: 'width' | 'height', value: number) => {
-    onUpdate({ [dimension]: Math.max(20, value) });
+    const newValue = Math.max(20, Math.min(800, value));
+    onUpdate({ [dimension]: newValue });
   };
 
   const handleOpacityChange = (opacity: number) => {
@@ -32,8 +36,16 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   };
 
   const handleDuplicate = () => {
-    // Note: Cette fonction nécessiterait une implémentation au niveau parent
-    console.log('Duplicate functionality would be implemented here');
+    // Create a copy with offset position
+    const newImage = {
+      ...image,
+      id: Date.now().toString(),
+      x: image.x + 20,
+      y: image.y + 20
+    };
+    
+    // This would need to be handled at a higher level
+    console.log('Duplicate image:', newImage);
   };
 
   const handleLayerUp = () => {
@@ -42,6 +54,34 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
 
   const handleLayerDown = () => {
     onUpdate({ zIndex: Math.max(0, (image.zIndex || 0) - 1) });
+  };
+
+  const handleRemoveBackground = async () => {
+    if (!image.src || isRemovingBackground) return;
+    
+    setIsRemovingBackground(true);
+    try {
+      // Convert image URL to blob
+      const response = await fetch(image.src);
+      const blob = await response.blob();
+      
+      // Load as image element
+      const imageElement = await loadImage(blob);
+      
+      // Remove background
+      const resultBlob = await removeBackground(imageElement);
+      
+      // Convert to URL
+      const newImageUrl = URL.createObjectURL(resultBlob);
+      
+      // Update image
+      onUpdate({ src: newImageUrl });
+    } catch (error) {
+      console.error('Failed to remove background:', error);
+      alert('Échec de la suppression de l\'arrière-plan. Veuillez réessayer.');
+    } finally {
+      setIsRemovingBackground(false);
+    }
   };
 
   return (
@@ -56,7 +96,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
       <div
         className="fixed z-50 bg-gray-900 text-white rounded-lg shadow-xl border border-gray-700"
         style={{
-          left: Math.min(position.x, window.innerWidth - 400),
+          left: Math.min(position.x, window.innerWidth - 450),
           top: Math.max(10, position.y),
         }}
       >
@@ -68,7 +108,10 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
               <input
                 type="number"
                 value={Math.round(image.width || 150)}
-                onChange={(e) => handleSizeChange('width', parseInt(e.target.value) || 150)}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 150;
+                  handleSizeChange('width', value);
+                }}
                 className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none w-16"
                 min="20"
                 max="800"
@@ -80,7 +123,10 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
               <input
                 type="number"
                 value={Math.round(image.height || 150)}
-                onChange={(e) => handleSizeChange('height', parseInt(e.target.value) || 150)}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 150;
+                  handleSizeChange('height', value);
+                }}
                 className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none w-16"
                 min="20"
                 max="800"
@@ -104,6 +150,20 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center px-2">
+            {/* Background Removal */}
+            <button
+              onClick={handleRemoveBackground}
+              disabled={isRemovingBackground}
+              className="p-2 rounded hover:bg-gray-700 transition-colors disabled:opacity-50"
+              title="Supprimer l'arrière-plan"
+            >
+              {isRemovingBackground ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Scissors className="w-4 h-4" />
+              )}
+            </button>
+
             {/* Copy */}
             <button
               onClick={handleDuplicate}
