@@ -1,4 +1,3 @@
-
 import { pipeline, env } from '@huggingface/transformers';
 
 // Configure transformers.js pour une meilleure performance
@@ -44,7 +43,6 @@ function applyMaskWithFeathering(
   
   // Créer un masque flou pour des contours plus doux
   const smoothMask = new Float32Array(mask.data.length);
-  const kernelSize = 3;
   
   // Appliquer un flou gaussien simple sur le masque
   for (let y = 0; y < height; y++) {
