@@ -1,5 +1,6 @@
 
 import { useState, useCallback } from 'react';
+import type { CustomText } from '../QualifioEditorLayout';
 
 interface UseTextResizeProps {
   minFontSize?: number;
@@ -7,25 +8,81 @@ interface UseTextResizeProps {
   step?: number;
 }
 
-export const useTextResize = ({
-  minFontSize = 8,
-  maxFontSize = 72,
-  step = 1
-}: UseTextResizeProps = {}) => {
-  const [fontSize, setFontSize] = useState(16);
+export const useTextResize = (
+  text: CustomText,
+  onUpdate: (text: CustomText) => void,
+  options: UseTextResizeProps = {}
+) => {
+  const { minFontSize = 8, maxFontSize = 72, step = 1 } = options;
+  const [isResizing, setIsResizing] = useState(false);
 
-  const increaseFontSize = useCallback(() => {
-    setFontSize(current => Math.min(current + step, maxFontSize));
-  }, [step, maxFontSize]);
+  const handleResizeStart = useCallback((handle: string) => {
+    return (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
 
-  const decreaseFontSize = useCallback(() => {
-    setFontSize(current => Math.max(current - step, minFontSize));
-  }, [step, minFontSize]);
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startWidth = text.width || 200;
+      const startHeight = text.height || 100;
 
-  const setFontSizeValue = useCallback((size: number) => {
-    const clampedSize = Math.max(minFontSize, Math.min(size, maxFontSize));
-    setFontSize(clampedSize);
-  }, [minFontSize, maxFontSize]);
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const deltaX = moveEvent.clientX - startX;
+        const deltaY = moveEvent.clientY - startY;
+
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+
+        // Handle different resize handles
+        switch (handle) {
+          case 'se':
+          case 'e':
+            newWidth = Math.max(50, startWidth + deltaX);
+            if (handle === 'se') {
+              newHeight = Math.max(20, startHeight + deltaY);
+            }
+            break;
+          case 'sw':
+          case 'w':
+            newWidth = Math.max(50, startWidth - deltaX);
+            if (handle === 'sw') {
+              newHeight = Math.max(20, startHeight + deltaY);
+            }
+            break;
+          case 'ne':
+          case 'n':
+            newHeight = Math.max(20, startHeight - deltaY);
+            if (handle === 'ne') {
+              newWidth = Math.max(50, startWidth + deltaX);
+            }
+            break;
+          case 'nw':
+            newWidth = Math.max(50, startWidth - deltaX);
+            newHeight = Math.max(20, startHeight - deltaY);
+            break;
+          case 's':
+            newHeight = Math.max(20, startHeight + deltaY);
+            break;
+        }
+
+        onUpdate({
+          ...text,
+          width: newWidth,
+          height: newHeight
+        });
+      };
+
+      const handleMouseUp = () => {
+        setIsResizing(false);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+  }, [text, onUpdate]);
 
   const resizeText = useCallback((
     element: HTMLElement, 
@@ -34,7 +91,7 @@ export const useTextResize = ({
   ) => {
     if (!element) return;
 
-    let currentSize = fontSize;
+    let currentSize = text.fontSize;
     element.style.fontSize = `${currentSize}px`;
 
     // Increase font size until text overflows
@@ -53,14 +110,12 @@ export const useTextResize = ({
       element.style.fontSize = `${currentSize}px`;
     }
 
-    setFontSize(currentSize);
-  }, [fontSize, maxFontSize, step]);
+    onUpdate({ ...text, fontSize: currentSize });
+  }, [text, maxFontSize, step, onUpdate]);
 
   return {
-    fontSize,
-    setFontSize: setFontSizeValue,
-    increaseFontSize,
-    decreaseFontSize,
+    isResizing,
+    handleResizeStart,
     resizeText
   };
 };
