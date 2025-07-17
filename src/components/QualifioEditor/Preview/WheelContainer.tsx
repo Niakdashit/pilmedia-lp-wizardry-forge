@@ -66,6 +66,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         onResult={handleWheelResult}
         gamePosition={gamePosition}
         isMode1={isMode1}
+        formFields={config.formFields}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: "#8E44AD",

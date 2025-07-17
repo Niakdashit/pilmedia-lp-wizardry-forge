@@ -21,7 +21,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   maxSize,
   buttonPosition,
   gamePosition,
-  isMode1 = true
+  isMode1 = true,
+  formFields
 }) => {
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
@@ -314,6 +315,10 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
         onClose={() => setShowParticipationModal(false)}
         onSubmit={handleParticipationSubmit}
         title="Formulaire de participation"
+        fields={formFields || [
+          { id: 'firstName', label: 'Prénom', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true }
+        ]}
       />
     </>
   );
