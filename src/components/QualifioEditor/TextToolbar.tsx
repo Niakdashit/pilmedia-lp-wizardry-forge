@@ -19,8 +19,15 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
 }) => {
   const fontSizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
   const fontFamilies = [
-    'Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana', 
-    'Tahoma', 'Trebuchet MS', 'Impact', 'Comic Sans MS', 'Courier New'
+    'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Nunito', 'Source Sans Pro', 
+    'Raleway', 'Ubuntu', 'Work Sans', 'Fira Sans', 'Rubik', 'Quicksand', 'Comfortaa', 'Kanit', 
+    'Exo 2', 'Arial', 'Helvetica', 'Verdana', 'Playfair Display', 'Merriweather', 'Georgia', 
+    'Times New Roman', 'Palatino', 'Oswald', 'Bebas Neue', 'Anton', 'Fjalla One', 'Russo One', 
+    'Righteous', 'Impact', 'Orbitron', 'Audiowide', 'Dancing Script', 'Pacifico', 'Lobster', 
+    'Great Vibes', 'Sacramento', 'Satisfy', 'Cookie', 'Caveat', 'Kalam', 'Architects Daughter', 
+    'Shadows Into Light', 'Indie Flower', 'Permanent Marker', 'Fredoka One', 'Bungee', 'Bangers', 
+    'Creepster', 'Amatic SC', 'Press Start 2P', 'Comic Sans MS', 'Anonymous Pro', 'Courier New', 
+    'JetBrains Mono', 'Belleza', 'Binate', 'Trebuchet MS'
   ];
 
   return (
