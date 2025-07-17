@@ -25,11 +25,13 @@ export interface BrandAssets {
 }
 
 export interface ScratchCard {
+  id: string;
   content: string;
   isWinning: boolean;
 }
 
 export interface QuizQuestion {
+  id: string;
   question: string;
   options: string[];
   correctAnswer: number;
@@ -37,6 +39,7 @@ export interface QuizQuestion {
 
 export interface MemoryPair {
   id: string;
+  name?: string;
   image1: string;
   image2?: string;
 }
@@ -90,6 +93,18 @@ export interface EditorConfig {
   customCSS?: string;
   customJS?: string;
   trackingTags?: string;
+  
+  // General layout
+  width?: number;
+  height?: number;
+  gameMode?: string;
+  anchor?: string;
+  bannerImage?: string;
+  bannerDescription?: string;
+  bannerLink?: string;
+  centerText?: boolean;
+  centerForm?: boolean;
+  centerGameZone?: boolean;
   
   // Jackpot
   jackpotBackgroundColor?: string;
