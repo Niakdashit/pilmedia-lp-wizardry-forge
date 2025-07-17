@@ -104,14 +104,14 @@ export const useTextResize = (
       element.style.fontSize = `${currentSize}px`;
     }
 
-    // Decrease if we overflowed
+    // Decrease if we overflowed, but respect minimum font size
     if (element.scrollWidth > containerWidth || element.scrollHeight > containerHeight) {
-      currentSize -= step;
+      currentSize = Math.max(minFontSize, currentSize - step);
       element.style.fontSize = `${currentSize}px`;
     }
 
     onUpdate({ ...text, fontSize: currentSize });
-  }, [text, maxFontSize, step, onUpdate]);
+  }, [text, minFontSize, maxFontSize, step, onUpdate]);
 
   return {
     isResizing,
