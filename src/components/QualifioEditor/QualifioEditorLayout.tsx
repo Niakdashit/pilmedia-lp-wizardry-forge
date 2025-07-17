@@ -229,7 +229,7 @@ const QualifioEditorLayout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row">
+      <div className="flex flex-col md:flex-row">
         {/* Sidebar */}
         <QualifioSidebar
           config={config}
