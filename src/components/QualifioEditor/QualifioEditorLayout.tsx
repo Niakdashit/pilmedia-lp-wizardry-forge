@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 export type DeviceType = 'desktop' | 'tablet' | 'mobile';
@@ -43,8 +44,10 @@ export interface MemoryPair {
 export interface FormField {
   id: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'textarea';
+  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox';
   required: boolean;
+  options?: string[];
+  placeholder?: string;
 }
 
 export interface EditorConfig {
@@ -76,16 +79,34 @@ export interface EditorConfig {
   // Game-specific configurations
   borderStyle?: 'classic' | 'modern';
   
+  // Background and design
+  backgroundColor?: string;
+  
+  // Footer
+  footerText?: string;
+  footerColor?: string;
+  
+  // Custom code
+  customCSS?: string;
+  customJS?: string;
+  trackingTags?: string;
+  
   // Jackpot
   jackpotBackgroundColor?: string;
   jackpotBorderStyle?: string;
+  jackpotSymbols?: string[];
+  jackpotWinningCombination?: string[];
   
   // Scratch
   scratchCards?: ScratchCard[];
   scratchSurfaceColor?: string;
+  scratchPercentage?: number;
   
   // Dice
   diceWinningNumbers?: number[];
+  diceSides?: number;
+  diceColor?: string;
+  diceDotColor?: string;
   
   // Quiz
   quizQuestions?: QuizQuestion[];
@@ -95,6 +116,7 @@ export interface EditorConfig {
   memoryPairs?: MemoryPair[];
   memoryGridSize?: string;
   memoryTimeLimit?: number;
+  memoryCardBackColor?: string;
   
   // Puzzle
   puzzleImage?: string;
@@ -103,9 +125,16 @@ export interface EditorConfig {
   puzzleShowPreview?: boolean;
   puzzleDifficulty?: 'easy' | 'medium' | 'hard';
   puzzleBackgroundColor?: string;
+  puzzleAutoShuffle?: boolean;
   
   // Form
   formFields?: FormField[];
+  formTitle?: string;
+  formSuccessMessage?: string;
+  formShowProgress?: boolean;
+  
+  // Wheel
+  wheelSegments?: any[];
 }
 
 export interface CustomText {
@@ -136,3 +165,4 @@ const QualifioEditorLayout: React.FC<QualifioEditorLayoutProps> = () => {
 };
 
 export default QualifioEditorLayout;
+
