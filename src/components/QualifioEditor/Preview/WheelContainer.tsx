@@ -20,11 +20,18 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onResult,
   scale = 1.0
 }) => {
+  // Utiliser les couleurs extraites de l'image si disponibles
+  const brandColors = config.brandAssets ? {
+    primary: config.brandAssets.primaryColor || '#4ECDC4',
+    secondary: config.brandAssets.secondaryColor || '#F7B731', 
+    accent: config.brandAssets.accentColor || '#E74C3C'
+  } : undefined;
+
   const wheelSegments = [
-    { id: '1', label: 'Prix 3', color: '#4ECDC4' },
-    { id: '2', label: 'Dommage', color: '#F7B731' },
-    { id: '3', label: 'Prix 1', color: '#E74C3C' },
-    { id: '4', label: 'Prix 2', color: '#26D0CE' }
+    { id: '1', label: 'Prix 3', color: brandColors?.accent || '#4ECDC4' },
+    { id: '2', label: 'Dommage', color: brandColors?.secondary || '#F7B731' },
+    { id: '3', label: 'Prix 1', color: brandColors?.primary || '#E74C3C' },
+    { id: '4', label: 'Prix 2', color: brandColors?.primary || '#26D0CE' }
   ];
 
   const handleWheelResult = (segment: any) => {
@@ -67,9 +74,10 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         gamePosition={gamePosition}
         isMode1={isMode1}
         formFields={config.formFields}
+        brandColors={brandColors}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
-          color: "#8E44AD",
+          color: brandColors?.primary || "#8E44AD",
           textColor: "#ffffff"
         }}
       />
