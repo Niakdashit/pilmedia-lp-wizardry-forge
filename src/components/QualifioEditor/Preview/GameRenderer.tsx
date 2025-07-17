@@ -14,12 +14,14 @@ interface GameRendererProps {
   config: EditorConfig;
   device: DeviceType;
   onResult?: (result: any) => void;
+  isMode1?: boolean;
 }
 const GameRenderer: React.FC<GameRendererProps> = ({
   gameType,
   config,
   device,
-  onResult
+  onResult,
+  isMode1 = false
 }) => {
   // Récupérer les paramètres de position et d'échelle pour le device actuel
   const gamePosition = config.deviceConfig?.[device]?.gamePosition || {
@@ -179,6 +181,18 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           backgroundColor: config.puzzleBackgroundColor || '#f0f0f0'
         }} />;
       case 'form':
+        // En Mode 1, le formulaire est géré par ContentArea, donc on affiche un message
+        if (isMode1) {
+          return <div className="text-center p-8 bg-green-50 rounded-lg">
+              <div className="text-green-600 mb-4">
+                <div className="text-4xl mb-2">✅</div>
+                <h3 className="text-lg font-medium">Formulaire prêt</h3>
+                <p className="text-sm mt-2">
+                  Le formulaire sera affiché après avoir cliqué sur "Participer"
+                </p>
+              </div>
+            </div>;
+        }
         return <FormPreview campaign={{
           formFields: config.formFields || [{
             id: '1',

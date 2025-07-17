@@ -40,8 +40,13 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     if (config.gameType !== 'form') {
       setMode1State('wheel');
     } else {
-      // Pour le formulaire, rester sur le formulaire ou afficher un message de succès
-      console.log('Form game completed');
+      // Pour le formulaire, afficher le résultat directement
+      const formResult = {
+        id: 'form-success',
+        label: 'Formulaire envoyé avec succès !',
+        color: config.participateButtonColor || 'hsl(var(--brand-primary))'
+      };
+      onWheelResult?.(formResult);
     }
   };
   const handlePlayAgain = () => {
@@ -87,7 +92,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           </div>
           
           <div className="game-wrapper flex justify-center">
-            <GameRenderer gameType={config.gameType} config={config} device={device} onResult={onWheelResult} />
+            <GameRenderer gameType={config.gameType} config={config} device={device} onResult={onWheelResult} isMode1={true} />
           </div>
         </div>;
     }
