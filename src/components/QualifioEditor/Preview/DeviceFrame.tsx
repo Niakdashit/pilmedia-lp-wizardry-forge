@@ -18,8 +18,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     switch (device) {
       case 'mobile':
         return {
-          width: '350px',
-          height: '622px',
+          width: '100%',
+          maxWidth: '350px',
+          minHeight: '622px',
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
@@ -27,8 +28,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
       case 'tablet':
         return {
-          width: '653px',
-          height: '720px',
+          width: '100%',
+          maxWidth: '653px',
+          minHeight: '720px',
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
@@ -38,7 +40,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       default:
         if (fitContentDesktop) {
           return {
-            width: '1020px',
+            width: '100%',
+            maxWidth: '1020px',
             margin: '20px auto',
             border: '2px solid #ddd',
             borderRadius: '8px',
@@ -46,8 +49,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           };
         }
         return {
-          width: '1020px',
-          height: '680px',
+          width: '100%',
+          maxWidth: '1020px',
+          minHeight: '680px',
           // Hauteur fixe pour que l'image de fond remplisse complètement
           margin: '20px auto',
           border: '2px solid #ddd',
