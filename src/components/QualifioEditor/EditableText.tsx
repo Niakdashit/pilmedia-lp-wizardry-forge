@@ -1,7 +1,10 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import type { CustomText } from './QualifioEditorLayout';
 import TextToolbar from './TextToolbar';
+import TextResizeHandles from './components/TextResizeHandles';
+import { useTextResize } from './hooks/useTextResize';
 
 interface EditableTextProps {
   text: CustomText;
@@ -24,6 +27,8 @@ const EditableText: React.FC<EditableTextProps> = ({
   const [toolbarPosition, setToolbarPosition] = useState({ x: 0, y: 0 });
   const textRef = useRef<HTMLDivElement>(null);
 
+  const { isResizing, handleResizeStart } = useTextResize(text, onUpdate);
+
   useEffect(() => {
     setEditContent(text.content);
   }, [text.content]);
@@ -38,7 +43,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     e.stopPropagation();
     onSelect(text.id);
     
-    if (textRef.current && !isEditing) {
+    if (textRef.current && !isEditing && !isResizing) {
       const rect = textRef.current.getBoundingClientRect();
       setToolbarPosition({
         x: rect.left + window.scrollX,
@@ -104,11 +109,13 @@ const EditableText: React.FC<EditableTextProps> = ({
     padding: '8px',
     border: isSelected && !isEditing ? '2px solid #3b82f6' : '2px solid transparent',
     borderRadius: '4px',
-    cursor: isEditing ? 'text' : 'move',
+    cursor: isEditing ? 'text' : isResizing ? 'crosshair' : 'move',
     display: 'inline-block',
     position: 'relative',
     boxShadow: isSelected && !isEditing ? '0 0 0 1px rgba(59, 130, 246, 0.3)' : 'none',
-    userSelect: isEditing ? 'text' : 'none'
+    userSelect: isEditing ? 'text' : 'none',
+    overflow: 'hidden',
+    wordWrap: 'break-word'
   };
 
   return (
@@ -116,7 +123,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       <Draggable
         position={{ x: text.x, y: text.y }}
         onDrag={handleDrag}
-        disabled={isEditing}
+        disabled={isEditing || isResizing}
         bounds="parent"
         defaultClassName="absolute"
       >
@@ -151,11 +158,16 @@ const EditableText: React.FC<EditableTextProps> = ({
           ) : (
             <span style={{ whiteSpace: 'pre-wrap' }}>{text.content}</span>
           )}
+
+          {/* Poignées de redimensionnement */}
+          {isSelected && !isEditing && !isResizing && (
+            <TextResizeHandles onResizeStart={handleResizeStart} />
+          )}
         </div>
       </Draggable>
 
       {/* Toolbar Canva-style */}
-      {showToolbar && !isEditing && (
+      {showToolbar && !isEditing && !isResizing && (
         <TextToolbar
           text={text}
           position={toolbarPosition}
