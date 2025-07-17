@@ -22,7 +22,9 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   const [backgroundRemovalProgress, setBackgroundRemovalProgress] = useState('');
 
-  const handleRotate = () => {
+  const handleRotate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     const newRotation = (image.rotation || 0) + 90;
     onUpdate({ rotation: newRotation >= 360 ? 0 : newRotation });
   };
@@ -36,7 +38,9 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
     onUpdate({ opacity: opacity / 100 });
   };
 
-  const handleDuplicate = () => {
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     const newImage = {
       ...image,
       id: Date.now().toString(),
@@ -46,15 +50,22 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
     console.log('Duplicate image:', newImage);
   };
 
-  const handleLayerUp = () => {
+  const handleLayerUp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     onUpdate({ zIndex: (image.zIndex || 0) + 1 });
   };
 
-  const handleLayerDown = () => {
+  const handleLayerDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     onUpdate({ zIndex: Math.max(0, (image.zIndex || 0) - 1) });
   };
 
-  const handleRemoveBackground = async () => {
+  const handleRemoveBackground = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
     if (!image.src || isRemovingBackground) return;
     
     setIsRemovingBackground(true);
@@ -85,7 +96,6 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
       console.error('Failed to remove background:', error);
       setBackgroundRemovalProgress('');
       
-      // Message d'erreur plus informatif
       const errorMessage = error instanceof Error 
         ? `Erreur: ${error.message}` 
         : 'Échec de la suppression de l\'arrière-plan. Vérifiez que l\'image est valide et réessayez.';
@@ -96,21 +106,36 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
     }
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log('Delete button clicked');
+    onDelete();
+  };
+
+  const handleToolbarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
   return (
     <>
       {/* Overlay to close toolbar on click outside */}
       <div 
-        className="fixed inset-0 z-40"
+        className="fixed inset-0"
+        style={{ zIndex: 998 }}
         onClick={onClose}
       />
       
       {/* Main Toolbar */}
       <div
-        className="fixed z-50 bg-gray-900 text-white rounded-lg shadow-xl border border-gray-700"
+        className="fixed bg-gray-900 text-white rounded-lg shadow-xl border border-gray-700"
         style={{
           left: Math.min(position.x, window.innerWidth - 480),
           top: Math.max(10, position.y),
+          zIndex: 999
         }}
+        onClick={handleToolbarClick}
       >
         <div className="flex items-center">
           {/* Size Controls */}
@@ -124,6 +149,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
                   const value = parseInt(e.target.value) || 150;
                   handleSizeChange('width', value);
                 }}
+                onClick={(e) => e.stopPropagation()}
                 className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none w-16"
                 min="20"
                 max="800"
@@ -139,6 +165,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
                   const value = parseInt(e.target.value) || 150;
                   handleSizeChange('height', value);
                 }}
+                onClick={(e) => e.stopPropagation()}
                 className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none w-16"
                 min="20"
                 max="800"
@@ -155,6 +182,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
               max="100"
               value={Math.round((image.opacity || 1) * 100)}
               onChange={(e) => handleOpacityChange(parseInt(e.target.value))}
+              onClick={(e) => e.stopPropagation()}
               className="w-16 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
             />
             <span className="text-xs text-gray-300 w-8">{Math.round((image.opacity || 1) * 100)}%</span>
@@ -205,7 +233,10 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
             {/* Layers */}
             <div className="relative">
               <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAdvanced(!showAdvanced);
+                }}
                 className="p-2 rounded hover:bg-gray-700 transition-colors"
                 title="Gestion des calques"
               >
@@ -213,7 +244,11 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
               </button>
               
               {showAdvanced && (
-                <div className="absolute top-full right-0 mt-1 bg-gray-800 rounded-lg shadow-lg border border-gray-600 p-2 min-w-32">
+                <div 
+                  className="absolute top-full right-0 mt-1 bg-gray-800 rounded-lg shadow-lg border border-gray-600 p-2 min-w-32"
+                  style={{ zIndex: 1000 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     onClick={handleLayerUp}
                     className="w-full text-left px-2 py-1 text-sm hover:bg-gray-700 rounded"
@@ -232,7 +267,7 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
 
             {/* Delete */}
             <button
-              onClick={onDelete}
+              onClick={handleDelete}
               className="p-2 rounded hover:bg-red-600 text-red-400 transition-colors ml-1"
               title="Supprimer l'image"
             >

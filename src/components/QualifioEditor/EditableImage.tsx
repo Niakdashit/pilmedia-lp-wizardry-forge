@@ -24,11 +24,15 @@ const EditableImage: React.FC<EditableImageProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartData, setResizeStartData] = useState<any>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<HTMLDivElement>(null);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    
     if (isDragging || isResizing) return;
     
+    console.log('Image clicked, selecting:', image.id);
     onSelect(image.id);
     
     if (imageRef.current) {
@@ -41,26 +45,32 @@ const EditableImage: React.FC<EditableImageProps> = ({
     }
   }, [image.id, onSelect, isDragging, isResizing]);
 
-  const handleDragStart = useCallback(() => {
+  const handleDragStart = useCallback((e: any, data: any) => {
+    console.log('Drag start');
     setIsDragging(true);
     setShowToolbar(false);
   }, []);
 
-  const handleDrag = useCallback((_: any, data: any) => {
+  const handleDrag = useCallback((e: any, data: any) => {
+    if (isResizing) return;
+    
     onUpdate({
       ...image,
       x: data.x,
       y: data.y
     });
-  }, [image, onUpdate]);
+  }, [image, onUpdate, isResizing]);
 
-  const handleDragStop = useCallback(() => {
+  const handleDragStop = useCallback((e: any, data: any) => {
+    console.log('Drag stop');
     setIsDragging(false);
   }, []);
 
   const handleResizeStart = useCallback((e: React.MouseEvent, corner: string) => {
+    console.log('Resize start:', corner);
     e.stopPropagation();
     e.preventDefault();
+    
     setIsResizing(true);
     setShowToolbar(false);
     
@@ -83,6 +93,8 @@ const EditableImage: React.FC<EditableImageProps> = ({
     if (!isResizing || !resizeStartData) return;
 
     e.preventDefault();
+    e.stopPropagation();
+    
     const deltaX = e.clientX - resizeStartData.startX;
     const deltaY = e.clientY - resizeStartData.startY;
     
@@ -91,7 +103,6 @@ const EditableImage: React.FC<EditableImageProps> = ({
     let newX = resizeStartData.startLeft;
     let newY = resizeStartData.startTop;
 
-    // Maintenir les proportions si Shift est pressé
     const maintainAspectRatio = e.shiftKey;
 
     switch (resizeStartData.corner) {
@@ -161,15 +172,28 @@ const EditableImage: React.FC<EditableImageProps> = ({
   }, [isResizing, resizeStartData, image, onUpdate]);
 
   const handleResizeEnd = useCallback((e: MouseEvent) => {
+    console.log('Resize end');
     e.preventDefault();
+    e.stopPropagation();
     setIsResizing(false);
     setResizeStartData(null);
   }, []);
 
   React.useEffect(() => {
     if (isResizing) {
-      document.addEventListener('mousemove', handleResizeMove, { passive: false });
-      document.addEventListener('mouseup', handleResizeEnd, { passive: false });
+      const handleMouseMove = (e: MouseEvent) => {
+        e.preventDefault();
+        handleResizeMove(e);
+      };
+      
+      const handleMouseUp = (e: MouseEvent) => {
+        e.preventDefault();
+        handleResizeEnd(e);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove, { passive: false, capture: true });
+      document.addEventListener('mouseup', handleMouseUp, { passive: false, capture: true });
+      
       document.body.style.cursor = resizeStartData?.corner?.includes('right') && resizeStartData?.corner?.includes('bottom') ? 'nw-resize' :
                                    resizeStartData?.corner?.includes('left') && resizeStartData?.corner?.includes('bottom') ? 'ne-resize' :
                                    resizeStartData?.corner?.includes('right') && resizeStartData?.corner?.includes('top') ? 'sw-resize' :
@@ -177,12 +201,14 @@ const EditableImage: React.FC<EditableImageProps> = ({
                                    resizeStartData?.corner === 'top' || resizeStartData?.corner === 'bottom' ? 'ns-resize' :
                                    'ew-resize';
       document.body.style.userSelect = 'none';
+      document.body.style.pointerEvents = 'none';
       
       return () => {
-        document.removeEventListener('mousemove', handleResizeMove);
-        document.removeEventListener('mouseup', handleResizeEnd);
+        document.removeEventListener('mousemove', handleMouseMove, { capture: true });
+        document.removeEventListener('mouseup', handleMouseUp, { capture: true });
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
+        document.body.style.pointerEvents = '';
       };
     }
   }, [isResizing, handleResizeMove, handleResizeEnd, resizeStartData]);
@@ -192,6 +218,7 @@ const EditableImage: React.FC<EditableImageProps> = ({
   }, [image, onUpdate]);
 
   const handleToolbarDelete = useCallback(() => {
+    console.log('Deleting image:', image.id);
     setShowToolbar(false);
     onDelete(image.id);
   }, [image.id, onDelete]);
@@ -199,6 +226,35 @@ const EditableImage: React.FC<EditableImageProps> = ({
   const handleToolbarClose = useCallback(() => {
     setShowToolbar(false);
   }, []);
+
+  if (!image.src) {
+    return null;
+  }
+
+  const getResizeHandleStyle = (position: string) => {
+    const baseStyle = "absolute w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-lg hover:bg-blue-600 transition-colors";
+    
+    switch (position) {
+      case 'top-left':
+        return `${baseStyle} -top-2 -left-2 cursor-nw-resize`;
+      case 'top-right':
+        return `${baseStyle} -top-2 -right-2 cursor-ne-resize`;
+      case 'bottom-left':
+        return `${baseStyle} -bottom-2 -left-2 cursor-sw-resize`;
+      case 'bottom-right':
+        return `${baseStyle} -bottom-2 -right-2 cursor-se-resize`;
+      case 'top':
+        return `${baseStyle} -top-2 left-1/2 transform -translate-x-1/2 cursor-n-resize`;
+      case 'bottom':
+        return `${baseStyle} -bottom-2 left-1/2 transform -translate-x-1/2 cursor-s-resize`;
+      case 'left':
+        return `${baseStyle} -left-2 top-1/2 transform -translate-y-1/2 cursor-w-resize`;
+      case 'right':
+        return `${baseStyle} -right-2 top-1/2 transform -translate-y-1/2 cursor-e-resize`;
+      default:
+        return baseStyle;
+    }
+  };
 
   const imageStyle: React.CSSProperties = {
     width: `${image.width || 150}px`,
@@ -212,37 +268,15 @@ const EditableImage: React.FC<EditableImageProps> = ({
     userSelect: 'none',
     objectFit: 'cover' as const,
     opacity: image.opacity || 1,
-    zIndex: image.zIndex || 0,
-    transition: isDragging || isResizing ? 'none' : 'all 0.1s ease'
+    transition: isDragging || isResizing ? 'none' : 'all 0.1s ease',
+    pointerEvents: 'auto'
   };
 
-  if (!image.src) {
-    return null;
-  }
-
-  const getResizeHandleStyle = (position: string) => {
-    const baseStyle = "absolute w-3 h-3 bg-blue-500 border-2 border-white rounded-full shadow-lg z-20 hover:bg-blue-600 transition-colors";
-    
-    switch (position) {
-      case 'top-left':
-        return `${baseStyle} -top-1.5 -left-1.5 cursor-nw-resize`;
-      case 'top-right':
-        return `${baseStyle} -top-1.5 -right-1.5 cursor-ne-resize`;
-      case 'bottom-left':
-        return `${baseStyle} -bottom-1.5 -left-1.5 cursor-sw-resize`;
-      case 'bottom-right':
-        return `${baseStyle} -bottom-1.5 -right-1.5 cursor-se-resize`;
-      case 'top':
-        return `${baseStyle} -top-1.5 left-1/2 transform -translate-x-1/2 cursor-n-resize`;
-      case 'bottom':
-        return `${baseStyle} -bottom-1.5 left-1/2 transform -translate-x-1/2 cursor-s-resize`;
-      case 'left':
-        return `${baseStyle} -left-1.5 top-1/2 transform -translate-y-1/2 cursor-w-resize`;
-      case 'right':
-        return `${baseStyle} -right-1.5 top-1/2 transform -translate-y-1/2 cursor-e-resize`;
-      default:
-        return baseStyle;
-    }
+  const containerStyle: React.CSSProperties = {
+    width: `${image.width || 150}px`, 
+    height: `${image.height || 150}px`,
+    zIndex: isSelected ? 1000 : (image.zIndex || 0) + 100,
+    position: 'relative'
   };
 
   return (
@@ -256,80 +290,93 @@ const EditableImage: React.FC<EditableImageProps> = ({
         disabled={isResizing}
         defaultClassName="absolute"
         scale={1}
+        nodeRef={dragRef}
       >
         <div
-          ref={imageRef}
-          onClick={handleClick}
-          className="group relative"
-          style={{ 
-            width: `${image.width || 150}px`, 
-            height: `${image.height || 150}px`,
-            zIndex: image.zIndex || 0
-          }}
+          ref={dragRef}
+          style={containerStyle}
         >
-          <img
-            src={image.src}
-            alt="Image personnalisée"
-            style={imageStyle}
-            draggable={false}
-            onError={(e) => {
-              console.warn('Image failed to load:', image.src);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          
-          {/* Poignées de redimensionnement améliorées */}
-          {isSelected && !isDragging && (
-            <>
-              {/* Coins */}
-              <div
-                className={getResizeHandleStyle('top-left')}
-                onMouseDown={(e) => handleResizeStart(e, 'top-left')}
-              />
-              <div
-                className={getResizeHandleStyle('top-right')}
-                onMouseDown={(e) => handleResizeStart(e, 'top-right')}
-              />
-              <div
-                className={getResizeHandleStyle('bottom-left')}
-                onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
-              />
-              <div
-                className={getResizeHandleStyle('bottom-right')}
-                onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
-              />
-              
-              {/* Milieux des côtés */}
-              <div
-                className={getResizeHandleStyle('top')}
-                onMouseDown={(e) => handleResizeStart(e, 'top')}
-              />
-              <div
-                className={getResizeHandleStyle('bottom')}
-                onMouseDown={(e) => handleResizeStart(e, 'bottom')}
-              />
-              <div
-                className={getResizeHandleStyle('left')}
-                onMouseDown={(e) => handleResizeStart(e, 'left')}
-              />
-              <div
-                className={getResizeHandleStyle('right')}
-                onMouseDown={(e) => handleResizeStart(e, 'right')}
-              />
+          <div
+            ref={imageRef}
+            onClick={handleClick}
+            className="group relative w-full h-full"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <img
+              src={image.src}
+              alt="Image personnalisée"
+              style={imageStyle}
+              draggable={false}
+              onError={(e) => {
+                console.warn('Image failed to load:', image.src);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            
+            {/* Poignées de redimensionnement */}
+            {isSelected && !isDragging && (
+              <>
+                {/* Coins */}
+                <div
+                  className={getResizeHandleStyle('top-left')}
+                  onMouseDown={(e) => handleResizeStart(e, 'top-left')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('top-right')}
+                  onMouseDown={(e) => handleResizeStart(e, 'top-right')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('bottom-left')}
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('bottom-right')}
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                
+                {/* Milieux des côtés */}
+                <div
+                  className={getResizeHandleStyle('top')}
+                  onMouseDown={(e) => handleResizeStart(e, 'top')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('bottom')}
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('left')}
+                  onMouseDown={(e) => handleResizeStart(e, 'left')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('right')}
+                  onMouseDown={(e) => handleResizeStart(e, 'right')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
 
-              {/* Indicateur pour maintenir les proportions */}
-              {isResizing && (
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  Maintenez Shift pour garder les proportions
-                </div>
-              )}
-            </>
-          )}
+                {/* Indicateur pour maintenir les proportions */}
+                {isResizing && (
+                  <div 
+                    className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
+                    style={{ zIndex: 1002 }}
+                  >
+                    Maintenez Shift pour garder les proportions
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </Draggable>
 
       {/* Toolbar */}
-      {showToolbar && (
+      {showToolbar && !isResizing && (
         <ImageToolbar
           image={image}
           position={toolbarPosition}
