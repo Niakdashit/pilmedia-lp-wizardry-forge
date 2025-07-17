@@ -73,7 +73,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
     switch (gameType) {
       case 'wheel':
-        return <WheelContainer device={device} config={config} isMode1={false} isVisible={true} onResult={onResult} scale={gamePosition.scale} />;
+        return <WheelContainer device={device} config={config} isMode1={isMode1} isVisible={true} onResult={onResult} scale={gamePosition.scale} />;
       case 'jackpot':
         return <Jackpot 
           isPreview={true} 
