@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import Draggable from 'react-draggable';
 import ImageToolbar from './ImageToolbar';
@@ -45,13 +44,13 @@ const EditableImage: React.FC<EditableImageProps> = ({
     }
   }, [image.id, onSelect, isDragging, isResizing]);
 
-  const handleDragStart = useCallback((e: any, data: any) => {
+  const handleDragStart = useCallback(() => {
     console.log('Drag start');
     setIsDragging(true);
     setShowToolbar(false);
   }, []);
 
-  const handleDrag = useCallback((e: any, data: any) => {
+  const handleDrag = useCallback((_: any, data: any) => {
     if (isResizing) return;
     
     onUpdate({
@@ -61,7 +60,7 @@ const EditableImage: React.FC<EditableImageProps> = ({
     });
   }, [image, onUpdate, isResizing]);
 
-  const handleDragStop = useCallback((e: any, data: any) => {
+  const handleDragStop = useCallback(() => {
     console.log('Drag stop');
     setIsDragging(false);
   }, []);
