@@ -1,10 +1,19 @@
 import React from 'react';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
-import type { EditorConfig, FormField } from '../../QualifioEditorLayout';
+import type { EditorConfig } from '../../QualifioEditorLayout';
 
 interface FormMechanicConfigProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
+}
+
+interface FormField {
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'select' | 'textarea' | 'checkbox';
+  required?: boolean;
+  options?: string[];
+  placeholder?: string;
 }
 
 const FormMechanicConfig: React.FC<FormMechanicConfigProps> = ({ config, onConfigUpdate }) => {
