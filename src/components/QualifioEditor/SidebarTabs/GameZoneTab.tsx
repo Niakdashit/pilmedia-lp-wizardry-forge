@@ -247,7 +247,7 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       
       {/* Device Selector */}
       <div className="premium-card py-0">
-        <label className="block text-sm font-medium mb-4">Appareil sélectionné</label>
+        <label className="block text-sm font-medium mb-4 my-[30px]">Appareil sélectionné</label>
         <div className="flex gap-2 mb-6">
           {devices.map(device => <button key={device.id} onClick={() => setSelectedDevice(device.id)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedDevice === device.id ? 'text-white' : 'text-sidebar-text-muted hover:text-sidebar-text-primary'}`} style={{
           backgroundColor: selectedDevice === device.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
