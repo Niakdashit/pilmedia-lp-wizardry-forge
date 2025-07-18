@@ -32,6 +32,7 @@ import AdminSettings from './pages/AdminSettings';
 import AdminTeam from './pages/AdminTeam';
 import AdminAlerts from './pages/AdminAlerts';
 import QualifioEditor from './pages/QualifioEditor';
+import QualifioLivePreview from './pages/QualifioLivePreview';
 
 function App() {
   return (
@@ -87,6 +88,7 @@ function App() {
             } />
             
             <Route path="/qualifio-editor" element={<QualifioEditor />} />
+            <Route path="/qualifio-live" element={<QualifioLivePreview />} />
             
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Admin />} />

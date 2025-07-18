@@ -220,8 +220,14 @@ const QualifioEditorLayout: React.FC = () => {
               onDeviceChange={setSelectedDevice}
             />
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors">
-                Sauvegarder le template
+              <button
+                onClick={() => {
+                  localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
+                  window.open(`/qualifio-live?device=${selectedDevice}`, '_blank');
+                }}
+                className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
+              >
+                Aperçu live
               </button>
               <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
                 <Save className="w-4 h-4" />
