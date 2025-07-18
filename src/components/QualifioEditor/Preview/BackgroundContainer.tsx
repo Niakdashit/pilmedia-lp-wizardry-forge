@@ -30,8 +30,8 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   };
 
   useEffect(() => {
-    // Calculer le ratio d'aspect seulement pour Mode 1 en desktop
-    if (isMode1 && device === 'desktop') {
+    // Calculer le ratio d'aspect pour desktop (Mode 1 et Mode 2)
+    if (device === 'desktop') {
       const img = new Image();
       img.onload = () => {
         const aspectRatio = img.naturalWidth / img.naturalHeight;
@@ -42,11 +42,11 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   }, [isMode1, device, config.deviceConfig]);
 
   const getContentDimensions = () => {
-    // Pour Mode 2 en desktop, appliquer un ratio 16:9
-    if (!isMode1 && device === 'desktop') {
+    // Pour Mode 2 en desktop, utiliser le ratio exact de l'image pour éviter les espaces blancs
+    if (!isMode1 && device === 'desktop' && imageAspectRatio) {
       return {
         width: '100%',
-        height: '56.25vw', // 9/16 = 0.5625, donc 56.25vw pour un ratio 16:9
+        height: `${100 / imageAspectRatio}vw`,
         maxHeight: '70vh'
       };
     }
