@@ -9,7 +9,7 @@ const CodeTab: React.FC<CodeTabProps> = ({
   config,
   onConfigUpdate
 }) => {
-  return <div className="space-y-6 mx-[30px] py-0 my-0">
+  return <div className="space-y-6 mx-[30px] py-0 my-[30px]">
       {/* Avertissement */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
