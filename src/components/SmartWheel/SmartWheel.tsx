@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
@@ -6,7 +5,6 @@ import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
 import BorderStyleSelector from './components/BorderStyleSelector';
 import ParticipationModal from './components/ParticipationModal';
-
 type Mode2State = 'form' | 'wheel' | 'result';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
@@ -21,7 +19,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   borderStyle = 'classic',
   className = '',
   maxSize,
-  buttonPosition = 'bottom',
+  buttonPosition,
   gamePosition,
   isMode1 = true,
   formFields
@@ -154,11 +152,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {
-    // Si le bouton est au centre, retourner une classe spéciale
-    if (finalButtonPosition === 'center') {
-      return 'relative flex items-center justify-center';
-    }
-
     switch (finalButtonPosition) {
       case 'top':
         return 'flex flex-col-reverse items-center space-y-reverse space-y-6';
@@ -234,22 +227,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     }
   };
 
-  // Rendu du bouton
-  const renderButton = () => (
-    <button
-      onClick={handleButtonClick}
-      disabled={isButtonDisabled()}
-      className={`${finalButtonPosition === 'center' ? 'absolute z-20' : ''} px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
-      style={{
-        backgroundColor: buttonConfig.color,
-        color: buttonConfig.textColor,
-        boxShadow: `0 4px 14px ${buttonConfig.color}40`
-      }}
-    >
-      {buttonConfig.text}
-    </button>
-  );
-
   return (
     <>
       <div className={`${getLayoutClasses()} ${className}`}>
@@ -266,9 +243,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
               transition: 'filter 0.3s ease'
             }}
           />
-          
-          {/* Bouton au centre si position center */}
-          {finalButtonPosition === 'center' && renderButton()}
           
           {/* Message si aucun segment */}
           {segments.length === 0 && (
@@ -295,8 +269,19 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           )}
         </div>
 
-        {/* Bouton de rotation (seulement si pas au centre) */}
-        {finalButtonPosition !== 'center' && renderButton()}
+        {/* Bouton de rotation */}
+        <button
+          onClick={handleButtonClick}
+          disabled={isButtonDisabled()}
+          className="px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          style={{
+            backgroundColor: buttonConfig.color,
+            color: buttonConfig.textColor,
+            boxShadow: `0 4px 14px ${buttonConfig.color}40`
+          }}
+        >
+          {buttonConfig.text}
+        </button>
 
         {/* Message de validation si segment sélectionné */}
         {!isMode1 && mode2State === 'result' && finalResult && (
@@ -338,5 +323,4 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     </>
   );
 };
-
 export default SmartWheel;
