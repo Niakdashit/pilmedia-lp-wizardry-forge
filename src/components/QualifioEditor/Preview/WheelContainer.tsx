@@ -70,7 +70,6 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         borderStyle={config.borderStyle || 'classic'}
         onResult={handleWheelResult}
         gamePosition={gamePosition}
-        buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : undefined}
         isMode1={isMode1}
         formFields={config.formFields}
         brandColors={brandColors}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
@@ -153,11 +152,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {
-    // Si le bouton est au centre, utiliser une position relative
-    if (finalButtonPosition === 'center') {
-      return 'flex flex-col items-center space-y-6';
-    }
-    
     switch (finalButtonPosition) {
       case 'top':
         return 'flex flex-col-reverse items-center space-y-reverse space-y-6';
@@ -233,24 +227,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     }
   };
 
-  // Render button component
-  const renderButton = () => (
-    <button
-      onClick={handleButtonClick}
-      disabled={isButtonDisabled()}
-      className={`px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${
-        finalButtonPosition === 'center' ? 'absolute z-10' : ''
-      }`}
-      style={{
-        backgroundColor: buttonConfig.color,
-        color: buttonConfig.textColor,
-        boxShadow: `0 4px 14px ${buttonConfig.color}40`
-      }}
-    >
-      {buttonConfig.text}
-    </button>
-  );
-
   return (
     <>
       <div className={`${getLayoutClasses()} ${className}`}>
@@ -267,13 +243,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
               transition: 'filter 0.3s ease'
             }}
           />
-          
-          {/* Bouton central */}
-          {finalButtonPosition === 'center' && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              {renderButton()}
-            </div>
-          )}
           
           {/* Message si aucun segment */}
           {segments.length === 0 && (
@@ -300,8 +269,19 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           )}
         </div>
 
-        {/* Bouton de rotation externe */}
-        {finalButtonPosition !== 'center' && renderButton()}
+        {/* Bouton de rotation */}
+        <button
+          onClick={handleButtonClick}
+          disabled={isButtonDisabled()}
+          className="px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          style={{
+            backgroundColor: buttonConfig.color,
+            color: buttonConfig.textColor,
+            boxShadow: `0 4px 14px ${buttonConfig.color}40`
+          }}
+        >
+          {buttonConfig.text}
+        </button>
 
         {/* Message de validation si segment sélectionné */}
         {!isMode1 && mode2State === 'result' && finalResult && (
