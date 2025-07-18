@@ -223,7 +223,7 @@ const QualifioEditorLayout: React.FC = () => {
               <button
                 onClick={() => {
                   localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
-                  window.open(`/qualifio-live?device=${selectedDevice}`, '_blank');
+                  window.open(`${window.location.origin}/qualifio-live?device=${selectedDevice}`, '_blank');
                 }}
                 className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
               >
