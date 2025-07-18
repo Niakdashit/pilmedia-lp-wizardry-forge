@@ -2,46 +2,39 @@
 export interface WheelSegment {
   id: string;
   label: string;
-  color: string;
+  value?: string;
+  color?: string;
   textColor?: string;
-  value?: any;
-}
-
-export interface CustomButton {
-  text: string;
-  color: string;
-  textColor: string;
-  position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  icon?: string;
+  probability?: number;
 }
 
 export interface WheelTheme {
+  name: string;
   colors: {
     primary: string;
     secondary: string;
     accent: string;
     background: string;
-    text: string;
     border: string;
+    text: string;
   };
   effects: {
     gradient: boolean;
-    shadow: boolean;
     glow: boolean;
-    metallic?: boolean;
-    animated?: boolean;
+    shadow: boolean;
+    metallic: boolean;
   };
-}
-
-export interface WheelState {
-  rotation: number;
-  isSpinning: boolean;
-  currentSegment: WheelSegment | null;
-  hasSpun: boolean;
+  animation: {
+    duration: number;
+    easing: string;
+    particles: boolean;
+  };
 }
 
 export interface SmartWheelProps {
   segments: WheelSegment[];
-  theme?: string;
+  theme?: WheelTheme | string;
   size?: number;
   disabled?: boolean;
   onSpin?: () => void;
@@ -51,18 +44,30 @@ export interface SmartWheelProps {
     secondary: string;
     accent?: string;
   };
-  customButton?: CustomButton;
-  borderStyle?: string;
+  customButton?: {
+    text: string;
+    color: string;
+    textColor: string;
+  };
+  borderStyle?: string; // Nouveau prop pour le style de bordure
   className?: string;
-  maxSize?: number;
-  buttonPosition?: 'top' | 'bottom' | 'left' | 'right';
-  gamePosition?: { x: number; y: number };
-  isMode1?: boolean;
+  maxSize?: number; // Limite la taille maximum de la roue
+  buttonPosition?: 'top' | 'bottom' | 'left' | 'right'; // Position du bouton
+  gamePosition?: { x: number; y: number; scale: number }; // Position du jeu pour auto-repositionnement
+  isMode1?: boolean; // Mode 1 (normal) ou Mode 2 (avec formulaire)
   formFields?: Array<{
     id: string;
+    type: 'text' | 'email' | 'tel' | 'select' | 'textarea' | 'checkbox';
     label: string;
-    type: 'text' | 'email' | 'tel' | 'textarea';
-    required: boolean;
     placeholder?: string;
-  }>;
+    required?: boolean;
+    options?: string[];
+  }>; // Champs de formulaire personnalisés pour le mode 2
+}
+
+export interface WheelState {
+  isSpinning: boolean;
+  rotation: number;
+  targetRotation: number;
+  currentSegment: WheelSegment | null;
 }

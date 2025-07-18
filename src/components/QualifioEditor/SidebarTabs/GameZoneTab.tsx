@@ -3,12 +3,10 @@ import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
 import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
 import GamePositionControls from '../Controls/GamePositionControls';
 import { generateBrandThemeFromFile } from '../../../utils/BrandStyleAnalyzer';
-
 interface GameZoneTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-
 const GameZoneTab: React.FC<GameZoneTabProps> = ({
   config,
   onConfigUpdate
@@ -21,7 +19,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const tabletInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
-
   // Fonction pour obtenir la ref correspondant au device
   const getInputRef = (device: DeviceType) => {
     switch (device) {
@@ -193,7 +190,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
     
     reader.readAsDataURL(file);
   };
-
   const handleFontSizeChange = (device: DeviceType, fontSize: number) => {
     onConfigUpdate({
       deviceConfig: {
@@ -207,7 +203,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       }
     });
   };
-
   const devices = [{
     id: 'desktop' as DeviceType,
     label: 'PC',
@@ -221,37 +216,21 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
     label: 'Mobile',
     icon: Smartphone
   }];
-
   const currentDeviceConfig = config.deviceConfig?.[selectedDevice];
-
-  return (
-    <div className="sidebar-content my-0 py-0">
+  return <div className="sidebar-content my-0 py-0">
+      
+      
       {/* Device Selector */}
       <div className="premium-card py-0">
         <label className="block text-sm font-medium mb-4">Appareil sélectionné</label>
         <div className="flex gap-2 mb-6">
-          {devices.map(device => (
-            <button
-              key={device.id}
-              onClick={() => setSelectedDevice(device.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedDevice === device.id 
-                  ? 'text-white' 
-                  : 'text-sidebar-text-muted hover:text-sidebar-text-primary'
-              }`}
-              style={{
-                backgroundColor: selectedDevice === device.id 
-                  ? 'hsl(var(--sidebar-active))' 
-                  : 'hsl(var(--sidebar-surface))',
-                border: selectedDevice === device.id 
-                  ? '1px solid hsl(var(--sidebar-active))' 
-                  : '1px solid hsl(var(--sidebar-border))'
-              }}
-            >
+          {devices.map(device => <button key={device.id} onClick={() => setSelectedDevice(device.id)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedDevice === device.id ? 'text-white' : 'text-sidebar-text-muted hover:text-sidebar-text-primary'}`} style={{
+          backgroundColor: selectedDevice === device.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
+          border: selectedDevice === device.id ? '1px solid hsl(var(--sidebar-active))' : '1px solid hsl(var(--sidebar-border))'
+        }}>
               <device.icon className="w-4 h-4" />
               {device.label}
-            </button>
-          ))}
+            </button>)}
         </div>
 
         {/* Background Image Upload - Inputs séparés pour chaque device */}
@@ -314,7 +293,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
               <span>Choisir une image ({selectedDevice})</span>
             </button>
 
-            {/* Cases à cocher pour appliquer l'image PC aux autres appareils */}
             {selectedDevice === 'desktop' && (
               <div className="flex gap-4 text-xs">
                 <label className="flex items-center gap-1">
@@ -339,11 +317,7 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
             {/* Aperçu de l'image */}
             {currentDeviceConfig?.backgroundImage && (
               <div className="relative">
-                <img 
-                  src={currentDeviceConfig.backgroundImage} 
-                  alt="Aperçu" 
-                  className="w-full h-24 object-cover rounded-lg" 
-                />
+                <img src={currentDeviceConfig.backgroundImage} alt="Aperçu" className="w-full h-24 object-cover rounded-lg" />
                 <button 
                   onClick={() => handleBackgroundImageUpload(selectedDevice, new File([], ''))} 
                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
@@ -426,8 +400,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default GameZoneTab;
