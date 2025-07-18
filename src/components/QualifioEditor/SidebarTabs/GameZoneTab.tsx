@@ -331,60 +331,7 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       </div>
 
       {/* Existing controls */}
-      <div className="premium-card">
-        <div className="form-group-premium">
-          <label htmlFor="width">Largeur (px)</label>
-          <input type="number" id="width" value={config.width} onChange={e => onConfigUpdate({
-          width: parseInt(e.target.value)
-        })} min="200" max="1200" />
-        </div>
-
-        <div className="form-group-premium">
-          <label htmlFor="height">Hauteur minimum (px)</label>
-          <input type="number" id="height" value={config.height} onChange={e => onConfigUpdate({
-          height: parseInt(e.target.value)
-        })} min="300" max="2000" />
-        </div>
-
-        <div className="form-group-premium">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={config.centerText} onChange={e => onConfigUpdate({
-            centerText: e.target.checked
-          })} />
-            Centrer le texte
-          </label>
-        </div>
-
-        <div className="form-group-premium">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={config.centerForm} onChange={e => onConfigUpdate({
-            centerForm: e.target.checked
-          })} />
-            Centrer le questionnaire
-          </label>
-        </div>
-
-        <div className="form-group-premium">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={config.centerGameZone} onChange={e => onConfigUpdate({
-            centerGameZone: e.target.checked
-          })} />
-            Centrer le formulaire
-          </label>
-        </div>
-
-        <div className="form-group-premium">
-          <label htmlFor="backgroundColor">Couleur de fond du concours</label>
-          <div className="color-input-group">
-            <input type="color" id="backgroundColor" value={config.backgroundColor} onChange={e => onConfigUpdate({
-            backgroundColor: e.target.value
-          })} />
-            <input type="text" value={config.backgroundColor} onChange={e => onConfigUpdate({
-            backgroundColor: e.target.value
-          })} placeholder="#ffffff" />
-          </div>
-        </div>
-      </div>
+      
     </div>;
 };
 export default GameZoneTab;
