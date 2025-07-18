@@ -148,6 +148,7 @@ export interface EditorConfig {
 const QualifioEditorLayout: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<string>('general');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
     height: 1200,
@@ -237,14 +238,18 @@ const QualifioEditorLayout: React.FC = () => {
         <QualifioSidebar 
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
         
         {/* Content Panel */}
-        <QualifioContentPanel 
-          activeTab={activeTab}
-          config={config}
-          onConfigUpdate={updateConfig}
-        />
+        {!isSidebarCollapsed && (
+          <QualifioContentPanel 
+            activeTab={activeTab}
+            config={config}
+            onConfigUpdate={updateConfig}
+          />
+        )}
         
         {/* Preview Area */}
         <div className="flex-1 p-6">
