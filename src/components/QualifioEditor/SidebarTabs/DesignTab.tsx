@@ -44,7 +44,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
       <h3 className="section-title text-center">Design et éléments visuels</h3>
       
       {/* Images personnalisées */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Images personnalisées</h4>
         
         <div className="space-y-4">
@@ -87,7 +87,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
       </div>
 
       {/* Paramètres d'arrière-plan */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Arrière-plan</h4>
         
         <div className="space-y-4">
