@@ -1,15 +1,15 @@
 import React from 'react';
 import { Code, AlertTriangle } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
-
 interface CodeTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-
-const CodeTab: React.FC<CodeTabProps> = ({ config, onConfigUpdate }) => {
-  return (
-    <div className="space-y-6">
+const CodeTab: React.FC<CodeTabProps> = ({
+  config,
+  onConfigUpdate
+}) => {
+  return <div className="space-y-6 mx-[30px] py-0 my-0">
       {/* Avertissement */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
@@ -34,13 +34,9 @@ const CodeTab: React.FC<CodeTabProps> = ({ config, onConfigUpdate }) => {
         <div className="space-y-4">
           <div className="form-group-premium">
             <label>Styles CSS</label>
-            <textarea
-              value={config.customCSS || ''}
-              onChange={(e) => onConfigUpdate({ customCSS: e.target.value })}
-              rows={8}
-              className="font-mono text-sm"
-              placeholder="/* Ajoutez votre CSS personnalisé ici */&#10;.custom-element {&#10;  color: #ff6b35;&#10;  font-weight: bold;&#10;}"
-            />
+            <textarea value={config.customCSS || ''} onChange={e => onConfigUpdate({
+            customCSS: e.target.value
+          })} rows={8} className="font-mono text-sm" placeholder="/* Ajoutez votre CSS personnalisé ici */&#10;.custom-element {&#10;  color: #ff6b35;&#10;  font-weight: bold;&#10;}" />
           </div>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -62,13 +58,9 @@ const CodeTab: React.FC<CodeTabProps> = ({ config, onConfigUpdate }) => {
         <div className="space-y-4">
           <div className="form-group-premium">
             <label>Code JavaScript</label>
-            <textarea
-              value={config.customJS || ''}
-              onChange={(e) => onConfigUpdate({ customJS: e.target.value })}
-              rows={8}
-              className="font-mono text-sm"
-              placeholder="// Ajoutez votre JavaScript personnalisé ici&#10;document.addEventListener('DOMContentLoaded', function() {&#10;  console.log('Concours chargé');&#10;});"
-            />
+            <textarea value={config.customJS || ''} onChange={e => onConfigUpdate({
+            customJS: e.target.value
+          })} rows={8} className="font-mono text-sm" placeholder="// Ajoutez votre JavaScript personnalisé ici&#10;document.addEventListener('DOMContentLoaded', function() {&#10;  console.log('Concours chargé');&#10;});" />
           </div>
           
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
@@ -90,13 +82,9 @@ const CodeTab: React.FC<CodeTabProps> = ({ config, onConfigUpdate }) => {
         <div className="space-y-4">
           <div className="form-group-premium">
             <label>Codes de suivi</label>
-            <textarea
-              value={config.trackingTags || ''}
-              onChange={(e) => onConfigUpdate({ trackingTags: e.target.value })}
-              rows={6}
-              className="font-mono text-sm"
-              placeholder="<!-- Ajoutez vos tags de tracking ici -->&#10;<!-- Google Analytics, Facebook Pixel, etc. -->&#10;<script>&#10;  // Votre code de tracking&#10;</script>"
-            />
+            <textarea value={config.trackingTags || ''} onChange={e => onConfigUpdate({
+            trackingTags: e.target.value
+          })} rows={6} className="font-mono text-sm" placeholder="<!-- Ajoutez vos tags de tracking ici -->&#10;<!-- Google Analytics, Facebook Pixel, etc. -->&#10;<script>&#10;  // Votre code de tracking&#10;</script>" />
           </div>
           
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -135,8 +123,6 @@ const CodeTab: React.FC<CodeTabProps> = ({ config, onConfigUpdate }) => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default CodeTab;
