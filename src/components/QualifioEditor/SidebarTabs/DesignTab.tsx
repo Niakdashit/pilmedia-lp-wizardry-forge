@@ -40,7 +40,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
       }
     });
   };
-  return <div className="space-y-6">
+  return <div className="space-y-6 my-[30px]">
       <h3 className="section-title text-center">Design et éléments visuels</h3>
       
       {/* Images personnalisées */}
