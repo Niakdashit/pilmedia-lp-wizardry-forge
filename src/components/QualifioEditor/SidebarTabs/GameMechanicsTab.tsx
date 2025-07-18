@@ -8,13 +8,14 @@ import DiceMechanicConfig from './GameMechanics/DiceMechanicConfig';
 import MemoryMechanicConfig from './GameMechanics/MemoryMechanicConfig';
 import PuzzleMechanicConfig from './GameMechanics/PuzzleMechanicConfig';
 import FormMechanicConfig from './GameMechanics/FormMechanicConfig';
-
 interface GameMechanicsTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-
-const GameMechanicsTab: React.FC<GameMechanicsTabProps> = ({ config, onConfigUpdate }) => {
+const GameMechanicsTab: React.FC<GameMechanicsTabProps> = ({
+  config,
+  onConfigUpdate
+}) => {
   const renderGameConfig = () => {
     switch (config.gameType) {
       case 'wheel':
@@ -34,22 +35,16 @@ const GameMechanicsTab: React.FC<GameMechanicsTabProps> = ({ config, onConfigUpd
       case 'form':
         return <FormMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
       default:
-        return (
-          <div className="premium-card">
+        return <div className="premium-card">
             <p className="text-center text-sidebar-text-muted">
               Configuration non disponible pour ce type de jeu
             </p>
-          </div>
-        );
+          </div>;
     }
   };
-
-  return (
-    <div className="space-y-6">
-      <h3 className="section-title">Configuration de la mécanique</h3>
+  return <div className="space-y-6">
+      <h3 className="section-title text-center">Configuration de la mécanique</h3>
       {renderGameConfig()}
-    </div>
-  );
+    </div>;
 };
-
 export default GameMechanicsTab;
