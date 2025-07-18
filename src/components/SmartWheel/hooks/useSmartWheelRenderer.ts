@@ -59,9 +59,8 @@ export const useSmartWheelRenderer = ({
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const borderMargin = size * 0.05;
-    const borderRadius = size / 2 - borderMargin / 2;
-    const maxRadius = borderRadius - borderMargin / 2;
+    const maxRadius = (size / 2) - 20;
+    const borderRadius = maxRadius + 10;
 
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
@@ -88,32 +87,18 @@ export const useSmartWheelRenderer = ({
 
   }, [segments, theme, wheelState, size, borderStyle, animationTime]);
 
-  const drawBackground = (
-    ctx: CanvasRenderingContext2D,
-    centerX: number,
-    centerY: number,
-    radius: number,
-    theme: WheelTheme
-  ) => {
-    const extra = size * 0.05;
+  const drawBackground = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
     if (theme.effects.gradient) {
-      const bgGradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        radius + extra
-      );
+      const bgGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius + 20);
       bgGradient.addColorStop(0, theme.colors.background);
       bgGradient.addColorStop(1, darkenColor(theme.colors.background, 0.1));
       ctx.fillStyle = bgGradient;
     } else {
       ctx.fillStyle = theme.colors.background;
     }
-
+    
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + extra, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, radius + 20, 0, 2 * Math.PI);
     ctx.fill();
   };
 
@@ -150,7 +135,7 @@ export const useSmartWheelRenderer = ({
 
       // Bordure fine entre segments
       ctx.strokeStyle = theme.colors.background;
-      ctx.lineWidth = size * 0.005;
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       // Dessiner le texte
@@ -163,17 +148,15 @@ export const useSmartWheelRenderer = ({
 
     ctx.save();
 
-    const scaledWidth = (borderStyleConfig.width * size) / 400;
-
     switch (borderStyleConfig.type) {
       case 'solid':
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = borderStyleConfig.colors[0];
-        ctx.lineWidth = scaledWidth;
+        ctx.lineWidth = borderStyleConfig.width;
         if (borderStyleConfig.effects.shadow) {
           ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-          ctx.shadowBlur = size * 0.025;
+          ctx.shadowBlur = 10;
         }
         ctx.stroke();
         break;
@@ -184,11 +167,11 @@ export const useSmartWheelRenderer = ({
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = metallicGradient;
-        ctx.lineWidth = scaledWidth;
+        ctx.lineWidth = borderStyleConfig.width;
         
         if (borderStyleConfig.effects.shadow) {
           ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-          ctx.shadowBlur = size * 0.0375;
+          ctx.shadowBlur = 15;
         }
         
         ctx.stroke();
@@ -217,7 +200,7 @@ export const useSmartWheelRenderer = ({
           ctx.beginPath();
           ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
           ctx.strokeStyle = rainbowGradient;
-          ctx.lineWidth = scaledWidth;
+          ctx.lineWidth = borderStyleConfig.width;
           ctx.stroke();
         } else {
           const gradient = ctx.createLinearGradient(
@@ -231,7 +214,7 @@ export const useSmartWheelRenderer = ({
           ctx.beginPath();
           ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
           ctx.strokeStyle = gradient;
-          ctx.lineWidth = scaledWidth;
+          ctx.lineWidth = borderStyleConfig.width;
           ctx.stroke();
         }
 
@@ -250,12 +233,8 @@ export const useSmartWheelRenderer = ({
     
     // Créer un gradient radial pour l'ombre intérieure
     const shadowGradient = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      radius - size * 0.0375,
-      centerX,
-      centerY,
-      radius
+      centerX, centerY, radius - 15,
+      centerX, centerY, radius
     );
     shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
     shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
@@ -274,15 +253,15 @@ export const useSmartWheelRenderer = ({
     ctx.rotate(startAngle + anglePerSegment / 2);
     
     ctx.fillStyle = segment.textColor || theme.colors.text;
-    ctx.font = `bold ${size * 0.03}px Arial`;
+    ctx.font = `bold ${Math.max(12, size * 0.03)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     if (theme.effects.shadow) {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = size * 0.01;
-      ctx.shadowOffsetX = size * 0.0025;
-      ctx.shadowOffsetY = size * 0.0025;
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
     }
     
     ctx.fillText(segment.label, radius * 0.7, 0);
@@ -308,7 +287,7 @@ export const useSmartWheelRenderer = ({
     
     ctx.fill();
     ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = size * 0.0075;
+    ctx.lineWidth = 3;
     ctx.stroke();
   };
 
@@ -316,7 +295,7 @@ export const useSmartWheelRenderer = ({
     ctx.save();
     
     // Positionner le pointeur pour qu'il touche presque les segments
-    const pointerDistance = radius - size * 0.0125; // Plus proche des segments
+    const pointerDistance = radius - 5; // Plus proche des segments
     ctx.translate(centerX, centerY - pointerDistance);
     
     // Taille augmentée du pointeur
@@ -325,9 +304,9 @@ export const useSmartWheelRenderer = ({
     
     // Dessiner l'ombre du pointeur
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = size * 0.02;
-    ctx.shadowOffsetX = size * 0.005;
-    ctx.shadowOffsetY = size * 0.005;
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
     
     // Dessiner le pointeur principal
     ctx.fillStyle = theme.colors.accent;
@@ -346,7 +325,7 @@ export const useSmartWheelRenderer = ({
     
     // Bordure du pointeur
     ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = size * 0.0075;
+    ctx.lineWidth = 3;
     ctx.stroke();
     
     // Ajouter un effet de brillance
