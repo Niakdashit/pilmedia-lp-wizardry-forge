@@ -21,7 +21,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   maxSize,
   buttonPosition,
   gamePosition,
-  isMode1 = true
+  isMode1 = true,
+  formFields
 }) => {
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
@@ -151,6 +152,10 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {
+    if (finalButtonPosition === 'center') {
+      return 'relative flex items-center justify-center';
+    }
+    
     switch (finalButtonPosition) {
       case 'top':
         return 'flex flex-col-reverse items-center space-y-reverse space-y-6';
@@ -243,6 +248,22 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             }}
           />
           
+          {/* Bouton central si position center */}
+          {finalButtonPosition === 'center' && (
+            <button
+              onClick={handleButtonClick}
+              disabled={isButtonDisabled()}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 flex items-center justify-center text-sm"
+              style={{
+                backgroundColor: buttonConfig.color,
+                color: buttonConfig.textColor,
+                boxShadow: `0 4px 14px ${buttonConfig.color}40`
+              }}
+            >
+              {wheelState.isSpinning ? '...' : 'GO'}
+            </button>
+          )}
+          
           {/* Message si aucun segment */}
           {segments.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -268,19 +289,21 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           )}
         </div>
 
-        {/* Bouton de rotation */}
-        <button
-          onClick={handleButtonClick}
-          disabled={isButtonDisabled()}
-          className="px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          style={{
-            backgroundColor: buttonConfig.color,
-            color: buttonConfig.textColor,
-            boxShadow: `0 4px 14px ${buttonConfig.color}40`
-          }}
-        >
-          {buttonConfig.text}
-        </button>
+        {/* Bouton de rotation (seulement si pas en position center) */}
+        {finalButtonPosition !== 'center' && (
+          <button
+            onClick={handleButtonClick}
+            disabled={isButtonDisabled()}
+            className="px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            style={{
+              backgroundColor: buttonConfig.color,
+              color: buttonConfig.textColor,
+              boxShadow: `0 4px 14px ${buttonConfig.color}40`
+            }}
+          >
+            {buttonConfig.text}
+          </button>
+        )}
 
         {/* Message de validation si segment sélectionné */}
         {!isMode1 && mode2State === 'result' && finalResult && (
@@ -314,6 +337,10 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
         onClose={() => setShowParticipationModal(false)}
         onSubmit={handleParticipationSubmit}
         title="Formulaire de participation"
+        fields={formFields || [
+          { id: 'firstName', label: 'Prénom', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true }
+        ]}
       />
     </>
   );

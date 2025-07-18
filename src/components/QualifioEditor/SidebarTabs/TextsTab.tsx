@@ -142,11 +142,80 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
                     value={text.fontFamily}
                     onChange={(e) => updateCustomText(text.id, { fontFamily: e.target.value })}
                   >
-                    <option value="Arial, sans-serif">Arial</option>
-                    <option value="Helvetica, sans-serif">Helvetica</option>
-                    <option value="'Times New Roman', serif">Times New Roman</option>
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="'Courier New', monospace">Courier New</option>
+                    <optgroup label="Sans Serif">
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Roboto, sans-serif">Roboto</option>
+                      <option value="Open Sans, sans-serif">Open Sans</option>
+                      <option value="Lato, sans-serif">Lato</option>
+                      <option value="Montserrat, sans-serif">Montserrat</option>
+                      <option value="Poppins, sans-serif">Poppins</option>
+                      <option value="Nunito, sans-serif">Nunito</option>
+                      <option value="Source Sans Pro, sans-serif">Source Sans Pro</option>
+                      <option value="Raleway, sans-serif">Raleway</option>
+                      <option value="Ubuntu, sans-serif">Ubuntu</option>
+                      <option value="Work Sans, sans-serif">Work Sans</option>
+                      <option value="Fira Sans, sans-serif">Fira Sans</option>
+                      <option value="Rubik, sans-serif">Rubik</option>
+                      <option value="Quicksand, sans-serif">Quicksand</option>
+                      <option value="Comfortaa, sans-serif">Comfortaa</option>
+                      <option value="Kanit, sans-serif">Kanit</option>
+                      <option value="Exo 2, sans-serif">Exo 2</option>
+                      <option value="Arial, sans-serif">Arial</option>
+                      <option value="Helvetica, sans-serif">Helvetica</option>
+                      <option value="Verdana, sans-serif">Verdana</option>
+                    </optgroup>
+                    <optgroup label="Serif">
+                      <option value="Playfair Display, serif">Playfair Display</option>
+                      <option value="Merriweather, serif">Merriweather</option>
+                      <option value="Georgia, serif">Georgia</option>
+                      <option value="Times New Roman, serif">Times New Roman</option>
+                      <option value="Palatino, serif">Palatino</option>
+                    </optgroup>
+                    <optgroup label="Display">
+                      <option value="Oswald, sans-serif">Oswald</option>
+                      <option value="Bebas Neue, sans-serif">Bebas Neue</option>
+                      <option value="Anton, sans-serif">Anton</option>
+                      <option value="Fjalla One, sans-serif">Fjalla One</option>
+                      <option value="Russo One, sans-serif">Russo One</option>
+                      <option value="Righteous, sans-serif">Righteous</option>
+                      <option value="Impact, sans-serif">Impact</option>
+                      <option value="Orbitron, sans-serif">Orbitron</option>
+                      <option value="Audiowide, sans-serif">Audiowide</option>
+                    </optgroup>
+                    <optgroup label="Handwriting & Script">
+                      <option value="Dancing Script, cursive">Dancing Script</option>
+                      <option value="Pacifico, cursive">Pacifico</option>
+                      <option value="Lobster, cursive">Lobster</option>
+                      <option value="Great Vibes, cursive">Great Vibes</option>
+                      <option value="Sacramento, cursive">Sacramento</option>
+                      <option value="Satisfy, cursive">Satisfy</option>
+                      <option value="Cookie, cursive">Cookie</option>
+                      <option value="Caveat, cursive">Caveat</option>
+                      <option value="Kalam, cursive">Kalam</option>
+                      <option value="Architects Daughter, cursive">Architects Daughter</option>
+                      <option value="Shadows Into Light, cursive">Shadows Into Light</option>
+                      <option value="Indie Flower, cursive">Indie Flower</option>
+                      <option value="Permanent Marker, cursive">Permanent Marker</option>
+                    </optgroup>
+                    <optgroup label="Fun & Creative">
+                      <option value="Fredoka One, cursive">Fredoka One</option>
+                      <option value="Bungee, cursive">Bungee</option>
+                      <option value="Bangers, cursive">Bangers</option>
+                      <option value="Creepster, cursive">Creepster</option>
+                      <option value="Amatic SC, cursive">Amatic SC</option>
+                      <option value="Press Start 2P, cursive">Press Start 2P</option>
+                      <option value="Comic Sans MS, cursive">Comic Sans MS</option>
+                    </optgroup>
+                    <optgroup label="Monospace">
+                      <option value="Anonymous Pro, monospace">Anonymous Pro</option>
+                      <option value="Courier New, monospace">Courier New</option>
+                      <option value="JetBrains Mono, monospace">JetBrains Mono</option>
+                    </optgroup>
+                    <optgroup label="Branded Style">
+                      <option value="Belleza, sans-serif">Belleza</option>
+                      <option value="Binate, sans-serif">Binate</option>
+                      <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+                    </optgroup>
                   </select>
                 </div>
 

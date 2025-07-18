@@ -6,14 +6,14 @@ import GameZoneTab from './SidebarTabs/GameZoneTab';
 import GameMechanicsTab from './SidebarTabs/GameMechanicsTab';
 import TextsTab from './SidebarTabs/TextsTab';
 import ButtonsTab from './SidebarTabs/ButtonsTab';
-import FooterTab from './SidebarTabs/FooterTab';
+import FormTab from './SidebarTabs/FormTab';
 import CodeTab from './SidebarTabs/CodeTab';
 import DesignTab from './SidebarTabs/DesignTab';
 interface QualifioSidebarProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-type TabType = 'general' | 'design' | 'gameZone' | 'gameMechanics' | 'texts' | 'buttons' | 'footer' | 'code';
+type TabType = 'general' | 'design' | 'gameZone' | 'gameMechanics' | 'texts' | 'buttons' | 'form' | 'code';
 const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   config,
   onConfigUpdate
@@ -44,8 +44,8 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
     label: 'Boutons',
     icon: MousePointer
   }, {
-    id: 'footer' as TabType,
-    label: 'Footer',
+    id: 'form' as TabType,
+    label: 'Formulaire',
     icon: FileText
   }, {
     id: 'code' as TabType,
@@ -66,8 +66,8 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
         return <TextsTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'buttons':
         return <ButtonsTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'footer':
-        return <FooterTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'form':
+        return <FormTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'code':
         return <CodeTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:

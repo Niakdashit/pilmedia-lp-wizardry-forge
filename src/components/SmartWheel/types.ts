@@ -52,9 +52,17 @@ export interface SmartWheelProps {
   borderStyle?: string; // Nouveau prop pour le style de bordure
   className?: string;
   maxSize?: number; // Limite la taille maximum de la roue
-  buttonPosition?: 'top' | 'bottom' | 'left' | 'right'; // Position du bouton
+  buttonPosition?: 'top' | 'bottom' | 'left' | 'right' | 'center'; // Position du bouton
   gamePosition?: { x: number; y: number; scale: number }; // Position du jeu pour auto-repositionnement
   isMode1?: boolean; // Mode 1 (normal) ou Mode 2 (avec formulaire)
+  formFields?: Array<{
+    id: string;
+    type: 'text' | 'email' | 'tel' | 'select' | 'textarea' | 'checkbox';
+    label: string;
+    placeholder?: string;
+    required?: boolean;
+    options?: string[];
+  }>; // Champs de formulaire personnalisés pour le mode 2
 }
 
 export interface WheelState {
