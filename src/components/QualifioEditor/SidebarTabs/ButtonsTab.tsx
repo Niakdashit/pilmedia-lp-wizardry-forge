@@ -1,17 +1,17 @@
 import React from 'react';
 import { MousePointer } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
-
 interface ButtonsTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-
-const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
-  return (
-    <div className="space-y-6">
+const ButtonsTab: React.FC<ButtonsTabProps> = ({
+  config,
+  onConfigUpdate
+}) => {
+  return <div className="space-y-6">
       {/* Bouton de participation */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
           <MousePointer className="w-4 h-4" />
           Bouton de participation
@@ -20,55 +20,40 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
         <div className="space-y-4">
           <div className="form-group-premium">
             <label>Texte du bouton</label>
-            <input
-              type="text"
-              value={config.participateButtonText || 'PARTICIPER !'}
-              onChange={(e) => onConfigUpdate({ participateButtonText: e.target.value })}
-              placeholder="PARTICIPER !"
-            />
+            <input type="text" value={config.participateButtonText || 'PARTICIPER !'} onChange={e => onConfigUpdate({
+            participateButtonText: e.target.value
+          })} placeholder="PARTICIPER !" />
           </div>
 
           <div className="form-group-premium">
             <label>Couleur du bouton</label>
             <div className="color-input-group">
-              <input
-                type="color"
-                value={config.participateButtonColor || '#ff6b35'}
-                onChange={(e) => onConfigUpdate({ participateButtonColor: e.target.value })}
-              />
-              <input
-                type="text"
-                value={config.participateButtonColor || '#ff6b35'}
-                onChange={(e) => onConfigUpdate({ participateButtonColor: e.target.value })}
-                placeholder="#ff6b35"
-              />
+              <input type="color" value={config.participateButtonColor || '#ff6b35'} onChange={e => onConfigUpdate({
+              participateButtonColor: e.target.value
+            })} />
+              <input type="text" value={config.participateButtonColor || '#ff6b35'} onChange={e => onConfigUpdate({
+              participateButtonColor: e.target.value
+            })} placeholder="#ff6b35" />
             </div>
           </div>
 
           <div className="form-group-premium">
             <label>Couleur du texte</label>
             <div className="color-input-group">
-              <input
-                type="color"
-                value={config.participateButtonTextColor || '#ffffff'}
-                onChange={(e) => onConfigUpdate({ participateButtonTextColor: e.target.value })}
-              />
-              <input
-                type="text"
-                value={config.participateButtonTextColor || '#ffffff'}
-                onChange={(e) => onConfigUpdate({ participateButtonTextColor: e.target.value })}
-                placeholder="#ffffff"
-              />
+              <input type="color" value={config.participateButtonTextColor || '#ffffff'} onChange={e => onConfigUpdate({
+              participateButtonTextColor: e.target.value
+            })} />
+              <input type="text" value={config.participateButtonTextColor || '#ffffff'} onChange={e => onConfigUpdate({
+              participateButtonTextColor: e.target.value
+            })} placeholder="#ffffff" />
             </div>
           </div>
 
           <div className="form-group-premium">
             <label>Position du bouton de la roue</label>
-            <select
-              value={config.wheelButtonPosition || 'external'}
-              onChange={(e) => onConfigUpdate({ wheelButtonPosition: e.target.value as 'external' | 'center' })}
-              className="w-full px-3 py-2 border border-sidebar-border rounded-lg bg-sidebar-surface text-sidebar-text-primary focus:outline-none focus:ring-2 focus:ring-primary-foreground"
-            >
+            <select value={config.wheelButtonPosition || 'external'} onChange={e => onConfigUpdate({
+            wheelButtonPosition: e.target.value as 'external' | 'center'
+          })} className="w-full px-3 py-2 border border-sidebar-border rounded-lg bg-sidebar-surface text-sidebar-text-primary focus:outline-none focus:ring-2 focus:ring-primary-foreground">
               <option value="external">Bouton externe</option>
               <option value="center">Centre de la roue</option>
             </select>
@@ -77,7 +62,7 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
       </div>
 
       {/* Boutons sociaux */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Boutons sociaux</h4>
         
         <div className="space-y-4">
@@ -108,7 +93,7 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
       </div>
 
       {/* Bouton Règlement */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Bouton Règlement</h4>
         
         <div className="bg-sidebar-surface rounded-lg p-4 border border-sidebar-border">
@@ -122,23 +107,18 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
       </div>
 
       {/* Aperçu du bouton */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Aperçu</h4>
         
         <div className="bg-sidebar-surface rounded-lg p-4 border border-sidebar-border text-center">
-          <div 
-            className="inline-flex px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer"
-            style={{
-              backgroundColor: config.participateButtonColor || '#ff6b35',
-              color: config.participateButtonTextColor || '#ffffff'
-            }}
-          >
+          <div className="inline-flex px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer" style={{
+          backgroundColor: config.participateButtonColor || '#ff6b35',
+          color: config.participateButtonTextColor || '#ffffff'
+        }}>
             {config.participateButtonText || 'PARTICIPER !'}
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ButtonsTab;
