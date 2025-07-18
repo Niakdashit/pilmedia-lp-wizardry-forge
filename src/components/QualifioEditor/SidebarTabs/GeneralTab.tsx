@@ -71,7 +71,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
     icon: FileText
   }];
   return <div className="space-y-6">
-      <h3 className="section-title">Configuration générale</h3>
+      <h3 className="section-title text-center font-semibold">Configuration générale</h3>
       
       {/* Game Type Selection */}
       <div className="premium-card mx-[30px]">
