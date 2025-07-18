@@ -12,8 +12,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
   onConfigUpdate
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
-  const [applyToTablet, setApplyToTablet] = useState(false);
-  const [applyToMobile, setApplyToMobile] = useState(false);
   
   // Créer des refs séparés pour chaque device
   const desktopInputRef = useRef<HTMLInputElement>(null);
@@ -36,65 +34,23 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
     inputRef.current?.click();
   };
 
-  const applyDesktopImageTo = (target: 'tablet' | 'mobile') => {
-    const imageUrl = config.deviceConfig?.desktop?.backgroundImage;
-    if (!imageUrl) return;
-    onConfigUpdate({
-      deviceConfig: {
-        mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-        tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-        desktop: config.deviceConfig?.desktop || { fontSize: 18 },
-        [target]: {
-          ...config.deviceConfig?.[target],
-          backgroundImage: imageUrl
-        }
-      }
-    });
-  };
-
-  const handleApplyToggle = (target: 'tablet' | 'mobile', checked: boolean) => {
-    if (target === 'tablet') {
-      setApplyToTablet(checked);
-    } else {
-      setApplyToMobile(checked);
-    }
-    if (checked) {
-      applyDesktopImageTo(target);
-    }
-  };
-
   const handleBackgroundImageUpload = async (device: DeviceType, file: File) => {
     console.log('handleBackgroundImageUpload called for:', device, 'with file:', file);
     
     if (!file || file.size === 0) {
       console.log('No file or empty file, removing image for:', device);
-      const baseDeviceConfig = {
-        mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-        tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-        desktop: config.deviceConfig?.desktop || { fontSize: 18 }
-      };
-      const newDeviceConfig: any = {
-        ...baseDeviceConfig,
-        [device]: {
-          ...config.deviceConfig?.[device],
-          backgroundImage: undefined
-        }
-      };
-      if (device === 'desktop') {
-        if (applyToTablet) {
-          newDeviceConfig.tablet = {
-            ...newDeviceConfig.tablet,
+      // Supprimer l'image si fichier vide
+      onConfigUpdate({
+        deviceConfig: {
+          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+          desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+          [device]: {
+            ...config.deviceConfig?.[device],
             backgroundImage: undefined
-          };
+          }
         }
-        if (applyToMobile) {
-          newDeviceConfig.mobile = {
-            ...newDeviceConfig.mobile,
-            backgroundImage: undefined
-          };
-        }
-      }
-      onConfigUpdate({ deviceConfig: newDeviceConfig });
+      });
       return;
     }
 
@@ -108,35 +64,16 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
         // Extract colors from background image
         const brandTheme = await generateBrandThemeFromFile(file);
         
-        const baseDeviceConfig = {
-          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-          desktop: config.deviceConfig?.desktop || { fontSize: 18 }
-        };
-        const newDeviceConfig: any = {
-          ...baseDeviceConfig,
-          [device]: {
-            ...config.deviceConfig?.[device],
-            backgroundImage: imageUrl
-          }
-        };
-        if (device === 'desktop') {
-          if (applyToTablet) {
-            newDeviceConfig.tablet = {
-              ...newDeviceConfig.tablet,
-              backgroundImage: imageUrl
-            };
-          }
-          if (applyToMobile) {
-            newDeviceConfig.mobile = {
-              ...newDeviceConfig.mobile,
-              backgroundImage: imageUrl
-            };
-          }
-        }
-
         const newConfig = {
-          deviceConfig: newDeviceConfig,
+          deviceConfig: {
+            mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+            tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+            desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+            [device]: {
+              ...config.deviceConfig?.[device],
+              backgroundImage: imageUrl
+            }
+          },
           // Update brand assets with extracted colors
           brandAssets: {
             ...config.brandAssets,
@@ -151,34 +88,16 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
       } catch (error) {
         console.error('Error extracting colors from background image:', error);
         // Fallback: just update the image without color extraction
-        const baseDeviceConfig = {
-          mobile: config.deviceConfig?.mobile || { fontSize: 14 },
-          tablet: config.deviceConfig?.tablet || { fontSize: 16 },
-          desktop: config.deviceConfig?.desktop || { fontSize: 18 }
-        };
-        const newDeviceConfig: any = {
-          ...baseDeviceConfig,
-          [device]: {
-            ...config.deviceConfig?.[device],
-            backgroundImage: imageUrl
-          }
-        };
-        if (device === 'desktop') {
-          if (applyToTablet) {
-            newDeviceConfig.tablet = {
-              ...newDeviceConfig.tablet,
-              backgroundImage: imageUrl
-            };
-          }
-          if (applyToMobile) {
-            newDeviceConfig.mobile = {
-              ...newDeviceConfig.mobile,
-              backgroundImage: imageUrl
-            };
-          }
-        }
         const newConfig = {
-          deviceConfig: newDeviceConfig
+          deviceConfig: {
+            mobile: config.deviceConfig?.mobile || { fontSize: 14 },
+            tablet: config.deviceConfig?.tablet || { fontSize: 16 },
+            desktop: config.deviceConfig?.desktop || { fontSize: 18 },
+            [device]: {
+              ...config.deviceConfig?.[device],
+              backgroundImage: imageUrl
+            }
+          }
         };
         onConfigUpdate(newConfig);
       }
@@ -283,36 +202,15 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
             />
             
             {/* Bouton de sélection visible */}
-            <button
+            <button 
               type="button"
               onClick={() => triggerFileSelect(selectedDevice)}
-              className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors w-full"
+              className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors w-full" 
               style={{ borderColor: 'hsl(var(--sidebar-border))' }}
             >
               <Upload className="w-5 h-5" />
               <span>Choisir une image ({selectedDevice})</span>
             </button>
-
-            {selectedDevice === 'desktop' && (
-              <div className="flex gap-4 text-xs">
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={applyToTablet}
-                    onChange={(e) => handleApplyToggle('tablet', e.target.checked)}
-                  />
-                  Utiliser sur tablette
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={applyToMobile}
-                    onChange={(e) => handleApplyToggle('mobile', e.target.checked)}
-                  />
-                  Utiliser sur mobile
-                </label>
-              </div>
-            )}
             
             {/* Aperçu de l'image */}
             {currentDeviceConfig?.backgroundImage && (

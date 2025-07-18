@@ -73,7 +73,6 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         isMode1={isMode1}
         formFields={config.formFields}
         brandColors={brandColors}
-        buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : undefined}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: brandColors?.primary || "#8E44AD",
