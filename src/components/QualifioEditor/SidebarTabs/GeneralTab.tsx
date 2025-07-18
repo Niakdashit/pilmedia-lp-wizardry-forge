@@ -70,7 +70,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
     label: 'Formulaire',
     icon: FileText
   }];
-  return <div className="space-y-6">
+  return <div className="space-y-6 my-[30px]">
       <h3 className="section-title text-center font-semibold">Configuration générale</h3>
       
       {/* Game Type Selection */}
