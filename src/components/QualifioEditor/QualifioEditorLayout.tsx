@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Monitor, Tablet, Smartphone, Palette, Settings, MousePointer, Gamepad2, Type, Image as ImageIcon, RotateCcw } from 'lucide-react';
 import GeneralTab from './SidebarTabs/GeneralTab';
@@ -16,7 +17,19 @@ export interface FormField {
   placeholder?: string;
 }
 
+export interface CustomText {
+  id: string;
+  text: string;
+  fontSize: string;
+  fontWeight: string;
+  color: string;
+  position: { x: number; y: number };
+  device: DeviceType;
+}
+
 export interface EditorConfig {
+  gameType?: 'wheel' | 'jackpot' | 'scratch' | 'dice' | 'quiz' | 'memory' | 'puzzle' | 'form';
+  displayMode?: 'mode1-banner-game' | 'mode2-background';
   brandAssets?: {
     primaryColor: string;
     secondaryColor: string;
@@ -26,6 +39,7 @@ export interface EditorConfig {
   borderStyle?: string;
   formFields?: FormField[];
   wheelButtonPosition?: 'bottom' | 'center' | 'top';
+  wheelCenterButtonPosition?: boolean;
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
@@ -33,15 +47,62 @@ export interface EditorConfig {
     [key in DeviceType]: {
       backgroundImage?: string;
       fontSize?: number;
-      gamePosition?: { x: number; y: number };
+      gamePosition?: { x: number; y: number; scale?: number };
     };
   };
   wheelSegments?: Array<{ id: string; label: string; color?: string }>;
+  customTexts?: CustomText[];
+  design?: {
+    customImages?: Array<{
+      id: string;
+      url: string;
+      position: { x: number; y: number };
+      size: { width: number; height: number };
+      device: DeviceType;
+    }>;
+    customTexts?: CustomText[];
+  };
+  
+  // Content properties
+  storyText?: string;
+  publisherLink?: string;
+  prizeText?: string;
+  
+  // Game-specific properties
+  jackpotBackgroundColor?: string;
+  jackpotBorderStyle?: string;
+  scratchCards?: Array<{
+    content: string;
+    isWinning: boolean;
+  }>;
+  scratchSurfaceColor?: string;
+  diceWinningNumbers?: number[];
+  quizQuestions?: Array<{
+    question: string;
+    options: string[];
+    correctAnswer: number;
+  }>;
+  quizPassingScore?: number;
+  memoryPairs?: Array<{
+    id: string;
+    image1: string;
+    image2?: string;
+  }>;
+  memoryGridSize?: string;
+  memoryTimeLimit?: number;
+  puzzleImage?: string;
+  puzzlePieces?: number;
+  puzzleTimeLimit?: number;
+  puzzleShowPreview?: boolean;
+  puzzleDifficulty?: string;
+  puzzleBackgroundColor?: string;
 }
 
 const QualifioEditorLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [config, setConfig] = useState<EditorConfig>({
+    gameType: 'wheel',
+    displayMode: 'mode1-banner-game',
     brandAssets: {
       primaryColor: '#4ECDC4',
       secondaryColor: '#F7B731',
@@ -50,6 +111,7 @@ const QualifioEditorLayout: React.FC = () => {
     borderStyle: 'classic',
     formFields: [],
     wheelButtonPosition: 'bottom',
+    wheelCenterButtonPosition: false,
     participateButtonText: 'PARTICIPER !',
     participateButtonColor: '#ff6b35',
     participateButtonTextColor: '#ffffff',
@@ -57,20 +119,43 @@ const QualifioEditorLayout: React.FC = () => {
       desktop: {
         backgroundImage: '',
         fontSize: 16,
-        gamePosition: { x: 0, y: 0 }
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       },
       tablet: {
         backgroundImage: '',
         fontSize: 14,
-        gamePosition: { x: 0, y: 0 }
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       },
       mobile: {
         backgroundImage: '',
         fontSize: 12,
-        gamePosition: { x: 0, y: 0 }
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       }
     },
-    wheelSegments: []
+    wheelSegments: [],
+    customTexts: [],
+    design: {
+      customImages: [],
+      customTexts: []
+    },
+    storyText: '',
+    publisherLink: '',
+    prizeText: '',
+    jackpotBackgroundColor: '#f3f4f6',
+    jackpotBorderStyle: 'classic',
+    scratchCards: [],
+    scratchSurfaceColor: '#C0C0C0',
+    diceWinningNumbers: [7, 11],
+    quizQuestions: [],
+    quizPassingScore: 70,
+    memoryPairs: [],
+    memoryGridSize: '4x3',
+    memoryTimeLimit: 60,
+    puzzlePieces: 9,
+    puzzleTimeLimit: 120,
+    puzzleShowPreview: true,
+    puzzleDifficulty: 'medium',
+    puzzleBackgroundColor: '#f0f0f0'
   });
 
   const handleConfigUpdate = (updates: Partial<EditorConfig>) => {
