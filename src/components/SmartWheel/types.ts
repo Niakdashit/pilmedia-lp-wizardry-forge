@@ -52,7 +52,7 @@ export interface SmartWheelProps {
   borderStyle?: string; // Nouveau prop pour le style de bordure
   className?: string;
   maxSize?: number; // Limite la taille maximum de la roue
-  buttonPosition?: 'top' | 'bottom' | 'left' | 'right'; // Position du bouton
+  buttonPosition?: 'top' | 'bottom' | 'left' | 'right' | 'center'; // Position du bouton (ajout de 'center')
   gamePosition?: { x: number; y: number; scale: number }; // Position du jeu pour auto-repositionnement
   isMode1?: boolean; // Mode 1 (normal) ou Mode 2 (avec formulaire)
   formFields?: Array<{

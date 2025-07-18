@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MousePointer } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
@@ -61,6 +62,19 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
               />
             </div>
           </div>
+
+          {/* Position du bouton de la roue */}
+          <div className="form-group-premium">
+            <label>Position du bouton de la roue</label>
+            <select
+              value={config.wheelButtonPosition || 'bottom'}
+              onChange={(e) => onConfigUpdate({ wheelButtonPosition: e.target.value as 'bottom' | 'center' })}
+              className="w-full p-2 border border-sidebar-border rounded-md bg-sidebar-surface text-sidebar-text-primary"
+            >
+              <option value="bottom">En dessous de la roue</option>
+              <option value="center">Au centre de la roue</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -123,6 +137,12 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
           >
             {config.participateButtonText || 'PARTICIPER !'}
           </div>
+          
+          {config.wheelButtonPosition === 'center' && (
+            <div className="mt-3 text-sm text-sidebar-text-muted">
+              Le bouton sera affiché au centre de la roue
+            </div>
+          )}
         </div>
       </div>
     </div>
