@@ -8,13 +8,11 @@ import TextsTab from './SidebarTabs/TextsTab';
 import ButtonsTab from './SidebarTabs/ButtonsTab';
 import FormTab from './SidebarTabs/FormTab';
 import CodeTab from './SidebarTabs/CodeTab';
-
 interface QualifioContentPanelProps {
   activeTab: string;
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-
 const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
   activeTab,
   config,
@@ -39,19 +37,13 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
       case 'code':
         return <CodeTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:
-        return (
-          <div className="p-6 text-center text-gray-500">
+        return <div className="p-6 text-center text-gray-500">
             Sélectionnez un onglet pour commencer la configuration.
-          </div>
-        );
+          </div>;
     }
   };
-
-  return (
-    <div className="w-96 bg-white border-r border-gray-200 overflow-y-auto h-full">
+  return <div className="w-96 bg-white border-r border-gray-200 overflow-y-auto h-full py-0">
       {renderTabContent()}
-    </div>
-  );
+    </div>;
 };
-
 export default QualifioContentPanel;
