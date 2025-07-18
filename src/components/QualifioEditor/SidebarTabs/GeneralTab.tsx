@@ -25,7 +25,6 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ config, onConfigUpdate }) => {
             ...config.brandAssets,
             primaryColor: brandTheme.customColors.primary,
             secondaryColor: brandTheme.customColors.secondary,
-            accentColor: brandTheme.customColors.accent,
           }
         });
       } catch (error) {

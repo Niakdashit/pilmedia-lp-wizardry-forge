@@ -9,9 +9,6 @@ const MAX_IMAGE_DIMENSION = 512; // Réduit pour de meilleures performances
 // Cache pour le modèle
 let segmenterCache: any = null;
 
-// Type pour les dispositifs supportés
-type SupportedDevice = 'webgpu' | 'wasm';
-
 function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, image: HTMLImageElement) {
   let width = image.naturalWidth;
   let height = image.naturalHeight;
@@ -87,7 +84,7 @@ function applyMaskWithFeathering(
 }
 
 // Fonction pour détecter la compatibilité WebGPU
-async function getOptimalDevice(): Promise<SupportedDevice> {
+async function getOptimalDevice(): Promise<string> {
   try {
     // Vérifier si WebGPU est disponible
     if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
@@ -98,11 +95,11 @@ async function getOptimalDevice(): Promise<SupportedDevice> {
       }
     }
   } catch (error) {
-    console.warn('WebGPU non disponible:', error);
+    console.warn('WebGPU non disponible, utilisation du CPU:', error);
   }
   
-  console.log('Utilisation de WASM pour le traitement');
-  return 'wasm'; // Changé de 'cpu' vers 'wasm'
+  console.log('Utilisation du CPU pour le traitement');
+  return 'cpu';
 }
 
 export const removeBackground = async (imageElement: HTMLImageElement): Promise<Blob> => {
@@ -129,15 +126,15 @@ export const removeBackground = async (imageElement: HTMLImageElement): Promise<
         );
         console.log(`Modèle chargé avec succès sur ${device}`);
       } catch (modelError) {
-        console.warn('Erreur lors du chargement avec le premier modèle, tentative avec WASM...');
+        console.warn('Erreur lors du chargement avec le premier modèle, tentative avec un modèle plus simple...');
         
-        // Fallback vers WASM au lieu de CPU
+        // Fallback vers un modèle plus simple
         segmenterCache = await pipeline(
           'image-segmentation', 
           'Xenova/segformer-b0-finetuned-ade-512-512',
-          { device: 'wasm', dtype: 'fp32' }
+          { device: 'cpu', dtype: 'fp32' }
         );
-        console.log('Modèle de fallback chargé sur WASM');
+        console.log('Modèle de fallback chargé sur CPU');
       }
     }
     
@@ -282,13 +279,12 @@ export const preloadBackgroundRemovalModel = async (): Promise<void> => {
   try {
     if (!segmenterCache) {
       console.log('Préchargement du modèle de suppression d\'arrière-plan...');
-      const device = await getOptimalDevice();
       segmenterCache = await pipeline(
         'image-segmentation', 
         'Xenova/segformer-b0-finetuned-ade-512-512',
         {
-          device: device,
-          dtype: device === 'webgpu' ? 'fp16' : 'fp32'
+          device: 'webgpu',
+          dtype: 'fp16'
         }
       );
       console.log('Modèle préchargé avec succès');

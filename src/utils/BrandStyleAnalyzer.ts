@@ -217,8 +217,8 @@ export async function extractColorsFromLogo(
         try {
           const { default: ColorThief } = await import('colorthief');
           const colorThief = new ColorThief();
-          const dominantColor = colorThief.getColor(img, 10);
-          const palette = colorThief.getPalette(img, 12, 10);
+          const dominantColor = colorThief.getColor(img, 5);
+          const palette = colorThief.getPalette(img, 8, 5);
           const dominantHex = rgbToHex(
             dominantColor[0],
             dominantColor[1],
@@ -228,14 +228,10 @@ export async function extractColorsFromLogo(
             rgbToHex(r, g, b),
           );
           const allColors = [dominantHex, ...paletteHex];
-          // Filtrage amélioré : ni gris, ni trop clair, ni trop foncé, avec plus de seuils
+          // Filtrage : ni gris, ni trop clair, ni trop foncé
           const filteredColors = allColors.filter((color) => {
             return (
-              !isGrayish(color) && 
-              !isTooLight(color) && 
-              !isTooDark(color) &&
-              getColorSaturation(color) > 0.3 && // Plus de saturation
-              getLuminance(color) > 0.15 && getLuminance(color) < 0.85 // Meilleur contraste
+              !isGrayish(color) && !isTooLight(color) && !isTooDark(color)
             );
           });
           const unique = deduplicateColors(filteredColors, 40).filter(Boolean);
@@ -260,7 +256,7 @@ function isGrayish(hex: string): boolean {
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const saturation = max === 0 ? 0 : (max - min) / max;
-  return saturation < 0.25; // Seuil plus strict pour éviter les gris
+  return saturation < 0.2;
 }
 function isTooLight(hex: string): boolean {
   return getLuminance(hex) > 0.95;

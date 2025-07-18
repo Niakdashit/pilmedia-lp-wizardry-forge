@@ -1,7 +1,6 @@
 import React from 'react';
 import { Bold, Italic, Underline, Trash2 } from 'lucide-react';
 import type { CustomText } from './QualifioEditorLayout';
-import { simpleFontSizes, getFontsByCategory, fontCategories } from '../../config/fonts';
 
 interface TextToolbarProps {
   text: CustomText;
@@ -18,6 +17,11 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
   onDelete,
   onClose
 }) => {
+  const fontSizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
+  const fontFamilies = [
+    'Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana', 
+    'Tahoma', 'Trebuchet MS', 'Impact', 'Comic Sans MS', 'Courier New'
+  ];
 
   return (
     <>
@@ -41,7 +45,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
           onChange={(e) => onUpdate({ fontSize: parseInt(e.target.value) })}
           className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none w-16"
         >
-          {simpleFontSizes.map(size => (
+          {fontSizes.map(size => (
             <option key={size} value={size}>{size}</option>
           ))}
         </select>
@@ -52,23 +56,10 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
         <select
           value={text.fontFamily}
           onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-          className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none max-w-32"
+          className="bg-gray-800 text-white text-sm px-2 py-1 rounded border-none outline-none max-w-24"
         >
-          <optgroup label="Populaires">
-            {getFontsByCategory('sans-serif').slice(0, 10).map(font => (
-              <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
-                {font.label}
-              </option>
-            ))}
-          </optgroup>
-          {Object.entries(fontCategories).map(([category, label]) => (
-            <optgroup key={category} label={label}>
-              {getFontsByCategory(category as any).map(font => (
-                <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
-                  {font.label}
-                </option>
-              ))}
-            </optgroup>
+          {fontFamilies.map(font => (
+            <option key={font} value={font}>{font}</option>
           ))}
         </select>
 

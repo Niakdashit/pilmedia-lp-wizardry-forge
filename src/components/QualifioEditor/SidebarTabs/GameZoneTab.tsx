@@ -79,7 +79,6 @@ const GameZoneTab: React.FC<GameZoneTabProps> = ({
             ...config.brandAssets,
             primaryColor: brandTheme.customColors.primary,
             secondaryColor: brandTheme.customColors.secondary,
-            accentColor: brandTheme.customColors.accent,
           }
         };
         

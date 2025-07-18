@@ -9,7 +9,7 @@ interface ParticipationModalProps {
   fields?: Array<{
     id: string;
     label: string;
-    type: 'text' | 'email' | 'tel' | 'select' | 'textarea' | 'checkbox';
+    type: 'text' | 'email' | 'tel' | 'select';
     required?: boolean;
     options?: string[];
     placeholder?: string;
@@ -97,36 +97,6 @@ const ParticipationModal: React.FC<ParticipationModalProps> = ({
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
-        );
-      case 'textarea':
-        return (
-          <textarea
-            id={field.id}
-            value={formData[field.id] || ''}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            rows={3}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${
-              errors[field.id] ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required={field.required}
-          />
-        );
-      case 'checkbox':
-        return (
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id={field.id}
-              checked={formData[field.id] === 'true'}
-              onChange={(e) => handleInputChange(field.id, e.target.checked ? 'true' : 'false')}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              required={field.required}
-            />
-            <label htmlFor={field.id} className="ml-2 text-sm text-gray-700">
-              {field.placeholder || field.label}
-            </label>
-          </div>
         );
       default:
         return (

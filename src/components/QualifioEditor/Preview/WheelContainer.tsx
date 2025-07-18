@@ -2,7 +2,6 @@
 import React from 'react';
 import { SmartWheel } from '../../SmartWheel';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
-import { createSegments } from './wheelHelpers';
 
 interface WheelContainerProps {
   device: DeviceType;
@@ -21,16 +20,12 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onResult,
   scale = 1.0
 }) => {
-  const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
-
-  // Utiliser les couleurs extraites de l'image si disponibles
-  const brandColors = config.brandAssets ? {
-    primary: brandColor,
-    secondary: config.brandAssets.secondaryColor || '#F7B731',
-    accent: config.brandAssets.accentColor || '#E74C3C'
-  } : undefined;
-
-  const wheelSegments = createSegments(config, brandColor);
+  const wheelSegments = [
+    { id: '1', label: 'Prix 3', color: '#4ECDC4' },
+    { id: '2', label: 'Dommage', color: '#F7B731' },
+    { id: '3', label: 'Prix 1', color: '#E74C3C' },
+    { id: '4', label: 'Prix 2', color: '#26D0CE' }
+  ];
 
   const handleWheelResult = (segment: any) => {
     console.log('Segment sélectionné:', segment);
@@ -71,11 +66,9 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         onResult={handleWheelResult}
         gamePosition={gamePosition}
         isMode1={isMode1}
-        formFields={config.formFields}
-        brandColors={brandColors}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
-          color: brandColors?.primary || "#8E44AD",
+          color: "#8E44AD",
           textColor: "#ffffff"
         }}
       />
