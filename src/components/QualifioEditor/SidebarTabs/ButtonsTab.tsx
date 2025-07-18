@@ -61,6 +61,18 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
               />
             </div>
           </div>
+
+          <div className="form-group-premium">
+            <label>Position du bouton de la roue</label>
+            <select
+              value={config.wheelButtonPosition || 'external'}
+              onChange={(e) => onConfigUpdate({ wheelButtonPosition: e.target.value as 'external' | 'center' })}
+              className="w-full px-3 py-2 border border-sidebar-border rounded-lg bg-sidebar-surface text-sidebar-text-primary focus:outline-none focus:ring-2 focus:ring-primary-foreground"
+            >
+              <option value="external">Bouton externe</option>
+              <option value="center">Centre de la roue</option>
+            </select>
+          </div>
         </div>
       </div>
 

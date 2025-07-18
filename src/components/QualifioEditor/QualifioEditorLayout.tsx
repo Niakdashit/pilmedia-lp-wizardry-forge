@@ -76,6 +76,7 @@ export interface EditorConfig {
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
+  wheelButtonPosition?: 'external' | 'center';
   
   // Footer
   footerText?: string;
