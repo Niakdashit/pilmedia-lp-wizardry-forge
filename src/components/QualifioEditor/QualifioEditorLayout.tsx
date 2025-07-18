@@ -1,11 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import { Monitor, Tablet, Smartphone, Palette, Settings, MousePointer, Gamepad2, Type, Image as ImageIcon, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, MousePointer, Gamepad2, Type } from 'lucide-react';
 import GeneralTab from './SidebarTabs/GeneralTab';
 import GameZoneTab from './SidebarTabs/GameZoneTab';
 import ButtonsTab from './SidebarTabs/ButtonsTab';
-import TypographyTab from './SidebarTabs/TypographyTab';
-import WheelContainer from './Preview/WheelContainer';
 
 export type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
@@ -20,10 +18,19 @@ export interface FormField {
 export interface CustomText {
   id: string;
   text: string;
+  content?: string;
   fontSize: string;
   fontWeight: string;
+  fontFamily?: string;
+  fontStyle?: string;
+  textDecoration?: string;
   color: string;
+  backgroundColor?: string;
   position: { x: number; y: number };
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
   device: DeviceType;
 }
 
@@ -61,6 +68,7 @@ export interface EditorConfig {
       device: DeviceType;
     }>;
     customTexts?: CustomText[];
+    backgroundColor?: string;
   };
   
   // Content properties
@@ -96,6 +104,11 @@ export interface EditorConfig {
   puzzleShowPreview?: boolean;
   puzzleDifficulty?: string;
   puzzleBackgroundColor?: string;
+  
+  // Code properties
+  customCSS?: string;
+  customJS?: string;
+  trackingTags?: string;
 }
 
 const QualifioEditorLayout: React.FC = () => {
@@ -136,7 +149,8 @@ const QualifioEditorLayout: React.FC = () => {
     customTexts: [],
     design: {
       customImages: [],
-      customTexts: []
+      customTexts: [],
+      backgroundColor: '#ffffff'
     },
     storyText: '',
     publisherLink: '',
@@ -155,7 +169,10 @@ const QualifioEditorLayout: React.FC = () => {
     puzzleTimeLimit: 120,
     puzzleShowPreview: true,
     puzzleDifficulty: 'medium',
-    puzzleBackgroundColor: '#f0f0f0'
+    puzzleBackgroundColor: '#f0f0f0',
+    customCSS: '',
+    customJS: '',
+    trackingTags: ''
   });
 
   const handleConfigUpdate = (updates: Partial<EditorConfig>) => {
@@ -178,7 +195,7 @@ const QualifioEditorLayout: React.FC = () => {
       case 'buttons':
         return <ButtonsTab config={config} onConfigUpdate={handleConfigUpdate} />;
       case 'typography':
-        return <TypographyTab config={config} onConfigUpdate={handleConfigUpdate} />;
+        return <div className="p-4 text-gray-500">Onglet Typographie en cours de développement</div>;
       default:
         return <GeneralTab config={config} onConfigUpdate={handleConfigUpdate} />;
     }
