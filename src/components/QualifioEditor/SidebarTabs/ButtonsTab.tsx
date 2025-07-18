@@ -11,8 +11,8 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
 }) => {
   return <div className="space-y-6 py-[2px] my-[30px]">
       {/* Bouton de participation */}
-      <div className="premium-card mx-[30px] py-0">
-        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+      <div className="premium-card mx-[30px] py-0 my-0">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2 my-[30px]">
           <MousePointer className="w-4 h-4" />
           Bouton de participation
         </h4>
@@ -53,7 +53,7 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
             <label>Position du bouton de la roue</label>
             <select value={config.wheelButtonPosition || 'external'} onChange={e => onConfigUpdate({
             wheelButtonPosition: e.target.value as 'external' | 'center'
-          })} className="w-full px-3 py-2 border border-sidebar-border rounded-lg bg-sidebar-surface text-sidebar-text-primary focus:outline-none focus:ring-2 focus:ring-primary-foreground">
+          })} className="w-full px-3 py-2 border border-sidebar-border rounded-lg bg-sidebar-surface text-sidebar-text-primary focus:outline-none focus:ring-2 focus:ring-primary-foreground my-[30px]">
               <option value="external">Bouton externe</option>
               <option value="center">Centre de la roue</option>
             </select>
