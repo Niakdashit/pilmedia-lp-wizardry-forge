@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import QualifioSidebar from './QualifioSidebar';
+import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
 
@@ -146,6 +147,7 @@ export interface EditorConfig {
 
 const QualifioEditorLayout: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
+  const [activeTab, setActiveTab] = useState<string>('general');
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
     height: 1200,
@@ -233,6 +235,13 @@ const QualifioEditorLayout: React.FC = () => {
       <div className="flex">
         {/* Sidebar */}
         <QualifioSidebar 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        
+        {/* Content Panel */}
+        <QualifioContentPanel 
+          activeTab={activeTab}
           config={config}
           onConfigUpdate={updateConfig}
         />
