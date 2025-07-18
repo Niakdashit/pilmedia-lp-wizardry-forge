@@ -82,9 +82,9 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     if (isMode1 && device === 'desktop') {
       return 'contain';
     }
-    // Pour desktop en Mode 2, utiliser '100% auto' pour afficher l'image entièrement en largeur
+    // Pour desktop en Mode 2, utiliser 'contain' pour s'ajuster parfaitement aux dimensions
     if (!isMode1 && device === 'desktop') {
-      return '100% auto';
+      return 'contain';
     }
     // Pour tablette et mobile en Mode 2, utiliser 'cover' pour remplir complètement
     return 'cover';
