@@ -220,7 +220,7 @@ const QualifioEditorLayout: React.FC = () => {
           <div className="flex items-center gap-4">
             <DeviceSelector selectedDevice={selectedDevice} onDeviceChange={setSelectedDevice} />
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors bg-gray-100">
+              <button className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors bg-gray-200 hover:bg-gray-100">
                 Sauvegarder le template
               </button>
               <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
