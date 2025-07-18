@@ -3,6 +3,7 @@ import React from 'react';
 import { SmartWheel } from '../../SmartWheel';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import { createSegments } from './wheelHelpers';
+import { getAccessibleTextColor } from '../../../utils/BrandStyleAnalyzer';
 
 interface WheelContainerProps {
   device: DeviceType;
@@ -30,7 +31,11 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     accent: config.brandAssets.accentColor || '#E74C3C'
   } : undefined;
 
-  const wheelSegments = createSegments(config, brandColor);
+  const wheelSegments = createSegments(config, brandColor).map(segment => ({
+    ...segment,
+    // Appliquer automatiquement la couleur de texte accessible
+    textColor: getAccessibleTextColor(segment.color)
+  }));
 
   const handleWheelResult = (segment: any) => {
     console.log('Segment sélectionné:', segment);
@@ -76,7 +81,8 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: brandColors?.primary || "#8E44AD",
-          textColor: "#ffffff"
+          textColor: "#ffffff",
+          position: config.wheelButtonPosition || 'bottom' // Nouvelle option de position
         }}
       />
     </div>

@@ -5,6 +5,7 @@ import { useWheelAnimation } from './hooks/useWheelAnimation';
 import { useSmartWheelRenderer } from './hooks/useSmartWheelRenderer';
 import BorderStyleSelector from './components/BorderStyleSelector';
 import ParticipationModal from './components/ParticipationModal';
+
 type Mode2State = 'form' | 'wheel' | 'result';
 
 const SmartWheel: React.FC<SmartWheelProps> = ({
@@ -111,8 +112,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     setFinalResult(null);
   };
 
-  // Fonction pour déterminer la position optimale du bouton
+  // Déterminer si le bouton doit être au centre
+  const isButtonInCenter = customButton?.position === 'center';
+
+  // Fonction pour déterminer la position optimale du bouton (seulement si pas au centre)
   const getOptimalButtonPosition = () => {
+    if (isButtonInCenter) return 'center';
+    
     // Si buttonPosition est explicitement défini, l'utiliser
     if (buttonPosition) return buttonPosition;
     
@@ -152,6 +158,10 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {
+    if (isButtonInCenter) {
+      return 'flex items-center justify-center relative';
+    }
+    
     switch (finalButtonPosition) {
       case 'top':
         return 'flex flex-col-reverse items-center space-y-reverse space-y-6';
@@ -244,6 +254,25 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             }}
           />
           
+          {/* Bouton au centre de la roue */}
+          {isButtonInCenter && (
+            <button
+              onClick={handleButtonClick}
+              disabled={isButtonDisabled()}
+              className="absolute inset-0 m-auto w-16 h-16 font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 text-sm"
+              style={{
+                backgroundColor: buttonConfig.color,
+                color: buttonConfig.textColor,
+                boxShadow: `0 4px 14px ${buttonConfig.color}40`,
+                maxWidth: `${actualSize * 0.15}px`,
+                maxHeight: `${actualSize * 0.15}px`,
+                fontSize: `${Math.max(10, actualSize * 0.025)}px`
+              }}
+            >
+              {wheelState.isSpinning ? '...' : '▶'}
+            </button>
+          )}
+          
           {/* Message si aucun segment */}
           {segments.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -269,19 +298,21 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           )}
         </div>
 
-        {/* Bouton de rotation */}
-        <button
-          onClick={handleButtonClick}
-          disabled={isButtonDisabled()}
-          className="px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          style={{
-            backgroundColor: buttonConfig.color,
-            color: buttonConfig.textColor,
-            boxShadow: `0 4px 14px ${buttonConfig.color}40`
-          }}
-        >
-          {buttonConfig.text}
-        </button>
+        {/* Bouton de rotation (seulement si pas au centre) */}
+        {!isButtonInCenter && (
+          <button
+            onClick={handleButtonClick}
+            disabled={isButtonDisabled()}
+            className="px-8 py-3 font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            style={{
+              backgroundColor: buttonConfig.color,
+              color: buttonConfig.textColor,
+              boxShadow: `0 4px 14px ${buttonConfig.color}40`
+            }}
+          >
+            {buttonConfig.text}
+          </button>
+        )}
 
         {/* Message de validation si segment sélectionné */}
         {!isMode1 && mode2State === 'result' && finalResult && (
@@ -323,4 +354,5 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     </>
   );
 };
+
 export default SmartWheel;

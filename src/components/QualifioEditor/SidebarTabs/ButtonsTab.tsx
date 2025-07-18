@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { MousePointer } from 'lucide-react';
+import { MousePointer, Target } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface ButtonsTabProps {
@@ -8,8 +9,45 @@ interface ButtonsTabProps {
 }
 
 const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
+  const buttonPositions = [
+    { id: 'bottom', label: 'Extérieur (bas)', description: 'Bouton positionné sous la roue' },
+    { id: 'center', label: 'Centre de la roue', description: 'Bouton intégré au centre de la roue' },
+    { id: 'top', label: 'Extérieur (haut)', description: 'Bouton positionné au-dessus de la roue' }
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Position du bouton de la roue */}
+      <div className="premium-card">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Target className="w-4 h-4" />
+          Position du bouton de la roue
+        </h4>
+        
+        <div className="space-y-3">
+          {buttonPositions.map((position) => (
+            <label key={position.id} className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="wheelButtonPosition"
+                value={position.id}
+                checked={config.wheelButtonPosition === position.id || (!config.wheelButtonPosition && position.id === 'bottom')}
+                onChange={(e) => onConfigUpdate({ wheelButtonPosition: e.target.value as 'bottom' | 'center' | 'top' })}
+                className="mt-1"
+              />
+              <div>
+                <div className="text-sm font-medium text-sidebar-text-primary">
+                  {position.label}
+                </div>
+                <div className="text-xs text-sidebar-text-muted">
+                  {position.description}
+                </div>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Bouton de participation */}
       <div className="premium-card">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
@@ -123,6 +161,12 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
           >
             {config.participateButtonText || 'PARTICIPER !'}
           </div>
+          
+          {config.wheelButtonPosition === 'center' && (
+            <div className="mt-3 text-xs text-sidebar-text-muted">
+              Position: Centre de la roue
+            </div>
+          )}
         </div>
       </div>
     </div>
