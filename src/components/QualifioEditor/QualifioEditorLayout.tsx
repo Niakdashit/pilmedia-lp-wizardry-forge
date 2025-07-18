@@ -35,74 +35,48 @@ export interface DeviceConfig {
 }
 
 export interface EditorConfig {
-  // General
   width: number;
   height: number;
   anchor: 'fixed' | 'center';
-  
-  // Game type and modes
   gameType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
   gameMode: 'mode1-sequential' | 'mode2-background';
   displayMode: 'mode1-banner-game' | 'mode2-background';
-  
-  // Banner
   bannerImage?: string;
   bannerDescription?: string;
   bannerLink?: string;
   backgroundColor?: string;
   outlineColor?: string;
-  
-  // Wheel settings
   borderStyle?: string;
-  
-  // Text content
   storyText?: string;
   publisherLink?: string;
   prizeText?: string;
-  
-  // Custom texts
   customTexts?: CustomText[];
-  
-  // Design elements
   design?: {
     customImages?: any[];
   };
-  
-  // Layout
   centerText?: boolean;
   centerForm?: boolean;
   centerGameZone?: boolean;
-  
-  // Buttons
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
   wheelButtonPosition?: 'external' | 'center';
-  
-  // Footer
   footerText?: string;
   footerColor?: string;
-  
-  // Custom code
   customCSS?: string;
   customJS?: string;
   trackingTags?: string;
-  
-  // Brand assets
   brandAssets?: {
     logo?: string;
     primaryColor?: string;
     secondaryColor?: string;
     accentColor?: string;
   };
-  
-  // Device-specific configurations
   deviceConfig?: {
     mobile: DeviceConfig;
     tablet: DeviceConfig;
     desktop: DeviceConfig;
   };
-
   formFields?: Array<{
     id: string;
     label: string;
@@ -111,8 +85,6 @@ export interface EditorConfig {
     options?: string[];
     placeholder?: string;
   }>;
-
-  // Game-specific configurations
   wheelSegments?: any[];
   quizQuestions?: any[];
   quizPassingScore?: number;
@@ -256,7 +228,10 @@ const QualifioEditorLayout: React.FC = () => {
                     })
                   );
                   localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
-                  window.open(`/qualifio-live?device=${selectedDevice}&config=${encoded}`, '_blank');
+                  window.open(
+                    `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
+                    '_blank'
+                  );
                 }}
                 className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
               >
