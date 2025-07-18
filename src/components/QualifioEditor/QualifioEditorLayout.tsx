@@ -222,8 +222,41 @@ const QualifioEditorLayout: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => {
+                  const encoded = encodeURIComponent(
+                    JSON.stringify({
+                      width: config.width,
+                      height: config.height,
+                      anchor: config.anchor,
+                      gameType: config.gameType,
+                      gameMode: config.gameMode,
+                      displayMode: config.displayMode,
+                      bannerImage: config.bannerImage,
+                      bannerDescription: config.bannerDescription,
+                      bannerLink: config.bannerLink,
+                      backgroundColor: config.backgroundColor,
+                      outlineColor: config.outlineColor,
+                      borderStyle: config.borderStyle,
+                      jackpotBorderStyle: config.jackpotBorderStyle,
+                      storyText: config.storyText,
+                      publisherLink: config.publisherLink,
+                      prizeText: config.prizeText,
+                      customTexts: config.customTexts,
+                      centerText: config.centerText,
+                      centerForm: config.centerForm,
+                      centerGameZone: config.centerGameZone,
+                      participateButtonText: config.participateButtonText,
+                      participateButtonColor: config.participateButtonColor,
+                      participateButtonTextColor: config.participateButtonTextColor,
+                      footerText: config.footerText,
+                      footerColor: config.footerColor,
+                      customCSS: config.customCSS,
+                      customJS: config.customJS,
+                      trackingTags: config.trackingTags,
+                      deviceConfig: config.deviceConfig
+                    })
+                  );
                   localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
-                  window.open(`/qualifio-live?device=${selectedDevice}`, '_blank');
+                  window.open(`/qualifio-live?device=${selectedDevice}&config=${encoded}`, '_blank');
                 }}
                 className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
               >
