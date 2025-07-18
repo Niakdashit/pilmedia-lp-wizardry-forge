@@ -1,13 +1,14 @@
 import React from 'react';
 import { Plus, Type, Bold, Italic, Underline } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
-
 interface TextsTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
-
-const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
+const TextsTab: React.FC<TextsTabProps> = ({
+  config,
+  onConfigUpdate
+}) => {
   const addCustomText = () => {
     const newText: CustomText = {
       id: `text-${Date.now()}`,
@@ -21,95 +22,79 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
       fontStyle: 'normal',
       textDecoration: 'none'
     };
-
     const updatedTexts = [...(config.customTexts || []), newText];
-    onConfigUpdate({ customTexts: updatedTexts });
+    onConfigUpdate({
+      customTexts: updatedTexts
+    });
   };
-
   const updateCustomText = (textId: string, updates: Partial<CustomText>) => {
-    const updatedTexts = config.customTexts?.map(text => 
-      text.id === textId ? { ...text, ...updates } : text
-    ) || [];
-    onConfigUpdate({ customTexts: updatedTexts });
+    const updatedTexts = config.customTexts?.map(text => text.id === textId ? {
+      ...text,
+      ...updates
+    } : text) || [];
+    onConfigUpdate({
+      customTexts: updatedTexts
+    });
   };
-
   const deleteCustomText = (textId: string) => {
     const updatedTexts = config.customTexts?.filter(text => text.id !== textId) || [];
-    onConfigUpdate({ customTexts: updatedTexts });
+    onConfigUpdate({
+      customTexts: updatedTexts
+    });
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Ajouter du texte - Style Canva */}
-      <div className="premium-card">
-        <button
-          onClick={addCustomText}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md"
-        >
+      <div className="premium-card mx-[30px]">
+        <button onClick={addCustomText} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md">
           <Type className="w-5 h-5" />
           Ajouter du texte
         </button>
       </div>
 
       {/* Textes par défaut */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Textes par défaut</h4>
         
         <div className="space-y-4">
           <div className="form-group-premium">
             <label>Contenu de l'histoire</label>
-            <textarea
-              value={config.storyText || ''}
-              onChange={(e) => onConfigUpdate({ storyText: e.target.value })}
-              rows={6}
-              placeholder="Saisissez le texte de l'histoire..."
-            />
+            <textarea value={config.storyText || ''} onChange={e => onConfigUpdate({
+            storyText: e.target.value
+          })} rows={6} placeholder="Saisissez le texte de l'histoire..." />
           </div>
 
           <div className="form-group-premium">
             <label>Lien éditeur</label>
-            <input
-              type="text"
-              value={config.publisherLink || ''}
-              onChange={(e) => onConfigUpdate({ publisherLink: e.target.value })}
-              placeholder="editions.flammarion.com"
-            />
+            <input type="text" value={config.publisherLink || ''} onChange={e => onConfigUpdate({
+            publisherLink: e.target.value
+          })} placeholder="editions.flammarion.com" />
           </div>
 
           <div className="form-group-premium">
             <label>Description du prix</label>
-            <textarea
-              value={config.prizeText || ''}
-              onChange={(e) => onConfigUpdate({ prizeText: e.target.value })}
-              rows={3}
-              placeholder="Description du prix à gagner..."
-            />
+            <textarea value={config.prizeText || ''} onChange={e => onConfigUpdate({
+            prizeText: e.target.value
+          })} rows={3} placeholder="Description du prix à gagner..." />
           </div>
         </div>
       </div>
 
       {/* Textes personnalisés */}
-      <div className="premium-card">
+      <div className="premium-card mx-[30px]">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-sidebar-text-primary font-medium text-base">Textes personnalisés</h4>
-          <button
-            onClick={addCustomText}
-            className="btn-secondary flex items-center gap-2"
-          >
+          <button onClick={addCustomText} className="btn-secondary flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Ajouter
           </button>
         </div>
         
-        {config.customTexts?.length === 0 && (
-          <p className="text-sidebar-text-muted text-sm italic">
+        {config.customTexts?.length === 0 && <p className="text-sidebar-text-muted text-sm italic">
             Aucun texte personnalisé. Cliquez sur "Ajouter" pour créer un nouveau texte éditable.
-          </p>
-        )}
+          </p>}
 
         <div className="space-y-4">
-          {config.customTexts?.map((text) => (
-            <div key={text.id} className="bg-sidebar-surface rounded-lg p-4 border border-sidebar-border">
+          {config.customTexts?.map(text => <div key={text.id} className="bg-sidebar-surface rounded-lg p-4 border border-sidebar-border">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Type className="w-4 h-4 text-sidebar-text-muted" />
@@ -117,10 +102,7 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
                     {text.content.substring(0, 20)}{text.content.length > 20 ? '...' : ''}
                   </span>
                 </div>
-                <button
-                  onClick={() => deleteCustomText(text.id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
+                <button onClick={() => deleteCustomText(text.id)} className="text-red-500 hover:text-red-700 text-sm">
                   Supprimer
                 </button>
               </div>
@@ -128,20 +110,16 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="form-group-premium">
                   <label>Contenu</label>
-                  <input
-                    type="text"
-                    value={text.content}
-                    onChange={(e) => updateCustomText(text.id, { content: e.target.value })}
-                    placeholder="Texte à afficher"
-                  />
+                  <input type="text" value={text.content} onChange={e => updateCustomText(text.id, {
+                content: e.target.value
+              })} placeholder="Texte à afficher" />
                 </div>
 
                 <div className="form-group-premium">
                   <label>Police</label>
-                  <select
-                    value={text.fontFamily}
-                    onChange={(e) => updateCustomText(text.id, { fontFamily: e.target.value })}
-                  >
+                  <select value={text.fontFamily} onChange={e => updateCustomText(text.id, {
+                fontFamily: e.target.value
+              })}>
                     <optgroup label="Sans Serif">
                       <option value="Inter, sans-serif">Inter</option>
                       <option value="Roboto, sans-serif">Roboto</option>
@@ -221,100 +199,70 @@ const TextsTab: React.FC<TextsTabProps> = ({ config, onConfigUpdate }) => {
 
                 <div className="form-group-premium">
                   <label>Taille</label>
-                  <input
-                    type="number"
-                    min="8"
-                    max="72"
-                    value={text.fontSize}
-                    onChange={(e) => updateCustomText(text.id, { fontSize: parseInt(e.target.value) || 16 })}
-                  />
+                  <input type="number" min="8" max="72" value={text.fontSize} onChange={e => updateCustomText(text.id, {
+                fontSize: parseInt(e.target.value) || 16
+              })} />
                 </div>
 
                 <div className="form-group-premium">
                   <label>Couleur</label>
                   <div className="color-input-group">
-                    <input
-                      type="color"
-                      value={text.color}
-                      onChange={(e) => updateCustomText(text.id, { color: e.target.value })}
-                    />
-                    <input
-                      type="text"
-                      value={text.color}
-                      onChange={(e) => updateCustomText(text.id, { color: e.target.value })}
-                      placeholder="#000000"
-                    />
+                    <input type="color" value={text.color} onChange={e => updateCustomText(text.id, {
+                  color: e.target.value
+                })} />
+                    <input type="text" value={text.color} onChange={e => updateCustomText(text.id, {
+                  color: e.target.value
+                })} placeholder="#000000" />
                   </div>
                 </div>
 
                 <div className="form-group-premium">
                   <label>Couleur de fond (optionnel)</label>
                   <div className="color-input-group">
-                    <input
-                      type="color"
-                      value={text.backgroundColor || '#ffffff'}
-                      onChange={(e) => updateCustomText(text.id, { backgroundColor: e.target.value })}
-                    />
-                    <input
-                      type="text"
-                      value={text.backgroundColor || ''}
-                      onChange={(e) => updateCustomText(text.id, { backgroundColor: e.target.value })}
-                      placeholder="Transparent"
-                    />
+                    <input type="color" value={text.backgroundColor || '#ffffff'} onChange={e => updateCustomText(text.id, {
+                  backgroundColor: e.target.value
+                })} />
+                    <input type="text" value={text.backgroundColor || ''} onChange={e => updateCustomText(text.id, {
+                  backgroundColor: e.target.value
+                })} placeholder="Transparent" />
                   </div>
                 </div>
 
                 <div className="form-group-premium">
                   <label>Position X</label>
-                  <input
-                    type="number"
-                    value={text.x}
-                    onChange={(e) => updateCustomText(text.id, { x: parseInt(e.target.value) || 0 })}
-                  />
+                  <input type="number" value={text.x} onChange={e => updateCustomText(text.id, {
+                x: parseInt(e.target.value) || 0
+              })} />
                 </div>
 
                 <div className="form-group-premium">
                   <label>Position Y</label>
-                  <input
-                    type="number"
-                    value={text.y}
-                    onChange={(e) => updateCustomText(text.id, { y: parseInt(e.target.value) || 0 })}
-                  />
+                  <input type="number" value={text.y} onChange={e => updateCustomText(text.id, {
+                y: parseInt(e.target.value) || 0
+              })} />
                 </div>
               </div>
 
               <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => updateCustomText(text.id, { 
-                    fontWeight: text.fontWeight === 'bold' ? 'normal' : 'bold' 
-                  })}
-                  className={`btn-icon ${text.fontWeight === 'bold' ? 'active' : ''}`}
-                >
+                <button onClick={() => updateCustomText(text.id, {
+              fontWeight: text.fontWeight === 'bold' ? 'normal' : 'bold'
+            })} className={`btn-icon ${text.fontWeight === 'bold' ? 'active' : ''}`}>
                   <Bold className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => updateCustomText(text.id, { 
-                    fontStyle: text.fontStyle === 'italic' ? 'normal' : 'italic' 
-                  })}
-                  className={`btn-icon ${text.fontStyle === 'italic' ? 'active' : ''}`}
-                >
+                <button onClick={() => updateCustomText(text.id, {
+              fontStyle: text.fontStyle === 'italic' ? 'normal' : 'italic'
+            })} className={`btn-icon ${text.fontStyle === 'italic' ? 'active' : ''}`}>
                   <Italic className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => updateCustomText(text.id, { 
-                    textDecoration: text.textDecoration === 'underline' ? 'none' : 'underline' 
-                  })}
-                  className={`btn-icon ${text.textDecoration === 'underline' ? 'active' : ''}`}
-                >
+                <button onClick={() => updateCustomText(text.id, {
+              textDecoration: text.textDecoration === 'underline' ? 'none' : 'underline'
+            })} className={`btn-icon ${text.textDecoration === 'underline' ? 'active' : ''}`}>
                   <Underline className="w-4 h-4" />
                 </button>
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default TextsTab;
