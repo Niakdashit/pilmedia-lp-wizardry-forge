@@ -1,248 +1,275 @@
-import React, { useState } from 'react';
-import { Save, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import QualifioSidebar from './QualifioSidebar';
-import QualifioPreview from './QualifioPreview';
-import DeviceSelector from './DeviceSelector';
+import React, { useState, useEffect } from 'react';
+import { Monitor, Tablet, Smartphone, Palette, Settings, Code, Eye, ImageIcon, RotateCcw } from 'lucide-react';
 
-export type DeviceType = 'mobile' | 'tablet' | 'desktop';
-
-export interface CustomText {
-  id: string;
-  content: string;
-  x: number;
-  y: number;
-  fontSize: number;
-  fontFamily: string;
-  color: string;
-  fontWeight: 'normal' | 'bold';
-  fontStyle: 'normal' | 'italic';
-  textDecoration: 'none' | 'underline';
-  backgroundColor?: string;
-  width?: number;
-  height?: number;
-}
-
-export interface DeviceConfig {
-  fontSize: number;
-  backgroundImage?: string;
-  gamePosition?: {
-    x: number; // Position horizontale (-100 à 100)
-    y: number; // Position verticale (-100 à 100)
-    scale: number; // Échelle (0.5 à 2.0)
-  };
-}
+export type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
 export interface EditorConfig {
-  // General
-  width: number;
-  height: number;
-  anchor: 'fixed' | 'center';
-  
-  // Game type and modes
-  gameType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
-  gameMode: 'mode1-sequential' | 'mode2-background';
-  displayMode: 'mode1-banner-game' | 'mode2-background';
-  
-  // Banner
-  bannerImage?: string;
-  bannerDescription?: string;
-  bannerLink?: string;
-  backgroundColor?: string;
-  outlineColor?: string;
-  
-  // Wheel settings
-  borderStyle?: string;
-  
-  // Text content
-  storyText?: string;
-  publisherLink?: string;
-  prizeText?: string;
-  
-  // Custom texts
-  customTexts?: CustomText[];
-  
-  // Design elements
-  design?: {
-    customImages?: any[];
-  };
-  
-  // Layout
-  centerText?: boolean;
-  centerForm?: boolean;
-  centerGameZone?: boolean;
-  
-  // Buttons
+  // Existing properties
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
+  wheelButtonPosition?: 'external' | 'center';
   
-  // Footer
-  footerText?: string;
-  footerColor?: string;
-  
-  // Custom code
-  customCSS?: string;
-  customJS?: string;
-  trackingTags?: string;
+  // Device configurations
+  deviceConfig?: {
+    desktop?: {
+      gamePosition?: { x: number; y: number; scale: number };
+    };
+    tablet?: {
+      gamePosition?: { x: number; y: number; scale: number };
+    };
+    mobile?: {
+      gamePosition?: { x: number; y: number; scale: number };
+    };
+  };
   
   // Brand assets
   brandAssets?: {
-    logo?: string;
     primaryColor?: string;
     secondaryColor?: string;
     accentColor?: string;
   };
   
-  // Device-specific configurations
-  deviceConfig?: {
-    mobile: DeviceConfig;
-    tablet: DeviceConfig;
-    desktop: DeviceConfig;
-  };
-
+  // Form fields for mode 2
   formFields?: Array<{
     id: string;
-    label: string;
     type: 'text' | 'email' | 'tel' | 'select' | 'textarea' | 'checkbox';
+    label: string;
+    placeholder?: string;
     required?: boolean;
     options?: string[];
-    placeholder?: string;
   }>;
-
-  // Game-specific configurations
-  wheelSegments?: any[];
-  quizQuestions?: any[];
-  quizPassingScore?: number;
-  scratchCards?: any[];
-  scratchSurfaceColor?: string;
-  scratchPercentage?: number;
-  jackpotSymbols?: string[];
-  jackpotWinningCombination?: string[];
-  jackpotBackgroundColor?: string;
-  jackpotBorderStyle?: string;
-  jackpotBorderColor?: string;
-  jackpotBorderWidth?: number;
-  diceSides?: number;
-  diceWinningNumbers?: number[];
-  diceColor?: string;
-  diceDotColor?: string;
-  memoryPairs?: any[];
-  memoryGridSize?: string;
-  memoryTimeLimit?: number;
-  memoryCardBackColor?: string;
-  puzzleImage?: string;
-  puzzlePieces?: number;
-  puzzleTimeLimit?: number;
-  puzzleShowPreview?: boolean;
-  puzzleAutoShuffle?: boolean;
-  puzzleDifficulty?: string;
-  puzzleBackgroundColor?: string;
-  formTitle?: string;
-  formSuccessMessage?: string;
-  formShowProgress?: boolean;
+  
+  // Wheel configuration
+  segments?: Array<{
+    id: string;
+    label: string;
+    color: string;
+    textColor?: string;
+  }>;
+  
+  borderStyle?: string;
 }
 
 const QualifioEditorLayout: React.FC = () => {
-  const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
-  const [config, setConfig] = useState<EditorConfig>({
-    width: 810,
-    height: 1200,
-    anchor: 'fixed',
-    gameType: 'wheel',
-    gameMode: 'mode1-sequential',
-    displayMode: 'mode1-banner-game',
-    storyText: `Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser.`,
-    publisherLink: 'editions.flammarion.com',
-    prizeText: 'Jouez et tentez de remporter l\'un des 10 exemplaires de "Les notes invisibles" d\'une valeur unitaire de 21 euros !',
-    customTexts: [],
-    centerText: false,
-    centerForm: true,
-    centerGameZone: true,
-    backgroundColor: '#ffffff',
-    outlineColor: '#ffffff',
-    borderStyle: 'classic',
-    jackpotBorderStyle: 'classic',
-    participateButtonText: 'PARTICIPER !',
-    participateButtonColor: '#ff6b35',
-    participateButtonTextColor: '#ffffff',
-    footerText: '',
-    footerColor: '#f8f9fa',
-    customCSS: '',
-    customJS: '',
-    trackingTags: '',
-    deviceConfig: {
-      mobile: {
-        fontSize: 14,
-        backgroundImage: undefined,
-        gamePosition: { x: 0, y: 0, scale: 1.0 }
-      },
-      tablet: {
-        fontSize: 16,
-        backgroundImage: undefined,
-        gamePosition: { x: 0, y: 0, scale: 1.0 }
-      },
-      desktop: {
-        fontSize: 18,
-        backgroundImage: undefined,
-        gamePosition: { x: 0, y: 0, scale: 1.0 }
-      }
-    }
-  });
+  const [activeDevice, setActiveDevice] = useState<DeviceType>('desktop');
+  const [activeTab, setActiveTab] = useState('design');
+  const [config, setConfig] = useState<EditorConfig>({});
+  const [isMode1, setIsMode1] = useState(false);
 
-  const updateConfig = (updates: Partial<EditorConfig>) => {
+  const handleConfigUpdate = (updates: Partial<EditorConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
   };
 
+  const devices = [
+    { id: 'desktop' as DeviceType, icon: Monitor, label: 'Desktop' },
+    { id: 'tablet' as DeviceType, icon: Tablet, label: 'Tablet' },
+    { id: 'mobile' as DeviceType, icon: Smartphone, label: 'Mobile' }
+  ];
+
+  const tabs = [
+    { id: 'design', icon: Palette, label: 'Design' },
+    { id: 'buttons', icon: Settings, label: 'Boutons' },
+    { id: 'code', icon: Code, label: 'Code' },
+    { id: 'preview', icon: Eye, label: 'Aperçu' }
+  ];
+
   return (
-    <div className="min-h-screen bg-brand-accent">
-      {/* Header avec couleurs de marque */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/gamification"
-              className="flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Retour
-            </Link>
-            <h1 className="text-xl font-semibold text-brand-primary">Éditeur Qualifio</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <div className="w-80 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+          {/* Header */}
+          <div className="p-6 border-b border-gray-200">
+            <h1 className="text-xl font-bold text-gray-900">Éditeur Qualifio</h1>
+            <p className="text-sm text-gray-600 mt-1">Configurez votre jeu interactif</p>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <DeviceSelector 
-              selectedDevice={selectedDevice}
-              onDeviceChange={setSelectedDevice}
-            />
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors">
-                Sauvegarder le template
+
+          {/* Mode Toggle */}
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setIsMode1(false)}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+                  !isMode1 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Mode 2
               </button>
-              <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                Sauvegarder & quitter
+              <button
+                onClick={() => setIsMode1(true)}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+                  isMode1 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Mode 1
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex">
-        {/* Sidebar */}
-        <QualifioSidebar 
-          config={config}
-          onConfigUpdate={updateConfig}
-        />
-        
-        {/* Preview Area */}
-        <div className="flex-1 p-6">
-          <QualifioPreview 
-            device={selectedDevice}
-            config={config}
-            onConfigUpdate={updateConfig}
-          />
+          {/* Tabs */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
+              <div className="space-y-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-4">
+              {activeTab === 'design' && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">Configuration du design</h3>
+                  <p className="text-sm text-gray-600">Personnalisez l'apparence de votre jeu</p>
+                </div>
+              )}
+              
+              {activeTab === 'buttons' && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">Configuration des boutons</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Texte du bouton
+                      </label>
+                      <input
+                        type="text"
+                        value={config.participateButtonText || 'PARTICIPER !'}
+                        onChange={(e) => handleConfigUpdate({ participateButtonText: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="PARTICIPER !"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Position du bouton de la roue
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => handleConfigUpdate({ wheelButtonPosition: 'external' })}
+                          className={`p-3 text-sm rounded-lg border transition-colors ${
+                            (config.wheelButtonPosition || 'external') === 'external'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'
+                          }`}
+                        >
+                          Bouton extérieur
+                        </button>
+                        <button
+                          onClick={() => handleConfigUpdate({ wheelButtonPosition: 'center' })}
+                          className={`p-3 text-sm rounded-lg border transition-colors ${
+                            config.wheelButtonPosition === 'center'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'
+                          }`}
+                        >
+                          Centre de la roue
+                        </button>
+                      </div>
+                      <p className="text-gray-500 text-xs mt-2">
+                        {config.wheelButtonPosition === 'center' 
+                          ? 'Le bouton sera affiché au centre de la roue de fortune'
+                          : 'Le bouton sera affiché en dehors de la roue de fortune'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === 'code' && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">Code d'intégration</h3>
+                  <p className="text-sm text-gray-600">Copiez ce code pour intégrer votre jeu</p>
+                </div>
+              )}
+              
+              {activeTab === 'preview' && (
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">Aperçu</h3>
+                  <p className="text-sm text-gray-600">Prévisualisez votre jeu</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Device Selector */}
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {devices.map((device) => (
+                  <button
+                    key={device.id}
+                    onClick={() => setActiveDevice(device.id)}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      activeDevice === device.id
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <device.icon className="w-4 h-4" />
+                    {device.label}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  {isMode1 ? 'Mode 1' : 'Mode 2'}
+                </span>
+                <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Preview Area */}
+          <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+            <div className="max-w-4xl mx-auto">
+              <div className={`bg-white rounded-lg shadow-lg overflow-hidden ${
+                activeDevice === 'mobile' ? 'max-w-sm mx-auto' :
+                activeDevice === 'tablet' ? 'max-w-2xl mx-auto' :
+                'w-full'
+              }`}>
+                <div className="aspect-video bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Aperçu du jeu
+                    </h3>
+                    <p className="text-gray-600">
+                      {isMode1 ? 'Mode 1 - Jeu direct' : 'Mode 2 - Avec formulaire'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Position du bouton: {config.wheelButtonPosition === 'center' ? 'Centre de la roue' : 'Extérieur'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

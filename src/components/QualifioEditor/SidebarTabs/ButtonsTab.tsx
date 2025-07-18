@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MousePointer } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
@@ -61,6 +62,39 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
               />
             </div>
           </div>
+
+          {/* Position du bouton de la roue */}
+          <div className="form-group-premium">
+            <label>Position du bouton de la roue</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => onConfigUpdate({ wheelButtonPosition: 'external' })}
+                className={`p-3 text-sm rounded-lg border transition-colors ${
+                  (config.wheelButtonPosition || 'external') === 'external'
+                    ? 'bg-sidebar-accent text-white border-sidebar-accent'
+                    : 'bg-sidebar-surface text-sidebar-text-primary border-sidebar-border hover:border-sidebar-accent'
+                }`}
+              >
+                Bouton extérieur
+              </button>
+              <button
+                onClick={() => onConfigUpdate({ wheelButtonPosition: 'center' })}
+                className={`p-3 text-sm rounded-lg border transition-colors ${
+                  config.wheelButtonPosition === 'center'
+                    ? 'bg-sidebar-accent text-white border-sidebar-accent'
+                    : 'bg-sidebar-surface text-sidebar-text-primary border-sidebar-border hover:border-sidebar-accent'
+                }`}
+              >
+                Centre de la roue
+              </button>
+            </div>
+            <p className="text-sidebar-text-muted text-xs mt-2">
+              {config.wheelButtonPosition === 'center' 
+                ? 'Le bouton sera affiché au centre de la roue de fortune'
+                : 'Le bouton sera affiché en dehors de la roue de fortune'
+              }
+            </p>
+          </div>
         </div>
       </div>
 
@@ -123,6 +157,11 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({ config, onConfigUpdate }) => {
           >
             {config.participateButtonText || 'PARTICIPER !'}
           </div>
+          {config.wheelButtonPosition === 'center' && (
+            <p className="text-sidebar-text-muted text-xs mt-2">
+              Ce bouton sera affiché au centre de la roue
+            </p>
+          )}
         </div>
       </div>
     </div>
