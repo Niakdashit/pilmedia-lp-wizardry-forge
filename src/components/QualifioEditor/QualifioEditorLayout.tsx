@@ -241,7 +241,7 @@ const QualifioEditorLayout: React.FC = () => {
         {!isSidebarCollapsed && <QualifioContentPanel activeTab={activeTab} config={config} onConfigUpdate={updateConfig} />}
         
         {/* Preview Area */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 py-0">
           <QualifioPreview device={selectedDevice} config={config} onConfigUpdate={updateConfig} />
         </div>
       </div>
