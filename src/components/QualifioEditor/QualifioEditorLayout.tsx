@@ -35,74 +35,48 @@ export interface DeviceConfig {
 }
 
 export interface EditorConfig {
-  // General
   width: number;
   height: number;
   anchor: 'fixed' | 'center';
-  
-  // Game type and modes
   gameType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
   gameMode: 'mode1-sequential' | 'mode2-background';
   displayMode: 'mode1-banner-game' | 'mode2-background';
-  
-  // Banner
   bannerImage?: string;
   bannerDescription?: string;
   bannerLink?: string;
   backgroundColor?: string;
   outlineColor?: string;
-  
-  // Wheel settings
   borderStyle?: string;
-  
-  // Text content
   storyText?: string;
   publisherLink?: string;
   prizeText?: string;
-  
-  // Custom texts
   customTexts?: CustomText[];
-  
-  // Design elements
   design?: {
     customImages?: any[];
   };
-  
-  // Layout
   centerText?: boolean;
   centerForm?: boolean;
   centerGameZone?: boolean;
-  
-  // Buttons
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
   wheelButtonPosition?: 'external' | 'center';
-  
-  // Footer
   footerText?: string;
   footerColor?: string;
-  
-  // Custom code
   customCSS?: string;
   customJS?: string;
   trackingTags?: string;
-  
-  // Brand assets
   brandAssets?: {
     logo?: string;
     primaryColor?: string;
     secondaryColor?: string;
     accentColor?: string;
   };
-  
-  // Device-specific configurations
   deviceConfig?: {
     mobile: DeviceConfig;
     tablet: DeviceConfig;
     desktop: DeviceConfig;
   };
-
   formFields?: Array<{
     id: string;
     label: string;
@@ -111,8 +85,6 @@ export interface EditorConfig {
     options?: string[];
     placeholder?: string;
   }>;
-
-  // Game-specific configurations
   wheelSegments?: any[];
   quizQuestions?: any[];
   quizPassingScore?: number;
@@ -222,8 +194,44 @@ const QualifioEditorLayout: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => {
+                  const encoded = encodeURIComponent(
+                    JSON.stringify({
+                      width: config.width,
+                      height: config.height,
+                      anchor: config.anchor,
+                      gameType: config.gameType,
+                      gameMode: config.gameMode,
+                      displayMode: config.displayMode,
+                      bannerImage: config.bannerImage,
+                      bannerDescription: config.bannerDescription,
+                      bannerLink: config.bannerLink,
+                      backgroundColor: config.backgroundColor,
+                      outlineColor: config.outlineColor,
+                      borderStyle: config.borderStyle,
+                      jackpotBorderStyle: config.jackpotBorderStyle,
+                      storyText: config.storyText,
+                      publisherLink: config.publisherLink,
+                      prizeText: config.prizeText,
+                      customTexts: config.customTexts,
+                      centerText: config.centerText,
+                      centerForm: config.centerForm,
+                      centerGameZone: config.centerGameZone,
+                      participateButtonText: config.participateButtonText,
+                      participateButtonColor: config.participateButtonColor,
+                      participateButtonTextColor: config.participateButtonTextColor,
+                      footerText: config.footerText,
+                      footerColor: config.footerColor,
+                      customCSS: config.customCSS,
+                      customJS: config.customJS,
+                      trackingTags: config.trackingTags,
+                      deviceConfig: config.deviceConfig
+                    })
+                  );
                   localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
-                  window.open(`${window.location.origin}/qualifio-live?device=${selectedDevice}`, '_blank');
+                  window.open(
+                    `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
+                    '_blank'
+                  );
                 }}
                 className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
               >
