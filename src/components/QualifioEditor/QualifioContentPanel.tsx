@@ -42,7 +42,7 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
           </div>;
     }
   };
-  return <div className="w-96 bg-white border-r border-gray-200 overflow-y-auto h-full py-0">
+  return <div className="w-96 bg-white border-r border-gray-200 overflow-y-auto h-full py-0 my-[30px]">
       {renderTabContent()}
     </div>;
 };
