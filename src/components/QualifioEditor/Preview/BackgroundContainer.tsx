@@ -42,12 +42,12 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   }, [isMode1, device, config.deviceConfig]);
 
   const getContentDimensions = () => {
-    // Pour Mode 2 en desktop, appliquer un ratio 16:9
+    // Pour Mode 2 en desktop, appliquer un ratio 16:9 strict
     if (!isMode1 && device === 'desktop') {
       return {
         width: '100%',
         height: '56.25vw', // 9/16 = 0.5625, donc 56.25vw pour un ratio 16:9
-        maxHeight: '70vh'
+        aspectRatio: '16/9'
       };
     }
     
@@ -82,9 +82,9 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     if (isMode1 && device === 'desktop') {
       return 'contain';
     }
-    // Pour desktop en Mode 2, utiliser '100% auto' pour afficher l'image entièrement en largeur
+    // Pour desktop en Mode 2, utiliser 'cover' pour remplir complètement le ratio 16:9
     if (!isMode1 && device === 'desktop') {
-      return '100% auto';
+      return 'cover';
     }
     // Pour tablette et mobile en Mode 2, utiliser 'cover' pour remplir complètement
     return 'cover';
