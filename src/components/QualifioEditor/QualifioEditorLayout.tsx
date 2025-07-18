@@ -5,9 +5,7 @@ import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
-
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
-
 export interface CustomText {
   id: string;
   content: string;
@@ -23,7 +21,6 @@ export interface CustomText {
   width?: number;
   height?: number;
 }
-
 export interface DeviceConfig {
   fontSize: number;
   backgroundImage?: string;
@@ -33,61 +30,60 @@ export interface DeviceConfig {
     scale: number; // Échelle (0.5 à 2.0)
   };
 }
-
 export interface EditorConfig {
   // General
   width: number;
   height: number;
   anchor: 'fixed' | 'center';
-  
+
   // Game type and modes
   gameType: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
   gameMode: 'mode1-sequential' | 'mode2-background';
   displayMode: 'mode1-banner-game' | 'mode2-background';
-  
+
   // Banner
   bannerImage?: string;
   bannerDescription?: string;
   bannerLink?: string;
   backgroundColor?: string;
   outlineColor?: string;
-  
+
   // Wheel settings
   borderStyle?: string;
-  
+
   // Text content
   storyText?: string;
   publisherLink?: string;
   prizeText?: string;
-  
+
   // Custom texts
   customTexts?: CustomText[];
-  
+
   // Design elements
   design?: {
     customImages?: any[];
   };
-  
+
   // Layout
   centerText?: boolean;
   centerForm?: boolean;
   centerGameZone?: boolean;
-  
+
   // Buttons
   participateButtonText?: string;
   participateButtonColor?: string;
   participateButtonTextColor?: string;
   wheelButtonPosition?: 'external' | 'center';
-  
+
   // Footer
   footerText?: string;
   footerColor?: string;
-  
+
   // Custom code
   customCSS?: string;
   customJS?: string;
   trackingTags?: string;
-  
+
   // Brand assets
   brandAssets?: {
     logo?: string;
@@ -95,14 +91,13 @@ export interface EditorConfig {
     secondaryColor?: string;
     accentColor?: string;
   };
-  
+
   // Device-specific configurations
   deviceConfig?: {
     mobile: DeviceConfig;
     tablet: DeviceConfig;
     desktop: DeviceConfig;
   };
-
   formFields?: Array<{
     id: string;
     label: string;
@@ -144,7 +139,6 @@ export interface EditorConfig {
   formSuccessMessage?: string;
   formShowProgress?: boolean;
 }
-
 const QualifioEditorLayout: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<string>('general');
@@ -179,35 +173,44 @@ const QualifioEditorLayout: React.FC = () => {
       mobile: {
         fontSize: 14,
         backgroundImage: undefined,
-        gamePosition: { x: 0, y: 0, scale: 1.0 }
+        gamePosition: {
+          x: 0,
+          y: 0,
+          scale: 1.0
+        }
       },
       tablet: {
         fontSize: 16,
         backgroundImage: undefined,
-        gamePosition: { x: 0, y: 0, scale: 1.0 }
+        gamePosition: {
+          x: 0,
+          y: 0,
+          scale: 1.0
+        }
       },
       desktop: {
         fontSize: 18,
         backgroundImage: undefined,
-        gamePosition: { x: 0, y: 0, scale: 1.0 }
+        gamePosition: {
+          x: 0,
+          y: 0,
+          scale: 1.0
+        }
       }
     }
   });
-
   const updateConfig = (updates: Partial<EditorConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    setConfig(prev => ({
+      ...prev,
+      ...updates
+    }));
   };
-
-  return (
-    <div className="min-h-screen bg-brand-accent">
+  return <div className="min-h-screen bg-brand-accent">
       {/* Header avec couleurs de marque */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link 
-              to="/gamification"
-              className="flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
-            >
+            <Link to="/gamification" className="flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors">
               <ArrowLeft className="w-5 h-5" />
               Retour
             </Link>
@@ -215,12 +218,9 @@ const QualifioEditorLayout: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            <DeviceSelector 
-              selectedDevice={selectedDevice}
-              onDeviceChange={setSelectedDevice}
-            />
+            <DeviceSelector selectedDevice={selectedDevice} onDeviceChange={setSelectedDevice} />
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors">
+              <button className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors bg-gray-100">
                 Sauvegarder le template
               </button>
               <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
@@ -235,33 +235,16 @@ const QualifioEditorLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex">
         {/* Sidebar */}
-        <QualifioSidebar 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        />
+        <QualifioSidebar activeTab={activeTab} onTabChange={setActiveTab} isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
         
         {/* Content Panel */}
-        {!isSidebarCollapsed && (
-          <QualifioContentPanel 
-            activeTab={activeTab}
-            config={config}
-            onConfigUpdate={updateConfig}
-          />
-        )}
+        {!isSidebarCollapsed && <QualifioContentPanel activeTab={activeTab} config={config} onConfigUpdate={updateConfig} />}
         
         {/* Preview Area */}
         <div className="flex-1 p-6">
-          <QualifioPreview 
-            device={selectedDevice}
-            config={config}
-            onConfigUpdate={updateConfig}
-          />
+          <QualifioPreview device={selectedDevice} config={config} onConfigUpdate={updateConfig} />
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default QualifioEditorLayout;
