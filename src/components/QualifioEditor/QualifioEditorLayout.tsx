@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { Monitor, Tablet, Smartphone, Palette, Settings, FileText, Code, ImageIcon, RotateCcw, MousePointer } from 'lucide-react';
 import { DeviceSelector } from './Controls/DeviceSelector';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Preview } from './Preview/Preview';
@@ -30,13 +30,40 @@ export interface FormField {
 export interface DeviceConfig {
   desktop?: {
     gamePosition?: { x: number; y: number; scale: number };
+    backgroundImage?: string;
   };
   tablet?: {
     gamePosition?: { x: number; y: number; scale: number };
+    backgroundImage?: string;
   };
   mobile?: {
     gamePosition?: { x: number; y: number; scale: number };
+    backgroundImage?: string;
   };
+}
+
+export interface CustomText {
+  id: string;
+  content: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  fontFamily: string;
+  color: string;
+  fontWeight: string;
+  fontStyle: string;
+  textDecoration: string;
+  backgroundColor?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface CustomImage {
+  id: string;
+  url: string;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  device: DeviceType;
 }
 
 export interface EditorConfig {
@@ -46,6 +73,17 @@ export interface EditorConfig {
   participateButtonColor?: string;
   participateButtonTextColor?: string;
   wheelButtonPosition?: 'bottom' | 'center';
+  
+  // Type de jeu
+  gameType?: 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
+  
+  // Contenu textuel
+  storyText?: string;
+  publisherLink?: string;
+  prizeText?: string;
+  
+  // Couleurs et design
+  backgroundColor?: string;
   
   // Ressources de marque
   brandAssets?: {
@@ -77,13 +115,68 @@ export interface EditorConfig {
   deviceConfig?: {
     desktop?: {
       gamePosition?: { x: number; y: number; scale: number };
+      backgroundImage?: string;
     };
     tablet?: {
       gamePosition?: { x: number; y: number; scale: number };
+      backgroundImage?: string;
     };
     mobile?: {
       gamePosition?: { x: number; y: number; scale: number };
+      backgroundImage?: string;
     };
+  };
+  
+  // Configuration Jackpot
+  jackpotBackgroundColor?: string;
+  jackpotBorderStyle?: string;
+  
+  // Configuration Scratch
+  scratchCards?: Array<{
+    id: string;
+    image?: string;
+    winText?: string;
+    isWinning?: boolean;
+  }>;
+  scratchSurfaceColor?: string;
+  
+  // Configuration Dice
+  diceWinningNumbers?: number[];
+  
+  // Configuration Quiz
+  quizQuestions?: Array<{
+    id: string;
+    question: string;
+    answers: string[];
+    correctAnswer: number;
+  }>;
+  quizPassingScore?: number;
+  
+  // Configuration Memory
+  memoryPairs?: Array<{
+    id: string;
+    image: string;
+  }>;
+  memoryGridSize?: number;
+  memoryTimeLimit?: number;
+  
+  // Configuration Puzzle
+  puzzleImage?: string;
+  puzzlePieces?: number;
+  puzzleTimeLimit?: number;
+  puzzleShowPreview?: boolean;
+  puzzleDifficulty?: 'easy' | 'medium' | 'hard';
+  puzzleBackgroundColor?: string;
+  
+  // Code personnalisé
+  customCSS?: string;
+  customJS?: string;
+  trackingTags?: string;
+  
+  // Éléments personnalisés
+  customTexts?: CustomText[];
+  design?: {
+    customImages?: CustomImage[];
   };
 }
 
@@ -98,6 +191,7 @@ const QualifioEditorLayout: React.FC = () => {
     participateButtonColor: '#ff6b35',
     participateButtonTextColor: '#ffffff',
     wheelButtonPosition: 'bottom',
+    gameType: 'wheel',
     wheelSegments: [
       { id: '1', label: 'Cadeau 1', color: '#4ECDC4' },
       { id: '2', label: 'Cadeau 2', color: '#F7B731' },
@@ -108,6 +202,10 @@ const QualifioEditorLayout: React.FC = () => {
       desktop: { gamePosition: { x: 0, y: 0, scale: 1 } },
       tablet: { gamePosition: { x: 0, y: 0, scale: 1 } },
       mobile: { gamePosition: { x: 0, y: 0, scale: 1 } }
+    },
+    customTexts: [],
+    design: {
+      customImages: []
     }
   });
 
