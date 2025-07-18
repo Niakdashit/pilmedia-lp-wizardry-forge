@@ -1,10 +1,13 @@
 import React from 'react';
 import type { EditorConfig } from './QualifioEditorLayout';
 import GeneralTab from './SidebarTabs/GeneralTab';
+import DesignTab from './SidebarTabs/DesignTab';
 import GameZoneTab from './SidebarTabs/GameZoneTab';
 import GameMechanicsTab from './SidebarTabs/GameMechanicsTab';
-import DesignTab from './SidebarTabs/DesignTab';
+import TextsTab from './SidebarTabs/TextsTab';
+import ButtonsTab from './SidebarTabs/ButtonsTab';
 import FormTab from './SidebarTabs/FormTab';
+import CodeTab from './SidebarTabs/CodeTab';
 
 interface QualifioContentPanelProps {
   activeTab: string;
@@ -21,21 +24,20 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
     switch (activeTab) {
       case 'general':
         return <GeneralTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'game':
-        return <GameZoneTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'layout':
-        return <GameMechanicsTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'design':
         return <DesignTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'gameZone':
+        return <GameZoneTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'gameMechanics':
+        return <GameMechanicsTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'texts':
+        return <TextsTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'buttons':
+        return <ButtonsTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'form':
         return <FormTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'mobile':
-        return (
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Configuration Mobile</h3>
-            <p className="text-gray-500">Paramètres spécifiques à l'affichage mobile en cours de développement.</p>
-          </div>
-        );
+      case 'code':
+        return <CodeTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:
         return (
           <div className="p-6 text-center text-gray-500">

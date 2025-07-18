@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, FileText, Gamepad2, Palette, Sliders, Smartphone } from 'lucide-react';
+import { Settings, Image, Type, MousePointer, Code, FileText, Gamepad2, Palette } from 'lucide-react';
 interface QualifioSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -13,25 +13,33 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
     label: 'Général',
     icon: Settings
   }, {
-    id: 'game',
-    label: 'Jeu',
-    icon: Gamepad2
-  }, {
-    id: 'layout',
-    label: 'Layout',
-    icon: Sliders
-  }, {
     id: 'design',
     label: 'Design',
     icon: Palette
+  }, {
+    id: 'gameZone',
+    label: 'Zone de jeu',
+    icon: Image
+  }, {
+    id: 'gameMechanics',
+    label: 'Mécaniques',
+    icon: Gamepad2
+  }, {
+    id: 'texts',
+    label: 'Textes',
+    icon: Type
+  }, {
+    id: 'buttons',
+    label: 'Boutons',
+    icon: MousePointer
   }, {
     id: 'form',
     label: 'Formulaire',
     icon: FileText
   }, {
-    id: 'mobile',
-    label: 'Mobile',
-    icon: Smartphone
+    id: 'code',
+    label: 'Code personnalisé et tags',
+    icon: Code
   }];
   return <div className="w-20 sidebar-premium flex flex-col h-screen border-r border-gray-200">
       {/* Navigation des onglets - Layout vertical */}
