@@ -9,9 +9,9 @@ const ButtonsTab: React.FC<ButtonsTabProps> = ({
   config,
   onConfigUpdate
 }) => {
-  return <div className="space-y-6 py-0">
+  return <div className="space-y-6 py-[2px] my-[30px]">
       {/* Bouton de participation */}
-      <div className="premium-card mx-[30px]">
+      <div className="premium-card mx-[30px] py-0">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
           <MousePointer className="w-4 h-4" />
           Bouton de participation
