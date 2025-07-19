@@ -1,8 +1,6 @@
 import React from 'react';
-import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText, Upload } from 'lucide-react';
-import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
+import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
-import { generateBrandThemeFromFile } from '../../../utils/BrandStyleAnalyzer';
 interface GeneralTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
@@ -11,32 +9,6 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
   config,
   onConfigUpdate
 }) => {
-  const handleBannerUpload = async (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async e => {
-      const imageUrl = e.target?.result as string;
-      try {
-        // Extract colors from banner image
-        const brandTheme = await generateBrandThemeFromFile(file);
-        onConfigUpdate({
-          bannerImage: imageUrl,
-          brandAssets: {
-            ...config.brandAssets,
-            primaryColor: brandTheme.customColors.primary,
-            secondaryColor: brandTheme.customColors.secondary,
-            accentColor: brandTheme.customColors.accent
-          }
-        });
-      } catch (error) {
-        console.error('Error extracting colors from banner image:', error);
-        // Fallback: just update the image without color extraction
-        onConfigUpdate({
-          bannerImage: imageUrl
-        });
-      }
-    };
-    reader.readAsDataURL(file);
-  };
   const gameTypes = [{
     value: 'wheel',
     label: 'Roue de la fortune',
