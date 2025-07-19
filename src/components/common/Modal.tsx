@@ -12,11 +12,21 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
   const modalContent = (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4"
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+      className="bg-black/40 p-4"
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
     >
-      <div className={`bg-white rounded-xl shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
-        style={{ margin: 'auto' }}
+      <div 
+        className={`bg-white rounded-xl shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
       >
         {/* Bouton de fermeture */}
         <button
