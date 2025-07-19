@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   title?: string;
@@ -9,7 +10,7 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
-  return (
+  const modalContent = (
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4"
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -37,6 +38,9 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
       </div>
     </div>
   );
+
+  // Utiliser createPortal pour rendre le modal directement dans le body
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;
