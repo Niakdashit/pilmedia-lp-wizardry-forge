@@ -152,7 +152,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           <FunnelUnlockedGame
             campaign={enhancedCampaign}
             previewMode={previewDevice === 'desktop' ? 'desktop' : previewDevice}
-            modalContained={false}
             key={`unlocked-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
           />
         </div>

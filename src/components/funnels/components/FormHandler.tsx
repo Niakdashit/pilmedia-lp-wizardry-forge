@@ -9,7 +9,6 @@ interface FormHandlerProps {
   campaign: any;
   fields: FieldConfig[];
   participationLoading: boolean;
-  modalContained?: boolean;
   onSubmit: (formData: Record<string, string>) => Promise<void>;
 }
 
@@ -19,7 +18,6 @@ const FormHandler: React.FC<FormHandlerProps> = ({
   campaign,
   fields,
   participationLoading,
-  modalContained = true,
   onSubmit
 }) => {
   if (!showFormModal) return null;
@@ -35,7 +33,6 @@ const FormHandler: React.FC<FormHandlerProps> = ({
     <Modal
       onClose={onClose}
       title={campaign.screens?.[1]?.title || 'Vos informations'}
-      contained={modalContained}
     >
       <DynamicContactForm
         fields={fields}

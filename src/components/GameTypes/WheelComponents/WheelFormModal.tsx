@@ -33,7 +33,6 @@ const WheelFormModal: React.FC<WheelFormModalProps> = ({
     <Modal
       onClose={onClose}
       title={campaign.screens?.[1]?.title || 'Vos informations'}
-      contained={true}
     >
       <DynamicContactForm
         fields={fields}

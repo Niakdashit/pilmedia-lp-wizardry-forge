@@ -135,7 +135,6 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
           <FunnelUnlockedGame
             campaign={enhancedCampaign}
             previewMode={selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-            modalContained={false}
             key={`unlocked-${JSON.stringify(customColors)}-${gamePosition}-${selectedDevice}`}
           />
           

@@ -34,7 +34,6 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, campaign }
           <FunnelUnlockedGame
             campaign={campaign}
             previewMode={selectedDevice}
-            modalContained={true}
             key={`${selectedDevice}-${campaign.id}-${JSON.stringify({
               gameConfig: campaign.gameConfig,
               design: campaign.design,

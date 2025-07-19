@@ -11,14 +11,12 @@ interface FunnelUnlockedGameProps {
   campaign: any;
   previewMode?: 'mobile' | 'tablet' | 'desktop';
   mobileConfig?: any;
-  modalContained?: boolean;
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   campaign,
   previewMode = 'desktop',
-  mobileConfig,
-  modalContained = true
+  mobileConfig
 }) => {
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
@@ -144,7 +142,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         campaign={campaign}
         fields={fields}
         participationLoading={participationLoading}
-        modalContained={modalContained}
         onClose={() => {
           setShowFormModal(false);
         }}

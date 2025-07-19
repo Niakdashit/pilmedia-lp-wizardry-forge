@@ -101,7 +101,6 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
         <FunnelUnlockedGame
           campaign={enhancedCampaign}
           previewMode={device === 'desktop' ? 'desktop' : device}
-          modalContained={false}
           key={`unlocked-${enhancedCampaign.type}-${device}-${JSON.stringify(enhancedCampaign.gameConfig)}`}
         />
       );
