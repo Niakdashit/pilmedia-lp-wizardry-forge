@@ -10,8 +10,13 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className={`bg-white rounded-xl shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}>
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+    >
+      <div className={`bg-white rounded-xl shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
+        style={{ margin: 'auto' }}
+      >
         {/* Bouton de fermeture */}
         <button
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl font-bold"
