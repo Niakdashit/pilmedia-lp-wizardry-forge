@@ -3,6 +3,7 @@ import React from 'react';
 import type { EditorConfig } from './QualifioEditorLayout';
 import ConfigurationTab from './SidebarTabs/ConfigurationTab';
 import DesignContentTab from './SidebarTabs/DesignContentTab';
+import LayersTab from './SidebarTabs/LayersTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
 import FinalizationTab from './SidebarTabs/FinalizationTab';
 
@@ -23,6 +24,8 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
         return <ConfigurationTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'design':
         return <DesignContentTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'layers':
+        return <LayersTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'layout':
         return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'finalization':
