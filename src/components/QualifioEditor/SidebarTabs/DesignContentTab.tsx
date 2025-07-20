@@ -2,6 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, Type, Plus, Trash2, Palette, Monitor, Smartphone, Tablet } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+import ColorThief from 'colorthief';
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
@@ -70,6 +71,59 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
     }
   };
 
+  const extractColorsFromImage = async (imageUrl: string) => {
+    try {
+      console.log('🎨 Début d\'extraction des couleurs depuis l\'image:', imageUrl);
+      
+      // Créer une image pour ColorThief
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          try {
+            const colorThief = new ColorThief();
+            
+            // Extraire la couleur dominante et la palette
+            const dominantColor = colorThief.getColor(img);
+            const palette = colorThief.getPalette(img, 3);
+            
+            console.log('🎯 Couleur dominante extraite:', dominantColor);
+            console.log('🎨 Palette extraite:', palette);
+            
+            // Convertir RGB en hex
+            const rgbToHex = (r: number, g: number, b: number) => 
+              "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            
+            const extractedColors = {
+              primary: rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2]),
+              secondary: palette[1] ? rgbToHex(palette[1][0], palette[1][1], palette[1][2]) : rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2]),
+              accent: palette[2] ? rgbToHex(palette[2][0], palette[2][1], palette[2][2]) : rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2])
+            };
+            
+            console.log('✅ Couleurs extraites avec succès:', extractedColors);
+            resolve(extractedColors);
+            
+          } catch (error) {
+            console.error('❌ Erreur lors de l\'extraction des couleurs:', error);
+            reject(error);
+          }
+        };
+        
+        img.onerror = () => {
+          console.error('❌ Erreur lors du chargement de l\'image pour extraction de couleurs');
+          reject(new Error('Impossible de charger l\'image'));
+        };
+        
+        img.src = imageUrl;
+      });
+      
+    } catch (error) {
+      console.error('❌ Erreur générale extraction couleurs:', error);
+      throw error;
+    }
+  };
+
   const handleBackgroundImageUpload = async (device: DeviceType, file: File) => {
     console.log('handleBackgroundImageUpload called for:', device, 'with file:', file);
     
@@ -114,32 +168,88 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
       const imageUrl = URL.createObjectURL(file);
       console.log('Image URL created:', imageUrl);
       
-      const newDeviceConfig: any = {
-        mobile: config.deviceConfig?.mobile || defaultConfigs.mobile,
-        tablet: config.deviceConfig?.tablet || defaultConfigs.tablet,
-        desktop: config.deviceConfig?.desktop || defaultConfigs.desktop,
-        [device]: {
-          ...config.deviceConfig?.[device],
-          backgroundImage: imageUrl
-        }
-      };
+      // Extraction automatique des couleurs depuis l'image
+      console.log('🚀 Début d\'extraction automatique des couleurs...');
       
-      if (device === 'desktop') {
-        if (applyToTablet) {
-          newDeviceConfig.tablet = {
-            ...newDeviceConfig.tablet,
+      try {
+        const extractedColors = await extractColorsFromImage(imageUrl) as any;
+        console.log('🎨 Application des couleurs extraites:', extractedColors);
+        
+        // Mise à jour de la configuration avec les nouvelles couleurs ET l'image
+        const newDeviceConfig: any = {
+          mobile: config.deviceConfig?.mobile || defaultConfigs.mobile,
+          tablet: config.deviceConfig?.tablet || defaultConfigs.tablet,
+          desktop: config.deviceConfig?.desktop || defaultConfigs.desktop,
+          [device]: {
+            ...config.deviceConfig?.[device],
             backgroundImage: imageUrl
-          };
+          }
+        };
+        
+        if (device === 'desktop') {
+          if (applyToTablet) {
+            newDeviceConfig.tablet = {
+              ...newDeviceConfig.tablet,
+              backgroundImage: imageUrl
+            };
+          }
+          if (applyToMobile) {
+            newDeviceConfig.mobile = {
+              ...newDeviceConfig.mobile,
+              backgroundImage: imageUrl
+            };
+          }
         }
-        if (applyToMobile) {
-          newDeviceConfig.mobile = {
-            ...newDeviceConfig.mobile,
+        
+        // Application des couleurs extraites à la configuration
+        onConfigUpdate({ 
+          deviceConfig: newDeviceConfig,
+          // Appliquer les couleurs extraites
+          backgroundColor: extractedColors.primary + '20', // Avec transparence
+          outlineColor: extractedColors.accent,
+          // Couleurs pour la mécanisme de jeu via brandAssets
+          brandAssets: {
+            ...config.brandAssets,
+            primaryColor: extractedColors.primary,
+            secondaryColor: extractedColors.secondary,
+            accentColor: extractedColors.accent
+          }
+        });
+        
+        console.log('✅ Configuration mise à jour avec image et couleurs extraites');
+        
+      } catch (colorError) {
+        console.warn('⚠️ Impossible d\'extraire les couleurs, application de l\'image uniquement:', colorError);
+        
+        // Fallback: appliquer uniquement l'image sans extraction de couleurs
+        const newDeviceConfig: any = {
+          mobile: config.deviceConfig?.mobile || defaultConfigs.mobile,
+          tablet: config.deviceConfig?.tablet || defaultConfigs.tablet,
+          desktop: config.deviceConfig?.desktop || defaultConfigs.desktop,
+          [device]: {
+            ...config.deviceConfig?.[device],
             backgroundImage: imageUrl
-          };
+          }
+        };
+        
+        if (device === 'desktop') {
+          if (applyToTablet) {
+            newDeviceConfig.tablet = {
+              ...newDeviceConfig.tablet,
+              backgroundImage: imageUrl
+            };
+          }
+          if (applyToMobile) {
+            newDeviceConfig.mobile = {
+              ...newDeviceConfig.mobile,
+              backgroundImage: imageUrl
+            };
+          }
         }
+        
+        onConfigUpdate({ deviceConfig: newDeviceConfig });
       }
       
-      onConfigUpdate({ deviceConfig: newDeviceConfig });
       console.log('Configuration updated with new image');
     } catch (error) {
       console.error('Erreur lors du téléchargement de l\'image:', error);
