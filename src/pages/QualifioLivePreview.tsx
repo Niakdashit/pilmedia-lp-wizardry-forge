@@ -45,7 +45,7 @@ const QualifioLivePreview: React.FC = () => {
 
   return (
     <div className={isMode2 ? "w-screen h-screen overflow-hidden" : "bg-gray-100 min-h-screen"}>
-      <QualifioPreview device={device} config={config} />
+      <QualifioPreview device={device} config={config} isLivePreview={true} />
     </div>
   );
 };

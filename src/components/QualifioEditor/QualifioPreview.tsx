@@ -8,9 +8,10 @@ interface QualifioPreviewProps {
   device: DeviceType;
   config: EditorConfig;
   onConfigUpdate?: (updates: Partial<EditorConfig>) => void;
+  isLivePreview?: boolean;
 }
 
-const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate }) => {
+const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate, isLivePreview = false }) => {
   const handleTextUpdate = (updatedText: CustomText) => {
     if (!onConfigUpdate) return;
     
@@ -64,17 +65,31 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
   return (
     <>
       {config.displayMode === 'mode2-background' ? (
-        <div className="w-full h-full">
-          <Mode2Preview
-            device={device}
-            config={config}
-            onTextUpdate={handleTextUpdate}
-            onTextDelete={handleTextDelete}
-            onImageUpdate={handleImageUpdate}
-            onImageDelete={handleImageDelete}
-            onContainerClick={handleContainerClick}
-          />
-        </div>
+        isLivePreview ? (
+          <div className="w-full h-full">
+            <Mode2Preview
+              device={device}
+              config={config}
+              onTextUpdate={handleTextUpdate}
+              onTextDelete={handleTextDelete}
+              onImageUpdate={handleImageUpdate}
+              onImageDelete={handleImageDelete}
+              onContainerClick={handleContainerClick}
+            />
+          </div>
+        ) : (
+          <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
+            <Mode2Preview
+              device={device}
+              config={config}
+              onTextUpdate={handleTextUpdate}
+              onTextDelete={handleTextDelete}
+              onImageUpdate={handleImageUpdate}
+              onImageDelete={handleImageDelete}
+              onContainerClick={handleContainerClick}
+            />
+          </DeviceFrame>
+        )
       ) : (
         <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
           <Mode1Preview
