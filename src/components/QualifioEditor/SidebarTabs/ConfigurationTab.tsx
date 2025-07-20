@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText, Gamepad2 } from 'lucide-react';
+import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText, Gamepad2, Calendar, Clock, Link } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 import WheelMechanicConfig from './GameMechanics/WheelMechanicConfig';
 import QuizMechanicConfig from './GameMechanics/QuizMechanicConfig';
@@ -110,6 +110,83 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
               <option value="mode1-banner-game">Mode 1 - Bannière + zone de texte</option>
               <option value="mode2-background">Mode 2 - Fond seul (paysage)</option>
             </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Campaign Settings */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Calendar className="w-4 h-4" />
+          Paramètres de campagne
+        </h4>
+        
+        <div className="space-y-4">
+          <div className="form-group-premium">
+            <label>Nom de la campagne</label>
+            <input
+              type="text"
+              value={config.campaignName || ''}
+              onChange={e => onConfigUpdate({ campaignName: e.target.value })}
+              placeholder="Nom de votre campagne"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group-premium">
+              <label>Date de début</label>
+              <input
+                type="date"
+                value={config.startDate || ''}
+                onChange={e => onConfigUpdate({ startDate: e.target.value })}
+              />
+            </div>
+            <div className="form-group-premium">
+              <label>Date de fin</label>
+              <input
+                type="date"
+                value={config.endDate || ''}
+                onChange={e => onConfigUpdate({ endDate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group-premium">
+              <label className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Heure de début
+              </label>
+              <input
+                type="time"
+                value={config.startTime || ''}
+                onChange={e => onConfigUpdate({ startTime: e.target.value })}
+              />
+            </div>
+            <div className="form-group-premium">
+              <label className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Heure de fin
+              </label>
+              <input
+                type="time"
+                value={config.endTime || ''}
+                onChange={e => onConfigUpdate({ endTime: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="form-group-premium">
+            <label className="flex items-center gap-2">
+              <Link className="w-4 h-4" />
+              URL de la campagne
+            </label>
+            <input
+              type="url"
+              value={config.campaignUrl || ''}
+              onChange={e => onConfigUpdate({ campaignUrl: e.target.value })}
+              placeholder="https://votre-site.com/campagne"
+            />
           </div>
         </div>
       </div>

@@ -66,6 +66,12 @@ export interface EditorConfig {
   customCSS?: string;
   customJS?: string;
   trackingTags?: string;
+  campaignName?: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  campaignUrl?: string;
   brandAssets?: {
     logo?: string;
     primaryColor?: string;

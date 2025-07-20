@@ -1,7 +1,9 @@
 
-import React from 'react';
-import { Upload, Image as ImageIcon, Type, Plus, Trash2, Palette } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Upload, Image as ImageIcon, Type, Plus, Trash2, Palette, Monitor, Smartphone, Tablet } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+
+type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
 interface DesignContentTabProps {
   config: EditorConfig;
@@ -12,6 +14,137 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
   config,
   onConfigUpdate
 }) => {
+  const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
+  const [applyToTablet, setApplyToTablet] = useState(false);
+  const [applyToMobile, setApplyToMobile] = useState(false);
+  
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const tabletInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+
+  const devices = [
+    { id: 'desktop' as DeviceType, label: 'Desktop', icon: Monitor },
+    { id: 'tablet' as DeviceType, label: 'Tablette', icon: Tablet },
+    { id: 'mobile' as DeviceType, label: 'Mobile', icon: Smartphone }
+  ];
+
+  const currentDeviceConfig = config.deviceConfig?.[selectedDevice];
+
+  const triggerFileSelect = (device: DeviceType) => {
+    const inputRef = device === 'desktop' ? desktopInputRef : 
+                    device === 'tablet' ? tabletInputRef : mobileInputRef;
+    inputRef.current?.click();
+  };
+
+  const applyDesktopImageTo = (target: 'tablet' | 'mobile') => {
+    const imageUrl = config.deviceConfig?.desktop?.backgroundImage;
+    if (!imageUrl) return;
+    
+    const defaultConfigs = {
+      mobile: { fontSize: 14, gamePosition: { x: 0, y: 0, scale: 1.0 } },
+      tablet: { fontSize: 16, gamePosition: { x: 0, y: 0, scale: 1.0 } },
+      desktop: { fontSize: 18, gamePosition: { x: 0, y: 0, scale: 1.0 } }
+    };
+    
+    onConfigUpdate({
+      deviceConfig: {
+        mobile: config.deviceConfig?.mobile || defaultConfigs.mobile,
+        tablet: config.deviceConfig?.tablet || defaultConfigs.tablet,
+        desktop: config.deviceConfig?.desktop || defaultConfigs.desktop,
+        [target]: {
+          ...config.deviceConfig?.[target],
+          backgroundImage: imageUrl
+        }
+      }
+    });
+  };
+
+  const handleApplyToggle = (target: 'tablet' | 'mobile', checked: boolean) => {
+    if (target === 'tablet') {
+      setApplyToTablet(checked);
+    } else {
+      setApplyToMobile(checked);
+    }
+    if (checked) {
+      applyDesktopImageTo(target);
+    }
+  };
+
+  const handleBackgroundImageUpload = async (device: DeviceType, file: File) => {
+    console.log('handleBackgroundImageUpload called for:', device, 'with file:', file);
+    
+    const defaultConfigs = {
+      mobile: { fontSize: 14, gamePosition: { x: 0, y: 0, scale: 1.0 } },
+      tablet: { fontSize: 16, gamePosition: { x: 0, y: 0, scale: 1.0 } },
+      desktop: { fontSize: 18, gamePosition: { x: 0, y: 0, scale: 1.0 } }
+    };
+    
+    if (!file || file.size === 0) {
+      console.log('No file or empty file, removing image for:', device);
+      const newDeviceConfig: any = {
+        mobile: config.deviceConfig?.mobile || defaultConfigs.mobile,
+        tablet: config.deviceConfig?.tablet || defaultConfigs.tablet,
+        desktop: config.deviceConfig?.desktop || defaultConfigs.desktop,
+        [device]: {
+          ...config.deviceConfig?.[device],
+          backgroundImage: undefined
+        }
+      };
+      
+      if (device === 'desktop') {
+        if (applyToTablet) {
+          newDeviceConfig.tablet = {
+            ...newDeviceConfig.tablet,
+            backgroundImage: undefined
+          };
+        }
+        if (applyToMobile) {
+          newDeviceConfig.mobile = {
+            ...newDeviceConfig.mobile,
+            backgroundImage: undefined
+          };
+        }
+      }
+      
+      onConfigUpdate({ deviceConfig: newDeviceConfig });
+      return;
+    }
+
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      console.log('Image URL created:', imageUrl);
+      
+      const newDeviceConfig: any = {
+        mobile: config.deviceConfig?.mobile || defaultConfigs.mobile,
+        tablet: config.deviceConfig?.tablet || defaultConfigs.tablet,
+        desktop: config.deviceConfig?.desktop || defaultConfigs.desktop,
+        [device]: {
+          ...config.deviceConfig?.[device],
+          backgroundImage: imageUrl
+        }
+      };
+      
+      if (device === 'desktop') {
+        if (applyToTablet) {
+          newDeviceConfig.tablet = {
+            ...newDeviceConfig.tablet,
+            backgroundImage: imageUrl
+          };
+        }
+        if (applyToMobile) {
+          newDeviceConfig.mobile = {
+            ...newDeviceConfig.mobile,
+            backgroundImage: imageUrl
+          };
+        }
+      }
+      
+      onConfigUpdate({ deviceConfig: newDeviceConfig });
+      console.log('Configuration updated with new image');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement de l\'image:', error);
+    }
+  };
   const handleImageUpload = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -115,6 +248,133 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
                 placeholder="#ffffff" 
               />
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Background Images */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <ImageIcon className="w-4 h-4" />
+          Images de fond par appareil
+        </h4>
+        
+        {/* Device Selector */}
+        <div className="form-group-premium">
+          <label className="block text-sm font-medium mb-4">Appareil sélectionné</label>
+          <div className="flex gap-2 mb-6">
+            {devices.map(device => (
+              <button 
+                key={device.id} 
+                onClick={() => setSelectedDevice(device.id)} 
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedDevice === device.id ? 'text-white' : 'text-sidebar-text-muted hover:text-sidebar-text-primary'
+                }`} 
+                style={{
+                  backgroundColor: selectedDevice === device.id ? 'hsl(var(--sidebar-active))' : 'hsl(var(--sidebar-surface))',
+                  border: selectedDevice === device.id ? '1px solid hsl(var(--sidebar-active))' : '1px solid hsl(var(--sidebar-border))'
+                }}
+              >
+                <device.icon className="w-4 h-4" />
+                {device.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Background Image Upload */}
+        <div className="form-group-premium">
+          <label>Image de fond ({devices.find(d => d.id === selectedDevice)?.label})</label>
+          <div className="space-y-3">
+            {/* Hidden inputs for each device */}
+            <input 
+              ref={desktopInputRef} 
+              type="file" 
+              accept="image/*" 
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleBackgroundImageUpload('desktop', file);
+                }
+              }} 
+              className="hidden" 
+            />
+            
+            <input 
+              ref={tabletInputRef} 
+              type="file" 
+              accept="image/*" 
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleBackgroundImageUpload('tablet', file);
+                }
+              }} 
+              className="hidden" 
+            />
+            
+            <input 
+              ref={mobileInputRef} 
+              type="file" 
+              accept="image/*" 
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleBackgroundImageUpload('mobile', file);
+                }
+              }} 
+              className="hidden" 
+            />
+            
+            {/* Upload button */}
+            <button 
+              type="button" 
+              onClick={() => triggerFileSelect(selectedDevice)} 
+              className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer hover:border-sidebar-active transition-colors w-full" 
+              style={{ borderColor: 'hsl(var(--sidebar-border))' }}
+            >
+              <Upload className="w-5 h-5" />
+              <span>Choisir une image ({selectedDevice})</span>
+            </button>
+
+            {/* Apply to other devices (only for desktop) */}
+            {selectedDevice === 'desktop' && (
+              <div className="flex gap-4 text-xs">
+                <label className="flex items-center gap-1">
+                  <input 
+                    type="checkbox" 
+                    checked={applyToTablet} 
+                    onChange={e => handleApplyToggle('tablet', e.target.checked)} 
+                  />
+                  Utiliser sur tablette
+                </label>
+                <label className="flex items-center gap-1">
+                  <input 
+                    type="checkbox" 
+                    checked={applyToMobile} 
+                    onChange={e => handleApplyToggle('mobile', e.target.checked)} 
+                  />
+                  Utiliser sur mobile
+                </label>
+              </div>
+            )}
+            
+            {/* Image preview */}
+            {currentDeviceConfig?.backgroundImage && (
+              <div className="relative">
+                <img 
+                  src={currentDeviceConfig.backgroundImage} 
+                  alt="Aperçu" 
+                  className="w-full h-24 object-cover rounded-lg" 
+                />
+                <button 
+                  onClick={() => handleBackgroundImageUpload(selectedDevice, new File([], ''))} 
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
