@@ -42,13 +42,13 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   }, [isMode1, device, config.deviceConfig]);
 
   const getContentDimensions = () => {
-    // Pour Mode 2 en desktop, s'adapter à l'espace disponible sans scroll
+    // Pour Mode 2 en desktop, utiliser un ratio 16:9 standard de page web
     if (!isMode1 && device === 'desktop') {
       return {
         width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%'
+        aspectRatio: '16/9',
+        maxWidth: '100vw',
+        maxHeight: '100vh'
       };
     }
     
