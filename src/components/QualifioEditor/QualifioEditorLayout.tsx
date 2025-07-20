@@ -119,7 +119,7 @@ export interface EditorConfig {
 
 const QualifioEditorLayout: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
-  const [activeTab, setActiveTab] = useState<string>('general');
+  const [activeTab, setActiveTab] = useState<string>('configuration');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
