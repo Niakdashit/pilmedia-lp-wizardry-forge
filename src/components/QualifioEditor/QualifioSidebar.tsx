@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings, Palette, Layout, Check, ChevronLeft, ChevronRight, Layers, Shapes } from 'lucide-react';
+import { Settings, Palette, Layout, Check, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 
 interface QualifioSidebarProps {
   activeTab: string;
@@ -21,12 +21,6 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
       label: 'Configuration',
       icon: Settings,
       description: 'Type de jeu et paramètres'
-    },
-    {
-      id: 'elements',
-      label: 'Bibliothèque',
-      icon: Shapes,
-      description: 'Formes, icônes, photos et plus'
     },
     {
       id: 'design',
