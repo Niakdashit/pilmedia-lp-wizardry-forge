@@ -41,8 +41,10 @@ const QualifioLivePreview: React.FC = () => {
 
   if (!config) return null;
 
+  const isMode2 = config.displayMode === 'mode2-background';
+
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className={isMode2 ? "w-screen h-screen overflow-hidden" : "bg-gray-100 min-h-screen"}>
       <QualifioPreview device={device} config={config} />
     </div>
   );
