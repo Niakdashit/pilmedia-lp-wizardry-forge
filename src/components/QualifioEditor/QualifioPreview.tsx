@@ -62,29 +62,33 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
   const fitContentDesktop = config.displayMode === 'mode1-banner-game';
 
   return (
-    <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
+    <>
       {config.displayMode === 'mode2-background' ? (
-        <Mode2Preview
-          device={device}
-          config={config}
-          onTextUpdate={handleTextUpdate}
-          onTextDelete={handleTextDelete}
-          onImageUpdate={handleImageUpdate}
-          onImageDelete={handleImageDelete}
-          onContainerClick={handleContainerClick}
-        />
+        <div className="w-full h-full">
+          <Mode2Preview
+            device={device}
+            config={config}
+            onTextUpdate={handleTextUpdate}
+            onTextDelete={handleTextDelete}
+            onImageUpdate={handleImageUpdate}
+            onImageDelete={handleImageDelete}
+            onContainerClick={handleContainerClick}
+          />
+        </div>
       ) : (
-        <Mode1Preview
-          device={device}
-          config={config}
-          onTextUpdate={handleTextUpdate}
-          onTextDelete={handleTextDelete}
-          onImageUpdate={handleImageUpdate}
-          onImageDelete={handleImageDelete}
-          onContainerClick={handleContainerClick}
-        />
+        <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
+          <Mode1Preview
+            device={device}
+            config={config}
+            onTextUpdate={handleTextUpdate}
+            onTextDelete={handleTextDelete}
+            onImageUpdate={handleImageUpdate}
+            onImageDelete={handleImageDelete}
+            onContainerClick={handleContainerClick}
+          />
+        </DeviceFrame>
       )}
-    </DeviceFrame>
+    </>
   );
 };
 
