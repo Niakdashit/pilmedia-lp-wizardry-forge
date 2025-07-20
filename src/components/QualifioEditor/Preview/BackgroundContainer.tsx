@@ -42,12 +42,13 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
   }, [isMode1, device, config.deviceConfig]);
 
   const getContentDimensions = () => {
-    // Pour Mode 2 en desktop, remplir l'entièreté de la page web
+    // Pour Mode 2 en desktop, s'adapter à l'espace disponible sans scroll
     if (!isMode1 && device === 'desktop') {
       return {
         width: '100%',
-        height: '100vh',
-        minHeight: '100vh'
+        height: '100%',
+        maxWidth: '100%',
+        maxHeight: '100%'
       };
     }
     
