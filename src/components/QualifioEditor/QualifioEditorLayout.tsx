@@ -167,7 +167,10 @@ const QualifioEditorLayout: React.FC = () => {
   });
 
   const updateConfig = (updates: Partial<EditorConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    const newConfig = { ...config, ...updates };
+    setConfig(newConfig);
+    // Synchroniser avec l'aperçu live
+    localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
   };
 
   return (
