@@ -19,11 +19,18 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
   ] as const;
 
   const updateDeviceConfig = (device: 'mobile' | 'tablet' | 'desktop', updates: any) => {
+    const defaultDeviceConfig = {
+      fontSize: 16,
+      gamePosition: { x: 0, y: 0, scale: 1.0 }
+    };
+
     onConfigUpdate({
       deviceConfig: {
-        ...config.deviceConfig,
+        mobile: config.deviceConfig?.mobile || defaultDeviceConfig,
+        tablet: config.deviceConfig?.tablet || defaultDeviceConfig,
+        desktop: config.deviceConfig?.desktop || defaultDeviceConfig,
         [device]: {
-          ...config.deviceConfig?.[device],
+          ...(config.deviceConfig?.[device] || defaultDeviceConfig),
           ...updates
         }
       }
