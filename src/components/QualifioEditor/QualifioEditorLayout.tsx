@@ -280,8 +280,8 @@ const QualifioEditorLayout: React.FC = () => {
         
         {/* Preview Area */}
         <div className="flex-1 relative">
-          <div id="text-toolbar-container" className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-            {/* Toolbar will be rendered here as overlay */}
+          <div id="text-toolbar-container" className="absolute top-8 left-1/2 transform -translate-x-1/2 z-50">
+            {/* Toolbar will be rendered here as overlay only when there's an active text */}
           </div>
           
           {/* Preview */}
