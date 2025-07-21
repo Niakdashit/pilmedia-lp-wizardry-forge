@@ -1,5 +1,7 @@
+
 import React from 'react';
 import type { DeviceType } from '../QualifioEditorLayout';
+
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
@@ -9,6 +11,7 @@ interface DeviceFrameProps {
    */
   fitContentDesktop?: boolean;
 }
+
 const DeviceFrame: React.FC<DeviceFrameProps> = ({
   device,
   children,
@@ -23,16 +26,16 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflowY: 'auto' as const
+          overflowY: 'hidden' as const
         };
       case 'tablet':
         return {
           width: '653px',
-          height: '720px',
+          height: '792px', // Increased by 10% from 720px
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflowY: 'auto' as const
+          overflowY: 'hidden' as const
         };
       case 'desktop':
       default:
@@ -48,7 +51,6 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         return {
           width: '1020px',
           height: '680px',
-          // Hauteur fixe pour que l'image de fond remplisse complètement
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
@@ -56,6 +58,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
     }
   };
+
   const containerStyles = {
     minHeight: '100vh',
     display: 'flex',
@@ -63,18 +66,29 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     justifyContent: 'center',
     padding: '20px'
   };
-  return <div style={containerStyles} className="py-0 my-0 rounded">
+
+  return (
+    <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
         {/* Pour mobile et tablet, contenu fixe sans scroll */}
-        {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        position: 'relative'
-      }}>
+        {device === 'mobile' || device === 'tablet' ? (
+          <div 
+            className="scrollbar-hide" 
+            style={{
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
             {children}
-          </div> : children}
+          </div>
+        ) : (
+          children
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default DeviceFrame;

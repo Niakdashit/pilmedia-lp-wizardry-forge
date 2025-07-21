@@ -16,6 +16,7 @@ interface GameRendererProps {
   onResult?: (result: any) => void;
   isMode1?: boolean;
 }
+
 const GameRenderer: React.FC<GameRendererProps> = ({
   gameType,
   config,
@@ -30,13 +31,28 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     scale: 1.0
   };
 
-  // Calculer les styles de transformation (sans scale CSS)
+  // Calculer les styles de transformation pour le centrage parfait
   const getGameContainerStyle = (): React.CSSProperties => {
-    // Tailles responsives standardisées
+    // Pour mobile et tablette, forcer le centrage parfait
+    if (device === 'mobile' || device === 'tablet') {
+      return {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden'
+      };
+    }
+
+    // Pour desktop, utiliser la logique de positionnement existante
     const getMinHeight = () => {
       switch (device) {
-        case 'mobile': return '300px';
-        case 'tablet': return '350px';
         case 'desktop': return '400px';
         default: return '400px';
       }
@@ -44,8 +60,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     
     const getPadding = () => {
       switch (device) {
-        case 'mobile': return '16px';
-        case 'tablet': return '24px';
         case 'desktop': return '32px';
         default: return '24px';
       }
@@ -65,6 +79,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
     };
   };
+
   const renderGameComponent = () => {
     // Récupérer les couleurs de la marque si disponibles
     const brandColors = config.brandAssets || {};
@@ -225,8 +240,12 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>;
     }
   };
-  return <div style={getGameContainerStyle()} className="game-container">
+
+  return (
+    <div style={getGameContainerStyle()} className="game-container">
       {renderGameComponent()}
-    </div>;
+    </div>
+  );
 };
+
 export default GameRenderer;
