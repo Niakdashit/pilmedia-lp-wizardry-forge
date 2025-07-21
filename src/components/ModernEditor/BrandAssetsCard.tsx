@@ -103,7 +103,7 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
               <>
                 <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600">Glissez votre logo ici</p>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG ou SVG</p>
+                <p className="text-xs text-gray-500 mt-1">Les couleurs seront automatiquement extraites</p>
               </>
             )}
           </div>

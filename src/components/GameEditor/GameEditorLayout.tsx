@@ -181,71 +181,53 @@ const GameEditorLayout: React.FC = () => {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [showUrlModal, setShowUrlModal] = useState(false);
   
-  // Récupérer les données de transfert depuis QuickCampaign si disponibles
-  const getInitialConfig = useCallback((): EditorConfig => {
-    try {
-      const transferData = localStorage.getItem('game_editor_transfer_data');
-      if (transferData) {
-        const parsed = JSON.parse(transferData);
-        // Nettoyer les données de transfert après utilisation
-        localStorage.removeItem('game_editor_transfer_data');
-        return parsed;
-      }
-    } catch (error) {
-      console.warn('Erreur lors de la récupération des données de transfert:', error);
-    }
-    
-    // Configuration par défaut si pas de transfert
-    return {
-      width: 810,
-      height: 1200,
-      anchor: 'fixed',
-      gameType: 'wheel',
-      gameMode: 'mode1-sequential',
-      displayMode: 'mode1-banner-game',
-      storyText: `Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser.`,
-      publisherLink: 'editions.flammarion.com',
-      prizeText: 'Jouez et tentez de remporter l\'un des 10 exemplaires de "Les notes invisibles" d\'une valeur unitaire de 21 euros !',
-      customTexts: [],
-      centerText: false,
-      centerForm: true,
-      centerGameZone: true,
-      backgroundColor: '#ffffff',
-      outlineColor: '#ffffff',
-      borderStyle: 'classic',
-      jackpotBorderStyle: 'classic',
-      participateButtonText: 'PARTICIPER !',
-      participateButtonColor: '#ff6b35',
-      participateButtonTextColor: '#ffffff',
-      footerText: '',
-      footerColor: '#f8f9fa',
-      customCSS: '',
-      customJS: '',
-      trackingTags: '',
-      deviceConfig: {
-        mobile: {
-          fontSize: 14,
-          backgroundImage: undefined,
-          gamePosition: { x: 0, y: 0, scale: 1.0 }
-        },
-        tablet: {
-          fontSize: 16,
-          backgroundImage: undefined,
-          gamePosition: { x: 0, y: 0, scale: 1.0 }
-        },
-        desktop: {
-          fontSize: 18,
-          backgroundImage: undefined,
-          gamePosition: { x: 0, y: 0, scale: 1.0 }
-        }
+  const [config, setConfig] = useState<EditorConfig>({
+    width: 810,
+    height: 1200,
+    anchor: 'fixed',
+    gameType: 'wheel',
+    gameMode: 'mode1-sequential',
+    displayMode: 'mode1-banner-game',
+    storyText: `Valentine et son frère aîné, Antoine, ont 13 ans d'écart. Orphelins de mère, ils viennent de perdre leur père, César Mestre. Le jour des obsèques, une inconnue leur remet une lettre de leur père. La lettre n'explicite pas grand-chose, mais évoque une fracture, des réparations qui n'ont pas eu le temps d'être faites. Antoine s'en détourne vite et retourne à sa vie rangée avec sa femme et ses enfants. Mais Valentine ne reconnaît pas dans ces lignes l'enfance qu'elle a vécue et se donne pour mission de comprendre ce que leur père a voulu leur dire et va enquêter. À son récit s'enchâsse celui de Laure, factrice à Loisel, un petit village normand, et qui vient de faire la connaissance de César. Elle s'est réfugiée là quatre ans plus tôt, après une dépression, et laissant la garde de son fils à son ex-mari, fils avec lequel elle tente peu à peu de renouer un lien fort. Le destin des deux femmes va se croiser.`,
+    publisherLink: 'editions.flammarion.com',
+    prizeText: 'Jouez et tentez de remporter l\'un des 10 exemplaires de "Les notes invisibles" d\'une valeur unitaire de 21 euros !',
+    customTexts: [],
+    centerText: false,
+    centerForm: true,
+    centerGameZone: true,
+    backgroundColor: '#ffffff',
+    outlineColor: '#ffffff',
+    borderStyle: 'classic',
+    jackpotBorderStyle: 'classic',
+    participateButtonText: 'PARTICIPER !',
+    participateButtonColor: '#ff6b35',
+    participateButtonTextColor: '#ffffff',
+    footerText: '',
+    footerColor: '#f8f9fa',
+    customCSS: '',
+    customJS: '',
+    trackingTags: '',
+    deviceConfig: {
+      mobile: {
+        fontSize: 14,
+        backgroundImage: undefined,
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
       },
-      autoSyncOnDeviceChange: false,
-      autoSyncRealTime: false,
-      autoSyncBaseDevice: 'desktop'
-    };
-  }, []);
-  
-  const [config, setConfig] = useState<EditorConfig>(getInitialConfig);
+      tablet: {
+        fontSize: 16,
+        backgroundImage: undefined,
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
+      },
+      desktop: {
+        fontSize: 18,
+        backgroundImage: undefined,
+        gamePosition: { x: 0, y: 0, scale: 1.0 }
+      }
+    },
+    autoSyncOnDeviceChange: false,
+    autoSyncRealTime: false,
+    autoSyncBaseDevice: 'desktop'
+  });
 
   // Fonction updateConfig optimisée avec validation et debouncing
   const updateConfig = useCallback((updates: Partial<EditorConfig>) => {
