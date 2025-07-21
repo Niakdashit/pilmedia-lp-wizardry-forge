@@ -1,40 +1,52 @@
 import type { CustomText } from '../QualifioEditorLayout';
 
-// Échelles de base pour maintenir la cohérence entre les appareils
-const DEVICE_SCALES = {
-  desktop: 1.0,
-  tablet: 0.85,
-  mobile: 0.7
+// Dimensions des conteneurs par appareil (basées sur les contraintes Qualifio)
+const DEVICE_CONTAINERS = {
+  desktop: { width: 1200, height: 800 },
+  tablet: { width: 850, height: 1200 },
+  mobile: { width: 520, height: 1100 }
 };
 
-// Facteurs de position pour adapter automatiquement selon l'appareil
-const POSITION_FACTORS = {
-  desktop: { x: 1.0, y: 1.0 },
-  tablet: { x: 0.9, y: 0.9 },
-  mobile: { x: 0.8, y: 0.8 }
+// Échelles de police pour maintenir la lisibilité
+const FONT_SCALES = {
+  desktop: 1.0,
+  tablet: 0.9,
+  mobile: 0.8
 };
 
 /**
- * Calcule la position et la taille adaptées pour un appareil donné
+ * Calcule la position proportionnelle pour maintenir le même placement relatif
  */
 export const calculateResponsiveProperties = (
   baseText: CustomText,
   targetDevice: 'desktop' | 'tablet' | 'mobile',
   baseDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ) => {
-  const baseScale = DEVICE_SCALES[baseDevice];
-  const targetScale = DEVICE_SCALES[targetDevice];
-  const scaleFactor = targetScale / baseScale;
+  const baseContainer = DEVICE_CONTAINERS[baseDevice];
+  const targetContainer = DEVICE_CONTAINERS[targetDevice];
   
-  const basePositionFactor = POSITION_FACTORS[baseDevice];
-  const targetPositionFactor = POSITION_FACTORS[targetDevice];
+  // Calcul des positions proportionnelles
+  const xRatio = baseText.x / baseContainer.width;
+  const yRatio = baseText.y / baseContainer.height;
+  
+  const newX = Math.round(xRatio * targetContainer.width);
+  const newY = Math.round(yRatio * targetContainer.height);
+  
+  // Échelle de la police
+  const fontScale = FONT_SCALES[targetDevice] / FONT_SCALES[baseDevice];
+  const newFontSize = Math.round(baseText.fontSize * fontScale);
+  
+  // Échelle des dimensions (si elles existent)
+  const widthRatio = targetContainer.width / baseContainer.width;
+  const heightRatio = targetContainer.height / baseContainer.height;
+  const avgRatio = (widthRatio + heightRatio) / 2;
   
   return {
-    x: Math.round(baseText.x * (targetPositionFactor.x / basePositionFactor.x)),
-    y: Math.round(baseText.y * (targetPositionFactor.y / basePositionFactor.y)),
-    fontSize: Math.round(baseText.fontSize * scaleFactor),
-    width: baseText.width ? Math.round(baseText.width * scaleFactor) : undefined,
-    height: baseText.height ? Math.round(baseText.height * scaleFactor) : undefined
+    x: newX,
+    y: newY,
+    fontSize: Math.max(8, Math.min(72, newFontSize)),
+    width: baseText.width ? Math.round(baseText.width * avgRatio) : undefined,
+    height: baseText.height ? Math.round(baseText.height * avgRatio) : undefined
   };
 };
 
