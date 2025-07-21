@@ -57,9 +57,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       if (device === 'mobile' || device === 'tablet') {
         return {
           width: '100%',
-          height: '100vh',
-          minHeight: '100vh',
-          minWidth: '100%'
+          height: '100%'
         };
       }
       return {

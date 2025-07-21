@@ -23,16 +23,16 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflowY: 'auto' as const
+          overflow: 'hidden' // Suppression du scroll
         };
       case 'tablet':
         return {
-          width: '653px',
+          width: '718px', // Augmenté de 10% (653 * 1.1 = 718)
           height: '720px',
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflowY: 'auto' as const
+          overflow: 'hidden' // Suppression du scroll
         };
       case 'desktop':
       default:
@@ -65,13 +65,16 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   };
   return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
-        {/* Pour mobile et tablet, contenu fixe sans scroll */}
-        {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        position: 'relative'
-      }}>
+        {/* Contenu sans scroll, centré */}
+        {device === 'mobile' || device === 'tablet' ? 
+          <div style={{
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
             {children}
           </div> : children}
       </div>
