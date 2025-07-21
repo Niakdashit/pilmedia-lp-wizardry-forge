@@ -72,7 +72,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         overflowY: 'auto',
         position: 'relative',
         display: 'flex',
-        flexDirection: 'column' as const
+        flexDirection: 'column' as const,
+        minHeight: '100%'
       }}>
             {children}
           </div> : children}

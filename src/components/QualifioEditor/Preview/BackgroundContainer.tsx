@@ -59,7 +59,9 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
         height: '100%',
         minHeight: '100%',
         minWidth: '100%',
-        flex: 1
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column' as const
       };
     }
     
@@ -72,10 +74,13 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       };
     }
     
-    // Comportement par défaut pour les autres cas
+    // Comportement par défaut pour les autres cas (Mode 1 mobile/tablet)
     return { 
       width: '100%',
-      height: '100%'
+      height: '100%',
+      minHeight: '100%',
+      display: 'flex',
+      flexDirection: 'column' as const
     };
   };
 
@@ -84,11 +89,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     if (isMode1 && device === 'desktop') {
       return 'contain';
     }
-    // Pour desktop en Mode 2, utiliser 'cover' pour remplir le cadre 16:9
-    if (!isMode1 && device === 'desktop') {
-      return 'cover';
-    }
-    // Pour tablette et mobile en Mode 2, utiliser 'cover' pour remplir complètement
+    // Pour tous les autres cas (desktop Mode 2, mobile et tablette), utiliser 'cover' pour remplir complètement
     return 'cover';
   };
 
