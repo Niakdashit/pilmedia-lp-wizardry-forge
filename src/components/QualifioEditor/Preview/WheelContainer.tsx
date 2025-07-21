@@ -65,18 +65,38 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
 
   return (
     <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
-      <motion.div
-        initial={{ y: "54%" }}
-        animate={{ y: isInteracting ? "30%" : "54%" }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 300, 
-          damping: 30 
-        }}
-        onMouseEnter={() => setIsInteracting(true)}
-        onMouseLeave={() => setIsInteracting(false)}
-        onClick={() => setIsInteracting(!isInteracting)}
-      >
+      {device === 'mobile' ? (
+        <motion.div
+          initial={{ y: "54%" }}
+          animate={{ y: isInteracting ? "30%" : "54%" }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 30 
+          }}
+          onMouseEnter={() => setIsInteracting(true)}
+          onMouseLeave={() => setIsInteracting(false)}
+          onClick={() => setIsInteracting(!isInteracting)}
+        >
+          <SmartWheel 
+            segments={wheelSegments}
+            size={getWheelSize() * (isMode1 ? 0.8 : 1)}
+            theme="modern"
+            borderStyle={config.borderStyle || 'classic'}
+            onResult={handleWheelResult}
+            gamePosition={gamePosition}
+            isMode1={isMode1}
+            formFields={config.formFields}
+            brandColors={brandColors}
+            buttonPosition="center"
+            customButton={{
+              text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
+              color: brandColors?.primary || "#8E44AD",
+              textColor: "#ffffff"
+            }}
+          />
+        </motion.div>
+      ) : (
         <SmartWheel 
           segments={wheelSegments}
           size={getWheelSize() * (isMode1 ? 0.8 : 1)}
@@ -87,14 +107,14 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
           isMode1={isMode1}
           formFields={config.formFields}
           brandColors={brandColors}
-          buttonPosition="center"
+          buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : undefined}
           customButton={{
             text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
             color: brandColors?.primary || "#8E44AD",
             textColor: "#ffffff"
           }}
         />
-      </motion.div>
+      )}
     </div>
   );
 };
