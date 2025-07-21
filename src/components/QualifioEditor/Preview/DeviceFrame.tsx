@@ -21,20 +21,20 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     switch (device) {
       case 'mobile':
         return {
-          width: '100%',
-          height: '100%',
-          margin: '0',
-          border: 'none',
-          borderRadius: '0',
+          width: '350px',
+          height: '622px',
+          margin: '20px auto',
+          border: '8px solid #333',
+          borderRadius: '25px',
           overflowY: 'hidden' as const
         };
       case 'tablet':
         return {
-          width: '100%',
-          height: '100%',
-          margin: '0',
-          border: 'none',
-          borderRadius: '0',
+          width: '653px',
+          height: '792px', // Increased by 10% from 720px
+          margin: '20px auto',
+          border: '12px solid #333',
+          borderRadius: '20px',
           overflowY: 'hidden' as const
         };
       case 'desktop':
