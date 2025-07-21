@@ -23,18 +23,18 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         return {
           width: '350px',
           height: '622px',
-          margin: '20px auto',
-          border: '8px solid #333',
-          borderRadius: '25px',
+          margin: 0,
+          border: 'none',
+          borderRadius: 0,
           overflowY: 'hidden' as const
         };
       case 'tablet':
         return {
           width: '653px',
-          height: '792px', // Increased by 10% from 720px
-          margin: '20px auto',
-          border: '12px solid #333',
-          borderRadius: '20px',
+          height: '792px',
+          margin: 0,
+          border: 'none',
+          borderRadius: 0,
           overflowY: 'hidden' as const
         };
       case 'desktop':
@@ -64,7 +64,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'center',
-    padding: '20px'
+    padding: device === 'mobile' || device === 'tablet' ? '0' : '20px'
   };
 
   return (
