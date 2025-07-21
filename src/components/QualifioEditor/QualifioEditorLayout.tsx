@@ -7,6 +7,7 @@ import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
+import { AnimationProvider } from './Animation/AnimationProvider';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -53,15 +54,16 @@ export interface CustomText {
   };
   // Nouvelles propriétés d'animation
   animationConfig?: {
-    type: string;
+    type: 'fadeIn' | 'slideInLeft' | 'slideInRight' | 'slideInUp' | 'slideInDown' | 'bounce' | 'typewriter' | 'pulse' | 'rotate' | 'zoomIn' | 'flipX' | 'flipY';
     duration: number;
     delay: number;
-    trigger: string;
+    trigger: 'onLoad' | 'onScroll' | 'onClick' | 'onHover' | 'delayed';
     enabled: boolean;
     typewriterSpeed?: number;
     repeat?: number;
     repeatType?: 'loop' | 'reverse' | 'mirror';
     ease?: string;
+    stagger?: number;
   };
 }
 
@@ -243,6 +245,7 @@ const QualifioEditorLayout: React.FC = () => {
   });
 
   return (
+    <AnimationProvider>
     <div className="min-h-screen bg-brand-accent">
         {/* Header avec couleurs de marque */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
@@ -356,6 +359,7 @@ const QualifioEditorLayout: React.FC = () => {
           </div>
         </div>
       </div>
+    </AnimationProvider>
   );
 };
 

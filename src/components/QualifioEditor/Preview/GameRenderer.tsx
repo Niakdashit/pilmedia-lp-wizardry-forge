@@ -8,6 +8,7 @@ import QuizPreview from '../../GameTypes/QuizPreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
+import { AnimatedGameContainer } from '../Animation/AnimatedGameContainer';
 interface GameRendererProps {
   gameType: EditorConfig['gameType'];
   config: EditorConfig;
@@ -239,7 +240,9 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   };
   return <div style={getGameContainerStyle()} className="game-container mx-0 my-0">
       <div style={getGameContentStyle()}>
-        {renderGameComponent()}
+        <AnimatedGameContainer gameType={gameType} device={device}>
+          {renderGameComponent()}
+        </AnimatedGameContainer>
       </div>
     </div>;
 };

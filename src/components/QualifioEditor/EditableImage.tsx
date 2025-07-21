@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Draggable from 'react-draggable';
+import { AnimatedImage } from './Animation/AnimatedImage';
 import ImageToolbar from './ImageToolbar';
 
 interface EditableImageProps {
@@ -301,16 +302,18 @@ const EditableImage: React.FC<EditableImageProps> = ({
             className="group relative w-full h-full"
             style={{ pointerEvents: 'auto' }}
           >
-            <img
-              src={image.src}
-              alt="Image personnalisée"
-              style={imageStyle}
-              draggable={false}
-              onError={(e) => {
-                console.warn('Image failed to load:', image.src);
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            <AnimatedImage image={image}>
+              <img
+                src={image.src}
+                alt="Image personnalisée"
+                style={imageStyle}
+                draggable={false}
+                onError={(e) => {
+                  console.warn('Image failed to load:', image.src);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </AnimatedImage>
             
             {/* Poignées de redimensionnement */}
             {isSelected && !isDragging && (

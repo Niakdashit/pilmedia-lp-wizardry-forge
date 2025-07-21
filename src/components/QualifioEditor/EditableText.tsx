@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import Draggable from 'react-draggable';
 import type { CustomText } from './QualifioEditorLayout';
 import TextToolbar from './TextToolbar';
+import { AnimatedText } from './Animation/AnimatedText';
 
 interface EditableTextProps {
   text: CustomText;
@@ -283,23 +284,25 @@ const EditableText: React.FC<EditableTextProps> = ({
               }}
             />
           ) : (
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              {text.listType === 'bullet' ? (
-                <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
-                  {text.content.split('\n').map((line, index) => (
-                    <li key={index}>{line}</li>
-                  ))}
-                </ul>
-              ) : text.listType === 'numbered' ? (
-                <ol style={{ listStyleType: 'decimal', paddingLeft: '20px', margin: 0 }}>
-                  {text.content.split('\n').map((line, index) => (
-                    <li key={index}>{line}</li>
-                  ))}
-                </ol>
-              ) : (
-                text.content
-              )}
-            </div>
+            <AnimatedText text={text}>
+              <div style={{ whiteSpace: 'pre-wrap' }}>
+                {text.listType === 'bullet' ? (
+                  <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
+                    {text.content.split('\n').map((line, index) => (
+                      <li key={index}>{line}</li>
+                    ))}
+                  </ul>
+                ) : text.listType === 'numbered' ? (
+                  <ol style={{ listStyleType: 'decimal', paddingLeft: '20px', margin: 0 }}>
+                    {text.content.split('\n').map((line, index) => (
+                      <li key={index}>{line}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  text.content
+                )}
+              </div>
+            </AnimatedText>
           )}
           
           {/* Poignées de redimensionnement */}
