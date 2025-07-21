@@ -66,16 +66,11 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const gamePosition = config.deviceConfig?.[device]?.gamePosition;
 
   return (
-    <div className="relative w-full h-screen flex items-start justify-center">
+    <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
       {device === 'mobile' ? (
         <motion.div
-          className="absolute"
-          style={{ 
-            transform: `scale(${scale})`,
-            transformOrigin: 'center center'
-          }}
-          initial={{ top: "34%" }}
-          animate={{ top: isInteracting ? "30%" : "34%" }}
+          initial={{ y: "54%" }}
+          animate={{ y: isInteracting ? "30%" : "54%" }}
           transition={{ 
             type: "spring", 
             stiffness: 300, 
@@ -87,7 +82,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         >
           <SmartWheel 
             segments={wheelSegments}
-            size={getWheelSize()}
+            size={getWheelSize() * (isMode1 ? 0.8 : 1)}
             theme="modern"
             borderStyle={config.borderStyle || 'classic'}
             onResult={handleWheelResult}
