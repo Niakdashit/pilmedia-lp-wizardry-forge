@@ -238,7 +238,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>;
     }
   };
-  return <div style={getGameContainerStyle()} className="game-container my-0">
+  return <div style={getGameContainerStyle()} className="game-container my-[21px] py-[240px] px-[240px]">
       <div style={getGameContentStyle()}>
         {renderGameComponent()}
       </div>
