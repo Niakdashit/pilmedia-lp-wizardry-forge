@@ -1,13 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import type { DeviceType, EditorConfig, CustomText } from './QualifioEditorLayout';
 import Mode1Preview from './Preview/Mode1Preview';
 
 interface QualifioPreviewProps {
   device: DeviceType;
   config: EditorConfig;
-  onConfigUpdate: (updates: Partial<EditorConfig>) => void;
+  onConfigUpdate?: (updates: Partial<EditorConfig>) => void;
   isRealTimeSyncEnabled?: boolean;
+  isLivePreview?: boolean;
 }
 
 const QualifioPreview: React.FC<QualifioPreviewProps> = ({ 
@@ -16,9 +17,10 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
   onConfigUpdate,
   isRealTimeSyncEnabled = false 
 }) => {
-  const [selectedElement, setSelectedElement] = useState<string | null>(null);
 
   const handleTextUpdate = useCallback((updatedText: CustomText) => {
+    if (!onConfigUpdate) return;
+    
     const updatedTexts = config.customTexts?.map(text => 
       text.id === updatedText.id ? updatedText : text
     ) || [];
@@ -27,12 +29,15 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
   }, [config.customTexts, onConfigUpdate]);
 
   const handleTextDelete = useCallback((textId: string) => {
+    if (!onConfigUpdate) return;
+    
     const updatedTexts = config.customTexts?.filter(text => text.id !== textId) || [];
     onConfigUpdate({ customTexts: updatedTexts });
-    setSelectedElement(null);
   }, [config.customTexts, onConfigUpdate]);
 
   const handleImageUpdate = useCallback((updatedImage: any) => {
+    if (!onConfigUpdate) return;
+    
     const updatedImages = config.design?.customImages?.map((image: any) => 
       image.id === updatedImage.id ? updatedImage : image
     ) || [];
@@ -46,6 +51,8 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
   }, [config.design, onConfigUpdate]);
 
   const handleImageDelete = useCallback((imageId: string) => {
+    if (!onConfigUpdate) return;
+    
     const updatedImages = config.design?.customImages?.filter((image: any) => image.id !== imageId) || [];
     onConfigUpdate({ 
       design: { 
@@ -53,11 +60,10 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
         customImages: updatedImages 
       } 
     });
-    setSelectedElement(null);
   }, [config.design, onConfigUpdate]);
 
   const handleContainerClick = useCallback(() => {
-    setSelectedElement(null);
+    // Empty callback for container clicks
   }, []);
 
   // Device-specific container styles

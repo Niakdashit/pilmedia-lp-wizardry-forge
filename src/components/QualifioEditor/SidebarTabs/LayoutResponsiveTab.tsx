@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw, Shuffle, Bug, Zap, Settings } from 'lucide-react';
+import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw, Bug, Zap, Settings } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 import { applyResponsiveConsistency, debugResponsiveCalculations } from '../utils/responsiveUtils';
 

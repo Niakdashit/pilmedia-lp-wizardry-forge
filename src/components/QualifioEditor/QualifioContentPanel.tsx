@@ -2,11 +2,9 @@
 import React from 'react';
 import GeneralTab from './SidebarTabs/GeneralTab';
 import DesignTab from './SidebarTabs/DesignTab';
-import TextTab from './SidebarTabs/TextTab';
 import ConfigurationTab from './SidebarTabs/ConfigurationTab';
 import FormTab from './SidebarTabs/FormTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
-import AdvancedTab from './SidebarTabs/AdvancedTab';
 import type { EditorConfig } from './QualifioEditorLayout';
 
 interface QualifioContentPanelProps {
@@ -34,8 +32,6 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
         return <GeneralTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'design':
         return <DesignTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'text':
-        return <TextTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'configuration':
         return <ConfigurationTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'form':
@@ -48,8 +44,6 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
             autoSyncSettings={autoSyncSettings}
           />
         );
-      case 'advanced':
-        return <AdvancedTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:
         return <GeneralTab config={config} onConfigUpdate={onConfigUpdate} />;
     }
