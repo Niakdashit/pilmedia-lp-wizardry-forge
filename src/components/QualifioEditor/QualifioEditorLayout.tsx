@@ -18,7 +18,11 @@ export interface CustomText {
   color: string;
   fontWeight: 'normal' | 'bold';
   fontStyle: 'normal' | 'italic';
-  textDecoration: 'none' | 'underline';
+  textDecoration: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  listType?: 'none' | 'bullet' | 'numbered';
+  hasEffect?: boolean;
+  isAnimated?: boolean;
   backgroundColor?: string;
   width?: number;
   height?: number;
