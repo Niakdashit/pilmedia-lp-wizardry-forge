@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
+import SocialButtons from './SocialButtons';
+import RulesButton from './RulesButton';
 import GameRenderer from './GameRenderer';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
@@ -42,7 +44,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
     switch (device) {
       case 'mobile':
       case 'tablet':
-        return 'w-full h-full flex items-center justify-center';
+        return 'w-full h-full min-h-screen';
       case 'desktop':
       default:
         return 'overflow-hidden relative';
@@ -61,20 +63,35 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         onClick={handleContainerClick}
         className={getFullScreenClass()}
       >
-        {/* GameRenderer centré pour mobile/tablette */}
-        <div className={device === 'mobile' || device === 'tablet' ? 'w-full h-full flex items-center justify-center' : ''}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 1.0 }}
-          >
-            <GameRenderer 
-              gameType={config.gameType} 
-              config={config} 
-              device={device} 
-            />
-          </motion.div>
-        </div>
+        {/* Boutons positionnés en haut de la zone d'aperçu, en dessous de la barre de statut */}
+        <motion.div 
+          className="absolute top-12 left-4 z-10"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <SocialButtons />
+        </motion.div>
+        <motion.div 
+          className="absolute top-12 right-4 z-10"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <RulesButton />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
+        >
+          <GameRenderer 
+            gameType={config.gameType} 
+            config={config} 
+            device={device} 
+          />
+        </motion.div>
         
         {/* Custom editable images - positioned absolutely over the whole layout */}
         {config.design?.customImages?.map((image: any, index) => (
