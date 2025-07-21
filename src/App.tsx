@@ -33,6 +33,8 @@ import AdminTeam from './pages/AdminTeam';
 import AdminAlerts from './pages/AdminAlerts';
 import QualifioEditor from './pages/QualifioEditor';
 import QualifioLivePreview from './pages/QualifioLivePreview';
+import Auth from './pages/Auth';
+import PublicCampaign from './pages/PublicCampaign';
 
 function App() {
   return (
@@ -104,6 +106,8 @@ function App() {
             </Route>
             
             <Route path="/login" element={<Login />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
       </BrandThemeProvider>
