@@ -5,6 +5,7 @@ import ConfigurationTab from './SidebarTabs/ConfigurationTab';
 import DesignContentTab from './SidebarTabs/DesignContentTab';
 import LayersTab from './SidebarTabs/LayersTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
+import AnimationsTab from './SidebarTabs/AnimationsTab';
 import FinalizationTab from './SidebarTabs/FinalizationTab';
 
 interface QualifioContentPanelProps {
@@ -31,11 +32,7 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
       case 'layout':
         return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} triggerAutoSync={triggerAutoSync} />;
       case 'animations':
-        return (
-          <div className="p-6 text-center text-gray-500">
-            Onglet Animations temporairement désactivé
-          </div>
-        );
+        return <AnimationsTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'finalization':
         return <FinalizationTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:

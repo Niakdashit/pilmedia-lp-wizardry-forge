@@ -63,7 +63,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     padding: '20px'
   };
 
-  // Pour mobile et tablette, utiliser une approche en couches
+  // Pour mobile et tablette, utiliser une approche en couches avec bordures visibles
   if (device === 'mobile' || device === 'tablet') {
     const borderRadius = device === 'mobile' ? '25px' : '20px';
     const borderWidth = device === 'mobile' ? '8px' : '12px';
@@ -71,41 +71,29 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     return (
       <div style={containerStyles} className="py-0 my-0 rounded">
         <div style={getDeviceStyles()}>
-          {/* Conteneur principal avec l'image de fond qui remplit tout */}
+          {/* Frame extérieur avec bordure visible */}
           <div 
             style={{
               width: '100%',
               height: '100%',
+              border: `${borderWidth} solid #333`,
               borderRadius: borderRadius,
-              overflow: 'hidden',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
-            {/* Contenu - l'image de fond sera appliquée ici via BackgroundContainer */}
+            {/* Conteneur intérieur pour le contenu avec l'image de fond qui remplit tout */}
             <div 
               style={{
                 width: '100%',
                 height: '100%',
+                borderRadius: `calc(${borderRadius} - ${borderWidth})`,
+                overflow: 'hidden',
                 position: 'relative'
               }}
             >
               {children}
             </div>
-            
-            {/* Bordures simulées par-dessus pour garder l'apparence du device */}
-            <div 
-              style={{
-                position: 'absolute',
-                top: `-${borderWidth}`,
-                left: `-${borderWidth}`,
-                right: `-${borderWidth}`,
-                bottom: `-${borderWidth}`,
-                border: `${borderWidth} solid #333`,
-                borderRadius: borderRadius,
-                pointerEvents: 'none',
-                zIndex: 1000
-              }}
-            />
           </div>
         </div>
       </div>

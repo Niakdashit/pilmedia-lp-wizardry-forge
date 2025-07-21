@@ -31,23 +31,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     scale: 1.0
   };
 
-  // Calculer les styles de transformation pour le centrage parfait
+  // Calculer les styles de transformation pour tous les devices
   const getGameContainerStyle = (): React.CSSProperties => {
-    // Pour mobile et tablette en Mode 2, centrage parfait avec zIndex pour être au-dessus de l'image
-    if ((device === 'mobile' || device === 'tablet') && !isMode1) {
-      return {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        zIndex: 2,
-        overflow: 'hidden'
-      };
-    }
-
-    // Pour desktop, utiliser la logique de positionnement existante
     const getMinHeight = () => {
       switch (device) {
         case 'desktop': return '400px';
@@ -62,9 +47,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       }
     };
 
-    return {
-      transform: `translate(${gamePosition.x}%, ${gamePosition.y}%)`,
-      transformOrigin: 'center center',
+    // Base style avec centrage parfait
+    const baseStyle: React.CSSProperties = {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
@@ -73,8 +57,39 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       minHeight: getMinHeight(),
       padding: getPadding(),
       boxSizing: 'border-box',
+      position: 'relative'
+    };
+
+    // Pour mobile et tablette en Mode 2, ajouter les transformations de position
+    if ((device === 'mobile' || device === 'tablet') && !isMode1) {
+      return {
+        ...baseStyle,
+        zIndex: 2,
+        overflow: 'hidden'
+      };
+    }
+
+    // Pour desktop ou Mode 1, utiliser la logique de positionnement existante
+    return {
+      ...baseStyle,
+      transform: `translate(${gamePosition.x}%, ${gamePosition.y}%)`,
+      transformOrigin: 'center center',
       transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
     };
+  };
+
+  // Style pour le contenu du jeu qui applique les transformations sur mobile/tablette
+  const getGameContentStyle = (): React.CSSProperties => {
+    // Sur mobile/tablette en Mode 2, appliquer les transformations au contenu
+    if ((device === 'mobile' || device === 'tablet') && !isMode1) {
+      return {
+        transform: `translate(${gamePosition.x}%, ${gamePosition.y}%)`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      };
+    }
+    // Sinon, pas de transformation supplémentaire
+    return {};
   };
 
   const renderGameComponent = () => {
@@ -240,7 +255,9 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
   return (
     <div style={getGameContainerStyle()} className="game-container">
-      {renderGameComponent()}
+      <div style={getGameContentStyle()}>
+        {renderGameComponent()}
+      </div>
     </div>
   );
 };
