@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Play, Pause, RotateCcw, Wand2, Eye, EyeOff } from 'lucide-react';
 import { useAnimations } from '../animations/AnimationProvider';
 import { textAnimationPresets, imageAnimationPresets } from '../animations/presets';
-import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../QualifioEditorLayout';
 import type { AnimationType, AnimationTrigger, TextAnimationConfig } from '../animations/types';
 
 interface AnimationsTabProps {
@@ -11,7 +11,7 @@ interface AnimationsTabProps {
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
 
-const AnimationsTab: React.FC<AnimationsTabProps> = ({ config, onConfigUpdate }) => {
+const AnimationsTab: React.FC<AnimationsTabProps> = ({ config }) => {
   const { 
     state, 
     updateTextAnimation, 
@@ -22,7 +22,7 @@ const AnimationsTab: React.FC<AnimationsTabProps> = ({ config, onConfigUpdate })
     resetAnimations
   } = useAnimations();
 
-  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  
   const [activeSection, setActiveSection] = useState<'texts' | 'images' | 'games'>('texts');
 
   const animationTypes: { value: AnimationType; label: string }[] = [

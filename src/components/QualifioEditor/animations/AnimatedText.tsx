@@ -65,12 +65,6 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
 
   const variants = textVariants[config.type] || textVariants.fadeIn;
 
-  const animationProps = {
-    duration: config.duration,
-    ease: config.ease || 'easeOut',
-    repeat: config.repeat,
-    repeatType: config.repeatType
-  };
 
   return (
     <motion.div
@@ -80,7 +74,13 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
       variants={variants}
       initial="hidden"
       animate={controls}
-      transition={animationProps}
+      transition={{
+        duration: config.duration,
+        delay: config.delay,
+        repeat: config.repeat,
+        repeatType: config.repeatType,
+        ease: config.ease as any
+      }}
       onHoverStart={() => {
         if (config.trigger === 'onHover') {
           controls.start('visible');

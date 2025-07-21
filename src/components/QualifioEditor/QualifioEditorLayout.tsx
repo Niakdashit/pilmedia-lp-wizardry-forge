@@ -8,6 +8,7 @@ import DeviceSelector from './DeviceSelector';
 import { AnimationProvider } from './animations/AnimationProvider';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
+import type { AnimationType, AnimationTrigger } from './animations/types';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -54,10 +55,10 @@ export interface CustomText {
   };
   // Nouvelles propriétés d'animation
   animationConfig?: {
-    type: string;
+    type: AnimationType;
     duration: number;
     delay: number;
-    trigger: string;
+    trigger: AnimationTrigger;
     enabled: boolean;
     typewriterSpeed?: number;
     repeat?: number;

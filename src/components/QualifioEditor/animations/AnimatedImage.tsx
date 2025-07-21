@@ -64,30 +64,23 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({
 
   const variants = textVariants[config.type] || textVariants.fadeIn;
 
-  const animationProps = {
-    duration: config.duration,
-    ease: config.ease || 'easeOut',
-    repeat: config.repeat,
-    repeatType: config.repeatType
-  };
-
-  const hoverVariants = config.hoverEffect ? {
-    hover: {
-      scale: 1.05,
-      transition: { duration: 0.3 }
-    }
-  } : {};
 
   return (
     <motion.div
       ref={ref}
       className={className}
       style={style}
-      variants={{ ...variants, ...hoverVariants }}
+      variants={variants}
+      whileHover={config.hoverEffect ? { scale: 1.05 } : undefined}
       initial="hidden"
       animate={controls}
-      whileHover={config.hoverEffect ? "hover" : undefined}
-      transition={animationProps}
+      transition={{
+        duration: config.duration,
+        delay: config.delay,
+        repeat: config.repeat,
+        repeatType: config.repeatType,
+        ease: config.ease as any
+      }}
       onHoverStart={() => {
         if (config.trigger === 'onHover') {
           controls.start('visible');

@@ -42,7 +42,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   };
   return (
     <motion.div
-      variants={gameVariants.entrance}
+      variants={gameVariants.entrance as any}
       initial="hidden"
       animate="visible"
       transition={{ duration: 1, delay: 0.2 }}

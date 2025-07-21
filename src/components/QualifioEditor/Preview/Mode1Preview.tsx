@@ -75,7 +75,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         backgroundColor: '#ffffff'
       }}
       onClick={handleContainerClick}
-      variants={gameVariants.entrance}
+      variants={gameVariants.entrance as any}
       initial="hidden"
       animate="visible"
       transition={{ duration: 0.8, delay: 0.2 }}

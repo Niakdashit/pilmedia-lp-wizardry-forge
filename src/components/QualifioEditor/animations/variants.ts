@@ -83,7 +83,7 @@ export const textVariants: Record<AnimationType, Variants> = {
   }
 };
 
-export const gameVariants: Variants = {
+export const gameVariants = {
   entrance: {
     hidden: { scale: 0.8, opacity: 0, y: 20 },
     visible: { 
