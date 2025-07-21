@@ -58,10 +58,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
         width: '100%',
         height: '100%',
         minHeight: '100%',
-        minWidth: '100%',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column' as const
+        minWidth: '100%'
       };
     }
     
@@ -78,9 +75,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     return { 
       width: '100%',
       height: '100%',
-      minHeight: '100%',
-      display: 'flex',
-      flexDirection: 'column' as const
+      minHeight: '100%'
     };
   };
 
