@@ -24,7 +24,9 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onShowParticipationModal,
   scale = 1.7 // Échelle par défaut à 1.7x
 }) => {
-  const [isInteracting, setIsInteracting] = useState(false);
+  // Track if the user has interacted with the wheel. Once true, the wheel
+  // remains in the interacted state (30% vertical offset) for the session.
+  const [hasInteracted, setHasInteracted] = useState(false);
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
 
   // Utiliser les couleurs extraites de l'image si disponibles
@@ -70,15 +72,15 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
       {device === 'mobile' ? (
         <motion.div
           initial={{ y: "54%" }}
-          animate={{ y: isInteracting ? "30%" : "54%" }}
-          transition={{ 
-            type: "spring", 
-            stiffness: 300, 
-            damping: 30 
+          animate={{ y: hasInteracted ? "30%" : "54%" }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30
           }}
-          onMouseEnter={() => setIsInteracting(true)}
-          onMouseLeave={() => setIsInteracting(false)}
-          onClick={() => setIsInteracting(!isInteracting)}
+          onMouseEnter={() => setHasInteracted(true)}
+          onTouchStart={() => setHasInteracted(true)}
+          onClick={() => setHasInteracted(true)}
         >
           <SmartWheel 
             segments={wheelSegments}
