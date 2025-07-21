@@ -66,11 +66,14 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const gamePosition = config.deviceConfig?.[device]?.gamePosition;
 
   return (
-    <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
+    <div className="relative flex items-start justify-center w-full h-full" style={{ minHeight: '100vh' }}>
       {device === 'mobile' ? (
         <motion.div
-          initial={{ y: "54%" }}
-          animate={{ y: isInteracting ? "30%" : "54%" }}
+          initial={{ y: "54vh", scale: 1.7 }}
+          animate={{ 
+            y: isInteracting ? "30vh" : "54vh",
+            scale: 1.7
+          }}
           transition={{ 
             type: "spring", 
             stiffness: 300, 
@@ -79,10 +82,11 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
           onMouseEnter={() => setIsInteracting(true)}
           onMouseLeave={() => setIsInteracting(false)}
           onClick={() => setIsInteracting(!isInteracting)}
+          className="absolute"
         >
           <SmartWheel 
             segments={wheelSegments}
-            size={getWheelSize() * (isMode1 ? 0.8 : 1)}
+            size={getWheelSize() * (isMode1 ? 0.8 : 1) / 1.7} // Diviser par 1.7 car on applique l'échelle via motion
             theme="modern"
             borderStyle={config.borderStyle || 'classic'}
             onResult={handleWheelResult}
