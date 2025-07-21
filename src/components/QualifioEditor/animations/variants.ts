@@ -83,13 +83,18 @@ export const textVariants: Record<AnimationType, Variants> = {
   }
 };
 
-export const gameVariants = {
+export const gameVariants: Variants = {
   entrance: {
     hidden: { scale: 0.8, opacity: 0, y: 20 },
     visible: { 
       scale: 1, 
       opacity: 1, 
-      y: 0
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 20,
+        stiffness: 100
+      }
     }
   },
   exit: {

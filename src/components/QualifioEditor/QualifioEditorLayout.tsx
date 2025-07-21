@@ -54,10 +54,10 @@ export interface CustomText {
   };
   // Nouvelles propriétés d'animation
   animationConfig?: {
-    type: 'fadeIn' | 'slideInLeft' | 'slideInRight' | 'slideInUp' | 'slideInDown' | 'bounce' | 'typewriter' | 'pulse' | 'rotate' | 'zoomIn' | 'flipX' | 'flipY' | 'slideInScale' | 'bounceIn';
+    type: string;
     duration: number;
     delay: number;
-    trigger: 'onLoad' | 'onScroll' | 'onClick' | 'onHover' | 'delayed' | 'manual';
+    trigger: string;
     enabled: boolean;
     typewriterSpeed?: number;
     repeat?: number;

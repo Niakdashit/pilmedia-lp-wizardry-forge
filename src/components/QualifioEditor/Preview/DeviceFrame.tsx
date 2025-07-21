@@ -65,17 +65,15 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   };
   return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
-         {/* Pour mobile et tablet, contenu fixe sans scroll */}
-        {device === 'mobile' || device === 'tablet' ? (
-          <div 
-            className="scrollbar-hide w-full h-full overflow-hidden relative"
-            style={{
-              overflowY: 'hidden'
-            }}
-          >
+        {/* Pour mobile et tablet, contenu fixe sans scroll */}
+        {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+        position: 'relative'
+      }}>
             {children}
-          </div>
-        ) : children}
+          </div> : children}
       </div>
     </div>;
 };

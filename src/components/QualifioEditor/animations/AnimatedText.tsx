@@ -80,12 +80,7 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
       variants={variants}
       initial="hidden"
       animate={controls}
-      transition={{
-        duration: animationProps.duration,
-        ease: animationProps.ease as any,
-        repeat: animationProps.repeat,
-        repeatType: animationProps.repeatType as any
-      }}
+      transition={animationProps}
       onHoverStart={() => {
         if (config.trigger === 'onHover') {
           controls.start('visible');

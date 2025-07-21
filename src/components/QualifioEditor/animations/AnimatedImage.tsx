@@ -83,16 +83,11 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({
       ref={ref}
       className={className}
       style={style}
-      variants={variants}
+      variants={{ ...variants, ...hoverVariants }}
       initial="hidden"
       animate={controls}
-      whileHover={config.hoverEffect ? hoverVariants : undefined}
-      transition={{
-        duration: animationProps.duration,
-        ease: animationProps.ease as any,
-        repeat: animationProps.repeat,
-        repeatType: animationProps.repeatType as any
-      }}
+      whileHover={config.hoverEffect ? "hover" : undefined}
+      transition={animationProps}
       onHoverStart={() => {
         if (config.trigger === 'onHover') {
           controls.start('visible');

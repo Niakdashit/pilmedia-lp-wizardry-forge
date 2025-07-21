@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { TextAnimationConfig, ImageAnimationConfig } from './types';
+import type { AnimationConfig, TextAnimationConfig, ImageAnimationConfig } from './types';
 
 interface AnimationState {
   textAnimations: Record<string, TextAnimationConfig>;

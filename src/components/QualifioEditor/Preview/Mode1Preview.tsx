@@ -7,7 +7,7 @@ import RulesButton from './RulesButton';
 import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
-
+import { gameVariants } from '../animations/variants';
 
 interface Mode1PreviewProps {
   device: DeviceType;
@@ -75,6 +75,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         backgroundColor: '#ffffff'
       }}
       onClick={handleContainerClick}
+      variants={gameVariants.entrance}
+      initial="hidden"
+      animate="visible"
       transition={{ duration: 0.8, delay: 0.2 }}
     >
       {/* Bande blanche pour les boutons sociaux et règlement */}
