@@ -46,7 +46,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         return 'w-full h-full';
       case 'desktop':
       default:
-        return 'overflow-hidden relative';
+        return 'relative';
     }
   };
 

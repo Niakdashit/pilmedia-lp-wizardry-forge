@@ -65,8 +65,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     if ((device === 'mobile' || device === 'tablet') && !isMode1) {
       return {
         ...baseStyle,
-        zIndex: 2,
-        overflow: 'hidden'
+        zIndex: 2
       };
     }
 
@@ -238,7 +237,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>;
     }
   };
-  return <div style={getGameContainerStyle()} className="game-container mx-0 my-0 px-[193px] py-[193px]">
+  return <div style={getGameContainerStyle()} className="game-container mx-0 my-0">
       <div style={getGameContentStyle()}>
         {renderGameComponent()}
       </div>
