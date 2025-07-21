@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
@@ -55,22 +56,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
     }
   };
 
-  // Calcul des hauteurs selon l'appareil
-  const getHeaderHeight = () => {
-    switch (device) {
-      case 'mobile':
-        return '100%'; // Remplir tout l'espace disponible
-      case 'tablet':
-        return '100%'; // Remplir tout l'espace disponible
-      case 'desktop':
-      default:
-        return 'auto'; // Changé pour permettre la hauteur automatique basée sur l'image
-    }
-  };
-
   return (
     <motion.div 
-      className="w-full h-full flex flex-col relative"
+      className="w-full h-full relative"
       style={{ 
         backgroundColor: '#ffffff'
       }}
@@ -80,23 +68,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       animate="visible"
       transition={{ duration: 0.8, delay: 0.2 }}
     >
-      {/* Bande blanche pour les boutons sociaux et règlement */}
+      {/* BackgroundContainer qui remplit tout l'espace pour mobile/tablette */}
       <motion.div 
-        className="w-full bg-white py-2 px-4 flex justify-between items-center border-b border-gray-100"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <SocialButtons />
-        <RulesButton />
-      </motion.div>
-
-      {/* Container principal qui remplit tout l'espace */}
-      <motion.div 
-        className="flex-1 relative"
-        style={{ 
-          height: device === 'mobile' || device === 'tablet' ? 'calc(100% - 56px)' : getHeaderHeight()
-        }}
+        className="absolute inset-0 w-full h-full"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.6 }}
@@ -106,45 +80,36 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           config={config}
           className="w-full h-full"
           isMode1={true}
-        >
-          {/* Content zone intégré dans le background pour mobile/tablette */}
-          {(device === 'mobile' || device === 'tablet') ? (
-            <motion.div
-              className="absolute bottom-0 left-0 right-0 z-10"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-            >
-              <ContentArea 
-                config={config} 
-                isMode1={true}
-                device={device}
-                wheelResult={wheelResult}
-                onWheelResultClose={handleWheelResultClose}
-                onWheelResult={handleWheelResult}
-              />
-            </motion.div>
-          ) : null}
-        </BackgroundContainer>
+        />
       </motion.div>
 
-      {/* Content zone séparée pour desktop */}
-      {device === 'desktop' && (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        >
-          <ContentArea 
-            config={config} 
-            isMode1={true}
-            device={device}
-            wheelResult={wheelResult}
-            onWheelResultClose={handleWheelResultClose}
-            onWheelResult={handleWheelResult}
-          />
-        </motion.div>
-      )}
+      {/* Barre des boutons sociaux et règlement - positionnée par-dessus l'image */}
+      <motion.div 
+        className="absolute top-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-sm py-2 px-4 flex justify-between items-center border-b border-gray-100/50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
+        <SocialButtons />
+        <RulesButton />
+      </motion.div>
+
+      {/* Content zone positionnée par-dessus l'image */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.8 }}
+      >
+        <ContentArea 
+          config={config} 
+          isMode1={true}
+          device={device}
+          wheelResult={wheelResult}
+          onWheelResultClose={handleWheelResultClose}
+          onWheelResult={handleWheelResult}
+        />
+      </motion.div>
       
       {/* Custom editable images - positioned absolutely over the whole layout */}
       {config.design?.customImages?.map((image: any, index) => (
