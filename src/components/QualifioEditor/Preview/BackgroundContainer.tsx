@@ -108,7 +108,7 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
         backgroundRepeat: 'no-repeat',
         margin: 0,
         padding: 0,
-        overflow: 'hidden',
+        // overflow: 'hidden', // Retiré pour permettre aux éléments d'aller jusqu'aux bordures
         ...getContentDimensions(),
         ...style
       }}

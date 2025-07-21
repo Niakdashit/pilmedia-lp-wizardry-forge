@@ -79,7 +79,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
               border: `${borderWidth} solid #333`,
               borderRadius: borderRadius,
               position: 'relative',
-              overflow: 'hidden' // Garde le overflow hidden seulement sur le frame extérieur
+              // overflow: 'hidden' retiré pour permettre aux éléments d'atteindre les bordures du device
             }}
           >
             {/* Conteneur intérieur pour le contenu - SANS overflow hidden */}
