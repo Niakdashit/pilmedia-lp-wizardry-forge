@@ -1,30 +1,18 @@
 import type { CustomText } from '../QualifioEditorLayout';
 
 /**
- * Obtient les dimensions réelles du conteneur actuel
+ * Obtient les dimensions standardisées pour chaque appareil
+ * Ces dimensions correspondent aux tailles réelles des conteneurs dans l'interface
  */
 const getContainerDimensions = (device: 'desktop' | 'tablet' | 'mobile') => {
-  // Essayer de trouver le conteneur de prévisualisation actuel
-  const previewContainer = document.querySelector('[class*="preview"]') || 
-                           document.querySelector('.relative.bg-center') ||
-                           document.querySelector('div[style*="backgroundImage"]');
-  
-  if (previewContainer) {
-    const rect = previewContainer.getBoundingClientRect();
-    return {
-      width: rect.width || 800,
-      height: rect.height || 600
-    };
-  }
-  
-  // Valeurs par défaut basées sur les dimensions observées dans l'interface
-  const defaults = {
-    desktop: { width: 1200, height: 675 }, // Ratio 16:9 pour desktop
-    tablet: { width: 600, height: 800 },   // Format portrait tablette
-    mobile: { width: 400, height: 700 }    // Format portrait mobile
+  // Dimensions standardisées basées sur l'interface réelle
+  const dimensions = {
+    desktop: { width: 1120, height: 630 },  // Dimensions du conteneur desktop observées
+    tablet: { width: 768, height: 1024 },   // Dimensions du conteneur tablette observées  
+    mobile: { width: 375, height: 667 }     // Dimensions du conteneur mobile observées
   };
   
-  return defaults[device];
+  return dimensions[device];
 };
 
 /**
