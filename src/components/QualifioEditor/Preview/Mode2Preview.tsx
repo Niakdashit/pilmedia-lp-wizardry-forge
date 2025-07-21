@@ -51,7 +51,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         device={device}
         config={config}
         onClick={handleContainerClick}
-        className="overflow-hidden relative"
+        className="w-full h-full overflow-hidden relative"
       >
         {/* Boutons positionnés en haut de la zone d'aperçu, en dessous de la barre de statut */}
         <motion.div 

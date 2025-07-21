@@ -127,16 +127,19 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         {device === 'mobile' || device === 'tablet' ? (
           <>
             {/* Container pour l'image de fond - s'étend sur tout le device */}
-            <div style={{
-              position: 'absolute' as const,
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              borderRadius: device === 'mobile' ? '25px' : '20px',
-              overflow: 'hidden' as const,
-              zIndex: 1
-            }}>
+            <div
+              className="w-full h-full"
+              style={{
+                position: 'absolute' as const,
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: device === 'mobile' ? '25px' : '20px',
+                overflow: 'hidden' as const,
+                zIndex: 1
+              }}
+            >
               {children}
             </div>
             
