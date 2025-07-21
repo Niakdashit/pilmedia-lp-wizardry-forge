@@ -80,7 +80,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           config={config}
           className="w-full h-full"
           isMode1={true}
-        />
+        >
+          {null}
+        </BackgroundContainer>
       </motion.div>
 
       {/* Barre des boutons sociaux et règlement - positionnée par-dessus l'image */}
