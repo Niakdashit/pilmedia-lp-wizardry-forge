@@ -279,12 +279,22 @@ const QualifioEditorLayout: React.FC = () => {
         )}
         
         {/* Preview Area */}
-        <div className="flex-1 p-6">
-          <QualifioPreview 
-            device={selectedDevice}
-            config={config}
-            onConfigUpdate={updateConfig}
-          />
+        <div className="flex-1 flex flex-col">
+          {/* Toolbar Area - Fixed above preview */}
+          <div className="h-16 bg-gray-50 border-b border-gray-200 flex items-center justify-center relative">
+            <div id="text-toolbar-container" className="flex items-center justify-center w-full">
+              {/* Toolbar will be rendered here */}
+            </div>
+          </div>
+          
+          {/* Preview */}
+          <div className="flex-1 p-6">
+            <QualifioPreview 
+              device={selectedDevice}
+              config={config}
+              onConfigUpdate={updateConfig}
+            />
+          </div>
         </div>
       </div>
     </div>

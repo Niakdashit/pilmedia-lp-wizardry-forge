@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Draggable from 'react-draggable';
 import type { CustomText } from './QualifioEditorLayout';
 import TextToolbar from './TextToolbar';
@@ -268,16 +269,22 @@ const EditableText: React.FC<EditableTextProps> = ({
         </div>
       </Draggable>
 
-      {/* Toolbar Canva-style */}
-      {showToolbar && !isEditing && (
-        <TextToolbar
-          text={text}
-          position={toolbarPosition}
-          onUpdate={handleToolbarUpdate}
-          onDelete={handleToolbarDelete}
-          onClose={handleToolbarClose}
-        />
-      )}
+      {/* Toolbar Canva-style - Fixed above preview */}
+      {showToolbar && !isEditing && (() => {
+        const toolbarContainer = document.getElementById('text-toolbar-container');
+        if (!toolbarContainer) return null;
+        
+        return createPortal(
+          <TextToolbar
+            text={text}
+            position={toolbarPosition}
+            onUpdate={handleToolbarUpdate}
+            onDelete={handleToolbarDelete}
+            onClose={handleToolbarClose}
+          />,
+          toolbarContainer
+        );
+      })()}
     </>
   );
 };
