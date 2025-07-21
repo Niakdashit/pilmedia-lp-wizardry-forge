@@ -1,26 +1,51 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
-import QuickCampaignCreator from '../components/QuickCampaign/QuickCampaignCreator';
 import BrandGameGenerator from '../components/BrandGameGenerator/BrandGameGenerator';
 import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
 import { transformBrandGameToCampaign } from '../utils/brandGameTransformer';
 import { useQuickCampaignStore } from '../stores/quickCampaignStore';
+import QuickCampaignStudio from '../components/QuickCampaign/NewInterface/QuickCampaignStudio';
 
 const QuickCampaign: React.FC = () => {
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const store = useQuickCampaignStore();
+
+  // Check for saved draft
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('quickCampaignDraft');
+    if (savedDraft) {
+      try {
+        const { data, timestamp } = JSON.parse(savedDraft);
+        // If draft is less than 24 hours old, ask user if they want to restore
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          const restore = window.confirm('Souhaitez-vous reprendre votre campagne en cours ?');
+          if (restore) {
+            store.setCampaignName(data.campaignName);
+            store.setSelectedGameType(data.selectedGameType);
+            store.setCustomColors(data.customColors);
+            if (data.logoUrl) store.setLogo(null, data.logoUrl);
+            if (data.backgroundImageUrl) store.setBackgroundImageUrl(data.backgroundImageUrl);
+            setShowWelcome(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring draft:', error);
+      }
+    }
+  }, []);
 
   const handleBrandGenerated = (concept: GeneratedGameConcept) => {
     const campaignData = transformBrandGameToCampaign(concept);
     
-    // Update the store with generated data - using the correct structure
+    // Update the store with generated data
     store.setSelectedGameType(campaignData.type);
     store.setCustomColors({
       primary: campaignData.design.customColors.primary,
       secondary: campaignData.design.customColors.secondary,
       accent: campaignData.design.customColors.accent,
-      textColor: campaignData.design.customColors.primary // Use primary color as text color fallback
+      textColor: campaignData.design.customColors.primary
     });
     store.setCampaignName(campaignData.name);
 
@@ -48,8 +73,8 @@ const QuickCampaign: React.FC = () => {
       <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-[#841b60] to-[#6d164f] rounded-full flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-primary-foreground" />
             </div>
             
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -64,7 +89,7 @@ const QuickCampaign: React.FC = () => {
             <div className="space-y-4">
               <button
                 onClick={() => setShowBrandGenerator(true)}
-                className="w-full px-8 py-4 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
+                className="w-full px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
               >
                 <Sparkles className="w-5 h-5" />
                 Générer depuis une URL
@@ -94,7 +119,7 @@ const QuickCampaign: React.FC = () => {
     );
   }
 
-  return <QuickCampaignCreator />;
+  return <QuickCampaignStudio />;
 };
 
 export default QuickCampaign;
