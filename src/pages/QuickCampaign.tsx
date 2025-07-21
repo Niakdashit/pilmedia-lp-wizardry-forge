@@ -25,7 +25,7 @@ const QuickCampaign: React.FC = () => {
             store.setCampaignName(data.campaignName);
             store.setSelectedGameType(data.selectedGameType);
             store.setCustomColors(data.customColors);
-            if (data.logoUrl) store.setLogo(null, data.logoUrl);
+            if (data.logoUrl) store.setLogoUrl(data.logoUrl);
             if (data.backgroundImageUrl) store.setBackgroundImageUrl(data.backgroundImageUrl);
             setShowWelcome(false);
           }

@@ -10,7 +10,8 @@ const BrandAssetsPanel: React.FC = () => {
     logoFile,
     backgroundImageUrl,
     backgroundImage,
-    setLogo,
+    setLogoFile,
+    setLogoUrl,
     setBackgroundImage,
     setBackgroundImageUrl
   } = useQuickCampaignStore();
@@ -21,7 +22,8 @@ const BrandAssetsPanel: React.FC = () => {
   const handleLogoUpload = (files: FileList | null) => {
     if (files && files[0]) {
       const file = files[0];
-      setLogo(file, URL.createObjectURL(file));
+      setLogoFile(file);
+      setLogoUrl(URL.createObjectURL(file));
     }
   };
 
@@ -41,7 +43,8 @@ const BrandAssetsPanel: React.FC = () => {
     if (logoUrl) {
       URL.revokeObjectURL(logoUrl);
     }
-    setLogo(null, null);
+    setLogoFile(null);
+    setLogoUrl(null);
   };
 
   const removeBackground = () => {

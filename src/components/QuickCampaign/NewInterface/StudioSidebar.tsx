@@ -8,8 +8,6 @@ import {
   Palette, 
   Image, 
   Type,
-  Settings,
-  Upload,
   Sparkles
 } from 'lucide-react';
 import { useQuickCampaignStore } from '../../../stores/quickCampaignStore';

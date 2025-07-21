@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useQuickCampaignStore } from '../../../stores/quickCampaignStore';
 import StudioSidebar from './StudioSidebar';
 import StudioPreview from './StudioPreview';
@@ -20,7 +20,7 @@ const QuickCampaignStudio: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   
   // Extract brand colors for adaptive theming
-  const { finalColors, brandStyleExtracted } = useBrandColorExtraction(customColors, logoUrl);
+  const { finalColors, brandStyleExtracted } = useBrandColorExtraction(customColors, logoUrl || undefined);
   
   // Auto-save mechanism
   useEffect(() => {
