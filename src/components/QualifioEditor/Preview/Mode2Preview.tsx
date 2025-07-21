@@ -67,7 +67,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         </div>
         
         {/* Custom editable images - positioned absolutely over the whole layout */}
-        {config.design?.customImages?.map((image: any, index) => (
+        {config.design?.customImages?.map((image: any) => (
           <div
             key={image.id}
             className="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -86,7 +86,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         ))}
 
         {/* Custom editable texts - positioned absolutely over the whole layout */}
-        {config.customTexts?.map((text, index) => (
+        {config.customTexts?.map((text) => (
           <div
             key={text.id}
             className="absolute top-0 left-0 w-full h-full pointer-events-none"
