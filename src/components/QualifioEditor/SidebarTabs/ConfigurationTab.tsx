@@ -1,15 +1,7 @@
 
 import React from 'react';
-import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText, Gamepad2, Calendar, Clock, Link } from 'lucide-react';
+import { Settings, Calendar, Clock, Globe, Hash } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
-import WheelMechanicConfig from './GameMechanics/WheelMechanicConfig';
-import QuizMechanicConfig from './GameMechanics/QuizMechanicConfig';
-import ScratchMechanicConfig from './GameMechanics/ScratchMechanicConfig';
-import JackpotMechanicConfig from './GameMechanics/JackpotMechanicConfig';
-import DiceMechanicConfig from './GameMechanics/DiceMechanicConfig';
-import MemoryMechanicConfig from './GameMechanics/MemoryMechanicConfig';
-import PuzzleMechanicConfig from './GameMechanics/PuzzleMechanicConfig';
-import FormMechanicConfig from './GameMechanics/FormMechanicConfig';
 
 interface ConfigurationTabProps {
   config: EditorConfig;
@@ -20,105 +12,15 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
   config,
   onConfigUpdate
 }) => {
-  const gameTypes = [
-    { value: 'wheel', label: 'Roue de la fortune', icon: Target },
-    { value: 'quiz', label: 'Quiz', icon: HelpCircle },
-    { value: 'scratch', label: 'Carte à gratter', icon: Cookie },
-    { value: 'jackpot', label: 'Machine à sous', icon: Target },
-    { value: 'dice', label: 'Dés', icon: Dice6 },
-    { value: 'memory', label: 'Memory', icon: Brain },
-    { value: 'puzzle', label: 'Puzzle', icon: Puzzle },
-    { value: 'form', label: 'Formulaire', icon: FileText }
-  ];
-
-  const renderGameConfig = () => {
-    switch (config.gameType) {
-      case 'wheel':
-        return <WheelMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'quiz':
-        return <QuizMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'scratch':
-        return <ScratchMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'jackpot':
-        return <JackpotMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'dice':
-        return <DiceMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'memory':
-        return <MemoryMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'puzzle':
-        return <PuzzleMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'form':
-        return <FormMechanicConfig config={config} onConfigUpdate={onConfigUpdate} />;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="space-y-6 my-[30px]">
-      <h3 className="section-title text-center font-semibold">Configuration</h3>
+    <div className="space-y-6 py-0 my-[30px]">
+      <h3 className="section-title text-center">Configuration générale</h3>
       
-      {/* Game Type Selection */}
+      {/* Informations de campagne */}
       <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
-          <Gamepad2 className="w-4 h-4" />
-          Type de jeu
-        </h4>
-        
-        <div className="form-group-premium">
-          <label>Sélectionnez votre mécanique</label>
-          <select 
-            value={config.gameType} 
-            onChange={e => onConfigUpdate({
-              gameType: e.target.value as EditorConfig['gameType']
-            })}
-          >
-            {gameTypes.map(gameType => (
-              <option key={gameType.value} value={gameType.value}>
-                {gameType.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      
-      {/* Game Mode Configuration */}
-      <div className="premium-card mx-[30px]">
-        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Paramètres généraux</h4>
-        
-        <div className="space-y-4">
-          <div className="form-group-premium">
-            <label>Mode de jeu</label>
-            <select 
-              value={config.gameMode} 
-              onChange={e => onConfigUpdate({
-                gameMode: e.target.value as EditorConfig['gameMode']
-              })}
-            >
-              <option value="mode1-sequential">Mode 1 - Séquentiel (Descriptif + Zone de jeu)</option>
-            </select>
-          </div>
-
-          <div className="form-group-premium">
-            <label>Mode d'affichage</label>
-            <select 
-              value={config.displayMode} 
-              onChange={e => onConfigUpdate({
-                displayMode: e.target.value as EditorConfig['displayMode']
-              })}
-            >
-              <option value="mode1-banner-game">Mode 1 - Bannière + zone de texte</option>
-              <option value="mode2-background">Mode 2 - Fond seul (paysage)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Campaign Settings */}
-      <div className="premium-card mx-[30px]">
-        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          Paramètres de campagne
+          <Settings className="w-4 h-4" />
+          Informations de campagne
         </h4>
         
         <div className="space-y-4">
@@ -128,11 +30,31 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
               type="text"
               value={config.campaignName || ''}
               onChange={e => onConfigUpdate({ campaignName: e.target.value })}
-              placeholder="Nom de votre campagne"
+              placeholder="Ma campagne Qualifio"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="form-group-premium">
+            <label>URL de la campagne</label>
+            <input
+              type="text"
+              value={config.campaignUrl || ''}
+              onChange={e => onConfigUpdate({ campaignUrl: e.target.value })}
+              placeholder="ma-campagne-qualifio"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Planification */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Calendar className="w-4 h-4" />
+          Planification
+        </h4>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="form-group-premium">
               <label>Date de début</label>
               <input
@@ -151,12 +73,9 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="form-group-premium">
-              <label className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Heure de début
-              </label>
+              <label>Heure de début</label>
               <input
                 type="time"
                 value={config.startTime || ''}
@@ -164,10 +83,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
               />
             </div>
             <div className="form-group-premium">
-              <label className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Heure de fin
-              </label>
+              <label>Heure de fin</label>
               <input
                 type="time"
                 value={config.endTime || ''}
@@ -175,24 +91,92 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Type de jeu */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Hash className="w-4 h-4" />
+          Type de jeu
+        </h4>
+        
+        <div className="space-y-4">
+          <div className="form-group-premium">
+            <label>Jeu sélectionné</label>
+            <select
+              value={config.gameType}
+              onChange={e => onConfigUpdate({ gameType: e.target.value as any })}
+            >
+              <option value="wheel">Roue de la fortune</option>
+              <option value="quiz">Quiz</option>
+              <option value="scratch">Carte à gratter</option>
+              <option value="jackpot">Jackpot</option>
+              <option value="dice">Dés</option>
+              <option value="memory">Memory</option>
+              <option value="puzzle">Puzzle</option>
+              <option value="form">Formulaire</option>
+            </select>
+          </div>
 
           <div className="form-group-premium">
-            <label className="flex items-center gap-2">
-              <Link className="w-4 h-4" />
-              URL de la campagne
-            </label>
-            <input
-              type="url"
-              value={config.campaignUrl || ''}
-              onChange={e => onConfigUpdate({ campaignUrl: e.target.value })}
-              placeholder="https://votre-site.com/campagne"
-            />
+            <label>Mode d'affichage</label>
+            <select
+              value={config.displayMode}
+              onChange={e => onConfigUpdate({ displayMode: e.target.value as any })}
+            >
+              <option value="mode1-banner-game">Mode 1 - Bannière + Jeu</option>
+              <option value="mode2-background">Mode 2 - Arrière-plan</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Game Specific Configuration */}
-      {renderGameConfig()}
+      {/* Configuration du conteneur */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Globe className="w-4 h-4" />
+          Dimensions du conteneur
+        </h4>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="form-group-premium">
+              <label>Largeur (px)</label>
+              <input
+                type="number"
+                value={config.width}
+                onChange={e => onConfigUpdate({ width: parseInt(e.target.value) || 810 })}
+                min="300"
+                max="1200"
+                step="10"
+              />
+            </div>
+            <div className="form-group-premium">
+              <label>Hauteur (px)</label>
+              <input
+                type="number"
+                value={config.height}
+                onChange={e => onConfigUpdate({ height: parseInt(e.target.value) || 1200 })}
+                min="400"
+                max="2000"
+                step="10"
+              />
+            </div>
+          </div>
+
+          <div className="form-group-premium">
+            <label>Type d'ancrage</label>
+            <select
+              value={config.anchor}
+              onChange={e => onConfigUpdate({ anchor: e.target.value as 'fixed' | 'center' })}
+            >
+              <option value="fixed">Position fixe</option>
+              <option value="center">Centré</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings, Palette, Layers, Layout, CheckCircle, Wand2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Settings, Palette, Type, Layers, Layout, CheckCircle, Wand2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface QualifioSidebarProps {
   activeTab: string;
@@ -18,6 +18,7 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   const tabs = [
     { id: 'configuration', label: 'Configuration', icon: Settings },
     { id: 'design', label: 'Design', icon: Palette },
+    { id: 'texts', label: 'Textes', icon: Type },
     { id: 'layers', label: 'Calques', icon: Layers },
     { id: 'layout', label: 'Layout', icon: Layout },
     { id: 'animations', label: 'Animations', icon: Wand2 },

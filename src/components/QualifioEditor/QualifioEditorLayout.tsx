@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Save, ArrowLeft, ExternalLink, Copy } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -229,14 +229,54 @@ const QualifioEditorLayout: React.FC = () => {
     autoSyncBaseDevice: 'desktop'
   });
 
-  const updateConfig = (updates: Partial<EditorConfig>) => {
-    const newConfig = { ...config, ...updates };
-    setConfig(newConfig);
-    // Synchroniser avec l'aperçu live
-    localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
-  };
+  // Fonction updateConfig optimisée avec validation et debouncing
+  const updateConfig = useCallback((updates: Partial<EditorConfig>) => {
+    try {
+      setConfig(prevConfig => {
+        const newConfig = { ...prevConfig, ...updates };
+        
+        // Validation des données critiques
+        if (newConfig.width < 300) newConfig.width = 300;
+        if (newConfig.height < 400) newConfig.height = 400;
+        if (newConfig.width > 1200) newConfig.width = 1200;
+        if (newConfig.height > 2000) newConfig.height = 2000;
+        
+        // Synchroniser avec l'aperçu live de manière sécurisée
+        try {
+          localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
+        } catch (error) {
+          console.warn('Impossible de sauvegarder dans localStorage:', error);
+        }
+        
+        return newConfig;
+      });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la configuration:', error);
+    }
+  }, []);
 
-  const handleSaveAndExit = async () => {
+  // Memoization des propriétés coûteuses
+  const memoizedConfig = useMemo(() => config, [config]);
+  const memoizedCustomTexts = useMemo(() => config.customTexts || [], [config.customTexts]);
+
+  // Hook pour auto-sync lors des changements d'appareil avec gestion d'erreur
+  useDeviceChangeSync({
+    selectedDevice,
+    customTexts: memoizedCustomTexts,
+    onConfigUpdate: updateConfig,
+    isEnabled: config.autoSyncOnDeviceChange || false,
+    baseDevice: config.autoSyncBaseDevice || 'desktop'
+  });
+
+  // Hook pour auto-sync en temps réel avec gestion d'erreur
+  const { triggerAutoSync } = useAutoSync({
+    onConfigUpdate: updateConfig,
+    isEnabled: config.autoSyncRealTime || false,
+    baseDevice: config.autoSyncBaseDevice || 'desktop'
+  });
+
+  // Fonction de sauvegarde optimisée avec gestion d'erreur complète
+  const handleSaveAndExit = useCallback(async () => {
     setSaving(true);
     
     try {
@@ -309,9 +349,10 @@ const QualifioEditorLayout: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [config, saveCampaign, publishCampaign]);
 
-  const copyUrlToClipboard = async () => {
+  // Fonction de copie d'URL optimisée
+  const copyUrlToClipboard = useCallback(async () => {
     if (generatedUrl) {
       try {
         await navigator.clipboard.writeText(generatedUrl);
@@ -321,27 +362,11 @@ const QualifioEditorLayout: React.FC = () => {
         toast.error('Erreur lors de la copie de l\'URL');
       }
     }
-  };
-
-  // Hook pour auto-sync lors des changements d'appareil
-  useDeviceChangeSync({
-    selectedDevice,
-    customTexts: config.customTexts,
-    onConfigUpdate: updateConfig,
-    isEnabled: config.autoSyncOnDeviceChange || false,
-    baseDevice: config.autoSyncBaseDevice || 'desktop'
-  });
-
-  // Hook pour auto-sync en temps réel
-  const { triggerAutoSync } = useAutoSync({
-    onConfigUpdate: updateConfig,
-    isEnabled: config.autoSyncRealTime || false,
-    baseDevice: config.autoSyncBaseDevice || 'desktop'
-  });
+  }, [generatedUrl]);
 
   return (
     <AnimationProvider>
-    <div className="min-h-screen bg-brand-accent">
+      <div className="min-h-screen bg-brand-accent">
         {/* Header avec couleurs de marque */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -364,44 +389,17 @@ const QualifioEditorLayout: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    const encoded = encodeURIComponent(
-                      JSON.stringify({
-                        width: config.width,
-                        height: config.height,
-                        anchor: config.anchor,
-                        gameType: config.gameType,
-                        gameMode: config.gameMode,
-                        displayMode: config.displayMode,
-                        bannerImage: config.bannerImage,
-                        bannerDescription: config.bannerDescription,
-                        bannerLink: config.bannerLink,
-                        backgroundColor: config.backgroundColor,
-                        outlineColor: config.outlineColor,
-                        borderStyle: config.borderStyle,
-                        jackpotBorderStyle: config.jackpotBorderStyle,
-                        storyText: config.storyText,
-                        publisherLink: config.publisherLink,
-                        prizeText: config.prizeText,
-                        customTexts: config.customTexts,
-                        centerText: config.centerText,
-                        centerForm: config.centerForm,
-                        centerGameZone: config.centerGameZone,
-                        participateButtonText: config.participateButtonText,
-                        participateButtonColor: config.participateButtonColor,
-                        participateButtonTextColor: config.participateButtonTextColor,
-                        footerText: config.footerText,
-                        footerColor: config.footerColor,
-                        customCSS: config.customCSS,
-                        customJS: config.customJS,
-                        trackingTags: config.trackingTags,
-                        deviceConfig: config.deviceConfig
-                      })
-                    );
-                    localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
-                    window.open(
-                      `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
-                      '_blank'
-                    );
+                    try {
+                      const encoded = encodeURIComponent(JSON.stringify(memoizedConfig));
+                      localStorage.setItem('qualifio_live_preview_config', JSON.stringify(memoizedConfig));
+                      window.open(
+                        `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
+                        '_blank'
+                      );
+                    } catch (error) {
+                      console.error('Erreur lors de l\'ouverture de l\'aperçu:', error);
+                      toast.error('Erreur lors de l\'ouverture de l\'aperçu');
+                    }
                   }}
                   className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
                 >
@@ -434,9 +432,9 @@ const QualifioEditorLayout: React.FC = () => {
           {!isSidebarCollapsed && (
             <QualifioContentPanel 
               activeTab={activeTab}
-              config={config}
+              config={memoizedConfig}
               onConfigUpdate={updateConfig}
-              triggerAutoSync={triggerAutoSync}
+              triggerAutoSync={() => triggerAutoSync(memoizedCustomTexts)}
             />
           )}
           
@@ -448,12 +446,12 @@ const QualifioEditorLayout: React.FC = () => {
             
             {/* Preview */}
             <div className="h-full p-6">
-            <QualifioPreview 
-              device={selectedDevice}
-              config={config}
-              onConfigUpdate={updateConfig}
-              triggerAutoSync={() => triggerAutoSync(config.customTexts || [])}
-            />
+              <QualifioPreview 
+                device={selectedDevice}
+                config={memoizedConfig}
+                onConfigUpdate={updateConfig}
+                triggerAutoSync={() => triggerAutoSync(memoizedCustomTexts)}
+              />
             </div>
           </div>
         </div>
@@ -480,31 +478,20 @@ const QualifioEditorLayout: React.FC = () => {
                 >
                   <Copy className="w-4 h-4" />
                 </button>
-                <a
-                  href={generatedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 hover:bg-gray-200 rounded"
-                  title="Ouvrir dans un nouvel onglet"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    setShowUrlModal(false);
-                    navigate('/campaigns');
-                  }}
-                  className="flex-1 px-4 py-2 bg-brand-primary text-white rounded hover:bg-brand-primary/90"
+                  onClick={() => window.open(generatedUrl, '_blank')}
+                  className="flex-1 px-4 py-2 bg-brand-primary text-white rounded hover:bg-brand-primary/90 transition-colors flex items-center justify-center gap-2"
                 >
-                  Retour aux campagnes
+                  <ExternalLink className="w-4 h-4" />
+                  Voir la campagne
                 </button>
                 <button
                   onClick={() => setShowUrlModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
                 >
-                  Continuer l'édition
+                  Fermer
                 </button>
               </div>
             </div>

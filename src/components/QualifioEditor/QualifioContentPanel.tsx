@@ -1,12 +1,13 @@
 
 import React from 'react';
-import type { EditorConfig } from './QualifioEditorLayout';
 import ConfigurationTab from './SidebarTabs/ConfigurationTab';
-import DesignContentTab from './SidebarTabs/DesignContentTab';
+import DesignTab from './SidebarTabs/DesignTab';
+import TextsTab from './SidebarTabs/TextsTab';
 import LayersTab from './SidebarTabs/LayersTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
 import AnimationsTab from './SidebarTabs/AnimationsTab';
 import FinalizationTab from './SidebarTabs/FinalizationTab';
+import type { EditorConfig } from './QualifioEditorLayout';
 
 interface QualifioContentPanelProps {
   activeTab: string;
@@ -24,31 +25,66 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
   const renderTabContent = () => {
     switch (activeTab) {
       case 'configuration':
-        return <ConfigurationTab config={config} onConfigUpdate={onConfigUpdate} />;
+        return (
+          <ConfigurationTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+          />
+        );
       case 'design':
-        return <DesignContentTab config={config} onConfigUpdate={onConfigUpdate} />;
+        return (
+          <DesignTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+          />
+        );
+      case 'texts':
+        return (
+          <TextsTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+          />
+        );
       case 'layers':
-        return <LayersTab config={config} onConfigUpdate={onConfigUpdate} />;
+        return (
+          <LayersTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+          />
+        );
       case 'layout':
-        return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} triggerAutoSync={triggerAutoSync} />;
+        return (
+          <LayoutResponsiveTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+            triggerAutoSync={triggerAutoSync}
+          />
+        );
       case 'animations':
-        return <AnimationsTab config={config} onConfigUpdate={onConfigUpdate} />;
+        return (
+          <AnimationsTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+          />
+        );
       case 'finalization':
-        return <FinalizationTab config={config} onConfigUpdate={onConfigUpdate} />;
+        return (
+          <FinalizationTab
+            config={config}
+            onConfigUpdate={onConfigUpdate}
+          />
+        );
       default:
         return (
           <div className="p-6 text-center text-gray-500">
-            Sélectionnez un onglet pour commencer la configuration.
+            <p>Sélectionnez un onglet pour commencer</p>
           </div>
         );
     }
   };
 
   return (
-    <div 
-      className="w-96 bg-white border-r border-gray-200 overflow-y-auto" 
-      style={{ height: 'calc(100vh - 88px)' }}
-    >
+    <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto h-full">
       {renderTabContent()}
     </div>
   );
