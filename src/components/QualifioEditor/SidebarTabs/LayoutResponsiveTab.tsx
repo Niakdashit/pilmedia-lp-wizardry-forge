@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw, Shuffle } from 'lucide-react';
+import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw, Shuffle, Bug } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
-import { applyResponsiveConsistency } from '../utils/responsiveUtils';
+import { applyResponsiveConsistency, debugResponsiveCalculations } from '../utils/responsiveUtils';
 
 interface LayoutResponsiveTabProps {
   config: EditorConfig;
@@ -40,10 +40,19 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
 
   const synchronizeTextsAcrossDevices = (baseDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop') => {
     if (config.customTexts && config.customTexts.length > 0) {
+      console.log(`🔄 Synchronisation depuis ${baseDevice} vers les autres appareils`);
+      
+      // Debug des calculs avant synchronisation
+      config.customTexts.forEach(text => {
+        debugResponsiveCalculations(text, baseDevice);
+      });
+      
       const synchronizedTexts = applyResponsiveConsistency(config.customTexts, baseDevice);
       onConfigUpdate({
         customTexts: synchronizedTexts
       });
+      
+      console.log('✅ Synchronisation terminée');
     }
   };
 
@@ -136,48 +145,71 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
         </div>
       </div>
 
-      {/* Cohérence Responsive */}
+      {/* Cohérence Responsive - AMÉLIORÉE */}
       <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
           <Shuffle className="w-4 h-4" />
-          Cohérence entre appareils
+          Synchronisation inter-appareils
         </h4>
         
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-xs text-yellow-800">
-              💡 <strong>Astuce :</strong> Positionnez vos textes sur un appareil, puis cliquez sur le bouton "Sync" correspondant pour adapter automatiquement sur les autres.
+          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-xs text-blue-800">
+              🎯 <strong>Guide d'utilisation :</strong> 
+              <br />1. Positionnez vos textes sur l'appareil de votre choix
+              <br />2. Cliquez sur "Sync depuis [Appareil]" pour adapter automatiquement sur les autres
+              <br />3. Les positions relatives et proportions sont conservées
             </p>
           </div>
-          <p className="text-xs text-sidebar-text-muted">
-            Les positions et tailles sont calculées proportionnellement selon les dimensions réelles de chaque appareil.
-          </p>
+          
+          <div className="text-xs text-sidebar-text-muted space-y-1">
+            <p>📏 <strong>Dimensions des conteneurs :</strong></p>
+            <p>• Desktop: 1200 × 675px (16:9)</p>
+            <p>• Tablette: 768 × 1024px (portrait)</p>
+            <p>• Mobile: 375 × 812px (portrait)</p>
+          </div>
+          
           <div className="grid grid-cols-1 gap-2">
             <button
               onClick={() => synchronizeTextsAcrossDevices('desktop')}
               className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              title="Applique les positions desktop aux autres appareils"
+              title="Applique les positions desktop (1200×675) vers tablette et mobile"
             >
               <Monitor className="w-3 h-3" />
-              Sync depuis Desktop
+              Sync depuis Desktop → Mobile/Tablette
             </button>
             <button
               onClick={() => synchronizeTextsAcrossDevices('tablet')}
-              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              title="Applique les positions tablette aux autres appareils"
+              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              title="Applique les positions tablette (768×1024) vers desktop et mobile"
             >
               <Tablet className="w-3 h-3" />
-              Sync depuis Tablette
+              Sync depuis Tablette → Desktop/Mobile
             </button>
             <button
               onClick={() => synchronizeTextsAcrossDevices('mobile')}
-              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              title="Applique les positions mobile aux autres appareils"
+              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+              title="Applique les positions mobile (375×812) vers desktop et tablette"
             >
               <Smartphone className="w-3 h-3" />
-              Sync depuis Mobile
+              Sync depuis Mobile → Desktop/Tablette
             </button>
           </div>
+          
+          {/* Debug section pour le développement */}
+          {process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={() => {
+                config.customTexts?.forEach(text => {
+                  debugResponsiveCalculations(text, 'desktop');
+                });
+              }}
+              className="flex items-center justify-center gap-2 px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              <Bug className="w-3 h-3" />
+              Debug positions (Console)
+            </button>
+          )}
         </div>
       </div>
 
