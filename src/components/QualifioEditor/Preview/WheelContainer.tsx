@@ -1,6 +1,5 @@
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
 import { SmartWheel } from '../../SmartWheel';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import { createSegments } from './wheelHelpers';
@@ -22,8 +21,6 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onResult,
   scale = 1.0
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
 
   // Utiliser les couleurs extraites de l'image si disponibles
@@ -65,45 +62,24 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const gamePosition = config.deviceConfig?.[device]?.gamePosition;
 
   return (
-    <div 
-      className="flex items-end justify-center w-full" 
-      style={{ height: 'auto', minHeight: 'fit-content', overflow: 'hidden' }}
-    >
-      <motion.div
-        initial={{ y: "50%" }}
-        animate={{ y: isHovered ? "0%" : "50%" }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 200, 
-          damping: 25,
-          duration: 0.6 
+    <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
+      <SmartWheel 
+        segments={wheelSegments}
+        size={getWheelSize() * (isMode1 ? 0.8 : 1)}
+        theme="modern"
+        borderStyle={config.borderStyle || 'classic'}
+        onResult={handleWheelResult}
+        gamePosition={gamePosition}
+        isMode1={isMode1}
+        formFields={config.formFields}
+        brandColors={brandColors}
+        buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : undefined}
+        customButton={{
+          text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
+          color: brandColors?.primary || "#8E44AD",
+          textColor: "#ffffff"
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="wheel-animation-container"
-        style={{
-          transformOrigin: "center bottom",
-          cursor: "pointer"
-        }}
-      >
-        <SmartWheel 
-          segments={wheelSegments}
-          size={getWheelSize() * (isMode1 ? 0.8 : 1)}
-          theme="modern"
-          borderStyle={config.borderStyle || 'classic'}
-          onResult={handleWheelResult}
-          gamePosition={gamePosition}
-          isMode1={isMode1}
-          formFields={config.formFields}
-          brandColors={brandColors}
-          buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : undefined}
-          customButton={{
-            text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
-            color: brandColors?.primary || "#8E44AD",
-            textColor: "#ffffff"
-          }}
-        />
-      </motion.div>
+      />
     </div>
   );
 };
