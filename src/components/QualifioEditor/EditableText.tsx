@@ -12,6 +12,7 @@ interface EditableTextProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   device?: 'desktop' | 'tablet' | 'mobile';
+  triggerAutoSync?: () => void;
 }
 
 const EditableText: React.FC<EditableTextProps> = ({ 
@@ -20,7 +21,8 @@ const EditableText: React.FC<EditableTextProps> = ({
   onDelete, 
   isSelected, 
   onSelect,
-  device = 'desktop'
+  device = 'desktop',
+  triggerAutoSync
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(text.content);
@@ -97,6 +99,11 @@ const EditableText: React.FC<EditableTextProps> = ({
     };
     
     onUpdate(updatedText);
+    
+    // Déclencher l'auto-sync si activé
+    if (triggerAutoSync) {
+      triggerAutoSync();
+    }
   };
 
   const handleResize = (e: React.MouseEvent, direction: string) => {
@@ -173,6 +180,11 @@ const EditableText: React.FC<EditableTextProps> = ({
       setIsResizing(false);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      
+      // Déclencher l'auto-sync après redimensionnement
+      if (triggerAutoSync) {
+        triggerAutoSync();
+      }
     };
     
     document.addEventListener('mousemove', handleMouseMove);
@@ -181,6 +193,11 @@ const EditableText: React.FC<EditableTextProps> = ({
 
   const handleToolbarUpdate = (updates: Partial<CustomText>) => {
     onUpdate({ ...text, ...updates });
+    
+    // Déclencher l'auto-sync après modification via toolbar
+    if (triggerAutoSync) {
+      triggerAutoSync();
+    }
   };
 
   const handleToolbarDelete = () => {

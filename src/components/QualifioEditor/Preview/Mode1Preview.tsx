@@ -15,17 +15,19 @@ interface Mode1PreviewProps {
   onTextDelete: (textId: string) => void;
   onImageUpdate: (updatedImage: any) => void;
   onImageDelete: (imageId: string) => void;
-  onContainerClick: () => void;
+  onContainerClick?: () => void;
+  triggerAutoSync?: () => void;
 }
 
-const Mode1Preview: React.FC<Mode1PreviewProps> = ({ 
-  device, 
-  config, 
-  onTextUpdate, 
+const Mode1Preview: React.FC<Mode1PreviewProps> = ({
+  device,
+  config,
+  onTextUpdate,
   onTextDelete,
   onImageUpdate,
   onImageDelete,
-  onContainerClick 
+  onContainerClick,
+  triggerAutoSync
 }) => {
   const [wheelResult, setWheelResult] = useState<{
     id: string;
@@ -47,7 +49,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   const handleContainerClick = () => {
     setSelectedTextId(null);
     setSelectedImageId(null);
-    onContainerClick();
+    if (onContainerClick) {
+      onContainerClick();
+    }
   };
 
   // Calcul des hauteurs selon l'appareil
@@ -133,6 +137,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
               isSelected={selectedTextId === text.id}
               onSelect={setSelectedTextId}
               device={device}
+              triggerAutoSync={triggerAutoSync}
             />
           </div>
         </div>

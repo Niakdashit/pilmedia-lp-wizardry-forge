@@ -11,12 +11,14 @@ interface QualifioContentPanelProps {
   activeTab: string;
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
+  triggerAutoSync?: (customTexts: any[]) => void;
 }
 
 const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
   activeTab,
   config,
-  onConfigUpdate
+  onConfigUpdate,
+  triggerAutoSync
 }) => {
   const renderTabContent = () => {
     switch (activeTab) {
@@ -27,7 +29,7 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
       case 'layers':
         return <LayersTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'layout':
-        return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} />;
+        return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} triggerAutoSync={triggerAutoSync} />;
       case 'finalization':
         return <FinalizationTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:

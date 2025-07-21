@@ -5,6 +5,8 @@ import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
+import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
+import { useAutoSync } from './hooks/useAutoSync';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -148,6 +150,9 @@ export interface EditorConfig {
   formTitle?: string;
   formSuccessMessage?: string;
   formShowProgress?: boolean;
+  autoSyncOnDeviceChange?: boolean;
+  autoSyncRealTime?: boolean;
+  autoSyncBaseDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const QualifioEditorLayout: React.FC = () => {
@@ -196,7 +201,10 @@ const QualifioEditorLayout: React.FC = () => {
         backgroundImage: undefined,
         gamePosition: { x: 0, y: 0, scale: 1.0 }
       }
-    }
+    },
+    autoSyncOnDeviceChange: false,
+    autoSyncRealTime: false,
+    autoSyncBaseDevice: 'desktop'
   });
 
   const updateConfig = (updates: Partial<EditorConfig>) => {
@@ -205,6 +213,22 @@ const QualifioEditorLayout: React.FC = () => {
     // Synchroniser avec l'aperçu live
     localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
   };
+
+  // Hook pour auto-sync lors des changements d'appareil
+  useDeviceChangeSync({
+    selectedDevice,
+    customTexts: config.customTexts,
+    onConfigUpdate: updateConfig,
+    isEnabled: config.autoSyncOnDeviceChange || false,
+    baseDevice: config.autoSyncBaseDevice || 'desktop'
+  });
+
+  // Hook pour auto-sync en temps réel
+  const { triggerAutoSync } = useAutoSync({
+    onConfigUpdate: updateConfig,
+    isEnabled: config.autoSyncRealTime || false,
+    baseDevice: config.autoSyncBaseDevice || 'desktop'
+  });
 
   return (
     <div className="min-h-screen bg-brand-accent">
@@ -298,6 +322,7 @@ const QualifioEditorLayout: React.FC = () => {
             activeTab={activeTab}
             config={config}
             onConfigUpdate={updateConfig}
+            triggerAutoSync={triggerAutoSync}
           />
         )}
         
@@ -309,11 +334,12 @@ const QualifioEditorLayout: React.FC = () => {
           
           {/* Preview */}
           <div className="h-full p-6">
-            <QualifioPreview 
-              device={selectedDevice}
-              config={config}
-              onConfigUpdate={updateConfig}
-            />
+          <QualifioPreview 
+            device={selectedDevice}
+            config={config}
+            onConfigUpdate={updateConfig}
+            triggerAutoSync={() => triggerAutoSync(config.customTexts || [])}
+          />
           </div>
         </div>
       </div>

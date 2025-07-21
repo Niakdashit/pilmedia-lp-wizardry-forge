@@ -7,11 +7,13 @@ import { applyResponsiveConsistency, debugResponsiveCalculations } from '../util
 interface LayoutResponsiveTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
+  triggerAutoSync?: (customTexts: any[]) => void;
 }
 
 const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
   config,
-  onConfigUpdate
+  onConfigUpdate,
+  triggerAutoSync: _triggerAutoSync
 }) => {
   const devices = [
     { key: 'mobile', label: 'Mobile', icon: Smartphone },
@@ -145,11 +147,62 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
         </div>
       </div>
 
-      {/* Cohérence Responsive - AMÉLIORÉE */}
+      {/* Automatisation de la synchronisation */}
       <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
           <Shuffle className="w-4 h-4" />
-          Synchronisation inter-appareils
+          Auto-synchronisation
+        </h4>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-sidebar-text-primary text-sm">Auto-sync changement d'appareil</label>
+            <input
+              type="checkbox"
+              checked={config.autoSyncOnDeviceChange || false}
+              onChange={e => onConfigUpdate({ autoSyncOnDeviceChange: e.target.checked })}
+              className="rounded"
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <label className="text-sidebar-text-primary text-sm">Auto-sync temps réel</label>
+            <input
+              type="checkbox"
+              checked={config.autoSyncRealTime || false}
+              onChange={e => onConfigUpdate({ autoSyncRealTime: e.target.checked })}
+              className="rounded"
+            />
+          </div>
+          
+          <div className="form-group-premium">
+            <label>Appareil de référence</label>
+            <select
+              value={config.autoSyncBaseDevice || 'desktop'}
+              onChange={e => onConfigUpdate({ autoSyncBaseDevice: e.target.value as 'desktop' | 'tablet' | 'mobile' })}
+            >
+              <option value="desktop">Desktop</option>
+              <option value="tablet">Tablette</option>
+              <option value="mobile">Mobile</option>
+            </select>
+          </div>
+          
+          <div className="p-3 bg-green-50 border border-green-200 rounded">
+            <p className="text-xs text-green-800">
+              ✅ <strong>Mode automatique :</strong> 
+              <br />• Auto-sync changement d'appareil : Synchronise automatiquement quand vous changez d'appareil
+              <br />• Auto-sync temps réel : Synchronise pendant que vous éditez (recommandé)
+              <br />• L'appareil de référence sert de base pour les calculs
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Synchronisation manuelle */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Shuffle className="w-4 h-4" />
+          Synchronisation manuelle
         </h4>
         
         <div className="space-y-4">

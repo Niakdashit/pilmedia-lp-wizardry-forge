@@ -14,17 +14,19 @@ interface Mode2PreviewProps {
   onTextDelete: (textId: string) => void;
   onImageUpdate: (updatedImage: any) => void;
   onImageDelete: (imageId: string) => void;
-  onContainerClick: () => void;
+  onContainerClick?: () => void;
+  triggerAutoSync?: () => void;
 }
 
-const Mode2Preview: React.FC<Mode2PreviewProps> = ({ 
-  device, 
-  config, 
-  onTextUpdate, 
+const Mode2Preview: React.FC<Mode2PreviewProps> = ({
+  device,
+  config,
+  onTextUpdate,
   onTextDelete,
   onImageUpdate,
   onImageDelete,
-  onContainerClick 
+  onContainerClick,
+  triggerAutoSync
 }) => {
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -32,7 +34,9 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   const handleContainerClick = () => {
     setSelectedTextId(null);
     setSelectedImageId(null);
-    onContainerClick();
+    if (onContainerClick) {
+      onContainerClick();
+    }
   };
   return (
     <BackgroundContainer
@@ -89,6 +93,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
               isSelected={selectedTextId === text.id}
               onSelect={setSelectedTextId}
               device={device}
+              triggerAutoSync={triggerAutoSync}
             />
           </div>
         </div>

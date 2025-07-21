@@ -9,9 +9,10 @@ interface QualifioPreviewProps {
   config: EditorConfig;
   onConfigUpdate?: (updates: Partial<EditorConfig>) => void;
   isLivePreview?: boolean;
+  triggerAutoSync?: () => void;
 }
 
-const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate, isLivePreview = false }) => {
+const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate, isLivePreview = false, triggerAutoSync }) => {
   const handleTextUpdate = (updatedText: CustomText) => {
     if (!onConfigUpdate) return;
     
@@ -75,6 +76,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
               onImageUpdate={handleImageUpdate}
               onImageDelete={handleImageDelete}
               onContainerClick={handleContainerClick}
+              triggerAutoSync={triggerAutoSync}
             />
           </div>
         ) : (
@@ -87,6 +89,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
               onImageUpdate={handleImageUpdate}
               onImageDelete={handleImageDelete}
               onContainerClick={handleContainerClick}
+              triggerAutoSync={triggerAutoSync}
             />
           </DeviceFrame>
         )
@@ -100,6 +103,7 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
             onImageUpdate={handleImageUpdate}
             onImageDelete={handleImageDelete}
             onContainerClick={handleContainerClick}
+            triggerAutoSync={triggerAutoSync}
           />
         </DeviceFrame>
       )}
