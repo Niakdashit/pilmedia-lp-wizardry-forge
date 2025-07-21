@@ -51,7 +51,7 @@ function App() {
               <Route path="social" element={<Social />} />
               <Route path="studies" element={<Studies />} />
               <Route path="account" element={<Account />} />
-              <Route path="qualifio-editor" element={<QualifioEditor />} />
+              
             </Route>
 
             {/* Routes éditeur en plein écran sans sidebar principale */}
