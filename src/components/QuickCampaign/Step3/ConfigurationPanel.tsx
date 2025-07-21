@@ -104,17 +104,17 @@ const ConfigurationPanel: React.FC = () => {
   const allSections = [...configSections, ...(advancedMode ? advancedSections : [])];
 
   return (
-    <div className="col-span-5 bg-card rounded-3xl shadow-xl border overflow-hidden">
+    <div className="col-span-4 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-muted/50 to-muted px-6 py-4 border-b">
+      <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
-              <Settings className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <Settings className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Configuration</h2>
-              <p className="text-sm text-muted-foreground">Personnalisez chaque détail</p>
+              <h2 className="text-lg font-bold text-gray-900">Configuration</h2>
+              <p className="text-xs text-gray-600">Personnalisez votre campagne</p>
             </div>
           </div>
           <AdvancedModeToggle />
@@ -123,27 +123,27 @@ const ConfigurationPanel: React.FC = () => {
 
       {/* Configuration Sections */}
       <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
-        <div className="p-6 space-y-4">
+        <div className="p-4 space-y-3">
           {allSections.map((section) => {
             const Icon = section.icon;
             const isExpanded = expandedSections.has(section.id);
             
             return (
-              <div key={section.id} className="border rounded-2xl overflow-hidden shadow-sm bg-background">
+              <div key={section.id} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                 <button
                   onClick={() => toggleSection(section.id)}
-                  className="w-full px-4 py-4 flex items-center justify-between hover:bg-muted/50 transition-all duration-200"
+                  className={`w-full px-3 py-2 flex items-center justify-between bg-gradient-to-r hover:shadow-md transition-all duration-200 ${section.bgColor}`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${section.color} shadow-sm`}>
-                      <Icon className="w-4 h-4 text-white" />
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${section.color}`}>
+                      <Icon className="w-3 h-3 text-white" />
                     </div>
-                    <span className="font-semibold text-foreground">{section.title}</span>
+                    <span className="font-semibold text-gray-900 text-sm">{section.title}</span>
                   </div>
                   {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    <ChevronRight className="w-4 h-4 text-gray-500" />
                   )}
                 </button>
                 
@@ -156,7 +156,7 @@ const ConfigurationPanel: React.FC = () => {
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
                       className="overflow-hidden"
                     >
-                      <div className="p-6 bg-card border-t">
+                      <div className="p-4 bg-white border-t border-gray-100">
                         {section.component}
                       </div>
                     </motion.div>

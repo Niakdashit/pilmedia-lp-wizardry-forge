@@ -8,7 +8,7 @@ import { useQuickCampaignStore } from '../stores/quickCampaignStore';
 
 const QuickCampaign: React.FC = () => {
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const store = useQuickCampaignStore();
 
   const handleBrandGenerated = (concept: GeneratedGameConcept) => {
