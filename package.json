@@ -16,6 +16,7 @@
     "@dnd-kit/modifiers": "^6.0.1",
     "@dnd-kit/sortable": "^7.0.2",
     "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource/montserrat": "^5.2.6",
     "@huggingface/transformers": "^3.6.3",
     "@supabase/supabase-js": "^2.52.0",
     "@tiptap/extension-image": "^2.1.16",

@@ -21,35 +21,43 @@ const TextSuggestions: React.FC<TextSuggestionsProps> = ({
 
   // Suggestions par défaut basées sur les couleurs
   const getDefaultSuggestions = () => {
-    const colorBasedSuggestions = [
-      "Découvrez votre chance",
-      "Gagnez maintenant !",
-      "Offre exclusive",
-      "Tentez votre chance",
-      "Prix incroyables à gagner"
+    const premiumSuggestions = [
+      "TOURNEZ LA ROUE DE LA CHANCE",
+      "GAGNEZ À COUP SÛR",
+      "CADEAU MYSTÈRE GARANTI",
+      "TENTEZ VOTRE CHANCE MAINTENANT",
+      "PRIX INCROYABLES À GAGNER",
+      "JEU CONCOURS EXCLUSIF",
+      "DÉCOUVREZ VOTRE SURPRISE",
+      "100% GAGNANT",
+      "OFFRE LIMITÉE",
+      "VOTRE CHANCE VOUS ATTEND"
     ];
 
     if (extractedColors) {
-      // Suggestions adaptées aux couleurs (exemple simplifié)
       const isDark = isColorDark(extractedColors.primary);
       if (isDark) {
         return [
-          "Élégance et sophistication",
-          "Expérience premium",
-          "Luxe à portée de main",
-          ...colorBasedSuggestions.slice(0, 2)
+          "ÉLÉGANCE & SOPHISTICATION",
+          "EXPÉRIENCE PREMIUM GARANTIE",
+          "LUXE À PORTÉE DE MAIN",
+          "COLLECTION EXCLUSIVE",
+          "RAFFINEMENT ABSOLU",
+          ...premiumSuggestions.slice(0, 5)
         ];
       } else {
         return [
-          "Énergie et dynamisme",
-          "Vivez l'aventure",
-          "Couleurs de la victoire",
-          ...colorBasedSuggestions.slice(0, 2)
+          "ÉNERGIE & DYNAMISME",
+          "VIVEZ L'AVENTURE",
+          "COULEURS DE LA VICTOIRE",
+          "VIBREZ AVEC NOUS",
+          "PASSION & INNOVATION",
+          ...premiumSuggestions.slice(0, 5)
         ];
       }
     }
 
-    return colorBasedSuggestions;
+    return premiumSuggestions;
   };
 
   const isColorDark = (color: string): boolean => {
@@ -71,11 +79,14 @@ const TextSuggestions: React.FC<TextSuggestionsProps> = ({
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const aiSuggestions = [
-        "Votre marque, votre succès",
-        "Innovation et excellence",
-        "Rejoignez l'aventure",
-        "Créez votre légende",
-        "L'excellence vous attend"
+        "VOTRE MARQUE, VOTRE SUCCÈS",
+        "INNOVATION & EXCELLENCE",
+        "REJOIGNEZ L'AVENTURE PREMIUM",
+        "CRÉEZ VOTRE LÉGENDE",
+        "L'EXCELLENCE VOUS ATTEND",
+        "DÉPASSEZ VOS LIMITES",
+        "RÉVÉLEZ VOTRE POTENTIEL",
+        "EXPÉRIENCE INOUBLIABLE GARANTIE"
       ];
       
       setSuggestions(aiSuggestions);
