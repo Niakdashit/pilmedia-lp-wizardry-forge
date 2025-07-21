@@ -8,7 +8,6 @@ import QuizPreview from '../../GameTypes/QuizPreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
-
 interface GameRendererProps {
   gameType: EditorConfig['gameType'];
   config: EditorConfig;
@@ -16,7 +15,6 @@ interface GameRendererProps {
   onResult?: (result: any) => void;
   isMode1?: boolean;
 }
-
 const GameRenderer: React.FC<GameRendererProps> = ({
   gameType,
   config,
@@ -35,15 +33,18 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const getGameContainerStyle = (): React.CSSProperties => {
     const getMinHeight = () => {
       switch (device) {
-        case 'desktop': return '400px';
-        default: return '400px';
+        case 'desktop':
+          return '400px';
+        default:
+          return '400px';
       }
     };
-    
     const getPadding = () => {
       switch (device) {
-        case 'desktop': return '32px';
-        default: return '24px';
+        case 'desktop':
+          return '32px';
+        default:
+          return '24px';
       }
     };
 
@@ -91,34 +92,19 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     // Sinon, pas de transformation supplémentaire
     return {};
   };
-
   const renderGameComponent = () => {
     // Récupérer les couleurs de la marque si disponibles
     const brandColors = config.brandAssets || {};
     const primaryColor = brandColors.primaryColor || config.participateButtonColor || '#841b60';
     const secondaryColor = brandColors.secondaryColor || '#ffffff';
-
     switch (gameType) {
       case 'wheel':
         return <WheelContainer device={device} config={config} isMode1={isMode1} isVisible={true} onResult={onResult} scale={gamePosition.scale} />;
       case 'jackpot':
-        return <Jackpot 
-          isPreview={true} 
-          buttonLabel="Lancer le Jackpot" 
-          buttonColor={primaryColor} 
-          backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} 
-          borderStyle={config.jackpotBorderStyle || 'classic'} 
-          slotBorderColor={secondaryColor} 
-          slotBorderWidth={2} 
-          slotBackgroundColor={secondaryColor} 
-          containerBackgroundColor="#1f2937" 
-          onStart={() => console.log('Jackpot started')} 
-          onFinish={result => {
-            console.log('Jackpot finished:', result);
-            onResult?.(result);
-          }} 
-          disabled={false} 
-        />;
+        return <Jackpot isPreview={true} buttonLabel="Lancer le Jackpot" buttonColor={primaryColor} backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} borderStyle={config.jackpotBorderStyle || 'classic'} slotBorderColor={secondaryColor} slotBorderWidth={2} slotBackgroundColor={secondaryColor} containerBackgroundColor="#1f2937" onStart={() => console.log('Jackpot started')} onFinish={result => {
+          console.log('Jackpot finished:', result);
+          onResult?.(result);
+        }} disabled={false} />;
       case 'scratch':
         return <ScratchPreview config={{
           cards: config.scratchCards?.map((card, index) => ({
@@ -252,14 +238,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>;
     }
   };
-
-  return (
-    <div style={getGameContainerStyle()} className="game-container">
+  return <div style={getGameContainerStyle()} className="game-container my-0">
       <div style={getGameContentStyle()}>
         {renderGameComponent()}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default GameRenderer;
