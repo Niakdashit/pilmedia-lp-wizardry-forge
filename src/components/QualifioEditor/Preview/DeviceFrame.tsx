@@ -24,18 +24,14 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           width: '350px',
           height: '622px',
           margin: '20px auto',
-          border: '8px solid #333',
-          borderRadius: '25px',
-          overflowY: 'hidden' as const
+          position: 'relative'
         };
       case 'tablet':
         return {
           width: '653px',
-          height: '792px', // Increased by 10% from 720px
+          height: '792px',
           margin: '20px auto',
-          border: '12px solid #333',
-          borderRadius: '20px',
-          overflowY: 'hidden' as const
+          position: 'relative'
         };
       case 'desktop':
       default:
@@ -67,25 +63,60 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     padding: '20px'
   };
 
-  return (
-    <div style={containerStyles} className="py-0 my-0 rounded">
-      <div style={getDeviceStyles()}>
-        {/* Pour mobile et tablet, contenu fixe sans scroll */}
-        {device === 'mobile' || device === 'tablet' ? (
+  // Pour mobile et tablette, utiliser une approche en couches
+  if (device === 'mobile' || device === 'tablet') {
+    const borderRadius = device === 'mobile' ? '25px' : '20px';
+    const borderWidth = device === 'mobile' ? '8px' : '12px';
+
+    return (
+      <div style={containerStyles} className="py-0 my-0 rounded">
+        <div style={getDeviceStyles()}>
+          {/* Conteneur principal avec l'image de fond qui remplit tout */}
           <div 
-            className="scrollbar-hide" 
             style={{
               width: '100%',
               height: '100%',
+              borderRadius: borderRadius,
               overflow: 'hidden',
               position: 'relative'
             }}
           >
-            {children}
+            {/* Contenu - l'image de fond sera appliquée ici via BackgroundContainer */}
+            <div 
+              style={{
+                width: '100%',
+                height: '100%',
+                position: 'relative'
+              }}
+            >
+              {children}
+            </div>
+            
+            {/* Bordures simulées par-dessus pour garder l'apparence du device */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: `-${borderWidth}`,
+                left: `-${borderWidth}`,
+                right: `-${borderWidth}`,
+                bottom: `-${borderWidth}`,
+                border: `${borderWidth} solid #333`,
+                borderRadius: borderRadius,
+                pointerEvents: 'none',
+                zIndex: 1000
+              }}
+            />
           </div>
-        ) : (
-          children
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  // Pour desktop, garder le comportement existant
+  return (
+    <div style={containerStyles} className="py-0 my-0 rounded">
+      <div style={getDeviceStyles()}>
+        {children}
       </div>
     </div>
   );

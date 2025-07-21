@@ -33,8 +33,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
   // Calculer les styles de transformation pour le centrage parfait
   const getGameContainerStyle = (): React.CSSProperties => {
-    // Pour mobile et tablette, forcer le centrage parfait
-    if (device === 'mobile' || device === 'tablet') {
+    // Pour mobile et tablette en Mode 2, centrage parfait avec zIndex pour être au-dessus de l'image
+    if ((device === 'mobile' || device === 'tablet') && !isMode1) {
       return {
         display: 'flex',
         justifyContent: 'center',
@@ -42,6 +42,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         width: '100%',
         height: '100%',
         position: 'relative',
+        zIndex: 2,
         overflow: 'hidden'
       };
     }

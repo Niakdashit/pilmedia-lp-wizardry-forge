@@ -52,12 +52,15 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       };
     }
     
-    // Pour Mode 2 sur tablette/mobile, remplir complètement l'espace disponible sans débordement
+    // Pour Mode 2 sur tablette/mobile, remplir complètement l'espace disponible
     if (!isMode1) {
       if (device === 'mobile' || device === 'tablet') {
         return {
           width: '100%',
-          height: '100%'
+          height: '100%',
+          position: 'absolute' as const,
+          top: 0,
+          left: 0
         };
       }
       return {
@@ -111,7 +114,26 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       }}
       onClick={onClick}
     >
-      {children}
+      {/* Conteneur pour centrer le contenu sur mobile/tablette */}
+      {(device === 'mobile' || device === 'tablet') && !isMode1 ? (
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1
+          }}
+        >
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 };
