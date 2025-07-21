@@ -6,17 +6,24 @@ import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
 import { transformBrandGameToCampaign } from '../utils/brandGameTransformer';
 import { useQuickCampaignStore } from '../stores/quickCampaignStore';
 import QuickCampaignStudio from '../components/QuickCampaign/NewInterface/QuickCampaignStudio';
+import SimpleQuickCampaign from '../components/QuickCampaign/Simple/SimpleQuickCampaign';
 
 const QuickCampaign: React.FC = () => {
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [useSimpleInterface, setUseSimpleInterface] = useState(false);
   const store = useQuickCampaignStore();
 
   // Initialize game type from URL parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const gameType = urlParams.get('type');
-    if (gameType && !store.selectedGameType) {
+    const simple = urlParams.get('simple') === 'true';
+    
+    if (simple) {
+      setUseSimpleInterface(true);
+      setShowWelcome(false);
+    } else if (gameType && !store.selectedGameType) {
       store.setSelectedGameType(gameType);
       setShowWelcome(false); // Skip welcome screen if game type is specified
     }
@@ -67,6 +74,24 @@ const QuickCampaign: React.FC = () => {
     setShowWelcome(false);
   };
 
+  const handleSimpleCreation = () => {
+    setUseSimpleInterface(true);
+    setShowWelcome(false);
+  };
+
+  // Show Simple Interface
+  if (useSimpleInterface) {
+    return (
+      <SimpleQuickCampaign
+        onComplete={(campaignData) => {
+          // Handle completion of simple campaign
+          console.log('Simple campaign completed:', campaignData);
+          // Could redirect to advanced editor or show success
+        }}
+      />
+    );
+  }
+
   if (showBrandGenerator) {
     return (
       <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
@@ -93,34 +118,40 @@ const QuickCampaign: React.FC = () => {
             
             <p className="text-gray-600 mb-8 leading-relaxed">
               Choisissez comment vous souhaitez créer votre campagne marketing. 
-              Générez automatiquement depuis un site web ou créez manuellement.
             </p>
 
             <div className="space-y-4">
               <button
-                onClick={() => setShowBrandGenerator(true)}
+                onClick={handleSimpleCreation}
                 className="w-full px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
               >
                 <Sparkles className="w-5 h-5" />
-                Générer depuis une URL
+                Création Simple & Rapide
                 <span className="bg-white/20 px-2 py-1 rounded-full text-xs">
-                  Nouveau
+                  Recommandé
                 </span>
+              </button>
+
+              <button
+                onClick={() => setShowBrandGenerator(true)}
+                className="w-full px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                Générer depuis une URL
               </button>
 
               <button
                 onClick={handleManualCreation}
                 className="w-full px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
               >
-                Création manuelle
+                Création manuelle avancée
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
 
             <div className="mt-8 p-4 bg-blue-50 rounded-lg">
               <p className="text-blue-800 text-sm">
-                <strong>💡 Astuce :</strong> La génération automatique analyse un site web 
-                pour extraire les couleurs, logos et créer une campagne parfaitement adaptée à la marque.
+                <strong>💡 Nouveau :</strong> La création simple vous permet d'obtenir 
+                un aperçu premium en 2 étapes seulement avec extraction automatique de votre marque.
               </p>
             </div>
           </div>
