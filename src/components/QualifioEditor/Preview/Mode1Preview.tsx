@@ -59,9 +59,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   const getHeaderHeight = () => {
     switch (device) {
       case 'mobile':
-        return '50vh';
+        return '100%'; // Remplir tout l'espace disponible
       case 'tablet':
-        return '45vh';
+        return '100%'; // Remplir tout l'espace disponible
       case 'desktop':
       default:
         return 'auto'; // Changé pour permettre la hauteur automatique basée sur l'image
@@ -70,7 +70,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
 
   return (
     <motion.div 
-      className="w-full flex flex-col relative"
+      className="w-full h-full flex flex-col relative"
       style={{ 
         backgroundColor: '#ffffff'
       }}
@@ -91,9 +91,12 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         <RulesButton />
       </motion.div>
 
-      {/* Header avec image de fond - hauteur responsive */}
+      {/* Container principal qui remplit tout l'espace */}
       <motion.div 
-        style={{ height: getHeaderHeight() }}
+        className="flex-1 relative"
+        style={{ 
+          height: device === 'mobile' || device === 'tablet' ? 'calc(100% - 56px)' : getHeaderHeight()
+        }}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, delay: 0.6 }}
@@ -104,25 +107,44 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           className="w-full h-full"
           isMode1={true}
         >
-          {null}
+          {/* Content zone intégré dans le background pour mobile/tablette */}
+          {(device === 'mobile' || device === 'tablet') ? (
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 z-10"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+            >
+              <ContentArea 
+                config={config} 
+                isMode1={true}
+                device={device}
+                wheelResult={wheelResult}
+                onWheelResultClose={handleWheelResultClose}
+                onWheelResult={handleWheelResult}
+              />
+            </motion.div>
+          ) : null}
         </BackgroundContainer>
       </motion.div>
 
-      {/* Content zone - connecté directement à la bannière */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.8 }}
-      >
-        <ContentArea 
-          config={config} 
-          isMode1={true}
-          device={device}
-          wheelResult={wheelResult}
-          onWheelResultClose={handleWheelResultClose}
-          onWheelResult={handleWheelResult}
-        />
-      </motion.div>
+      {/* Content zone séparée pour desktop */}
+      {device === 'desktop' && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        >
+          <ContentArea 
+            config={config} 
+            isMode1={true}
+            device={device}
+            wheelResult={wheelResult}
+            onWheelResultClose={handleWheelResultClose}
+            onWheelResult={handleWheelResult}
+          />
+        </motion.div>
+      )}
       
       {/* Custom editable images - positioned absolutely over the whole layout */}
       {config.design?.customImages?.map((image: any, index) => (
