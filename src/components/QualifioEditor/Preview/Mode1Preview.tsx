@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
@@ -7,7 +6,6 @@ import RulesButton from './RulesButton';
 import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
-import { gameVariants } from '../animations/variants';
 
 interface Mode1PreviewProps {
   device: DeviceType;
@@ -69,34 +67,24 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   };
 
   return (
-    <motion.div 
+    <div 
       className="w-full flex flex-col relative"
       style={{ 
         backgroundColor: '#ffffff'
       }}
       onClick={handleContainerClick}
-      variants={gameVariants.entrance}
-      initial="hidden"
-      animate="visible"
-      transition={{ duration: 0.8, delay: 0.2 }}
     >
       {/* Bande blanche pour les boutons sociaux et règlement */}
-      <motion.div 
+      <div 
         className="w-full bg-white py-2 px-4 flex justify-between items-center border-b border-gray-100"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
       >
         <SocialButtons />
         <RulesButton />
-      </motion.div>
+      </div>
 
       {/* Header avec image de fond - hauteur responsive */}
-      <motion.div 
+      <div 
         style={{ height: getHeaderHeight() }}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, delay: 0.6 }}
       >
         <BackgroundContainer
           device={device}
@@ -106,14 +94,10 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         >
           {null}
         </BackgroundContainer>
-      </motion.div>
+      </div>
 
       {/* Content zone - connecté directement à la bannière */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.8 }}
-      >
+      <div>
         <ContentArea 
           config={config} 
           isMode1={true}
@@ -122,17 +106,14 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
           onWheelResultClose={handleWheelResultClose}
           onWheelResult={handleWheelResult}
         />
-      </motion.div>
+      </div>
       
       {/* Custom editable images - positioned absolutely over the whole layout */}
-      {config.design?.customImages?.map((image: any, index) => (
-        <motion.div
+      {config.design?.customImages?.map((image: any) => (
+        <div
           key={image.id}
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ zIndex: 9 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.0 + index * 0.1 }}
         >
           <div className="relative w-full h-full pointer-events-auto">
             <EditableImage
@@ -143,18 +124,15 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
               onSelect={setSelectedImageId}
             />
           </div>
-        </motion.div>
+        </div>
       ))}
 
       {/* Custom editable texts - positioned absolutely over the whole layout */}
-      {config.customTexts?.map((text, index) => (
-        <motion.div
+      {config.customTexts?.map((text) => (
+        <div
           key={text.id}
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ zIndex: 10 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.2 + index * 0.1 }}
         >
           <div className="relative w-full h-full pointer-events-auto">
             <EditableText
@@ -167,9 +145,9 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
               triggerAutoSync={triggerAutoSync}
             />
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 };
 

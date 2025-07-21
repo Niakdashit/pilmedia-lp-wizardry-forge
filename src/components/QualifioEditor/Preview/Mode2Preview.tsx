@@ -7,7 +7,6 @@ import RulesButton from './RulesButton';
 import GameRenderer from './GameRenderer';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
-import { gameVariants } from '../animations/variants';
 
 interface Mode2PreviewProps {
   device: DeviceType;
@@ -40,18 +39,29 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
       onContainerClick();
     }
   };
+  // Obtenir la classe CSS pour le full écran selon l'appareil
+  const getFullScreenClass = () => {
+    switch (device) {
+      case 'mobile':
+      case 'tablet':
+        return 'w-full h-full min-h-screen';
+      case 'desktop':
+      default:
+        return 'overflow-hidden relative';
+    }
+  };
+
   return (
     <motion.div
-      variants={gameVariants.entrance}
-      initial="hidden"
-      animate="visible"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 1, delay: 0.2 }}
     >
       <BackgroundContainer
         device={device}
         config={config}
         onClick={handleContainerClick}
-        className="overflow-hidden relative"
+        className={getFullScreenClass()}
       >
         {/* Boutons positionnés en haut de la zone d'aperçu, en dessous de la barre de statut */}
         <motion.div 

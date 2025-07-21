@@ -52,8 +52,16 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       };
     }
     
-    // Pour Mode 2 sur tablette/mobile, remplir complètement l'espace disponible
+    // Pour Mode 2 sur tablette/mobile, remplir complètement l'espace disponible  
     if (!isMode1) {
+      if (device === 'mobile' || device === 'tablet') {
+        return {
+          width: '100%',
+          height: '100vh',
+          minHeight: '100vh',
+          minWidth: '100%'
+        };
+      }
       return {
         width: '100%',
         height: '100%',
