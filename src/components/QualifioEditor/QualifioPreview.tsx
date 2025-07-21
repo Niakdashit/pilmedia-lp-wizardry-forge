@@ -1,24 +1,18 @@
-
-import React, { useCallback } from 'react';
+import React from 'react';
 import type { DeviceType, EditorConfig, CustomText } from './QualifioEditorLayout';
+import DeviceFrame from './Preview/DeviceFrame';
 import Mode1Preview from './Preview/Mode1Preview';
+import Mode2Preview from './Preview/Mode2Preview';
 
 interface QualifioPreviewProps {
   device: DeviceType;
   config: EditorConfig;
   onConfigUpdate?: (updates: Partial<EditorConfig>) => void;
-  isRealTimeSyncEnabled?: boolean;
   isLivePreview?: boolean;
 }
 
-const QualifioPreview: React.FC<QualifioPreviewProps> = ({ 
-  device, 
-  config, 
-  onConfigUpdate,
-  isRealTimeSyncEnabled = false 
-}) => {
-
-  const handleTextUpdate = useCallback((updatedText: CustomText) => {
+const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate, isLivePreview = false }) => {
+  const handleTextUpdate = (updatedText: CustomText) => {
     if (!onConfigUpdate) return;
     
     const updatedTexts = config.customTexts?.map(text => 
@@ -26,19 +20,19 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
     ) || [];
     
     onConfigUpdate({ customTexts: updatedTexts });
-  }, [config.customTexts, onConfigUpdate]);
+  };
 
-  const handleTextDelete = useCallback((textId: string) => {
+  const handleTextDelete = (textId: string) => {
     if (!onConfigUpdate) return;
     
     const updatedTexts = config.customTexts?.filter(text => text.id !== textId) || [];
     onConfigUpdate({ customTexts: updatedTexts });
-  }, [config.customTexts, onConfigUpdate]);
+  };
 
-  const handleImageUpdate = useCallback((updatedImage: any) => {
+  const handleImageUpdate = (updatedImage: any) => {
     if (!onConfigUpdate) return;
     
-    const updatedImages = config.design?.customImages?.map((image: any) => 
+    const updatedImages = config.design?.customImages?.map(image => 
       image.id === updatedImage.id ? updatedImage : image
     ) || [];
     
@@ -48,78 +42,68 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({
         customImages: updatedImages 
       } 
     });
-  }, [config.design, onConfigUpdate]);
+  };
 
-  const handleImageDelete = useCallback((imageId: string) => {
+  const handleImageDelete = (imageId: string) => {
     if (!onConfigUpdate) return;
     
-    const updatedImages = config.design?.customImages?.filter((image: any) => image.id !== imageId) || [];
-    onConfigUpdate({ 
+    const updatedImages = config.design?.customImages?.filter(image => image.id !== imageId) || [];
+    onConfigUpdate({
       design: { 
         ...config.design, 
         customImages: updatedImages 
       } 
     });
-  }, [config.design, onConfigUpdate]);
-
-  const handleContainerClick = useCallback(() => {
-    // Empty callback for container clicks
-  }, []);
-
-  // Device-specific container styles
-  const getContainerStyles = () => {
-    switch (device) {
-      case 'mobile':
-        return {
-          width: '375px',
-          height: '812px',
-          maxWidth: '375px'
-        };
-      case 'tablet':
-        return {
-          width: '768px',
-          height: '1024px',
-          maxWidth: '768px'
-        };
-      case 'desktop':
-      default:
-        return {
-          width: '1200px',
-          height: '675px',
-          maxWidth: '1200px'
-        };
-    }
   };
 
-  const containerStyles = getContainerStyles();
+  const handleContainerClick = () => {
+    // Handle container click if needed
+  };
+
+  const fitContentDesktop = config.displayMode === 'mode1-banner-game';
 
   return (
-    <div className="flex justify-center items-start h-full py-8">
-      <div 
-        className="relative bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-gray-200"
-        style={containerStyles}
-      >
-        {/* Real-time sync indicator */}
-        {isRealTimeSyncEnabled && (
-          <div className="absolute top-2 right-2 z-50">
-            <div className="bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
-              Sync temps réel
-            </div>
+    <>
+      {config.displayMode === 'mode2-background' ? (
+        isLivePreview ? (
+          <div className="w-full h-full">
+            <Mode2Preview
+              device={device}
+              config={config}
+              onTextUpdate={handleTextUpdate}
+              onTextDelete={handleTextDelete}
+              onImageUpdate={handleImageUpdate}
+              onImageDelete={handleImageDelete}
+              onContainerClick={handleContainerClick}
+            />
           </div>
-        )}
-        
-        {/* Preview content */}
-        <Mode1Preview
-          device={device}
-          config={config}
-          onTextUpdate={handleTextUpdate}
-          onTextDelete={handleTextDelete}
-          onImageUpdate={handleImageUpdate}
-          onImageDelete={handleImageDelete}
-          onContainerClick={handleContainerClick}
-        />
-      </div>
-    </div>
+        ) : (
+          <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
+            <Mode2Preview
+              device={device}
+              config={config}
+              onTextUpdate={handleTextUpdate}
+              onTextDelete={handleTextDelete}
+              onImageUpdate={handleImageUpdate}
+              onImageDelete={handleImageDelete}
+              onContainerClick={handleContainerClick}
+            />
+          </DeviceFrame>
+        )
+      ) : (
+        <DeviceFrame device={device} fitContentDesktop={fitContentDesktop}>
+          <Mode1Preview
+            device={device}
+            config={config}
+            onTextUpdate={handleTextUpdate}
+            onTextDelete={handleTextDelete}
+            onImageUpdate={handleImageUpdate}
+            onImageDelete={handleImageDelete}
+            onContainerClick={handleContainerClick}
+          />
+        </DeviceFrame>
+      )}
+    </>
   );
 };
 
