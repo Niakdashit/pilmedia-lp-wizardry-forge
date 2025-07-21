@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Type, Bold, Italic, Underline } from 'lucide-react';
-import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+import type { EditorConfig, CustomText } from '../GameEditorLayout';
 interface TextsTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;

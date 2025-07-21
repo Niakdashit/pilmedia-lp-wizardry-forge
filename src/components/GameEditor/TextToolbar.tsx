@@ -4,7 +4,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Move, Sparkles
 } from 'lucide-react';
-import type { CustomText } from './QualifioEditorLayout';
+import type { CustomText } from './GameEditorLayout';
 import { simpleFontSizes, getFontsByCategory, fontCategories } from '../../config/fonts';
 
 interface TextToolbarProps {

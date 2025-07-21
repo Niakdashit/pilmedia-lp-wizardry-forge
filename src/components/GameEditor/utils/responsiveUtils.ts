@@ -1,5 +1,5 @@
 
-import type { CustomText } from '../QualifioEditorLayout';
+import type { CustomText } from '../GameEditorLayout';
 
 /**
  * Obtient les dimensions réelles des conteneurs pour chaque appareil

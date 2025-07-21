@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import type { EditorConfig } from '../../QualifioEditorLayout';
+import type { EditorConfig } from '../../GameEditorLayout';
 
 interface MemoryMechanicConfigProps {
   config: EditorConfig;

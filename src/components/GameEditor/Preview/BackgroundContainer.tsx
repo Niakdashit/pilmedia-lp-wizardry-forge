@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 import summerBeachImage from '../../../assets/summer-beach.jpg';
 
 interface BackgroundContainerProps {

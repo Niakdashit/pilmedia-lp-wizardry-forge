@@ -1,5 +1,5 @@
 import React from 'react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 import WheelMechanicConfig from './GameMechanics/WheelMechanicConfig';
 import QuizMechanicConfig from './GameMechanics/QuizMechanicConfig';
 import ScratchMechanicConfig from './GameMechanics/ScratchMechanicConfig';

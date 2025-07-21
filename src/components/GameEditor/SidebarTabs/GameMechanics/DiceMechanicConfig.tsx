@@ -1,5 +1,5 @@
 import React from 'react';
-import type { EditorConfig } from '../../QualifioEditorLayout';
+import type { EditorConfig } from '../../GameEditorLayout';
 
 interface DiceMechanicConfigProps {
   config: EditorConfig;

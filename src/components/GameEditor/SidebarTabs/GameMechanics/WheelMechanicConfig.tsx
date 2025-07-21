@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import BorderStyleSelector from '../../../SmartWheel/components/BorderStyleSelector';
-import type { EditorConfig } from '../../QualifioEditorLayout';
+import type { EditorConfig } from '../../GameEditorLayout';
 interface WheelMechanicConfigProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;

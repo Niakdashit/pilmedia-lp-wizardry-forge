@@ -1,6 +1,6 @@
 import React from 'react';
 import { Upload } from 'lucide-react';
-import type { EditorConfig } from '../../QualifioEditorLayout';
+import type { EditorConfig } from '../../GameEditorLayout';
 
 interface PuzzleMechanicConfigProps {
   config: EditorConfig;

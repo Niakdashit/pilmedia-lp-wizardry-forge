@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Code, Tag, Eye, Download, Upload } from 'lucide-react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 
 interface FinalizationTabProps {
   config: EditorConfig;

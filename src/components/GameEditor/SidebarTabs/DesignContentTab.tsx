@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, Type, Plus, Trash2, Palette, Monitor, Smartphone, Tablet } from 'lucide-react';
-import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+import type { EditorConfig, CustomText } from '../GameEditorLayout';
 import ColorThief from 'colorthief';
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';

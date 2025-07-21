@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileText, Plus, Trash2, GripVertical } from 'lucide-react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 interface FormTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;

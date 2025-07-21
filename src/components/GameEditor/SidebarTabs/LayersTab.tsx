@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Trash2, Lock, Unlock, Copy, Type, Image as ImageIcon, Settings } from 'lucide-react';
-import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+import type { EditorConfig, CustomText } from '../GameEditorLayout';
 import TextElementEditor from '../TextElementEditor';
 
 interface LayersTabProps {

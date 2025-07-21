@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 import DynamicContactForm from '../../forms/DynamicContactForm';
 import WheelResult from './WheelResult';
 import GameRenderer from './GameRenderer';

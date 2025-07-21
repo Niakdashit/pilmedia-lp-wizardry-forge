@@ -1,7 +1,7 @@
 
 import { useEffect, useRef } from 'react';
 import { applyResponsiveConsistency } from '../utils/responsiveUtils';
-import type { CustomText, DeviceType } from '../QualifioEditorLayout';
+import type { CustomText, DeviceType } from '../GameEditorLayout';
 
 interface UseDeviceChangeSyncProps {
   selectedDevice: DeviceType;

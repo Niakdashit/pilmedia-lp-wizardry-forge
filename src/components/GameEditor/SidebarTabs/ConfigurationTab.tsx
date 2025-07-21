@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Settings, Calendar, Globe, Hash } from 'lucide-react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 
 interface ConfigurationTabProps {
   config: EditorConfig;

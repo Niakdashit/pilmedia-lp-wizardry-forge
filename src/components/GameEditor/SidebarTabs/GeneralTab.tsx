@@ -1,6 +1,6 @@
 import React from 'react';
 import { Target, HelpCircle, Cookie, Dice6, Brain, Puzzle, FileText } from 'lucide-react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 interface GeneralTabProps {
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
-import type { EditorConfig, DeviceType } from '../QualifioEditorLayout';
+import type { EditorConfig, DeviceType } from '../GameEditorLayout';
 import GamePositionControls from '../Controls/GamePositionControls';
 import { generateBrandThemeFromFile } from '../../../utils/BrandStyleAnalyzer';
 interface GameZoneTabProps {

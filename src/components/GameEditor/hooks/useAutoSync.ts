@@ -1,7 +1,7 @@
 
 import { useCallback, useRef } from 'react';
 import { applyResponsiveConsistency } from '../utils/responsiveUtils';
-import type { CustomText } from '../QualifioEditorLayout';
+import type { CustomText } from '../GameEditorLayout';
 
 interface UseAutoSyncProps {
   onConfigUpdate: (updates: any) => void;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 import WheelContainer from './WheelContainer';
 import { Jackpot } from '../../GameTypes';
 import ScratchPreview from '../../GameTypes/ScratchPreview';

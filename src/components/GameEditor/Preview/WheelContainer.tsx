@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SmartWheel } from '../../SmartWheel';
-import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 import { createSegments } from './wheelHelpers';
 
 interface WheelContainerProps {

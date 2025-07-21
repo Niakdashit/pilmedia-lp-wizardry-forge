@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Wand2, Play, RotateCcw, Sparkles } from 'lucide-react';
-import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
+import type { EditorConfig, CustomText } from '../GameEditorLayout';
 
 interface AnimationsTabProps {
   config: EditorConfig;

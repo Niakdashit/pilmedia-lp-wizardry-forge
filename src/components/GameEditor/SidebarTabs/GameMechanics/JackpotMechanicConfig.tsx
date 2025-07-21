@@ -1,6 +1,6 @@
 import React from 'react';
 import BorderStyleSelector from '../../../SmartWheel/components/BorderStyleSelector';
-import type { EditorConfig } from '../../QualifioEditorLayout';
+import type { EditorConfig } from '../../GameEditorLayout';
 
 interface JackpotMechanicConfigProps {
   config: EditorConfig;

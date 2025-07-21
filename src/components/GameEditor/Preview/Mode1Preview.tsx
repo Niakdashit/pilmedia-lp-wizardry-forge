@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { DeviceType, EditorConfig, CustomText } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig, CustomText } from '../GameEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
 import RulesButton from './RulesButton';

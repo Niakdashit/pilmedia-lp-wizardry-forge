@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw, Shuffle, Bug } from 'lucide-react';
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 import { applyResponsiveConsistency, debugResponsiveCalculations } from '../utils/responsiveUtils';
 
 interface LayoutResponsiveTabProps {

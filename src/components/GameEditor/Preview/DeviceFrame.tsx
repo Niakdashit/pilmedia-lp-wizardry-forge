@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { DeviceType } from '../QualifioEditorLayout';
+import type { DeviceType } from '../GameEditorLayout';
 
 interface DeviceFrameProps {
   device: DeviceType;

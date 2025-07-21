@@ -1,4 +1,4 @@
-import type { EditorConfig } from '../QualifioEditorLayout';
+import type { EditorConfig } from '../GameEditorLayout';
 import { DEFAULT_WHEEL_SEGMENTS } from '../../../utils/wheelConfig';
 
 export interface WheelSegment {

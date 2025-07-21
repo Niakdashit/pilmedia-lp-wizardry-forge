@@ -3,7 +3,7 @@ import {
   Type, Bold, Italic, Underline, 
   Trash2, Copy, Settings 
 } from 'lucide-react';
-import type { CustomText } from './QualifioEditorLayout';
+import type { CustomText } from './GameEditorLayout';
 
 interface TextElementEditorProps {
   text: CustomText;
