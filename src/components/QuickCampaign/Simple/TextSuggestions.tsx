@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Plus, Sparkles, RefreshCw } from 'lucide-react';
 
 interface TextSuggestionsProps {
-  logoUrl: string;
   extractedColors: {
     primary: string;
     secondary: string;
@@ -14,7 +13,6 @@ interface TextSuggestionsProps {
 }
 
 const TextSuggestions: React.FC<TextSuggestionsProps> = ({
-  logoUrl,
   extractedColors,
   onAddText
 }) => {

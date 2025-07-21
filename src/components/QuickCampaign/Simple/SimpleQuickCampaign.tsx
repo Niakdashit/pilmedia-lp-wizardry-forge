@@ -13,8 +13,6 @@ type Step = 'upload' | 'preview';
 
 const SimpleQuickCampaign: React.FC<SimpleQuickCampaignProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<Step>('upload');
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [backgroundUrl, setBackgroundUrl] = useState<string>('');
   
@@ -26,9 +24,6 @@ const SimpleQuickCampaign: React.FC<SimpleQuickCampaignProps> = ({ onComplete })
   } = useBrandExtraction();
 
   const handleAssetsUploaded = async (logo: File | null, background: File | null) => {
-    setLogoFile(logo);
-    setBackgroundFile(background);
-    
     if (logo) {
       const logoURL = URL.createObjectURL(logo);
       setLogoUrl(logoURL);

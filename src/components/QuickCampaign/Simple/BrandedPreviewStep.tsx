@@ -137,7 +137,6 @@ const BrandedPreviewStep: React.FC<BrandedPreviewStepProps> = ({
             className="lg:col-span-1"
           >
             <TextSuggestions
-              logoUrl={logoUrl}
               extractedColors={extractedColors}
               onAddText={handleAddText}
             />

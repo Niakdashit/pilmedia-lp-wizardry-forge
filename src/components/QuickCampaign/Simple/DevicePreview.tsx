@@ -158,7 +158,7 @@ const DevicePreview: React.FC<DevicePreviewProps> = ({
                   ...text.style
                 }}
                 drag
-                onDragEnd={(event, info) => {
+                onDragEnd={(_, info) => {
                   const updatedTexts = customTexts.map(t => 
                     t.id === text.id 
                       ? {
