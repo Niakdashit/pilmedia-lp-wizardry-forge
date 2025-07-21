@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Save, ArrowLeft, ExternalLink, Copy } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { toast } from 'react-toastify';
 import QualifioSidebar from './QualifioSidebar';
@@ -172,7 +172,7 @@ export interface EditorConfig {
 }
 
 const QualifioEditorLayout: React.FC = () => {
-  const navigate = useNavigate();
+  
   const { saveCampaign, publishCampaign } = useCampaigns();
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<string>('configuration');

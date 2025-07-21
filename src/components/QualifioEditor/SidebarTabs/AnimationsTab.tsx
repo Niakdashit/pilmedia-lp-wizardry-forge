@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Wand2, Play, Pause, RotateCcw, Sparkles } from 'lucide-react';
+import { Wand2, Play, RotateCcw, Sparkles } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
 
 interface AnimationsTabProps {
@@ -15,11 +15,19 @@ const AnimationsTab: React.FC<AnimationsTabProps> = ({
   const updateTextAnimation = (textId: string, animationConfig: Partial<CustomText['animationConfig']>) => {
     const updatedTexts = config.customTexts?.map(text => {
       if (text.id === textId) {
+        const currentConfig = text.animationConfig || {
+          type: 'fadeIn' as const,
+          duration: 1000,
+          delay: 0,
+          trigger: 'onLoad' as const,
+          enabled: false
+        };
         return {
           ...text,
           animationConfig: {
-            ...text.animationConfig,
-            ...animationConfig
+            ...currentConfig,
+            ...animationConfig,
+            type: animationConfig?.type ?? currentConfig.type
           }
         };
       }

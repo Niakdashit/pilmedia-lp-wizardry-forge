@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings, Calendar, Clock, Globe, Hash } from 'lucide-react';
+import { Settings, Calendar, Globe, Hash } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface ConfigurationTabProps {

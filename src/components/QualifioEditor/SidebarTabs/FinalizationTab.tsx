@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle, Code, Tag, Eye, Download, Upload } from 'lucide-react';
+import { Code, Tag, Eye, Download, Upload } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface FinalizationTabProps {
