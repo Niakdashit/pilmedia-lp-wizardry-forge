@@ -40,13 +40,11 @@ const Step4Finalization: React.FC = () => {
       // Store the campaign data in localStorage for immediate access
       localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
       
-      // For quick preview, we'll use a special ID
-      const campaignId = 'quick-preview';
+      // Redirect to qualifio editor
+      console.log('Redirecting to qualifio editor with campaign data');
       
-      console.log('Redirecting to modern editor with campaign data');
-      
-      // Redirect to modern editor with the special preview ID
-      navigate(`/modern-campaign/${campaignId}`);
+      // Redirect to qualifio editor
+      navigate('/qualifio-editor');
       
     } catch (error) {
       console.error('Erreur lors de la redirection vers les paramètres avancés:', error);

@@ -6,12 +6,8 @@ import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Admin/AdminLayout';
 import EditorOnlyLayout from './components/Layout/EditorOnlyLayout';
 import Dashboard from './pages/Dashboard';
-import CampaignEditor from './pages/CampaignEditor';
 import Campaigns from './pages/Campaigns';
 import Gamification from './pages/Gamification';
-import ModernCampaignEditor from './pages/ModernCampaignEditor';
-import ModernEditorPage from './pages/ModernEditorPage';
-import ModernWizardPage from './pages/ModernWizardPage';
 import QuickCampaign from './pages/QuickCampaign';
 import Newsletter from './pages/Newsletter';
 import Statistics from './pages/Statistics';
@@ -55,37 +51,13 @@ function App() {
               <Route path="social" element={<Social />} />
               <Route path="studies" element={<Studies />} />
               <Route path="account" element={<Account />} />
-              <Route path="campaign-editor/:campaignId" element={<CampaignEditor />} />
+              <Route path="qualifio-editor" element={<QualifioEditor />} />
             </Route>
 
             {/* Routes éditeur en plein écran sans sidebar principale */}
             <Route path="/quick-campaign" element={
               <EditorOnlyLayout title="Création rapide de campagne" backPath="/campaigns">
                 <QuickCampaign />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-campaign/:campaignId" element={
-              <EditorOnlyLayout title="Éditeur moderne" backPath="/campaigns">
-                <ModernCampaignEditor />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-campaign/quick-preview" element={
-              <EditorOnlyLayout title="Aperçu rapide" backPath="/quick-campaign">
-                <ModernCampaignEditor />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-editor/:campaignId" element={
-              <EditorOnlyLayout title="Éditeur avancé" backPath="/campaigns">
-                <ModernEditorPage />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-wizard" element={
-              <EditorOnlyLayout title="Assistant de création" backPath="/campaigns">
-                <ModernWizardPage />
               </EditorOnlyLayout>
             } />
             
