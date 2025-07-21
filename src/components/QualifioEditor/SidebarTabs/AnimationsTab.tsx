@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Play, Pause, RotateCcw, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface AnimationsTabProps {

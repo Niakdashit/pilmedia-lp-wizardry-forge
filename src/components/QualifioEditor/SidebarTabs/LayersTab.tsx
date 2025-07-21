@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Eye, EyeOff, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { Eye, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface LayersTabProps {
@@ -99,7 +99,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
                   </button>
                   <button
                     onClick={() => moveImageLayer(image.id, 'down')}
-                    disabled={index === config.design.customImages.length - 1}
+                    disabled={index === (config.design?.customImages?.length || 0) - 1}
                     className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowDown className="w-3 h-3" />
@@ -136,7 +136,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
                   </button>
                   <button
                     onClick={() => moveTextLayer(text.id, 'down')}
-                    disabled={index === config.customTexts.length - 1}
+                    disabled={index === (config.customTexts?.length || 0) - 1}
                     className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowDown className="w-3 h-3" />

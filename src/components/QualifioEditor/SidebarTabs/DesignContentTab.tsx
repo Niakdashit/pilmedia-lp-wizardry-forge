@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plus, Upload, Type, Image } from 'lucide-react';
+import { Upload, Type, Image } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../QualifioEditorLayout';
 
 interface DesignContentTabProps {
@@ -110,7 +110,7 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Textes personnalisés</h4>
           <div className="space-y-2">
-            {config.customTexts.map((text, index) => (
+            {config.customTexts.map((text) => (
               <div key={text.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm truncate flex-1">{text.content}</span>
                 <button

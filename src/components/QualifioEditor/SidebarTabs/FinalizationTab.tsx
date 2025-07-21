@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, Link2, Code, Tag } from 'lucide-react';
+import { Calendar, Link2, Code, Tag } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface FinalizationTabProps {
