@@ -31,6 +31,12 @@ const EditableText: React.FC<EditableTextProps> = ({
     setEditContent(text.content);
   }, [text.content]);
 
+  useEffect(() => {
+    if (!isSelected) {
+      setShowToolbar(false);
+    }
+  }, [isSelected]);
+
   const handleDoubleClick = () => {
     setIsEditing(true);
     onSelect(text.id);
@@ -270,7 +276,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       </Draggable>
 
       {/* Toolbar Canva-style - Fixed above preview */}
-      {showToolbar && !isEditing && (() => {
+      {showToolbar && isSelected && !isEditing && (() => {
         const toolbarContainer = document.getElementById('text-toolbar-container');
         if (!toolbarContainer) return null;
         
