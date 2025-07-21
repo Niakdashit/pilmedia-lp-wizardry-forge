@@ -5,6 +5,7 @@ import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
+import { AnimationProvider } from './animations/AnimationProvider';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
 
@@ -243,7 +244,8 @@ const QualifioEditorLayout: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-brand-accent">
+    <AnimationProvider>
+      <div className="min-h-screen bg-brand-accent">
         {/* Header avec couleurs de marque */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -356,6 +358,7 @@ const QualifioEditorLayout: React.FC = () => {
           </div>
         </div>
       </div>
+    </AnimationProvider>
   );
 };
 

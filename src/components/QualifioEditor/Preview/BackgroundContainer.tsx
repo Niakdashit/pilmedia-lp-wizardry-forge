@@ -54,18 +54,11 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     
     // Pour Mode 2 sur tablette/mobile, remplir complètement l'espace disponible
     if (!isMode1) {
-      if (device === 'mobile' || device === 'tablet') {
-        return {
-          width: '100%',
-          height: '100%',
-          position: 'absolute' as const,
-          top: 0,
-          left: 0
-        };
-      }
       return {
         width: '100%',
-        height: '100%'
+        height: '100%',
+        minHeight: '100%',
+        minWidth: '100%'
       };
     }
     
@@ -108,32 +101,12 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
         backgroundRepeat: 'no-repeat',
         margin: 0,
         padding: 0,
-        overflow: 'hidden',
         ...getContentDimensions(),
         ...style
       }}
       onClick={onClick}
     >
-      {/* Conteneur pour centrer le contenu sur mobile/tablette */}
-      {(device === 'mobile' || device === 'tablet') && !isMode1 ? (
-        <div 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1
-          }}
-        >
-          {children}
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </div>
   );
 };

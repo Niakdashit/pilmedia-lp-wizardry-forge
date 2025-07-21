@@ -1,7 +1,5 @@
-
 import React from 'react';
 import type { DeviceType } from '../QualifioEditorLayout';
-
 interface DeviceFrameProps {
   device: DeviceType;
   children: React.ReactNode;
@@ -11,7 +9,6 @@ interface DeviceFrameProps {
    */
   fitContentDesktop?: boolean;
 }
-
 const DeviceFrame: React.FC<DeviceFrameProps> = ({
   device,
   children,
@@ -24,14 +21,18 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           width: '350px',
           height: '622px',
           margin: '20px auto',
-          position: 'relative'
+          border: '8px solid #333',
+          borderRadius: '25px',
+          overflowY: 'auto' as const
         };
       case 'tablet':
         return {
           width: '653px',
-          height: '792px',
+          height: '720px',
           margin: '20px auto',
-          position: 'relative'
+          border: '12px solid #333',
+          borderRadius: '20px',
+          overflowY: 'auto' as const
         };
       case 'desktop':
       default:
@@ -47,6 +48,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         return {
           width: '1020px',
           height: '680px',
+          // Hauteur fixe pour que l'image de fond remplisse complètement
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
@@ -54,7 +56,6 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
         };
     }
   };
-
   const containerStyles = {
     minHeight: '100vh',
     display: 'flex',
@@ -62,52 +63,18 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     justifyContent: 'center',
     padding: '20px'
   };
-
-  // Pour mobile et tablette, utiliser une approche en couches avec bordures visibles
-  if (device === 'mobile' || device === 'tablet') {
-    const borderRadius = device === 'mobile' ? '25px' : '20px';
-    const borderWidth = device === 'mobile' ? '8px' : '12px';
-
-    return (
-      <div style={containerStyles} className="py-0 my-0 rounded">
-        <div style={getDeviceStyles()}>
-          {/* Frame extérieur avec bordure visible */}
-          <div 
-            style={{
-              width: '100%',
-              height: '100%',
-              border: `${borderWidth} solid #333`,
-              borderRadius: borderRadius,
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            {/* Conteneur intérieur pour le contenu */}
-            <div 
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: `calc(${borderRadius} - ${borderWidth})`,
-                overflow: 'auto',
-                position: 'relative'
-              }}
-            >
-              {children}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Pour desktop, garder le comportement existant
-  return (
-    <div style={containerStyles} className="py-0 my-0 rounded">
+  return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
-        {children}
+        {/* Pour mobile et tablet, contenu fixe sans scroll */}
+        {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto',
+        position: 'relative'
+      }}>
+            {children}
+          </div> : children}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DeviceFrame;
