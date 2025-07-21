@@ -12,6 +12,16 @@ const QuickCampaign: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const store = useQuickCampaignStore();
 
+  // Initialize game type from URL parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameType = urlParams.get('type');
+    if (gameType && !store.selectedGameType) {
+      store.setSelectedGameType(gameType);
+      setShowWelcome(false); // Skip welcome screen if game type is specified
+    }
+  }, [store]);
+
   // Check for saved draft
   useEffect(() => {
     const savedDraft = localStorage.getItem('quickCampaignDraft');
