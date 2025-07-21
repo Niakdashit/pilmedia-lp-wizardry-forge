@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { DeviceType } from '../QualifioEditorLayout';
 interface DeviceFrameProps {
@@ -23,7 +24,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '8px solid #333',
           borderRadius: '25px',
-          overflowY: 'auto' as const
+          overflowY: 'auto' as const,
+          display: 'flex',
+          flexDirection: 'column' as const
         };
       case 'tablet':
         return {
@@ -32,7 +35,9 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           margin: '20px auto',
           border: '12px solid #333',
           borderRadius: '20px',
-          overflowY: 'auto' as const
+          overflowY: 'auto' as const,
+          display: 'flex',
+          flexDirection: 'column' as const
         };
       case 'desktop':
       default:
@@ -65,10 +70,13 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
   };
   return <div style={containerStyles} className="py-0 my-0 rounded">
       <div style={getDeviceStyles()}>
-        {/* Pour mobile et tablet, contenu fixe sans scroll */}
+        {/* Pour mobile et tablet, contenu qui prend toute la hauteur */}
         {device === 'mobile' || device === 'tablet' ? <div className="scrollbar-hide" style={{
         width: '100%',
         height: '100%',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column' as const,
         overflowY: 'auto',
         position: 'relative'
       }}>
