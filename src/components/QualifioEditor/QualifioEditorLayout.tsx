@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
+import { useAutoSync } from './hooks/useAutoSync';
+import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
+import { applyResponsiveConsistency } from './utils/responsiveUtils';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -154,6 +157,9 @@ const QualifioEditorLayout: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<string>('configuration');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState<boolean>(true);
+  const [isRealTimeSyncEnabled, setIsRealTimeSyncEnabled] = useState<boolean>(false);
+  
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
     height: 1200,
@@ -199,11 +205,60 @@ const QualifioEditorLayout: React.FC = () => {
     }
   });
 
+  // Auto-sync hook for real-time synchronization
+  const { triggerSync } = useAutoSync({
+    isEnabled: isRealTimeSyncEnabled,
+    customTexts: config.customTexts || [],
+    onUpdate: (synchronizedTexts) => {
+      setConfig(prev => ({
+        ...prev,
+        customTexts: synchronizedTexts
+      }));
+    },
+    baseDevice: 'desktop',
+    debounceMs: 500
+  });
+
+  // Handle manual auto-sync trigger
+  const handleAutoSync = useCallback((baseDevice: DeviceType = 'desktop') => {
+    if (config.customTexts && config.customTexts.length > 0) {
+      console.log(`🔄 Manual auto-sync from ${baseDevice}`);
+      const synchronizedTexts = applyResponsiveConsistency(config.customTexts, baseDevice);
+      setConfig(prev => ({
+        ...prev,
+        customTexts: synchronizedTexts
+      }));
+    }
+  }, [config.customTexts]);
+
+  // Device change auto-sync
+  useDeviceChangeSync({
+    currentDevice: selectedDevice,
+    isAutoSyncEnabled,
+    customTexts: config.customTexts || [],
+    onAutoSync: handleAutoSync
+  });
+
   const updateConfig = (updates: Partial<EditorConfig>) => {
     const newConfig = { ...config, ...updates };
     setConfig(newConfig);
+    
+    // Trigger real-time sync if enabled and custom texts were updated
+    if (isRealTimeSyncEnabled && updates.customTexts) {
+      triggerSync();
+    }
+    
     // Synchroniser avec l'aperçu live
     localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
+  };
+
+  // Pass auto-sync settings to content panel
+  const autoSyncSettings = {
+    isAutoSyncEnabled,
+    setIsAutoSyncEnabled,
+    isRealTimeSyncEnabled,
+    setIsRealTimeSyncEnabled,
+    onManualSync: handleAutoSync
   };
 
   return (
@@ -220,6 +275,11 @@ const QualifioEditorLayout: React.FC = () => {
               Retour
             </Link>
             <h1 className="text-xl font-semibold text-brand-primary">Éditeur Qualifio</h1>
+            {isAutoSyncEnabled && (
+              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                Auto-sync ON
+              </span>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
@@ -298,6 +358,7 @@ const QualifioEditorLayout: React.FC = () => {
             activeTab={activeTab}
             config={config}
             onConfigUpdate={updateConfig}
+            autoSyncSettings={autoSyncSettings}
           />
         )}
         
@@ -313,6 +374,7 @@ const QualifioEditorLayout: React.FC = () => {
               device={selectedDevice}
               config={config}
               onConfigUpdate={updateConfig}
+              isRealTimeSyncEnabled={isRealTimeSyncEnabled}
             />
           </div>
         </div>

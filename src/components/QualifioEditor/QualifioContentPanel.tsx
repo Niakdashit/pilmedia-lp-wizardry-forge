@@ -1,49 +1,62 @@
 
 import React from 'react';
-import type { EditorConfig } from './QualifioEditorLayout';
+import GeneralTab from './SidebarTabs/GeneralTab';
+import DesignTab from './SidebarTabs/DesignTab';
+import TextTab from './SidebarTabs/TextTab';
 import ConfigurationTab from './SidebarTabs/ConfigurationTab';
-import DesignContentTab from './SidebarTabs/DesignContentTab';
-import LayersTab from './SidebarTabs/LayersTab';
+import FormTab from './SidebarTabs/FormTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
-import FinalizationTab from './SidebarTabs/FinalizationTab';
+import AdvancedTab from './SidebarTabs/AdvancedTab';
+import type { EditorConfig } from './QualifioEditorLayout';
 
 interface QualifioContentPanelProps {
   activeTab: string;
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
+  autoSyncSettings?: {
+    isAutoSyncEnabled: boolean;
+    setIsAutoSyncEnabled: (enabled: boolean) => void;
+    isRealTimeSyncEnabled: boolean;
+    setIsRealTimeSyncEnabled: (enabled: boolean) => void;
+    onManualSync: (baseDevice?: 'desktop' | 'tablet' | 'mobile') => void;
+  };
 }
 
-const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
-  activeTab,
-  config,
-  onConfigUpdate
+const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({ 
+  activeTab, 
+  config, 
+  onConfigUpdate,
+  autoSyncSettings
 }) => {
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'general':
+        return <GeneralTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'design':
+        return <DesignTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'text':
+        return <TextTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'configuration':
         return <ConfigurationTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'design':
-        return <DesignContentTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'layers':
-        return <LayersTab config={config} onConfigUpdate={onConfigUpdate} />;
+      case 'form':
+        return <FormTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'layout':
-        return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} />;
-      case 'finalization':
-        return <FinalizationTab config={config} onConfigUpdate={onConfigUpdate} />;
-      default:
         return (
-          <div className="p-6 text-center text-gray-500">
-            Sélectionnez un onglet pour commencer la configuration.
-          </div>
+          <LayoutResponsiveTab 
+            config={config} 
+            onConfigUpdate={onConfigUpdate}
+            autoSyncSettings={autoSyncSettings}
+          />
         );
+      case 'advanced':
+        return <AdvancedTab config={config} onConfigUpdate={onConfigUpdate} />;
+      default:
+        return <GeneralTab config={config} onConfigUpdate={onConfigUpdate} />;
     }
   };
 
   return (
-    <div 
-      className="w-96 bg-white border-r border-gray-200 overflow-y-auto" 
-      style={{ height: 'calc(100vh - 88px)' }}
-    >
+    <div className="w-[360px] h-screen overflow-y-auto bg-white border-r border-gray-200">
       {renderTabContent()}
     </div>
   );
