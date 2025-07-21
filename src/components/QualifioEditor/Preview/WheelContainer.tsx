@@ -69,8 +69,8 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     <div className="flex items-center justify-center w-full" style={{ height: 'auto', minHeight: 'fit-content' }}>
       {device === 'mobile' ? (
         <motion.div
-          initial={{ y: "54%" }}
-          animate={{ y: isInteracting ? "30%" : "54%" }}
+          initial={{ y: "34%" }}
+          animate={{ y: isInteracting ? "30%" : "34%" }}
           transition={{ 
             type: "spring", 
             stiffness: 300, 
