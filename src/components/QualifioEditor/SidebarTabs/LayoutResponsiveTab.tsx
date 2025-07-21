@@ -144,13 +144,19 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
         </h4>
         
         <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-xs text-yellow-800">
+              💡 <strong>Astuce :</strong> Positionnez vos textes sur un appareil, puis cliquez sur le bouton "Sync" correspondant pour adapter automatiquement sur les autres.
+            </p>
+          </div>
           <p className="text-xs text-sidebar-text-muted">
-            Synchronisez automatiquement les positions et tailles des textes entre tous les appareils
+            Les positions et tailles sont calculées proportionnellement selon les dimensions réelles de chaque appareil.
           </p>
           <div className="grid grid-cols-1 gap-2">
             <button
               onClick={() => synchronizeTextsAcrossDevices('desktop')}
               className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              title="Applique les positions desktop aux autres appareils"
             >
               <Monitor className="w-3 h-3" />
               Sync depuis Desktop
@@ -158,6 +164,7 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
             <button
               onClick={() => synchronizeTextsAcrossDevices('tablet')}
               className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              title="Applique les positions tablette aux autres appareils"
             >
               <Tablet className="w-3 h-3" />
               Sync depuis Tablette
@@ -165,6 +172,7 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
             <button
               onClick={() => synchronizeTextsAcrossDevices('mobile')}
               className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              title="Applique les positions mobile aux autres appareils"
             >
               <Smartphone className="w-3 h-3" />
               Sync depuis Mobile

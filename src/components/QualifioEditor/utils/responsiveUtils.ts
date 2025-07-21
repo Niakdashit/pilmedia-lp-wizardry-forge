@@ -1,17 +1,30 @@
 import type { CustomText } from '../QualifioEditorLayout';
 
-// Dimensions des conteneurs par appareil (basées sur les contraintes Qualifio)
-const DEVICE_CONTAINERS = {
-  desktop: { width: 1200, height: 800 },
-  tablet: { width: 850, height: 1200 },
-  mobile: { width: 520, height: 1100 }
-};
-
-// Échelles de police pour maintenir la lisibilité
-const FONT_SCALES = {
-  desktop: 1.0,
-  tablet: 0.9,
-  mobile: 0.8
+/**
+ * Obtient les dimensions réelles du conteneur actuel
+ */
+const getContainerDimensions = (device: 'desktop' | 'tablet' | 'mobile') => {
+  // Essayer de trouver le conteneur de prévisualisation actuel
+  const previewContainer = document.querySelector('[class*="preview"]') || 
+                           document.querySelector('.relative.bg-center') ||
+                           document.querySelector('div[style*="backgroundImage"]');
+  
+  if (previewContainer) {
+    const rect = previewContainer.getBoundingClientRect();
+    return {
+      width: rect.width || 800,
+      height: rect.height || 600
+    };
+  }
+  
+  // Valeurs par défaut basées sur les dimensions observées dans l'interface
+  const defaults = {
+    desktop: { width: 1200, height: 675 }, // Ratio 16:9 pour desktop
+    tablet: { width: 600, height: 800 },   // Format portrait tablette
+    mobile: { width: 400, height: 700 }    // Format portrait mobile
+  };
+  
+  return defaults[device];
 };
 
 /**
@@ -22,8 +35,8 @@ export const calculateResponsiveProperties = (
   targetDevice: 'desktop' | 'tablet' | 'mobile',
   baseDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ) => {
-  const baseContainer = DEVICE_CONTAINERS[baseDevice];
-  const targetContainer = DEVICE_CONTAINERS[targetDevice];
+  const baseContainer = getContainerDimensions(baseDevice);
+  const targetContainer = getContainerDimensions(targetDevice);
   
   // Calcul des positions proportionnelles
   const xRatio = baseText.x / baseContainer.width;
@@ -32,14 +45,20 @@ export const calculateResponsiveProperties = (
   const newX = Math.round(xRatio * targetContainer.width);
   const newY = Math.round(yRatio * targetContainer.height);
   
-  // Échelle de la police
-  const fontScale = FONT_SCALES[targetDevice] / FONT_SCALES[baseDevice];
+  // Échelles de police adaptées aux tailles d'écran
+  const fontScales = {
+    desktop: 1.0,
+    tablet: 0.85,
+    mobile: 0.75
+  };
+  
+  const fontScale = fontScales[targetDevice] / fontScales[baseDevice];
   const newFontSize = Math.round(baseText.fontSize * fontScale);
   
-  // Échelle des dimensions (si elles existent)
+  // Échelle des dimensions
   const widthRatio = targetContainer.width / baseContainer.width;
   const heightRatio = targetContainer.height / baseContainer.height;
-  const avgRatio = (widthRatio + heightRatio) / 2;
+  const avgRatio = Math.min(widthRatio, heightRatio); // Utiliser le plus petit ratio pour éviter le débordement
   
   return {
     x: newX,
