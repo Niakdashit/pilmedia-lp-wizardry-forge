@@ -171,6 +171,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     fontWeight: text.fontWeight,
     fontStyle: text.fontStyle,
     textDecoration: text.textDecoration,
+    textAlign: text.textAlign as any,
     backgroundColor: text.backgroundColor || 'transparent',
     width: text.width ? `${text.width}px` : 'auto',
     height: text.height ? `${text.height}px` : 'auto',
@@ -225,9 +226,25 @@ const EditableText: React.FC<EditableTextProps> = ({
                 padding: '0'
               }}
             />
-          ) : (
-            <span style={{ whiteSpace: 'pre-wrap' }}>{text.content}</span>
-          )}
+           ) : (
+             <div style={{ whiteSpace: 'pre-wrap' }}>
+               {text.listType === 'bullet' ? (
+                 <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
+                   {text.content.split('\n').map((line, index) => (
+                     <li key={index}>{line}</li>
+                   ))}
+                 </ul>
+               ) : text.listType === 'numbered' ? (
+                 <ol style={{ listStyleType: 'decimal', paddingLeft: '20px', margin: 0 }}>
+                   {text.content.split('\n').map((line, index) => (
+                     <li key={index}>{line}</li>
+                   ))}
+                 </ol>
+               ) : (
+                 text.content
+               )}
+             </div>
+           )}
           
           {/* Poignées de redimensionnement */}
           {isSelected && !isEditing && (
