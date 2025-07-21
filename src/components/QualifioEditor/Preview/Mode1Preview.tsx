@@ -132,6 +132,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
               onDelete={onTextDelete}
               isSelected={selectedTextId === text.id}
               onSelect={setSelectedTextId}
+              device={device}
             />
           </div>
         </div>

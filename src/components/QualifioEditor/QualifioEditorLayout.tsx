@@ -26,6 +26,29 @@ export interface CustomText {
   backgroundColor?: string;
   width?: number;
   height?: number;
+  deviceConfig?: {
+    mobile?: {
+      x?: number;
+      y?: number;
+      fontSize?: number;
+      width?: number;
+      height?: number;
+    };
+    tablet?: {
+      x?: number;
+      y?: number;
+      fontSize?: number;
+      width?: number;
+      height?: number;
+    };
+    desktop?: {
+      x?: number;
+      y?: number;
+      fontSize?: number;
+      width?: number;
+      height?: number;
+    };
+  };
 }
 
 export interface DeviceConfig {

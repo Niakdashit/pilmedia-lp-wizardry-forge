@@ -88,6 +88,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
               onDelete={onTextDelete}
               isSelected={selectedTextId === text.id}
               onSelect={setSelectedTextId}
+              device={device}
             />
           </div>
         </div>

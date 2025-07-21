@@ -11,6 +11,7 @@ interface EditableTextProps {
   onDelete: (id: string) => void;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  device?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const EditableText: React.FC<EditableTextProps> = ({ 
@@ -18,7 +19,8 @@ const EditableText: React.FC<EditableTextProps> = ({
   onUpdate, 
   onDelete, 
   isSelected, 
-  onSelect 
+  onSelect,
+  device = 'desktop'
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(text.content);
@@ -78,11 +80,23 @@ const EditableText: React.FC<EditableTextProps> = ({
 
   const handleDrag = (_: any, data: any) => {
     setShowToolbar(false);
-    onUpdate({
+    
+    // Mettre à jour la position pour l'appareil actuel
+    const updatedText = {
       ...text,
       x: data.x,
-      y: data.y
-    });
+      y: data.y,
+      deviceConfig: {
+        ...text.deviceConfig,
+        [device]: {
+          ...text.deviceConfig?.[device],
+          x: data.x,
+          y: data.y
+        }
+      }
+    };
+    
+    onUpdate(updatedText);
   };
 
   const handleResize = (e: React.MouseEvent, direction: string) => {
@@ -131,14 +145,28 @@ const EditableText: React.FC<EditableTextProps> = ({
       
       const newFontSize = Math.max(8, Math.min(128, Math.round(startFontSize * scaleRatio)));
       
-      onUpdate({
+      // Mettre à jour les dimensions pour l'appareil actuel
+      const updatedText = {
         ...text,
         width: newWidth,
         height: newHeight,
         x: newX,
         y: newY,
-        fontSize: newFontSize
-      });
+        fontSize: newFontSize,
+        deviceConfig: {
+          ...text.deviceConfig,
+          [device]: {
+            ...text.deviceConfig?.[device],
+            x: newX,
+            y: newY,
+            width: newWidth,
+            height: newHeight,
+            fontSize: newFontSize
+          }
+        }
+      };
+      
+      onUpdate(updatedText);
     };
     
     const handleMouseUp = () => {
@@ -164,8 +192,20 @@ const EditableText: React.FC<EditableTextProps> = ({
     setShowToolbar(false);
   };
 
+  // Obtenir les valeurs actuelles en fonction de l'appareil
+  const getDeviceValue = (baseValue: any, deviceConfigValue: any) => {
+    return deviceConfigValue !== undefined ? deviceConfigValue : baseValue;
+  };
+
+  const deviceConfig = text.deviceConfig?.[device];
+  const currentX = getDeviceValue(text.x, deviceConfig?.x);
+  const currentY = getDeviceValue(text.y, deviceConfig?.y);
+  const currentWidth = getDeviceValue(text.width, deviceConfig?.width);
+  const currentHeight = getDeviceValue(text.height, deviceConfig?.height);
+  const currentFontSize = getDeviceValue(text.fontSize, deviceConfig?.fontSize);
+
   const textStyle: React.CSSProperties = {
-    fontSize: `${text.fontSize}px`,
+    fontSize: `${currentFontSize}px`,
     fontFamily: text.fontFamily,
     color: text.color,
     fontWeight: text.fontWeight,
@@ -173,8 +213,8 @@ const EditableText: React.FC<EditableTextProps> = ({
     textDecoration: text.textDecoration,
     textAlign: text.textAlign as any,
     backgroundColor: text.backgroundColor || 'transparent',
-    width: text.width ? `${text.width}px` : 'auto',
-    height: text.height ? `${text.height}px` : 'auto',
+    width: currentWidth ? `${currentWidth}px` : 'auto',
+    height: currentHeight ? `${currentHeight}px` : 'auto',
     minWidth: '50px',
     minHeight: '20px',
     padding: '8px',
@@ -192,7 +232,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   return (
     <>
       <Draggable
-        position={{ x: text.x, y: text.y }}
+        position={{ x: currentX, y: currentY }}
         onDrag={handleDrag}
         disabled={isEditing || isResizing}
         bounds="parent"

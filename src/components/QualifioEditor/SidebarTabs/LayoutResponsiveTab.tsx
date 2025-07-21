@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw } from 'lucide-react';
+import { Layout, Smartphone, Tablet, Monitor, Move, RotateCcw, Shuffle } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
+import { applyResponsiveConsistency } from '../utils/responsiveUtils';
 
 interface LayoutResponsiveTabProps {
   config: EditorConfig;
@@ -35,6 +36,15 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
         }
       }
     });
+  };
+
+  const synchronizeTextsAcrossDevices = (baseDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop') => {
+    if (config.customTexts && config.customTexts.length > 0) {
+      const synchronizedTexts = applyResponsiveConsistency(config.customTexts, baseDevice);
+      onConfigUpdate({
+        customTexts: synchronizedTexts
+      });
+    }
   };
 
   return (
@@ -122,6 +132,43 @@ const LayoutResponsiveTab: React.FC<LayoutResponsiveTabProps> = ({
               onChange={e => onConfigUpdate({ centerGameZone: e.target.checked })}
               className="rounded"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Cohérence Responsive */}
+      <div className="premium-card mx-[30px]">
+        <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
+          <Shuffle className="w-4 h-4" />
+          Cohérence entre appareils
+        </h4>
+        
+        <div className="space-y-4">
+          <p className="text-xs text-sidebar-text-muted">
+            Synchronisez automatiquement les positions et tailles des textes entre tous les appareils
+          </p>
+          <div className="grid grid-cols-1 gap-2">
+            <button
+              onClick={() => synchronizeTextsAcrossDevices('desktop')}
+              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              <Monitor className="w-3 h-3" />
+              Sync depuis Desktop
+            </button>
+            <button
+              onClick={() => synchronizeTextsAcrossDevices('tablet')}
+              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              <Tablet className="w-3 h-3" />
+              Sync depuis Tablette
+            </button>
+            <button
+              onClick={() => synchronizeTextsAcrossDevices('mobile')}
+              className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              <Smartphone className="w-3 h-3" />
+              Sync depuis Mobile
+            </button>
           </div>
         </div>
       </div>
