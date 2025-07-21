@@ -32,6 +32,8 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
       style={{
         minWidth: '600px'
       }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Font Family */}
       <select
