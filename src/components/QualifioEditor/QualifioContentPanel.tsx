@@ -5,7 +5,6 @@ import ConfigurationTab from './SidebarTabs/ConfigurationTab';
 import DesignContentTab from './SidebarTabs/DesignContentTab';
 import LayersTab from './SidebarTabs/LayersTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
-import AnimationsTab from './SidebarTabs/AnimationsTab';
 import FinalizationTab from './SidebarTabs/FinalizationTab';
 
 interface QualifioContentPanelProps {
@@ -31,8 +30,6 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
         return <LayersTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'layout':
         return <LayoutResponsiveTab config={config} onConfigUpdate={onConfigUpdate} triggerAutoSync={triggerAutoSync} />;
-      case 'animations':
-        return <AnimationsTab config={config} onConfigUpdate={onConfigUpdate} />;
       case 'finalization':
         return <FinalizationTab config={config} onConfigUpdate={onConfigUpdate} />;
       default:

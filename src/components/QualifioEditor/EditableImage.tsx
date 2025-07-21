@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Draggable from 'react-draggable';
 import ImageToolbar from './ImageToolbar';
-import AnimatedImage from './animations/AnimatedImage';
 
 interface EditableImageProps {
   image: any;
@@ -296,88 +295,82 @@ const EditableImage: React.FC<EditableImageProps> = ({
           ref={dragRef}
           style={containerStyle}
         >
-          <AnimatedImage
-            imageId={image.id}
-            animationConfig={image.animationConfig}
-            style={{ width: '100%', height: '100%' }}
+          <div
+            ref={imageRef}
+            onClick={handleClick}
+            className="group relative w-full h-full"
+            style={{ pointerEvents: 'auto' }}
           >
-            <div
-              ref={imageRef}
-              onClick={handleClick}
-              className="group relative w-full h-full"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <img
-                src={image.src}
-                alt="Image personnalisée"
-                style={imageStyle}
-                draggable={false}
-                onError={(e) => {
-                  console.warn('Image failed to load:', image.src);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              
-              {/* Poignées de redimensionnement */}
-              {isSelected && !isDragging && (
-                <>
-                  {/* Coins */}
-                  <div
-                    className={getResizeHandleStyle('top-left')}
-                    onMouseDown={(e) => handleResizeStart(e, 'top-left')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  <div
-                    className={getResizeHandleStyle('top-right')}
-                    onMouseDown={(e) => handleResizeStart(e, 'top-right')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  <div
-                    className={getResizeHandleStyle('bottom-left')}
-                    onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  <div
-                    className={getResizeHandleStyle('bottom-right')}
-                    onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  
-                  {/* Milieux des côtés */}
-                  <div
-                    className={getResizeHandleStyle('top')}
-                    onMouseDown={(e) => handleResizeStart(e, 'top')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  <div
-                    className={getResizeHandleStyle('bottom')}
-                    onMouseDown={(e) => handleResizeStart(e, 'bottom')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  <div
-                    className={getResizeHandleStyle('left')}
-                    onMouseDown={(e) => handleResizeStart(e, 'left')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
-                  <div
-                    className={getResizeHandleStyle('right')}
-                    onMouseDown={(e) => handleResizeStart(e, 'right')}
-                    style={{ zIndex: 1001, pointerEvents: 'auto' }}
-                  />
+            <img
+              src={image.src}
+              alt="Image personnalisée"
+              style={imageStyle}
+              draggable={false}
+              onError={(e) => {
+                console.warn('Image failed to load:', image.src);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            
+            {/* Poignées de redimensionnement */}
+            {isSelected && !isDragging && (
+              <>
+                {/* Coins */}
+                <div
+                  className={getResizeHandleStyle('top-left')}
+                  onMouseDown={(e) => handleResizeStart(e, 'top-left')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('top-right')}
+                  onMouseDown={(e) => handleResizeStart(e, 'top-right')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('bottom-left')}
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('bottom-right')}
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                
+                {/* Milieux des côtés */}
+                <div
+                  className={getResizeHandleStyle('top')}
+                  onMouseDown={(e) => handleResizeStart(e, 'top')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('bottom')}
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('left')}
+                  onMouseDown={(e) => handleResizeStart(e, 'left')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
+                <div
+                  className={getResizeHandleStyle('right')}
+                  onMouseDown={(e) => handleResizeStart(e, 'right')}
+                  style={{ zIndex: 1001, pointerEvents: 'auto' }}
+                />
 
-                  {/* Indicateur pour maintenir les proportions */}
-                  {isResizing && (
-                    <div 
-                      className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
-                      style={{ zIndex: 1002 }}
-                    >
-                      Maintenez Shift pour garder les proportions
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </AnimatedImage>
+                {/* Indicateur pour maintenir les proportions */}
+                {isResizing && (
+                  <div 
+                    className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap"
+                    style={{ zIndex: 1002 }}
+                  >
+                    Maintenez Shift pour garder les proportions
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </Draggable>
 

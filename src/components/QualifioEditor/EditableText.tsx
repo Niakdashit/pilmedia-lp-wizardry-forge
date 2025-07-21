@@ -1,9 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Draggable from 'react-draggable';
 import type { CustomText } from './QualifioEditorLayout';
 import TextToolbar from './TextToolbar';
-import AnimatedText from './animations/AnimatedText';
 
 interface EditableTextProps {
   text: CustomText;
@@ -262,52 +262,46 @@ const EditableText: React.FC<EditableTextProps> = ({
           onDoubleClick={handleDoubleClick}
           className="group"
         >
-          <AnimatedText
-            text={text}
-            animationConfig={text.animationConfig}
-            style={{ width: '100%', height: '100%' }}
-          >
-            {isEditing ? (
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
-                autoFocus
-                className="w-full h-full resize-none"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: 'inherit',
-                  fontFamily: 'inherit',
-                  color: 'inherit',
-                  fontWeight: 'inherit',
-                  fontStyle: 'inherit',
-                  textDecoration: 'inherit',
-                  padding: '0'
-                }}
-              />
-            ) : (
-              <div style={{ whiteSpace: 'pre-wrap' }}>
-                {text.listType === 'bullet' ? (
-                  <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
-                    {text.content.split('\n').map((line, index) => (
-                      <li key={index}>{line}</li>
-                    ))}
-                  </ul>
-                ) : text.listType === 'numbered' ? (
-                  <ol style={{ listStyleType: 'decimal', paddingLeft: '20px', margin: 0 }}>
-                    {text.content.split('\n').map((line, index) => (
-                      <li key={index}>{line}</li>
-                    ))}
-                  </ol>
-                ) : (
-                  text.content
-                )}
-              </div>
-            )}
-          </AnimatedText>
+          {isEditing ? (
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+              autoFocus
+              className="w-full h-full resize-none"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                fontSize: 'inherit',
+                fontFamily: 'inherit',
+                color: 'inherit',
+                fontWeight: 'inherit',
+                fontStyle: 'inherit',
+                textDecoration: 'inherit',
+                padding: '0'
+              }}
+            />
+           ) : (
+             <div style={{ whiteSpace: 'pre-wrap' }}>
+               {text.listType === 'bullet' ? (
+                 <ul style={{ listStyleType: 'disc', paddingLeft: '20px', margin: 0 }}>
+                   {text.content.split('\n').map((line, index) => (
+                     <li key={index}>{line}</li>
+                   ))}
+                 </ul>
+               ) : text.listType === 'numbered' ? (
+                 <ol style={{ listStyleType: 'decimal', paddingLeft: '20px', margin: 0 }}>
+                   {text.content.split('\n').map((line, index) => (
+                     <li key={index}>{line}</li>
+                   ))}
+                 </ol>
+               ) : (
+                 text.content
+               )}
+             </div>
+           )}
           
           {/* Poignées de redimensionnement */}
           {isSelected && !isEditing && (

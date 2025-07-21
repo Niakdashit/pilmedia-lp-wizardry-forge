@@ -5,7 +5,6 @@ import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
-import { AnimationProvider } from './animations/AnimationProvider';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
 
@@ -51,18 +50,6 @@ export interface CustomText {
       width?: number;
       height?: number;
     };
-  };
-  // Nouvelles propriétés d'animation
-  animationConfig?: {
-    type: string;
-    duration: number;
-    delay: number;
-    trigger: string;
-    enabled: boolean;
-    typewriterSpeed?: number;
-    repeat?: number;
-    repeatType?: 'loop' | 'reverse' | 'mirror';
-    ease?: string;
   };
 }
 
@@ -244,121 +231,119 @@ const QualifioEditorLayout: React.FC = () => {
   });
 
   return (
-    <AnimationProvider>
-      <div className="min-h-screen bg-brand-accent">
-        {/* Header avec couleurs de marque */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link 
-                to="/gamification"
-                className="flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Retour
-              </Link>
-              <h1 className="text-xl font-semibold text-brand-primary">Éditeur Qualifio</h1>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <DeviceSelector 
-                selectedDevice={selectedDevice}
-                onDeviceChange={setSelectedDevice}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const encoded = encodeURIComponent(
-                      JSON.stringify({
-                        width: config.width,
-                        height: config.height,
-                        anchor: config.anchor,
-                        gameType: config.gameType,
-                        gameMode: config.gameMode,
-                        displayMode: config.displayMode,
-                        bannerImage: config.bannerImage,
-                        bannerDescription: config.bannerDescription,
-                        bannerLink: config.bannerLink,
-                        backgroundColor: config.backgroundColor,
-                        outlineColor: config.outlineColor,
-                        borderStyle: config.borderStyle,
-                        jackpotBorderStyle: config.jackpotBorderStyle,
-                        storyText: config.storyText,
-                        publisherLink: config.publisherLink,
-                        prizeText: config.prizeText,
-                        customTexts: config.customTexts,
-                        centerText: config.centerText,
-                        centerForm: config.centerForm,
-                        centerGameZone: config.centerGameZone,
-                        participateButtonText: config.participateButtonText,
-                        participateButtonColor: config.participateButtonColor,
-                        participateButtonTextColor: config.participateButtonTextColor,
-                        footerText: config.footerText,
-                        footerColor: config.footerColor,
-                        customCSS: config.customCSS,
-                        customJS: config.customJS,
-                        trackingTags: config.trackingTags,
-                        deviceConfig: config.deviceConfig
-                      })
-                    );
-                    localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
-                    window.open(
-                      `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
-                      '_blank'
-                    );
-                  }}
-                  className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
-                >
-                  Aperçu live
-                </button>
-                <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
-                  <Save className="w-4 h-4" />
-                  Sauvegarder & quitter
-                </button>
-              </div>
-            </div>
+    <div className="min-h-screen bg-brand-accent">
+      {/* Header avec couleurs de marque */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/gamification"
+              className="flex items-center gap-2 text-gray-600 hover:text-brand-primary transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Retour
+            </Link>
+            <h1 className="text-xl font-semibold text-brand-primary">Éditeur Qualifio</h1>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex">
-          {/* Sidebar */}
-          <QualifioSidebar 
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            isCollapsed={isSidebarCollapsed}
-            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          />
           
-          {/* Content Panel */}
-          {!isSidebarCollapsed && (
-            <QualifioContentPanel 
-              activeTab={activeTab}
-              config={config}
-              onConfigUpdate={updateConfig}
-              triggerAutoSync={triggerAutoSync}
+          <div className="flex items-center gap-4">
+            <DeviceSelector 
+              selectedDevice={selectedDevice}
+              onDeviceChange={setSelectedDevice}
             />
-          )}
-          
-          {/* Preview Area */}
-          <div className="flex-1 relative">
-            <div id="text-toolbar-container" className="absolute top-8 left-1/2 transform -translate-x-1/2 z-50">
-              {/* Toolbar will be rendered here as overlay only when there's an active text */}
-            </div>
-            
-            {/* Preview */}
-            <div className="h-full p-6">
-            <QualifioPreview 
-              device={selectedDevice}
-              config={config}
-              onConfigUpdate={updateConfig}
-              triggerAutoSync={() => triggerAutoSync(config.customTexts || [])}
-            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const encoded = encodeURIComponent(
+                    JSON.stringify({
+                      width: config.width,
+                      height: config.height,
+                      anchor: config.anchor,
+                      gameType: config.gameType,
+                      gameMode: config.gameMode,
+                      displayMode: config.displayMode,
+                      bannerImage: config.bannerImage,
+                      bannerDescription: config.bannerDescription,
+                      bannerLink: config.bannerLink,
+                      backgroundColor: config.backgroundColor,
+                      outlineColor: config.outlineColor,
+                      borderStyle: config.borderStyle,
+                      jackpotBorderStyle: config.jackpotBorderStyle,
+                      storyText: config.storyText,
+                      publisherLink: config.publisherLink,
+                      prizeText: config.prizeText,
+                      customTexts: config.customTexts,
+                      centerText: config.centerText,
+                      centerForm: config.centerForm,
+                      centerGameZone: config.centerGameZone,
+                      participateButtonText: config.participateButtonText,
+                      participateButtonColor: config.participateButtonColor,
+                      participateButtonTextColor: config.participateButtonTextColor,
+                      footerText: config.footerText,
+                      footerColor: config.footerColor,
+                      customCSS: config.customCSS,
+                      customJS: config.customJS,
+                      trackingTags: config.trackingTags,
+                      deviceConfig: config.deviceConfig
+                    })
+                  );
+                  localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
+                  window.open(
+                    `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
+                    '_blank'
+                  );
+                }}
+                className="px-4 py-2 bg-brand-accent text-brand-primary rounded-lg hover:bg-brand-accent/80 transition-colors"
+              >
+                Aperçu live
+              </button>
+              <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
+                <Save className="w-4 h-4" />
+                Sauvegarder & quitter
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </AnimationProvider>
+
+      {/* Main Content */}
+      <div className="flex">
+        {/* Sidebar */}
+        <QualifioSidebar 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+        
+        {/* Content Panel */}
+        {!isSidebarCollapsed && (
+          <QualifioContentPanel 
+            activeTab={activeTab}
+            config={config}
+            onConfigUpdate={updateConfig}
+            triggerAutoSync={triggerAutoSync}
+          />
+        )}
+        
+        {/* Preview Area */}
+        <div className="flex-1 relative">
+          <div id="text-toolbar-container" className="absolute top-8 left-1/2 transform -translate-x-1/2 z-50">
+            {/* Toolbar will be rendered here as overlay only when there's an active text */}
+          </div>
+          
+          {/* Preview */}
+          <div className="h-full p-6">
+          <QualifioPreview 
+            device={selectedDevice}
+            config={config}
+            onConfigUpdate={updateConfig}
+            triggerAutoSync={() => triggerAutoSync(config.customTexts || [])}
+          />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
