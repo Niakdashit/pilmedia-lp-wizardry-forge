@@ -82,13 +82,13 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
               overflow: 'hidden'
             }}
           >
-            {/* Conteneur intérieur pour le contenu avec l'image de fond qui remplit tout */}
+            {/* Conteneur intérieur pour le contenu */}
             <div 
               style={{
                 width: '100%',
                 height: '100%',
                 borderRadius: `calc(${borderRadius} - ${borderWidth})`,
-                overflow: 'hidden',
+                overflow: 'auto',
                 position: 'relative'
               }}
             >
