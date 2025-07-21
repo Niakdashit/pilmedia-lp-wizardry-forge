@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import QualifioPreview from '../components/QualifioEditor/QualifioPreview';
-import type { DeviceType, EditorConfig } from '../components/QualifioEditor/QualifioEditorLayout';
+import GamePreview from '../components/GameEditor/GamePreview';
+import type { DeviceType, EditorConfig } from '../components/GameEditor/GameEditorLayout';
 
-const QualifioLivePreview: React.FC = () => {
+const LivePreview: React.FC = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const device = (query.get('device') as DeviceType) || 'desktop';
@@ -45,9 +45,9 @@ const QualifioLivePreview: React.FC = () => {
 
   return (
     <div className={isMode2 ? "w-screen h-screen overflow-hidden" : "bg-gray-100 min-h-screen"}>
-      <QualifioPreview device={device} config={config} isLivePreview={true} />
+      <GamePreview device={device} config={config} isLivePreview={true} />
     </div>
   );
 };
 
-export default QualifioLivePreview;
+export default LivePreview;

@@ -30,7 +30,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
               type="text"
               value={config.campaignName || ''}
               onChange={e => onConfigUpdate({ campaignName: e.target.value })}
-              placeholder="Ma campagne Qualifio"
+              placeholder="Ma campagne de jeu"
             />
           </div>
 
@@ -40,7 +40,7 @@ const ConfigurationTab: React.FC<ConfigurationTabProps> = ({
               type="text"
               value={config.campaignUrl || ''}
               onChange={e => onConfigUpdate({ campaignUrl: e.target.value })}
-              placeholder="ma-campagne-qualifio"
+              placeholder="ma-campagne-jeu"
             />
           </div>
         </div>

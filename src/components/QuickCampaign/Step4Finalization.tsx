@@ -40,11 +40,11 @@ const Step4Finalization: React.FC = () => {
       // Store the campaign data in localStorage for immediate access
       localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
       
-      // Redirect to qualifio editor
-      console.log('Redirecting to qualifio editor with campaign data');
+      // Redirect to campaign editor
+      console.log('Redirecting to campaign editor with campaign data');
       
-      // Redirect to qualifio editor
-      navigate('/qualifio-editor');
+      // Redirect to campaign editor
+      navigate('/campaign-editor');
       
     } catch (error) {
       console.error('Erreur lors de la redirection vers les paramètres avancés:', error);

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Draggable from 'react-draggable';
-import type { CustomText } from './QualifioEditorLayout';
+import type { CustomText } from './GameEditorLayout';
 import TextToolbar from './TextToolbar';
 import { AnimatedText } from './Animation/AnimatedText';
 

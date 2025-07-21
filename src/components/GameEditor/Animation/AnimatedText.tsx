@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAnimationVariants } from './AnimationPresets';
-import type { CustomText } from '../QualifioEditorLayout';
+import type { CustomText } from '../GameEditorLayout';
 
 interface AnimatedTextProps {
   text: CustomText;

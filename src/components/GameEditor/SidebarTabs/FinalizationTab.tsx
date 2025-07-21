@@ -23,7 +23,7 @@ const FinalizationTab: React.FC<FinalizationTabProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `qualifio-config-${Date.now()}.json`;
+    a.download = `game-config-${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -98,10 +98,10 @@ const FinalizationTab: React.FC<FinalizationTabProps> = ({
               value={config.customJS || ''}
               onChange={e => onConfigUpdate({ customJS: e.target.value })}
               placeholder="// Votre JavaScript personnalisé
-console.log('Campagne Qualifio chargée');
+console.log('Campagne de jeu chargée');
 
 // Exemple d'événement personnalisé
-document.addEventListener('qualifio:gameComplete', function(event) {
+document.addEventListener('game:gameComplete', function(event) {
   console.log('Jeu terminé:', event.detail);
 });"
               rows={8}
@@ -217,7 +217,7 @@ document.addEventListener('qualifio:gameComplete', function(event) {
             <button
               onClick={() => {
                 const encoded = encodeURIComponent(JSON.stringify(config));
-                window.open(`${window.location.origin}/qualifio-live?config=${encoded}`, '_blank');
+                window.open(`${window.location.origin}/live-preview?config=${encoded}`, '_blank');
               }}
               className="px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors font-medium"
             >

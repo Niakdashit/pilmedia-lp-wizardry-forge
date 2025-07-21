@@ -3,9 +3,9 @@ import { Save, ArrowLeft, ExternalLink, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { toast } from 'react-toastify';
-import QualifioSidebar from './QualifioSidebar';
-import QualifioContentPanel from './QualifioContentPanel';
-import QualifioPreview from './QualifioPreview';
+import GameSidebar from './GameSidebar';
+import GameContentPanel from './GameContentPanel';
+import GamePreview from './GamePreview';
 import DeviceSelector from './DeviceSelector';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
@@ -171,7 +171,7 @@ export interface EditorConfig {
   autoSyncBaseDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const QualifioEditorLayout: React.FC = () => {
+const GameEditorLayout: React.FC = () => {
   
   const { saveCampaign, publishCampaign } = useCampaigns();
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
@@ -243,7 +243,7 @@ const QualifioEditorLayout: React.FC = () => {
         
         // Synchroniser avec l'aperçu live de manière sécurisée
         try {
-          localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
+          localStorage.setItem('game_live_preview_config', JSON.stringify(newConfig));
         } catch (error) {
           console.warn('Impossible de sauvegarder dans localStorage:', error);
         }
@@ -281,7 +281,7 @@ const QualifioEditorLayout: React.FC = () => {
     
     try {
       const campaignData = {
-        name: config.campaignName || 'Nouvelle campagne Qualifio',
+        name: config.campaignName || 'Nouvelle campagne',
         description: config.storyText,
         type: config.gameType as any,
         status: 'draft' as const,
@@ -378,7 +378,7 @@ const QualifioEditorLayout: React.FC = () => {
                 <ArrowLeft className="w-5 h-5" />
                 Retour
               </Link>
-              <h1 className="text-xl font-semibold text-brand-primary">Éditeur Qualifio</h1>
+              <h1 className="text-xl font-semibold text-brand-primary">Éditeur de Jeux</h1>
             </div>
             
             <div className="flex items-center gap-4">
@@ -391,9 +391,9 @@ const QualifioEditorLayout: React.FC = () => {
                   onClick={() => {
                     try {
                       const encoded = encodeURIComponent(JSON.stringify(memoizedConfig));
-                      localStorage.setItem('qualifio_live_preview_config', JSON.stringify(memoizedConfig));
+                      localStorage.setItem('game_live_preview_config', JSON.stringify(memoizedConfig));
                       window.open(
-                        `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,
+                        `${window.location.origin}/live-preview?device=${selectedDevice}&config=${encoded}`,
                         '_blank'
                       );
                     } catch (error) {
@@ -421,7 +421,7 @@ const QualifioEditorLayout: React.FC = () => {
         {/* Main Content */}
         <div className="flex">
           {/* Sidebar */}
-          <QualifioSidebar 
+          <GameSidebar 
             activeTab={activeTab}
             onTabChange={setActiveTab}
             isCollapsed={isSidebarCollapsed}
@@ -430,7 +430,7 @@ const QualifioEditorLayout: React.FC = () => {
           
           {/* Content Panel */}
           {!isSidebarCollapsed && (
-            <QualifioContentPanel 
+            <GameContentPanel 
               activeTab={activeTab}
               config={memoizedConfig}
               onConfigUpdate={updateConfig}
@@ -446,7 +446,7 @@ const QualifioEditorLayout: React.FC = () => {
             
             {/* Preview */}
             <div className="h-full p-6">
-              <QualifioPreview 
+              <GamePreview
                 device={selectedDevice}
                 config={memoizedConfig}
                 onConfigUpdate={updateConfig}
@@ -502,4 +502,4 @@ const QualifioEditorLayout: React.FC = () => {
   );
 };
 
-export default QualifioEditorLayout;
+export default GameEditorLayout;

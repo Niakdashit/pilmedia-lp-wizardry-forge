@@ -1,6 +1,6 @@
 import React from 'react';
 import { Monitor, Tablet, Smartphone } from 'lucide-react';
-import type { DeviceType } from './QualifioEditorLayout';
+import type { DeviceType } from './GameEditorLayout';
 
 interface DeviceSelectorProps {
   selectedDevice: DeviceType;

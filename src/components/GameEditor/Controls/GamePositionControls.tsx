@@ -1,6 +1,6 @@
 import React from 'react';
 import { Move, RotateCcw } from 'lucide-react';
-import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
+import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 
 interface GamePositionControlsProps {
   config: EditorConfig;

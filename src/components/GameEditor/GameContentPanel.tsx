@@ -7,16 +7,16 @@ import LayersTab from './SidebarTabs/LayersTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
 import AnimationsTab from './SidebarTabs/AnimationsTab';
 import FinalizationTab from './SidebarTabs/FinalizationTab';
-import type { EditorConfig } from './QualifioEditorLayout';
+import type { EditorConfig } from './GameEditorLayout';
 
-interface QualifioContentPanelProps {
+interface GameContentPanelProps {
   activeTab: string;
   config: EditorConfig;
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
   triggerAutoSync?: (customTexts: any[]) => void;
 }
 
-const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
+const GameContentPanel: React.FC<GameContentPanelProps> = ({
   activeTab,
   config,
   onConfigUpdate,
@@ -90,4 +90,4 @@ const QualifioContentPanel: React.FC<QualifioContentPanelProps> = ({
   );
 };
 
-export default QualifioContentPanel;
+export default GameContentPanel;

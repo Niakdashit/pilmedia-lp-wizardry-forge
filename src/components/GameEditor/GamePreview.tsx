@@ -1,10 +1,10 @@
 import React from 'react';
-import type { DeviceType, EditorConfig, CustomText } from './QualifioEditorLayout';
+import type { DeviceType, EditorConfig, CustomText } from './GameEditorLayout';
 import DeviceFrame from './Preview/DeviceFrame';
 import Mode1Preview from './Preview/Mode1Preview';
 import Mode2Preview from './Preview/Mode2Preview';
 
-interface QualifioPreviewProps {
+interface GamePreviewProps {
   device: DeviceType;
   config: EditorConfig;
   onConfigUpdate?: (updates: Partial<EditorConfig>) => void;
@@ -12,7 +12,7 @@ interface QualifioPreviewProps {
   triggerAutoSync?: () => void;
 }
 
-const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onConfigUpdate, isLivePreview = false, triggerAutoSync }) => {
+const GamePreview: React.FC<GamePreviewProps> = ({ device, config, onConfigUpdate, isLivePreview = false, triggerAutoSync }) => {
   const handleTextUpdate = (updatedText: CustomText) => {
     if (!onConfigUpdate) return;
     
@@ -111,4 +111,4 @@ const QualifioPreview: React.FC<QualifioPreviewProps> = ({ device, config, onCon
   );
 };
 
-export default QualifioPreview;
+export default GamePreview;

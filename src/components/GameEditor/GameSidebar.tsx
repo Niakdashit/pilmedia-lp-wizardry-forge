@@ -2,14 +2,14 @@
 import React from 'react';
 import { Settings, Palette, Type, Layers, Layout, CheckCircle, Wand2, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface QualifioSidebarProps {
+interface GameSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
 
-const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
+const GameSidebar: React.FC<GameSidebarProps> = ({
   activeTab,
   onTabChange,
   isCollapsed,
@@ -69,4 +69,4 @@ const QualifioSidebar: React.FC<QualifioSidebarProps> = ({
   );
 };
 
-export default QualifioSidebar;
+export default GameSidebar;
