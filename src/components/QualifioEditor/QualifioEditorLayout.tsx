@@ -183,10 +183,10 @@ const QualifioEditorLayout: React.FC = () => {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [showUrlModal, setShowUrlModal] = useState(false);
   
-  // Redirect to auth if not authenticated
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate('/login');
       return;
     }
   }, [user, authLoading, navigate]);
@@ -249,7 +249,7 @@ const QualifioEditorLayout: React.FC = () => {
   const handleSaveAndExit = async () => {
     if (!user) {
       toast.error('Vous devez être connecté pour sauvegarder une campagne');
-      navigate('/auth');
+      navigate('/login');
       return;
     }
 

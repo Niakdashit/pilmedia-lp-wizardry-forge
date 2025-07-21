@@ -20,7 +20,6 @@ import Data from './pages/Data';
 import Social from './pages/Social';
 import Studies from './pages/Studies';
 import Account from './pages/Account';
-import Login from './pages/Login';
 import Admin from './pages/Admin';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminCampaigns from './pages/AdminCampaigns';
@@ -33,7 +32,7 @@ import AdminTeam from './pages/AdminTeam';
 import AdminAlerts from './pages/AdminAlerts';
 import QualifioEditor from './pages/QualifioEditor';
 import QualifioLivePreview from './pages/QualifioLivePreview';
-import Auth from './pages/Auth';
+import Login from './pages/Login';
 import PublicCampaign from './pages/PublicCampaign';
 
 function App() {
@@ -106,7 +105,6 @@ function App() {
             </Route>
             
             <Route path="/login" element={<Login />} />
-            <Route path="/auth" element={<Auth />} />
             <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
