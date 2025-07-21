@@ -95,6 +95,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     const startHeight = text.height || 50;
     const startPosX = text.x;
     const startPosY = text.y;
+    const startFontSize = text.fontSize || 16;
     
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
@@ -123,12 +124,20 @@ const EditableText: React.FC<EditableTextProps> = ({
         newY = startPosY + (startHeight - newHeight);
       }
       
+      // Calculate new font size based on the scaling ratio
+      const widthRatio = newWidth / startWidth;
+      const heightRatio = newHeight / startHeight;
+      const scaleRatio = Math.min(widthRatio, heightRatio); // Use the smaller ratio to maintain proportions
+      
+      const newFontSize = Math.max(8, Math.min(128, Math.round(startFontSize * scaleRatio)));
+      
       onUpdate({
         ...text,
         width: newWidth,
         height: newHeight,
         x: newX,
-        y: newY
+        y: newY,
+        fontSize: newFontSize
       });
     };
     
