@@ -8,11 +8,11 @@ import Step3Styles from './Step3/Step3Styles';
 
 const Step3VisualStyle: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-6 py-8">
         <Step3Header />
 
-        <div className="grid grid-cols-12 gap-6 mt-6">
+        <div className="grid grid-cols-12 gap-8 mt-8">
           <ConfigurationPanel />
           <PreviewPanel />
         </div>

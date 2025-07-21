@@ -23,37 +23,37 @@ const PreviewPanel: React.FC = () => {
   ];
 
   return (
-    <div className="col-span-8 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col">
+    <div className="col-span-7 bg-card rounded-3xl shadow-xl border overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-4 py-3 border-b border-gray-100 flex-shrink-0">
+      <div className="bg-gradient-to-r from-muted/50 to-muted px-6 py-4 border-b flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <Eye className="w-4 h-4 text-white" />
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary to-primary/80 rounded-xl flex items-center justify-center">
+              <Eye className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Aperçu en temps réel</h2>
-              <p className="text-xs text-gray-600">Visualisez votre campagne</p>
+              <h2 className="text-xl font-bold text-foreground">Aperçu en temps réel</h2>
+              <p className="text-sm text-muted-foreground">Visualisez votre campagne brandée</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {/* Device Selector */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center bg-muted rounded-xl p-1.5">
               {devices.map((device) => {
                 const Icon = device.icon;
                 return (
                   <button
                     key={device.id}
                     onClick={() => setSelectedDevice(device.id)}
-                    className={`flex items-center space-x-1 px-2 py-1 rounded-md transition-all duration-200 ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                       selectedDevice === device.id
-                        ? 'bg-white shadow-sm text-blue-600 font-medium'
-                        : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                        ? 'bg-background shadow-sm text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                     }`}
                   >
-                    <Icon className="w-3 h-3" />
-                    <span className="hidden sm:inline text-xs">{device.label}</span>
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline text-sm">{device.label}</span>
                   </button>
                 );
               })}
@@ -62,11 +62,11 @@ const PreviewPanel: React.FC = () => {
             {/* Reset Button */}
             <button
               onClick={reset}
-              className="flex items-center space-x-1 px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors"
               title="Réinitialiser"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span className="hidden sm:inline text-xs">Reset</span>
+              <RotateCcw className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Reset</span>
             </button>
           </div>
         </div>
@@ -84,13 +84,13 @@ const PreviewPanel: React.FC = () => {
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
-                <Eye className="w-8 h-8 text-gray-400" />
+            <div className="text-center space-y-6">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto">
+                <Eye className="w-10 h-10 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-medium text-gray-900">Aucun jeu sélectionné</p>
-                <p className="text-sm text-gray-600">Veuillez d'abord choisir un type de jeu</p>
+                <p className="text-xl font-semibold text-foreground">Aucun jeu sélectionné</p>
+                <p className="text-muted-foreground">Veuillez d'abord choisir un type de jeu</p>
               </div>
             </div>
           </div>
