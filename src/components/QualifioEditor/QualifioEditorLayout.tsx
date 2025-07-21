@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Save, ArrowLeft, ExternalLink, Copy } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '@/hooks/useCampaigns';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-toastify';
 import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
@@ -174,7 +173,6 @@ export interface EditorConfig {
 
 const QualifioEditorLayout: React.FC = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   const { saveCampaign, publishCampaign } = useCampaigns();
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<string>('configuration');
@@ -183,14 +181,6 @@ const QualifioEditorLayout: React.FC = () => {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [showUrlModal, setShowUrlModal] = useState(false);
   
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login');
-      return;
-    }
-  }, [user, authLoading, navigate]);
-
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
     height: 1200,
@@ -247,131 +237,71 @@ const QualifioEditorLayout: React.FC = () => {
   };
 
   const handleSaveAndExit = async () => {
-    if (!user) {
-      toast.error('Vous devez être connecté pour sauvegarder une campagne');
-      navigate('/login');
-      return;
-    }
-
     setSaving(true);
     
     try {
-      // Improved data mapping for campaign persistence
       const campaignData = {
         name: config.campaignName || 'Nouvelle campagne Qualifio',
-        description: config.storyText || '',
+        description: config.storyText,
         type: config.gameType as any,
         status: 'draft' as const,
-        slug: config.campaignUrl || undefined,
         config: {
-          // Core configuration
           width: config.width,
           height: config.height,
           anchor: config.anchor,
           gameMode: config.gameMode,
           displayMode: config.displayMode,
           backgroundColor: config.backgroundColor,
-          outlineColor: config.outlineColor,
-          borderStyle: config.borderStyle,
-          
-          // Layout options
           centerText: config.centerText,
           centerForm: config.centerForm,
           centerGameZone: config.centerGameZone,
-          
-          // Auto-sync settings
-          autoSyncOnDeviceChange: config.autoSyncOnDeviceChange,
-          autoSyncRealTime: config.autoSyncRealTime,
-          autoSyncBaseDevice: config.autoSyncBaseDevice,
-          
-          // Custom code and tracking
           customCSS: config.customCSS,
           customJS: config.customJS,
-          trackingTags: config.trackingTags,
-          
-          // Schedule
-          startDate: config.startDate,
-          endDate: config.endDate,
-          startTime: config.startTime,
-          endTime: config.endTime,
-          
-          // Footer
-          footerText: config.footerText,
-          footerColor: config.footerColor
+          trackingTags: config.trackingTags
         },
         game_config: {
           gameType: config.gameType,
-          participateButtonText: config.participateButtonText,
-          participateButtonColor: config.participateButtonColor,
-          participateButtonTextColor: config.participateButtonTextColor,
-          wheelButtonPosition: config.wheelButtonPosition,
-          wheelSegments: config.wheelSegments || [],
-          quizQuestions: config.quizQuestions || [],
+          wheelSegments: config.wheelSegments,
+          quizQuestions: config.quizQuestions,
           quizPassingScore: config.quizPassingScore,
-          scratchCards: config.scratchCards || [],
-          scratchSurfaceColor: config.scratchSurfaceColor,
-          scratchPercentage: config.scratchPercentage,
-          jackpotSymbols: config.jackpotSymbols || [],
-          jackpotWinningCombination: config.jackpotWinningCombination || [],
-          jackpotBackgroundColor: config.jackpotBackgroundColor,
-          jackpotBorderStyle: config.jackpotBorderStyle,
-          jackpotBorderColor: config.jackpotBorderColor,
-          jackpotBorderWidth: config.jackpotBorderWidth,
+          scratchCards: config.scratchCards,
+          jackpotSymbols: config.jackpotSymbols,
           diceSides: config.diceSides,
-          diceWinningNumbers: config.diceWinningNumbers || [],
-          diceColor: config.diceColor,
-          diceDotColor: config.diceDotColor,
-          memoryPairs: config.memoryPairs || [],
-          memoryGridSize: config.memoryGridSize,
-          memoryTimeLimit: config.memoryTimeLimit,
-          memoryCardBackColor: config.memoryCardBackColor,
-          puzzleImage: config.puzzleImage,
-          puzzlePieces: config.puzzlePieces,
-          puzzleTimeLimit: config.puzzleTimeLimit,
-          puzzleShowPreview: config.puzzleShowPreview,
-          puzzleAutoShuffle: config.puzzleAutoShuffle,
-          puzzleDifficulty: config.puzzleDifficulty,
-          puzzleBackgroundColor: config.puzzleBackgroundColor
+          diceWinningNumbers: config.diceWinningNumbers
         },
         design: {
           bannerImage: config.bannerImage,
           bannerDescription: config.bannerDescription,
-          bannerLink: config.bannerLink,
-          customTexts: config.customTexts || [],
-          customImages: config.design?.customImages || [],
+          outlineColor: config.outlineColor,
+          borderStyle: config.borderStyle,
+          participateButtonText: config.participateButtonText,
+          participateButtonColor: config.participateButtonColor,
+          participateButtonTextColor: config.participateButtonTextColor,
+          footerText: config.footerText,
+          footerColor: config.footerColor,
+          customTexts: config.customTexts,
           deviceConfig: config.deviceConfig,
           brandAssets: config.brandAssets
         },
         form_fields: config.formFields || [
-          { 
-            id: 'email',
-            name: 'email', 
-            label: 'Email', 
-            type: 'email', 
-            required: true,
-            placeholder: 'Votre email'
-          }
-        ]
+          { name: 'email', label: 'Email', type: 'email', required: true }
+        ],
+        start_date: config.startDate,
+        end_date: config.endDate
       };
-
-      console.log('💾 Saving campaign with data:', campaignData);
 
       const savedCampaign = await saveCampaign(campaignData);
       
       if (savedCampaign) {
         // Publier automatiquement la campagne pour la rendre accessible
-        const publishResult = await publishCampaign(savedCampaign.id);
+        await publishCampaign(savedCampaign.id);
         
-        if (publishResult) {
-          // Générer l'URL de la campagne
-          const campaignUrl = `${window.location.origin}/c/${savedCampaign.slug}`;
-          setGeneratedUrl(campaignUrl);
-          setShowUrlModal(true);
-          
-          toast.success('Campagne sauvegardée et publiée avec succès !');
-        } else {
-          toast.error('Erreur lors de la publication de la campagne');
-        }
+        // Générer l'URL de la campagne
+        const campaignUrl = `${window.location.origin}/c/${savedCampaign.slug}`;
+        setGeneratedUrl(campaignUrl);
+        setShowUrlModal(true);
+        
+        toast.success('Campagne sauvegardée et publiée avec succès !');
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
@@ -409,23 +339,6 @@ const QualifioEditorLayout: React.FC = () => {
     baseDevice: config.autoSyncBaseDevice || 'desktop'
   });
 
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-brand-accent flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated (will redirect)
-  if (!user) {
-    return null;
-  }
-
   return (
     <AnimationProvider>
     <div className="min-h-screen bg-brand-accent">
@@ -451,7 +364,39 @@ const QualifioEditorLayout: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    const encoded = encodeURIComponent(JSON.stringify(config));
+                    const encoded = encodeURIComponent(
+                      JSON.stringify({
+                        width: config.width,
+                        height: config.height,
+                        anchor: config.anchor,
+                        gameType: config.gameType,
+                        gameMode: config.gameMode,
+                        displayMode: config.displayMode,
+                        bannerImage: config.bannerImage,
+                        bannerDescription: config.bannerDescription,
+                        bannerLink: config.bannerLink,
+                        backgroundColor: config.backgroundColor,
+                        outlineColor: config.outlineColor,
+                        borderStyle: config.borderStyle,
+                        jackpotBorderStyle: config.jackpotBorderStyle,
+                        storyText: config.storyText,
+                        publisherLink: config.publisherLink,
+                        prizeText: config.prizeText,
+                        customTexts: config.customTexts,
+                        centerText: config.centerText,
+                        centerForm: config.centerForm,
+                        centerGameZone: config.centerGameZone,
+                        participateButtonText: config.participateButtonText,
+                        participateButtonColor: config.participateButtonColor,
+                        participateButtonTextColor: config.participateButtonTextColor,
+                        footerText: config.footerText,
+                        footerColor: config.footerColor,
+                        customCSS: config.customCSS,
+                        customJS: config.customJS,
+                        trackingTags: config.trackingTags,
+                        deviceConfig: config.deviceConfig
+                      })
+                    );
                     localStorage.setItem('qualifio_live_preview_config', JSON.stringify(config));
                     window.open(
                       `${window.location.origin}/qualifio-live?device=${selectedDevice}&config=${encoded}`,

@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">Démarrer</h3>
           <div className="flex gap-4">
-            <Link to="/login">
+            <Link to="/auth">
               <Button>
                 Authentification
               </Button>
