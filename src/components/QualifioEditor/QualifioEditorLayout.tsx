@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Save, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Save, ArrowLeft, ExternalLink, Copy } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCampaigns } from '@/hooks/useCampaigns';
+import { toast } from 'react-toastify';
 import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
@@ -170,9 +172,15 @@ export interface EditorConfig {
 }
 
 const QualifioEditorLayout: React.FC = () => {
+  const navigate = useNavigate();
+  const { saveCampaign, publishCampaign } = useCampaigns();
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [activeTab, setActiveTab] = useState<string>('configuration');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [saving, setSaving] = useState(false);
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  
   const [config, setConfig] = useState<EditorConfig>({
     width: 810,
     height: 1200,
@@ -226,6 +234,93 @@ const QualifioEditorLayout: React.FC = () => {
     setConfig(newConfig);
     // Synchroniser avec l'aperçu live
     localStorage.setItem('qualifio_live_preview_config', JSON.stringify(newConfig));
+  };
+
+  const handleSaveAndExit = async () => {
+    setSaving(true);
+    
+    try {
+      const campaignData = {
+        name: config.campaignName || 'Nouvelle campagne Qualifio',
+        description: config.storyText,
+        type: config.gameType as any,
+        status: 'draft' as const,
+        config: {
+          width: config.width,
+          height: config.height,
+          anchor: config.anchor,
+          gameMode: config.gameMode,
+          displayMode: config.displayMode,
+          backgroundColor: config.backgroundColor,
+          centerText: config.centerText,
+          centerForm: config.centerForm,
+          centerGameZone: config.centerGameZone,
+          customCSS: config.customCSS,
+          customJS: config.customJS,
+          trackingTags: config.trackingTags
+        },
+        game_config: {
+          gameType: config.gameType,
+          wheelSegments: config.wheelSegments,
+          quizQuestions: config.quizQuestions,
+          quizPassingScore: config.quizPassingScore,
+          scratchCards: config.scratchCards,
+          jackpotSymbols: config.jackpotSymbols,
+          diceSides: config.diceSides,
+          diceWinningNumbers: config.diceWinningNumbers
+        },
+        design: {
+          bannerImage: config.bannerImage,
+          bannerDescription: config.bannerDescription,
+          outlineColor: config.outlineColor,
+          borderStyle: config.borderStyle,
+          participateButtonText: config.participateButtonText,
+          participateButtonColor: config.participateButtonColor,
+          participateButtonTextColor: config.participateButtonTextColor,
+          footerText: config.footerText,
+          footerColor: config.footerColor,
+          customTexts: config.customTexts,
+          deviceConfig: config.deviceConfig,
+          brandAssets: config.brandAssets
+        },
+        form_fields: config.formFields || [
+          { name: 'email', label: 'Email', type: 'email', required: true }
+        ],
+        start_date: config.startDate,
+        end_date: config.endDate
+      };
+
+      const savedCampaign = await saveCampaign(campaignData);
+      
+      if (savedCampaign) {
+        // Publier automatiquement la campagne pour la rendre accessible
+        await publishCampaign(savedCampaign.id);
+        
+        // Générer l'URL de la campagne
+        const campaignUrl = `${window.location.origin}/c/${savedCampaign.slug}`;
+        setGeneratedUrl(campaignUrl);
+        setShowUrlModal(true);
+        
+        toast.success('Campagne sauvegardée et publiée avec succès !');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde de la campagne');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const copyUrlToClipboard = async () => {
+    if (generatedUrl) {
+      try {
+        await navigator.clipboard.writeText(generatedUrl);
+        toast.success('URL copiée dans le presse-papiers !');
+      } catch (error) {
+        console.error('Erreur lors de la copie:', error);
+        toast.error('Erreur lors de la copie de l\'URL');
+      }
+    }
   };
 
   // Hook pour auto-sync lors des changements d'appareil
@@ -312,9 +407,13 @@ const QualifioEditorLayout: React.FC = () => {
                 >
                   Aperçu live
                 </button>
-                <button className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2">
+                <button 
+                  onClick={handleSaveAndExit}
+                  disabled={saving}
+                  className="px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
                   <Save className="w-4 h-4" />
-                  Sauvegarder & quitter
+                  {saving ? 'Sauvegarde...' : 'Sauvegarder & quitter'}
                 </button>
               </div>
             </div>
@@ -358,6 +457,59 @@ const QualifioEditorLayout: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        {/* Modal pour afficher l'URL générée */}
+        {showUrlModal && generatedUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">URL de la campagne générée</h3>
+              <p className="text-gray-600 mb-4">
+                Votre campagne a été sauvegardée et publiée avec succès. Voici l'URL publique :
+              </p>
+              <div className="bg-gray-50 p-3 rounded border flex items-center gap-2 mb-4">
+                <input
+                  type="text"
+                  value={generatedUrl}
+                  readOnly
+                  className="flex-1 bg-transparent text-sm"
+                />
+                <button
+                  onClick={copyUrlToClipboard}
+                  className="p-1 hover:bg-gray-200 rounded"
+                  title="Copier l'URL"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+                <a
+                  href={generatedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 hover:bg-gray-200 rounded"
+                  title="Ouvrir dans un nouvel onglet"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowUrlModal(false);
+                    navigate('/campaigns');
+                  }}
+                  className="flex-1 px-4 py-2 bg-brand-primary text-white rounded hover:bg-brand-primary/90"
+                >
+                  Retour aux campagnes
+                </button>
+                <button
+                  onClick={() => setShowUrlModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Continuer l'édition
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AnimationProvider>
   );
