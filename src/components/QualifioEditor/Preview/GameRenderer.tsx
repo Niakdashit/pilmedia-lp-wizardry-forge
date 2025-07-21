@@ -265,7 +265,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     }
   };
   return (
-    <>
+    <div className="relative w-full h-full">
       <div style={getGameContainerStyle()} className="game-container mx-0 my-0">
         <div style={getGameContentStyle()}>
           <AnimatedGameContainer gameType={gameType} device={device}>
@@ -274,7 +274,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         </div>
       </div>
 
-      {/* Modal de participation rendu au niveau supérieur pour garantir un centrage parfait */}
+      {/* Modal de participation centré par rapport à la zone de prévisualisation */}
       <ParticipationModal
         isOpen={showParticipationModal}
         onClose={() => setShowParticipationModal(false)}
@@ -285,7 +285,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           { id: 'email', label: 'Email', type: 'email', required: true }
         ]}
       />
-    </>
+    </div>
   );
 };
 
