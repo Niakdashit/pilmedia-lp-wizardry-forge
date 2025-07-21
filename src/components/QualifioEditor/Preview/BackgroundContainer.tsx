@@ -54,14 +54,18 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     
     // Pour Mode 2 sur tablette/mobile, remplir complètement l'espace disponible
     if (!isMode1) {
+      if (device === 'mobile' || device === 'tablet') {
+        return {
+          width: '100%',
+          height: '100%',
+          position: 'absolute' as const,
+          top: 0,
+          left: 0
+        };
+      }
       return {
         width: '100%',
-        height: '100%',
-        minHeight: '100%',
-        minWidth: '100%',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column' as const
+        height: '100%'
       };
     }
     
@@ -74,14 +78,10 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
       };
     }
     
-    // Comportement par défaut pour les autres cas (Mode 1 mobile/tablet)
+    // Comportement par défaut pour les autres cas
     return { 
       width: '100%',
-      height: '100%',
-      minHeight: '100%',
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column' as const
+      height: '100%'
     };
   };
 
@@ -90,7 +90,11 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
     if (isMode1 && device === 'desktop') {
       return 'contain';
     }
-    // Pour tous les autres cas (desktop Mode 2, mobile et tablette), utiliser 'cover' pour remplir complètement
+    // Pour desktop en Mode 2, utiliser 'cover' pour remplir le cadre 16:9
+    if (!isMode1 && device === 'desktop') {
+      return 'cover';
+    }
+    // Pour tablette et mobile en Mode 2, utiliser 'cover' pour remplir complètement
     return 'cover';
   };
 
@@ -104,12 +108,32 @@ const BackgroundContainer: React.FC<BackgroundContainerProps> = ({
         backgroundRepeat: 'no-repeat',
         margin: 0,
         padding: 0,
+        overflow: 'hidden',
         ...getContentDimensions(),
         ...style
       }}
       onClick={onClick}
     >
-      {children}
+      {/* Conteneur pour centrer le contenu sur mobile/tablette */}
+      {(device === 'mobile' || device === 'tablet') && !isMode1 ? (
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1
+          }}
+        >
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 };

@@ -5,10 +5,8 @@ import QualifioSidebar from './QualifioSidebar';
 import QualifioContentPanel from './QualifioContentPanel';
 import QualifioPreview from './QualifioPreview';
 import DeviceSelector from './DeviceSelector';
-import { AnimationProvider } from './animations/AnimationProvider';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
-import type { AnimationType, AnimationTrigger } from './animations/types';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -55,10 +53,10 @@ export interface CustomText {
   };
   // Nouvelles propriétés d'animation
   animationConfig?: {
-    type: AnimationType;
+    type: string;
     duration: number;
     delay: number;
-    trigger: AnimationTrigger;
+    trigger: string;
     enabled: boolean;
     typewriterSpeed?: number;
     repeat?: number;
@@ -245,8 +243,7 @@ const QualifioEditorLayout: React.FC = () => {
   });
 
   return (
-    <AnimationProvider>
-      <div className="min-h-screen bg-brand-accent">
+    <div className="min-h-screen bg-brand-accent">
         {/* Header avec couleurs de marque */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -359,7 +356,6 @@ const QualifioEditorLayout: React.FC = () => {
           </div>
         </div>
       </div>
-    </AnimationProvider>
   );
 };
 
