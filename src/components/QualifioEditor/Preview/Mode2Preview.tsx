@@ -7,7 +7,7 @@ import RulesButton from './RulesButton';
 import GameRenderer from './GameRenderer';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
-import { gameVariants } from '../animations/variants';
+
 
 interface Mode2PreviewProps {
   device: DeviceType;
@@ -42,9 +42,6 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   };
   return (
     <motion.div
-      variants={gameVariants.entrance}
-      initial="hidden"
-      animate="visible"
       transition={{ duration: 1, delay: 0.2 }}
     >
       <BackgroundContainer
