@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { DeviceType, EditorConfig } from '../QualifioEditorLayout';
 import WheelContainer from './WheelContainer';
 import { Jackpot } from '../../GameTypes';
@@ -9,6 +9,7 @@ import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
 import { AnimatedGameContainer } from '../Animation/AnimatedGameContainer';
+import ParticipationModal from '../../SmartWheel/components/ParticipationModal';
 interface GameRendererProps {
   gameType: EditorConfig['gameType'];
   config: EditorConfig;
@@ -23,6 +24,23 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   onResult,
   isMode1 = false
 }) => {
+  // État pour le modal de participation géré au niveau supérieur
+  const [showParticipationModal, setShowParticipationModal] = useState(false);
+
+  // Callback pour gérer l'affichage du modal de participation
+  const handleShowParticipationModal = () => {
+    setShowParticipationModal(true);
+  };
+
+  // Callback pour gérer la soumission du formulaire de participation
+  const handleParticipationSubmit = (formData: any) => {
+    setShowParticipationModal(false);
+    // Vous pouvez ajouter ici la logique pour traiter les données du formulaire
+    console.log('Données de participation:', formData);
+    // Transmettre les données au parent si nécessaire
+    onResult?.(formData);
+  };
+
   // Récupérer les paramètres de position et d'échelle pour le device actuel
   const gamePosition = config.deviceConfig?.[device]?.gamePosition || {
     x: 0,
@@ -99,7 +117,15 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     const secondaryColor = brandColors.secondaryColor || '#ffffff';
     switch (gameType) {
       case 'wheel':
-        return <WheelContainer device={device} config={config} isMode1={isMode1} isVisible={true} onResult={onResult} scale={gamePosition.scale} />;
+        return <WheelContainer 
+          device={device} 
+          config={config} 
+          isMode1={isMode1} 
+          isVisible={true} 
+          onResult={onResult} 
+          onShowParticipationModal={handleShowParticipationModal}
+          scale={gamePosition.scale} 
+        />;
       case 'jackpot':
         return <Jackpot isPreview={true} buttonLabel="Lancer le Jackpot" buttonColor={primaryColor} backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} borderStyle={config.jackpotBorderStyle || 'classic'} slotBorderColor={secondaryColor} slotBorderWidth={2} slotBackgroundColor={secondaryColor} containerBackgroundColor="#1f2937" onStart={() => console.log('Jackpot started')} onFinish={result => {
           console.log('Jackpot finished:', result);
@@ -238,12 +264,29 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>;
     }
   };
-  return <div style={getGameContainerStyle()} className="game-container mx-0 my-0">
-      <div style={getGameContentStyle()}>
-        <AnimatedGameContainer gameType={gameType} device={device}>
-          {renderGameComponent()}
-        </AnimatedGameContainer>
+  return (
+    <>
+      <div style={getGameContainerStyle()} className="game-container mx-0 my-0">
+        <div style={getGameContentStyle()}>
+          <AnimatedGameContainer gameType={gameType} device={device}>
+            {renderGameComponent()}
+          </AnimatedGameContainer>
+        </div>
       </div>
-    </div>;
+
+      {/* Modal de participation rendu au niveau supérieur pour garantir un centrage parfait */}
+      <ParticipationModal
+        isOpen={showParticipationModal}
+        onClose={() => setShowParticipationModal(false)}
+        onSubmit={handleParticipationSubmit}
+        title="Formulaire de participation"
+        fields={config.formFields || [
+          { id: 'firstName', label: 'Prénom', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true }
+        ]}
+      />
+    </>
+  );
 };
+
 export default GameRenderer;

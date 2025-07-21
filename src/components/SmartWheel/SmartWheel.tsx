@@ -14,6 +14,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   disabled = false,
   onSpin,
   onResult,
+  onShowParticipationModal,
   brandColors,
   customButton,
   borderStyle = 'classic',
@@ -81,7 +82,12 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     if (!isMode1) {
       // Mode 2: ouvrir la modale de participation
       if (mode2State === 'form') {
-        setShowParticipationModal(true);
+        // Utiliser le callback externe si fourni, sinon la logique interne
+        if (onShowParticipationModal) {
+          onShowParticipationModal();
+        } else {
+          setShowParticipationModal(true);
+        }
         return;
       }
       // Si on est déjà dans l'état wheel, faire tourner
