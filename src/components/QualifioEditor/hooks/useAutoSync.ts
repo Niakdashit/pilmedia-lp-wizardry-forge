@@ -1,3 +1,4 @@
+
 import { useCallback, useRef } from 'react';
 import { applyResponsiveConsistency } from '../utils/responsiveUtils';
 import type { CustomText } from '../QualifioEditorLayout';
@@ -10,20 +11,34 @@ interface UseAutoSyncProps {
 
 export const useAutoSync = ({ onConfigUpdate, isEnabled, baseDevice = 'desktop' }: UseAutoSyncProps) => {
   const debounceRef = useRef<NodeJS.Timeout>();
+  const lastSyncRef = useRef<string>('');
 
   const triggerAutoSync = useCallback((customTexts: CustomText[]) => {
     if (!isEnabled || !customTexts || customTexts.length === 0) return;
 
-    // Debounce pour éviter trop d'appels en temps réel
+    // Create a hash of current texts to avoid unnecessary syncs
+    const textsHash = JSON.stringify(customTexts.map(t => ({ id: t.id, x: t.x, y: t.y, fontSize: t.fontSize })));
+    if (textsHash === lastSyncRef.current) return;
+
+    // Clear previous debounce
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
-      console.log(`🔄 Auto-sync depuis ${baseDevice}`);
-      const synchronizedTexts = applyResponsiveConsistency(customTexts, baseDevice);
-      onConfigUpdate({ customTexts: synchronizedTexts });
-    }, 300); // 300ms de debounce
+      try {
+        console.log(`🔄 Auto-sync depuis ${baseDevice}`);
+        const synchronizedTexts = applyResponsiveConsistency(customTexts, baseDevice);
+        
+        // Only update if there are actual changes
+        if (JSON.stringify(synchronizedTexts) !== JSON.stringify(customTexts)) {
+          onConfigUpdate({ customTexts: synchronizedTexts });
+          lastSyncRef.current = textsHash;
+        }
+      } catch (error) {
+        console.error('Error during auto-sync:', error);
+      }
+    }, 500); // Increased debounce to reduce frequency
   }, [isEnabled, baseDevice, onConfigUpdate]);
 
   return { triggerAutoSync };

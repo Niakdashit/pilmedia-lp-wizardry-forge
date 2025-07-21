@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Play, RotateCcw } from 'lucide-react';
+import React from 'react';
+import { Play, Pause, RotateCcw, Zap } from 'lucide-react';
 import type { EditorConfig } from '../QualifioEditorLayout';
 
 interface AnimationsTabProps {
@@ -8,178 +8,180 @@ interface AnimationsTabProps {
   onConfigUpdate: (updates: Partial<EditorConfig>) => void;
 }
 
-const AnimationsTab: React.FC<AnimationsTabProps> = () => {
-  const [activeTab, setActiveTab] = useState<'textes' | 'images' | 'jeux'>('textes');
+const AnimationsTab: React.FC<AnimationsTabProps> = ({
+  config,
+  onConfigUpdate
+}) => {
+  const animationTypes = [
+    { value: 'fadeIn', label: 'Apparition en fondu' },
+    { value: 'slideInLeft', label: 'Glissement depuis la gauche' },
+    { value: 'slideInRight', label: 'Glissement depuis la droite' },
+    { value: 'slideInUp', label: 'Glissement depuis le bas' },
+    { value: 'slideInDown', label: 'Glissement depuis le haut' },
+    { value: 'bounce', label: 'Rebond' },
+    { value: 'typewriter', label: 'Machine à écrire' },
+    { value: 'pulse', label: 'Pulsation' },
+    { value: 'rotate', label: 'Rotation' },
+    { value: 'zoomIn', label: 'Zoom avant' },
+    { value: 'flipX', label: 'Retournement horizontal' },
+    { value: 'flipY', label: 'Retournement vertical' }
+  ];
 
-  const handlePlay = () => {
-    // Lancer la prévisualisation des animations
-    console.log('🎬 Lancement des animations');
-  };
+  const triggerTypes = [
+    { value: 'onLoad', label: 'Au chargement' },
+    { value: 'onScroll', label: 'Au défilement' },
+    { value: 'onClick', label: 'Au clic' },
+    { value: 'onHover', label: 'Au survol' },
+    { value: 'delayed', label: 'Retardé' }
+  ];
 
-  const handleReset = () => {
-    // Réinitialiser les animations
-    console.log('🔄 Réinitialisation des animations');
+  const updateTextAnimation = (textId: string, animationConfig: any) => {
+    if (!config.customTexts) return;
+    
+    const updatedTexts = config.customTexts.map(text => 
+      text.id === textId 
+        ? { ...text, animationConfig, isAnimated: animationConfig.enabled }
+        : text
+    );
+    
+    onConfigUpdate({ customTexts: updatedTexts });
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Animations</h2>
-        
-        {/* Contrôles globaux */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Contrôles globaux</h3>
-          <div className="flex gap-3">
-            <button
-              onClick={handlePlay}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <Play size={16} />
-              Jouer
-            </button>
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              <RotateCcw size={16} />
-              Reset
-            </button>
-          </div>
-        </div>
-
-        {/* Onglets */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('textes')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'textes'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Textes
-          </button>
-          <button
-            onClick={() => setActiveTab('images')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'images'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Images
-          </button>
-          <button
-            onClick={() => setActiveTab('jeux')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'jeux'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Jeux
-          </button>
-        </div>
-      </div>
-
-      {/* Contenu */}
-      <div className="flex-1 p-6">
-        {activeTab === 'textes' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Animations des textes</h3>
-              <div className="text-center py-12 text-gray-500">
-                <p>Aucun texte personnalisé à animer</p>
-                <p className="text-sm mt-1">Ajoutez des textes dans l'onglet Layout</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'images' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Animations des images</h3>
+    <div className="p-6 space-y-6">
+      <h3 className="text-lg font-semibold text-gray-900">Animations</h3>
+      
+      {config.customTexts && config.customTexts.length > 0 ? (
+        <div className="space-y-4">
+          {config.customTexts.map((text) => (
+            <div key={text.id} className="bg-white border border-gray-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3 truncate">
+                Animation: {text.content}
+              </h4>
               
-              {/* Animation de la roue */}
-              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-gray-800">Roue de la fortune</h4>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm text-gray-700">Animation de rotation fluide</label>
+              <div className="space-y-3">
+                {/* Enable Animation */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Activer l'animation</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      defaultChecked={true}
-                      className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                      checked={text.animationConfig?.enabled || false}
+                      onChange={(e) => updateTextAnimation(text.id, {
+                        ...text.animationConfig,
+                        enabled: e.target.checked
+                      })}
+                      className="sr-only peer"
                     />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm text-gray-700">Effet de rebond</label>
-                    <input
-                      type="checkbox"
-                      defaultChecked={false}
-                      className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-700">Durée de rotation (secondes)</label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="10"
-                      step="0.5"
-                      defaultValue={3}
-                      className="w-full"
-                    />
-                    <div className="text-xs text-gray-500">3 secondes</div>
-                  </div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-accent rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-primary"></div>
+                  </label>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {activeTab === 'jeux' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Animations du jeu</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <label className="text-sm text-gray-700">Animation d'entrée</label>
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <label className="text-sm text-gray-700">Animation de sortie</label>
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <label className="text-sm text-gray-700">Transition des éléments</label>
-                  <input
-                    type="checkbox"
-                    defaultChecked={false}
-                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                  />
-                </div>
+                {text.animationConfig?.enabled && (
+                  <>
+                    {/* Animation Type */}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Type d'animation</label>
+                      <select 
+                        value={text.animationConfig?.type || 'fadeIn'} 
+                        onChange={(e) => updateTextAnimation(text.id, {
+                          ...text.animationConfig,
+                          type: e.target.value
+                        })}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
+                      >
+                        {animationTypes.map(type => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Trigger */}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Déclenchement</label>
+                      <select 
+                        value={text.animationConfig?.trigger || 'onLoad'} 
+                        onChange={(e) => updateTextAnimation(text.id, {
+                          ...text.animationConfig,
+                          trigger: e.target.value
+                        })}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
+                      >
+                        {triggerTypes.map(trigger => (
+                          <option key={trigger.value} value={trigger.value}>
+                            {trigger.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Duration and Delay */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Durée (ms)</label>
+                        <input
+                          type="number"
+                          value={text.animationConfig?.duration || 1000}
+                          onChange={(e) => updateTextAnimation(text.id, {
+                            ...text.animationConfig,
+                            duration: parseInt(e.target.value) || 1000
+                          })}
+                          min="100"
+                          max="5000"
+                          step="100"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Délai (ms)</label>
+                        <input
+                          type="number"
+                          value={text.animationConfig?.delay || 0}
+                          onChange={(e) => updateTextAnimation(text.id, {
+                            ...text.animationConfig,
+                            delay: parseInt(e.target.value) || 0
+                          })}
+                          min="0"
+                          max="5000"
+                          step="100"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Typewriter Speed (if typewriter animation) */}
+                    {text.animationConfig?.type === 'typewriter' && (
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Vitesse machine à écrire (ms/caractère)</label>
+                        <input
+                          type="number"
+                          value={text.animationConfig?.typewriterSpeed || 50}
+                          onChange={(e) => updateTextAnimation(text.id, {
+                            ...text.animationConfig,
+                            typewriterSpeed: parseInt(e.target.value) || 50
+                          })}
+                          min="10"
+                          max="500"
+                          step="10"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+          <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500">Aucun texte disponible pour l'animation</p>
+          <p className="text-sm text-gray-400 mt-1">Ajoutez du texte dans l'onglet Design pour configurer les animations</p>
+        </div>
+      )}
     </div>
   );
 };
