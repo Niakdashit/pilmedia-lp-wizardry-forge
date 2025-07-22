@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, Smartphone, Tablet, Monitor } from 'lucide-react';
+import { ChevronLeft, Smartphone, Tablet, Monitor, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import InteractiveWheel from './InteractiveWheel';
@@ -23,6 +24,86 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
   onBack
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  const navigate = useNavigate();
+
+  const handleAdvancedEditor = () => {
+    try {
+      // Transformer les données Studio vers le format EditorConfig
+      const editorConfig = {
+        width: 810,
+        height: 1200,
+        anchor: 'fixed',
+        gameType: 'wheel',
+        gameMode: 'mode1-sequential',
+        displayMode: 'mode1-banner-game',
+        storyText: campaignData.content?.description || 'Campagne Studio créée',
+        publisherLink: '',
+        prizeText: campaignData.content?.callToAction || 'Participez et tentez de gagner !',
+        customTexts: [],
+        centerText: false,
+        centerForm: true,
+        centerGameZone: true,
+        backgroundColor: campaignData.design?.primaryColor || '#ffffff',
+        outlineColor: campaignData.design?.accentColor || '#ffffff',
+        borderStyle: 'classic',
+        jackpotBorderStyle: 'classic',
+        participateButtonText: campaignData.content?.callToAction || 'PARTICIPER !',
+        participateButtonColor: campaignData.design?.primaryColor || '#ff6b35',
+        participateButtonTextColor: campaignData.design?.accentColor || '#ffffff',
+        footerText: '',
+        footerColor: '#f8f9fa',
+        customCSS: '',
+        customJS: '',
+        trackingTags: '',
+        deviceConfig: {
+          mobile: {
+            fontSize: 14,
+            backgroundImage: backgroundUrl || undefined,
+            gamePosition: { x: 0, y: 0, scale: 1.7 }
+          },
+          tablet: {
+            fontSize: 16,
+            backgroundImage: backgroundUrl || undefined,
+            gamePosition: { x: 0, y: 0, scale: 1.7 }
+          },
+          desktop: {
+            fontSize: 18,
+            backgroundImage: backgroundUrl || undefined,
+            gamePosition: { x: 0, y: 0, scale: 1.7 }
+          }
+        },
+        autoSyncOnDeviceChange: false,
+        autoSyncRealTime: false,
+        autoSyncBaseDevice: 'desktop',
+        gameConfig: {},
+        wheelConfig: {},
+        brandAnalysis: campaignData.brandAnalysis || null,
+        centerLogo: logoUrl || null,
+        designColors: {
+          primary: campaignData.design?.primaryColor,
+          secondary: campaignData.design?.secondaryColor,
+          accent: campaignData.design?.accentColor
+        }
+      };
+      
+      // Sauvegarder les données complètes
+      const fullCampaignData = {
+        ...campaignData,
+        design: {
+          ...campaignData.design,
+          backgroundImage: backgroundUrl,
+          centerLogo: logoUrl
+        }
+      };
+      
+      localStorage.setItem('studioPreview', JSON.stringify(fullCampaignData));
+      localStorage.setItem('editorConfig', JSON.stringify(editorConfig));
+      
+      navigate('/campaign-editor');
+    } catch (error) {
+      console.error('Erreur lors du transfert vers l\'éditeur:', error);
+    }
+  };
 
   const getDeviceStyle = () => {
     switch (selectedDevice) {
@@ -76,25 +157,35 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
           Retour
         </Button>
 
-        <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
-          <button
-            onClick={() => setSelectedDevice('mobile')}
-            className={`p-2 rounded ${selectedDevice === 'mobile' ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={handleAdvancedEditor}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
           >
-            <Smartphone className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setSelectedDevice('tablet')}
-            className={`p-2 rounded ${selectedDevice === 'tablet' ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-          >
-            <Tablet className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setSelectedDevice('desktop')}
-            className={`p-2 rounded ${selectedDevice === 'desktop' ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-          >
-            <Monitor className="w-4 h-4" />
-          </button>
+            <Settings className="w-4 h-4" />
+            Éditeur avancé
+          </Button>
+          
+          <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
+            <button
+              onClick={() => setSelectedDevice('mobile')}
+              className={`p-2 rounded ${selectedDevice === 'mobile' ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              <Smartphone className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setSelectedDevice('tablet')}
+              className={`p-2 rounded ${selectedDevice === 'tablet' ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              <Tablet className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setSelectedDevice('desktop')}
+              className={`p-2 rounded ${selectedDevice === 'desktop' ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              <Monitor className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
