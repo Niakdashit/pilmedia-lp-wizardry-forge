@@ -306,23 +306,34 @@ const GameEditorLayout: React.FC = () => {
   const initializeConfig = (): EditorConfig => {
     try {
       const savedConfig = localStorage.getItem('editorConfig');
+      const studioData = localStorage.getItem('studioPreview');
+      
+      console.log('📋 Initializing config...');
+      console.log('🔧 savedConfig exists:', !!savedConfig);
+      console.log('🎬 studioData exists:', !!studioData);
+      
       if (savedConfig) {
         const parsedConfig = JSON.parse(savedConfig);
-        console.log('Loading campaign from QuickCampaign:', parsedConfig);
-        // Ne pas nettoyer le localStorage immédiatement pour permettre les rechargements
+        console.log('✅ Loading campaign from editorConfig:', parsedConfig);
         return parsedConfig;
       }
       
       // Essayer de charger depuis studioPreview si editorConfig n'existe pas
-      const studioData = localStorage.getItem('studioPreview');
       if (studioData) {
         const studioConfig = JSON.parse(studioData);
-        console.log('Loading from Studio data:', studioConfig);
+        console.log('🎨 Studio data found:', studioConfig);
+        console.log('📝 Studio content:', studioConfig.content);
+        console.log('🎯 Studio design:', studioConfig.design);
+        
         // Transformer les données Studio en format EditorConfig
-        return transformStudioToEditorConfig(studioConfig);
+        const transformedConfig = transformStudioToEditorConfig(studioConfig);
+        console.log('🔄 Transformed config:', transformedConfig);
+        console.log('📄 Custom texts created:', transformedConfig.customTexts);
+        
+        return transformedConfig;
       }
     } catch (error) {
-      console.error('Error loading saved config:', error);
+      console.error('❌ Error loading saved config:', error);
     }
     
     // Configuration par défaut
