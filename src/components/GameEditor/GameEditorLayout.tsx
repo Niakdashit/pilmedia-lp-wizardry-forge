@@ -187,64 +187,183 @@ const GameEditorLayout: React.FC = () => {
     // Créer les customTexts depuis les données Studio
     const customTexts: CustomText[] = [];
     
-    if (studioData.content?.title) {
-      customTexts.push({
-        id: 'main-title',
-        content: studioData.content.title,
-        x: 50,
-        y: 20,
-        fontSize: 48,
-        fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
-        color: '#ffffff',
-        fontWeight: 'bold',
-        fontStyle: 'normal',
-        textDecoration: 'none',
-        textAlign: 'center',
-        hasEffect: true,
-        isAnimated: false,
-        width: 700,
-        height: 60
-      });
-    }
+    console.log('🔍 Transforming studio data:', studioData);
+    console.log('📊 Professional data:', studioData.professionalData);
+    console.log('📄 Legacy content:', studioData.content);
     
-    if (studioData.content?.subtitle) {
+    // Priorité 1: Utiliser les données professionnelles du nouveau format
+    if (studioData.professionalData?.wording_jeu_concours) {
+      const wording = studioData.professionalData.wording_jeu_concours;
+      const fontFamily = studioData.professionalData.polices?.[0]?.nom || studioData.brandAnalysis?.fontFamily || 'Montserrat';
+      
+      // Titre principal
+      if (wording.titre) {
+        customTexts.push({
+          id: 'main-title',
+          content: wording.titre,
+          x: 50,
+          y: 20,
+          fontSize: 48,
+          fontFamily: fontFamily,
+          color: '#ffffff',
+          fontWeight: 'bold',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 60
+        });
+      }
+      
+      // Sous-titre
+      if (wording.sous_titre) {
+        customTexts.push({
+          id: 'subtitle',
+          content: wording.sous_titre,
+          x: 50,
+          y: 100,
+          fontSize: 24,
+          fontFamily: fontFamily,
+          color: '#ffffff',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 30
+        });
+      }
+      
+      // Mécanique de participation
+      if (wording.mecanique) {
+        customTexts.push({
+          id: 'mechanics',
+          content: wording.mecanique,
+          x: 50,
+          y: 900,
+          fontSize: 18,
+          fontFamily: fontFamily,
+          color: '#ffffff',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 40
+        });
+      }
+      
+      // Avantage client (description de l'offre)
+      if (wording.avantage_client) {
+        customTexts.push({
+          id: 'offer-description',
+          content: wording.avantage_client,
+          x: 50,
+          y: 950,
+          fontSize: 16,
+          fontFamily: fontFamily,
+          color: '#ffffff',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 40
+        });
+      }
+      
+      // Mentions légales (texte par défaut)
       customTexts.push({
-        id: 'subtitle',
-        content: studioData.content.subtitle,
+        id: 'legal-mentions',
+        content: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
         x: 50,
-        y: 100,
-        fontSize: 24,
-        fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+        y: 1050,
+        fontSize: 12,
+        fontFamily: fontFamily,
         color: '#ffffff',
         fontWeight: 'normal',
         fontStyle: 'normal',
         textDecoration: 'none',
         textAlign: 'center',
-        hasEffect: true,
+        hasEffect: false,
         isAnimated: false,
         width: 700,
-        height: 30
+        height: 20
       });
+      
+      console.log('✅ Created customTexts from professional data:', customTexts.length);
     }
-    
-    if (studioData.content?.description) {
-      customTexts.push({
-        id: 'description',
-        content: studioData.content.description,
-        x: 50,
-        y: 1000,
-        fontSize: 16,
-        fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
-        color: '#ffffff',
-        fontWeight: 'normal',
-        fontStyle: 'normal',
-        textDecoration: 'none',
-        textAlign: 'center',
-        hasEffect: true,
-        isAnimated: false,
-        width: 700,
-        height: 60
-      });
+    // Priorité 2: Utiliser le format legacy si pas de données professionnelles
+    else {
+      if (studioData.content?.title) {
+        customTexts.push({
+          id: 'main-title',
+          content: studioData.content.title,
+          x: 50,
+          y: 20,
+          fontSize: 48,
+          fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+          color: '#ffffff',
+          fontWeight: 'bold',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 60
+        });
+      }
+      
+      if (studioData.content?.subtitle) {
+        customTexts.push({
+          id: 'subtitle',
+          content: studioData.content.subtitle,
+          x: 50,
+          y: 100,
+          fontSize: 24,
+          fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+          color: '#ffffff',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 30
+        });
+      }
+      
+      if (studioData.content?.description) {
+        customTexts.push({
+          id: 'description',
+          content: studioData.content.description,
+          x: 50,
+          y: 1000,
+          fontSize: 16,
+          fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+          color: '#ffffff',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          textDecoration: 'none',
+          textAlign: 'center',
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 60
+        });
+      }
+      
+      console.log('✅ Created customTexts from legacy data:', customTexts.length);
     }
     
     return {
