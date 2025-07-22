@@ -394,6 +394,16 @@ const GameEditorLayout: React.FC = () => {
       setConfig(prevConfig => {
         const newConfig = { ...prevConfig, ...updates };
         
+        console.log('🔄 Config update:', updates);
+        console.log('📄 Previous customTexts:', prevConfig.customTexts?.length || 0);
+        console.log('📄 New customTexts:', newConfig.customTexts?.length || 0);
+        
+        // Si on change le displayMode, conserver les customTexts existants
+        if (updates.displayMode && prevConfig.customTexts && prevConfig.customTexts.length > 0) {
+          console.log('🔧 Display mode change detected, preserving customTexts');
+          newConfig.customTexts = prevConfig.customTexts;
+        }
+        
         // Validation des données critiques
         if (newConfig.width < 300) newConfig.width = 300;
         if (newConfig.height < 400) newConfig.height = 400;
