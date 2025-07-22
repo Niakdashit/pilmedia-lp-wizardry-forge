@@ -99,7 +99,7 @@ const TextsTab: React.FC<TextsTabProps> = ({
                 <div className="flex items-center gap-2">
                   <Type className="w-4 h-4 text-sidebar-text-muted" />
                   <span className="text-sm font-medium text-sidebar-text-primary">
-                    {text.content.substring(0, 20)}{text.content.length > 20 ? '...' : ''}
+                    {(text.content || 'Texte vide').substring(0, 20)}{(text.content || '').length > 20 ? '...' : ''}
                   </span>
                 </div>
                 <button onClick={() => deleteCustomText(text.id)} className="text-red-500 hover:text-red-700 text-sm">
