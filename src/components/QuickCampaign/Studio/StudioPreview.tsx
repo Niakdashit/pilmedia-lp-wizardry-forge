@@ -135,10 +135,10 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-6 md:px-12">
               {/* Titre principal */}
               <h1 
-                className={`${textSizes.title} font-black mb-4 text-white leading-tight`}
+                className={`${textSizes.title} font-titan font-black mb-4 text-white leading-tight`}
                 style={{
                   textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.3)',
-                  fontFamily: campaignData.brandAnalysis?.fontFamily || 'system-ui'
+                  fontFamily: campaignData.brandAnalysis?.fontFamily || 'Titan One, cursive'
                 }}
               >
                 {campaignData.content?.title || 'PARTICIPEZ & GAGNEZ'}
@@ -171,10 +171,10 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 size="lg"
                 className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200`}
                 style={{
-                  backgroundColor: campaignData.design?.primaryColor || '#006799',
-                  color: campaignData.design?.accentColor || '#ffffff',
-                  border: `3px solid ${campaignData.design?.accentColor || '#ffffff'}`,
-                  boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`
+                  backgroundColor: campaignData.brandAnalysis?.primaryColor || campaignData.design?.primaryColor || '#006799',
+                  color: campaignData.brandAnalysis?.accentColor || campaignData.design?.accentColor || '#ffffff',
+                  border: `3px solid ${campaignData.brandAnalysis?.accentColor || campaignData.design?.accentColor || '#ffffff'}`,
+                  boxShadow: `0 8px 32px ${campaignData.brandAnalysis?.primaryColor || campaignData.design?.primaryColor || '#006799'}40`
                 }}
               >
                 {campaignData.content?.callToAction || 'JOUER MAINTENANT'}

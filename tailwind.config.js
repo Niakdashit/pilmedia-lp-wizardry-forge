@@ -9,6 +9,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        'titan': ['Titan One', 'cursive'],
+        'oswald': ['Oswald', 'sans-serif'],
       },
       colors: {
         primary: {
