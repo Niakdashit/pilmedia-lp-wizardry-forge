@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Palette, Image, Upload, Trash2 } from 'lucide-react';
+import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 import type { EditorConfig } from '../GameEditorLayout';
 
 interface DesignTabProps {
@@ -160,18 +161,10 @@ const DesignTab: React.FC<DesignTabProps> = ({
       <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Style de bordure</h4>
         
-        <div className="form-group-premium">
-          <label>Type de bordure</label>
-          <select
-            value={config.borderStyle || 'classic'}
-            onChange={e => onConfigUpdate({ borderStyle: e.target.value })}
-          >
-            <option value="classic">Classique</option>
-            <option value="rounded">Arrondie</option>
-            <option value="modern">Moderne</option>
-            <option value="none">Aucune</option>
-          </select>
-        </div>
+        <BorderStyleSelector
+          currentStyle={config.borderStyle || 'classic'}
+          onStyleChange={(style) => onConfigUpdate({ borderStyle: style })}
+        />
       </div>
 
       {/* Bouton de participation */}
