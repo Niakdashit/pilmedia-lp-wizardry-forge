@@ -39,10 +39,47 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         gameType: 'wheel',
         gameMode: 'mode1-sequential',
         displayMode: 'mode1-banner-game',
-        storyText: campaignData.content?.description || 'Campagne Studio créée',
+        storyText: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
         publisherLink: '',
-        prizeText: campaignData.content?.callToAction || 'Participez et tentez de gagner !',
-        customTexts: [],
+        prizeText: campaignData.content?.subtitle || campaignData.content?.description || 'Participez et tentez de gagner !',
+        customTexts: [
+          {
+            id: 'main-title',
+            text: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
+            type: 'title',
+            position: { x: 0, y: 0 },
+            style: {
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: '#ffffff',
+              textAlign: 'center'
+            }
+          },
+          {
+            id: 'subtitle',
+            text: campaignData.content?.subtitle || '',
+            type: 'subtitle',
+            position: { x: 0, y: 60 },
+            style: {
+              fontSize: '24px',
+              fontWeight: 'medium',
+              color: '#ffffff',
+              textAlign: 'center'
+            }
+          },
+          {
+            id: 'description',
+            text: campaignData.content?.description || '',
+            type: 'description',
+            position: { x: 0, y: 120 },
+            style: {
+              fontSize: '16px',
+              fontWeight: 'normal',
+              color: '#ffffff',
+              textAlign: 'center'
+            }
+          }
+        ].filter(text => text.text), // Supprimer les textes vides
         centerText: false,
         centerForm: true,
         centerGameZone: true,
@@ -50,10 +87,10 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         outlineColor: campaignData.design?.accentColor || '#ffffff',
         borderStyle: 'classic',
         jackpotBorderStyle: 'classic',
-        participateButtonText: campaignData.content?.callToAction || 'PARTICIPER !',
+        participateButtonText: campaignData.content?.callToAction || 'JOUER MAINTENANT',
         participateButtonColor: campaignData.design?.primaryColor || '#ff6b35',
         participateButtonTextColor: campaignData.design?.accentColor || '#ffffff',
-        footerText: '',
+        footerText: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
         footerColor: '#f8f9fa',
         customCSS: '',
         customJS: '',
