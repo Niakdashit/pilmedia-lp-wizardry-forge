@@ -135,10 +135,12 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-6 md:px-12">
               {/* Titre principal */}
               <h1 
-                className={`${textSizes.title} font-titan font-black mb-4 text-white leading-tight`}
+                className={`${textSizes.title} font-brand font-black mb-4 text-white leading-tight`}
                 style={{
                   textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.3)',
-                  fontFamily: campaignData.brandAnalysis?.fontFamily || 'Titan One, cursive'
+                  fontFamily: campaignData.brandAnalysis?.fontFamily || 'Inter, sans-serif',
+                  fontWeight: '900',
+                  letterSpacing: '0.025em'
                 }}
               >
                 {campaignData.content?.title || 'PARTICIPEZ & GAGNEZ'}
