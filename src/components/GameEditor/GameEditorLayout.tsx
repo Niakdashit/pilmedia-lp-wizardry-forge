@@ -181,6 +181,64 @@ const GameEditorLayout: React.FC = () => {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [showUrlModal, setShowUrlModal] = useState(false);
   
+  
+  // Fonction pour transformer les données Studio vers le format EditorConfig
+  const transformStudioToEditorConfig = (studioData: any): EditorConfig => {
+    return {
+      width: 810,
+      height: 1200,
+      anchor: 'fixed',
+      gameType: 'wheel',
+      gameMode: 'mode1-sequential',
+      displayMode: 'mode1-banner-game',
+      storyText: studioData.content?.description || 'Campagne Studio créée',
+      publisherLink: '',
+      prizeText: studioData.content?.callToAction || 'Participez et tentez de gagner !',
+      customTexts: [],
+      centerText: false,
+      centerForm: true,
+      centerGameZone: true,
+      backgroundColor: studioData.design?.primaryColor || '#ffffff',
+      outlineColor: studioData.design?.accentColor || '#ffffff',
+      borderStyle: 'classic',
+      jackpotBorderStyle: 'classic',
+      participateButtonText: studioData.content?.callToAction || 'PARTICIPER !',
+      participateButtonColor: studioData.design?.primaryColor || '#ff6b35',
+      participateButtonTextColor: studioData.design?.accentColor || '#ffffff',
+      footerText: '',
+      footerColor: '#f8f9fa',
+      customCSS: '',
+      customJS: '',
+      trackingTags: '',
+      deviceConfig: {
+        mobile: {
+          fontSize: 14,
+          backgroundImage: studioData.design?.backgroundImage,
+          gamePosition: { x: 0, y: 0, scale: 1.7 }
+        },
+        tablet: {
+          fontSize: 16,
+          backgroundImage: studioData.design?.backgroundImage,
+          gamePosition: { x: 0, y: 0, scale: 1.7 }
+        },
+        desktop: {
+          fontSize: 18,
+          backgroundImage: studioData.design?.backgroundImage,
+          gamePosition: { x: 0, y: 0, scale: 1.7 }
+        }
+      },
+      autoSyncOnDeviceChange: false,
+      autoSyncRealTime: false,
+      autoSyncBaseDevice: 'desktop',
+      brandAssets: {
+        logo: studioData.design?.centerLogo,
+        primaryColor: studioData.design?.primaryColor,
+        secondaryColor: studioData.design?.secondaryColor,
+        accentColor: studioData.design?.accentColor
+      }
+    };
+  };
+
   // Fonction pour initialiser la configuration depuis le localStorage ou par défaut
   const initializeConfig = (): EditorConfig => {
     try {
@@ -188,9 +246,17 @@ const GameEditorLayout: React.FC = () => {
       if (savedConfig) {
         const parsedConfig = JSON.parse(savedConfig);
         console.log('Loading campaign from QuickCampaign:', parsedConfig);
-        // Nettoyer le localStorage après chargement
-        localStorage.removeItem('editorConfig');
+        // Ne pas nettoyer le localStorage immédiatement pour permettre les rechargements
         return parsedConfig;
+      }
+      
+      // Essayer de charger depuis studioPreview si editorConfig n'existe pas
+      const studioData = localStorage.getItem('studioPreview');
+      if (studioData) {
+        const studioConfig = JSON.parse(studioData);
+        console.log('Loading from Studio data:', studioConfig);
+        // Transformer les données Studio en format EditorConfig
+        return transformStudioToEditorConfig(studioConfig);
       }
     } catch (error) {
       console.error('Error loading saved config:', error);

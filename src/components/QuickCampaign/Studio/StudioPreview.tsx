@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { ChevronLeft, Smartphone, Tablet, Monitor, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import InteractiveWheel from './InteractiveWheel';
@@ -24,10 +23,14 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
   onBack
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
-  const navigate = useNavigate();
 
   const handleAdvancedEditor = () => {
     try {
+      // Nettoyer d'abord le localStorage
+      localStorage.removeItem('editorConfig');
+      localStorage.removeItem('studioPreview');
+      localStorage.removeItem('game_live_preview_config');
+      
       // Transformer les données Studio vers le format EditorConfig
       const editorConfig = {
         width: 810,
@@ -79,6 +82,12 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         wheelConfig: {},
         brandAnalysis: campaignData.brandAnalysis || null,
         centerLogo: logoUrl || null,
+        brandAssets: {
+          logo: logoUrl,
+          primaryColor: campaignData.design?.primaryColor,
+          secondaryColor: campaignData.design?.secondaryColor,
+          accentColor: campaignData.design?.accentColor
+        },
         designColors: {
           primary: campaignData.design?.primaryColor,
           secondary: campaignData.design?.secondaryColor,
@@ -96,10 +105,14 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         }
       };
       
+      // Sauvegarder dans localStorage
       localStorage.setItem('studioPreview', JSON.stringify(fullCampaignData));
       localStorage.setItem('editorConfig', JSON.stringify(editorConfig));
       
-      navigate('/campaign-editor');
+      console.log('Transferring Studio data:', { fullCampaignData, editorConfig });
+      
+      // Naviguer vers l'éditeur avec rechargement forcé
+      window.location.href = '/campaign-editor';
     } catch (error) {
       console.error('Erreur lors du transfert vers l\'éditeur:', error);
     }
