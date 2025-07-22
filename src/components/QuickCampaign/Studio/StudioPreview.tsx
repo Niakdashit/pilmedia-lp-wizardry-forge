@@ -61,38 +61,8 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
     }
   };
 
-  // Fonction pour déterminer la police basée sur l'analyse de marque
-  const getBrandFont = () => {
-    const detectedFont = campaignData.brandAnalysis?.fontFamily;
-    console.log('Detected font from brand analysis:', detectedFont);
-    
-    // Mapping des polices détectées vers les classes Tailwind
-    const fontMap: { [key: string]: string } = {
-      'Titan One': 'font-sifonn',
-      'Bebas Neue': 'font-condensed', 
-      'Oswald': 'font-oswald',
-      'Anton': 'font-condensed',
-      'Impact': 'font-impact',
-      'Montserrat': 'font-sans',
-      'Roboto': 'font-sans',
-      'Open Sans': 'font-sans',
-      'Inter': 'font-sans'
-    };
-    
-    // Si la police détectée correspond à un mapping, l'utiliser
-    if (detectedFont && fontMap[detectedFont]) {
-      console.log('Using mapped font class:', fontMap[detectedFont]);
-      return fontMap[detectedFont];
-    }
-    
-    // Sinon, utiliser la police par défaut pour le style "impactant"
-    console.log('Using default impact font: font-sifonn');
-    return 'font-sifonn';
-  };
-
   const deviceStyle = getDeviceStyle();
   const textSizes = getTextSize();
-  const brandFontClass = getBrandFont();
 
   return (
     <div className="w-full">
@@ -166,12 +136,9 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-6 md:px-12">
               {/* Titre principal avec police de marque */}
               <h1 
-                className={`${textSizes.title} ${brandFontClass} font-black mb-4 text-white leading-tight`}
+                className={`${textSizes.title} font-medium mb-4 text-white leading-tight`}
                 style={{
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.3)',
-                  fontFamily: campaignData.brandAnalysis?.fontFamily || 'Titan One, Impact, sans-serif',
-                  fontWeight: '900',
-                  letterSpacing: '0.025em'
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.3)'
                 }}
               >
                 {campaignData.content?.title || 'PARTICIPEZ & GAGNEZ'}
@@ -200,18 +167,19 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
               </div>
 
               {/* Call to Action */}
-              <Button
-                size="lg"
-                className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200`}
+              <a
+                href="#"
+                className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200 inline-block text-center cursor-pointer`}
                 style={{
                   backgroundColor: campaignData.design?.primaryColor || '#006799',
                   color: campaignData.design?.accentColor || '#ffffff',
                   border: `3px solid ${campaignData.design?.accentColor || '#ffffff'}`,
-                  boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`
+                  boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`,
+                  textDecoration: 'none'
                 }}
               >
                 {campaignData.content?.callToAction || 'JOUER MAINTENANT'}
-              </Button>
+              </a>
 
               {/* Description */}
               {campaignData.content?.description && (

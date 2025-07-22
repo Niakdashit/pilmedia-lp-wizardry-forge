@@ -36,7 +36,7 @@ const InteractiveWheel: React.FC<InteractiveWheelProps> = ({
     <SmartWheel
       segments={segments}
       theme="modern"
-      size={180}
+      size={240}
       gamePosition={{ x: 0, y: 0, scale: 1.7 }}
       brandColors={brandColors}
       onSpin={onSpin}
