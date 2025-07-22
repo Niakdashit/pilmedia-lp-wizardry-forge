@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -16,26 +15,61 @@ interface StudioCampaignRequest {
   objective?: string;
 }
 
-interface BrandAnalysis {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  fontFamily: string;
-  brandName: string;
-  industry: string;
-  tone: string;
-}
-
-interface GeneratedContent {
-  title: string;
-  subtitle: string;
-  callToAction: string;
-  description: string;
-  visualStyle: {
-    typography: string;
-    layout: string;
-    effectsAndShadows: string;
+interface ProfessionalCampaignResult {
+  palette_couleurs: Array<{
+    nom: string;
+    hexa: string;
+  }>;
+  polices: Array<{
+    nom: string;
+    utilisation: string;
+  }>;
+  ambiance_et_keywords: string[];
+  extrait_du_ton_editorial: string;
+  slogan_officiel: string | null;
+  wording_jeu_concours: {
+    titre: string;
+    sous_titre: string;
+    mecanique: string;
+    avantage_client: string;
+    call_to_action: string;
   };
+  structure_visuelle: {
+    format_pc_16_9: {
+      logo: string;
+      image_fond: string;
+      emplacements_textes: {
+        titre: string;
+        sous_titre: string;
+        mecanique: string;
+        avantage_client: string;
+        call_to_action: string;
+      };
+    };
+    format_tablette: {
+      logo: string;
+      image_fond: string;
+      emplacements_textes: {
+        titre: string;
+        sous_titre: string;
+        mecanique: string;
+        avantage_client: string;
+        call_to_action: string;
+      };
+    };
+    format_mobile_9_16: {
+      logo: string;
+      image_fond: string;
+      emplacements_textes: {
+        titre: string;
+        sous_titre: string;
+        mecanique: string;
+        avantage_client: string;
+        call_to_action: string;
+      };
+    };
+  };
+  commentaires_design: string;
 }
 
 serve(async (req) => {
@@ -50,43 +84,27 @@ serve(async (req) => {
     }
 
     const body: StudioCampaignRequest = await req.json();
-    console.log('Studio campaign request:', body);
+    console.log('🎬 Studio campaign request:', body);
 
-    // 1. Analyser le site web pour extraire les infos de marque
-    let brandAnalysis: BrandAnalysis | null = null;
-    if (body.websiteUrl) {
-      brandAnalysis = await analyzeBrand(body.websiteUrl, OPENAI_API_KEY, body.backgroundImageUrl, body.logoUrl);
-    }
-
-    // 2. Générer le contenu de campagne avec IA
-    const generatedContent = await generateCampaignContent(
+    // Générer la campagne avec votre prompt structuré exact
+    const professionalCampaign = await generateProfessionalCampaign(
       body,
-      brandAnalysis,
       OPENAI_API_KEY
     );
 
-    // 3. Créer la configuration complète de la campagne
-    const campaignConfig = {
-      brandAnalysis,
-      content: generatedContent,
-      design: {
-        primaryColor: brandAnalysis?.primaryColor || '#841b60',
-        secondaryColor: brandAnalysis?.secondaryColor || '#dc2626',
-        accentColor: brandAnalysis?.accentColor || '#ffffff',
-        fontFamily: brandAnalysis?.fontFamily || 'Titan One',
-        backgroundImageUrl: body.backgroundImageUrl,
-        logoUrl: body.logoUrl,
-      }
-    };
+    console.log('✅ Professional campaign generated:', professionalCampaign);
 
-    console.log('Final campaign config:', campaignConfig);
+    // Transformer le résultat pour l'ancien format (compatibilité)
+    const campaignConfig = transformToLegacyFormat(professionalCampaign, body);
+
+    console.log('🔄 Final campaign config:', campaignConfig);
 
     return new Response(JSON.stringify(campaignConfig), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in studio-campaign-generator:', error);
+    console.error('❌ Error in studio-campaign-generator:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -94,200 +112,138 @@ serve(async (req) => {
   }
 });
 
-async function analyzeBrand(websiteUrl: string, apiKey: string, backgroundImageUrl?: string, logoUrl?: string): Promise<BrandAnalysis> {
-  console.log('Analyzing brand from:', websiteUrl);
-  console.log('Background image URL:', backgroundImageUrl);
-  console.log('Logo URL:', logoUrl);
-  
-  // Récupérer le contenu du site web
-  let websiteContent = '';
-  try {
-    const response = await fetch(websiteUrl);
-    websiteContent = await response.text();
-    // Limiter le contenu pour éviter les tokens excessifs
-    websiteContent = websiteContent.substring(0, 10000);
-  } catch (error) {
-    console.warn('Could not fetch website content:', error);
-    websiteContent = `Site web: ${websiteUrl}`;
-  }
-
-  const logoAnalysis = logoUrl ? `
-
-🎨 ANALYSE DU LOGO FOURNI: ${logoUrl}
-Analysez visuellement ce logo pour détecter:
-1. Style typographique (est-ce condensé comme "Sifonn", "Impact", "Bebas Neue" ?)
-2. Si le texte est en majuscules et condensé, utilisez "Titan One" ou "Bebas Neue"
-3. Si c'est un style moderne sans-serif épais, utilisez "Oswald" ou "Anton"
-4. Si c'est traditionnel, utilisez "Montserrat" ou "Roboto"
-5. Couleurs dominantes du logo (à prioriser sur tout le reste)
-` : '';
-
-  const backgroundAnalysis = backgroundImageUrl ? `
-
-🖼️ IMAGE DE FOND PRIORITAIRE: ${backgroundImageUrl}
-RÈGLE ABSOLUE: Cette image de fond doit être la SOURCE PRINCIPALE des couleurs.
-Analysez cette image pour extraire:
-1. Couleur la plus dominante (primaryColor) - celle qui occupe le plus d'espace
-2. Couleur secondaire contrastante (secondaryColor) 
-3. Couleur d'accent claire ou foncée (accentColor) qui ressort bien
-4. Ignorez les couleurs du site web si cette image est fournie
-5. Assurez-vous que primaryColor et secondaryColor créent un bon contraste
-` : '';
-
-  const prompt = `
-Tu es un expert en analyse de marque et design visuel. Analyse ce site web et extrais les informations clés.
-
-CONTENU DU SITE WEB:
-${websiteContent}
-${logoAnalysis}
-${backgroundAnalysis}
-
-🔍 INSTRUCTIONS SPÉCIALES POUR LES POLICES:
-- Si tu détectes un style "SIFONN", "Impact", "condensé" ou "majuscules épaisses" → utilise "Titan One"
-- Si tu vois un style moderne sans-serif épais → utilise "Bebas Neue" ou "Oswald"  
-- Si c'est du texte traditionnel → utilise "Montserrat", "Roboto" ou "Open Sans"
-- Pour Homair ou style vacances → privilégie "Titan One" ou "Bebas Neue" (impact fort)
-- TOUJOURS analyser le logo uploadé en priorité pour la police
-
-🎨 PRIORITÉS DES COULEURS:
-1. Image de fond (si fournie) = PRIORITÉ ABSOLUE
-2. Logo uploadé = PRIORITÉ ÉLEVÉE  
-3. Site web = Seulement si pas d'image/logo
-
-Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte:
-{
-  "primaryColor": "#hexcode",
-  "secondaryColor": "#hexcode", 
-  "accentColor": "#hexcode",
-  "fontFamily": "nom exact de police détectée",
-  "brandName": "nom de la marque",
-  "industry": "secteur d'activité",
-  "tone": "ton de communication"
-}
-
-EXEMPLES DE POLICES À UTILISER:
-- "Titan One" (pour style Sifonn/Impact/condensé)
-- "Bebas Neue" (moderne condensé)
-- "Oswald" (sans-serif condensé)
-- "Anton" (bold condensé)
-- "Montserrat" (moderne polyvalent)
-- "Roboto" (tech/moderne)
-
-⚠️ IMPORTANT: Réponds SEULEMENT avec le JSON, aucun autre texte.
-`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { 
-          role: 'system', 
-          content: 'Tu es un expert en analyse de marque et design visuel. Tu détectes les polices de style "Sifonn", "Impact", condensées et les couleurs dominantes des images. Réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.' 
-        },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.2,
-    }),
-  });
-
-  const data = await response.json();
-  const content = data.choices[0].message.content;
-  
-  console.log('Raw AI response for brand analysis:', content);
-  
-  try {
-    // Nettoyer le contenu pour extraire le JSON
-    let cleanContent = content.trim();
-    
-    // Supprimer les blocs de code markdown s'il y en a
-    if (cleanContent.startsWith('```')) {
-      cleanContent = cleanContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
-    }
-    
-    // Trouver le JSON dans la réponse
-    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
-    const jsonContent = jsonMatch ? jsonMatch[0] : cleanContent;
-    
-    console.log('Cleaned JSON content:', jsonContent);
-    
-    const parsedResult = JSON.parse(jsonContent);
-    console.log('Successfully parsed brand analysis:', parsedResult);
-    
-    return parsedResult;
-  } catch (e) {
-    console.error('Failed to parse brand analysis. Raw content:', content);
-    console.error('Parse error:', e);
-    
-    // Fallback intelligent basé sur le contexte
-    const fallbackFont = logoUrl || backgroundImageUrl ? 'Titan One' : 'Montserrat';
-    
-    return {
-      primaryColor: '#006799',
-      secondaryColor: '#5bbad5', 
-      accentColor: '#ffffff',
-      fontFamily: fallbackFont,
-      brandName: 'Votre Marque',
-      industry: 'général',
-      tone: 'moderne'
-    };
-  }
-}
-
-async function generateCampaignContent(
+async function generateProfessionalCampaign(
   request: StudioCampaignRequest,
-  brandAnalysis: BrandAnalysis | null,
   apiKey: string
-): Promise<GeneratedContent> {
-  console.log('Generating campaign content...');
+): Promise<ProfessionalCampaignResult> {
+  console.log('🎨 Generating professional campaign...');
 
-  const brandInfo = brandAnalysis ? `
-Marque: ${brandAnalysis.brandName}
-Secteur: ${brandAnalysis.industry}
-Ton: ${brandAnalysis.tone}
-Police: ${brandAnalysis.fontFamily}
-Couleurs: ${brandAnalysis.primaryColor}, ${brandAnalysis.secondaryColor}
-` : '';
-
-  const prompt = `
-Créez une campagne marketing de niveau STUDIO professionnel avec ces informations:
-
-${brandInfo}
-Type de campagne: ${request.campaignType || 'jeu-concours'}
-Public cible: ${request.targetAudience || 'général'}
-Objectif: ${request.objective || 'engagement'}
-
-Créez du contenu percutant qui ressemble aux meilleures campagnes Canva/Adobe. Le contenu doit être:
-- IMPACTANT et MÉMORABLE
-- Adapté à la marque et son secteur
-- Optimisé pour le digital et mobile
-- Niveau studio professionnel avec un titre accrocheur
-
-Retournez UNIQUEMENT un objet JSON avec cette structure exacte:
-{
-  "title": "TITRE PRINCIPAL IMPACTANT (en majuscules si approprié)",
-  "subtitle": "Sous-titre complémentaire engageant",
-  "callToAction": "CALL TO ACTION PUISSANT",
-  "description": "Description détaillée de l'offre et des bénéfices",
-  "visualStyle": {
-    "typography": "Style typographique recommandé",
-    "layout": "Disposition recommandée des éléments", 
-    "effectsAndShadows": "Effets visuels et ombres recommandés"
+  // Récupérer le contenu du site web si fourni
+  let websiteContent = '';
+  if (request.websiteUrl) {
+    try {
+      console.log('🌐 Fetching website content from:', request.websiteUrl);
+      const response = await fetch(request.websiteUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; CampaignGenerator/1.0)'
+        }
+      });
+      websiteContent = await response.text();
+      // Limiter le contenu pour éviter les tokens excessifs
+      websiteContent = websiteContent.substring(0, 15000);
+      console.log('✅ Website content fetched, length:', websiteContent.length);
+    } catch (error) {
+      console.warn('⚠️ Could not fetch website content:', error);
+      websiteContent = `Site web fourni: ${request.websiteUrl}`;
+    }
   }
+
+  const logoInfo = request.logoUrl ? `\nLogo fourni: ${request.logoUrl}` : '';
+  const backgroundInfo = request.backgroundImageUrl ? `\nImage de fond fournie: ${request.backgroundImageUrl}` : '';
+
+  // Votre prompt exact
+  const prompt = `Génère une campagne de jeu concours digital adapté à une marque donnée, prêt à l'emploi, en t'appuyant sur les éléments suivants : l'URL officielle du site de la marque (à explorer pour comprendre l'univers visuel/la tonalité), un logo fourni (à utiliser sans modification), et une image de fond fournie (ou à défaut, propose une ambiance en cohérence avec la marque). Le visuel doit être décliné pour trois formats (PC 16:9, tablette et mobile 9:16), respecter strictement la charte graphique et le ton de la marque, sans jamais paraître générique ou IA généré.
+
+Procède ainsi :
+- Analyse l'URL pour identifier et extraire : 
+    - Couleurs dominantes (en hexa) 
+    - Polices principales (noms précis si trouvés)
+    - Ambiance visuelle/mots-clés descriptifs 
+    - Ton éditorial 
+    - Slogan officiel de la marque (si existant et pertinent)
+- Utilise obligatoirement (sans aucune modification ni génération) :
+    - Le logo uploadé 
+    - L'image de fond uploadée (ou, s'il n'y en a pas : crée une proposition d'ambiance fidèle à la marque)
+- Structure le wording typique d'un jeu concours selon les usages français (évite tournures artificielles ou IA, reste professionnel et fluide) : 
+    - Titre principal impactant 
+    - Sous-titre/explanation 
+    - Mécanique de participation claire (ex : "Tournez la roue", "Remplissez le formulaire…")
+    - Avantage/bénéfice client 
+    - Call-to-action percutant 
+- Peaufine tout wording pour la cible (style moderne/sobre/ludique selon secteur).
+- Propose une structure visuelle pour le rendu : 
+    - Placement du logo
+    - Positionnement de l'image de fond
+    - Recommandations d'emplacement pour chaque bloc de texte, par version POS (PC / tablette / mobile)
+- Le tout en garantissant un rendu niveau design studio.
+- Assure-toi que le rendu final respecte à la lettre la charte, l'univers, et cible de la marque (jamais d'effet générique ou IA).
+
+DONNÉES D'ENTRÉE :
+URL du site: ${request.websiteUrl || 'non fournie'}
+${logoInfo}
+${backgroundInfo}
+Type de campagne: ${request.campaignType || 'roue de la fortune'}
+Public cible: ${request.targetAudience || 'grand public'}
+Objectif: ${request.objective || 'engagement et génération de leads'}
+
+CONTENU DU SITE WEB À ANALYSER :
+${websiteContent}
+
+Format de ta réponse (en français, structuré et exhaustif) en JSON :
+{
+  "palette_couleurs": [
+    {"nom": "[Nom ou brève description de la couleur]", "hexa": "[#RRGGBB]"}
+    // ...jusqu'à 5 couleurs principales
+  ],
+  "polices": [
+    {"nom": "[Nom exact de la police]", "utilisation": "[titres, texte courant, etc.]"}
+    // ...autant que nécessaire
+  ],
+  "ambiance_et_keywords": ["mot-clé1", "mot-clé2", "adjectif1", ...],
+  "extrait_du_ton_editorial": "[court extrait ou description du registre et du ton de la marque identifié sur son site]",
+  "slogan_officiel": "[slogan ou null]",
+  "wording_jeu_concours": {
+    "titre": "[Titre principal accrocheur]",
+    "sous_titre": "[Phrase explicative ou incitative]",
+    "mecanique": "[Description de la mécanique de participation]",
+    "avantage_client": "[Formulation de l'avantage/lot ciblé]",
+    "call_to_action": "[CTA engageant et concis]"
+  },
+  "structure_visuelle": {
+    "format_pc_16_9": {
+      "logo": "[suggestion précise de placement]",
+      "image_fond": "[description de l'utilisation]",
+      "emplacements_textes": {
+        "titre": "[suggestion de placement]",
+        "sous_titre": "[suggestion de placement]",
+        "mecanique": "[suggestion de placement]",
+        "avantage_client": "[suggestion de placement]",
+        "call_to_action": "[suggestion emplacement/format]"
+      }
+    },
+    "format_tablette": {
+      "logo": "[suggestion précise de placement]",
+      "image_fond": "[description de l'utilisation]",
+      "emplacements_textes": {
+        "titre": "[suggestion de placement]",
+        "sous_titre": "[suggestion de placement]",
+        "mecanique": "[suggestion de placement]",
+        "avantage_client": "[suggestion de placement]",
+        "call_to_action": "[suggestion emplacement/format]"
+      }
+    },
+    "format_mobile_9_16": {
+      "logo": "[suggestion précise de placement]",
+      "image_fond": "[description de l'utilisation]",
+      "emplacements_textes": {
+        "titre": "[suggestion de placement]",
+        "sous_titre": "[suggestion de placement]",
+        "mecanique": "[suggestion de placement]",
+        "avantage_client": "[suggestion de placement]",
+        "call_to_action": "[suggestion emplacement/format]"
+      }
+    }
+  },
+  "commentaires_design": "[Consignes additionnelles pour studio : style, intégration, détails pour éviter l'effet template, etc.]"
 }
 
-Exemples de titres pour différents secteurs:
-- Tourisme: "DÉCOUVREZ VOTRE ÉVASION DE RÊVE !"
-- Fitness: "TRANSFORMEZ VOTRE CORPS AUJOURD'HUI !"
-- Tech: "DÉVERROUILLEZ LE FUTUR !"
-- Mode: "RÉVÉLEZ VOTRE STYLE UNIQUE !"
+RAPPEL INSTRUCTIONS CLÉS :  
+- Explore précisément l'URL pour l'univers et charte.
+- Utilise le logo et l'image fournie seulement (pas d'altération ou IA).
+- Rends le wording et le rendu irréprochables, sans aucun effet "template".
+- Structure ta sortie en JSON exhaustif, en français.
 
-⚠️ IMPORTANT: Réponds SEULEMENT avec le JSON, aucun autre texte.
-`;
+⚠️ IMPORTANT: Réponds SEULEMENT avec le JSON, aucun autre texte.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -296,22 +252,22 @@ Exemples de titres pour différents secteurs:
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         { 
           role: 'system', 
-          content: 'Tu es un expert en marketing digital et copywriting. Crée du contenu de niveau studio professionnel. Réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.' 
+          content: 'Tu es un expert en analyse de marque et génération de campagnes marketing de niveau studio professionnel. Tu analyses les sites web pour comprendre l\'univers visuel, la tonalité et la charte graphique des marques. Tu génères des campagnes sans effet générique ou IA. Réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.' 
         },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.8,
+      temperature: 0.3,
     }),
   });
 
   const data = await response.json();
   const content = data.choices[0].message.content;
   
-  console.log('Raw AI response for content generation:', content);
+  console.log('🤖 Raw AI response:', content);
   
   try {
     // Nettoyer le contenu pour extraire le JSON
@@ -326,27 +282,118 @@ Exemples de titres pour différents secteurs:
     const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
     const jsonContent = jsonMatch ? jsonMatch[0] : cleanContent;
     
-    console.log('Cleaned content JSON:', jsonContent);
+    console.log('🧹 Cleaned JSON content:', jsonContent);
     
     const parsedResult = JSON.parse(jsonContent);
-    console.log('Successfully parsed campaign content:', parsedResult);
+    console.log('✅ Successfully parsed professional campaign:', parsedResult);
     
     return parsedResult;
   } catch (e) {
-    console.error('Failed to parse campaign content. Raw content:', content);
+    console.error('❌ Failed to parse professional campaign. Raw content:', content);
     console.error('Parse error:', e);
     
-    // Fallback avec du contenu par défaut
+    // Fallback avec du contenu professionnel par défaut
     return {
-      title: 'PARTICIPEZ & GAGNEZ',
-      subtitle: 'Une expérience unique vous attend',
-      callToAction: 'JOUER MAINTENANT',
-      description: 'Tentez votre chance et remportez des prix exceptionnels',
-      visualStyle: {
-        typography: 'Titre en gras, sous-titre léger',
-        layout: 'Centré avec hiérarchie claire',
-        effectsAndShadows: 'Ombres portées subtiles'
-      }
+      palette_couleurs: [
+        { nom: "Bleu identité", hexa: "#006799" },
+        { nom: "Blanc pur", hexa: "#FFFFFF" },
+        { nom: "Bleu accent", hexa: "#35A7FF" }
+      ],
+      polices: [
+        { nom: "Montserrat", utilisation: "Titres" },
+        { nom: "Roboto", utilisation: "Texte courant" }
+      ],
+      ambiance_et_keywords: ["professionnel", "moderne", "digital", "engagement"],
+      extrait_du_ton_editorial: "Ton professionnel et engageant, adapté au digital moderne.",
+      slogan_officiel: null,
+      wording_jeu_concours: {
+        titre: "Participez à notre grand jeu concours !",
+        sous_titre: "Une expérience unique vous attend",
+        mecanique: "Tournez la roue pour découvrir votre cadeau",
+        avantage_client: "Des prix exceptionnels à gagner chaque jour !",
+        call_to_action: "Je joue maintenant"
+      },
+      structure_visuelle: {
+        format_pc_16_9: {
+          logo: "En haut à gauche, bien visible sur fond contrasté",
+          image_fond: "En pleine largeur, avec overlay léger pour lisibilité",
+          emplacements_textes: {
+            titre: "Centré en haut, grande taille impactante",
+            sous_titre: "Sous le titre, taille moyenne",
+            mecanique: "Centre de l'écran, bien visible",
+            avantage_client: "En bas à droite, mise en valeur",
+            call_to_action: "Bouton proéminent en bas au centre"
+          }
+        },
+        format_tablette: {
+          logo: "En haut à gauche, taille adaptée",
+          image_fond: "Pleine largeur, overlay adapté",
+          emplacements_textes: {
+            titre: "Centré, taille adaptée à l'écran",
+            sous_titre: "Sous le titre, bien espacé",
+            mecanique: "Centre, lisibilité optimisée",
+            avantage_client: "En bas, bien visible",
+            call_to_action: "Bouton central, taille optimale"
+          }
+        },
+        format_mobile_9_16: {
+          logo: "En haut, centré ou à gauche",
+          image_fond: "Pleine hauteur, optimisé mobile",
+          emplacements_textes: {
+            titre: "Haut de l'écran, lecture verticale",
+            sous_titre: "Sous le titre, compact",
+            mecanique: "Milieu d'écran, concis",
+            avantage_client: "Vers le bas, accrocheur",
+            call_to_action: "Bouton fixe en bas d'écran"
+          }
+        }
+      },
+      commentaires_design: "Maintenir la cohérence de marque, éviter l'effet template générique, optimiser la lisibilité sur tous supports."
     };
   }
+}
+
+function transformToLegacyFormat(professionalCampaign: ProfessionalCampaignResult, request: StudioCampaignRequest) {
+  // Extraire la couleur primaire (première couleur de la palette)
+  const primaryColor = professionalCampaign.palette_couleurs[0]?.hexa || '#006799';
+  const secondaryColor = professionalCampaign.palette_couleurs[1]?.hexa || '#FFFFFF';
+  const accentColor = professionalCampaign.palette_couleurs[2]?.hexa || '#35A7FF';
+  
+  // Extraire la police principale
+  const fontFamily = professionalCampaign.polices[0]?.nom || 'Montserrat';
+
+  return {
+    // Nouveau format professionnel complet
+    professionalData: professionalCampaign,
+    
+    // Format legacy pour compatibilité
+    brandAnalysis: {
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      fontFamily,
+      brandName: 'Marque',
+      industry: professionalCampaign.ambiance_et_keywords[0] || 'général',
+      tone: professionalCampaign.extrait_du_ton_editorial
+    },
+    content: {
+      title: professionalCampaign.wording_jeu_concours.titre,
+      subtitle: professionalCampaign.wording_jeu_concours.sous_titre,
+      callToAction: professionalCampaign.wording_jeu_concours.call_to_action,
+      description: professionalCampaign.wording_jeu_concours.avantage_client,
+      visualStyle: {
+        typography: fontFamily,
+        layout: professionalCampaign.structure_visuelle.format_pc_16_9.emplacements_textes.titre,
+        effectsAndShadows: professionalCampaign.commentaires_design
+      }
+    },
+    design: {
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      fontFamily,
+      backgroundImageUrl: request.backgroundImageUrl,
+      logoUrl: request.logoUrl,
+    }
+  };
 }
