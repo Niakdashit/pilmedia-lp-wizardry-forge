@@ -184,6 +184,69 @@ const GameEditorLayout: React.FC = () => {
   
   // Fonction pour transformer les données Studio vers le format EditorConfig
   const transformStudioToEditorConfig = (studioData: any): EditorConfig => {
+    // Créer les customTexts depuis les données Studio
+    const customTexts: CustomText[] = [];
+    
+    if (studioData.content?.title) {
+      customTexts.push({
+        id: 'main-title',
+        content: studioData.content.title,
+        x: 50,
+        y: 20,
+        fontSize: 48,
+        fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+        color: '#ffffff',
+        fontWeight: 'bold',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'center',
+        hasEffect: true,
+        isAnimated: false,
+        width: 700,
+        height: 60
+      });
+    }
+    
+    if (studioData.content?.subtitle) {
+      customTexts.push({
+        id: 'subtitle',
+        content: studioData.content.subtitle,
+        x: 50,
+        y: 100,
+        fontSize: 24,
+        fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+        color: '#ffffff',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'center',
+        hasEffect: true,
+        isAnimated: false,
+        width: 700,
+        height: 30
+      });
+    }
+    
+    if (studioData.content?.description) {
+      customTexts.push({
+        id: 'description',
+        content: studioData.content.description,
+        x: 50,
+        y: 1000,
+        fontSize: 16,
+        fontFamily: studioData.brandAnalysis?.fontFamily || 'Arial',
+        color: '#ffffff',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'center',
+        hasEffect: true,
+        isAnimated: false,
+        width: 700,
+        height: 60
+      });
+    }
+    
     return {
       width: 810,
       height: 1200,
@@ -191,10 +254,10 @@ const GameEditorLayout: React.FC = () => {
       gameType: 'wheel',
       gameMode: 'mode1-sequential',
       displayMode: 'mode1-banner-game',
-      storyText: studioData.content?.description || 'Campagne Studio créée',
+      storyText: studioData.content?.title || 'Campagne Studio créée',
       publisherLink: '',
       prizeText: studioData.content?.callToAction || 'Participez et tentez de gagner !',
-      customTexts: [],
+      customTexts: customTexts,
       centerText: false,
       centerForm: true,
       centerGameZone: true,
@@ -205,7 +268,7 @@ const GameEditorLayout: React.FC = () => {
       participateButtonText: studioData.content?.callToAction || 'PARTICIPER !',
       participateButtonColor: studioData.design?.primaryColor || '#ff6b35',
       participateButtonTextColor: studioData.design?.accentColor || '#ffffff',
-      footerText: '',
+      footerText: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
       footerColor: '#f8f9fa',
       customCSS: '',
       customJS: '',
