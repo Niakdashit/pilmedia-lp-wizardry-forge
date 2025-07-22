@@ -54,7 +54,7 @@ serve(async (req) => {
     // 1. Analyser le site web pour extraire les infos de marque
     let brandAnalysis: BrandAnalysis | null = null;
     if (body.websiteUrl) {
-      brandAnalysis = await analyzeBrand(body.websiteUrl, OPENAI_API_KEY);
+      brandAnalysis = await analyzeBrand(body.websiteUrl, OPENAI_API_KEY, body.backgroundImageUrl);
     }
 
     // 2. Générer le contenu de campagne avec IA
@@ -91,7 +91,7 @@ serve(async (req) => {
   }
 });
 
-async function analyzeBrand(websiteUrl: string, apiKey: string): Promise<BrandAnalysis> {
+async function analyzeBrand(websiteUrl: string, apiKey: string, backgroundImageUrl?: string): Promise<BrandAnalysis> {
   console.log('Analyzing brand from:', websiteUrl);
   
   // Récupérer le contenu du site web
@@ -106,23 +106,41 @@ async function analyzeBrand(websiteUrl: string, apiKey: string): Promise<BrandAn
     websiteContent = `Site web: ${websiteUrl}`;
   }
 
+  const backgroundAnalysis = backgroundImageUrl ? `
+
+IMPORTANT: Une image de fond a été fournie: ${backgroundImageUrl}
+Vous devez analyser cette image pour extraire les couleurs dominantes et les utiliser comme base pour votre palette de couleurs. Les couleurs de l'image de fond doivent être prioritaires sur celles du site web.
+
+Analysez cette image de fond pour:
+1. Couleur dominante (primaryColor)
+2. Couleur secondaire visible (secondaryColor) 
+3. Couleur d'accent qui contraste bien (accentColor)
+4. Assurez-vous que les couleurs extraites créent un bon contraste pour la lisibilité du texte
+` : '';
+
   const prompt = `
 Analysez ce site web et extrayez les informations de marque clés. Voici le contenu HTML:
 
 ${websiteContent}
+${backgroundAnalysis}
 
 Retournez un objet JSON avec cette structure exacte:
 {
   "primaryColor": "#hexcode",
   "secondaryColor": "#hexcode", 
   "accentColor": "#hexcode",
-  "fontFamily": "nom de la police principale ou générique",
-  "brandName": "nom de la marque",
-  "industry": "secteur d'activité",
-  "tone": "ton de communication (moderne, élégant, dynamique, etc.)"
+  "fontFamily": "nom exact de la police principale détectée (Google Fonts de préférence)",
+  "brandName": "nom exact de la marque trouvé",
+  "industry": "secteur d'activité précis",
+  "tone": "ton de communication (moderne, élégant, dynamique, familial, etc.)"
 }
 
-Analysez les couleurs dominantes, les polices utilisées, le nom de la marque, le secteur d'activité et le ton de communication. Soyez précis et créatif dans vos choix de couleurs.
+Instructions spéciales:
+- Si une image de fond est fournie, PRIORITÉ aux couleurs de cette image
+- Pour fontFamily, cherchez les vraies polices utilisées (Montserrat, Roboto, Open Sans, etc.)
+- Analysez le CSS et les balles link pour détecter les Google Fonts
+- Les couleurs doivent être harmonieuses et professionnelles
+- accentColor doit contraster avec primaryColor pour les boutons
 `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -136,11 +154,11 @@ Analysez les couleurs dominantes, les polices utilisées, le nom de la marque, l
       messages: [
         { 
           role: 'system', 
-          content: 'Tu es un expert en analyse de marque et design. Réponds uniquement avec du JSON valide.' 
+          content: 'Tu es un expert en analyse de marque, design et extraction de couleurs. Réponds uniquement avec du JSON valide. Sois précis dans la détection des polices et couleurs.' 
         },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.7,
+      temperature: 0.3,
     }),
   });
 
@@ -148,15 +166,18 @@ Analysez les couleurs dominantes, les polices utilisées, le nom de la marque, l
   const content = data.choices[0].message.content;
   
   try {
-    return JSON.parse(content);
+    // Nettoyer le contenu pour extraire le JSON
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonContent = jsonMatch ? jsonMatch[0] : content;
+    return JSON.parse(jsonContent);
   } catch (e) {
     console.error('Failed to parse brand analysis:', content);
     // Fallback avec des valeurs par défaut
     return {
-      primaryColor: '#841b60',
-      secondaryColor: '#dc2626',
+      primaryColor: '#006799',
+      secondaryColor: '#5bbad5',
       accentColor: '#ffffff',
-      fontFamily: 'Montserrat',
+      fontFamily: 'Averta',
       brandName: 'Votre Marque',
       industry: 'général',
       tone: 'moderne'

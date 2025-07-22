@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import InteractiveWheel from './InteractiveWheel';
 
 interface StudioPreviewProps {
   campaignData: {
@@ -155,16 +156,14 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 </p>
               )}
 
-              {/* Zone de jeu simulée */}
+              {/* Zone de jeu interactive */}
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 mb-8 border border-white/20">
-                <div className="w-32 h-32 md:w-48 md:h-48 mx-auto rounded-full border-4 border-white/50 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-2xl md:text-4xl mb-2">🎯</div>
-                    <div className="text-sm md:text-base font-semibold">
-                      Zone de Jeu
-                    </div>
-                  </div>
-                </div>
+                <InteractiveWheel
+                  primaryColor={campaignData.design?.primaryColor || '#006799'}
+                  secondaryColor={campaignData.design?.secondaryColor || '#5bbad5'}
+                  accentColor={campaignData.design?.accentColor || '#ffffff'}
+                  onSpin={() => console.log('Roue tournée!')}
+                />
               </div>
 
               {/* Call to Action */}
@@ -172,9 +171,10 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 size="lg"
                 className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200`}
                 style={{
-                  backgroundColor: campaignData.design?.accentColor || '#ffffff',
-                  color: campaignData.design?.primaryColor || '#841b60',
-                  border: `3px solid ${campaignData.design?.primaryColor || '#841b60'}`
+                  backgroundColor: campaignData.design?.primaryColor || '#006799',
+                  color: campaignData.design?.accentColor || '#ffffff',
+                  border: `3px solid ${campaignData.design?.accentColor || '#ffffff'}`,
+                  boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`
                 }}
               >
                 {campaignData.content?.callToAction || 'JOUER MAINTENANT'}
