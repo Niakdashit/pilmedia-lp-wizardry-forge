@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -54,7 +55,7 @@ serve(async (req) => {
     // 1. Analyser le site web pour extraire les infos de marque
     let brandAnalysis: BrandAnalysis | null = null;
     if (body.websiteUrl) {
-      brandAnalysis = await analyzeBrand(body.websiteUrl, OPENAI_API_KEY, body.backgroundImageUrl);
+      brandAnalysis = await analyzeBrand(body.websiteUrl, OPENAI_API_KEY, body.backgroundImageUrl, body.logoUrl);
     }
 
     // 2. Générer le contenu de campagne avec IA
@@ -72,11 +73,13 @@ serve(async (req) => {
         primaryColor: brandAnalysis?.primaryColor || '#841b60',
         secondaryColor: brandAnalysis?.secondaryColor || '#dc2626',
         accentColor: brandAnalysis?.accentColor || '#ffffff',
-        fontFamily: brandAnalysis?.fontFamily || 'Montserrat',
+        fontFamily: brandAnalysis?.fontFamily || 'Titan One',
         backgroundImageUrl: body.backgroundImageUrl,
         logoUrl: body.logoUrl,
       }
     };
+
+    console.log('Final campaign config:', campaignConfig);
 
     return new Response(JSON.stringify(campaignConfig), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -91,8 +94,10 @@ serve(async (req) => {
   }
 });
 
-async function analyzeBrand(websiteUrl: string, apiKey: string, backgroundImageUrl?: string): Promise<BrandAnalysis> {
+async function analyzeBrand(websiteUrl: string, apiKey: string, backgroundImageUrl?: string, logoUrl?: string): Promise<BrandAnalysis> {
   console.log('Analyzing brand from:', websiteUrl);
+  console.log('Background image URL:', backgroundImageUrl);
+  console.log('Logo URL:', logoUrl);
   
   // Récupérer le contenu du site web
   let websiteContent = '';
@@ -106,41 +111,69 @@ async function analyzeBrand(websiteUrl: string, apiKey: string, backgroundImageU
     websiteContent = `Site web: ${websiteUrl}`;
   }
 
+  const logoAnalysis = logoUrl ? `
+
+🎨 ANALYSE DU LOGO FOURNI: ${logoUrl}
+Analysez visuellement ce logo pour détecter:
+1. Style typographique (est-ce condensé comme "Sifonn", "Impact", "Bebas Neue" ?)
+2. Si le texte est en majuscules et condensé, utilisez "Titan One" ou "Bebas Neue"
+3. Si c'est un style moderne sans-serif épais, utilisez "Oswald" ou "Anton"
+4. Si c'est traditionnel, utilisez "Montserrat" ou "Roboto"
+5. Couleurs dominantes du logo (à prioriser sur tout le reste)
+` : '';
+
   const backgroundAnalysis = backgroundImageUrl ? `
 
-IMPORTANT: Une image de fond a été fournie: ${backgroundImageUrl}
-Vous devez analyser cette image pour extraire les couleurs dominantes et les utiliser comme base pour votre palette de couleurs. Les couleurs de l'image de fond doivent être prioritaires sur celles du site web.
-
-Analysez cette image de fond pour:
-1. Couleur dominante (primaryColor)
-2. Couleur secondaire visible (secondaryColor) 
-3. Couleur d'accent qui contraste bien (accentColor)
-4. Assurez-vous que les couleurs extraites créent un bon contraste pour la lisibilité du texte
+🖼️ IMAGE DE FOND PRIORITAIRE: ${backgroundImageUrl}
+RÈGLE ABSOLUE: Cette image de fond doit être la SOURCE PRINCIPALE des couleurs.
+Analysez cette image pour extraire:
+1. Couleur la plus dominante (primaryColor) - celle qui occupe le plus d'espace
+2. Couleur secondaire contrastante (secondaryColor) 
+3. Couleur d'accent claire ou foncée (accentColor) qui ressort bien
+4. Ignorez les couleurs du site web si cette image est fournie
+5. Assurez-vous que primaryColor et secondaryColor créent un bon contraste
 ` : '';
 
   const prompt = `
-Analysez ce site web et extrayez les informations de marque clés. Voici le contenu HTML:
+Tu es un expert en analyse de marque et design visuel. Analyse ce site web et extrais les informations clés.
 
+CONTENU DU SITE WEB:
 ${websiteContent}
+${logoAnalysis}
 ${backgroundAnalysis}
 
-Retournez un objet JSON avec cette structure exacte:
+🔍 INSTRUCTIONS SPÉCIALES POUR LES POLICES:
+- Si tu détectes un style "SIFONN", "Impact", "condensé" ou "majuscules épaisses" → utilise "Titan One"
+- Si tu vois un style moderne sans-serif épais → utilise "Bebas Neue" ou "Oswald"  
+- Si c'est du texte traditionnel → utilise "Montserrat", "Roboto" ou "Open Sans"
+- Pour Homair ou style vacances → privilégie "Titan One" ou "Bebas Neue" (impact fort)
+- TOUJOURS analyser le logo uploadé en priorité pour la police
+
+🎨 PRIORITÉS DES COULEURS:
+1. Image de fond (si fournie) = PRIORITÉ ABSOLUE
+2. Logo uploadé = PRIORITÉ ÉLEVÉE  
+3. Site web = Seulement si pas d'image/logo
+
+Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte:
 {
   "primaryColor": "#hexcode",
   "secondaryColor": "#hexcode", 
   "accentColor": "#hexcode",
-  "fontFamily": "nom exact de la police principale détectée (Google Fonts de préférence)",
-  "brandName": "nom exact de la marque trouvé",
-  "industry": "secteur d'activité précis",
-  "tone": "ton de communication (moderne, élégant, dynamique, familial, etc.)"
+  "fontFamily": "nom exact de police détectée",
+  "brandName": "nom de la marque",
+  "industry": "secteur d'activité",
+  "tone": "ton de communication"
 }
 
-Instructions spéciales:
-- Si une image de fond est fournie, PRIORITÉ aux couleurs de cette image
-- Pour fontFamily, cherchez les vraies polices utilisées (Montserrat, Roboto, Open Sans, etc.)
-- Analysez le CSS et les balles link pour détecter les Google Fonts
-- Les couleurs doivent être harmonieuses et professionnelles
-- accentColor doit contraster avec primaryColor pour les boutons
+EXEMPLES DE POLICES À UTILISER:
+- "Titan One" (pour style Sifonn/Impact/condensé)
+- "Bebas Neue" (moderne condensé)
+- "Oswald" (sans-serif condensé)
+- "Anton" (bold condensé)
+- "Montserrat" (moderne polyvalent)
+- "Roboto" (tech/moderne)
+
+⚠️ IMPORTANT: Réponds SEULEMENT avec le JSON, aucun autre texte.
 `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -154,30 +187,50 @@ Instructions spéciales:
       messages: [
         { 
           role: 'system', 
-          content: 'Tu es un expert en analyse de marque, design et extraction de couleurs. Réponds uniquement avec du JSON valide. Sois précis dans la détection des polices et couleurs.' 
+          content: 'Tu es un expert en analyse de marque et design visuel. Tu détectes les polices de style "Sifonn", "Impact", condensées et les couleurs dominantes des images. Réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.' 
         },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.3,
+      temperature: 0.2,
     }),
   });
 
   const data = await response.json();
   const content = data.choices[0].message.content;
   
+  console.log('Raw AI response for brand analysis:', content);
+  
   try {
     // Nettoyer le contenu pour extraire le JSON
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const jsonContent = jsonMatch ? jsonMatch[0] : content;
-    return JSON.parse(jsonContent);
+    let cleanContent = content.trim();
+    
+    // Supprimer les blocs de code markdown s'il y en a
+    if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+    }
+    
+    // Trouver le JSON dans la réponse
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+    const jsonContent = jsonMatch ? jsonMatch[0] : cleanContent;
+    
+    console.log('Cleaned JSON content:', jsonContent);
+    
+    const parsedResult = JSON.parse(jsonContent);
+    console.log('Successfully parsed brand analysis:', parsedResult);
+    
+    return parsedResult;
   } catch (e) {
-    console.error('Failed to parse brand analysis:', content);
-    // Fallback avec des valeurs par défaut
+    console.error('Failed to parse brand analysis. Raw content:', content);
+    console.error('Parse error:', e);
+    
+    // Fallback intelligent basé sur le contexte
+    const fallbackFont = logoUrl || backgroundImageUrl ? 'Titan One' : 'Montserrat';
+    
     return {
       primaryColor: '#006799',
-      secondaryColor: '#5bbad5',
+      secondaryColor: '#5bbad5', 
       accentColor: '#ffffff',
-      fontFamily: 'Averta',
+      fontFamily: fallbackFont,
       brandName: 'Votre Marque',
       industry: 'général',
       tone: 'moderne'
@@ -196,6 +249,7 @@ async function generateCampaignContent(
 Marque: ${brandAnalysis.brandName}
 Secteur: ${brandAnalysis.industry}
 Ton: ${brandAnalysis.tone}
+Police: ${brandAnalysis.fontFamily}
 Couleurs: ${brandAnalysis.primaryColor}, ${brandAnalysis.secondaryColor}
 ` : '';
 
@@ -209,29 +263,30 @@ Objectif: ${request.objective || 'engagement'}
 
 Créez du contenu percutant qui ressemble aux meilleures campagnes Canva/Adobe. Le contenu doit être:
 - IMPACTANT et MÉMORABLE
-- Adapté à la marque
-- Optimisé pour le digital
-- Niveau studio professionnel
+- Adapté à la marque et son secteur
+- Optimisé pour le digital et mobile
+- Niveau studio professionnel avec un titre accrocheur
 
-Retournez un objet JSON avec cette structure exacte:
+Retournez UNIQUEMENT un objet JSON avec cette structure exacte:
 {
   "title": "TITRE PRINCIPAL IMPACTANT (en majuscules si approprié)",
-  "subtitle": "Sous-titre complémentaire",
+  "subtitle": "Sous-titre complémentaire engageant",
   "callToAction": "CALL TO ACTION PUISSANT",
-  "description": "Description détaillée de l'offre",
+  "description": "Description détaillée de l'offre et des bénéfices",
   "visualStyle": {
-    "typography": "Style typographique recommandé (gras, italique, taille, etc.)",
-    "layout": "Disposition recommandée des éléments",
+    "typography": "Style typographique recommandé",
+    "layout": "Disposition recommandée des éléments", 
     "effectsAndShadows": "Effets visuels et ombres recommandés"
   }
 }
 
-Exemples de titres impactants:
-- "TOURNEZ LA ROUE DE LA CHANCE"
-- "GAGNEZ 1 MOIS DE FITNESS GRATUIT !"
-- "DÉVERROUILLEZ VOTRE CADEAU MYSTÈRE"
+Exemples de titres pour différents secteurs:
+- Tourisme: "DÉCOUVREZ VOTRE ÉVASION DE RÊVE !"
+- Fitness: "TRANSFORMEZ VOTRE CORPS AUJOURD'HUI !"
+- Tech: "DÉVERROUILLEZ LE FUTUR !"
+- Mode: "RÉVÉLEZ VOTRE STYLE UNIQUE !"
 
-Soyez créatif et professionnel !
+⚠️ IMPORTANT: Réponds SEULEMENT avec le JSON, aucun autre texte.
 `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -245,7 +300,7 @@ Soyez créatif et professionnel !
       messages: [
         { 
           role: 'system', 
-          content: 'Tu es un expert en marketing digital et copywriting. Crée du contenu de niveau studio professionnel. Réponds uniquement avec du JSON valide.' 
+          content: 'Tu es un expert en marketing digital et copywriting. Crée du contenu de niveau studio professionnel. Réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.' 
         },
         { role: 'user', content: prompt }
       ],
@@ -256,10 +311,31 @@ Soyez créatif et professionnel !
   const data = await response.json();
   const content = data.choices[0].message.content;
   
+  console.log('Raw AI response for content generation:', content);
+  
   try {
-    return JSON.parse(content);
+    // Nettoyer le contenu pour extraire le JSON
+    let cleanContent = content.trim();
+    
+    // Supprimer les blocs de code markdown s'il y en a
+    if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/```json\s*/, '').replace(/```\s*$/, '');
+    }
+    
+    // Trouver le JSON dans la réponse
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+    const jsonContent = jsonMatch ? jsonMatch[0] : cleanContent;
+    
+    console.log('Cleaned content JSON:', jsonContent);
+    
+    const parsedResult = JSON.parse(jsonContent);
+    console.log('Successfully parsed campaign content:', parsedResult);
+    
+    return parsedResult;
   } catch (e) {
-    console.error('Failed to parse campaign content:', content);
+    console.error('Failed to parse campaign content. Raw content:', content);
+    console.error('Parse error:', e);
+    
     // Fallback avec du contenu par défaut
     return {
       title: 'PARTICIPEZ & GAGNEZ',

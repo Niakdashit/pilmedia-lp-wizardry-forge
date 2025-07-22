@@ -9,7 +9,10 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        'brand': ['Inter', 'sans-serif'],
+        'brand': ['Titan One', 'Impact', 'Bebas Neue', 'Oswald', 'Anton', 'sans-serif'],
+        'sifonn': ['Titan One', 'Impact', 'Bebas Neue', 'sans-serif'],
+        'impact': ['Impact', 'Bebas Neue', 'Oswald', 'sans-serif'],
+        'condensed': ['Bebas Neue', 'Oswald', 'Anton', 'Impact', 'sans-serif'],
         'oswald': ['Oswald', 'sans-serif'],
       },
       colors: {
