@@ -196,8 +196,24 @@ const DesignTab: React.FC<DesignTabProps> = ({
         prizeText: result.content?.subtitle || config.prizeText,
         participateButtonText: result.content?.callToAction || config.participateButtonText,
         
-        // Textes personnalisés
-        customTexts: result.content?.editableTexts || config.customTexts || [],
+        // Textes personnalisés (garder les existants)
+        customTexts: config.customTexts || [],
+
+        // Design mis à jour avec logo
+        design: {
+          ...(config.design || {}),
+          customImages: [
+            ...(config.design?.customImages || []),
+            ...(result.assets?.logoUrl ? [{
+              id: 'ai-logo',
+              src: result.assets.logoUrl,
+              x: 20,
+              y: 20,
+              width: 80,
+              height: 80
+            }] : [])
+          ]
+        },
         
         // Marquer comme brandé
         isBranded: true,
