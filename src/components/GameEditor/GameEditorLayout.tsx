@@ -21,6 +21,19 @@ export interface CustomText {
   showFrame: boolean;
   frameColor: string;
   frameBorderColor: string;
+  animationConfig?: any;
+  fontSize?: number;
+  fontWeight?: string;
+  fontStyle?: string;
+  textDecoration?: string;
+  width?: number;
+  height?: number;
+  backgroundColor?: string;
+  textAlign?: string;
+  listType?: string;
+  hasEffect?: boolean;
+  isAnimated?: boolean;
+  deviceConfig?: any;
 }
 
 export interface CustomImage {
@@ -63,6 +76,72 @@ export interface EditorConfig {
   formFields?: any[];
   source?: string;
   _isTransformed?: boolean;
+  
+  // Additional properties to fix TypeScript errors
+  deviceConfig?: any;
+  participateButtonColor?: string;
+  participateButtonText?: string;
+  participateButtonTextColor?: string;
+  storyText?: string;
+  publisherLink?: string;
+  prizeText?: string;
+  brandAssets?: any;
+  jackpotBackgroundColor?: string;
+  jackpotBorderStyle?: string;
+  scratchCards?: any[];
+  scratchSurfaceColor?: string;
+  diceWinningNumbers?: any[];
+  quizQuestions?: any[];
+  quizPassingScore?: number;
+  memoryPairs?: any[];
+  memoryGridSize?: number;
+  memoryTimeLimit?: number;
+  puzzleImage?: string;
+  puzzlePieces?: number;
+  puzzleTimeLimit?: number;
+  puzzleShowPreview?: boolean;
+  puzzleDifficulty?: string;
+  puzzleBackgroundColor?: string;
+  borderStyle?: string;
+  wheelButtonPosition?: string;
+  customCSS?: string;
+  customJS?: string;
+  trackingTags?: string;
+  campaignName?: string;
+  campaignUrl?: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  width?: number;
+  height?: number;
+  anchor?: string;
+  backgroundColor?: string;
+  outlineColor?: string;
+  bannerImage?: string;
+  bannerDescription?: string;
+  bannerLink?: string;
+  footerText?: string;
+  footerColor?: string;
+  diceSides?: number;
+  diceColor?: string;
+  diceDotColor?: string;
+  formTitle?: string;
+  formSuccessMessage?: string;
+  formShowProgress?: boolean;
+  jackpotSymbols?: any[];
+  jackpotWinningCombination?: any[];
+  memoryCardBackColor?: string;
+  puzzleAutoShuffle?: boolean;
+  scratchPercentage?: number;
+  gameMode?: string;
+  wheelSegments?: any[];
+  centerText?: boolean;
+  centerForm?: boolean;
+  centerGameZone?: boolean;
+  autoSyncOnDeviceChange?: boolean;
+  autoSyncRealTime?: boolean;
+  autoSyncBaseDevice?: string;
 }
 
 const GameEditorLayout: React.FC = () => {

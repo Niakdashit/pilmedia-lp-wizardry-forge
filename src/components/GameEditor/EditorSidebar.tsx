@@ -14,10 +14,6 @@ interface EditorSidebarProps {
 }
 
 const EditorSidebar: React.FC<EditorSidebarProps> = ({
-  config,
-  onConfigUpdate,
-  device,
-  onDeviceChange,
   onSave,
   onPublish,
   isSaving,
