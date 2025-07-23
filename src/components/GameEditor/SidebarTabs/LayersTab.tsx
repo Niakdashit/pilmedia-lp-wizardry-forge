@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { createCustomText, createCustomImage } from '../utils/typeHelpers';
 import { Eye, EyeOff, Trash2, Lock, Unlock, Copy, Type, Image as ImageIcon, Settings } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../GameEditorLayout';
 import TextElementEditor from '../TextElementEditor';
@@ -161,7 +160,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
   };
 
   const addNewTextElement = () => {
-    const newText = createCustomText({
+    const newText: CustomText = {
       id: Date.now().toString(),
       content: 'NOUVEAU TEXTE',
       x: 50,
@@ -174,7 +173,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
       textDecoration: 'none',
       width: 200,
       height: 50
-    });
+    };
     
     onConfigUpdate({
       customTexts: [...(config.customTexts || []), newText]
@@ -217,7 +216,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     const imageUrl = event.target?.result as string;
-                    const newImage = createCustomImage({
+                    const newImage = {
                       id: Date.now().toString(),
                       src: imageUrl,
                       x: 50,
@@ -225,7 +224,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
                       width: 150,
                       height: 150,
                       rotation: 0
-                    });
+                    };
                     onConfigUpdate({
                       design: {
                         ...config.design,

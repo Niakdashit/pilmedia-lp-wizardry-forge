@@ -1,8 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, Type, Plus, Trash2, Palette, Monitor, Smartphone, Tablet } from 'lucide-react';
-import type { EditorConfig } from '../GameEditorLayout';
-import { createCustomText, createCustomImage } from '../utils/typeHelpers';
+import type { EditorConfig, CustomText } from '../GameEditorLayout';
 import ColorThief from 'colorthief';
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
@@ -260,7 +259,7 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const imageUrl = e.target?.result as string;
-      const newImage = createCustomImage({
+      const newImage = {
         id: Date.now().toString(),
         src: imageUrl,
         x: 50,
@@ -268,7 +267,7 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
         width: 150,
         height: 150,
         rotation: 0
-      });
+      };
       onConfigUpdate({
         design: {
           ...config.design,
@@ -289,7 +288,7 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
   };
 
   const addCustomText = () => {
-    const newText = createCustomText({
+    const newText: CustomText = {
       id: Date.now().toString(),
       content: 'Nouveau texte',
       x: 50,
@@ -302,7 +301,7 @@ const DesignContentTab: React.FC<DesignContentTabProps> = ({
       textDecoration: 'none',
       width: 200,
       height: 50
-    });
+    };
     
     onConfigUpdate({
       customTexts: [...(config.customTexts || []), newText]

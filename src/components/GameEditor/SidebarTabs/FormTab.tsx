@@ -67,7 +67,7 @@ const FormTab: React.FC<FormTabProps> = ({
   const removeOption = (fieldId: string, optionIndex: number) => {
     const field = formFields.find(f => f.id === fieldId);
     if (field && field.options) {
-      const newOptions = field.options.filter((_: any, index: number) => index !== optionIndex);
+      const newOptions = field.options.filter((_, index) => index !== optionIndex);
       updateField(fieldId, {
         options: newOptions
       });
@@ -148,7 +148,7 @@ const FormTab: React.FC<FormTabProps> = ({
                           </button>
                         </div>
                         <div className="space-y-2">
-                          {(field.options || []).map((option: any, optionIndex: number) => <div key={optionIndex} className="flex items-center gap-2">
+                          {(field.options || []).map((option, optionIndex) => <div key={optionIndex} className="flex items-center gap-2">
                               <input type="text" value={option} onChange={e => updateOption(field.id, optionIndex, e.target.value)} className="flex-1 px-2 py-1 text-sm border border-sidebar-border rounded" />
                               <button onClick={() => removeOption(field.id, optionIndex)} className="p-1 text-destructive hover:bg-destructive/10 rounded">
                                 <Trash2 className="w-3 h-3" />
@@ -176,7 +176,7 @@ const FormTab: React.FC<FormTabProps> = ({
                   
                   {field.type === 'textarea' ? <textarea placeholder={field.placeholder} className="w-full px-3 py-2 text-sm border border-sidebar-border rounded-md bg-background" rows={3} disabled /> : field.type === 'select' ? <select className="w-full px-3 py-2 text-sm border border-sidebar-border rounded-md bg-background" disabled>
                       <option value="">Sélectionner...</option>
-                      {(field.options || []).map((option: any, index: number) => <option key={index} value={option}>{option}</option>)}
+                      {(field.options || []).map((option, index) => <option key={index} value={option}>{option}</option>)}
                     </select> : <input type={field.type} placeholder={field.placeholder} className="w-full px-3 py-2 text-sm border border-sidebar-border rounded-md bg-background" disabled />}
                 </div>)}
             </div>

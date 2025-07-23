@@ -1,5 +1,4 @@
 import React from 'react';
-import { createCustomText } from '../utils/typeHelpers';
 import { Plus, Type, Bold, Italic, Underline } from 'lucide-react';
 import type { EditorConfig, CustomText } from '../GameEditorLayout';
 interface TextsTabProps {
@@ -11,7 +10,7 @@ const TextsTab: React.FC<TextsTabProps> = ({
   onConfigUpdate
 }) => {
   const addCustomText = () => {
-    const newText = createCustomText({
+    const newText: CustomText = {
       id: `text-${Date.now()}`,
       content: 'Nouveau texte',
       x: 100,
@@ -22,7 +21,7 @@ const TextsTab: React.FC<TextsTabProps> = ({
       fontWeight: 'normal',
       fontStyle: 'normal',
       textDecoration: 'none'
-    });
+    };
     const updatedTexts = [...(config.customTexts || []), newText];
     onConfigUpdate({
       customTexts: updatedTexts

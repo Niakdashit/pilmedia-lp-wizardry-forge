@@ -45,7 +45,7 @@ export const calculateResponsiveProperties = (
   // Calcul intelligent de la taille de police
   // Utilise une approche hybride: ratio moyen pondéré vers la largeur
   const fontScaleRatio = (widthRatio * 0.7) + (heightRatio * 0.3);
-  const newFontSize = Math.round((baseText.fontSize || 16) * fontScaleRatio);
+  const newFontSize = Math.round(baseText.fontSize * fontScaleRatio);
   
   // Calcul des dimensions si elles existent
   const newWidth = baseText.width ? Math.round(baseText.width * widthRatio) : undefined;

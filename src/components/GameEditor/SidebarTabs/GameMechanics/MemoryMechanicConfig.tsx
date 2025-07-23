@@ -50,7 +50,7 @@ const MemoryMechanicConfig: React.FC<MemoryMechanicConfigProps> = ({ config, onC
             <label>Taille de la grille</label>
             <select
               value={config.memoryGridSize || '4x3'}
-              onChange={(e) => onConfigUpdate({ memoryGridSize: parseInt(e.target.value) })}
+              onChange={(e) => onConfigUpdate({ memoryGridSize: e.target.value })}
               className="w-full"
             >
               <option value="2x3">2x3 (6 cartes)</option>
