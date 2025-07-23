@@ -1,5 +1,5 @@
 
-import type { EditorConfig, CustomText, GameType, DeviceType } from '../GameEditorLayout';
+import type { EditorConfig, CustomText, GameType } from '../GameEditorLayout';
 
 export const transformStudioToEditorConfig = (studioData: any): EditorConfig => {
   console.log('🔄 Starting transformation of studio data:', studioData);

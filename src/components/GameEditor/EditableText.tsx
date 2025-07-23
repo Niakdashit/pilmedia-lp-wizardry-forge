@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Move, Edit2, Trash2, Type, Palette, Frame } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import type { CustomText, DeviceType } from './GameEditorLayout';
 
 interface EditableTextProps {
@@ -18,7 +18,6 @@ const EditableText: React.FC<EditableTextProps> = ({
   onDelete,
   isSelected,
   onSelect,
-  device,
   triggerAutoSync
 }) => {
   // Debug: Log text props

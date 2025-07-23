@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useToast } from '../ui/use-toast';
 import GamePreview from './GamePreview';
 import EditorSidebar from './EditorSidebar';
 import { transformStudioToEditorConfig } from './utils/studioToEditorTransform';
 import { repositionTextsForDisplayMode } from './utils/textRepositioning';
 
-interface CustomText {
+export interface CustomText {
   id: string;
   content: string;
   x: number;
@@ -23,7 +23,7 @@ interface CustomText {
   frameBorderColor: string;
 }
 
-interface CustomImage {
+export interface CustomImage {
   id: string;
   src: string;
   x: number;
@@ -34,10 +34,10 @@ interface CustomImage {
   enabled: boolean;
 }
 
-type DeviceType = 'desktop' | 'tablet' | 'mobile';
-type GameType = 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
+export type DeviceType = 'desktop' | 'tablet' | 'mobile';
+export type GameType = 'wheel' | 'quiz' | 'scratch' | 'jackpot' | 'dice' | 'memory' | 'puzzle' | 'form';
 
-interface EditorConfig {
+export interface EditorConfig {
   gameType: GameType;
   displayMode: 'mode1-banner-game' | 'mode2-background';
   customTexts?: CustomText[];
@@ -67,7 +67,7 @@ interface EditorConfig {
 
 const GameEditorLayout: React.FC = () => {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  
   const { toast } = useToast();
   
   const [device, setDevice] = useState<DeviceType>('desktop');
@@ -75,7 +75,7 @@ const GameEditorLayout: React.FC = () => {
     gameType: 'wheel',
     displayMode: 'mode1-banner-game',
   });
-  const [isLoading, setIsLoading] = useState(false);
+  
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -117,7 +117,7 @@ const GameEditorLayout: React.FC = () => {
     });
   };
 
-  const saveCampaign = async (config: EditorConfig) => {
+  const saveCampaign = async () => {
     setIsSaving(true);
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -132,7 +132,7 @@ const GameEditorLayout: React.FC = () => {
     });
   };
 
-  const publishCampaign = async (config: EditorConfig) => {
+  const publishCampaign = async () => {
     setIsPublishing(true);
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -149,8 +149,6 @@ const GameEditorLayout: React.FC = () => {
   const loadCampaignData = useCallback(async () => {
     if (!id) return;
     
-    setIsLoading(true);
-    
     try {
       if (id === 'new') {
         // Create new campaign
@@ -160,7 +158,7 @@ const GameEditorLayout: React.FC = () => {
         });
       } else {
         // Load existing campaign
-        const campaignData = await getCampaign(id);
+        const campaignData: any = await getCampaign(id);
         
         if (campaignData) {
           // Check if this is a quick campaign that needs transformation
@@ -172,7 +170,7 @@ const GameEditorLayout: React.FC = () => {
             // Debug: Log the custom texts specifically
             if (transformedConfig.customTexts) {
               console.log('📝 Custom texts after transformation:', transformedConfig.customTexts);
-              transformedConfig.customTexts.forEach((text, index) => {
+              transformedConfig.customTexts.forEach((text: CustomText, index: number) => {
                 console.log(`Text ${index}:`, {
                   id: text.id,
                   content: text.content,
@@ -187,7 +185,7 @@ const GameEditorLayout: React.FC = () => {
             setConfig(transformedConfig);
           } else {
             // Regular campaign
-            setConfig(campaignData);
+            setConfig(campaignData as EditorConfig);
           }
         }
       }
@@ -198,8 +196,6 @@ const GameEditorLayout: React.FC = () => {
         description: "Impossible de charger la campagne",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   }, [id, toast]);
 
@@ -233,7 +229,7 @@ const GameEditorLayout: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      await saveCampaign(config);
+      await saveCampaign();
     } catch (error) {
       console.error('Error saving campaign:', error);
       toast({
@@ -246,7 +242,7 @@ const GameEditorLayout: React.FC = () => {
 
   const handlePublish = async () => {
     try {
-      await publishCampaign(config);
+      await publishCampaign();
     } catch (error) {
       console.error('Error publishing campaign:', error);
       toast({
