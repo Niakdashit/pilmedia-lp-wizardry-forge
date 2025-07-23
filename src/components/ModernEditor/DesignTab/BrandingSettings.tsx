@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import { Globe, Upload, Wand2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-// import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface BrandingSettingsProps {
   campaign: any;
@@ -156,29 +152,31 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Wand2 className="w-5 h-5 text-purple-600" />
           Branding IA
-        </CardTitle>
-        <p className="text-sm text-gray-600">
+        </h3>
+        <p className="text-sm text-gray-600 mt-1">
           Générez automatiquement le design et contenu basé sur votre marque
         </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      </div>
+      
+      <div className="p-6 space-y-6">
         {/* URL du site web */}
         <div className="space-y-2">
           <label htmlFor="websiteUrl" className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <Globe className="w-4 h-4" />
             URL du site web de la marque
           </label>
-          <Input
+          <input
             id="websiteUrl"
             type="url"
             placeholder="https://www.exemple.com"
             value={brandingData.websiteUrl}
             onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
 
@@ -189,12 +187,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
             Logo de la marque
           </label>
           <div className="flex items-center gap-4">
-            <Input
+            <input
               type="url"
               placeholder="URL du logo ou uploadez un fichier"
               value={brandingData.logoUrl}
               onChange={(e) => handleInputChange('logoUrl', e.target.value)}
-              className="flex-1"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <div className="relative">
               <input
@@ -207,13 +205,16 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 disabled={uploadingLogo}
               />
-              <Button variant="outline" disabled={uploadingLogo}>
+              <button 
+                className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                disabled={uploadingLogo}
+              >
                 {uploadingLogo ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Upload className="w-4 h-4" />
                 )}
-              </Button>
+              </button>
             </div>
           </div>
           {brandingData.logoUrl && (
@@ -234,12 +235,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
             Image de fond
           </label>
           <div className="flex items-center gap-4">
-            <Input
+            <input
               type="url"
               placeholder="URL de l'image ou uploadez un fichier"
               value={brandingData.backgroundImageUrl}
               onChange={(e) => handleInputChange('backgroundImageUrl', e.target.value)}
-              className="flex-1"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <div className="relative">
               <input
@@ -252,13 +253,16 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 disabled={uploadingBackground}
               />
-              <Button variant="outline" disabled={uploadingBackground}>
+              <button 
+                className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                disabled={uploadingBackground}
+              >
                 {uploadingBackground ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Upload className="w-4 h-4" />
                 )}
-              </Button>
+              </button>
             </div>
           </div>
           {brandingData.backgroundImageUrl && (
@@ -276,43 +280,44 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label htmlFor="targetAudience" className="text-sm font-medium text-gray-700">Audience cible</label>
-            <Input
+            <input
               id="targetAudience"
               placeholder="clients potentiels"
               value={brandingData.targetAudience}
               onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           <div className="space-y-2">
             <label htmlFor="objective" className="text-sm font-medium text-gray-700">Objectif</label>
-            <Input
+            <input
               id="objective"
               placeholder="engagement et conversion"
               value={brandingData.objective}
               onChange={(e) => handleInputChange('objective', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
         </div>
 
         {/* Bouton de génération */}
-        <Button 
+        <button 
           onClick={handleGenerateBranding}
           disabled={isGenerating || !brandingData.websiteUrl}
-          className="w-full"
-          size="lg"
+          className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
         >
           {isGenerating ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               Génération en cours...
             </>
           ) : (
             <>
-              <Wand2 className="w-4 h-4 mr-2" />
+              <Wand2 className="w-4 h-4" />
               Générer le branding IA
             </>
           )}
-        </Button>
+        </button>
 
         {campaign.isBranded && (
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -326,8 +331,8 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
