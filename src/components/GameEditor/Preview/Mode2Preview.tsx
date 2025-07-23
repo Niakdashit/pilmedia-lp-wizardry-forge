@@ -38,7 +38,16 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
     }
   };
 
-  // Obtenir la classe CSS pour le full écran selon l'appareil
+  // Debug: Log rendering data
+  console.log('🎨 Mode2Preview rendering:', {
+    device,
+    displayMode: config.displayMode,
+    customTextsCount: config.customTexts?.length || 0,
+    customImagesCount: config.design?.customImages?.length || 0,
+    customTexts: config.customTexts
+  });
+
+  // Get full screen class for device
   const getFullScreenClass = () => {
     switch (device) {
       case 'mobile':
@@ -49,14 +58,6 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         return 'relative';
     }
   };
-
-  // Log pour debug
-  console.log('Mode2Preview - Rendu avec:', {
-    customTexts: config.customTexts?.length || 0,
-    customImages: config.design?.customImages?.length || 0,
-    device,
-    displayMode: config.displayMode
-  });
 
   return (
     <div>
@@ -74,9 +75,16 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
           />
         </div>
         
-        {/* Custom editable images - positioned absolutely over the whole layout */}
+        {/* Custom editable images */}
         {config.design?.customImages?.map((image: any) => {
-          console.log('Mode2Preview - Rendu image:', image);
+          console.log('🖼️ Mode2Preview rendering image:', {
+            id: image.id,
+            src: image.src,
+            x: image.x,
+            y: image.y,
+            enabled: image.enabled
+          });
+          
           return (
             <div
               key={image.id}
@@ -96,16 +104,23 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
           );
         })}
 
-        {/* Custom editable texts - positioned absolutely over the whole layout */}
+        {/* Custom editable texts */}
         {config.customTexts?.map((text) => {
-          console.log('Mode2Preview - Rendu texte:', {
+          console.log('📝 Mode2Preview rendering text:', {
             id: text.id,
-            content: text.content?.substring(0, 50) + '...',
+            content: text.content,
             x: text.x,
             y: text.y,
             color: text.color,
-            backgroundColor: text.backgroundColor
+            enabled: text.enabled
           });
+          
+          // Skip if text is disabled or has no content
+          if (!text.enabled || !text.content) {
+            console.log('📝 Mode2Preview skipping text (disabled or no content):', text.id);
+            return null;
+          }
+          
           return (
             <div
               key={text.id}
