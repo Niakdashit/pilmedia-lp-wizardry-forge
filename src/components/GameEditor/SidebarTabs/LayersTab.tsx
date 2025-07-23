@@ -33,7 +33,7 @@ const LayersTab: React.FC<LayersTabProps> = ({
       layers.push({
         id: text.id,
         type: 'text',
-        name: (text.content || 'Texte vide').length > 20 ? (text.content || 'Texte vide').substring(0, 20) + '...' : (text.content || 'Texte vide'),
+        name: text.content.length > 20 ? text.content.substring(0, 20) + '...' : text.content,
         visible: true,
         locked: false,
         zIndex: 100 + index,

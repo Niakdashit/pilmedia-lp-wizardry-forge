@@ -29,7 +29,6 @@ export interface CustomText {
   hasEffect?: boolean;
   isAnimated?: boolean;
   backgroundColor?: string;
-  textShadow?: string;
   width?: number;
   height?: number;
   deviceConfig?: {
@@ -170,18 +169,6 @@ export interface EditorConfig {
   autoSyncOnDeviceChange?: boolean;
   autoSyncRealTime?: boolean;
   autoSyncBaseDevice?: 'desktop' | 'tablet' | 'mobile';
-  // Nouvelles propriétés pour le branding
-  centerLogo?: string;
-  isBranded?: boolean;
-  lastBrandingUpdate?: number;
-  brandingData?: {
-    websiteUrl?: string;
-    logoUrl?: string;
-    backgroundImageUrl?: string;
-    targetAudience?: string;
-    objective?: string;
-  };
-  brandAnalysis?: any;
 }
 
 const GameEditorLayout: React.FC = () => {
@@ -319,34 +306,23 @@ const GameEditorLayout: React.FC = () => {
   const initializeConfig = (): EditorConfig => {
     try {
       const savedConfig = localStorage.getItem('editorConfig');
-      const studioData = localStorage.getItem('studioPreview');
-      
-      console.log('📋 Initializing config...');
-      console.log('🔧 savedConfig exists:', !!savedConfig);
-      console.log('🎬 studioData exists:', !!studioData);
-      
       if (savedConfig) {
         const parsedConfig = JSON.parse(savedConfig);
-        console.log('✅ Loading campaign from editorConfig:', parsedConfig);
+        console.log('Loading campaign from QuickCampaign:', parsedConfig);
+        // Ne pas nettoyer le localStorage immédiatement pour permettre les rechargements
         return parsedConfig;
       }
       
       // Essayer de charger depuis studioPreview si editorConfig n'existe pas
+      const studioData = localStorage.getItem('studioPreview');
       if (studioData) {
         const studioConfig = JSON.parse(studioData);
-        console.log('🎨 Studio data found:', studioConfig);
-        console.log('📝 Studio content:', studioConfig.content);
-        console.log('🎯 Studio design:', studioConfig.design);
-        
+        console.log('Loading from Studio data:', studioConfig);
         // Transformer les données Studio en format EditorConfig
-        const transformedConfig = transformStudioToEditorConfig(studioConfig);
-        console.log('🔄 Transformed config:', transformedConfig);
-        console.log('📄 Custom texts created:', transformedConfig.customTexts);
-        
-        return transformedConfig;
+        return transformStudioToEditorConfig(studioConfig);
       }
     } catch (error) {
-      console.error('❌ Error loading saved config:', error);
+      console.error('Error loading saved config:', error);
     }
     
     // Configuration par défaut
@@ -406,16 +382,6 @@ const GameEditorLayout: React.FC = () => {
     try {
       setConfig(prevConfig => {
         const newConfig = { ...prevConfig, ...updates };
-        
-        console.log('🔄 Config update:', updates);
-        console.log('📄 Previous customTexts:', prevConfig.customTexts?.length || 0);
-        console.log('📄 New customTexts:', newConfig.customTexts?.length || 0);
-        
-        // Si on change le displayMode, conserver les customTexts existants
-        if (updates.displayMode && prevConfig.customTexts && prevConfig.customTexts.length > 0) {
-          console.log('🔧 Display mode change detected, preserving customTexts');
-          newConfig.customTexts = prevConfig.customTexts;
-        }
         
         // Validation des données critiques
         if (newConfig.width < 300) newConfig.width = 300;

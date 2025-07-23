@@ -14,63 +14,6 @@ export const loadCampaign = async (
     if (campaignId === 'quick-preview') {
       console.log('Loading QuickCampaign preview data');
       
-      // Charger d'abord les données du Studio si disponibles
-      const studioPreviewData = localStorage.getItem('studioPreview');
-      const editorConfigData = localStorage.getItem('editorConfig');
-      
-      if (studioPreviewData && editorConfigData) {
-        console.log('Loading Studio preview data');
-        const studioData = JSON.parse(studioPreviewData);
-        const editorConfig = JSON.parse(editorConfigData);
-        
-        console.log('Studio data:', studioData);
-        console.log('Editor config:', editorConfig);
-        
-        const defaultCampaign = getDefaultCampaign(campaignType, false);
-        
-        // Transformer les données Studio vers le format campagne
-        const studioCampaign = {
-          ...defaultCampaign,
-          id: 'studio-preview',
-          name: studioData.content?.title || 'Campagne Studio',
-          description: studioData.content?.description || 'Campagne générée depuis le Studio',
-          type: campaignType,
-          design: {
-            ...defaultCampaign.design,
-            primaryColor: studioData.design?.primaryColor || editorConfig.backgroundColor || defaultCampaign.design.primaryColor,
-            secondaryColor: studioData.design?.secondaryColor || defaultCampaign.design.secondaryColor,
-            titleColor: studioData.design?.accentColor || editorConfig.outlineColor || defaultCampaign.design.titleColor,
-            backgroundImage: studioData.design?.backgroundImage || editorConfig.deviceConfig?.desktop?.backgroundImage,
-            centerLogo: studioData.design?.centerLogo || editorConfig.centerLogo
-          },
-          gameConfig: {
-            ...defaultCampaign.gameConfig,
-            ...editorConfig.gameConfig,
-            customTexts: editorConfig.customTexts || []
-          },
-          buttonConfig: {
-            ...defaultCampaign.buttonConfig,
-            text: editorConfig.participateButtonText || 'JOUER MAINTENANT',
-            color: editorConfig.participateButtonTextColor || '#ffffff',
-            backgroundColor: editorConfig.participateButtonColor || studioData.design?.primaryColor || '#006799'
-          },
-          screens: {
-            ...defaultCampaign.screens,
-            1: {
-              ...defaultCampaign.screens[1],
-              title: studioData.content?.title || editorConfig.storyText || defaultCampaign.screens[1].title,
-              description: studioData.content?.subtitle || editorConfig.prizeText || defaultCampaign.screens[1].description,
-              buttonText: studioData.content?.callToAction || editorConfig.participateButtonText || 'Participer'
-            }
-          },
-          brandAnalysis: studioData.brandAnalysis || null
-        };
-        
-        console.log('Final studio campaign:', studioCampaign);
-        console.log('Studio customTexts:', studioCampaign.gameConfig?.customTexts);
-        return studioCampaign;
-      }
-      
       const quickCampaignData = localStorage.getItem('quickCampaignPreview');
       console.log('QuickCampaign data from localStorage:', quickCampaignData);
       

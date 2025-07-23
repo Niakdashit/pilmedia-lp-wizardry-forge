@@ -4,7 +4,6 @@ import { ChevronLeft, Smartphone, Tablet, Monitor, Settings } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import InteractiveWheel from './InteractiveWheel';
-import EditableStudioText from './EditableStudioText';
 
 interface StudioPreviewProps {
   campaignData: {
@@ -24,38 +23,6 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
   onBack
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
-  
-  // États pour les textes éditables
-  const [editableContent, setEditableContent] = useState({
-    title: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
-    subtitle: campaignData.content?.subtitle || '',
-    description: campaignData.content?.description || '',
-    callToAction: campaignData.content?.callToAction || 'JOUER MAINTENANT',
-    legalText: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat'
-  });
-
-  // Fonction pour mettre à jour les textes
-  const updateText = (field: keyof typeof editableContent, newText: string) => {
-    setEditableContent(prev => ({
-      ...prev,
-      [field]: newText
-    }));
-    
-    // Mettre à jour également campaignData pour la synchronisation
-    if (campaignData.content) {
-      campaignData.content[field] = newText;
-    }
-    
-    // Mettre à jour aussi les editableTexts si disponibles
-    if (campaignData.content?.editableTexts) {
-      campaignData.content.editableTexts = campaignData.content.editableTexts.map((text: any) => {
-        if (text.type === field || text.id === `${field}-text`) {
-          return { ...text, text: newText };
-        }
-        return text;
-      });
-    }
-  };
 
   const handleAdvancedEditor = () => {
     try {
@@ -72,179 +39,47 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         gameType: 'wheel',
         gameMode: 'mode1-sequential',
         displayMode: 'mode1-banner-game',
-        storyText: editableContent.title,
+        storyText: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
         publisherLink: '',
-        prizeText: editableContent.subtitle || editableContent.description || 'Participez et tentez de gagner !',
-        customTexts: (() => {
-          // Utiliser les editableTexts de l'API si disponibles, sinon fallback
-          if (campaignData.content?.editableTexts && campaignData.content.editableTexts.length > 0) {
-            return campaignData.content.editableTexts.map((editableText: any) => ({
-              id: editableText.id,
-              text: editableText.text,
-              type: editableText.type,
-              position: editableText.position,
-              style: editableText.style,
-              editable: true,
-              deviceConfig: {
-                desktop: {
-                  x: editableText.position.x,
-                  y: editableText.position.y,
-                  fontSize: parseInt(editableText.style.fontSize),
-                  fontWeight: editableText.style.fontWeight,
-                  color: editableText.style.color,
-                  textAlign: editableText.style.textAlign,
-                  textShadow: editableText.style.textShadow
-                },
-                tablet: {
-                  x: editableText.position.x,
-                  y: editableText.position.y,
-                  fontSize: parseInt(editableText.style.fontSize) * 0.8,
-                  fontWeight: editableText.style.fontWeight,
-                  color: editableText.style.color,
-                  textAlign: editableText.style.textAlign,
-                  textShadow: editableText.style.textShadow
-                },
-                mobile: {
-                  x: editableText.position.x,
-                  y: editableText.position.y,
-                  fontSize: parseInt(editableText.style.fontSize) * 0.6,
-                  fontWeight: editableText.style.fontWeight,
-                  color: editableText.style.color,
-                  textAlign: editableText.style.textAlign,
-                  textShadow: editableText.style.textShadow
-                }
-              }
-            }));
-          }
-          
-          // Utiliser les textes éditables modifiés avec des positions adaptées au nouveau layout
-          return [
-            {
-              id: 'main-title',
-              text: editableContent.title,
-              type: 'title',
-              position: { x: 50, y: 15 }, // Position en pourcentage pour être responsive
-              style: {
-                fontSize: '48px',
-                fontWeight: 'bold',
-                color: '#ffffff',
-                textAlign: 'center',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-              },
-              editable: true,
-              deviceConfig: {
-                desktop: {
-                  x: 50, y: 120,
-                  fontSize: 48, fontWeight: 'bold', color: '#ffffff',
-                  textAlign: 'center', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-                },
-                tablet: {
-                  x: 50, y: 100,
-                  fontSize: 36, fontWeight: 'bold', color: '#ffffff',
-                  textAlign: 'center', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-                },
-                mobile: {
-                  x: 50, y: 80,
-                  fontSize: 28, fontWeight: 'bold', color: '#ffffff',
-                  textAlign: 'center', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-                }
-              }
-            },
-            {
-              id: 'subtitle',
-              text: editableContent.subtitle,
-              type: 'subtitle',
-              position: { x: 50, y: 25 },
-              style: {
-                fontSize: '24px',
-                fontWeight: 'medium',
-                color: '#ffffff',
-                textAlign: 'center',
-                textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
-              },
-              editable: true,
-              deviceConfig: {
-                desktop: {
-                  x: 50, y: 200,
-                  fontSize: 24, fontWeight: 'medium', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
-                },
-                tablet: {
-                  x: 50, y: 170,
-                  fontSize: 20, fontWeight: 'medium', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
-                },
-                mobile: {
-                  x: 50, y: 140,
-                  fontSize: 16, fontWeight: 'medium', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
-                }
-              }
-            },
-            {
-              id: 'description',
-              text: editableContent.description,
-              type: 'description',
-              position: { x: 50, y: 70 },
-              style: {
-                fontSize: '18px',
-                fontWeight: 'normal',
-                color: '#ffffff',
-                textAlign: 'center',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
-              },
-              editable: true,
-              deviceConfig: {
-                desktop: {
-                  x: 50, y: 650,
-                  fontSize: 18, fontWeight: 'normal', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
-                },
-                tablet: {
-                  x: 50, y: 550,
-                  fontSize: 16, fontWeight: 'normal', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
-                },
-                mobile: {
-                  x: 50, y: 450,
-                  fontSize: 14, fontWeight: 'normal', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
-                }
-              }
-            },
-            {
-              id: 'legal',
-              text: editableContent.legalText,
-              type: 'legal',
-              position: { x: 50, y: 85 },
-              style: {
-                fontSize: '12px',
-                fontWeight: 'normal',
-                color: '#ffffff',
-                textAlign: 'center',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-              },
-              editable: true,
-              deviceConfig: {
-                desktop: {
-                  x: 50, y: 750,
-                  fontSize: 12, fontWeight: 'normal', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                },
-                tablet: {
-                  x: 50, y: 650,
-                  fontSize: 11, fontWeight: 'normal', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                },
-                mobile: {
-                  x: 50, y: 550,
-                  fontSize: 10, fontWeight: 'normal', color: '#ffffff',
-                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                }
-              }
+        prizeText: campaignData.content?.subtitle || campaignData.content?.description || 'Participez et tentez de gagner !',
+        customTexts: [
+          {
+            id: 'main-title',
+            text: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
+            type: 'title',
+            position: { x: 0, y: 0 },
+            style: {
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: '#ffffff',
+              textAlign: 'center'
             }
-          ].filter(text => text.text);
-        })(),
+          },
+          {
+            id: 'subtitle',
+            text: campaignData.content?.subtitle || '',
+            type: 'subtitle',
+            position: { x: 0, y: 60 },
+            style: {
+              fontSize: '24px',
+              fontWeight: 'medium',
+              color: '#ffffff',
+              textAlign: 'center'
+            }
+          },
+          {
+            id: 'description',
+            text: campaignData.content?.description || '',
+            type: 'description',
+            position: { x: 0, y: 120 },
+            style: {
+              fontSize: '16px',
+              fontWeight: 'normal',
+              color: '#ffffff',
+              textAlign: 'center'
+            }
+          }
+        ].filter(text => text.text), // Supprimer les textes vides
         centerText: false,
         centerForm: true,
         centerGameZone: true,
@@ -441,27 +276,25 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             {/* Contenu principal centré */}
             <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-6 md:px-12">
               {/* Titre principal avec police de marque */}
-              <EditableStudioText
-                text={editableContent.title}
-                onUpdate={(newText) => updateText('title', newText)}
+              <h1 
                 className={`${textSizes.title} font-medium mb-4 text-white leading-tight`}
                 style={{
                   textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.3)'
                 }}
-                placeholder="Titre principal"
-              />
+              >
+                {campaignData.content?.title || 'PARTICIPEZ & GAGNEZ'}
+              </h1>
 
               {/* Sous-titre */}
-              {(editableContent.subtitle || campaignData.content?.subtitle) && (
-                <EditableStudioText
-                  text={editableContent.subtitle}
-                  onUpdate={(newText) => updateText('subtitle', newText)}
+              {campaignData.content?.subtitle && (
+                <p 
                   className={`${textSizes.subtitle} text-white/90 mb-6 font-medium`}
                   style={{
                     textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
                   }}
-                  placeholder="Sous-titre"
-                />
+                >
+                  {campaignData.content.subtitle}
+                </p>
               )}
 
               {/* Zone de jeu interactive */}
@@ -475,9 +308,8 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
               </div>
 
               {/* Call to Action */}
-              <EditableStudioText
-                text={editableContent.callToAction}
-                onUpdate={(newText) => updateText('callToAction', newText)}
+              <a
+                href="#"
                 className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200 inline-block text-center cursor-pointer`}
                 style={{
                   backgroundColor: campaignData.design?.primaryColor || '#006799',
@@ -486,32 +318,28 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                   boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`,
                   textDecoration: 'none'
                 }}
-                placeholder="Bouton d'action"
-              />
+              >
+                {campaignData.content?.callToAction || 'JOUER MAINTENANT'}
+              </a>
 
               {/* Description */}
-              {(editableContent.description || campaignData.content?.description) && (
-                <EditableStudioText
-                  text={editableContent.description}
-                  onUpdate={(newText) => updateText('description', newText)}
+              {campaignData.content?.description && (
+                <p 
                   className={`${textSizes.description} text-white/80 mt-6 max-w-md`}
                   style={{
                     textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
                   }}
-                  placeholder="Description"
-                  multiline
-                />
+                >
+                  {campaignData.content.description}
+                </p>
               )}
             </div>
 
             {/* Footer avec informations légales */}
             <div className="relative z-10 p-4 text-center">
-              <EditableStudioText
-                text={editableContent.legalText}
-                onUpdate={(newText) => updateText('legalText', newText)}
-                className="text-white/60 text-xs"
-                placeholder="Mentions légales"
-              />
+              <p className="text-white/60 text-xs">
+                * Voir conditions d'utilisation - Jeu gratuit sans obligation d'achat
+              </p>
             </div>
           </CardContent>
         </Card>

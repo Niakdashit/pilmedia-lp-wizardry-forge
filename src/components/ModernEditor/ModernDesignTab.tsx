@@ -1,6 +1,5 @@
 
 import React from 'react';
-import BrandingSettings from './DesignTab/BrandingSettings';
 import BackgroundSettings from './DesignTab/BackgroundSettings';
 import WheelBorderSettings from './DesignTab/WheelBorderSettings';
 import GameStyleSettings from './DesignTab/GameStyleSettings';
@@ -22,12 +21,6 @@ const ModernDesignTab: React.FC<ModernDesignTabProps> = ({
 
   return (
     <div className="space-y-8 px-[5px]">
-      {/* Section Branding IA */}
-      <BrandingSettings
-        campaign={campaign}
-        setCampaign={setCampaign}
-      />
-
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-6">Design</h2>
       </div>

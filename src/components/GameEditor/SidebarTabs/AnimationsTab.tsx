@@ -112,7 +112,7 @@ const AnimationsTab: React.FC<AnimationsTabProps> = ({
                     <div className="flex items-center gap-2">
                       <Wand2 className="w-4 h-4 text-sidebar-text-muted" />
                       <span className="text-sm font-medium text-sidebar-text-primary">
-                        {(text.content || 'Texte sans contenu').substring(0, 30)}{(text.content || '').length > 30 ? '...' : ''}
+                        {text.content.substring(0, 30)}{text.content.length > 30 ? '...' : ''}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
