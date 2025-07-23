@@ -8,8 +8,25 @@ interface CampaignPreviewProps {
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const CampaignPreview: React.FC<CampaignPreviewProps> = ({ campaign, previewDevice: initialDevice = 'desktop' }) => {
+const CampaignPreview: React.FC<CampaignPreviewProps> = ({ campaign, setCampaign, previewDevice: initialDevice = 'desktop' }) => {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet'>(initialDevice === 'mobile' ? 'tablet' : initialDevice);
+
+  const handleTextUpdate = (textId: string, newText: string) => {
+    if (!setCampaign) return;
+    
+    setCampaign((prevCampaign: any) => {
+      const updatedCampaign = { ...prevCampaign };
+      
+      // Mettre à jour le texte dans customTexts
+      if (updatedCampaign.gameConfig?.customTexts) {
+        updatedCampaign.gameConfig.customTexts = updatedCampaign.gameConfig.customTexts.map((text: any) => 
+          text.id === textId ? { ...text, text: newText } : text
+        );
+      }
+      
+      return updatedCampaign;
+    });
+  };
 
   return (
     <div className="w-full h-full bg-white border-l border-gray-200 overflow-hidden">
@@ -45,6 +62,7 @@ const CampaignPreview: React.FC<CampaignPreviewProps> = ({ campaign, previewDevi
               gameSize={campaign.gameSize || 'large'}
               previewDevice={previewDevice}
               showBackgroundOverlay={false}
+              onTextUpdate={handleTextUpdate}
             />
           </div>
         </div>

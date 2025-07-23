@@ -45,6 +45,16 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
     if (campaignData.content) {
       campaignData.content[field] = newText;
     }
+    
+    // Mettre à jour aussi les editableTexts si disponibles
+    if (campaignData.content?.editableTexts) {
+      campaignData.content.editableTexts = campaignData.content.editableTexts.map((text: any) => {
+        if (text.type === field || text.id === `${field}-text`) {
+          return { ...text, text: newText };
+        }
+        return text;
+      });
+    }
   };
 
   const handleAdvancedEditor = () => {
@@ -107,13 +117,13 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             }));
           }
           
-          // Utiliser les textes éditables modifiés
+          // Utiliser les textes éditables modifiés avec des positions adaptées au nouveau layout
           return [
             {
               id: 'main-title',
               text: editableContent.title,
               type: 'title',
-              position: { x: 50, y: 100 },
+              position: { x: 50, y: 15 }, // Position en pourcentage pour être responsive
               style: {
                 fontSize: '48px',
                 fontWeight: 'bold',
@@ -121,13 +131,30 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 textAlign: 'center',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
               },
-              editable: true
+              editable: true,
+              deviceConfig: {
+                desktop: {
+                  x: 50, y: 120,
+                  fontSize: 48, fontWeight: 'bold', color: '#ffffff',
+                  textAlign: 'center', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                },
+                tablet: {
+                  x: 50, y: 100,
+                  fontSize: 36, fontWeight: 'bold', color: '#ffffff',
+                  textAlign: 'center', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                },
+                mobile: {
+                  x: 50, y: 80,
+                  fontSize: 28, fontWeight: 'bold', color: '#ffffff',
+                  textAlign: 'center', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                }
+              }
             },
             {
               id: 'subtitle',
               text: editableContent.subtitle,
               type: 'subtitle',
-              position: { x: 50, y: 200 },
+              position: { x: 50, y: 25 },
               style: {
                 fontSize: '24px',
                 fontWeight: 'medium',
@@ -135,13 +162,30 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 textAlign: 'center',
                 textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
               },
-              editable: true
+              editable: true,
+              deviceConfig: {
+                desktop: {
+                  x: 50, y: 200,
+                  fontSize: 24, fontWeight: 'medium', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
+                },
+                tablet: {
+                  x: 50, y: 170,
+                  fontSize: 20, fontWeight: 'medium', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
+                },
+                mobile: {
+                  x: 50, y: 140,
+                  fontSize: 16, fontWeight: 'medium', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
+                }
+              }
             },
             {
               id: 'description',
               text: editableContent.description,
               type: 'description',
-              position: { x: 50, y: 650 },
+              position: { x: 50, y: 70 },
               style: {
                 fontSize: '18px',
                 fontWeight: 'normal',
@@ -149,13 +193,30 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 textAlign: 'center',
                 textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
               },
-              editable: true
+              editable: true,
+              deviceConfig: {
+                desktop: {
+                  x: 50, y: 650,
+                  fontSize: 18, fontWeight: 'normal', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
+                },
+                tablet: {
+                  x: 50, y: 550,
+                  fontSize: 16, fontWeight: 'normal', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
+                },
+                mobile: {
+                  x: 50, y: 450,
+                  fontSize: 14, fontWeight: 'normal', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
+                }
+              }
             },
             {
               id: 'legal',
               text: editableContent.legalText,
               type: 'legal',
-              position: { x: 50, y: 750 },
+              position: { x: 50, y: 85 },
               style: {
                 fontSize: '12px',
                 fontWeight: 'normal',
@@ -163,7 +224,24 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 textAlign: 'center',
                 textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
               },
-              editable: true
+              editable: true,
+              deviceConfig: {
+                desktop: {
+                  x: 50, y: 750,
+                  fontSize: 12, fontWeight: 'normal', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                },
+                tablet: {
+                  x: 50, y: 650,
+                  fontSize: 11, fontWeight: 'normal', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                },
+                mobile: {
+                  x: 50, y: 550,
+                  fontSize: 10, fontWeight: 'normal', color: '#ffffff',
+                  textAlign: 'center', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                }
+              }
             }
           ].filter(text => text.text);
         })(),

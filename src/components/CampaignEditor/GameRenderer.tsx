@@ -8,6 +8,7 @@ import { useGamePositionCalculator } from './GamePositionCalculator';
 import useCenteredStyles from '../../hooks/useCenteredStyles';
 import { shouldUseUnlockedFunnel, shouldUseStandardFunnel } from '../../utils/funnelMatcher';
 import { SmartWheel } from '../SmartWheel';
+import EditableGameText from './EditableGameText';
 
 interface GameRendererProps {
   campaign: any;
@@ -20,6 +21,7 @@ interface GameRendererProps {
    */
   showBackgroundOverlay?: boolean;
   className?: string;
+  onTextUpdate?: (textId: string, newText: string) => void;
 }
 
 const GameRenderer: React.FC<GameRendererProps> = ({
@@ -28,7 +30,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   previewDevice,
   gameBackgroundImage,
   showBackgroundOverlay = false,
-  className = ''
+  className = '',
+  onTextUpdate
 }) => {
   // Utiliser le système de synchronisation pour le quiz
   const enhancedCampaign = campaign.type === 'quiz'
@@ -87,33 +90,63 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     // Récupérer le style de bordure depuis la campagne
     const borderStyle = enhancedCampaign.design?.wheelBorderStyle || 'classic';
 
-    return (
-      <div className={className} style={containerStyle}>
-        {gameBackgroundImage && showBackgroundOverlay && (
-          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
-        )}
-        <div
-          className="relative z-10 w-full h-full flex items-center justify-center"
-          style={{ ...wrapperStyle, ...getPositionStyles() }}
-        >
-          <SmartWheel
-            segments={segments}
-            theme="modern"
-            size={wheelSize}
-            brandColors={brandColors}
-            borderStyle={borderStyle}
-            onResult={(segment) => {
-              console.log('Segment gagné dans l\'éditeur:', segment);
-            }}
-            customButton={{
-              text: enhancedCampaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
-              color: brandColors.primary,
-              textColor: '#ffffff'
-            }}
-          />
-        </div>
+  return (
+    <div className={className} style={containerStyle}>
+      {gameBackgroundImage && showBackgroundOverlay && (
+        <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+      )}
+      
+      {/* Afficher les textes éditables personnalisés */}
+      {enhancedCampaign.gameConfig?.customTexts?.map((customText: any, index: number) => (
+        <EditableGameText
+          key={customText.id || `text-${index}`}
+          id={customText.id}
+          text={customText.text}
+          onUpdate={(newText) => {
+            if (onTextUpdate && customText.id) {
+              onTextUpdate(customText.id, newText);
+            }
+          }}
+          style={{
+            position: 'absolute',
+            left: `${customText.position?.x || 50}%`,
+            top: `${customText.position?.y || 100}px`,
+            transform: 'translateX(-50%)',
+            fontSize: customText.style?.fontSize || '18px',
+            fontWeight: customText.style?.fontWeight || 'normal',
+            color: customText.style?.color || '#ffffff',
+            textAlign: customText.style?.textAlign || 'center',
+            textShadow: customText.style?.textShadow || '2px 2px 4px rgba(0,0,0,0.8)',
+            zIndex: 20,
+            maxWidth: '80%',
+            wordWrap: 'break-word'
+          }}
+          multiline={customText.type === 'description'}
+        />
+      ))}
+      
+      <div
+        className="relative z-10 w-full h-full flex items-center justify-center"
+        style={{ ...wrapperStyle, ...getPositionStyles() }}
+      >
+        <SmartWheel
+          segments={segments}
+          theme="modern"
+          size={wheelSize}
+          brandColors={brandColors}
+          borderStyle={borderStyle}
+          onResult={(segment) => {
+            console.log('Segment gagné dans l\'éditeur:', segment);
+          }}
+          customButton={{
+            text: enhancedCampaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+            color: brandColors.primary,
+            textColor: '#ffffff'
+          }}
+        />
       </div>
-    );
+    </div>
+  );
   }
 
   // Pour les types utilisant le funnel standard
