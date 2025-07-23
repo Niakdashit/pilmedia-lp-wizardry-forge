@@ -56,7 +56,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
     customImages: config.design?.customImages?.length || 0,
     device,
     displayMode: config.displayMode,
-    backgroundImage: config.design?.backgroundImage
+    backgroundUrl: config.design?.backgroundUrl || config.design?.backgroundImage
   });
 
   return (

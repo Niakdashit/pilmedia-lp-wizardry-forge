@@ -1,27 +1,34 @@
 
 import React from 'react';
-import WheelPreview from '../../GameTypes/WheelComponents/WheelPreview';
-import QuizPreview from '../../GameTypes/QuizComponents/QuizPreview';
-import ScratchPreview from '../../GameTypes/ScratchComponents/ScratchPreview';
-import JackpotPreview from '../../GameTypes/JackpotComponents/JackpotPreview';
+import WheelPreview from '../../GameTypes/WheelPreview';
+import QuizPreview from '../../GameTypes/QuizPreview';
+import ScratchPreview from '../../GameTypes/ScratchPreview';
+import JackpotPreview from '../../GameTypes/JackpotPreview';
 import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 
 interface GameRendererProps {
   gameType: string;
   config: EditorConfig;
   device: DeviceType;
+  onResult?: (result: { id: string; label: string; color: string }) => void;
+  isMode1?: boolean;
 }
 
 const GameRenderer: React.FC<GameRendererProps> = ({ gameType, config, device }) => {
   console.log('🎮 GameRenderer - Rendu du jeu:', {
     gameType,
     device,
-    hasBackground: !!config.design?.backgroundImage
+    hasBackground: !!(config.design?.backgroundUrl || config.design?.backgroundImage)
   });
 
   const commonProps = {
-    device,
-    config,
+    campaign: config,
+    config: {
+      mode: 'instant_winner' as const,
+      winProbability: 0.5,
+      winnersCount: 0
+    },
+    previewDevice: device,
     style: {
       position: 'relative' as const,
       zIndex: 10, // Z-index plus bas que les textes

@@ -54,6 +54,7 @@ export interface CustomText {
       height?: number;
     };
   };
+  textShadow?: string;
   // Nouvelles propriétés d'animation
   animationConfig?: {
     type: 'fadeIn' | 'slideInLeft' | 'slideInRight' | 'slideInUp' | 'slideInDown' | 'bounce' | 'typewriter' | 'pulse' | 'rotate' | 'zoomIn' | 'flipX' | 'flipY';
@@ -98,6 +99,8 @@ export interface EditorConfig {
   customTexts?: CustomText[];
   design?: {
     customImages?: any[];
+    backgroundUrl?: string;
+    backgroundImage?: string;
   };
   centerText?: boolean;
   centerForm?: boolean;
