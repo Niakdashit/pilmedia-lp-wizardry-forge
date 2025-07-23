@@ -41,6 +41,20 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   }, [isSelected]);
 
+  // Log de debug pour tracer le rendu
+  useEffect(() => {
+    console.log('📝 EditableText rendu:', {
+      id: text.id,
+      content: text.content?.substring(0, 50) + '...',
+      position: { x: currentX, y: currentY },
+      fontSize: currentFontSize,
+      color: text.color,
+      backgroundColor: text.backgroundColor,
+      device: device,
+      visible: true
+    });
+  }, [text, device]);
+
   const handleDoubleClick = () => {
     setIsEditing(true);
     onSelect(text.id);
@@ -83,7 +97,6 @@ const EditableText: React.FC<EditableTextProps> = ({
   const handleDrag = (_: any, data: any) => {
     setShowToolbar(false);
     
-    // Mettre à jour la position pour l'appareil actuel
     const updatedText = {
       ...text,
       x: data.x,
@@ -100,7 +113,6 @@ const EditableText: React.FC<EditableTextProps> = ({
     
     onUpdate(updatedText);
     
-    // Déclencher l'auto-sync si activé
     if (triggerAutoSync) {
       triggerAutoSync();
     }
@@ -194,7 +206,6 @@ const EditableText: React.FC<EditableTextProps> = ({
   const handleToolbarUpdate = (updates: Partial<CustomText>) => {
     onUpdate({ ...text, ...updates });
     
-    // Déclencher l'auto-sync après modification via toolbar
     if (triggerAutoSync) {
       triggerAutoSync();
     }
@@ -221,6 +232,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   const currentHeight = getDeviceValue(text.height, deviceConfig?.height);
   const currentFontSize = getDeviceValue(text.fontSize, deviceConfig?.fontSize);
 
+  // Style amélioré avec meilleure visibilité
   const textStyle: React.CSSProperties = {
     fontSize: `${currentFontSize}px`,
     fontFamily: text.fontFamily,
@@ -229,7 +241,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     fontStyle: text.fontStyle,
     textDecoration: text.textDecoration,
     textAlign: text.textAlign as any,
-    backgroundColor: text.backgroundColor || 'transparent',
+    backgroundColor: text.backgroundColor || 'rgba(0, 0, 0, 0.5)',
     width: currentWidth ? `${currentWidth}px` : 'auto',
     height: currentHeight ? `${currentHeight}px` : 'auto',
     minWidth: '50px',
@@ -243,8 +255,23 @@ const EditableText: React.FC<EditableTextProps> = ({
     boxShadow: isSelected && !isEditing ? '0 0 0 1px rgba(59, 130, 246, 0.3)' : 'none',
     userSelect: isEditing ? 'text' : 'none',
     overflow: 'hidden',
-    wordWrap: 'break-word'
+    wordWrap: 'break-word',
+    // Améliorer la lisibilité
+    textShadow: text.textShadow || '2px 2px 4px rgba(0, 0, 0, 0.8)',
+    zIndex: isSelected ? 25 : 20,
+    // S'assurer que le texte est visible
+    opacity: 1,
+    visibility: 'visible'
   };
+
+  console.log('🎨 Style appliqué au texte:', {
+    id: text.id,
+    position: { x: currentX, y: currentY },
+    fontSize: currentFontSize,
+    color: text.color,
+    backgroundColor: text.backgroundColor,
+    zIndex: textStyle.zIndex
+  });
 
   return (
     <>
