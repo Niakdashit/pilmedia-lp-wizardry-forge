@@ -170,6 +170,18 @@ export interface EditorConfig {
   autoSyncOnDeviceChange?: boolean;
   autoSyncRealTime?: boolean;
   autoSyncBaseDevice?: 'desktop' | 'tablet' | 'mobile';
+  // Nouvelles propriétés pour le branding
+  centerLogo?: string;
+  isBranded?: boolean;
+  lastBrandingUpdate?: number;
+  brandingData?: {
+    websiteUrl?: string;
+    logoUrl?: string;
+    backgroundImageUrl?: string;
+    targetAudience?: string;
+    objective?: string;
+  };
+  brandAnalysis?: any;
 }
 
 const GameEditorLayout: React.FC = () => {
