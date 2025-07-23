@@ -42,11 +42,12 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
     };
 
     if (config.showFrame || customText.showFrame) {
-      textStyle.backgroundColor = config.frameColor || customText.frameColor || '#ffffff';
-      textStyle.border = `1px solid ${config.frameBorderColor || customText.frameBorderColor || '#e5e7eb'}`;
-      textStyle.padding = '8px 12px';
-      textStyle.borderRadius = '4px';
-      textStyle.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+      textStyle.backgroundColor = config.frameColor || customText.frameColor || 'rgba(0, 0, 0, 0.7)';
+      textStyle.border = `2px solid ${config.frameBorderColor || customText.frameBorderColor || 'transparent'}`;
+      textStyle.padding = '12px 16px';
+      textStyle.borderRadius = '8px';
+      textStyle.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+      textStyle.backdropFilter = 'blur(4px)';
     }
 
     return (
@@ -64,25 +65,35 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
 
     const config = getElementDeviceConfig(customImage);
     
+    // Gérer le centrage horizontal
+    let leftPosition;
+    if (customImage.centered || (config.x || customImage.x) === 'center') {
+      leftPosition = '50%';
+    } else {
+      leftPosition = `${config.x || customImage.x || 0}px`;
+    }
+
     const imageStyle: React.CSSProperties = {
       position: 'absolute',
-      left: `${config.x || customImage.x || 0}px`,
+      left: leftPosition,
       top: `${config.y || customImage.y || 0}px`,
       width: `${config.width || customImage.width || 100}px`,
       height: `${config.height || customImage.height || 100}px`,
-      transform: `rotate(${config.rotation || customImage.rotation || 0}deg)`,
-      zIndex: 99,
+      transform: customImage.centered || (config.x || customImage.x) === 'center' 
+        ? `translateX(-50%) rotate(${config.rotation || customImage.rotation || 0}deg)` 
+        : `rotate(${config.rotation || customImage.rotation || 0}deg)`,
+      zIndex: 150,
       pointerEvents: 'none',
-      objectFit: 'cover',
-      borderRadius: '4px',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+      objectFit: 'contain',
+      borderRadius: '8px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
     };
 
     return (
       <img
         key={`image-${customImage.id}-${previewDevice}`}
         src={customImage.src}
-        alt="Image personnalisée"
+        alt="Logo"
         style={imageStyle}
         onError={(e) => {
           console.warn('Image failed to load:', customImage.src);
