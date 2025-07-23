@@ -67,6 +67,7 @@ export const loadCampaign = async (
         };
         
         console.log('Final studio campaign:', studioCampaign);
+        console.log('Studio customTexts:', studioCampaign.gameConfig?.customTexts);
         return studioCampaign;
       }
       

@@ -91,39 +91,48 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     const borderStyle = enhancedCampaign.design?.wheelBorderStyle || 'classic';
 
   return (
-    <div className={className} style={containerStyle}>
+    <div className={className} style={{ ...containerStyle, position: 'relative' }}>
       {gameBackgroundImage && showBackgroundOverlay && (
         <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
       )}
       
       {/* Afficher les textes éditables personnalisés */}
-      {enhancedCampaign.gameConfig?.customTexts?.map((customText: any, index: number) => (
-        <EditableGameText
-          key={customText.id || `text-${index}`}
-          id={customText.id}
-          text={customText.text}
-          onUpdate={(newText) => {
-            if (onTextUpdate && customText.id) {
-              onTextUpdate(customText.id, newText);
-            }
-          }}
-          style={{
-            position: 'absolute',
-            left: `${customText.position?.x || 50}%`,
-            top: `${customText.position?.y || 100}px`,
-            transform: 'translateX(-50%)',
-            fontSize: customText.style?.fontSize || '18px',
-            fontWeight: customText.style?.fontWeight || 'normal',
-            color: customText.style?.color || '#ffffff',
-            textAlign: customText.style?.textAlign || 'center',
-            textShadow: customText.style?.textShadow || '2px 2px 4px rgba(0,0,0,0.8)',
-            zIndex: 20,
-            maxWidth: '80%',
-            wordWrap: 'break-word'
-          }}
-          multiline={customText.type === 'description'}
-        />
-      ))}
+      {enhancedCampaign.gameConfig?.customTexts?.map((customText: any, index: number) => {
+        console.log('Rendering custom text:', customText);
+        
+        // Utiliser deviceConfig pour responsive
+        const deviceConfig = customText.deviceConfig?.[previewDevice] || customText;
+        const position = deviceConfig.position || customText.position || { x: 50, y: 100 };
+        
+        return (
+          <EditableGameText
+            key={customText.id || `text-${index}`}
+            id={customText.id}
+            text={customText.text}
+            onUpdate={(newText) => {
+              if (onTextUpdate && customText.id) {
+                onTextUpdate(customText.id, newText);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              left: `${position.x || 50}%`,
+              top: typeof position.y === 'number' ? `${position.y}px` : `${position.y}%`,
+              transform: 'translateX(-50%)',
+              fontSize: typeof deviceConfig.fontSize === 'number' ? `${deviceConfig.fontSize}px` : (deviceConfig.fontSize || customText.style?.fontSize || '18px'),
+              fontWeight: deviceConfig.fontWeight || customText.style?.fontWeight || 'normal',
+              color: deviceConfig.color || customText.style?.color || '#ffffff',
+              textAlign: deviceConfig.textAlign || customText.style?.textAlign || 'center',
+              textShadow: deviceConfig.textShadow || customText.style?.textShadow || '2px 2px 4px rgba(0,0,0,0.8)',
+              zIndex: 20,
+              maxWidth: '80%',
+              wordWrap: 'break-word',
+              pointerEvents: 'auto'
+            }}
+            multiline={customText.type === 'description'}
+          />
+        );
+      })}
       
       <div
         className="relative z-10 w-full h-full flex items-center justify-center"
