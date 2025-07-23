@@ -554,15 +554,15 @@ const GameEditorLayout: React.FC = () => {
         let newY = text.y;
         
         // Ajuster les positions selon l'ID ou le contenu
-        if (text.id === 'main-title' || text.content.includes('Gagnez') || text.content.includes('vacances')) {
+        if (text.id === 'main-title' || (text.content && (text.content.includes('Gagnez') || text.content.includes('vacances')))) {
           newY = 15; // Titre principal en haut
-        } else if (text.id === 'subtitle' || text.content.includes('Participez')) {
+        } else if (text.id === 'subtitle' || (text.content && text.content.includes('Participez'))) {
           newY = 85; // Sous-titre
-        } else if (text.id === 'mechanics' || text.content.includes('Séjour')) {
+        } else if (text.id === 'mechanics' || (text.content && text.content.includes('Séjour'))) {
           newY = 1000; // Description de l'offre
         } else if (text.id === 'offer-description') {
           newY = 1050; // Avantage client
-        } else if (text.id === 'legal-mentions' || text.content.includes('conditions')) {
+        } else if (text.id === 'legal-mentions' || (text.content && text.content.includes('conditions'))) {
           newY = 1100; // Mentions légales
         }
         
