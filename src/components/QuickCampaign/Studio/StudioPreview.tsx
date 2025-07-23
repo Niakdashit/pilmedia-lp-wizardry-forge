@@ -4,6 +4,7 @@ import { ChevronLeft, Smartphone, Tablet, Monitor, Settings } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import InteractiveWheel from './InteractiveWheel';
+import EditableStudioText from './EditableStudioText';
 
 interface StudioPreviewProps {
   campaignData: {
@@ -23,6 +24,28 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
   onBack
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  
+  // États pour les textes éditables
+  const [editableContent, setEditableContent] = useState({
+    title: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
+    subtitle: campaignData.content?.subtitle || '',
+    description: campaignData.content?.description || '',
+    callToAction: campaignData.content?.callToAction || 'JOUER MAINTENANT',
+    legalText: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat'
+  });
+
+  // Fonction pour mettre à jour les textes
+  const updateText = (field: keyof typeof editableContent, newText: string) => {
+    setEditableContent(prev => ({
+      ...prev,
+      [field]: newText
+    }));
+    
+    // Mettre à jour également campaignData pour la synchronisation
+    if (campaignData.content) {
+      campaignData.content[field] = newText;
+    }
+  };
 
   const handleAdvancedEditor = () => {
     try {
@@ -39,9 +62,9 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         gameType: 'wheel',
         gameMode: 'mode1-sequential',
         displayMode: 'mode1-banner-game',
-        storyText: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
+        storyText: editableContent.title,
         publisherLink: '',
-        prizeText: campaignData.content?.subtitle || campaignData.content?.description || 'Participez et tentez de gagner !',
+        prizeText: editableContent.subtitle || editableContent.description || 'Participez et tentez de gagner !',
         customTexts: (() => {
           // Utiliser les editableTexts de l'API si disponibles, sinon fallback
           if (campaignData.content?.editableTexts && campaignData.content.editableTexts.length > 0) {
@@ -84,11 +107,11 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             }));
           }
           
-          // Fallback vers l'ancienne méthode
+          // Utiliser les textes éditables modifiés
           return [
             {
               id: 'main-title',
-              text: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
+              text: editableContent.title,
               type: 'title',
               position: { x: 50, y: 100 },
               style: {
@@ -102,7 +125,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             },
             {
               id: 'subtitle',
-              text: campaignData.content?.subtitle || '',
+              text: editableContent.subtitle,
               type: 'subtitle',
               position: { x: 50, y: 200 },
               style: {
@@ -116,7 +139,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             },
             {
               id: 'description',
-              text: campaignData.content?.description || '',
+              text: editableContent.description,
               type: 'description',
               position: { x: 50, y: 650 },
               style: {
@@ -130,7 +153,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             },
             {
               id: 'legal',
-              text: campaignData.content?.legalText || '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
+              text: editableContent.legalText,
               type: 'legal',
               position: { x: 50, y: 750 },
               style: {
@@ -340,25 +363,27 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
             {/* Contenu principal centré */}
             <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-6 md:px-12">
               {/* Titre principal avec police de marque */}
-              <h1 
+              <EditableStudioText
+                text={editableContent.title}
+                onUpdate={(newText) => updateText('title', newText)}
                 className={`${textSizes.title} font-medium mb-4 text-white leading-tight`}
                 style={{
                   textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.3)'
                 }}
-              >
-                {campaignData.content?.title || 'PARTICIPEZ & GAGNEZ'}
-              </h1>
+                placeholder="Titre principal"
+              />
 
               {/* Sous-titre */}
-              {campaignData.content?.subtitle && (
-                <p 
+              {(editableContent.subtitle || campaignData.content?.subtitle) && (
+                <EditableStudioText
+                  text={editableContent.subtitle}
+                  onUpdate={(newText) => updateText('subtitle', newText)}
                   className={`${textSizes.subtitle} text-white/90 mb-6 font-medium`}
                   style={{
                     textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
                   }}
-                >
-                  {campaignData.content.subtitle}
-                </p>
+                  placeholder="Sous-titre"
+                />
               )}
 
               {/* Zone de jeu interactive */}
@@ -372,8 +397,9 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
               </div>
 
               {/* Call to Action */}
-              <a
-                href="#"
+              <EditableStudioText
+                text={editableContent.callToAction}
+                onUpdate={(newText) => updateText('callToAction', newText)}
                 className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200 inline-block text-center cursor-pointer`}
                 style={{
                   backgroundColor: campaignData.design?.primaryColor || '#006799',
@@ -382,28 +408,32 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                   boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`,
                   textDecoration: 'none'
                 }}
-              >
-                {campaignData.content?.callToAction || 'JOUER MAINTENANT'}
-              </a>
+                placeholder="Bouton d'action"
+              />
 
               {/* Description */}
-              {campaignData.content?.description && (
-                <p 
+              {(editableContent.description || campaignData.content?.description) && (
+                <EditableStudioText
+                  text={editableContent.description}
+                  onUpdate={(newText) => updateText('description', newText)}
                   className={`${textSizes.description} text-white/80 mt-6 max-w-md`}
                   style={{
                     textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
                   }}
-                >
-                  {campaignData.content.description}
-                </p>
+                  placeholder="Description"
+                  multiline
+                />
               )}
             </div>
 
             {/* Footer avec informations légales */}
             <div className="relative z-10 p-4 text-center">
-              <p className="text-white/60 text-xs">
-                * Voir conditions d'utilisation - Jeu gratuit sans obligation d'achat
-              </p>
+              <EditableStudioText
+                text={editableContent.legalText}
+                onUpdate={(newText) => updateText('legalText', newText)}
+                className="text-white/60 text-xs"
+                placeholder="Mentions légales"
+              />
             </div>
           </CardContent>
         </Card>
