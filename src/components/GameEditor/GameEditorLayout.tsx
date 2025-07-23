@@ -29,6 +29,7 @@ export interface CustomText {
   hasEffect?: boolean;
   isAnimated?: boolean;
   backgroundColor?: string;
+  textShadow?: string;
   width?: number;
   height?: number;
   deviceConfig?: {

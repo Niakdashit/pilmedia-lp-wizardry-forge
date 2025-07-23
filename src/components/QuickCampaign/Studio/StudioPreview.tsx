@@ -42,44 +42,108 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         storyText: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
         publisherLink: '',
         prizeText: campaignData.content?.subtitle || campaignData.content?.description || 'Participez et tentez de gagner !',
-        customTexts: [
-          {
-            id: 'main-title',
-            text: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
-            type: 'title',
-            position: { x: 0, y: 0 },
-            style: {
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              textAlign: 'center'
-            }
-          },
-          {
-            id: 'subtitle',
-            text: campaignData.content?.subtitle || '',
-            type: 'subtitle',
-            position: { x: 0, y: 60 },
-            style: {
-              fontSize: '24px',
-              fontWeight: 'medium',
-              color: '#ffffff',
-              textAlign: 'center'
-            }
-          },
-          {
-            id: 'description',
-            text: campaignData.content?.description || '',
-            type: 'description',
-            position: { x: 0, y: 120 },
-            style: {
-              fontSize: '16px',
-              fontWeight: 'normal',
-              color: '#ffffff',
-              textAlign: 'center'
-            }
+        customTexts: (() => {
+          // Utiliser les editableTexts de l'API si disponibles, sinon fallback
+          if (campaignData.content?.editableTexts && campaignData.content.editableTexts.length > 0) {
+            return campaignData.content.editableTexts.map((editableText: any) => ({
+              id: editableText.id,
+              text: editableText.text,
+              type: editableText.type,
+              position: editableText.position,
+              style: editableText.style,
+              editable: true,
+              deviceConfig: {
+                desktop: {
+                  x: editableText.position.x,
+                  y: editableText.position.y,
+                  fontSize: parseInt(editableText.style.fontSize),
+                  fontWeight: editableText.style.fontWeight,
+                  color: editableText.style.color,
+                  textAlign: editableText.style.textAlign,
+                  textShadow: editableText.style.textShadow
+                },
+                tablet: {
+                  x: editableText.position.x,
+                  y: editableText.position.y,
+                  fontSize: parseInt(editableText.style.fontSize) * 0.8,
+                  fontWeight: editableText.style.fontWeight,
+                  color: editableText.style.color,
+                  textAlign: editableText.style.textAlign,
+                  textShadow: editableText.style.textShadow
+                },
+                mobile: {
+                  x: editableText.position.x,
+                  y: editableText.position.y,
+                  fontSize: parseInt(editableText.style.fontSize) * 0.6,
+                  fontWeight: editableText.style.fontWeight,
+                  color: editableText.style.color,
+                  textAlign: editableText.style.textAlign,
+                  textShadow: editableText.style.textShadow
+                }
+              }
+            }));
           }
-        ].filter(text => text.text), // Supprimer les textes vides
+          
+          // Fallback vers l'ancienne méthode
+          return [
+            {
+              id: 'main-title',
+              text: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
+              type: 'title',
+              position: { x: 50, y: 100 },
+              style: {
+                fontSize: '48px',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                textAlign: 'center',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+              },
+              editable: true
+            },
+            {
+              id: 'subtitle',
+              text: campaignData.content?.subtitle || '',
+              type: 'subtitle',
+              position: { x: 50, y: 200 },
+              style: {
+                fontSize: '24px',
+                fontWeight: 'medium',
+                color: '#ffffff',
+                textAlign: 'center',
+                textShadow: '1px 1px 3px rgba(0,0,0,0.7)'
+              },
+              editable: true
+            },
+            {
+              id: 'description',
+              text: campaignData.content?.description || '',
+              type: 'description',
+              position: { x: 50, y: 650 },
+              style: {
+                fontSize: '18px',
+                fontWeight: 'normal',
+                color: '#ffffff',
+                textAlign: 'center',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
+              },
+              editable: true
+            },
+            {
+              id: 'legal',
+              text: campaignData.content?.legalText || '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
+              type: 'legal',
+              position: { x: 50, y: 750 },
+              style: {
+                fontSize: '12px',
+                fontWeight: 'normal',
+                color: '#ffffff',
+                textAlign: 'center',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+              },
+              editable: true
+            }
+          ].filter(text => text.text);
+        })(),
         centerText: false,
         centerForm: true,
         centerGameZone: true,
