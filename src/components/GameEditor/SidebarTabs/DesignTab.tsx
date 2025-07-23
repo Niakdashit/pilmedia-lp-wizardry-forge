@@ -184,7 +184,7 @@ RÃ©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en franÃ
       if (error) throw error;
 
       setGeneratedBranding(data.result);
-      
+
       // Apply the generated branding to the config
       if (data.result.palette_couleurs && data.result.palette_couleurs.length > 0) {
         onConfigUpdate({
@@ -195,6 +195,67 @@ RÃ©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en franÃ
           bannerDescription: data.result.wording_jeu_concours?.titre || '',
           footerText: data.result.wording_jeu_concours?.sous_titre || ''
         });
+      }
+
+      // Create or update main title & subtitle custom texts
+      const updatedCustomTexts = [...(config.customTexts || [])];
+
+      if (data.result.wording_jeu_concours?.titre) {
+        const mainTitleIndex = updatedCustomTexts.findIndex(t => t.id === 'main-title');
+        const mainTitle = {
+          id: 'main-title',
+          content: data.result.wording_jeu_concours.titre,
+          x: 50,
+          y: 20,
+          fontSize: 48,
+          fontFamily: 'Arial',
+          color: '#ffffff',
+          fontWeight: 'bold' as const,
+          fontStyle: 'normal' as const,
+          textDecoration: 'none',
+          textAlign: 'center' as const,
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 60
+        } as const;
+
+        if (mainTitleIndex !== -1) {
+          updatedCustomTexts[mainTitleIndex] = { ...updatedCustomTexts[mainTitleIndex], ...mainTitle };
+        } else {
+          updatedCustomTexts.push(mainTitle);
+        }
+      }
+
+      if (data.result.wording_jeu_concours?.sous_titre) {
+        const subtitleIndex = updatedCustomTexts.findIndex(t => t.id === 'subtitle');
+        const subtitle = {
+          id: 'subtitle',
+          content: data.result.wording_jeu_concours.sous_titre,
+          x: 50,
+          y: 100,
+          fontSize: 24,
+          fontFamily: 'Arial',
+          color: '#ffffff',
+          fontWeight: 'normal' as const,
+          fontStyle: 'normal' as const,
+          textDecoration: 'none',
+          textAlign: 'center' as const,
+          hasEffect: true,
+          isAnimated: false,
+          width: 700,
+          height: 30
+        } as const;
+
+        if (subtitleIndex !== -1) {
+          updatedCustomTexts[subtitleIndex] = { ...updatedCustomTexts[subtitleIndex], ...subtitle };
+        } else {
+          updatedCustomTexts.push(subtitle);
+        }
+      }
+
+      if (data.result.wording_jeu_concours?.titre || data.result.wording_jeu_concours?.sous_titre) {
+        onConfigUpdate({ customTexts: updatedCustomTexts });
       }
 
       if (logoUrl) {
