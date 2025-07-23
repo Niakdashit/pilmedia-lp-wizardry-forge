@@ -50,6 +50,14 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
     }
   };
 
+  // Log pour debug
+  console.log('Mode2Preview - Rendu avec:', {
+    customTexts: config.customTexts?.length || 0,
+    customImages: config.design?.customImages?.length || 0,
+    device,
+    displayMode: config.displayMode
+  });
+
   return (
     <div>
       <BackgroundContainer
@@ -67,44 +75,57 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         </div>
         
         {/* Custom editable images - positioned absolutely over the whole layout */}
-        {config.design?.customImages?.map((image: any) => (
-          <div
-            key={image.id}
-            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 19 }}
-          >
-            <div className="relative w-full h-full pointer-events-auto">
-              <EditableImage
-                image={image}
-                onUpdate={onImageUpdate}
-                onDelete={onImageDelete}
-                isSelected={selectedImageId === image.id}
-                onSelect={setSelectedImageId}
-              />
+        {config.design?.customImages?.map((image: any) => {
+          console.log('Mode2Preview - Rendu image:', image);
+          return (
+            <div
+              key={image.id}
+              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              style={{ zIndex: 19 }}
+            >
+              <div className="relative w-full h-full pointer-events-auto">
+                <EditableImage
+                  image={image}
+                  onUpdate={onImageUpdate}
+                  onDelete={onImageDelete}
+                  isSelected={selectedImageId === image.id}
+                  onSelect={setSelectedImageId}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Custom editable texts - positioned absolutely over the whole layout */}
-        {config.customTexts?.map((text) => (
-          <div
-            key={text.id}
-            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 20 }}
-          >
-            <div className="relative w-full h-full pointer-events-auto">
-              <EditableText
-                text={text}
-                onUpdate={onTextUpdate}
-                onDelete={onTextDelete}
-                isSelected={selectedTextId === text.id}
-                onSelect={setSelectedTextId}
-                device={device}
-                triggerAutoSync={triggerAutoSync}
-              />
+        {config.customTexts?.map((text) => {
+          console.log('Mode2Preview - Rendu texte:', {
+            id: text.id,
+            content: text.content?.substring(0, 50) + '...',
+            x: text.x,
+            y: text.y,
+            color: text.color,
+            backgroundColor: text.backgroundColor
+          });
+          return (
+            <div
+              key={text.id}
+              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              style={{ zIndex: 20 }}
+            >
+              <div className="relative w-full h-full pointer-events-auto">
+                <EditableText
+                  text={text}
+                  onUpdate={onTextUpdate}
+                  onDelete={onTextDelete}
+                  isSelected={selectedTextId === text.id}
+                  onSelect={setSelectedTextId}
+                  device={device}
+                  triggerAutoSync={triggerAutoSync}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </BackgroundContainer>
     </div>
   );

@@ -181,29 +181,28 @@ const GameEditorLayout: React.FC = () => {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [showUrlModal, setShowUrlModal] = useState(false);
   
-  
   // Fonction pour transformer les données Studio vers le format EditorConfig
   const transformStudioToEditorConfig = (studioData: any): EditorConfig => {
-    // Créer les customTexts depuis les données Studio
     const customTexts: CustomText[] = [];
+    const customImages: any[] = [];
     
     console.log('🔍 Transforming studio data:', studioData);
     console.log('📊 Professional data:', studioData.professionalData);
-    console.log('📄 Legacy content:', studioData.content);
     
     // Priorité 1: Utiliser les données professionnelles du nouveau format
     if (studioData.professionalData?.wording_jeu_concours) {
       const wording = studioData.professionalData.wording_jeu_concours;
       const fontFamily = studioData.professionalData.polices?.[0]?.nom || studioData.brandAnalysis?.fontFamily || 'Montserrat';
       
-      // Titre principal
+      // Positions optimisées pour le mode 2 avec image de fond
+      // Titre principal - position haute mais visible
       if (wording.titre) {
         customTexts.push({
           id: 'main-title',
           content: wording.titre,
-          x: 50,
-          y: 20,
-          fontSize: 48,
+          x: 50, // Centré horizontalement
+          y: 15, // Plus haut pour éviter l'image
+          fontSize: 42, // Légèrement plus petit pour s'adapter
           fontFamily: fontFamily,
           color: '#ffffff',
           fontWeight: 'bold',
@@ -212,19 +211,20 @@ const GameEditorLayout: React.FC = () => {
           textAlign: 'center',
           hasEffect: true,
           isAnimated: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fond semi-transparent pour lisibilité
           width: 700,
           height: 60
         });
       }
       
-      // Sous-titre
+      // Sous-titre - juste sous le titre
       if (wording.sous_titre) {
         customTexts.push({
           id: 'subtitle',
           content: wording.sous_titre,
           x: 50,
-          y: 100,
-          fontSize: 24,
+          y: 85, // Juste sous le titre
+          fontSize: 22,
           fontFamily: fontFamily,
           color: '#ffffff',
           fontWeight: 'normal',
@@ -233,18 +233,19 @@ const GameEditorLayout: React.FC = () => {
           textAlign: 'center',
           hasEffect: true,
           isAnimated: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
           width: 700,
           height: 30
         });
       }
       
-      // Mécanique de participation
+      // Mécanique de participation - position basse mais visible
       if (wording.mecanique) {
         customTexts.push({
           id: 'mechanics',
           content: wording.mecanique,
           x: 50,
-          y: 900,
+          y: 1000, // Position basse
           fontSize: 18,
           fontFamily: fontFamily,
           color: '#ffffff',
@@ -254,6 +255,7 @@ const GameEditorLayout: React.FC = () => {
           textAlign: 'center',
           hasEffect: true,
           isAnimated: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
           width: 700,
           height: 40
         });
@@ -265,7 +267,7 @@ const GameEditorLayout: React.FC = () => {
           id: 'offer-description',
           content: wording.avantage_client,
           x: 50,
-          y: 950,
+          y: 1050,
           fontSize: 16,
           fontFamily: fontFamily,
           color: '#ffffff',
@@ -275,17 +277,18 @@ const GameEditorLayout: React.FC = () => {
           textAlign: 'center',
           hasEffect: true,
           isAnimated: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
           width: 700,
           height: 40
         });
       }
       
-      // Mentions légales (texte par défaut)
+      // Mentions légales
       customTexts.push({
         id: 'legal-mentions',
         content: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
         x: 50,
-        y: 1050,
+        y: 1100,
         fontSize: 12,
         fontFamily: fontFamily,
         color: '#ffffff',
@@ -295,6 +298,7 @@ const GameEditorLayout: React.FC = () => {
         textAlign: 'center',
         hasEffect: false,
         isAnimated: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         width: 700,
         height: 20
       });
@@ -366,17 +370,50 @@ const GameEditorLayout: React.FC = () => {
       console.log('✅ Created customTexts from legacy data:', customTexts.length);
     }
     
+    // Ajouter les logos depuis les données studio
+    if (studioData.design?.centerLogo) {
+      customImages.push({
+        id: 'center-logo',
+        src: studioData.design.centerLogo,
+        x: 350, // Centré horizontalement
+        y: 150, // Position après le titre
+        width: 100,
+        height: 100,
+        rotation: 0,
+        opacity: 1,
+        zIndex: 10
+      });
+    }
+    
+    // Ajouter le logo de marque si disponible
+    if (studioData.brandAnalysis?.logo && studioData.brandAnalysis.logo !== studioData.design?.centerLogo) {
+      customImages.push({
+        id: 'brand-logo',
+        src: studioData.brandAnalysis.logo,
+        x: 50, // Coin supérieur gauche
+        y: 50,
+        width: 80,
+        height: 80,
+        rotation: 0,
+        opacity: 0.9,
+        zIndex: 5
+      });
+    }
+    
     return {
       width: 810,
       height: 1200,
       anchor: 'fixed',
       gameType: 'wheel',
-      gameMode: 'mode1-sequential',
-      displayMode: 'mode1-banner-game',
+      gameMode: 'mode2-background', // Mode 2 par défaut pour le studio
+      displayMode: 'mode2-background',
       storyText: studioData.content?.title || 'Campagne Studio créée',
       publisherLink: '',
       prizeText: studioData.content?.callToAction || 'Participez et tentez de gagner !',
       customTexts: customTexts,
+      design: {
+        customImages: customImages
+      },
       centerText: false,
       centerForm: true,
       centerGameZone: true,
@@ -507,7 +544,45 @@ const GameEditorLayout: React.FC = () => {
 
   const [config, setConfig] = useState<EditorConfig>(initializeConfig);
 
-  // Fonction updateConfig optimisée avec validation et debouncing
+  // Fonction pour repositionner automatiquement les textes selon le mode d'affichage
+  const repositionTextsForDisplayMode = useCallback((texts: CustomText[], displayMode: string): CustomText[] => {
+    if (!texts || texts.length === 0) return texts;
+    
+    return texts.map(text => {
+      if (displayMode === 'mode2-background') {
+        // Repositionnement pour mode 2 avec image de fond
+        let newY = text.y;
+        
+        // Ajuster les positions selon l'ID ou le contenu
+        if (text.id === 'main-title' || text.content.includes('Gagnez') || text.content.includes('vacances')) {
+          newY = 15; // Titre principal en haut
+        } else if (text.id === 'subtitle' || text.content.includes('Participez')) {
+          newY = 85; // Sous-titre
+        } else if (text.id === 'mechanics' || text.content.includes('Séjour')) {
+          newY = 1000; // Description de l'offre
+        } else if (text.id === 'offer-description') {
+          newY = 1050; // Avantage client
+        } else if (text.id === 'legal-mentions' || text.content.includes('conditions')) {
+          newY = 1100; // Mentions légales
+        }
+        
+        return {
+          ...text,
+          y: newY,
+          backgroundColor: text.backgroundColor || 'rgba(0, 0, 0, 0.5)', // Fond pour lisibilité
+          color: '#ffffff' // Texte blanc pour contraste
+        };
+      } else {
+        // Mode 1 - positions originales
+        return {
+          ...text,
+          backgroundColor: undefined // Pas de fond en mode 1
+        };
+      }
+    });
+  }, []);
+
+  // Fonction updateConfig optimisée avec validation et repositionnement automatique
   const updateConfig = useCallback((updates: Partial<EditorConfig>) => {
     try {
       setConfig(prevConfig => {
@@ -517,10 +592,27 @@ const GameEditorLayout: React.FC = () => {
         console.log('📄 Previous customTexts:', prevConfig.customTexts?.length || 0);
         console.log('📄 New customTexts:', newConfig.customTexts?.length || 0);
         
-        // Si on change le displayMode, conserver les customTexts existants
-        if (updates.displayMode && prevConfig.customTexts && prevConfig.customTexts.length > 0) {
-          console.log('🔧 Display mode change detected, preserving customTexts');
+        // Si on change le displayMode, repositionner automatiquement les textes
+        if (updates.displayMode && updates.displayMode !== prevConfig.displayMode) {
+          console.log('🔧 Display mode change detected:', prevConfig.displayMode, '→', updates.displayMode);
+          
+          if (prevConfig.customTexts && prevConfig.customTexts.length > 0) {
+            console.log('📝 Repositioning texts for new display mode');
+            newConfig.customTexts = repositionTextsForDisplayMode(prevConfig.customTexts, updates.displayMode);
+          }
+        }
+        
+        // Conserver les customTexts existants si pas de mise à jour spécifique
+        if (!updates.customTexts && prevConfig.customTexts && prevConfig.customTexts.length > 0) {
           newConfig.customTexts = prevConfig.customTexts;
+        }
+        
+        // Conserver les customImages existants
+        if (!updates.design?.customImages && prevConfig.design?.customImages) {
+          newConfig.design = {
+            ...newConfig.design,
+            customImages: prevConfig.design.customImages
+          };
         }
         
         // Validation des données critiques
@@ -541,7 +633,7 @@ const GameEditorLayout: React.FC = () => {
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la configuration:', error);
     }
-  }, []);
+  }, [repositionTextsForDisplayMode]);
 
   // Memoization des propriétés coûteuses
   const memoizedConfig = useMemo(() => config, [config]);
