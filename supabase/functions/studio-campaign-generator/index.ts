@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -49,25 +50,33 @@ interface GeneratedGameConcept {
 }
 
 async function analyzeBrandFromWebsite(websiteUrl: string): Promise<BrandAnalysisResult> {
+  console.log('🔍 Analyzing brand from website:', websiteUrl);
+  
   // Simuler l'analyse de la marque pour le moment
   // Dans une implémentation complète, on ferait du web scraping
   
   const brandName = new URL(websiteUrl).hostname.replace('www.', '').split('.')[0];
   
-  return {
+  const result = {
     brandName: brandName.charAt(0).toUpperCase() + brandName.slice(1),
-    industry: "Vacances/Tourisme",
+    industry: "Services",
     primaryColor: "#0066CC",
     secondaryColor: "#FFD700",
     accentColor: "#FF6B35",
-    description: `${brandName} est une marque spécialisée dans les vacances et le tourisme, offrant des expériences mémorables à ses clients.`,
-    targetAudience: "Familles et voyageurs en quête d'aventures",
+    description: `${brandName} est une marque moderne offrant des services de qualité à ses clients.`,
+    targetAudience: "Professionnels et particuliers",
     marketingGoals: ["Augmenter l'engagement", "Générer des leads", "Fidéliser les clients"]
   };
+
+  console.log('✅ Brand analysis result:', result);
+  return result;
 }
 
 async function generateGameFromBrand(brandData: BrandAnalysisResult, campaignType: string, targetAudience: string, objective: string): Promise<GeneratedGameConcept> {
+  console.log('🎮 Generating game concept for:', { brandData, campaignType, targetAudience, objective });
+
   if (!openAIApiKey) {
+    console.error('❌ OpenAI API key not configured');
     throw new Error('OpenAI API key not configured');
   }
 
@@ -113,6 +122,8 @@ Réponds en JSON avec cette structure exacte:
 }`;
 
   try {
+    console.log('🤖 Calling OpenAI API...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -130,21 +141,35 @@ Réponds en JSON avec cette structure exacte:
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('📥 OpenAI response:', data);
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('❌ Invalid OpenAI response structure:', data);
+      throw new Error('Invalid response from OpenAI');
+    }
+
     const generatedContent = data.choices[0].message.content;
+    console.log('📝 Generated content:', generatedContent);
     
     // Nettoyer la réponse pour extraire le JSON
     const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error('❌ No JSON found in OpenAI response:', generatedContent);
       throw new Error('Invalid JSON response from OpenAI');
     }
     
-    return JSON.parse(jsonMatch[0]);
+    const parsedResult = JSON.parse(jsonMatch[0]);
+    console.log('✅ Parsed game concept:', parsedResult);
+    
+    return parsedResult;
   } catch (error) {
-    console.error('Error generating game concept:', error);
+    console.error('❌ Error generating game concept:', error);
     throw error;
   }
 }
@@ -156,15 +181,36 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 Studio Campaign Generator called');
+
     const { websiteUrl, logoUrl, backgroundImageUrl, campaignType, targetAudience, objective } = await req.json();
 
-    console.log('Generating campaign for:', { websiteUrl, campaignType, targetAudience, objective });
+    console.log('📋 Request data:', { websiteUrl, logoUrl, backgroundImageUrl, campaignType, targetAudience, objective });
+
+    if (!websiteUrl) {
+      return new Response(JSON.stringify({ error: 'Website URL is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!campaignType) {
+      return new Response(JSON.stringify({ error: 'Campaign type is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Analyser la marque à partir de l'URL du site web
     const brandData = await analyzeBrandFromWebsite(websiteUrl);
     
     // Générer le concept de jeu avec OpenAI
-    const gameConcept = await generateGameFromBrand(brandData, campaignType, targetAudience, objective);
+    const gameConcept = await generateGameFromBrand(
+      brandData, 
+      campaignType, 
+      targetAudience || 'clients potentiels', 
+      objective || 'engagement et conversion'
+    );
     
     // Ajouter les URLs des assets uploadés
     const result = {
@@ -176,13 +222,13 @@ serve(async (req) => {
       brandAnalysis: brandData
     };
 
-    console.log('Generated campaign concept:', result);
+    console.log('✅ Generated campaign concept:', result);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in studio-campaign-generator:', error);
+    console.error('❌ Error in studio-campaign-generator:', error);
     return new Response(JSON.stringify({ 
       error: error.message || 'Erreur lors de la génération du branding'
     }), {

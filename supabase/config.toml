@@ -1,3 +1,4 @@
+
 project_id = "vmkwascgjntopgkbmctv"
 
 [api]
@@ -37,4 +38,7 @@ enabled = true
 port = 54327
 
 [functions.studio-campaign-generator]
+verify_jwt = false
+
+[functions.upload-asset]
 verify_jwt = false

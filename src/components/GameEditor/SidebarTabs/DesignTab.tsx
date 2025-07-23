@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Palette, Image, Upload, Trash2, Globe, Wand2, Loader2 } from 'lucide-react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
@@ -24,6 +23,8 @@ const DesignTab: React.FC<DesignTabProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBackground, setUploadingBackground] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleBrandingInputChange = (field: string, value: string) => {
     setBrandingData(prev => ({
@@ -40,6 +41,9 @@ const DesignTab: React.FC<DesignTabProps> = ({
   };
 
   const handleBrandingFileUpload = async (file: File, type: 'logo' | 'background') => {
+    setErrorMessage('');
+    setSuccessMessage('');
+
     if (type === 'logo') {
       setUploadingLogo(true);
     } else {
@@ -47,20 +51,37 @@ const DesignTab: React.FC<DesignTabProps> = ({
     }
 
     try {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Type de fichier non autorisé. Seules les images sont acceptées.');
+      }
+
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        throw new Error('Fichier trop volumineux. Taille maximale : 10MB.');
+      }
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', type);
 
-      const response = await fetch('/functions/v1/upload-asset', {
+      const response = await fetch('https://vmkwascgjntopgkbmctv.supabase.co/functions/v1/upload-asset', {
         method: 'POST',
         body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'upload');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'upload');
       }
 
-      const { url } = await response.json();
+      const { url, success } = await response.json();
+      
+      if (!success || !url) {
+        throw new Error('Réponse invalide du serveur');
+      }
       
       const field = type === 'logo' ? 'logoUrl' : 'backgroundImageUrl';
       handleBrandingInputChange(field, url);
@@ -85,10 +106,12 @@ const DesignTab: React.FC<DesignTabProps> = ({
           }
         });
       }
+
+      setSuccessMessage(`${type === 'logo' ? 'Logo' : 'Image de fond'} uploadé avec succès !`);
       
     } catch (error) {
       console.error('Erreur upload:', error);
-      alert('Erreur lors de l\'upload du fichier');
+      setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de l\'upload du fichier');
     } finally {
       if (type === 'logo') {
         setUploadingLogo(false);
@@ -99,15 +122,29 @@ const DesignTab: React.FC<DesignTabProps> = ({
   };
 
   const handleGenerateBranding = async () => {
-    if (!brandingData.websiteUrl) {
-      alert('Veuillez saisir l\'URL du site web');
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!brandingData.websiteUrl.trim()) {
+      setErrorMessage('Veuillez saisir l\'URL du site web');
+      return;
+    }
+
+    // Validate URL format
+    try {
+      const url = brandingData.websiteUrl.startsWith('http') 
+        ? brandingData.websiteUrl 
+        : `https://${brandingData.websiteUrl}`;
+      new URL(url);
+    } catch {
+      setErrorMessage('URL invalide. Veuillez saisir une URL valide (ex: https://example.com)');
       return;
     }
 
     setIsGenerating(true);
 
     try {
-      const response = await fetch('/functions/v1/studio-campaign-generator', {
+      const response = await fetch('https://vmkwascgjntopgkbmctv.supabase.co/functions/v1/studio-campaign-generator', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,11 +160,16 @@ const DesignTab: React.FC<DesignTabProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la génération');
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('Branding result:', result);
+      console.log('✅ Branding result:', result);
+
+      if (!result || !result.design) {
+        throw new Error('Réponse invalide du serveur');
+      }
 
       // Mettre à jour la configuration avec les données de branding
       onConfigUpdate({
@@ -138,14 +180,14 @@ const DesignTab: React.FC<DesignTabProps> = ({
         participateButtonTextColor: result.design?.accentColor || config.participateButtonTextColor,
         
         // Logo et image de fond
-        centerLogo: result.design?.logoUrl || brandingData.logoUrl || config.centerLogo,
+        centerLogo: result.assets?.logoUrl || brandingData.logoUrl || config.centerLogo,
         deviceConfig: {
           mobile: config.deviceConfig?.mobile || { fontSize: 14, gamePosition: { x: 0, y: 0, scale: 1.0 } },
           tablet: config.deviceConfig?.tablet || { fontSize: 16, gamePosition: { x: 0, y: 0, scale: 1.0 } },
           desktop: {
             fontSize: config.deviceConfig?.desktop?.fontSize || 18,
             gamePosition: config.deviceConfig?.desktop?.gamePosition || { x: 0, y: 0, scale: 1.0 },
-            backgroundImage: result.design?.backgroundImageUrl || brandingData.backgroundImageUrl
+            backgroundImage: result.assets?.backgroundImageUrl || brandingData.backgroundImageUrl || config.deviceConfig?.desktop?.backgroundImage
           }
         },
         
@@ -164,15 +206,16 @@ const DesignTab: React.FC<DesignTabProps> = ({
         brandAnalysis: result.brandAnalysis
       });
 
-      alert('Campagne mise à jour avec le branding IA !');
+      setSuccessMessage('Campagne mise à jour avec le branding IA !');
       
     } catch (error) {
-      console.error('Erreur génération branding:', error);
-      alert('Erreur lors de la génération du branding');
+      console.error('❌ Erreur génération branding:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de la génération du branding');
     } finally {
       setIsGenerating(false);
     }
   };
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'background') => {
     const file = event.target.files?.[0];
     if (file) {
@@ -209,6 +252,19 @@ const DesignTab: React.FC<DesignTabProps> = ({
     <div className="space-y-6 py-0 my-[30px]">
       <h3 className="section-title text-center">Design & Contenu</h3>
 
+      {/* Messages d'erreur et de succès */}
+      {errorMessage && (
+        <div className="mx-[30px] p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          ❌ {errorMessage}
+        </div>
+      )}
+      
+      {successMessage && (
+        <div className="mx-[30px] p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          ✅ {successMessage}
+        </div>
+      )}
+
       {/* Section Branding IA */}
       <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base flex items-center gap-2">
@@ -224,7 +280,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
           <div className="form-group-premium">
             <label className="flex items-center gap-2 text-xs font-medium mb-2">
               <Globe className="w-3 h-3" />
-              URL du site web de la marque
+              URL du site web de la marque *
             </label>
             <input
               type="url"
@@ -232,6 +288,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
               value={brandingData.websiteUrl}
               onChange={(e) => handleBrandingInputChange('websiteUrl', e.target.value)}
               className="form-input-premium"
+              required
             />
           </div>
 
@@ -260,7 +317,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   disabled={uploadingLogo}
                 />
-                <button className="form-input-premium px-2 py-1 min-w-[40px] flex items-center justify-center">
+                <button className="form-input-premium px-2 py-1 min-w-[40px] flex items-center justify-center" disabled={uploadingLogo}>
                   {uploadingLogo ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
@@ -275,6 +332,9 @@ const DesignTab: React.FC<DesignTabProps> = ({
                   src={brandingData.logoUrl} 
                   alt="Logo preview" 
                   className="h-8 object-contain border rounded"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
             )}
@@ -305,7 +365,7 @@ const DesignTab: React.FC<DesignTabProps> = ({
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   disabled={uploadingBackground}
                 />
-                <button className="form-input-premium px-2 py-1 min-w-[40px] flex items-center justify-center">
+                <button className="form-input-premium px-2 py-1 min-w-[40px] flex items-center justify-center" disabled={uploadingBackground}>
                   {uploadingBackground ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
@@ -320,6 +380,9 @@ const DesignTab: React.FC<DesignTabProps> = ({
                   src={brandingData.backgroundImageUrl} 
                   alt="Background preview" 
                   className="h-12 w-20 object-cover border rounded"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
             )}
@@ -350,9 +413,9 @@ const DesignTab: React.FC<DesignTabProps> = ({
           {/* Bouton de génération */}
           <button 
             onClick={handleGenerateBranding}
-            disabled={isGenerating || !brandingData.websiteUrl}
+            disabled={isGenerating || !brandingData.websiteUrl.trim()}
             className={`w-full px-4 py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
-              isGenerating || !brandingData.websiteUrl
+              isGenerating || !brandingData.websiteUrl.trim()
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-purple-600 text-white hover:bg-purple-700'
             }`}
