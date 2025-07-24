@@ -37,71 +37,19 @@ const Step4Finalization: React.FC = () => {
       
       console.log('QuickCampaign data being transferred:', quickCampaign);
       
-      // Transformer les données QuickCampaign vers le format EditorConfig
-      const editorConfig = {
-        width: 810,
-        height: 1200,
-        anchor: 'fixed',
-        gameType: quickCampaign.type || 'wheel',
-        gameMode: 'mode1-sequential',
-        displayMode: 'mode1-banner-game',
-        storyText: quickCampaign.general?.description || `Campagne ${quickCampaign.type} créée avec QuickCampaign`,
-        publisherLink: quickCampaign.general?.brandSiteUrl || '',
-        prizeText: `Participez et tentez de gagner !`,
-        customTexts: [],
-        centerText: false,
-        centerForm: true,
-        centerGameZone: true,
-        backgroundColor: quickCampaign.design?.backgroundColor || '#ffffff',
-        outlineColor: quickCampaign.design?.borderColor || '#ffffff',
-        borderStyle: 'classic',
-        jackpotBorderStyle: 'classic',
-        participateButtonText: quickCampaign.buttonConfig?.text || 'PARTICIPER !',
-        participateButtonColor: quickCampaign.design?.primaryColor || '#ff6b35',
-        participateButtonTextColor: quickCampaign.design?.accentColor || '#ffffff',
-        footerText: '',
-        footerColor: '#f8f9fa',
-        customCSS: '',
-        customJS: '',
-        trackingTags: '',
-        deviceConfig: {
-          mobile: {
-            fontSize: 14,
-            backgroundImage: quickCampaign.design?.backgroundImage || undefined,
-            gamePosition: { x: 0, y: 0, scale: 1.7 }
-          },
-          tablet: {
-            fontSize: 16,
-            backgroundImage: quickCampaign.design?.backgroundImage || undefined,
-            gamePosition: { x: 0, y: 0, scale: 1.7 }
-          },
-          desktop: {
-            fontSize: 18,
-            backgroundImage: quickCampaign.design?.backgroundImage || undefined,
-            gamePosition: { x: 0, y: 0, scale: 1.7 }
-          }
-        },
-        autoSyncOnDeviceChange: false,
-        autoSyncRealTime: false,
-        autoSyncBaseDevice: 'desktop',
-        // Ajouter toutes les données spécifiques du jeu
-        gameConfig: quickCampaign.gameConfig || {},
-        wheelConfig: quickCampaign.config?.roulette || {},
-        brandAnalysis: quickCampaign.brandAnalysis || null,
-        centerLogo: quickCampaign.design?.centerLogo || null,
-        designColors: quickCampaign.design?.customColors || {}
-      };
-      
-      // Store both the original campaign data and the editor config
+      // Store the campaign data in localStorage for immediate access
       localStorage.setItem('quickCampaignPreview', JSON.stringify(quickCampaign));
-      localStorage.setItem('editorConfig', JSON.stringify(editorConfig));
       
-      console.log('Editor config created:', editorConfig);
+      // For quick preview, we'll use a special ID
+      const campaignId = 'quick-preview';
       
-      // Navigate to campaign editor
-      navigate('/campaign-editor');
+      console.log('Redirecting to modern editor with campaign data');
+      
+      // Redirect to modern editor with the special preview ID
+      navigate(`/modern-campaign/${campaignId}`);
+      
     } catch (error) {
-      console.error('Erreur lors du transfert vers l\'éditeur:', error);
+      console.error('Erreur lors de la redirection vers les paramètres avancés:', error);
     }
   };
 

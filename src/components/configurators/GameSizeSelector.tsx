@@ -4,10 +4,10 @@ import React from 'react';
 export type GameSize = 'small' | 'medium' | 'large' | 'xlarge';
 
 export const GAME_SIZES = {
-  small: { width: 280, height: 180, label: 'Petit (280×180px)' },
-  medium: { width: 350, height: 240, label: 'Moyen (350×240px)' },
-  large: { width: 420, height: 300, label: 'Grand (420×300px)' },
-  xlarge: { width: 500, height: 360, label: 'Très Grand (500×360px)' }
+  small: { width: 300, height: 200, label: 'Petit (300×200px)' },
+  medium: { width: 400, height: 300, label: 'Moyen (400×300px)' },
+  large: { width: 500, height: 400, label: 'Grand (500×400px)' },
+  xlarge: { width: 600, height: 500, label: 'Très Grand (600×500px)' }
 } as const;
 
 interface GameSizeSelectorProps {

@@ -19,86 +19,42 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
   };
 
   const renderTextElement = (customText: any) => {
-    if (!customText?.content && !customText?.text) return null;
+    if (!customText?.enabled) return null;
 
-    // Gestion du responsive : utiliser deviceConfig si disponible
-    const deviceConfig = customText.deviceConfig?.[previewDevice];
-    const config = deviceConfig || customText;
+    const config = getElementDeviceConfig(customText);
     
-    const textContent = customText.content || customText.text || 'Texte personnalisé';
-    
-    // Responsive font sizes based on device
-    const getFontSize = () => {
-      if (config.fontSize) return `${config.fontSize}px`;
-      if (sizeMap[config.size || customText.size || 'base']) {
-        return sizeMap[config.size || customText.size || 'base'];
-      }
-      // Fallback responsive sizing
-      switch (previewDevice) {
-        case 'mobile': return '14px';
-        case 'tablet': return '16px';
-        case 'desktop': return '18px';
-        default: return '16px';
-      }
-    };
-
-    // Responsive width calculations
-    const getResponsiveWidth = () => {
-      const width = config.width || customText.width;
-      if (width) return `${width}px`;
-      
-      // Auto-width with device-appropriate max-width
-      switch (previewDevice) {
-        case 'mobile': return 'auto';
-        case 'tablet': return 'auto';
-        case 'desktop': return 'auto';
-        default: return 'auto';
-      }
-    };
-
     const textStyle: React.CSSProperties = {
       position: 'absolute',
       left: `${config.x || customText.x || 0}px`,
       top: `${config.y || customText.y || 0}px`,
-      fontSize: getFontSize(),
-      color: config.color || customText.color || '#ffffff',
-      fontFamily: config.fontFamily || customText.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-      fontWeight: config.fontWeight || customText.fontWeight || ((config.bold || customText.bold) ? 'bold' : 'normal'),
-      fontStyle: config.fontStyle || customText.fontStyle || ((config.italic || customText.italic) ? 'italic' : 'normal'),
-      textDecoration: config.textDecoration || customText.textDecoration || ((config.underline || customText.underline) ? 'underline' : 'none'),
-      textAlign: config.textAlign || customText.textAlign || 'center',
+      fontSize: sizeMap[config.size || customText.size || 'base'] || '14px',
+      color: config.color || customText.color || '#000000',
+      fontFamily: config.fontFamily || customText.fontFamily || 'Inter, sans-serif',
+      fontWeight: (config.bold || customText.bold) ? 'bold' : 'normal',
+      fontStyle: (config.italic || customText.italic) ? 'italic' : 'normal',
+      textDecoration: (config.underline || customText.underline) ? 'underline' : 'none',
       zIndex: 100,
-      pointerEvents: 'auto', // Permettre les clics pour l'édition
-      cursor: 'pointer',
-      width: getResponsiveWidth(),
-      height: config.height ? `${config.height}px` : 'auto',
-      minWidth: '50px',
-      lineHeight: '1.2',
-      wordWrap: 'break-word',
-      textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)', // Améliorer la lisibilité
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: config.textAlign || customText.textAlign || 'center'
+      pointerEvents: 'none',
+      whiteSpace: 'nowrap',
+      maxWidth: '400px',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
     };
 
     if (config.showFrame || customText.showFrame) {
-      textStyle.backgroundColor = config.frameColor || customText.frameColor || 'rgba(255, 255, 255, 0.9)';
+      textStyle.backgroundColor = config.frameColor || customText.frameColor || '#ffffff';
       textStyle.border = `1px solid ${config.frameBorderColor || customText.frameBorderColor || '#e5e7eb'}`;
       textStyle.padding = '8px 12px';
       textStyle.borderRadius = '4px';
-      textStyle.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
-      textStyle.backdropFilter = 'blur(10px)';
+      textStyle.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
     }
 
     return (
       <div
         key={`text-${customText.id}-${previewDevice}`}
         style={textStyle}
-        title="Double-cliquez pour éditer"
       >
-        <span style={{ width: '100%', textAlign: 'inherit' }}>
-          {textContent}
-        </span>
+        {config.text || customText.text || 'Texte personnalisé'}
       </div>
     );
   };

@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, Palette } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import QuickCampaignCreator from '../components/QuickCampaign/QuickCampaignCreator';
 import BrandGameGenerator from '../components/BrandGameGenerator/BrandGameGenerator';
-import StudioCampaignCreator from '../components/QuickCampaign/Studio/StudioCampaignCreator';
 import { GeneratedGameConcept } from '../services/openAIGameGeneratorService';
 import { transformBrandGameToCampaign } from '../utils/brandGameTransformer';
 import { useQuickCampaignStore } from '../stores/quickCampaignStore';
 
 const QuickCampaign: React.FC = () => {
   const [showBrandGenerator, setShowBrandGenerator] = useState(false);
-  const [showStudioCreator, setShowStudioCreator] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const store = useQuickCampaignStore();
 
@@ -33,15 +31,6 @@ const QuickCampaign: React.FC = () => {
   const handleManualCreation = () => {
     setShowWelcome(false);
   };
-
-  const handleStudioCreation = () => {
-    setShowStudioCreator(true);
-    setShowWelcome(false);
-  };
-
-  if (showStudioCreator) {
-    return <StudioCampaignCreator />;
-  }
 
   if (showBrandGenerator) {
     return (
@@ -69,29 +58,18 @@ const QuickCampaign: React.FC = () => {
             
             <p className="text-gray-600 mb-8 leading-relaxed">
               Choisissez comment vous souhaitez créer votre campagne marketing. 
-              Utilisez le Studio pour un résultat professionnel ou créez manuellement.
+              Générez automatiquement depuis un site web ou créez manuellement.
             </p>
 
             <div className="space-y-4">
               <button
-                onClick={handleStudioCreation}
-                className="w-full px-8 py-4 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
-              >
-                <Palette className="w-5 h-5" />
-                Studio de Création
-                <span className="bg-white/20 px-2 py-1 rounded-full text-xs">
-                  Niveau Pro
-                </span>
-              </button>
-
-              <button
                 onClick={() => setShowBrandGenerator(true)}
-                className="w-full px-8 py-4 border-2 border-[#841b60] text-[#841b60] rounded-xl hover:bg-[#841b60]/5 transition-colors font-medium flex items-center justify-center gap-3"
+                className="w-full px-8 py-4 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
               >
                 <Sparkles className="w-5 h-5" />
                 Générer depuis une URL
-                <span className="bg-[#841b60]/10 px-2 py-1 rounded-full text-xs">
-                  IA
+                <span className="bg-white/20 px-2 py-1 rounded-full text-xs">
+                  Nouveau
                 </span>
               </button>
 
@@ -104,10 +82,10 @@ const QuickCampaign: React.FC = () => {
               </button>
             </div>
 
-            <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-              <p className="text-purple-800 text-sm">
-                <strong>🎨 Studio :</strong> Interface professionnelle qui analyse votre site web, 
-                extrait vos couleurs de marque et génère des campagnes de niveau Canva/Adobe avec IA avancée.
+            <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                <strong>💡 Astuce :</strong> La génération automatique analyse un site web 
+                pour extraire les couleurs, logos et créer une campagne parfaitement adaptée à la marque.
               </p>
             </div>
           </div>
