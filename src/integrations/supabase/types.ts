@@ -14,16 +14,232 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaign_stats: {
+        Row: {
+          campaign_id: string
+          completion_rate: number | null
+          date: string
+          id: string
+          participations: number | null
+          unique_views: number | null
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          campaign_id: string
+          completion_rate?: number | null
+          date: string
+          id?: string
+          participations?: number | null
+          unique_views?: number | null
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          campaign_id?: string
+          completion_rate?: number | null
+          date?: string
+          id?: string
+          participations?: number | null
+          unique_views?: number | null
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_stats_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_views: {
+        Row: {
+          campaign_id: string
+          id: string
+          ip_address: unknown | null
+          referrer: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          id?: string
+          ip_address?: unknown | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          id?: string
+          ip_address?: unknown | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_views_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          banner_url: string | null
+          config: Json
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          design: Json
+          end_date: string | null
+          form_fields: Json
+          game_config: Json
+          id: string
+          name: string
+          published_at: string | null
+          slug: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          thumbnail_url: string | null
+          total_participants: number | null
+          total_views: number | null
+          type: Database["public"]["Enums"]["game_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          design?: Json
+          end_date?: string | null
+          form_fields?: Json
+          game_config?: Json
+          id?: string
+          name: string
+          published_at?: string | null
+          slug: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          thumbnail_url?: string | null
+          total_participants?: number | null
+          total_views?: number | null
+          type?: Database["public"]["Enums"]["game_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          design?: Json
+          end_date?: string | null
+          form_fields?: Json
+          game_config?: Json
+          id?: string
+          name?: string
+          published_at?: string | null
+          slug?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          thumbnail_url?: string | null
+          total_participants?: number | null
+          total_views?: number | null
+          type?: Database["public"]["Enums"]["game_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      participations: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          form_data: Json
+          game_result: Json | null
+          id: string
+          ip_address: unknown | null
+          is_winner: boolean | null
+          user_agent: string | null
+          user_email: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          form_data?: Json
+          game_result?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          is_winner?: boolean | null
+          user_agent?: string | null
+          user_email: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          form_data?: Json
+          game_result?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          is_winner?: boolean | null
+          user_agent?: string | null
+          user_email?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_campaign_slug: {
+        Args: { campaign_name: string }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      campaign_status:
+        | "draft"
+        | "scheduled"
+        | "active"
+        | "paused"
+        | "ended"
+        | "archived"
+      game_type: "wheel" | "quiz" | "contest" | "survey" | "jackpot" | "dice"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +366,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      campaign_status: [
+        "draft",
+        "scheduled",
+        "active",
+        "paused",
+        "ended",
+        "archived",
+      ],
+      game_type: ["wheel", "quiz", "contest", "survey", "jackpot", "dice"],
+    },
   },
 } as const

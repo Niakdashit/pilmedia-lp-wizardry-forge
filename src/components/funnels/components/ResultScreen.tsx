@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import ContrastBackground from '../../common/ContrastBackground';
 
 interface ResultScreenProps {
@@ -15,6 +17,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
   mobileConfig,
   onReset
 }) => {
+  const navigate = useNavigate();
   const resultScreen = campaign.screens?.[3] || {};
   const contrastBg = mobileConfig?.contrastBackground || resultScreen.contrastBackground;
   
@@ -25,6 +28,71 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
   const winMessage = resultScreen?.winMessage || defaultWinMessage;
   const loseMessage = resultScreen?.loseMessage || defaultLoseMessage;
   const thankYouMessage = resultScreen?.description || defaultThankYouMessage;
+
+  const handleAdvancedEditor = () => {
+    try {
+      // Transformer les données de campagne vers le format EditorConfig
+      const editorConfig = {
+        width: 810,
+        height: 1200,
+        anchor: 'fixed',
+        gameType: campaign.type || 'wheel',
+        gameMode: 'mode1-sequential',
+        displayMode: 'mode1-banner-game',
+        storyText: campaign.general?.description || campaign.description || 'Campagne créée',
+        publisherLink: campaign.general?.brandSiteUrl || '',
+        prizeText: `Participez et tentez de gagner !`,
+        customTexts: [],
+        centerText: false,
+        centerForm: true,
+        centerGameZone: true,
+        backgroundColor: campaign.design?.backgroundColor || '#ffffff',
+        outlineColor: campaign.design?.borderColor || '#ffffff',
+        borderStyle: 'classic',
+        jackpotBorderStyle: 'classic',
+        participateButtonText: campaign.buttonConfig?.text || 'PARTICIPER !',
+        participateButtonColor: campaign.design?.primaryColor || '#ff6b35',
+        participateButtonTextColor: campaign.design?.accentColor || '#ffffff',
+        footerText: '',
+        footerColor: '#f8f9fa',
+        customCSS: '',
+        customJS: '',
+        trackingTags: '',
+        deviceConfig: {
+          mobile: {
+            fontSize: 14,
+            backgroundImage: campaign.design?.backgroundImage || undefined,
+            gamePosition: { x: 0, y: 0, scale: 1.7 }
+          },
+          tablet: {
+            fontSize: 16,
+            backgroundImage: campaign.design?.backgroundImage || undefined,
+            gamePosition: { x: 0, y: 0, scale: 1.7 }
+          },
+          desktop: {
+            fontSize: 18,
+            backgroundImage: campaign.design?.backgroundImage || undefined,
+            gamePosition: { x: 0, y: 0, scale: 1.7 }
+          }
+        },
+        autoSyncOnDeviceChange: false,
+        autoSyncRealTime: false,
+        autoSyncBaseDevice: 'desktop',
+        gameConfig: campaign.gameConfig || {},
+        wheelConfig: campaign.config?.roulette || campaign.config || {},
+        brandAnalysis: campaign.brandAnalysis || null,
+        centerLogo: campaign.design?.centerLogo || null,
+        designColors: campaign.design?.customColors || {}
+      };
+      
+      localStorage.setItem('campaignPreview', JSON.stringify(campaign));
+      localStorage.setItem('editorConfig', JSON.stringify(editorConfig));
+      
+      navigate('/campaign-editor');
+    } catch (error) {
+      console.error('Erreur lors du transfert vers l\'éditeur:', error);
+    }
+  };
 
   return (
     <div className="w-full max-w-lg mx-auto p-4 flex flex-col items-center space-y-4">
@@ -53,6 +121,14 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
               {resultScreen?.ctaText || "Récupérer mon gain"}
             </a>
           )}
+          
+          <button 
+            onClick={handleAdvancedEditor} 
+            className="inline-flex items-center justify-center gap-2 px-6 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            Éditeur avancé
+          </button>
           
           <button 
             onClick={onReset} 

@@ -6,12 +6,8 @@ import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Admin/AdminLayout';
 import EditorOnlyLayout from './components/Layout/EditorOnlyLayout';
 import Dashboard from './pages/Dashboard';
-import CampaignEditor from './pages/CampaignEditor';
 import Campaigns from './pages/Campaigns';
 import Gamification from './pages/Gamification';
-import ModernCampaignEditor from './pages/ModernCampaignEditor';
-import ModernEditorPage from './pages/ModernEditorPage';
-import ModernWizardPage from './pages/ModernWizardPage';
 import QuickCampaign from './pages/QuickCampaign';
 import Newsletter from './pages/Newsletter';
 import Statistics from './pages/Statistics';
@@ -31,8 +27,10 @@ import AdminReports from './pages/AdminReports';
 import AdminSettings from './pages/AdminSettings';
 import AdminTeam from './pages/AdminTeam';
 import AdminAlerts from './pages/AdminAlerts';
-import QualifioEditor from './pages/QualifioEditor';
-import QualifioLivePreview from './pages/QualifioLivePreview';
+import GameEditor from './pages/GameEditor';
+import LivePreview from './pages/LivePreview';
+import Auth from './pages/Auth';
+import PublicCampaign from './pages/PublicCampaign';
 
 function App() {
   return (
@@ -53,7 +51,7 @@ function App() {
               <Route path="social" element={<Social />} />
               <Route path="studies" element={<Studies />} />
               <Route path="account" element={<Account />} />
-              <Route path="campaign-editor/:campaignId" element={<CampaignEditor />} />
+              
             </Route>
 
             {/* Routes éditeur en plein écran sans sidebar principale */}
@@ -63,32 +61,8 @@ function App() {
               </EditorOnlyLayout>
             } />
             
-            <Route path="/modern-campaign/:campaignId" element={
-              <EditorOnlyLayout title="Éditeur moderne" backPath="/campaigns">
-                <ModernCampaignEditor />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-campaign/quick-preview" element={
-              <EditorOnlyLayout title="Aperçu rapide" backPath="/quick-campaign">
-                <ModernCampaignEditor />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-editor/:campaignId" element={
-              <EditorOnlyLayout title="Éditeur avancé" backPath="/campaigns">
-                <ModernEditorPage />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/modern-wizard" element={
-              <EditorOnlyLayout title="Assistant de création" backPath="/campaigns">
-                <ModernWizardPage />
-              </EditorOnlyLayout>
-            } />
-            
-            <Route path="/qualifio-editor" element={<QualifioEditor />} />
-            <Route path="/qualifio-live" element={<QualifioLivePreview />} />
+            <Route path="/campaign-editor" element={<GameEditor />} />
+            <Route path="/live-preview" element={<LivePreview />} />
             
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Admin />} />
@@ -104,6 +78,8 @@ function App() {
             </Route>
             
             <Route path="/login" element={<Login />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
       </BrandThemeProvider>

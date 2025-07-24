@@ -1,37 +1,58 @@
 
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-export interface Participation {
-  id?: string;
-  campaign_id: string;
-  form_data: Record<string, string>;
-  user_email: string;
-  created_at?: string; // Make optional for creation
-  utm_source?: string;
+type DatabaseParticipation = Database['public']['Tables']['participations']['Row'];
+
+export interface Participation extends Omit<DatabaseParticipation, 'form_data' | 'game_result'> {
+  form_data: Record<string, any>;
+  game_result?: Record<string, any>;
 }
 
 export const useParticipations = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createParticipation = async (participation: Omit<Participation, 'created_at'> & { created_at?: string }): Promise<boolean> => {
+  const createParticipation = async (participation: {
+    campaign_id: string;
+    user_email: string;
+    form_data: Record<string, any>;
+    game_result?: Record<string, any>;
+    is_winner?: boolean;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  }): Promise<boolean> => {
     setLoading(true);
     setError(null);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Get IP address and user agent from browser
+      const userAgent = navigator.userAgent;
+      const ip_address = '127.0.0.1'; // In real app, this would come from server
+
+      const participationData = {
+        campaign_id: participation.campaign_id,
+        user_email: participation.user_email,
+        form_data: participation.form_data,
+        game_result: participation.game_result,
+        is_winner: participation.is_winner || false,
+        ip_address,
+        user_agent: userAgent,
+        utm_source: participation.utm_source,
+        utm_medium: participation.utm_medium,
+        utm_campaign: participation.utm_campaign
+      };
+
+      const { error } = await supabase
+        .from('participations')
+        .insert(participationData);
       
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Participation created:', {
-          ...participation,
-          created_at: participation.created_at || new Date().toISOString()
-        });
-      }
-      
+      if (error) throw error;
       return true;
-    } catch (err) {
-      setError('Erreur lors de l\'enregistrement de la participation');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de l\'enregistrement de la participation');
       return false;
     } finally {
       setLoading(false);
@@ -43,13 +64,22 @@ export const useParticipations = () => {
     setError(null);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      const { data, error } = await supabase
+        .from('participations')
+        .select(`
+          *,
+          campaigns!inner(created_by)
+        `)
+        .eq('campaigns.created_by', user.id)
+        .order('created_at', { ascending: false });
       
-      // Return mock data
-      return [];
-    } catch (err) {
-      setError('Erreur lors du chargement des participations');
+      if (error) throw error;
+      return (data || []) as Participation[];
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des participations');
       return [];
     } finally {
       setLoading(false);
@@ -57,23 +87,70 @@ export const useParticipations = () => {
   };
 
   const getParticipationsByCampaign = async (campaignId: string): Promise<Participation[]> => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Loading participations for campaign:', campaignId);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non authentifié');
+
+      const { data, error } = await supabase
+        .from('participations')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return (data || []) as Participation[];
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors du chargement des participations');
+      return [];
+    } finally {
+      setLoading(false);
     }
-    return getParticipations();
+  };
+
+  const trackCampaignView = async (campaignId: string, utmParams?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    referrer?: string;
+  }): Promise<void> => {
+    try {
+      const userAgent = navigator.userAgent;
+      const ip_address = '127.0.0.1'; // In real app, this would come from server
+
+      const viewData = {
+        campaign_id: campaignId,
+        ip_address,
+        user_agent: userAgent,
+        referrer: utmParams?.referrer || document.referrer,
+        utm_source: utmParams?.utm_source,
+        utm_medium: utmParams?.utm_medium,
+        utm_campaign: utmParams?.utm_campaign
+      };
+
+      await supabase
+        .from('campaign_views')
+        .insert(viewData);
+    } catch (err) {
+      // Silently fail for analytics
+      console.warn('Failed to track campaign view:', err);
+    }
   };
 
   const exportParticipationsToCSV = (participations: Participation[], campaignName: string) => {
     try {
-      const headers = ['Date', 'Email', 'Prénom', 'Nom', 'Source'];
+      const headers = ['Date', 'Email', 'Prénom', 'Nom', 'Source', 'Gagnant'];
       const csvContent = [
         headers.join(','),
         ...participations.map(p => [
           p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '',
           p.user_email || '',
-          p.form_data.prenom || '',
-          p.form_data.nom || '',
-          p.utm_source || ''
+          p.form_data?.prenom || '',
+          p.form_data?.nom || '',
+          p.utm_source || '',
+          p.is_winner ? 'Oui' : 'Non'
         ].join(','))
       ].join('\n');
 
@@ -95,6 +172,7 @@ export const useParticipations = () => {
     createParticipation,
     getParticipations,
     getParticipationsByCampaign,
+    trackCampaignView,
     exportParticipationsToCSV,
     loading,
     error
