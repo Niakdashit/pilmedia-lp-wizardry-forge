@@ -81,8 +81,8 @@ const FormEditor: React.FC<FormEditorProps> = ({
     // Dans un vrai cas, on pourrait envoyer ça à une API de test
   };
 
-    return (
-      <div className="h-[calc(100vh-3rem)] flex flex-col my-[24px] mx-[21px]">
+  return (
+    <div className="h-[calc(150vh-3rem)] flex flex-col my-[24px] mx-[21px]">
       <div className="bg-[#f9f0f5] border border-[#e9d0e5] rounded-lg p-4 mb-6">
         <p className="text-[#841b60] text-sm">
           Créez et personnalisez les champs de votre formulaire. Les utilisateurs rempliront ce formulaire avant d'accéder au jeu.
