@@ -30,10 +30,11 @@ const LayersTab: React.FC<LayersTabProps> = ({
 
     // Ajouter les textes personnalisés
     config.customTexts?.forEach((text, index) => {
+      const content = text.content || 'Texte sans contenu';
       layers.push({
         id: text.id,
         type: 'text',
-        name: text.content.length > 20 ? text.content.substring(0, 20) + '...' : text.content,
+        name: content.length > 20 ? content.substring(0, 20) + '...' : content,
         visible: true,
         locked: false,
         zIndex: 100 + index,
