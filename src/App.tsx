@@ -29,6 +29,7 @@ import AdminTeam from './pages/AdminTeam';
 import AdminAlerts from './pages/AdminAlerts';
 import GameEditor from './pages/GameEditor';
 import LivePreview from './pages/LivePreview';
+import CanvaEditorPage from './pages/CanvaEditorPage';
 import Auth from './pages/Auth';
 import PublicCampaign from './pages/PublicCampaign';
 
@@ -62,6 +63,7 @@ function App() {
             } />
             
             <Route path="/campaign-editor" element={<GameEditor />} />
+            <Route path="/canva-editor" element={<CanvaEditorPage />} />
             <Route path="/live-preview" element={<LivePreview />} />
             
             <Route path="/admin" element={<AdminLayout />}>
