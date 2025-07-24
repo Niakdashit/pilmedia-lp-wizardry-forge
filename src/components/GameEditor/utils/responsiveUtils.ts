@@ -6,14 +6,14 @@ import type { CustomText } from '../GameEditorLayout';
  * Basé sur l'analyse des dimensions observées dans l'interface réelle
  */
 const getContainerDimensions = (device: 'desktop' | 'tablet' | 'mobile') => {
-  // Dimensions réelles mesurées dans l'interface Qualifio Editor
+  // Dimensions optimisées pour le Branding IA et l'affichage des textes
   const dimensions = {
-    // Desktop: conteneur avec ratio 16:9 standard
-    desktop: { width: 1200, height: 675 },
-    // Tablet: format portrait standard iPad
-    tablet: { width: 768, height: 1024 },
-    // Mobile: format portrait iPhone standard
-    mobile: { width: 375, height: 812 }
+    // Desktop: format 16:9 optimisé
+    desktop: { width: 800, height: 450 },
+    // Tablet: format équilibré
+    tablet: { width: 600, height: 450 },
+    // Mobile: format portrait compact
+    mobile: { width: 320, height: 480 }
   };
   
   return dimensions[device];

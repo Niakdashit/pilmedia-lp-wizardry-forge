@@ -197,7 +197,7 @@ R√©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran√
         });
       }
 
-      // Create or update main title & subtitle custom texts
+      // Create or update main title & subtitle custom texts with responsive design
       const updatedCustomTexts = [...(config.customTexts || [])];
 
       if (data.result.wording_jeu_concours?.titre) {
@@ -205,10 +205,10 @@ R√©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran√
         const mainTitle = {
           id: 'main-title',
           content: data.result.wording_jeu_concours.titre,
-          x: 50,
-          y: 20,
-          fontSize: 48,
-          fontFamily: 'Arial',
+          x: 250,
+          y: 60,
+          fontSize: 32,
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
           color: '#ffffff',
           fontWeight: 'bold' as const,
           fontStyle: 'normal' as const,
@@ -216,8 +216,13 @@ R√©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran√
           textAlign: 'center' as const,
           hasEffect: true,
           isAnimated: false,
-          width: 700,
-          height: 60
+          width: 300,
+          height: 50,
+          deviceConfig: {
+            desktop: { x: 250, y: 60, fontSize: 32, width: 300, height: 50 },
+            tablet: { x: 150, y: 50, fontSize: 24, width: 300, height: 40 },
+            mobile: { x: 60, y: 80, fontSize: 18, width: 200, height: 35 }
+          }
         } as const;
 
         if (mainTitleIndex !== -1) {
@@ -232,10 +237,10 @@ R√©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran√
         const subtitle = {
           id: 'subtitle',
           content: data.result.wording_jeu_concours.sous_titre,
-          x: 50,
-          y: 100,
-          fontSize: 24,
-          fontFamily: 'Arial',
+          x: 250,
+          y: 130,
+          fontSize: 18,
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
           color: '#ffffff',
           fontWeight: 'normal' as const,
           fontStyle: 'normal' as const,
@@ -243,8 +248,13 @@ R√©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran√
           textAlign: 'center' as const,
           hasEffect: true,
           isAnimated: false,
-          width: 700,
-          height: 30
+          width: 300,
+          height: 30,
+          deviceConfig: {
+            desktop: { x: 250, y: 130, fontSize: 18, width: 300, height: 30 },
+            tablet: { x: 150, y: 110, fontSize: 16, width: 300, height: 28 },
+            mobile: { x: 60, y: 130, fontSize: 14, width: 200, height: 25 }
+          }
         } as const;
 
         if (subtitleIndex !== -1) {

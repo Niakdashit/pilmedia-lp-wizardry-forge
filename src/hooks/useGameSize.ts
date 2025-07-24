@@ -26,22 +26,24 @@ export const useGameSize = (size: GameSize = 'medium') => {
       
       switch (device) {
         case 'mobile':
-          // Mobile: Qualifio standard size for optimal UX
-          const mobileScale = Math.min(520 / baseDimensions.width, 1100 / baseDimensions.height);
+          // Mobile: Optimisé pour écrans tactiles
           return {
-            width: Math.floor(baseDimensions.width * mobileScale),
-            height: Math.floor(baseDimensions.height * mobileScale)
+            width: Math.min(320, baseDimensions.width),
+            height: Math.min(480, baseDimensions.height)
           };
         case 'tablet':
-          // Tablet: Qualifio standard size for optimal UX
-          const tabletScale = Math.min(850 / baseDimensions.width, 1200 / baseDimensions.height);
+          // Tablet: Équilibré pour format tablette
           return {
-            width: Math.floor(baseDimensions.width * tabletScale),
-            height: Math.floor(baseDimensions.height * tabletScale)
+            width: Math.min(600, baseDimensions.width * 1.2),
+            height: Math.min(450, baseDimensions.height * 1.2)
           };
         case 'desktop':
         default:
-          return baseDimensions;
+          // Desktop: Format 16:9 optimisé avec échelle réduite
+          return {
+            width: Math.min(800, baseDimensions.width * 1.6),
+            height: Math.min(450, baseDimensions.height * 1.5)
+          };
       }
     };
   }, [getGameDimensions]);
