@@ -225,7 +225,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const renderGameComponent = () => {
     if (campaign.type === 'wheel') {
       return (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 10 }}>
+        <div 
+          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all ease-out ${getInitialClasses()} ${getAnimationClasses()}`}
+          style={{ zIndex: 10 }}
+        >
           <WheelPreview
             campaign={campaign} 
             config={{
@@ -251,7 +254,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   return (
     <div className="w-full h-full">
       <div 
-        className={`canvas-container relative bg-white overflow-hidden w-full h-full transition-all ease-out ${getInitialClasses()} ${getAnimationClasses()}`}
+        className="canvas-container relative bg-white overflow-hidden w-full h-full"
         style={previewMode === 'desktop' ? {
           width: '100%',
           height: '100vh',
