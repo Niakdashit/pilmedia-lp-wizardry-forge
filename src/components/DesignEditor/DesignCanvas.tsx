@@ -22,13 +22,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const getCanvasSize = () => {
     switch (selectedDevice) {
       case 'desktop':
-        return { width: 1920, height: 1080 }; // 16:9 ratio
+        return { width: 1200, height: 675 }; // 16:9 ratio
       case 'tablet':
-        return { width: 1024, height: 576 }; // 16:9 ratio
+        return { width: 768, height: 432 }; // 16:9 ratio
       case 'mobile':
-        return { width: 640, height: 360 }; // 16:9 ratio
+        return { width: 360, height: 640 }; // 9:16 ratio (portrait)
       default:
-        return { width: 640, height: 360 }; // 16:9 ratio
+        return { width: 360, height: 640 }; // 9:16 ratio (portrait)
     }
   };
 
@@ -68,7 +68,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             style={{
               width: `${canvasSize.width}px`,
               height: `${canvasSize.height}px`,
-              transform: selectedDevice === 'desktop' ? 'scale(0.4)' : selectedDevice === 'tablet' ? 'scale(0.7)' : 'scale(1)',
+              transform: selectedDevice === 'desktop' ? 'scale(0.8)' : selectedDevice === 'tablet' ? 'scale(0.9)' : 'scale(1)',
               transformOrigin: 'top center'
             }}
           >
