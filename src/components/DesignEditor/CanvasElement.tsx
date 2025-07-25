@@ -118,9 +118,12 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
         
         newFontSize = Math.max(8, startFontSize * scaleFactor);
         
-        // Keep text box dimensions tight to content (don't scale the container)
+        // Keep text box dimensions tight to content (remove width/height to make it auto)
         onUpdate({
           fontSize: newFontSize,
+          width: undefined,
+          height: undefined,
+          isCornerScaled: true,
         });
       } else {
         // For edge handles or non-text elements: change dimensions only
