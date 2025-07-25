@@ -29,7 +29,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
   
   // Animation de révélation par scroll pour la roue uniquement
-  const { scrollProgress, elementRef } = useScrollReveal({
+  const { scrollProgress, elementRef, containerRef } = useScrollReveal({
     startOffset: 100,
     endOffset: 50
   });
@@ -74,10 +74,15 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
 
   return (
     <div 
-      ref={elementRef}
-      className="flex items-center justify-center w-full" 
-      style={{ height: 'auto', minHeight: 'fit-content' }}
+      ref={containerRef}
+      className="flex items-center justify-center w-full overflow-auto" 
+      style={{ height: '500px', maxHeight: '500px' }}
     >
+      <div 
+        ref={elementRef}
+        className="flex items-center justify-center w-full" 
+        style={{ height: '800px', minHeight: '800px' }}
+      >
       {device === 'mobile' ? (
         <motion.div
           initial={{ y: "54%" }}
@@ -141,6 +146,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
           />
         </motion.div>
       )}
+      </div>
     </div>
   );
 };
