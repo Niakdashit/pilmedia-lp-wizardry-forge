@@ -166,6 +166,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           height: newHeight,
           x: newX,
           y: newY,
+          isCornerScaled: false,
         });
       }
     };
@@ -180,12 +181,15 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
   };
 
   const renderElement = () => {
-    const elementStyle = {
+    // For text elements, only apply dimensions if they were set by edge handles (not corner scaling)
+    const shouldApplyDimensions = element.type !== 'text' || (element.width && element.height && !element.isCornerScaled);
+    
+    const elementStyle = shouldApplyDimensions ? {
       width: element.width ? `${element.width}px` : 'auto',
       height: element.height ? `${element.height}px` : 'auto',
       minWidth: element.type === 'image' ? `${element.width || 100}px` : 'auto',
       minHeight: element.type === 'image' ? `${element.height || 100}px` : 'auto'
-    };
+    } : {};
 
     switch (element.type) {
       case 'text':
