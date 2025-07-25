@@ -14,30 +14,54 @@ const DesignEditorLayout: React.FC = () => {
   const [campaignConfig, setCampaignConfig] = useState<any>({});
   const [showFunnel, setShowFunnel] = useState(false);
 
-  // Configuration de campagne par défaut pour la roue (unlocked game)
-  const mockCampaign = {
-    id: 'wheel-design-preview',
-    type: 'wheel',
-    design: {
-      buttonColor: '#841b60',
-      borderRadius: '8px',
-      textStyles: {
-        title: { color: '#333333', fontSize: '24px', fontWeight: 'bold' },
-        button: { color: '#ffffff' }
+  // Configuration de campagne dynamique basée sur les éléments du canvas
+  const generateCampaignFromCanvas = () => {
+    // Extraire les textes depuis les éléments canvas
+    const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
+    const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
+    const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
+
+    return {
+      id: 'wheel-design-preview',
+      type: 'wheel',
+      design: {
+        buttonColor: campaignConfig.buttonColor || '#841b60',
+        borderRadius: campaignConfig.borderRadius || '8px',
+        background: canvasBackground,
+        customElements: canvasElements,
+        textStyles: {
+          title: { 
+            color: titleElement?.style?.color || '#333333', 
+            fontSize: titleElement?.style?.fontSize || '24px', 
+            fontWeight: 'bold' 
+          },
+          description: {
+            color: descriptionElement?.style?.color || '#666666',
+            fontSize: descriptionElement?.style?.fontSize || '16px'
+          },
+          button: { 
+            color: buttonElement?.style?.color || '#ffffff' 
+          }
+        }
+      },
+      screens: [
+        {
+          title: titleElement?.content || 'Tentez votre chance !',
+          description: descriptionElement?.content || 'Tournez la roue et gagnez des prix incroyables',
+          buttonText: buttonElement?.content || 'Jouer'
+        }
+      ],
+      formFields: [
+        { id: 'prenom', label: 'Prénom', type: 'text', required: true },
+        { id: 'nom', label: 'Nom', type: 'text', required: true },
+        { id: 'email', label: 'Email', type: 'email', required: true }
+      ],
+      canvasConfig: {
+        elements: canvasElements,
+        background: canvasBackground,
+        device: selectedDevice
       }
-    },
-    screens: [
-      {
-        title: 'Tentez votre chance !',
-        description: 'Tournez la roue et gagnez des prix incroyables',
-        buttonText: 'Jouer'
-      }
-    ],
-    formFields: [
-      { id: 'prenom', label: 'Prénom', type: 'text', required: true },
-      { id: 'nom', label: 'Nom', type: 'text', required: true },
-      { id: 'email', label: 'Email', type: 'email', required: true }
-    ]
+    };
   };
 
   return (
@@ -56,7 +80,7 @@ const DesignEditorLayout: React.FC = () => {
           /* Funnel Preview Mode */
           <div className="flex-1 flex items-center justify-center bg-gray-100">
             <FunnelUnlockedGame
-              campaign={mockCampaign}
+              campaign={generateCampaignFromCanvas()}
               previewMode={selectedDevice}
             />
           </div>

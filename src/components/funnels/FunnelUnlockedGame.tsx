@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
-import GameRenderer from './components/GameRenderer';
+import CanvasGameRenderer from './components/CanvasGameRenderer';
 import ResultScreen from './components/ResultScreen';
 import FormHandler from './components/FormHandler';
 import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
@@ -125,7 +125,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <GameRenderer 
+      <CanvasGameRenderer 
         campaign={campaign} 
         formValidated={formValidated} 
         showValidationMessage={showValidationMessage} 
