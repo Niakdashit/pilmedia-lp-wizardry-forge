@@ -101,6 +101,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     accent: extractedColors[2] || campaign.design?.customColors?.accent || '#45b7d1'
   };
 
+  // Appliquer une échelle par défaut de 200%
+  const defaultScale = 2.0;
+
   const handleResult = () => {
     if (onFinish) {
       // Logique de win/lose basée sur la probabilité configurée
@@ -115,29 +118,13 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue adaptée sans débordement
-  const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const wheelSize = Math.min(baseSize * 1.5, Math.min(gameDimensions.width, gameDimensions.height) - 20);
-  const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
-
   return (
-    <div 
-      className="wheel-preview-container w-full h-full flex items-center justify-center"
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-    >
+    <div className="wheel-preview-container" style={{ transform: `scale(${defaultScale})`, transformOrigin: 'center center' }}>
       <SmartWheel
         segments={smartWheelSegments}
         theme="modern"
-        size={wheelSize}
-        maxSize={maxWheelSize}
+        size={Math.min(gameDimensions.width, gameDimensions.height) - 40}
+        maxSize={Math.min(gameDimensions.width, gameDimensions.height)}
         brandColors={brandColors}
         onResult={handleResult}
         onSpin={handleSpin}

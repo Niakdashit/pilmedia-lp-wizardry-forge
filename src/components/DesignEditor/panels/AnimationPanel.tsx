@@ -71,62 +71,6 @@ const AnimationPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Animations de la roue */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          <RotateCw className="w-4 h-4 inline mr-2" />
-          Animation d'entrée de la roue
-        </label>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Position initiale</label>
-            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-              <option value="bottom">Depuis le bas (50%)</option>
-              <option value="top">Depuis le haut</option>
-              <option value="left">Depuis la gauche</option>
-              <option value="right">Depuis la droite</option>
-              <option value="center">Directement au centre</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Animation de levée</label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="wheel-lift-enabled"
-                defaultChecked
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label htmlFor="wheel-lift-enabled" className="text-sm text-gray-700">
-                Activer l'animation de levée sur clic
-              </label>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Durée de l'animation (ms)</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="300"
-                max="1000"
-                defaultValue="500"
-                className="flex-1"
-              />
-              <span className="text-sm font-medium text-gray-700 w-16">500ms</span>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Type d'animation</label>
-            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-              <option value="ease-out">Douce (ease-out)</option>
-              <option value="ease-in-out">Équilibrée (ease-in-out)</option>
-              <option value="spring">Rebond (spring)</option>
-              <option value="bounce">Rebond prononcé</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
       {/* Transitions */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">

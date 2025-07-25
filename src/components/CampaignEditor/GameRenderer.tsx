@@ -94,6 +94,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         )}
         <div
           className="relative z-10 w-full h-full flex items-center justify-center"
+          style={{ ...wrapperStyle, ...getPositionStyles() }}
         >
           <SmartWheel
             segments={segments}
