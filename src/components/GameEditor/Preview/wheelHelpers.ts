@@ -34,8 +34,22 @@ export const createSegments = (
     labels.push(defaultLabels[labels.length % defaultLabels.length] || `Segment ${labels.length + 1}`);
   }
 
+  // Utiliser les couleurs extraites de l'image si disponibles
+  const primaryColor = config.brandAssets?.primaryColor || brandColor;
+  const secondaryColor = config.brandAssets?.secondaryColor || '#ffffff';
+  const accentColor = config.brandAssets?.accentColor;
+
   return labels.map((label, idx) => {
-    const segmentColor = idx % 2 === 0 ? brandColor : '#ffffff';
+    // Utiliser un cycle de 3 couleurs si accent disponible, sinon alterner primary/secondary
+    let segmentColor: string;
+    if (accentColor && labels.length >= 3) {
+      const colorIndex = idx % 3;
+      segmentColor = colorIndex === 0 ? primaryColor : 
+                   colorIndex === 1 ? secondaryColor : accentColor;
+    } else {
+      segmentColor = idx % 2 === 0 ? primaryColor : secondaryColor;
+    }
+    
     return {
       id: String(idx + 1),
       label,
