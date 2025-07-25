@@ -35,7 +35,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const getCanvasSize = () => {
     switch (previewMode) {
       case 'desktop':
-        return { width: 1200, height: 675 };
+        return { width: '100%', height: '100%' };
       case 'tablet':
         return { width: 768, height: 1024 };
       case 'mobile':
@@ -46,7 +46,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   const canvasSize = getCanvasSize();
-  const scale = previewMode === 'desktop' ? 0.8 : previewMode === 'tablet' ? 0.9 : 1;
+  const scale = previewMode === 'desktop' ? 1 : previewMode === 'tablet' ? 0.9 : 1;
 
   const handleGameComplete = (result: 'win' | 'lose') => {
     console.log('Game completed with result:', result);
@@ -125,8 +125,11 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   return (
     <div className="flex justify-center items-center w-full h-full">
       <div 
-        className="relative bg-white shadow-lg rounded-lg overflow-hidden"
-        style={{
+        className={`relative bg-white overflow-hidden ${previewMode === 'desktop' ? 'w-full h-full' : 'shadow-lg rounded-lg'}`}
+        style={previewMode === 'desktop' ? {
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center'
+        } : {
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
           transform: `scale(${scale})`,
