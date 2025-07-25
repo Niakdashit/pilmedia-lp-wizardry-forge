@@ -50,13 +50,15 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
-        {/* Canvas Toolbar */}
-        <div className="flex justify-center mb-4">
-          <CanvasToolbar 
-            selectedElement={selectedElementData}
-            onElementUpdate={(updates) => selectedElement && handleElementUpdate(selectedElement, updates)}
-          />
-        </div>
+        {/* Canvas Toolbar - Only show when text element is selected */}
+        {selectedElementData && selectedElementData.type === 'text' && (
+          <div className="flex justify-center mb-4">
+            <CanvasToolbar 
+              selectedElement={selectedElementData}
+              onElementUpdate={(updates) => selectedElement && handleElementUpdate(selectedElement, updates)}
+            />
+          </div>
+        )}
         
         <div className="flex justify-center">
           <div 
@@ -72,16 +74,24 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             <div 
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #00b894 100%)'
+                background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
             >
-              {/* Example content similar to the wheel game */}
-              <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-center">
-                <h2 className="text-white text-3xl font-bold mb-4">Jouez pour gagner</h2>
-                <div className="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-400 to-red-500 rounded-full flex items-center justify-center">
-                  <div className="w-20 h-20 bg-white rounded-full"></div>
+              {/* Clouds */}
+              <div className="absolute top-8 left-8 w-16 h-10 bg-white rounded-full opacity-80"></div>
+              <div className="absolute top-12 left-12 w-12 h-8 bg-white rounded-full opacity-60"></div>
+              <div className="absolute top-6 right-16 w-20 h-12 bg-white rounded-full opacity-70"></div>
+              <div className="absolute top-10 right-20 w-16 h-10 bg-white rounded-full opacity-50"></div>
+              
+              {/* Default content when no elements */}
+              {elements.length === 0 && (
+                <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-center">
+                  <h2 className="text-white text-3xl font-bold mb-4 drop-shadow-lg">Jouez pour gagner</h2>
+                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-20 h-20 bg-white rounded-full"></div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Canvas Elements */}

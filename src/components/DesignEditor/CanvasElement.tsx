@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
+import { SmartWheel } from '../SmartWheel';
 
 interface CanvasElementProps {
   element: any;
@@ -74,6 +75,27 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             className="max-w-full max-h-full object-contain cursor-move"
             draggable={false}
           />
+        );
+      case 'wheel':
+        return (
+          <div 
+            className="cursor-move"
+            style={{ 
+              width: element.width || 300, 
+              height: element.height || 300,
+              pointerEvents: 'none' // Empêche l'interaction directe avec la roue
+            }}
+          >
+            <SmartWheel
+              segments={element.segments || []}
+              size={Math.min(element.width || 300, element.height || 300)}
+              disabled={true}
+              brandColors={{
+                primary: '#FF6B6B',
+                secondary: '#4ECDC4'
+              }}
+            />
+          </div>
         );
       case 'shape':
         return (

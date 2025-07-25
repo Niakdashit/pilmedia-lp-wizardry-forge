@@ -36,6 +36,28 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
     });
   };
 
+  const addWheel = () => {
+    const wheelSegments = [
+      { id: '1', label: 'Cadeau 1', color: '#FF6B6B', value: 'cadeau1' },
+      { id: '2', label: 'Cadeau 2', color: '#4ECDC4', value: 'cadeau2' },
+      { id: '3', label: 'Cadeau 3', color: '#45B7D1', value: 'cadeau3' },
+      { id: '4', label: 'Cadeau 4', color: '#96CEB4', value: 'cadeau4' },
+      { id: '5', label: 'Cadeau 5', color: '#FFEAA7', value: 'cadeau5' },
+      { id: '6', label: 'Cadeau 6', color: '#DDA0DD', value: 'cadeau6' },
+    ];
+
+    onAddElement({
+      id: `wheel-${Date.now()}`,
+      type: 'wheel',
+      x: 200,
+      y: 150,
+      width: 300,
+      height: 300,
+      segments: wheelSegments,
+      zIndex: 10
+    });
+  };
+
   const addLine = (line: any) => {
     onAddElement({
       id: `line-${Date.now()}`,
@@ -52,6 +74,20 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
 
   return (
     <div className="p-4 space-y-6">
+      {/* Roue de la Fortune */}
+      <div>
+        <h3 className="font-semibold text-sm text-gray-700 mb-3">JEU INTERACTIF</h3>
+        <button
+          onClick={addWheel}
+          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors flex flex-col items-center"
+        >
+          <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-red-500 rounded-full mb-2 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-white rounded-full"></div>
+          </div>
+          <span className="text-sm text-gray-600">Roue de la Fortune</span>
+        </button>
+      </div>
+
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">FORMES</h3>
         <div className="grid grid-cols-3 gap-2">
