@@ -27,6 +27,8 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
     }),
   }));
 
+  const [isEditing, setIsEditing] = React.useState(false);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     onSelect();
@@ -50,10 +52,107 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleDoubleClick = () => {
+    if (element.type === 'text') {
+      setIsEditing(true);
+    }
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate({ content: e.target.value });
+  };
+
+  const handleTextKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      setIsEditing(false);
+    }
+  };
+
+  const handleTextBlur = () => {
+    setIsEditing(false);
+  };
+
+  const handleResizeMouseDown = (e: React.MouseEvent, direction: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = element.width || 100;
+    const startHeight = element.height || 100;
+    const startPosX = element.x || 0;
+    const startPosY = element.y || 0;
+
+    const handleResizeMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newX = startPosX;
+      let newY = startPosY;
+
+      switch (direction) {
+        case 'se': // bottom-right
+          newWidth = Math.max(20, startWidth + deltaX);
+          newHeight = Math.max(20, startHeight + deltaY);
+          break;
+        case 'sw': // bottom-left
+          newWidth = Math.max(20, startWidth - deltaX);
+          newHeight = Math.max(20, startHeight + deltaY);
+          newX = startPosX + (startWidth - newWidth);
+          break;
+        case 'ne': // top-right
+          newWidth = Math.max(20, startWidth + deltaX);
+          newHeight = Math.max(20, startHeight - deltaY);
+          newY = startPosY + (startHeight - newHeight);
+          break;
+        case 'nw': // top-left
+          newWidth = Math.max(20, startWidth - deltaX);
+          newHeight = Math.max(20, startHeight - deltaY);
+          newX = startPosX + (startWidth - newWidth);
+          newY = startPosY + (startHeight - newHeight);
+          break;
+      }
+
+      onUpdate({
+        width: newWidth,
+        height: newHeight,
+        x: newX,
+        y: newY,
+      });
+    };
+
+    const handleResizeMouseUp = () => {
+      document.removeEventListener('mousemove', handleResizeMouseMove);
+      document.removeEventListener('mouseup', handleResizeMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleResizeMouseMove);
+    document.addEventListener('mouseup', handleResizeMouseUp);
+  };
+
   const renderElement = () => {
     switch (element.type) {
       case 'text':
-        return (
+        return isEditing ? (
+          <input
+            type="text"
+            value={element.content || 'Texte'}
+            onChange={handleTextChange}
+            onKeyDown={handleTextKeyDown}
+            onBlur={handleTextBlur}
+            autoFocus
+            className="bg-transparent border-none outline-none"
+            style={{
+              fontSize: element.fontSize || 16,
+              fontFamily: element.fontFamily || 'Arial',
+              color: element.color || '#000000',
+              fontWeight: element.fontWeight || 'normal',
+              textAlign: element.textAlign || 'left',
+            }}
+          />
+        ) : (
           <div
             className="cursor-move select-none"
             style={{
@@ -125,16 +224,29 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
         zIndex: element.zIndex || 1,
       }}
       onMouseDown={handleMouseDown}
+      onDoubleClick={handleDoubleClick}
     >
       {renderElement()}
       
       {/* Selection handles */}
       {isSelected && (
         <>
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize" />
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize" />
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize" />
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize" />
+          <div 
+            className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize" 
+            onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
+          />
+          <div 
+            className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize" 
+            onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
+          />
+          <div 
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize" 
+            onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
+          />
+          <div 
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize" 
+            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+          />
           
           {/* Delete button */}
           <button

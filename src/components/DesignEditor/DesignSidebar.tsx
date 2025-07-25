@@ -7,27 +7,32 @@ import {
   Wrench, 
   FolderOpen,
   Grid3X3,
-  Star
+  Star,
+  Image
 } from 'lucide-react';
 import DesignPanel from './panels/DesignPanel';
 import ElementsPanel from './panels/ElementsPanel';
 import TextPanel from './panels/TextPanel';
 import BrandPanel from './panels/BrandPanel';
 import UploadsPanel from './panels/UploadsPanel';
+import BackgroundPanel from './panels/BackgroundPanel';
 
 interface DesignSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onAddElement: (element: any) => void;
+  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
 }
 
 const DesignSidebar: React.FC<DesignSidebarProps> = ({
   activeTab,
   onTabChange,
-  onAddElement
+  onAddElement,
+  onBackgroundChange
 }) => {
   const tabs = [
     { id: 'design', label: 'Design', icon: Palette },
+    { id: 'background', label: 'Arrière-plan', icon: Image },
     { id: 'elements', label: 'Éléments', icon: Shapes },
     { id: 'text', label: 'Texte', icon: Type },
     { id: 'brand', label: 'Marque', icon: Star },
@@ -41,6 +46,8 @@ const DesignSidebar: React.FC<DesignSidebarProps> = ({
     switch (activeTab) {
       case 'design':
         return <DesignPanel onAddElement={onAddElement} />;
+      case 'background':
+        return <BackgroundPanel onBackgroundChange={onBackgroundChange || (() => {})} />;
       case 'elements':
         return <ElementsPanel onAddElement={onAddElement} />;
       case 'text':

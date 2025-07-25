@@ -8,12 +8,14 @@ interface DesignCanvasProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   elements: any[];
   onElementsChange: (elements: any[]) => void;
+  background?: { type: 'color' | 'image'; value: string };
 }
 
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
   selectedDevice,
   elements,
-  onElementsChange
+  onElementsChange,
+  background
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
 
@@ -70,11 +72,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               transformOrigin: 'top center'
             }}
           >
-            {/* Canvas Background with gradient like in the images */}
+            {/* Canvas Background */}
             <div 
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                background: background?.type === 'image' 
+                  ? `url(${background.value}) center/cover no-repeat`
+                  : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
             >
               {/* Clouds */}
