@@ -3,7 +3,6 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
-import DeviceFrame from './components/DeviceFrames';
 interface DesignCanvasProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   elements: any[];
@@ -82,40 +81,63 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           </div>}
         
         <div className="flex justify-center">
-          <DeviceFrame device={selectedDevice}>
-            <div 
-              className="relative bg-white shadow-lg rounded-lg overflow-hidden w-full h-full" 
-              onClick={onCanvasClick}
-              style={{
-                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'transparent'
-              }}
-            >
+          <div 
+            className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+            style={{
+              width: canvasSize.width,
+              height: canvasSize.height,
+              transform: selectedDevice === 'desktop' ? 'scale(0.5)' : selectedDevice === 'tablet' ? 'scale(0.8)' : 'scale(1)',
+              transformOrigin: 'top center'
+            }}
+            onClick={onCanvasClick}
+          >
+            {/* Canvas Background */}
+            <div className="absolute inset-0" style={{
+            background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+          }}>
+              {/* Clouds */}
+              
+              
+              
+              
+              
               {/* Default content when no elements */}
-              {elements.length === 0 && (
-                <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-center">
+              {elements.length === 0 && <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-center">
                   <h2 className="text-white text-3xl font-bold mb-4 drop-shadow-lg">Jouez pour gagner</h2>
                   <div className="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
                     <div className="w-20 h-20 bg-white rounded-full"></div>
                   </div>
-                </div>
+                </div>}
+            </div>
+
+            {/* Canvas Elements */}
+            {elements
+              .filter(element => element.visible !== false)
+              .map(element => 
+                <CanvasElement 
+                  key={element.id} 
+                  element={element} 
+                  isSelected={selectedElements.includes(element.id)}
+                  isMultiSelected={selectedElements.length > 1 && selectedElements.includes(element.id)}
+                  onSelect={(isCtrlPressed) => onElementSelect(element.id, isCtrlPressed)} 
+                  onUpdate={updates => handleElementUpdate(element.id, updates)} 
+                  onDelete={() => handleElementDelete(element.id)} 
+                />
               )}
 
-              {/* Canvas Elements */}
-              {elements
-                .filter(element => element.visible !== false)
-                .map(element => 
-                  <CanvasElement 
-                    key={element.id} 
-                    element={element} 
-                    isSelected={selectedElements.includes(element.id)}
-                    isMultiSelected={selectedElements.length > 1 && selectedElements.includes(element.id)}
-                    onSelect={(isCtrlPressed) => onElementSelect(element.id, isCtrlPressed)} 
-                    onUpdate={updates => handleElementUpdate(element.id, updates)} 
-                    onDelete={() => handleElementDelete(element.id)} 
-                  />
-                )}
-            </div>
-          </DeviceFrame>
+            {/* Device Frame for mobile/tablet */}
+            {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
+                {selectedDevice === 'mobile' && <>
+                    {/* iPhone-like frame */}
+                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-6 bg-black rounded-full"></div>
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full"></div>
+                  </>}
+                {selectedDevice === 'tablet' && <>
+                    {/* Tablet-like frame */}
+                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-gray-300 rounded-full"></div>
+                  </>}
+              </div>}
+          </div>
         </div>
 
         {/* Canvas Info */}
