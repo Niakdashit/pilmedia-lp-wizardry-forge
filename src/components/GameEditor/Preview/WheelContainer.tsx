@@ -83,7 +83,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
           <SmartWheel 
             segments={wheelSegments}
             size={getWheelSize() * (isMode1 ? 0.8 : 1)}
-            theme="modern"
+            theme={brandColors ? "brand" : "modern"}
             borderStyle={config.borderStyle || 'classic'}
             onResult={handleWheelResult}
             gamePosition={gamePosition}
@@ -103,7 +103,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         <SmartWheel 
           segments={wheelSegments}
           size={getWheelSize() * (isMode1 ? 0.8 : 1)}
-          theme="modern"
+          theme={brandColors ? "brand" : "modern"}
           borderStyle={config.borderStyle || 'classic'}
           onResult={handleWheelResult}
           gamePosition={gamePosition}

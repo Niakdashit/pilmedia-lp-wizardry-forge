@@ -122,12 +122,13 @@ export const createBrandTheme = (brandColors: {
 };
 
 export const getTheme = (theme: WheelTheme | string, brandColors?: any): WheelTheme => {
-  if (typeof theme === 'string') {
-    return PREDEFINED_THEMES[theme] || PREDEFINED_THEMES.modern;
-  }
-  
+  // Si brandColors est fourni, utiliser un thème de marque en priorité
   if (brandColors) {
     return createBrandTheme(brandColors);
+  }
+  
+  if (typeof theme === 'string') {
+    return PREDEFINED_THEMES[theme] || PREDEFINED_THEMES.modern;
   }
   
   return theme;
