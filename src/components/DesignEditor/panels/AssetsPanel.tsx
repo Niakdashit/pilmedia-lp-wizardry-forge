@@ -20,6 +20,7 @@ interface AssetsPanelProps {
 const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
   const [activeCategory, setActiveCategory] = useState('text');
   const [searchQuery, setSearchQuery] = useState('');
+  const [uploadedImages, setUploadedImages] = useState<any[]>([]);
 
   const categories = [
     { id: 'text', label: 'Texte', icon: Type },
@@ -57,6 +58,8 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
       content: textType.label,
       x: 100,
       y: 100,
+      width: 200,
+      height: 50,
       style: {
         ...textType.style,
         color: '#000000'
@@ -74,10 +77,8 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
       y: 100,
       width: 100,
       height: 100,
-      style: {
-        backgroundColor: shape.color,
-        borderRadius: shape.type === 'circle' ? '50%' : '0'
-      }
+      backgroundColor: shape.color,
+      borderRadius: shape.type === 'circle' ? '50%' : '0'
     };
     onAddElement(element);
   };
@@ -93,6 +94,23 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
       height: 100
     };
     onAddElement(element);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string;
+        const newImage = {
+          id: Date.now(),
+          url: imageUrl,
+          name: file.name
+        };
+        setUploadedImages(prev => [...prev, newImage]);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const renderContent = () => {
@@ -196,21 +214,64 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
               <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
-              <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" className="text-blue-600 text-sm font-medium hover:text-blue-700 cursor-pointer">
                 Parcourir les fichiers
-              </button>
+              </label>
             </div>
           </div>
         );
 
       case 'uploads':
         return (
-          <div className="text-center py-8">
-            <Upload className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Vos uploads apparaîtront ici</p>
-            <button className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
-              Uploader un fichier
-            </button>
+          <div className="space-y-4">
+            {uploadedImages.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2">
+                {uploadedImages.map((image) => (
+                  <button
+                    key={image.id}
+                    onClick={() => handleAddImage(image)}
+                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors"
+                  >
+                    <img 
+                      src={image.url} 
+                      alt="Uploaded image"
+                      className="w-full h-20 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
+                      <span className="text-white text-xs opacity-0 group-hover:opacity-100">
+                        Ajouter
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Upload className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-sm">Vos uploads apparaîtront ici</p>
+              </div>
+            )}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload-uploads"
+              />
+              <label htmlFor="file-upload-uploads" className="text-blue-600 text-sm font-medium hover:text-blue-700 cursor-pointer">
+                Uploader un fichier
+              </label>
+            </div>
           </div>
         );
 

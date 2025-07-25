@@ -133,6 +133,13 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
   };
 
   const renderElement = () => {
+    const elementStyle = {
+      width: element.width ? `${element.width}px` : 'auto',
+      height: element.height ? `${element.height}px` : 'auto',
+      minWidth: element.type === 'image' ? `${element.width || 100}px` : 'auto',
+      minHeight: element.type === 'image' ? `${element.height || 100}px` : 'auto'
+    };
+
     switch (element.type) {
       case 'text':
         return isEditing ? (
@@ -143,24 +150,29 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             onKeyDown={handleTextKeyDown}
             onBlur={handleTextBlur}
             autoFocus
-            className="bg-transparent border-none outline-none"
+            className="bg-transparent border-none outline-none w-full"
             style={{
-              fontSize: element.fontSize || 16,
-              fontFamily: element.fontFamily || 'Arial',
-              color: element.color || '#000000',
-              fontWeight: element.fontWeight || 'normal',
-              textAlign: element.textAlign || 'left',
+              fontSize: element.fontSize || element.style?.fontSize || 16,
+              fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
+              color: element.color || element.style?.color || '#000000',
+              fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
+              textAlign: element.textAlign || element.style?.textAlign || 'left',
+              ...elementStyle
             }}
           />
         ) : (
           <div
             className="cursor-move select-none"
             style={{
-              fontSize: element.fontSize || 16,
-              fontFamily: element.fontFamily || 'Arial',
-              color: element.color || '#000000',
-              fontWeight: element.fontWeight || 'normal',
-              textAlign: element.textAlign || 'left',
+              fontSize: element.fontSize || element.style?.fontSize || 16,
+              fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
+              color: element.color || element.style?.color || '#000000',
+              fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
+              textAlign: element.textAlign || element.style?.textAlign || 'left',
+              ...elementStyle,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: element.style?.textAlign === 'center' ? 'center' : element.style?.textAlign === 'right' ? 'flex-end' : 'flex-start'
             }}
           >
             {element.content || 'Texte'}
@@ -171,8 +183,9 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           <img
             src={element.src}
             alt={element.alt || 'Image'}
-            className="max-w-full max-h-full object-contain cursor-move"
+            className="cursor-move object-cover"
             draggable={false}
+            style={elementStyle}
           />
         );
       case 'wheel':
@@ -180,8 +193,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           <div 
             className="cursor-move"
             style={{ 
-              width: element.width || 300, 
-              height: element.height || 300,
+              ...elementStyle,
               pointerEvents: 'none' // Empêche l'interaction directe avec la roue
             }}
           >
@@ -201,15 +213,14 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           <div
             className="cursor-move"
             style={{
-              width: element.width || 100,
-              height: element.height || 100,
-              backgroundColor: element.backgroundColor || '#3B82F6',
-              borderRadius: element.borderRadius || 0,
+              ...elementStyle,
+              backgroundColor: element.backgroundColor || element.style?.backgroundColor || '#3B82F6',
+              borderRadius: element.borderRadius || element.style?.borderRadius || (element.shapeType === 'circle' ? '50%' : '0'),
             }}
           />
         );
       default:
-        return <div className="w-20 h-20 bg-gray-300 cursor-move" />;
+        return <div className="w-20 h-20 bg-gray-300 cursor-move" style={elementStyle} />;
     }
   };
 
