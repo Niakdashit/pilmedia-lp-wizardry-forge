@@ -11,6 +11,7 @@ interface AnimatedGameContainerProps {
 
 export const AnimatedGameContainer: React.FC<AnimatedGameContainerProps> = ({
   children,
+  gameType,
   isVisible = true,
   onAnimationComplete,
   device = 'desktop'
@@ -24,6 +25,15 @@ export const AnimatedGameContainer: React.FC<AnimatedGameContainerProps> = ({
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Pour la roue, pas d'animation pour éviter les décalages
+  if (gameType === 'wheel') {
+    return (
+      <div className="game-animation-container w-full h-full">
+        {isVisible && isLoaded && children}
+      </div>
+    );
+  }
 
   // Animation plus rapide sur mobile pour la performance
   const duration = device === 'mobile' ? 0.4 : 0.6;
