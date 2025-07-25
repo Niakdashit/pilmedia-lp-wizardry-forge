@@ -66,9 +66,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           <div 
             className="relative bg-white shadow-lg rounded-lg overflow-hidden"
             style={{
-              width: canvasSize.width,
-              height: canvasSize.height,
-              transform: selectedDevice === 'desktop' ? 'scale(0.5)' : selectedDevice === 'tablet' ? 'scale(0.8)' : 'scale(1)',
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              transform: selectedDevice === 'desktop' ? 'scale(0.4)' : selectedDevice === 'tablet' ? 'scale(0.7)' : 'scale(1)',
               transformOrigin: 'top center'
             }}
           >
