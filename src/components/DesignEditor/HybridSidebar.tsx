@@ -7,7 +7,8 @@ import {
   Settings,
   Gamepad2,
   Share,
-  Palette
+  Palette,
+  Zap
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
@@ -15,6 +16,7 @@ import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
+import AnimationEntrancePanel from './panels/AnimationEntrancePanel';
 
 interface HybridSidebarProps {
   onAddElement: (element: any) => void;
@@ -53,6 +55,11 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
       icon: Layers
     },
     { 
+      id: 'animations', 
+      label: 'Animations', 
+      icon: Zap
+    },
+    { 
       id: 'campaign', 
       label: 'Settings', 
       icon: Settings
@@ -85,6 +92,8 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
         return <BackgroundPanel onBackgroundChange={onBackgroundChange || (() => {})} />;
       case 'layers':
         return <LayersPanel elements={elements} onElementsChange={onElementsChange || (() => {})} />;
+      case 'animations':
+        return <AnimationEntrancePanel onAnimationChange={(config) => console.log('Animation config:', config)} />;
       case 'campaign':
         return (
           <CampaignConfigPanel 
