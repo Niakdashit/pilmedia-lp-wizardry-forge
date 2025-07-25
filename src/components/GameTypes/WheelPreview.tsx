@@ -46,20 +46,54 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   // Utiliser les couleurs extraites de l'image de fond si disponibles
   const extractedColors = campaign.design?.extractedColors || [];
   
-  // Convertir les segments au format SmartWheel avec couleurs extraites
+  // Convertir les segments au format SmartWheel avec seulement 2 couleurs en alternance
   const smartWheelSegments = segments.map((segment: any, index: number) => {
-    // Si on a des couleurs extraites, les utiliser cycliquement
-    const color = extractedColors.length > 0 
-      ? extractedColors[index % extractedColors.length]
-      : segment.color;
+    let color = segment.color;
+    
+    // Si on a des couleurs extraites, utiliser seulement les 2 premières en alternance
+    if (extractedColors.length >= 2) {
+      color = extractedColors[index % 2];
+    } else if (extractedColors.length === 1) {
+      // Si une seule couleur extraite, alterner avec une version plus claire/foncée
+      const baseColor = extractedColors[0];
+      color = index % 2 === 0 ? baseColor : adjustColorBrightness(baseColor, index % 2 === 1 ? -20 : 20);
+    }
     
     return {
       id: segment.id || index.toString(),
       label: segment.label,
       color: color,
-      textColor: segment.textColor || '#ffffff'
+      textColor: getContrastColor(color)
     };
   });
+
+  // Fonction utilitaire pour ajuster la luminosité d'une couleur
+  const adjustColorBrightness = (color: string, amount: number): string => {
+    // Conversion basique pour RGB
+    if (color.startsWith('rgb')) {
+      const values = color.match(/\d+/g);
+      if (values && values.length >= 3) {
+        const r = Math.max(0, Math.min(255, parseInt(values[0]) + amount));
+        const g = Math.max(0, Math.min(255, parseInt(values[1]) + amount));
+        const b = Math.max(0, Math.min(255, parseInt(values[2]) + amount));
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+    }
+    return color;
+  };
+
+  // Fonction utilitaire pour calculer la couleur de contraste
+  const getContrastColor = (bgColor: string): string => {
+    // Logique simplifiée - vous pouvez l'améliorer
+    if (bgColor.includes('rgb')) {
+      const values = bgColor.match(/\d+/g);
+      if (values && values.length >= 3) {
+        const brightness = (parseInt(values[0]) * 299 + parseInt(values[1]) * 587 + parseInt(values[2]) * 114) / 1000;
+        return brightness > 128 ? '#000000' : '#ffffff';
+      }
+    }
+    return '#ffffff';
+  };
 
   // Couleurs de marque depuis la campagne avec couleurs extraites en priorité
   const brandColors = {
