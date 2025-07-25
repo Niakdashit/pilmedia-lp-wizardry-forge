@@ -23,6 +23,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onShowParticipationModal,
   scale = 1.7 // Échelle par défaut à 1.7x
 }) => {
+  const [wheelState, setWheelState] = React.useState<'initial' | 'lifted' | 'spinning'>('initial');
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
 
   // Utiliser les couleurs extraites de l'image si disponibles
@@ -37,6 +38,31 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   const handleWheelResult = (segment: any) => {
     console.log('Segment sélectionné:', segment);
     onResult?.(segment);
+  };
+
+  const handleWheelClick = () => {
+    if (wheelState === 'initial') {
+      setWheelState('lifted');
+    } else if (wheelState === 'lifted') {
+      setWheelState('spinning');
+      if (onShowParticipationModal) {
+        onShowParticipationModal();
+      }
+    }
+  };
+
+  // Calculer la position selon l'état
+  const getWheelTransform = () => {
+    switch (wheelState) {
+      case 'initial':
+        return 'translateY(50%)';
+      case 'lifted':
+        return 'translateY(0%)';
+      case 'spinning':
+        return 'translateY(0%)';
+      default:
+        return 'translateY(0%)';
+    }
   };
 
   const getWheelSize = () => {
@@ -78,24 +104,34 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         padding: 0
       }}
     >
-      <SmartWheel 
-        segments={wheelSegments}
-        size={getWheelSize() * (isMode1 ? 0.8 : 1)}
-        theme="modern"
-        borderStyle={config.borderStyle || 'classic'}
-        onResult={handleWheelResult}
-        gamePosition={undefined}
-        isMode1={isMode1}
-        formFields={config.formFields}
-        brandColors={brandColors}
-        buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : 'bottom'}
-        onShowParticipationModal={onShowParticipationModal}
-        customButton={{
-          text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
-          color: brandColors?.primary || "#8E44AD",
-          textColor: "#ffffff"
+      <div 
+        onClick={handleWheelClick}
+        className="transition-transform duration-500 ease-out cursor-pointer"
+        style={{
+          transform: getWheelTransform()
         }}
-      />
+      >
+        <SmartWheel 
+          segments={wheelSegments}
+          size={getWheelSize() * (isMode1 ? 0.8 : 1)}
+          theme="modern"
+          borderStyle={config.borderStyle || 'classic'}
+          onResult={handleWheelResult}
+          gamePosition={undefined}
+          isMode1={isMode1}
+          formFields={config.formFields}
+          brandColors={brandColors}
+          buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : 'bottom'}
+          onShowParticipationModal={wheelState === 'spinning' ? onShowParticipationModal : undefined}
+          customButton={{
+            text: wheelState === 'initial' ? "Cliquez pour débuter" : 
+                  wheelState === 'lifted' ? "Cliquez pour jouer" : 
+                  isMode1 ? "Faire tourner" : "Remplir le formulaire",
+            color: brandColors?.primary || "#8E44AD",
+            textColor: "#ffffff"
+          }}
+        />
+      </div>
     </div>
   );
 };
