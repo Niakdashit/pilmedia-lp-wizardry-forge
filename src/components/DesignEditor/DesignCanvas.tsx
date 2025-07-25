@@ -13,12 +13,18 @@ interface DesignCanvasProps {
     type: 'color' | 'image';
     value: string;
   };
+  extractedColors?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  } | null;
 }
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
   selectedDevice,
   elements,
   onElementsChange,
-  background
+  background,
+  extractedColors
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
@@ -85,8 +91,15 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     return Math.round(baseSize * wheelScale);
   };
 
-  // Segments par défaut pour la roue
-  const wheelSegments = [
+  // Segments par défaut pour la roue - utiliser les couleurs extraites si disponibles
+  const wheelSegments = extractedColors ? [
+    { id: '1', label: '10€', color: extractedColors.primary, textColor: '#ffffff' },
+    { id: '2', label: '20€', color: extractedColors.secondary, textColor: '#ffffff' },
+    { id: '3', label: '5€', color: extractedColors.primary, textColor: '#ffffff' },
+    { id: '4', label: 'Perdu', color: extractedColors.secondary, textColor: '#ffffff' },
+    { id: '5', label: '50€', color: extractedColors.primary, textColor: '#ffffff' },
+    { id: '6', label: '30€', color: extractedColors.secondary, textColor: '#ffffff' }
+  ] : [
     { id: '1', label: '10€', color: '#ff6b6b', textColor: '#ffffff' },
     { id: '2', label: '20€', color: '#4ecdc4', textColor: '#ffffff' },
     { id: '3', label: '5€', color: '#45b7d1', textColor: '#ffffff' },
@@ -134,17 +147,21 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                 >
                   <SmartWheel
                     segments={wheelSegments}
-                    theme="modern"
+                    theme={extractedColors ? "brand" : "modern"}
                     size={getWheelSize()}
                     borderStyle={wheelBorderStyle}
-                    brandColors={{
+                    brandColors={extractedColors ? {
+                      primary: extractedColors.primary,
+                      secondary: extractedColors.secondary,
+                      accent: extractedColors.accent
+                    } : {
                       primary: wheelBorderColor,
                       secondary: '#4ecdc4',
                       accent: '#45b7d1'
                     }}
                     customButton={{
                       text: 'JOUER',
-                      color: wheelBorderColor,
+                      color: extractedColors ? extractedColors.primary : wheelBorderColor,
                       textColor: '#ffffff'
                     }}
                     disabled={true}

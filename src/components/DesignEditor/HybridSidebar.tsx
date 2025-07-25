@@ -19,6 +19,7 @@ import ExportPanel from './panels/ExportPanel';
 interface HybridSidebarProps {
   onAddElement: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  onColorsExtracted?: (colors: { primary: string; secondary: string; accent: string }) => void;
   campaignConfig?: any;
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
@@ -28,6 +29,7 @@ interface HybridSidebarProps {
 const HybridSidebar: React.FC<HybridSidebarProps> = ({
   onAddElement,
   onBackgroundChange,
+  onColorsExtracted,
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
@@ -82,7 +84,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
       case 'assets':
         return <AssetsPanel onAddElement={onAddElement} />;
       case 'background':
-        return <BackgroundPanel onBackgroundChange={onBackgroundChange || (() => {})} />;
+        return <BackgroundPanel onBackgroundChange={onBackgroundChange || (() => {})} onColorsExtracted={onColorsExtracted} />;
       case 'layers':
         return <LayersPanel elements={elements} onElementsChange={onElementsChange || (() => {})} />;
       case 'campaign':

@@ -11,6 +11,7 @@ const DesignEditorLayout: React.FC = () => {
     type: 'color',
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
+  const [extractedColors, setExtractedColors] = useState<{ primary: string; secondary: string; accent: string } | null>(null);
   const [campaignConfig, setCampaignConfig] = useState<any>({});
   const [showFunnel, setShowFunnel] = useState(false);
 
@@ -64,6 +65,11 @@ const DesignEditorLayout: React.FC = () => {
     };
   };
 
+  const handleColorsExtracted = (colors: { primary: string; secondary: string; accent: string }) => {
+    console.log('🎨 Couleurs extraites reçues dans DesignEditorLayout:', colors);
+    setExtractedColors(colors);
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Top Toolbar - Hidden in preview mode */}
@@ -100,6 +106,7 @@ const DesignEditorLayout: React.FC = () => {
             <HybridSidebar 
               onAddElement={(element) => setCanvasElements(prev => [...prev, element])}
               onBackgroundChange={setCanvasBackground}
+              onColorsExtracted={handleColorsExtracted}
               campaignConfig={campaignConfig}
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
@@ -112,6 +119,7 @@ const DesignEditorLayout: React.FC = () => {
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
+              extractedColors={extractedColors}
             />
           </>
         )}
