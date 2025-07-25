@@ -51,17 +51,17 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     }
   };
 
-  // Calculer la position selon l'état
-  const getWheelTransform = () => {
+  // Obtenir la classe CSS selon l'état
+  const getWheelClass = () => {
     switch (wheelState) {
       case 'initial':
-        return 'translateY(50%)';
+        return 'wheel-initial cursor-pointer';
       case 'lifted':
-        return 'translateY(0%)';
+        return 'wheel-lifted cursor-pointer';
       case 'spinning':
-        return 'translateY(0%)';
+        return 'wheel-spinning';
       default:
-        return 'translateY(0%)';
+        return 'wheel-initial';
     }
   };
 
@@ -106,10 +106,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     >
       <div 
         onClick={handleWheelClick}
-        className="transition-transform duration-500 ease-out cursor-pointer"
-        style={{
-          transform: getWheelTransform()
-        }}
+        className={getWheelClass()}
       >
         <SmartWheel 
           segments={wheelSegments}
