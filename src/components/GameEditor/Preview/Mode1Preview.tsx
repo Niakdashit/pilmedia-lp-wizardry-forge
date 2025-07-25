@@ -127,14 +127,20 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
         </div>
       ))}
 
-      {/* Custom editable texts - positioned absolutely over the whole layout */}
+      {/* Custom editable texts - only render in header area for Mode 1, not over content area */}
       {config.customTexts?.map((text) => (
         <div
           key={text.id}
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{ zIndex: 10 }}
+          className="absolute pointer-events-none"
+          style={{ 
+            zIndex: 10,
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: getHeaderHeight() === 'auto' ? '70vh' : getHeaderHeight()
+          }}
         >
-          <div className="relative w-full h-full pointer-events-auto">
+          <div className="relative w-full h-full">
             <EditableText
               text={text}
               onUpdate={onTextUpdate}

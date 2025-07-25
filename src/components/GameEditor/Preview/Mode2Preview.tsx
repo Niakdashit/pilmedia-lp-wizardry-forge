@@ -85,25 +85,18 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
           </div>
         ))}
 
-        {/* Custom editable texts - positioned absolutely over the whole layout */}
+        {/* Custom editable texts - positioned absolutely over the game canvas */}
         {config.customTexts?.map((text) => (
-          <div
+          <EditableText
             key={text.id}
-            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 20 }}
-          >
-            <div className="relative w-full h-full pointer-events-auto">
-              <EditableText
-                text={text}
-                onUpdate={onTextUpdate}
-                onDelete={onTextDelete}
-                isSelected={selectedTextId === text.id}
-                onSelect={setSelectedTextId}
-                device={device}
-                triggerAutoSync={triggerAutoSync}
-              />
-            </div>
-          </div>
+            text={text}
+            onUpdate={onTextUpdate}
+            onDelete={onTextDelete}
+            isSelected={selectedTextId === text.id}
+            onSelect={setSelectedTextId}
+            device={device}
+            triggerAutoSync={triggerAutoSync}
+          />
         ))}
       </BackgroundContainer>
     </div>

@@ -197,75 +197,85 @@ RÃ©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en franÃ
         });
       }
 
-      // Create or update main title & subtitle custom texts with responsive design
-      const updatedCustomTexts = [...(config.customTexts || [])];
+      // Update config based on display mode - texts for Mode 2 only, content for Mode 1
+      const isMode2 = config.displayMode === 'mode2-background';
+      
+      if (isMode2) {
+        // Mode 2: Create custom texts over the visual
+        const updatedCustomTexts = [...(config.customTexts || [])];
 
-      if (data.result.wording_jeu_concours?.titre) {
-        const mainTitleIndex = updatedCustomTexts.findIndex(t => t.id === 'main-title');
-        const mainTitle = {
-          id: 'main-title',
-          content: data.result.wording_jeu_concours.titre,
-          x: 250,
-          y: 60,
-          fontSize: 32,
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-          color: '#ffffff',
-          fontWeight: 'bold' as const,
-          fontStyle: 'normal' as const,
-          textDecoration: 'none',
-          textAlign: 'center' as const,
-          hasEffect: true,
-          isAnimated: false,
-          width: 300,
-          height: 50,
-          deviceConfig: {
-            desktop: { x: 250, y: 60, fontSize: 32, width: 300, height: 50 },
-            tablet: { x: 150, y: 50, fontSize: 24, width: 300, height: 40 },
-            mobile: { x: 60, y: 80, fontSize: 18, width: 200, height: 35 }
+        if (data.result.wording_jeu_concours?.titre) {
+          const mainTitleIndex = updatedCustomTexts.findIndex(t => t.id === 'main-title');
+          const mainTitle = {
+            id: 'main-title',
+            content: data.result.wording_jeu_concours.titre,
+            x: 250,
+            y: 60,
+            fontSize: 32,
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: '#ffffff',
+            fontWeight: 'bold' as const,
+            fontStyle: 'normal' as const,
+            textDecoration: 'none',
+            textAlign: 'center' as const,
+            hasEffect: true,
+            isAnimated: false,
+            width: 300,
+            height: 50,
+            deviceConfig: {
+              desktop: { x: 250, y: 60, fontSize: 32, width: 300, height: 50 },
+              tablet: { x: 150, y: 50, fontSize: 24, width: 300, height: 40 },
+              mobile: { x: 60, y: 80, fontSize: 18, width: 200, height: 35 }
+            }
+          } as const;
+
+          if (mainTitleIndex !== -1) {
+            updatedCustomTexts[mainTitleIndex] = { ...updatedCustomTexts[mainTitleIndex], ...mainTitle };
+          } else {
+            updatedCustomTexts.push(mainTitle);
           }
-        } as const;
-
-        if (mainTitleIndex !== -1) {
-          updatedCustomTexts[mainTitleIndex] = { ...updatedCustomTexts[mainTitleIndex], ...mainTitle };
-        } else {
-          updatedCustomTexts.push(mainTitle);
         }
-      }
 
-      if (data.result.wording_jeu_concours?.sous_titre) {
-        const subtitleIndex = updatedCustomTexts.findIndex(t => t.id === 'subtitle');
-        const subtitle = {
-          id: 'subtitle',
-          content: data.result.wording_jeu_concours.sous_titre,
-          x: 250,
-          y: 130,
-          fontSize: 18,
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-          color: '#ffffff',
-          fontWeight: 'normal' as const,
-          fontStyle: 'normal' as const,
-          textDecoration: 'none',
-          textAlign: 'center' as const,
-          hasEffect: true,
-          isAnimated: false,
-          width: 300,
-          height: 30,
-          deviceConfig: {
-            desktop: { x: 250, y: 130, fontSize: 18, width: 300, height: 30 },
-            tablet: { x: 150, y: 110, fontSize: 16, width: 300, height: 28 },
-            mobile: { x: 60, y: 130, fontSize: 14, width: 200, height: 25 }
+        if (data.result.wording_jeu_concours?.sous_titre) {
+          const subtitleIndex = updatedCustomTexts.findIndex(t => t.id === 'subtitle');
+          const subtitle = {
+            id: 'subtitle',
+            content: data.result.wording_jeu_concours.sous_titre,
+            x: 250,
+            y: 130,
+            fontSize: 18,
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: '#ffffff',
+            fontWeight: 'normal' as const,
+            fontStyle: 'normal' as const,
+            textDecoration: 'none',
+            textAlign: 'center' as const,
+            hasEffect: true,
+            isAnimated: false,
+            width: 300,
+            height: 30,
+            deviceConfig: {
+              desktop: { x: 250, y: 130, fontSize: 18, width: 300, height: 30 },
+              tablet: { x: 150, y: 110, fontSize: 16, width: 300, height: 28 },
+              mobile: { x: 60, y: 130, fontSize: 14, width: 200, height: 25 }
+            }
+          } as const;
+
+          if (subtitleIndex !== -1) {
+            updatedCustomTexts[subtitleIndex] = { ...updatedCustomTexts[subtitleIndex], ...subtitle };
+          } else {
+            updatedCustomTexts.push(subtitle);
           }
-        } as const;
-
-        if (subtitleIndex !== -1) {
-          updatedCustomTexts[subtitleIndex] = { ...updatedCustomTexts[subtitleIndex], ...subtitle };
-        } else {
-          updatedCustomTexts.push(subtitle);
         }
-      }
 
-      if (data.result.wording_jeu_concours?.titre || data.result.wording_jeu_concours?.sous_titre) {
         onConfigUpdate({ customTexts: updatedCustomTexts });
+      } else {
+        // Mode 1: Update content in the description area
+        onConfigUpdate({
+          storyText: data.result.wording_jeu_concours?.sous_titre || config.storyText,
+          bannerDescription: data.result.wording_jeu_concours?.titre || config.bannerDescription,
+          footerText: data.result.wording_jeu_concours?.mecanique || config.footerText
+        });
       }
 
       if (logoUrl) {
