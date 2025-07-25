@@ -98,10 +98,20 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
 
   const renderGameComponent = () => {
     if (campaign.type === 'wheel') {
+      // Utiliser les couleurs extraites si disponibles
+      const extractedColors = campaign.design?.extractedColors;
+      const campaignWithColors = extractedColors ? {
+        ...campaign,
+        design: {
+          ...campaign.design,
+          extractedColors
+        }
+      } : campaign;
+
       return (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 10 }}>
           <WheelPreview
-            campaign={campaign} 
+            campaign={campaignWithColors} 
             config={{
               mode: 'instant_winner' as const,
               winProbability: campaign.gameConfig?.wheel?.winProbability || 0.1,
@@ -132,6 +142,13 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         } : previewMode === 'mobile' ? {
           width: '100%',
           height: '100vh',
+        } : previewMode === 'tablet' ? {
+          width: '100vw',
+          height: '100vh',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 1000
         } : {
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,

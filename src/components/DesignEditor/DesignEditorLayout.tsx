@@ -5,7 +5,22 @@ import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 
 const DesignEditorLayout: React.FC = () => {
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
+  // Détection automatique de l'appareil
+  const detectDevice = () => {
+    if (typeof window !== 'undefined') {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isTablet = /ipad|android(?!.*mobile)|tablet/.test(userAgent) || 
+                      (window.innerWidth >= 768 && window.innerWidth <= 1024);
+      const isMobile = window.innerWidth < 768 && !/ipad|tablet/.test(userAgent);
+      
+      if (isTablet) return 'tablet';
+      if (isMobile) return 'mobile';
+      return 'desktop';
+    }
+    return 'mobile';
+  };
+
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
@@ -30,6 +45,7 @@ const DesignEditorLayout: React.FC = () => {
         borderRadius: campaignConfig.borderRadius || '8px',
         background: canvasBackground,
         customElements: canvasElements,
+        extractedColors, // Ajouter les couleurs extraites
         textStyles: {
           title: { 
             color: titleElement?.style?.color || '#333333', 
