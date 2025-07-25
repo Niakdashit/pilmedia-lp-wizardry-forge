@@ -25,10 +25,8 @@ interface DesignSidebarProps {
 }
 
 const DesignSidebar: React.FC<DesignSidebarProps> = ({
-  selectedDevice,
   elements,
   onElementsChange,
-  background,
   onBackgroundChange,
   selectedElements,
   onElementSelect,
@@ -51,57 +49,65 @@ const DesignSidebar: React.FC<DesignSidebarProps> = ({
   ];
 
   return (
-    <div className="w-80 bg-background border-r border-border flex flex-col h-full">
-      {/* History controls */}
-      <div className="p-3 border-b bg-muted/30">
-        <div className="flex gap-2">
-          <button
-            onClick={onUndo}
-            disabled={!canUndo}
-            className={`flex-1 p-2 rounded flex items-center justify-center gap-2 text-xs ${
-              canUndo 
-                ? 'bg-background hover:bg-muted text-foreground' 
-                : 'bg-muted/50 text-muted-foreground cursor-not-allowed'
-            }`}
-          >
-            <Undo className="w-3 h-3" />
-            Annuler
-          </button>
-          <button
-            onClick={onRedo}
-            disabled={!canRedo}
-            className={`flex-1 p-2 rounded flex items-center justify-center gap-2 text-xs ${
-              canRedo 
-                ? 'bg-background hover:bg-muted text-foreground' 
-                : 'bg-muted/50 text-muted-foreground cursor-not-allowed'
-            }`}
-          >
-            <Redo className="w-3 h-3" />
-            Rétablir
-          </button>
-        </div>
-      </div>
-
-      <div className="border-t">
-        {/* Tab buttons */}
-        <div className="grid grid-cols-4 border-b">
-          {tabs.map((tab) => (
+    <div className="w-80 bg-white border-r border-gray-200 flex">
+      {/* Tab Navigation */}
+      <div className="w-16 bg-gray-50 border-r border-gray-200 flex flex-col items-center py-4 space-y-2">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`p-3 flex flex-col items-center gap-1 text-xs border-r last:border-r-0 ${
+              className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-primary/10 text-primary border-b-2 border-primary'
-                  : 'hover:bg-muted/50 text-muted-foreground'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-200'
+              }`}
+              title={tab.label}
+            >
+              <Icon className="w-5 h-5" />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Panel Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* History controls */}
+        <div className="p-3 border-b bg-gray-50">
+          <div className="flex gap-2">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={`flex-1 p-2 rounded flex items-center justify-center gap-2 text-xs ${
+                canUndo 
+                  ? 'bg-white hover:bg-gray-100 text-gray-700 border' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              <tab.icon className="w-4 h-4" />
-              <span className="truncate">{tab.label}</span>
+              <Undo className="w-3 h-3" />
+              Annuler
             </button>
-          ))}
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className={`flex-1 p-2 rounded flex items-center justify-center gap-2 text-xs ${
+                canRedo 
+                  ? 'bg-white hover:bg-gray-100 text-gray-700 border' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <Redo className="w-3 h-3" />
+              Rétablir
+            </button>
+          </div>
         </div>
 
-        {/* Panel content */}
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="font-semibold text-gray-800">
+            {tabs.find(tab => tab.id === activeTab)?.label}
+          </h2>
+        </div>
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'elements' && (
             <ElementsPanel 

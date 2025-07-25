@@ -5,7 +5,7 @@ interface HistoryState {
   timestamp: number;
 }
 
-export const useEditorHistory = (initialElements: any[], onElementsChange: (elements: any[]) => void) => {
+export const useEditorHistory = (_initialElements: any[], onElementsChange: (elements: any[]) => void) => {
   const [history, setHistory] = useState<HistoryState[]>([{ elements: [], timestamp: Date.now() }]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
