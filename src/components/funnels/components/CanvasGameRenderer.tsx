@@ -123,16 +123,19 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   return (
-    <div className={`flex justify-center items-center ${previewMode === 'desktop' ? 'w-full h-full' : 'w-full h-full'}`}>
+    <div className="w-full h-full">
       <div 
-        className={`relative bg-white overflow-hidden ${previewMode === 'desktop' ? 'w-full' : 'shadow-lg rounded-lg'}`}
+        className="relative bg-white overflow-hidden w-full h-full"
         style={previewMode === 'desktop' ? {
           width: '100%',
           height: '100vh',
-          aspectRatio: '16/9',
+        } : previewMode === 'mobile' ? {
+          width: '100%',
+          height: '100vh',
         } : {
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
+          margin: '0 auto',
           transform: `scale(${scale})`,
           transformOrigin: 'center center'
         }}

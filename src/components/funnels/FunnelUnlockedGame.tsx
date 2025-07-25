@@ -124,7 +124,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full">
       <CanvasGameRenderer 
         campaign={campaign} 
         formValidated={formValidated} 
