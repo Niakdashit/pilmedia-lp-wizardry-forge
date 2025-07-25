@@ -61,8 +61,8 @@ export const useSmartWheelRenderer = ({
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const maxRadius = (size / 2) - 20;
-    const borderRadius = maxRadius + 10;
+    const maxRadius = (size / 2) - Math.max(10, size * 0.04);
+    const borderRadius = maxRadius + Math.max(5, size * 0.02);
 
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
@@ -137,7 +137,7 @@ export const useSmartWheelRenderer = ({
 
       // Bordure fine entre segments
       ctx.strokeStyle = theme.colors.background;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = Math.max(1, size * 0.005);
       ctx.stroke();
 
       // Dessiner le texte
@@ -271,7 +271,7 @@ export const useSmartWheelRenderer = ({
     ctx.rotate(startAngle + anglePerSegment / 2);
     
     ctx.fillStyle = segment.textColor || theme.colors.text;
-    ctx.font = `bold ${Math.max(12, size * 0.03)}px Arial`;
+    ctx.font = `bold ${Math.max(10, size * 0.035)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
@@ -287,7 +287,7 @@ export const useSmartWheelRenderer = ({
   };
 
   const drawCenter = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, theme: WheelTheme) => {
-    const centerRadius = size * 0.08;
+    const centerRadius = Math.max(15, size * 0.06);
     ctx.beginPath();
     ctx.arc(centerX, centerY, centerRadius, 0, 2 * Math.PI);
     
@@ -305,7 +305,7 @@ export const useSmartWheelRenderer = ({
     
     ctx.fill();
     ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = Math.max(2, size * 0.008);
     ctx.stroke();
   };
 
@@ -316,9 +316,9 @@ export const useSmartWheelRenderer = ({
     const pointerDistance = radius - 5; // Plus proche des segments
     ctx.translate(centerX, centerY - pointerDistance);
     
-    // Taille augmentée du pointeur
-    const pointerWidth = size * 0.04; // Largeur proportionnelle à la taille de la roue
-    const pointerHeight = size * 0.08; // Hauteur proportionnelle à la taille de la roue
+    // Taille du pointeur proportionnelle
+    const pointerWidth = Math.max(8, size * 0.03);
+    const pointerHeight = Math.max(15, size * 0.06);
     
     // Dessiner l'ombre du pointeur
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
@@ -343,7 +343,7 @@ export const useSmartWheelRenderer = ({
     
     // Bordure du pointeur
     ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = Math.max(1, size * 0.006);
     ctx.stroke();
     
     // Ajouter un effet de brillance
