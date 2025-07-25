@@ -110,8 +110,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               transform: selectedDevice === 'desktop' ? 'scale(0.8)' : selectedDevice === 'tablet' ? 'scale(0.9)' : 'scale(1)',
               transformOrigin: 'top center'
             }}
-            onClick={(e) => {
-              // Close toolbar when clicking on empty canvas area
+            onMouseDown={(e) => {
+              // Close toolbar only when clicking directly on the canvas background
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
               }
