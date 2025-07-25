@@ -63,7 +63,21 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   // Forcer le centrage pour toutes les roues - pas de gamePosition spécifique
 
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div 
+      className="absolute inset-0 flex items-center justify-center w-full h-full"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        margin: 0,
+        padding: 0
+      }}
+    >
       <SmartWheel 
         segments={wheelSegments}
         size={getWheelSize() * (isMode1 ? 0.8 : 1)}
@@ -74,7 +88,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         isMode1={isMode1}
         formFields={config.formFields}
         brandColors={brandColors}
-        buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : undefined}
+        buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : 'bottom'}
         onShowParticipationModal={onShowParticipationModal}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",

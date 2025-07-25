@@ -44,6 +44,27 @@
   --radius: 0.5rem;
 }
 
+/* Styles de centrage forcé pour les roues */
+.wheel-center-container {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1 !important;
+}
+
+/* Forcer le centrage parfait pour tous les containers de roue */
+.game-animation-container,
+.wheel-preview-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+}
+
 .dark {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
