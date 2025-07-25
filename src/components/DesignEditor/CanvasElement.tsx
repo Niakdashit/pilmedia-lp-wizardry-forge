@@ -105,16 +105,16 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
         
         switch (direction) {
           case 'se': // bottom-right
-            scaleFactor = 1 + (deltaX + deltaY) / 50;
+            scaleFactor = 1 + (deltaX + deltaY) / 150;
             break;
           case 'sw': // bottom-left
-            scaleFactor = 1 + (-deltaX + deltaY) / 50;
+            scaleFactor = 1 + (-deltaX + deltaY) / 150;
             break;
           case 'ne': // top-right
-            scaleFactor = 1 + (deltaX - deltaY) / 50;
+            scaleFactor = 1 + (deltaX - deltaY) / 150;
             break;
           case 'nw': // top-left
-            scaleFactor = 1 + (-deltaX - deltaY) / 50;
+            scaleFactor = 1 + (-deltaX - deltaY) / 150;
             break;
         }
         
