@@ -21,6 +21,7 @@ import AnimationEntrancePanel from './panels/AnimationEntrancePanel';
 interface HybridSidebarProps {
   onAddElement: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
   campaignConfig?: any;
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
@@ -32,6 +33,7 @@ interface HybridSidebarProps {
 const HybridSidebar: React.FC<HybridSidebarProps> = ({
   onAddElement,
   onBackgroundChange,
+  onExtractedColorsChange,
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
@@ -93,7 +95,12 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
       case 'assets':
         return <AssetsPanel onAddElement={onAddElement} />;
       case 'background':
-        return <BackgroundPanel onBackgroundChange={onBackgroundChange || (() => {})} />;
+        return (
+          <BackgroundPanel 
+            onBackgroundChange={onBackgroundChange || (() => {})} 
+            onExtractedColorsChange={onExtractedColorsChange}
+          />
+        );
       case 'layers':
         return <LayersPanel elements={elements} onElementsChange={onElementsChange || (() => {})} />;
       case 'animations':

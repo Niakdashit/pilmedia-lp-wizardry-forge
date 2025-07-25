@@ -1,11 +1,16 @@
 import React, { useRef } from 'react';
 import { Upload } from 'lucide-react';
+import ColorThief from 'colorthief';
 
 interface BackgroundPanelProps {
   onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
 }
 
-const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ onBackgroundChange }) => {
+const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
+  onBackgroundChange, 
+  onExtractedColorsChange 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const backgroundColors = [
@@ -26,13 +31,39 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ onBackgroundChange })
     'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
   ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const extractColorsFromImage = async (imageUrl: string) => {
+    return new Promise<string[]>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const colorThief = new ColorThief();
+          const palette = colorThief.getPalette(img, 6);
+          const colors = palette.map(rgb => `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
+          resolve(colors);
+        } catch (error) {
+          console.error('Error extracting colors:', error);
+          resolve([]);
+        }
+      };
+      img.onerror = () => resolve([]);
+      img.src = imageUrl;
+    });
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
         onBackgroundChange({ type: 'image', value: imageUrl });
+        
+        // Extract colors from the uploaded image
+        const extractedColors = await extractColorsFromImage(imageUrl);
+        if (onExtractedColorsChange && extractedColors.length > 0) {
+          onExtractedColorsChange(extractedColors);
+        }
       };
       reader.readAsDataURL(file);
     }

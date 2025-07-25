@@ -20,6 +20,7 @@ const DesignEditorLayout: React.FC = () => {
     trigger: 'onLoad',
     easing: 'easeOut'
   });
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
@@ -38,6 +39,7 @@ const DesignEditorLayout: React.FC = () => {
         background: canvasBackground,
         customElements: canvasElements,
         animationConfig: animationConfig,
+        extractedColors: extractedColors,
         textStyles: {
           title: { 
             color: titleElement?.style?.color || '#333333', 
@@ -110,6 +112,7 @@ const DesignEditorLayout: React.FC = () => {
             <HybridSidebar 
               onAddElement={(element) => setCanvasElements(prev => [...prev, element])}
               onBackgroundChange={setCanvasBackground}
+              onExtractedColorsChange={setExtractedColors}
               campaignConfig={campaignConfig}
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}

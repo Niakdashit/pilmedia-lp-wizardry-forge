@@ -43,19 +43,29 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     { id: '4', label: 'Dommage', color: '#feca57' }
   ];
 
-  // Convertir les segments au format SmartWheel
-  const smartWheelSegments = segments.map((segment: any, index: number) => ({
-    id: segment.id || index.toString(),
-    label: segment.label,
-    color: segment.color,
-    textColor: segment.textColor || '#ffffff'
-  }));
+  // Utiliser les couleurs extraites de l'image de fond si disponibles
+  const extractedColors = campaign.design?.extractedColors || [];
+  
+  // Convertir les segments au format SmartWheel avec couleurs extraites
+  const smartWheelSegments = segments.map((segment: any, index: number) => {
+    // Si on a des couleurs extraites, les utiliser cycliquement
+    const color = extractedColors.length > 0 
+      ? extractedColors[index % extractedColors.length]
+      : segment.color;
+    
+    return {
+      id: segment.id || index.toString(),
+      label: segment.label,
+      color: color,
+      textColor: segment.textColor || '#ffffff'
+    };
+  });
 
-  // Couleurs de marque depuis la campagne
+  // Couleurs de marque depuis la campagne avec couleurs extraites en priorité
   const brandColors = {
-    primary: campaign.design?.customColors?.primary || '#841b60',
-    secondary: campaign.design?.customColors?.secondary || '#4ecdc4',
-    accent: campaign.design?.customColors?.accent || '#45b7d1'
+    primary: extractedColors[0] || campaign.design?.customColors?.primary || '#841b60',
+    secondary: extractedColors[1] || campaign.design?.customColors?.secondary || '#4ecdc4',
+    accent: extractedColors[2] || campaign.design?.customColors?.accent || '#45b7d1'
   };
 
   const wheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
@@ -88,7 +98,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         borderStyle={borderStyle}
         customButton={{
           text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
-          color: campaign.buttonConfig?.color || brandColors.primary,
+          color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
           textColor: campaign.buttonConfig?.textColor || '#ffffff'
         }}
       />
