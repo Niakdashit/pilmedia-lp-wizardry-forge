@@ -67,12 +67,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      />
-      
       {/* Modal */}
       <div 
         className="bg-white rounded-lg shadow-xl z-50 border"
