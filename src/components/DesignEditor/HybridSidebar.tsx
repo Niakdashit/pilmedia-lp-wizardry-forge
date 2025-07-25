@@ -7,8 +7,7 @@ import {
   Settings,
   Gamepad2,
   Share,
-  Palette,
-  Grid3X3
+  Palette
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
@@ -35,69 +34,51 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
   onElementsChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeSection, setActiveSection] = useState('assets');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['assets']));
+  const [activeTab, setActiveTab] = useState<string | null>('assets');
 
-  const sections = [
+  const tabs = [
     { 
       id: 'assets', 
-      label: 'Éléments', 
-      icon: Plus, 
-      description: 'Textes, images, formes',
-      color: 'text-blue-600'
+      label: 'Elements', 
+      icon: Plus
     },
     { 
       id: 'background', 
-      label: 'Arrière-plan', 
-      icon: Palette, 
-      description: 'Couleurs, images, dégradés',
-      color: 'text-purple-600'
+      label: 'Design', 
+      icon: Palette
     },
     { 
       id: 'layers', 
-      label: 'Calques', 
-      icon: Layers, 
-      description: 'Organisation des éléments',
-      color: 'text-green-600'
+      label: 'Layers', 
+      icon: Layers
     },
     { 
       id: 'campaign', 
-      label: 'Campagne', 
-      icon: Settings, 
-      description: 'Configuration générale',
-      color: 'text-orange-600'
+      label: 'Settings', 
+      icon: Settings
     },
     { 
       id: 'gamelogic', 
-      label: 'Jeu', 
-      icon: Gamepad2, 
-      description: 'Mécaniques et règles',
-      color: 'text-red-600'
+      label: 'Game', 
+      icon: Gamepad2
     },
     { 
       id: 'export', 
       label: 'Export', 
-      icon: Share, 
-      description: 'Publication et partage',
-      color: 'text-indigo-600'
+      icon: Share
     }
   ];
 
-  const toggleSection = (sectionId: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(sectionId)) {
-      newExpanded.delete(sectionId);
+  const handleTabClick = (tabId: string) => {
+    if (activeTab === tabId) {
+      setActiveTab(null); // Close if clicking on active tab
     } else {
-      newExpanded.add(sectionId);
+      setActiveTab(tabId);
     }
-    setExpandedSections(newExpanded);
-    setActiveSection(sectionId);
   };
 
-  const renderPanel = (sectionId: string) => {
-    if (!expandedSections.has(sectionId)) return null;
-    
-    switch (sectionId) {
+  const renderPanel = (tabId: string) => {
+    switch (tabId) {
       case 'assets':
         return <AssetsPanel onAddElement={onAddElement} />;
       case 'background':
@@ -134,22 +115,21 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
         
         {/* Collapsed Icons */}
         <div className="flex flex-col space-y-2 p-2">
-          {sections.map((section) => {
-            const Icon = section.icon;
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
             return (
               <button
-                key={section.id}
+                key={tab.id}
                 onClick={() => {
                   setIsCollapsed(false);
-                  setActiveSection(section.id);
-                  setExpandedSections(new Set([section.id]));
+                  setActiveTab(tab.id);
                 }}
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                  activeSection === section.id
+                  activeTab === tab.id
                     ? 'bg-blue-100 text-blue-600'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
-                title={section.label}
+                title={tab.label}
               >
                 <Icon className="w-5 h-5" />
               </button>
@@ -161,66 +141,59 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
   }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="font-semibold text-gray-800">Design & Paramètres</h2>
+    <div className="flex h-full">
+      {/* Vertical Tab Sidebar */}
+      <div className="w-20 bg-gray-100 border-r border-gray-200 flex flex-col">
+        {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-3 hover:bg-gray-200 border-b border-gray-200"
           title="Réduire la sidebar"
         >
           <ChevronLeft className="w-5 h-5 text-gray-600" />
         </button>
-      </div>
-
-      {/* Accordion Sections */}
-      <div className="flex-1 overflow-y-auto">
-        {sections.map((section) => {
-          const Icon = section.icon;
-          const isExpanded = expandedSections.has(section.id);
-          
-          return (
-            <div key={section.id} className="border-b border-gray-100">
-              {/* Section Header */}
+        
+        {/* Vertical Tabs */}
+        <div className="flex flex-col flex-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            
+            return (
               <button
-                onClick={() => toggleSection(section.id)}
-                className={`w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${
-                  isExpanded ? 'bg-gray-50' : ''
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                className={`p-4 flex flex-col items-center justify-center border-b border-gray-200 transition-colors ${
+                  isActive 
+                    ? 'bg-white text-blue-600 border-r-2 border-r-blue-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
+                title={tab.label}
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className={`w-5 h-5 ${section.color}`} />
-                  <div className="text-left">
-                    <div className="font-medium text-gray-800">{section.label}</div>
-                    <div className="text-xs text-gray-500">{section.description}</div>
-                  </div>
-                </div>
-                <ChevronRight 
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
-                    isExpanded ? 'rotate-90' : ''
-                  }`} 
-                />
+                <Icon className="w-6 h-6 mb-1" />
+                <span className="text-xs font-medium">{tab.label}</span>
               </button>
-
-              {/* Section Content */}
-              {isExpanded && (
-                <div className="border-t border-gray-100 animate-accordion-down">
-                  {renderPanel(section.id)}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <Grid3X3 className="w-4 h-4" />
-          <span>Mode Design Avancé</span>
+            );
+          })}
         </div>
       </div>
+
+      {/* Panel Content */}
+      {activeTab && (
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+          {/* Panel Header */}
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="font-semibold text-gray-800">
+              {tabs.find(tab => tab.id === activeTab)?.label}
+            </h2>
+          </div>
+
+          {/* Panel Content */}
+          <div className="flex-1 overflow-y-auto">
+            {renderPanel(activeTab)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
