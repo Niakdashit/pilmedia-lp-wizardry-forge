@@ -142,7 +142,8 @@ export const createMetallicGradient = (
   );
   
   colors.forEach((color, index) => {
-    gradient.addColorStop(index / (colors.length - 1), color);
+    const position = colors.length === 1 ? 0 : index / (colors.length - 1);
+    gradient.addColorStop(position, color);
   });
   
   return gradient;
