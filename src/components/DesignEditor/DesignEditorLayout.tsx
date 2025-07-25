@@ -66,19 +66,28 @@ const DesignEditorLayout: React.FC = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
-      {/* Top Toolbar */}
-      <DesignToolbar 
-        selectedDevice={selectedDevice}
-        onDeviceChange={setSelectedDevice}
-        onPreviewToggle={() => setShowFunnel(!showFunnel)}
-        isPreviewMode={showFunnel}
-      />
+      {/* Top Toolbar - Hidden in preview mode */}
+      {!showFunnel && (
+        <DesignToolbar 
+          selectedDevice={selectedDevice}
+          onDeviceChange={setSelectedDevice}
+          onPreviewToggle={() => setShowFunnel(!showFunnel)}
+          isPreviewMode={showFunnel}
+        />
+      )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="flex-1 flex items-center justify-center bg-gray-100">
+          <div className="flex-1 flex items-center justify-center bg-gray-100 group">
+            {/* Floating Edit Mode Button */}
+            <button
+              onClick={() => setShowFunnel(false)}
+              className="absolute top-4 right-4 z-50 px-4 py-2 bg-[#841b60] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
+            >
+              Mode édition
+            </button>
             <FunnelUnlockedGame
               campaign={generateCampaignFromCanvas()}
               previewMode={selectedDevice}
