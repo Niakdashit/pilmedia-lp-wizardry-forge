@@ -148,8 +148,12 @@ export const useSmartWheelRenderer = ({
   const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
 
-    // Utiliser la couleur personnalisée si fournie, sinon utiliser la couleur du style
+    // Utiliser la couleur personnalisée seulement si c'est un style "classique" ou si explicitement demandé
     const getBorderColor = (index: number = 0) => {
+      // Pour les styles prédéfinis avec leurs propres couleurs, ne pas utiliser customBorderColor
+      if (borderStyleName !== 'classic' && borderStyleConfig.colors.length > 1) {
+        return borderStyleConfig.colors[index];
+      }
       return customBorderColor || borderStyleConfig.colors[index];
     };
 
@@ -170,7 +174,9 @@ export const useSmartWheelRenderer = ({
 
       case 'metallic':
       case 'luxury':
-        const colors = customBorderColor ? [customBorderColor] : borderStyleConfig.colors;
+        const colors = (borderStyleName !== 'classic' && borderStyleConfig.colors.length > 1) 
+          ? borderStyleConfig.colors 
+          : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
         const metallicGradient = createMetallicGradient(ctx, colors, centerX, centerY, radius);
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
@@ -215,7 +221,9 @@ export const useSmartWheelRenderer = ({
             centerX - radius, centerY - radius,
             centerX + radius, centerY + radius
           );
-          const gradientColors = customBorderColor ? [customBorderColor] : borderStyleConfig.colors;
+          const gradientColors = (borderStyleName !== 'classic' && borderStyleConfig.colors.length > 1) 
+            ? borderStyleConfig.colors 
+            : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
           gradientColors.forEach((color, index) => {
             const position = gradientColors.length === 1 ? 0 : index / (gradientColors.length - 1);
             gradient.addColorStop(position, color);
