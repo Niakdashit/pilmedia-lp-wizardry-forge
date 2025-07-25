@@ -61,8 +61,8 @@ export const useSmartWheelRenderer = ({
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const maxRadius = (size / 2) - 20;
-    const borderRadius = maxRadius + 10;
+    const maxRadius = (size / 2) - 15; // Réduire la marge pour des bordures proportionnelles
+    const borderRadius = maxRadius + 5; // Bordure plus proche
 
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
@@ -135,9 +135,9 @@ export const useSmartWheelRenderer = ({
       
       ctx.fill();
 
-      // Bordure fine entre segments
+      // Bordure fine entre segments proportionnelle
       ctx.strokeStyle = theme.colors.background;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = Math.max(1, size * 0.003); // Largeur proportionnelle
       ctx.stroke();
 
       // Dessiner le texte
@@ -287,7 +287,7 @@ export const useSmartWheelRenderer = ({
   };
 
   const drawCenter = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, theme: WheelTheme) => {
-    const centerRadius = size * 0.08;
+    const centerRadius = size * 0.06; // Centre plus proportionnel
     ctx.beginPath();
     ctx.arc(centerX, centerY, centerRadius, 0, 2 * Math.PI);
     
@@ -316,9 +316,9 @@ export const useSmartWheelRenderer = ({
     const pointerDistance = radius - 5; // Plus proche des segments
     ctx.translate(centerX, centerY - pointerDistance);
     
-    // Taille augmentée du pointeur
-    const pointerWidth = size * 0.04; // Largeur proportionnelle à la taille de la roue
-    const pointerHeight = size * 0.08; // Hauteur proportionnelle à la taille de la roue
+    // Taille proportionnelle du pointeur
+    const pointerWidth = size * 0.025; // Largeur proportionnelle réduite
+    const pointerHeight = size * 0.045; // Hauteur proportionnelle réduite
     
     // Dessiner l'ombre du pointeur
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
