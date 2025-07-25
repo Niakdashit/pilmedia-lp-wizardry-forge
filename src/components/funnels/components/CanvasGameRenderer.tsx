@@ -130,7 +130,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           width: '100%',
           height: '100vh',
           aspectRatio: '16/9',
-          maxHeight: 'calc(100vh - 80px)', // Déduire la hauteur de la toolbar
         } : {
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
