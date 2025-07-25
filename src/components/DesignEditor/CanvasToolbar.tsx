@@ -45,7 +45,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
       <div className="h-6 w-px bg-gray-600 mx-2" />
 
       {/* Font Size */}
-      <button className="text-white hover:bg-gray-700 p-1 rounded">−</button>
+      <button 
+        onClick={() => onElementUpdate({ fontSize: Math.max(8, (selectedElement.fontSize || 16) - 2) })}
+        className="text-white hover:bg-gray-700 p-1 rounded"
+      >
+        −
+      </button>
       <select 
         value={selectedElement.fontSize || 16}
         onChange={(e) => onElementUpdate({ fontSize: parseInt(e.target.value) })}
@@ -55,7 +60,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           <option key={size} value={size}>{size}</option>
         ))}
       </select>
-      <button className="text-white hover:bg-gray-700 p-1 rounded">+</button>
+      <button 
+        onClick={() => onElementUpdate({ fontSize: Math.min(96, (selectedElement.fontSize || 16) + 2) })}
+        className="text-white hover:bg-gray-700 p-1 rounded"
+      >
+        +
+      </button>
 
       <div className="h-6 w-px bg-gray-600 mx-2" />
 
