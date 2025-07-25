@@ -217,7 +217,8 @@ export const useSmartWheelRenderer = ({
           );
           const gradientColors = customBorderColor ? [customBorderColor] : borderStyleConfig.colors;
           gradientColors.forEach((color, index) => {
-            gradient.addColorStop(index / (gradientColors.length - 1), color);
+            const position = gradientColors.length === 1 ? 0 : index / (gradientColors.length - 1);
+            gradient.addColorStop(position, color);
           });
           
           ctx.beginPath();
