@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
+import CanvasToolbar from './CanvasToolbar';
 
 interface DesignCanvasProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -19,7 +20,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const getCanvasSize = () => {
     switch (selectedDevice) {
       case 'desktop':
-        return { width: 1200, height: 800 };
+        return { width: 1920, height: 1080 }; // 16:9 ratio
       case 'tablet':
         return { width: 768, height: 1024 };
       case 'mobile':
@@ -44,16 +45,26 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   };
 
+  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+        {/* Canvas Toolbar */}
+        <div className="flex justify-center mb-4">
+          <CanvasToolbar 
+            selectedElement={selectedElementData}
+            onElementUpdate={(updates) => selectedElement && handleElementUpdate(selectedElement, updates)}
+          />
+        </div>
+        
         <div className="flex justify-center">
           <div 
             className="relative bg-white shadow-lg rounded-lg overflow-hidden"
             style={{
               width: canvasSize.width,
               height: canvasSize.height,
-              transform: selectedDevice === 'desktop' ? 'scale(0.7)' : 'scale(1)',
+              transform: selectedDevice === 'desktop' ? 'scale(0.5)' : selectedDevice === 'tablet' ? 'scale(0.8)' : 'scale(1)',
               transformOrigin: 'top center'
             }}
           >
