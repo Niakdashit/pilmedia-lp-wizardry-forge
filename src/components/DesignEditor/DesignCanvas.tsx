@@ -102,12 +102,20 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           </div>}
         
         <div className="flex justify-center">
-          <div className="relative bg-white shadow-lg rounded-lg overflow-hidden" style={{
-          width: `${canvasSize.width}px`,
-          height: `${canvasSize.height}px`,
-          transform: selectedDevice === 'desktop' ? 'scale(0.8)' : selectedDevice === 'tablet' ? 'scale(0.9)' : 'scale(1)',
-          transformOrigin: 'top center'
-        }}>
+          <div 
+            className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+            style={{
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              transform: selectedDevice === 'desktop' ? 'scale(0.8)' : selectedDevice === 'tablet' ? 'scale(0.9)' : 'scale(1)',
+              transformOrigin: 'top center'
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedElement(null);
+              }
+            }}
+          >
             {/* Canvas Background */}
             <div className="absolute inset-0" style={{
             background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
