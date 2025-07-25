@@ -98,7 +98,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       let newFontSize = startFontSize;
 
       if (isCornerHandle && element.type === 'text') {
-        // For corner handles on text: maintain proportions and scale font size
+        // For corner handles on text: only scale font size, keep text box tight
         let scaleFactor = 1;
         
         switch (direction) {
@@ -107,28 +107,19 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             break;
           case 'sw': // bottom-left
             scaleFactor = Math.max(0.1, 1 + Math.max(-deltaX, deltaY) / Math.max(startWidth, startHeight));
-            newX = startPosX - (scaleFactor - 1) * startWidth;
             break;
           case 'ne': // top-right
             scaleFactor = Math.max(0.1, 1 + Math.max(deltaX, -deltaY) / Math.max(startWidth, startHeight));
-            newY = startPosY - (scaleFactor - 1) * startHeight;
             break;
           case 'nw': // top-left
             scaleFactor = Math.max(0.1, 1 + Math.max(-deltaX, -deltaY) / Math.max(startWidth, startHeight));
-            newX = startPosX - (scaleFactor - 1) * startWidth;
-            newY = startPosY - (scaleFactor - 1) * startHeight;
             break;
         }
         
-        newWidth = Math.max(20, startWidth * scaleFactor);
-        newHeight = Math.max(20, startHeight * scaleFactor);
         newFontSize = Math.max(8, startFontSize * scaleFactor);
         
+        // Keep text box dimensions tight to content (don't scale the container)
         onUpdate({
-          width: newWidth,
-          height: newHeight,
-          x: newX,
-          y: newY,
           fontSize: newFontSize,
         });
       } else {
@@ -297,43 +288,51 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       
       {/* Selection handles */}
       {isSelected && (
-        <>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 
-            className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize" 
+            className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize shadow-lg" 
             onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
+            style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize" 
+            className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize shadow-lg" 
             onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
+            style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize" 
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize shadow-lg" 
             onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
+            style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize" 
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize shadow-lg" 
             onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+            style={{ zIndex: 1001 }}
           />
           
           {/* Edge handles - for stretching shape only */}
           {element.type === 'text' && (
             <>
               <div 
-                className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-n-resize" 
+                className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-n-resize shadow-lg" 
                 onMouseDown={(e) => handleResizeMouseDown(e, 'n')}
+                style={{ zIndex: 1001 }}
               />
               <div 
-                className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-s-resize" 
+                className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-s-resize shadow-lg" 
                 onMouseDown={(e) => handleResizeMouseDown(e, 's')}
+                style={{ zIndex: 1001 }}
               />
               <div 
-                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-w-resize" 
+                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-w-resize shadow-lg" 
                 onMouseDown={(e) => handleResizeMouseDown(e, 'w')}
+                style={{ zIndex: 1001 }}
               />
               <div 
-                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-e-resize" 
+                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-e-resize shadow-lg" 
                 onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+                style={{ zIndex: 1001 }}
               />
             </>
           )}
@@ -341,11 +340,12 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           {/* Delete button */}
           <button
             onClick={onDelete}
-            className="absolute -top-8 -right-8 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600"
+            className="absolute -top-8 -right-8 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 shadow-lg"
+            style={{ zIndex: 1001 }}
           >
             ×
           </button>
-        </>
+        </div>
       )}
     </div>
   );
