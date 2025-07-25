@@ -5,29 +5,22 @@ import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 
 const DesignEditorLayout: React.FC = () => {
-  // Détection automatique de l'appareil
-  const detectDevice = () => {
-    if (typeof window !== 'undefined') {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isTablet = /ipad|android(?!.*mobile)|tablet/.test(userAgent) || 
-                      (window.innerWidth >= 768 && window.innerWidth <= 1024);
-      const isMobile = window.innerWidth < 768 && !/ipad|tablet/.test(userAgent);
-      
-      if (isTablet) return 'tablet';
-      if (isMobile) return 'mobile';
-      return 'desktop';
-    }
-    return 'mobile';
-  };
-
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
-  const [extractedColors, setExtractedColors] = useState<{ primary: string; secondary: string; accent: string } | null>(null);
   const [campaignConfig, setCampaignConfig] = useState<any>({});
+  const [animationConfig, setAnimationConfig] = useState<any>({
+    type: 'fadeIn',
+    direction: 'none',
+    duration: 800,
+    delay: 0,
+    trigger: 'onLoad',
+    easing: 'easeOut'
+  });
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
@@ -45,7 +38,8 @@ const DesignEditorLayout: React.FC = () => {
         borderRadius: campaignConfig.borderRadius || '8px',
         background: canvasBackground,
         customElements: canvasElements,
-        extractedColors, // Ajouter les couleurs extraites
+        animationConfig: animationConfig,
+        extractedColors: extractedColors,
         textStyles: {
           title: { 
             color: titleElement?.style?.color || '#333333', 
@@ -76,14 +70,10 @@ const DesignEditorLayout: React.FC = () => {
       canvasConfig: {
         elements: canvasElements,
         background: canvasBackground,
-        device: selectedDevice
+        device: selectedDevice,
+        animations: animationConfig
       }
     };
-  };
-
-  const handleColorsExtracted = (colors: { primary: string; secondary: string; accent: string }) => {
-    console.log('🎨 Couleurs extraites reçues dans DesignEditorLayout:', colors);
-    setExtractedColors(colors);
   };
 
   return (
@@ -113,7 +103,6 @@ const DesignEditorLayout: React.FC = () => {
             <FunnelUnlockedGame
               campaign={generateCampaignFromCanvas()}
               previewMode={selectedDevice}
-              extractedColors={extractedColors || undefined}
             />
           </div>
         ) : (
@@ -123,11 +112,13 @@ const DesignEditorLayout: React.FC = () => {
             <HybridSidebar 
               onAddElement={(element) => setCanvasElements(prev => [...prev, element])}
               onBackgroundChange={setCanvasBackground}
-              onColorsExtracted={handleColorsExtracted}
+              onExtractedColorsChange={setExtractedColors}
               campaignConfig={campaignConfig}
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
+              animationConfig={animationConfig}
+              onAnimationConfigChange={setAnimationConfig}
             />
             
             {/* Main Canvas Area */}
@@ -136,7 +127,6 @@ const DesignEditorLayout: React.FC = () => {
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-              extractedColors={extractedColors}
             />
           </>
         )}

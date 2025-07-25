@@ -4,10 +4,13 @@ import ColorThief from 'colorthief';
 
 interface BackgroundPanelProps {
   onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
-  onColorsExtracted?: (colors: { primary: string; secondary: string; accent: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
 }
 
-const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ onBackgroundChange, onColorsExtracted }) => {
+const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
+  onBackgroundChange, 
+  onExtractedColorsChange 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const backgroundColors = [
@@ -29,53 +32,23 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ onBackgroundChange, o
   ];
 
   const extractColorsFromImage = async (imageUrl: string) => {
-    try {
-      console.log('🎨 Début d\'extraction des couleurs depuis l\'image:', imageUrl);
-      
+    return new Promise<string[]>((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      
-      return new Promise((resolve, reject) => {
-        img.onload = () => {
-          try {
-            const colorThief = new ColorThief();
-            
-            const dominantColor = colorThief.getColor(img);
-            const palette = colorThief.getPalette(img, 3);
-            
-            console.log('🎯 Couleur dominante extraite:', dominantColor);
-            console.log('🎨 Palette extraite:', palette);
-            
-            const rgbToHex = (r: number, g: number, b: number) => 
-              "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-            
-            const extractedColors = {
-              primary: rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2]),
-              secondary: palette[1] ? rgbToHex(palette[1][0], palette[1][1], palette[1][2]) : rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2]),
-              accent: palette[2] ? rgbToHex(palette[2][0], palette[2][1], palette[2][2]) : rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2])
-            };
-            
-            console.log('✅ Couleurs extraites avec succès:', extractedColors);
-            resolve(extractedColors);
-            
-          } catch (error) {
-            console.error('❌ Erreur lors de l\'extraction des couleurs:', error);
-            reject(error);
-          }
-        };
-        
-        img.onerror = () => {
-          console.error('❌ Erreur lors du chargement de l\'image pour extraction de couleurs');
-          reject(new Error('Impossible de charger l\'image'));
-        };
-        
-        img.src = imageUrl;
-      });
-      
-    } catch (error) {
-      console.error('❌ Erreur générale extraction couleurs:', error);
-      throw error;
-    }
+      img.onload = () => {
+        try {
+          const colorThief = new ColorThief();
+          const palette = colorThief.getPalette(img, 6);
+          const colors = palette.map(rgb => `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
+          resolve(colors);
+        } catch (error) {
+          console.error('Error extracting colors:', error);
+          resolve([]);
+        }
+      };
+      img.onerror = () => resolve([]);
+      img.src = imageUrl;
+    });
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,17 +59,10 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ onBackgroundChange, o
         const imageUrl = e.target?.result as string;
         onBackgroundChange({ type: 'image', value: imageUrl });
         
-        // Extraire les couleurs automatiquement
-        try {
-          console.log('🚀 Début d\'extraction automatique des couleurs...');
-          const extractedColors = await extractColorsFromImage(imageUrl) as any;
-          console.log('🎨 Application des couleurs extraites:', extractedColors);
-          
-          if (onColorsExtracted) {
-            onColorsExtracted(extractedColors);
-          }
-        } catch (colorError) {
-          console.warn('⚠️ Impossible d\'extraire les couleurs:', colorError);
+        // Extract colors from the uploaded image
+        const extractedColors = await extractColorsFromImage(imageUrl);
+        if (onExtractedColorsChange && extractedColors.length > 0) {
+          onExtractedColorsChange(extractedColors);
         }
       };
       reader.readAsDataURL(file);

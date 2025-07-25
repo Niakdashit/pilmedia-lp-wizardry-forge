@@ -21,9 +21,7 @@ const wheelDecorByTheme: Record<string, string> = {
 
 const WheelDecorations: React.FC<WheelDecorationsProps> = ({
   theme,
-  canvasSize,
-  shouldCropWheel,
-  gamePosition
+  canvasSize
 }) => {
   if (theme === 'default' || !wheelDecorByTheme[theme]) {
     return null;
@@ -35,7 +33,7 @@ const WheelDecorations: React.FC<WheelDecorationsProps> = ({
       alt={`Décor roue ${theme}`}
       style={{
         position: 'absolute',
-        left: shouldCropWheel ? (gamePosition === 'left' ? '0px' : `-${canvasSize * 0.5}px`) : '0px',
+        left: '0px',
         top: 0,
         width: canvasSize,
         height: canvasSize,

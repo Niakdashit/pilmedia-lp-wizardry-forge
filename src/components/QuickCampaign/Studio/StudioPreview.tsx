@@ -13,11 +13,6 @@ interface StudioPreviewProps {
   };
   logoUrl?: string;
   backgroundUrl?: string;
-  extractedColors?: {
-    primary: string;
-    secondary: string;
-    accent: string;
-  };
   onBack: () => void;
 }
 
@@ -25,7 +20,6 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
   campaignData,
   logoUrl,
   backgroundUrl,
-  extractedColors,
   onBack
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
@@ -127,9 +121,9 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         centerLogo: logoUrl || null,
         brandAssets: {
           logo: logoUrl,
-          primaryColor: extractedColors?.primary || campaignData.design?.primaryColor,
-          secondaryColor: extractedColors?.secondary || campaignData.design?.secondaryColor,
-          accentColor: extractedColors?.accent || campaignData.design?.accentColor
+          primaryColor: campaignData.design?.primaryColor,
+          secondaryColor: campaignData.design?.secondaryColor,
+          accentColor: campaignData.design?.accentColor
         },
         designColors: {
           primary: campaignData.design?.primaryColor,
@@ -306,9 +300,9 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
               {/* Zone de jeu interactive */}
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 mb-8 border border-white/20">
                 <InteractiveWheel
-                  primaryColor={extractedColors?.primary || campaignData.design?.primaryColor || '#006799'}
-                  secondaryColor={extractedColors?.secondary || campaignData.design?.secondaryColor || '#5bbad5'}
-                  accentColor={extractedColors?.accent || campaignData.design?.accentColor || '#ffffff'}
+                  primaryColor={campaignData.design?.primaryColor || '#006799'}
+                  secondaryColor={campaignData.design?.secondaryColor || '#5bbad5'}
+                  accentColor={campaignData.design?.accentColor || '#ffffff'}
                   onSpin={() => console.log('Roue tournée!')}
                 />
               </div>
@@ -318,10 +312,10 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                 href="#"
                 className={`${textSizes.cta} font-bold px-8 md:px-12 py-4 md:py-6 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200 inline-block text-center cursor-pointer`}
                 style={{
-                  backgroundColor: extractedColors?.primary || campaignData.design?.primaryColor || '#006799',
-                  color: extractedColors?.accent || campaignData.design?.accentColor || '#ffffff',
-                  border: `3px solid ${extractedColors?.accent || campaignData.design?.accentColor || '#ffffff'}`,
-                  boxShadow: `0 8px 32px ${extractedColors?.primary || campaignData.design?.primaryColor || '#006799'}40`,
+                  backgroundColor: campaignData.design?.primaryColor || '#006799',
+                  color: campaignData.design?.accentColor || '#ffffff',
+                  border: `3px solid ${campaignData.design?.accentColor || '#ffffff'}`,
+                  boxShadow: `0 8px 32px ${campaignData.design?.primaryColor || '#006799'}40`,
                   textDecoration: 'none'
                 }}
               >
@@ -379,23 +373,23 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
               <div className="flex items-center gap-2">
                 <div 
                   className="w-4 h-4 rounded"
-                  style={{ backgroundColor: extractedColors?.primary || campaignData.design?.primaryColor || '#841b60' }}
+                  style={{ backgroundColor: campaignData.design?.primaryColor || '#841b60' }}
                 />
-                <span className="text-sm">Primaire {extractedColors ? '(extraite)' : ''}</span>
+                <span className="text-sm">Primaire</span>
               </div>
               <div className="flex items-center gap-2">
                 <div 
                   className="w-4 h-4 rounded"
-                  style={{ backgroundColor: extractedColors?.secondary || campaignData.design?.secondaryColor || '#dc2626' }}
+                  style={{ backgroundColor: campaignData.design?.secondaryColor || '#dc2626' }}
                 />
-                <span className="text-sm">Secondaire {extractedColors ? '(extraite)' : ''}</span>
+                <span className="text-sm">Secondaire</span>
               </div>
               <div className="flex items-center gap-2">
                 <div 
                   className="w-4 h-4 rounded"
-                  style={{ backgroundColor: extractedColors?.accent || campaignData.design?.accentColor || '#ffffff' }}
+                  style={{ backgroundColor: campaignData.design?.accentColor || '#ffffff' }}
                 />
-                <span className="text-sm">Accent {extractedColors ? '(extraite)' : ''}</span>
+                <span className="text-sm">Accent</span>
               </div>
             </div>
           </CardContent>
