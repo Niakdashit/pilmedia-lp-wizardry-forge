@@ -5,7 +5,8 @@ import { SmartWheel } from '../SmartWheel';
 interface CanvasElementProps {
   element: any;
   isSelected: boolean;
-  onSelect: () => void;
+  isMultiSelected?: boolean;
+  onSelect: (isCtrlPressed?: boolean) => void;
   onUpdate: (updates: any) => void;
   onDelete: () => void;
 }
@@ -13,6 +14,7 @@ interface CanvasElementProps {
 const CanvasElement: React.FC<CanvasElementProps> = ({
   element,
   isSelected,
+  isMultiSelected = false,
   onSelect,
   onUpdate,
   onDelete
@@ -31,7 +33,12 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    onSelect();
+    e.stopPropagation();
+    
+    // Don't allow interaction with locked elements
+    if (element.locked) return;
+    
+    onSelect(e.ctrlKey || e.metaKey);
 
     const startX = e.clientX - element.x;
     const startY = e.clientY - element.y;
@@ -216,11 +223,17 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
   return (
     <div
       ref={drag}
-      className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`absolute ${
+        isSelected 
+          ? isMultiSelected 
+            ? 'ring-2 ring-orange-500' 
+            : 'ring-2 ring-blue-500' 
+          : ''
+      } ${element.locked ? 'cursor-not-allowed opacity-75' : ''}`}
       style={{
         left: element.x || 0,
         top: element.y || 0,
-        opacity,
+        opacity: element.visible === false ? 0.3 : opacity,
         zIndex: element.zIndex || 1,
       }}
       onMouseDown={handleMouseDown}
@@ -229,32 +242,42 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       {renderElement()}
       
       {/* Selection handles */}
-      {isSelected && (
+      {isSelected && !element.locked && (
         <>
           <div 
-            className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize" 
+            className={`absolute -top-1 -left-1 w-3 h-3 border border-white rounded-full cursor-nw-resize ${
+              isMultiSelected ? 'bg-orange-500' : 'bg-blue-500'
+            }`}
             onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
           />
           <div 
-            className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize" 
+            className={`absolute -top-1 -right-1 w-3 h-3 border border-white rounded-full cursor-ne-resize ${
+              isMultiSelected ? 'bg-orange-500' : 'bg-blue-500'
+            }`}
             onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
           />
           <div 
-            className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize" 
+            className={`absolute -bottom-1 -left-1 w-3 h-3 border border-white rounded-full cursor-sw-resize ${
+              isMultiSelected ? 'bg-orange-500' : 'bg-blue-500'
+            }`}
             onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
           />
           <div 
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize" 
+            className={`absolute -bottom-1 -right-1 w-3 h-3 border border-white rounded-full cursor-se-resize ${
+              isMultiSelected ? 'bg-orange-500' : 'bg-blue-500'
+            }`}
             onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
           />
           
-          {/* Delete button */}
-          <button
-            onClick={onDelete}
-            className="absolute -top-8 -right-8 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600"
-          >
-            ×
-          </button>
+          {/* Delete button - only show for single selection */}
+          {!isMultiSelected && (
+            <button
+              onClick={onDelete}
+              className="absolute -top-8 -right-8 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600"
+            >
+              ×
+            </button>
+          )}
         </>
       )}
     </div>

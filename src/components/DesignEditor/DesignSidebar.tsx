@@ -1,98 +1,137 @@
-import React from 'react';
-import { 
-  Palette, 
-  Type, 
-  Shapes, 
-  Upload, 
-  Wrench, 
-  FolderOpen,
-  Grid3X3,
-  Star,
-  Image
-} from 'lucide-react';
-import DesignPanel from './panels/DesignPanel';
+import React, { useState } from 'react';
+import { Layers, Upload, Type, Square, Palette, Image, Move3D, Undo, Redo } from 'lucide-react';
 import ElementsPanel from './panels/ElementsPanel';
-import TextPanel from './panels/TextPanel';
-import BrandPanel from './panels/BrandPanel';
 import UploadsPanel from './panels/UploadsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
+import LayersPanel from './components/LayersPanel';
+import AlignmentTools from './components/AlignmentTools';
 
 interface DesignSidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  onAddElement: (element: any) => void;
-  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  selectedDevice: 'desktop' | 'tablet' | 'mobile';
+  elements: any[];
+  onElementsChange: (elements: any[]) => void;
+  background?: {
+    type: 'color' | 'image';
+    value: string;
+  };
+  onBackgroundChange: (background: any) => void;
+  selectedElements: string[];
+  onElementSelect: (id: string, isCtrlPressed?: boolean) => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  canvasSize: { width: number; height: number };
 }
 
 const DesignSidebar: React.FC<DesignSidebarProps> = ({
-  activeTab,
-  onTabChange,
-  onAddElement,
-  onBackgroundChange
+  selectedDevice,
+  elements,
+  onElementsChange,
+  background,
+  onBackgroundChange,
+  selectedElements,
+  onElementSelect,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+  canvasSize
 }) => {
+  const [activeTab, setActiveTab] = useState('elements');
+
   const tabs = [
-    { id: 'design', label: 'Design', icon: Palette },
-    { id: 'background', label: 'Arrière-plan', icon: Image },
-    { id: 'elements', label: 'Éléments', icon: Shapes },
-    { id: 'text', label: 'Texte', icon: Type },
-    { id: 'brand', label: 'Marque', icon: Star },
+    { id: 'elements', label: 'Éléments', icon: Square },
     { id: 'uploads', label: 'Uploads', icon: Upload },
-    { id: 'tools', label: 'Outils', icon: Wrench },
-    { id: 'projects', label: 'Projets', icon: FolderOpen },
-    { id: 'apps', label: 'Apps', icon: Grid3X3 },
+    { id: 'text', label: 'Texte', icon: Type },
+    { id: 'images', label: 'Images', icon: Image },
+    { id: 'background', label: 'Arrière-plan', icon: Palette },
+    { id: 'layers', label: 'Calques', icon: Layers },
+    { id: 'alignment', label: 'Alignement', icon: Move3D }
   ];
 
-  const renderPanel = () => {
-    switch (activeTab) {
-      case 'design':
-        return <DesignPanel onAddElement={onAddElement} />;
-      case 'background':
-        return <BackgroundPanel onBackgroundChange={onBackgroundChange || (() => {})} />;
-      case 'elements':
-        return <ElementsPanel onAddElement={onAddElement} />;
-      case 'text':
-        return <TextPanel onAddElement={onAddElement} />;
-      case 'brand':
-        return <BrandPanel onAddElement={onAddElement} />;
-      case 'uploads':
-        return <UploadsPanel onAddElement={onAddElement} />;
-      default:
-        return <div className="p-4 text-gray-500">Panel à venir...</div>;
-    }
-  };
-
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex">
-      {/* Tab Navigation */}
-      <div className="w-16 bg-gray-50 border-r border-gray-200 flex flex-col items-center py-4 space-y-2">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
-              }`}
-              title={tab.label}
-            >
-              <Icon className="w-5 h-5" />
-            </button>
-          );
-        })}
+    <div className="w-80 bg-background border-r border-border flex flex-col h-full">
+      {/* History controls */}
+      <div className="p-3 border-b bg-muted/30">
+        <div className="flex gap-2">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className={`flex-1 p-2 rounded flex items-center justify-center gap-2 text-xs ${
+              canUndo 
+                ? 'bg-background hover:bg-muted text-foreground' 
+                : 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+            }`}
+          >
+            <Undo className="w-3 h-3" />
+            Annuler
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className={`flex-1 p-2 rounded flex items-center justify-center gap-2 text-xs ${
+              canRedo 
+                ? 'bg-background hover:bg-muted text-foreground' 
+                : 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+            }`}
+          >
+            <Redo className="w-3 h-3" />
+            Rétablir
+          </button>
+        </div>
       </div>
 
-      {/* Panel Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="font-semibold text-gray-800">
-            {tabs.find(tab => tab.id === activeTab)?.label}
-          </h2>
+      <div className="border-t">
+        {/* Tab buttons */}
+        <div className="grid grid-cols-4 border-b">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`p-3 flex flex-col items-center gap-1 text-xs border-r last:border-r-0 ${
+                activeTab === tab.id
+                  ? 'bg-primary/10 text-primary border-b-2 border-primary'
+                  : 'hover:bg-muted/50 text-muted-foreground'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          ))}
         </div>
+
+        {/* Panel content */}
         <div className="flex-1 overflow-y-auto">
-          {renderPanel()}
+          {activeTab === 'elements' && (
+            <ElementsPanel 
+              onAddElement={(element) => onElementsChange([...elements, element])}
+            />
+          )}
+          {activeTab === 'uploads' && <UploadsPanel onElementsChange={onElementsChange} elements={elements} />}
+          {activeTab === 'text' && <div className="p-4">Panel Texte</div>}
+          {activeTab === 'images' && <div className="p-4">Panel Images</div>}
+          {activeTab === 'background' && (
+            <BackgroundPanel 
+              onBackgroundChange={onBackgroundChange}
+            />
+          )}
+          {activeTab === 'layers' && (
+            <LayersPanel
+              elements={elements}
+              selectedElements={selectedElements}
+              onElementsChange={onElementsChange}
+              onElementSelect={onElementSelect}
+            />
+          )}
+          {activeTab === 'alignment' && (
+            <AlignmentTools
+              selectedElements={selectedElements}
+              elements={elements}
+              onElementsChange={onElementsChange}
+              canvasSize={canvasSize}
+            />
+          )}
         </div>
       </div>
     </div>

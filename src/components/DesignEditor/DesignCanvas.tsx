@@ -11,12 +11,18 @@ interface DesignCanvasProps {
     type: 'color' | 'image';
     value: string;
   };
+  selectedElements: string[];
+  onElementSelect: (id: string, isCtrlPressed?: boolean) => void;
+  onCanvasClick: (e: React.MouseEvent) => void;
 }
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
   selectedDevice,
   elements,
   onElementsChange,
-  background
+  background,
+  selectedElements,
+  onElementSelect,
+  onCanvasClick
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const getCanvasSize = () => {
@@ -58,6 +64,15 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   };
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
+
+  // Sync local selection with global selection
+  React.useEffect(() => {
+    if (selectedElements.length === 1) {
+      setSelectedElement(selectedElements[0]);
+    } else {
+      setSelectedElement(null);
+    }
+  }, [selectedElements]);
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
@@ -66,12 +81,16 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           </div>}
         
         <div className="flex justify-center">
-          <div className="relative bg-white shadow-lg rounded-lg overflow-hidden" style={{
-          width: canvasSize.width,
-          height: canvasSize.height,
-          transform: selectedDevice === 'desktop' ? 'scale(0.5)' : selectedDevice === 'tablet' ? 'scale(0.8)' : 'scale(1)',
-          transformOrigin: 'top center'
-        }}>
+          <div 
+            className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+            style={{
+              width: canvasSize.width,
+              height: canvasSize.height,
+              transform: selectedDevice === 'desktop' ? 'scale(0.5)' : selectedDevice === 'tablet' ? 'scale(0.8)' : 'scale(1)',
+              transformOrigin: 'top center'
+            }}
+            onClick={onCanvasClick}
+          >
             {/* Canvas Background */}
             <div className="absolute inset-0" style={{
             background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
@@ -92,7 +111,19 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             </div>
 
             {/* Canvas Elements */}
-            {elements.map(element => <CanvasElement key={element.id} element={element} isSelected={selectedElement === element.id} onSelect={() => setSelectedElement(element.id)} onUpdate={updates => handleElementUpdate(element.id, updates)} onDelete={() => handleElementDelete(element.id)} />)}
+            {elements
+              .filter(element => element.visible !== false)
+              .map(element => 
+                <CanvasElement 
+                  key={element.id} 
+                  element={element} 
+                  isSelected={selectedElements.includes(element.id)}
+                  isMultiSelected={selectedElements.length > 1 && selectedElements.includes(element.id)}
+                  onSelect={(isCtrlPressed) => onElementSelect(element.id, isCtrlPressed)} 
+                  onUpdate={updates => handleElementUpdate(element.id, updates)} 
+                  onDelete={() => handleElementDelete(element.id)} 
+                />
+              )}
 
             {/* Device Frame for mobile/tablet */}
             {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
