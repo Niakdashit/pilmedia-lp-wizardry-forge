@@ -11,12 +11,18 @@ interface FunnelUnlockedGameProps {
   campaign: any;
   previewMode?: 'mobile' | 'tablet' | 'desktop';
   mobileConfig?: any;
+  extractedColors?: {
+    primary: string;
+    secondary: string;
+    accent?: string;
+  };
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   campaign,
   previewMode = 'desktop',
-  mobileConfig
+  mobileConfig,
+  extractedColors
 }) => {
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
@@ -123,10 +129,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     />;
   }
 
+  // Créer une campagne enrichie avec les couleurs extraites
+  const enhancedCampaign = extractedColors ? {
+    ...campaign,
+    design: {
+      ...campaign.design,
+      extractedColors
+    }
+  } : campaign;
+
   return (
     <div className="w-full h-full">
       <CanvasGameRenderer 
-        campaign={campaign} 
+        campaign={enhancedCampaign} 
         formValidated={formValidated} 
         showValidationMessage={showValidationMessage} 
         previewMode={previewMode} 

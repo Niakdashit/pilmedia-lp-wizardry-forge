@@ -113,6 +113,7 @@ const DesignEditorLayout: React.FC = () => {
             <FunnelUnlockedGame
               campaign={generateCampaignFromCanvas()}
               previewMode={selectedDevice}
+              extractedColors={extractedColors || undefined}
             />
           </div>
         ) : (
