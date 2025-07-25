@@ -16,7 +16,7 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
     const offsetX = campaign?.design?.gameOffsetX || 0;
     const offsetY = campaign?.design?.gameOffsetY || 0;
     
-    // Pour la roue, forcer toujours le centrage parfait sans décalage
+    // Pour la roue, forcer toujours le centrage parfait sans décalage ni position
     if (campaign?.type === 'wheel') {
       return {
         width: '100%',
@@ -32,7 +32,9 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundRepeat: 'no-repeat',
+        // Ignorer complètement les offsets pour la roue
+        transform: 'none'
       };
     }
     

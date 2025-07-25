@@ -60,8 +60,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
     return null;
   }
 
-  // Récupérer la position du jeu depuis la configuration
-  const gamePosition = config.deviceConfig?.[device]?.gamePosition;
+  // Forcer le centrage pour toutes les roues - pas de gamePosition spécifique
 
   return (
     <div className="flex items-center justify-center w-full h-full">
@@ -71,7 +70,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         theme="modern"
         borderStyle={config.borderStyle || 'classic'}
         onResult={handleWheelResult}
-        gamePosition={gamePosition}
+        gamePosition={undefined}
         isMode1={isMode1}
         formFields={config.formFields}
         brandColors={brandColors}
