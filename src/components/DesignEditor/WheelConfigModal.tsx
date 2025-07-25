@@ -114,10 +114,10 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
               </div>
             </div>
 
-            {/* Couleur du contour */}
+            {/* Couleur de la bordure */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Couleur du contour
+                Couleur de la bordure
               </label>
               <div className="flex items-center space-x-3">
                 <input
