@@ -4,11 +4,15 @@ import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo } from '
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
+  onPreviewToggle?: () => void;
+  isPreviewMode?: boolean;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = ({
   selectedDevice,
-  onDeviceChange
+  onDeviceChange,
+  onPreviewToggle,
+  isPreviewMode = false
 }) => {
   return (
     <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
@@ -64,9 +68,16 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
 
       {/* Right Section - Actions */}
       <div className="flex items-center space-x-2">
-        <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+        <button 
+          onClick={onPreviewToggle}
+          className={`flex items-center px-3 py-2 text-sm border rounded-lg transition-colors ${
+            isPreviewMode 
+              ? 'bg-[#841b60] text-white border-[#841b60]' 
+              : 'border-gray-300 hover:bg-gray-50'
+          }`}
+        >
           <Eye className="w-4 h-4 mr-2" />
-          Aperçu
+          {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
         <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
           <Share2 className="w-4 h-4 mr-2" />

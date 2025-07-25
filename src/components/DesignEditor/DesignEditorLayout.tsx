@@ -46,17 +46,9 @@ const DesignEditorLayout: React.FC = () => {
       <DesignToolbar 
         selectedDevice={selectedDevice}
         onDeviceChange={setSelectedDevice}
+        onPreviewToggle={() => setShowFunnel(!showFunnel)}
+        isPreviewMode={showFunnel}
       />
-      
-      {/* Toggle Button */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2">
-        <button
-          onClick={() => setShowFunnel(!showFunnel)}
-          className="px-4 py-2 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
-        >
-          {showFunnel ? 'Mode Édition' : 'Aperçu Funnel'}
-        </button>
-      </div>
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
