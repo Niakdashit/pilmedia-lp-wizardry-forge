@@ -99,25 +99,29 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
       if (isCornerHandle && element.type === 'text') {
         // For corner handles on text: scale font size proportionally
+        console.log('Text resize - deltaX:', deltaX, 'deltaY:', deltaY, 'startFontSize:', startFontSize);
+        
         let scaleFactor = 1;
         
         switch (direction) {
           case 'se': // bottom-right
-            scaleFactor = 1 + (deltaX + deltaY) / 200;
+            scaleFactor = 1 + (deltaX + deltaY) / 50;
             break;
           case 'sw': // bottom-left
-            scaleFactor = 1 + (-deltaX + deltaY) / 200;
+            scaleFactor = 1 + (-deltaX + deltaY) / 50;
             break;
           case 'ne': // top-right
-            scaleFactor = 1 + (deltaX - deltaY) / 200;
+            scaleFactor = 1 + (deltaX - deltaY) / 50;
             break;
           case 'nw': // top-left
-            scaleFactor = 1 + (-deltaX - deltaY) / 200;
+            scaleFactor = 1 + (-deltaX - deltaY) / 50;
             break;
         }
         
         scaleFactor = Math.max(0.2, scaleFactor);
-        newFontSize = Math.max(8, startFontSize * scaleFactor);
+        newFontSize = Math.max(8, Math.round(startFontSize * scaleFactor));
+        
+        console.log('Text resize - scaleFactor:', scaleFactor, 'newFontSize:', newFontSize);
         
         // Keep text box dimensions tight to content (remove width/height to make it auto)
         onUpdate({
