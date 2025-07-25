@@ -82,6 +82,10 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
     const startHeight = element.height || 100;
     const startPosX = element.x || 0;
     const startPosY = element.y || 0;
+    const startFontSize = element.fontSize || element.style?.fontSize || 16;
+    
+    // Detect if it's a corner handle (for proportional scaling with font size change)
+    const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
 
     const handleResizeMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX;
@@ -91,36 +95,88 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       let newHeight = startHeight;
       let newX = startPosX;
       let newY = startPosY;
+      let newFontSize = startFontSize;
 
-      switch (direction) {
-        case 'se': // bottom-right
-          newWidth = Math.max(20, startWidth + deltaX);
-          newHeight = Math.max(20, startHeight + deltaY);
-          break;
-        case 'sw': // bottom-left
-          newWidth = Math.max(20, startWidth - deltaX);
-          newHeight = Math.max(20, startHeight + deltaY);
-          newX = startPosX + (startWidth - newWidth);
-          break;
-        case 'ne': // top-right
-          newWidth = Math.max(20, startWidth + deltaX);
-          newHeight = Math.max(20, startHeight - deltaY);
-          newY = startPosY + (startHeight - newHeight);
-          break;
-        case 'nw': // top-left
-          newWidth = Math.max(20, startWidth - deltaX);
-          newHeight = Math.max(20, startHeight - deltaY);
-          newX = startPosX + (startWidth - newWidth);
-          newY = startPosY + (startHeight - newHeight);
-          break;
+      if (isCornerHandle && element.type === 'text') {
+        // For corner handles on text: maintain proportions and scale font size
+        let scaleFactor = 1;
+        
+        switch (direction) {
+          case 'se': // bottom-right
+            scaleFactor = Math.max(0.1, 1 + Math.max(deltaX, deltaY) / Math.max(startWidth, startHeight));
+            break;
+          case 'sw': // bottom-left
+            scaleFactor = Math.max(0.1, 1 + Math.max(-deltaX, deltaY) / Math.max(startWidth, startHeight));
+            newX = startPosX - (scaleFactor - 1) * startWidth;
+            break;
+          case 'ne': // top-right
+            scaleFactor = Math.max(0.1, 1 + Math.max(deltaX, -deltaY) / Math.max(startWidth, startHeight));
+            newY = startPosY - (scaleFactor - 1) * startHeight;
+            break;
+          case 'nw': // top-left
+            scaleFactor = Math.max(0.1, 1 + Math.max(-deltaX, -deltaY) / Math.max(startWidth, startHeight));
+            newX = startPosX - (scaleFactor - 1) * startWidth;
+            newY = startPosY - (scaleFactor - 1) * startHeight;
+            break;
+        }
+        
+        newWidth = Math.max(20, startWidth * scaleFactor);
+        newHeight = Math.max(20, startHeight * scaleFactor);
+        newFontSize = Math.max(8, startFontSize * scaleFactor);
+        
+        onUpdate({
+          width: newWidth,
+          height: newHeight,
+          x: newX,
+          y: newY,
+          fontSize: newFontSize,
+        });
+      } else {
+        // For edge handles or non-text elements: change dimensions only
+        switch (direction) {
+          case 'n': // top
+            newHeight = Math.max(20, startHeight - deltaY);
+            newY = startPosY + (startHeight - newHeight);
+            break;
+          case 's': // bottom
+            newHeight = Math.max(20, startHeight + deltaY);
+            break;
+          case 'w': // left
+            newWidth = Math.max(20, startWidth - deltaX);
+            newX = startPosX + (startWidth - newWidth);
+            break;
+          case 'e': // right
+            newWidth = Math.max(20, startWidth + deltaX);
+            break;
+          case 'se': // bottom-right
+            newWidth = Math.max(20, startWidth + deltaX);
+            newHeight = Math.max(20, startHeight + deltaY);
+            break;
+          case 'sw': // bottom-left
+            newWidth = Math.max(20, startWidth - deltaX);
+            newHeight = Math.max(20, startHeight + deltaY);
+            newX = startPosX + (startWidth - newWidth);
+            break;
+          case 'ne': // top-right
+            newWidth = Math.max(20, startWidth + deltaX);
+            newHeight = Math.max(20, startHeight - deltaY);
+            newY = startPosY + (startHeight - newHeight);
+            break;
+          case 'nw': // top-left
+            newWidth = Math.max(20, startWidth - deltaX);
+            newHeight = Math.max(20, startHeight - deltaY);
+            newX = startPosX + (startWidth - newWidth);
+            newY = startPosY + (startHeight - newHeight);
+            break;
+        }
+
+        onUpdate({
+          width: newWidth,
+          height: newHeight,
+          x: newX,
+          y: newY,
+        });
       }
-
-      onUpdate({
-        width: newWidth,
-        height: newHeight,
-        x: newX,
-        y: newY,
-      });
     };
 
     const handleResizeMouseUp = () => {
@@ -242,6 +298,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       {/* Selection handles */}
       {isSelected && (
         <>
+          {/* Corner handles - for proportional scaling */}
           <div 
             className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize" 
             onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
@@ -258,6 +315,28 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize" 
             onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
           />
+          
+          {/* Edge handles - for stretching shape only */}
+          {element.type === 'text' && (
+            <>
+              <div 
+                className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-n-resize" 
+                onMouseDown={(e) => handleResizeMouseDown(e, 'n')}
+              />
+              <div 
+                className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-s-resize" 
+                onMouseDown={(e) => handleResizeMouseDown(e, 's')}
+              />
+              <div 
+                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-w-resize" 
+                onMouseDown={(e) => handleResizeMouseDown(e, 'w')}
+              />
+              <div 
+                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-e-resize" 
+                onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+              />
+            </>
+          )}
           
           {/* Delete button */}
           <button
