@@ -3,6 +3,9 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
+import { SmartWheel } from '../SmartWheel';
+import BorderStyleSelector from '../SmartWheel/components/BorderStyleSelector';
+import Modal from '../common/Modal';
 interface DesignCanvasProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   elements: any[];
@@ -19,6 +22,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   background
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [showBorderModal, setShowBorderModal] = useState(false);
+  const [wheelBorderStyle, setWheelBorderStyle] = useState('classic');
   const getCanvasSize = () => {
     switch (selectedDevice) {
       case 'desktop':
@@ -61,6 +66,30 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   };
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
+
+  // Définir la taille de la roue en fonction de l'appareil
+  const getWheelSize = () => {
+    switch (selectedDevice) {
+      case 'desktop':
+        return 200;
+      case 'tablet':
+        return 180;
+      case 'mobile':
+        return 140;
+      default:
+        return 140;
+    }
+  };
+
+  // Segments par défaut pour la roue
+  const wheelSegments = [
+    { id: '1', label: '10€', color: '#ff6b6b', textColor: '#ffffff' },
+    { id: '2', label: '20€', color: '#4ecdc4', textColor: '#ffffff' },
+    { id: '3', label: '5€', color: '#45b7d1', textColor: '#ffffff' },
+    { id: '4', label: 'Perdu', color: '#96ceb4', textColor: '#ffffff' },
+    { id: '5', label: '50€', color: '#feca57', textColor: '#ffffff' },
+    { id: '6', label: '30€', color: '#ff9ff3', textColor: '#ffffff' }
+  ];
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
@@ -85,13 +114,31 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               
               
               
-              {/* Default content when no elements */}
-              {elements.length === 0 && <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-center">
-                  <h2 className="text-white text-3xl font-bold mb-4 drop-shadow-lg">Jouez pour gagner</h2>
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-yellow-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-                    <div className="w-20 h-20 bg-white rounded-full"></div>
-                  </div>
-                </div>}
+              {/* Roue de la fortune au centre */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div 
+                  onClick={() => setShowBorderModal(true)}
+                  className="cursor-pointer hover:scale-105 transition-transform duration-200"
+                >
+                  <SmartWheel
+                    segments={wheelSegments}
+                    theme="modern"
+                    size={getWheelSize()}
+                    borderStyle={wheelBorderStyle}
+                    brandColors={{
+                      primary: '#841b60',
+                      secondary: '#4ecdc4',
+                      accent: '#45b7d1'
+                    }}
+                    customButton={{
+                      text: 'JOUER',
+                      color: '#841b60',
+                      textColor: '#ffffff'
+                    }}
+                    disabled={true}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Canvas Elements */}
@@ -114,8 +161,26 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
 
         {/* Canvas Info */}
         <div className="text-center mt-4 text-sm text-gray-500">
-          {selectedDevice} • {canvasSize.width} × {canvasSize.height}px
+          {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
         </div>
+
+        {/* Modal pour les styles de bordure */}
+        {showBorderModal && (
+          <Modal
+            onClose={() => setShowBorderModal(false)}
+            title="Styles de bordure de la roue"
+          >
+            <div className="p-4">
+              <BorderStyleSelector
+                currentStyle={wheelBorderStyle}
+                onStyleChange={(style) => {
+                  setWheelBorderStyle(style);
+                  setShowBorderModal(false);
+                }}
+              />
+            </div>
+          </Modal>
+        )}
       </div>
     </DndProvider>;
 };
