@@ -16,7 +16,27 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
     const offsetX = campaign?.design?.gameOffsetX || 0;
     const offsetY = campaign?.design?.gameOffsetY || 0;
     
-    // Position mapping pour le jeu
+    // Pour la roue, forcer toujours le centrage parfait sans décalage
+    if (campaign?.type === 'wheel') {
+      return {
+        width: '100%',
+        height: '100%',
+        minWidth: '1400px',
+        minHeight: '900px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative' as const,
+        overflow: 'hidden',
+        backgroundColor: campaign?.design?.backgroundColor || campaign?.design?.background || '#f3f4f6',
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
+    // Position mapping pour les autres types de jeux
     const positionStyles = {
       'top-left': { alignItems: 'flex-start', justifyContent: 'flex-start' },
       'top-center': { alignItems: 'flex-start', justifyContent: 'center' },
