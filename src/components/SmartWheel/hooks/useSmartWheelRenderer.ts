@@ -9,6 +9,7 @@ interface UseSmartWheelRendererProps {
   wheelState: WheelState;
   size: number;
   borderStyle?: string;
+  customBorderColor?: string;
 }
 
 export const useSmartWheelRenderer = ({
@@ -16,7 +17,8 @@ export const useSmartWheelRenderer = ({
   theme,
   wheelState,
   size,
-  borderStyle = 'classic'
+  borderStyle = 'classic',
+  customBorderColor
 }: UseSmartWheelRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -146,13 +148,18 @@ export const useSmartWheelRenderer = ({
   const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
 
+    // Utiliser la couleur personnalisée si fournie, sinon utiliser la couleur du style
+    const getBorderColor = (index: number = 0) => {
+      return customBorderColor || borderStyleConfig.colors[index];
+    };
+
     ctx.save();
 
     switch (borderStyleConfig.type) {
       case 'solid':
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.strokeStyle = borderStyleConfig.colors[0];
+        ctx.strokeStyle = getBorderColor(0);
         ctx.lineWidth = borderStyleConfig.width;
         if (borderStyleConfig.effects.shadow) {
           ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
@@ -163,7 +170,8 @@ export const useSmartWheelRenderer = ({
 
       case 'metallic':
       case 'luxury':
-        const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
+        const colors = customBorderColor ? [customBorderColor] : borderStyleConfig.colors;
+        const metallicGradient = createMetallicGradient(ctx, colors, centerX, centerY, radius);
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
         ctx.strokeStyle = metallicGradient;
@@ -186,12 +194,12 @@ export const useSmartWheelRenderer = ({
         }
 
         if (borderStyleConfig.effects.glow) {
-          createNeonEffect(ctx, centerX, centerY, radius, borderStyleConfig.colors[0], 0.5);
+          createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0), 0.5);
         }
         break;
 
       case 'neon':
-        createNeonEffect(ctx, centerX, centerY, radius, borderStyleConfig.colors[0]);
+        createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0));
         break;
 
       case 'gradient':
@@ -207,8 +215,9 @@ export const useSmartWheelRenderer = ({
             centerX - radius, centerY - radius,
             centerX + radius, centerY + radius
           );
-          borderStyleConfig.colors.forEach((color, index) => {
-            gradient.addColorStop(index / (borderStyleConfig.colors.length - 1), color);
+          const gradientColors = customBorderColor ? [customBorderColor] : borderStyleConfig.colors;
+          gradientColors.forEach((color, index) => {
+            gradient.addColorStop(index / (gradientColors.length - 1), color);
           });
           
           ctx.beginPath();
@@ -219,7 +228,7 @@ export const useSmartWheelRenderer = ({
         }
 
         if (borderStyleConfig.effects.glow) {
-          createNeonEffect(ctx, centerX, centerY, radius, borderStyleConfig.colors[0], 0.3);
+          createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0), 0.3);
         }
         break;
     }

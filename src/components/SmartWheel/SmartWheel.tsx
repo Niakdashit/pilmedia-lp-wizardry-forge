@@ -75,7 +75,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     theme: resolvedTheme,
     wheelState,
     size: actualSize,
-    borderStyle: currentBorderStyle
+    borderStyle: currentBorderStyle,
+    customBorderColor: brandColors?.primary
   });
   
   const handleSpin = () => {
