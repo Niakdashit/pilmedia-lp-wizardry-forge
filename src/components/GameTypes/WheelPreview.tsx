@@ -101,7 +101,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     accent: extractedColors[2] || campaign.design?.customColors?.accent || '#45b7d1'
   };
 
-  const wheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
+  // Appliquer une échelle par défaut de 200%
+  const defaultScale = 2.0;
 
   const handleResult = () => {
     if (onFinish) {
@@ -118,11 +119,11 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   };
 
   return (
-    <div className="wheel-preview-container">
+    <div className="wheel-preview-container" style={{ transform: `scale(${defaultScale})`, transformOrigin: 'center center' }}>
       <SmartWheel
         segments={smartWheelSegments}
         theme="modern"
-        size={wheelSize}
+        size={Math.min(gameDimensions.width, gameDimensions.height) - 40}
         maxSize={Math.min(gameDimensions.width, gameDimensions.height)}
         brandColors={brandColors}
         onResult={handleResult}
