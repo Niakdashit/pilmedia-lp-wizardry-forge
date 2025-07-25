@@ -123,12 +123,14 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   return (
-    <div className="flex justify-center items-center w-full h-full">
+    <div className={`flex justify-center items-center ${previewMode === 'desktop' ? 'w-full h-full' : 'w-full h-full'}`}>
       <div 
-        className={`relative bg-white overflow-hidden ${previewMode === 'desktop' ? 'w-full h-full' : 'shadow-lg rounded-lg'}`}
+        className={`relative bg-white overflow-hidden ${previewMode === 'desktop' ? 'w-full' : 'shadow-lg rounded-lg'}`}
         style={previewMode === 'desktop' ? {
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center'
+          width: '100%',
+          height: '100vh',
+          aspectRatio: '16/9',
+          maxHeight: 'calc(100vh - 80px)', // Déduire la hauteur de la toolbar
         } : {
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
@@ -163,7 +165,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           />
         )}
 
-        {/* Device Frame pour mobile/tablet */}
+        {/* Device Frame pour mobile/tablet uniquement */}
         {previewMode !== 'desktop' && (
           <div className="absolute inset-0 pointer-events-none">
             {previewMode === 'mobile' && (
