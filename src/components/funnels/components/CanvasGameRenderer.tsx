@@ -167,20 +167,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           />
         )}
 
-        {/* Device Frame pour mobile/tablet uniquement */}
-        {previewMode !== 'desktop' && (
-          <div className="absolute inset-0 pointer-events-none">
-            {previewMode === 'mobile' && (
-              <>
-                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-6 bg-black rounded-full"></div>
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full"></div>
-              </>
-            )}
-            {previewMode === 'tablet' && (
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-gray-300 rounded-full"></div>
-            )}
-          </div>
-        )}
       </div>
 
       <ValidationMessage
