@@ -115,13 +115,24 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue plus grande directement (200% de la taille de base)
+  // Calculer une taille de roue adaptée sans débordement
   const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const wheelSize = baseSize * 2.0;
-  const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) * 2.0;
+  const wheelSize = Math.min(baseSize * 1.5, Math.min(gameDimensions.width, gameDimensions.height) - 20);
+  const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
   return (
-    <div className="wheel-preview-container">
+    <div 
+      className="wheel-preview-container w-full h-full flex items-center justify-center"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
       <SmartWheel
         segments={smartWheelSegments}
         theme="modern"
