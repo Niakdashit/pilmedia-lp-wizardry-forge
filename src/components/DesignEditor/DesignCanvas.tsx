@@ -24,7 +24,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
       case 'desktop':
         return { width: 1200, height: 675 }; // 16:9 ratio
       case 'tablet':
-        return { width: 768, height: 432 }; // 16:9 ratio
+        return { width: 768, height: 1024 }; // 3:4 ratio (portrait)
       case 'mobile':
         return { width: 360, height: 640 }; // 9:16 ratio (portrait)
       default:
