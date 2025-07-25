@@ -4,8 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
-import BorderStyleSelector from '../SmartWheel/components/BorderStyleSelector';
-import Modal from '../common/Modal';
+import WheelConfigModal from './WheelConfigModal';
 interface DesignCanvasProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   elements: any[];
@@ -24,6 +23,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [wheelBorderStyle, setWheelBorderStyle] = useState('classic');
+  const [wheelBorderColor, setWheelBorderColor] = useState('#841b60');
+  const [wheelScale, setWheelScale] = useState(1);
   const getCanvasSize = () => {
     switch (selectedDevice) {
       case 'desktop':
@@ -67,18 +68,21 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   };
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
-  // Définir la taille de la roue en fonction de l'appareil
+  // Définir la taille de la roue en fonction de l'appareil et du scale
   const getWheelSize = () => {
-    switch (selectedDevice) {
-      case 'desktop':
-        return 200;
-      case 'tablet':
-        return 180;
-      case 'mobile':
-        return 140;
-      default:
-        return 140;
-    }
+    const baseSize = (() => {
+      switch (selectedDevice) {
+        case 'desktop':
+          return 200;
+        case 'tablet':
+          return 180;
+        case 'mobile':
+          return 140;
+        default:
+          return 140;
+      }
+    })();
+    return Math.round(baseSize * wheelScale);
   };
 
   // Segments par défaut pour la roue
@@ -126,13 +130,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                     size={getWheelSize()}
                     borderStyle={wheelBorderStyle}
                     brandColors={{
-                      primary: '#841b60',
+                      primary: wheelBorderColor,
                       secondary: '#4ecdc4',
                       accent: '#45b7d1'
                     }}
                     customButton={{
                       text: 'JOUER',
-                      color: '#841b60',
+                      color: wheelBorderColor,
                       textColor: '#ffffff'
                     }}
                     disabled={true}
@@ -164,23 +168,18 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
         </div>
 
-        {/* Modal pour les styles de bordure */}
-        {showBorderModal && (
-          <Modal
-            onClose={() => setShowBorderModal(false)}
-            title="Styles de bordure de la roue"
-          >
-            <div className="p-4">
-              <BorderStyleSelector
-                currentStyle={wheelBorderStyle}
-                onStyleChange={(style) => {
-                  setWheelBorderStyle(style);
-                  setShowBorderModal(false);
-                }}
-              />
-            </div>
-          </Modal>
-        )}
+        {/* Modal pour la configuration de la roue */}
+        <WheelConfigModal
+          isOpen={showBorderModal}
+          onClose={() => setShowBorderModal(false)}
+          wheelBorderStyle={wheelBorderStyle}
+          wheelBorderColor={wheelBorderColor}
+          wheelScale={wheelScale}
+          onBorderStyleChange={setWheelBorderStyle}
+          onBorderColorChange={setWheelBorderColor}
+          onScaleChange={setWheelScale}
+          selectedDevice={selectedDevice}
+        />
       </div>
     </DndProvider>;
 };
