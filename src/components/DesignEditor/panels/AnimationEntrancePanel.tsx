@@ -2,13 +2,15 @@ import React from 'react';
 import { Play, RotateCcw } from 'lucide-react';
 
 interface AnimationEntrancePanelProps {
+  animationConfig?: any;
   onAnimationChange?: (config: any) => void;
 }
 
 const AnimationEntrancePanel: React.FC<AnimationEntrancePanelProps> = ({
+  animationConfig,
   onAnimationChange = () => {}
 }) => {
-  const [config, setConfig] = React.useState({
+  const [config, setConfig] = React.useState(animationConfig || {
     type: 'fadeIn',
     direction: 'none',
     duration: 800,
@@ -16,6 +18,13 @@ const AnimationEntrancePanel: React.FC<AnimationEntrancePanelProps> = ({
     trigger: 'onLoad',
     easing: 'easeOut'
   });
+
+  // Sync with external config changes
+  React.useEffect(() => {
+    if (animationConfig) {
+      setConfig(animationConfig);
+    }
+  }, [animationConfig]);
 
   const handleConfigChange = (updates: any) => {
     const newConfig = { ...config, ...updates };
