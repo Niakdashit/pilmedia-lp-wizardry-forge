@@ -14,15 +14,12 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
   previewDevice,
   sizeMap
 }) => {
-  const getElementDeviceConfig = (element: any) => {
-    return element[previewDevice] || element;
-  };
 
   const renderTextElement = (customText: any) => {
     if (!customText?.content && !customText?.text) return null;
 
-    // Gestion du responsive : utiliser deviceConfig si disponible
-    const deviceConfig = customText.deviceConfig?.[previewDevice];
+    // Gestion du responsive : utiliser les propriétés responsives si disponibles
+    const deviceConfig = customText.deviceConfig?.[previewDevice] || customText.responsive?.[previewDevice];
     const config = deviceConfig || customText;
     
     const textContent = customText.content || customText.text || 'Texte personnalisé';
@@ -106,7 +103,9 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
   const renderImageElement = (customImage: any) => {
     if (!customImage?.src) return null;
 
-    const config = getElementDeviceConfig(customImage);
+    // Gestion du responsive : utiliser les propriétés responsives si disponibles
+    const deviceConfig = customImage.deviceConfig?.[previewDevice] || customImage.responsive?.[previewDevice];
+    const config = deviceConfig || customImage;
     
     const imageStyle: React.CSSProperties = {
       position: 'absolute',
