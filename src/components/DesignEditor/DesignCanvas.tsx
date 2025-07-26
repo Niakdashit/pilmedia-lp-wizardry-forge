@@ -6,8 +6,10 @@ import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
-interface DesignCanvasProps {
-  selectedDevice: 'desktop' | 'tablet' | 'mobile';
+import type { DeviceType } from '../../utils/deviceDimensions';
+
+export interface DesignCanvasProps {
+  selectedDevice: DeviceType;
   elements: any[];
   onElementsChange: (elements: any[]) => void;
   background?: {
@@ -154,7 +156,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             </div>
 
             {/* Canvas Elements */}
-            {elementsWithResponsive.map(element => {
+            {elementsWithResponsive.map((element: any) => {
               // Obtenir les propriétés pour l'appareil actuel
               const responsiveProps = getPropertiesForDevice(element, selectedDevice);
               
@@ -174,12 +176,11 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                 <CanvasElement 
                   key={element.id} 
                   element={elementWithResponsive} 
-                  originalElement={element}
                   selectedDevice={selectedDevice}
                   isSelected={selectedElement === element.id} 
-                  onSelect={() => setSelectedElement(element.id)} 
-                  onUpdate={updates => handleElementUpdate(element.id, updates)} 
-                  onDelete={() => handleElementDelete(element.id)} 
+                  onSelect={setSelectedElement} 
+                  onUpdate={handleElementUpdate} 
+                  onDelete={handleElementDelete} 
                 />
               );
             })}

@@ -1,28 +1,30 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
+import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
+import type { DeviceType } from '../../utils/deviceDimensions';
 
-interface CanvasElementProps {
+export interface CanvasElementProps {
   element: any;
-  originalElement?: any;
-  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   isSelected: boolean;
-  onSelect: () => void;
-  onUpdate: (updates: any) => void;
-  onDelete: () => void;
+  onSelect: (id: string) => void;
+  onUpdate: (id: string, updates: any) => void;
+  onDelete: (id: string) => void;
+  selectedDevice: DeviceType;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = ({
   element,
-  originalElement,
-  selectedDevice,
   isSelected,
+  selectedDevice,
   onSelect,
   onUpdate,
   onDelete
 }) => {
-  // Utiliser les props passées pour éviter les warnings TypeScript
-  console.debug('CanvasElement device:', selectedDevice, 'hasOriginal:', !!originalElement);
+  const { getPropertiesForDevice } = useUniversalResponsive('desktop');
+  
+  // Get device-specific properties with proper typing
+  const deviceProps = getPropertiesForDevice(element, selectedDevice);
   
 
   const [{ opacity }, drag] = useDrag(() => ({
@@ -37,13 +39,14 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    onSelect();
+    onSelect(element.id);
 
-    const startX = e.clientX - element.x;
-    const startY = e.clientY - element.y;
+    const currentProps = deviceProps;
+    const startX = e.clientX - currentProps.x;
+    const startY = e.clientY - currentProps.y;
 
     const handleMouseMove = (e: MouseEvent) => {
-      onUpdate({
+      onUpdate(element.id, {
         x: e.clientX - startX,
         y: e.clientY - startY,
       });
@@ -65,7 +68,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate({ content: e.target.value });
+    onUpdate(element.id, { content: e.target.value });
   };
 
   const handleTextKeyDown = (e: React.KeyboardEvent) => {
@@ -130,7 +133,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
         console.log('Text resize - scaleFactor:', scaleFactor, 'newFontSize:', newFontSize);
         
         // Keep text box dimensions tight to content (remove width/height to make it auto)
-        onUpdate({
+        onUpdate(element.id, {
           fontSize: newFontSize,
           width: undefined,
           height: undefined,
@@ -175,7 +178,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             break;
         }
 
-        onUpdate({
+        onUpdate(element.id, {
           width: newWidth,
           height: newHeight,
           x: newX,
@@ -217,11 +220,11 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             autoFocus
             className="bg-transparent border-none outline-none w-full"
             style={{
-              fontSize: element.fontSize || element.style?.fontSize || 16,
+              fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
               fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
               color: element.color || element.style?.color || '#000000',
               fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
-              textAlign: element.textAlign || element.style?.textAlign || 'left',
+              textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
               ...elementStyle
             }}
           />
@@ -229,15 +232,16 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           <div
             className="cursor-move select-none"
             style={{
-              fontSize: element.fontSize || element.style?.fontSize || 16,
+              fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
               fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
               color: element.color || element.style?.color || '#000000',
               fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
-              textAlign: element.textAlign || element.style?.textAlign || 'left',
+              textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
               ...elementStyle,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: element.style?.textAlign === 'center' ? 'center' : element.style?.textAlign === 'right' ? 'flex-end' : 'flex-start'
+              justifyContent: ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'center' ? 'center' : 
+                            ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'right' ? 'flex-end' : 'flex-start'
             }}
           >
             {element.content || 'Texte'}
@@ -294,8 +298,8 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       ref={drag}
       className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
       style={{
-        left: element.x || 0,
-        top: element.y || 0,
+        left: deviceProps.x || 0,
+        top: deviceProps.y || 0,
         opacity,
         zIndex: element.zIndex || 1,
       }}
@@ -357,7 +361,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           
           {/* Delete button */}
           <button
-            onClick={onDelete}
+            onClick={() => onDelete(element.id)}
             className="absolute -top-8 -right-8 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 shadow-lg"
             style={{ zIndex: 1001 }}
           >
