@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { DeviceType, EditorConfig, CustomText } from '../GameEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
@@ -7,6 +7,8 @@ import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
+import { useBrandColorExtraction } from '../../QuickCampaign/Preview/hooks/useBrandColorExtraction';
+import { synchronizeCampaignWithColors } from '../../QuickCampaign/Preview/utils/campaignSynchronizer';
 
 interface Mode1PreviewProps {
   device: DeviceType;
@@ -36,14 +38,40 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   } | null>(null);
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [synchronizedConfig, setSynchronizedConfig] = useState(config);
+
+  // Extraction automatique des couleurs de l'image de fond
+  const customColors = useMemo(() => ({
+    primary: config.participateButtonColor || '#841b60',
+    secondary: config.outlineColor || '#dc2626', 
+    accent: config.backgroundColor || '#10b981'
+  }), [config.participateButtonColor, config.outlineColor, config.backgroundColor]);
+
+  const { finalColors, brandStyleExtracted } = useBrandColorExtraction(
+    customColors,
+    config.bannerImage
+  );
+
+  // Synchroniser la configuration avec les couleurs extraites
+  useEffect(() => {
+    if (brandStyleExtracted && finalColors) {
+      const updatedConfig = synchronizeCampaignWithColors(
+        config,
+        finalColors
+      );
+      setSynchronizedConfig(updatedConfig);
+    } else {
+      setSynchronizedConfig(config);
+    }
+  }, [config, finalColors, brandStyleExtracted]);
 
   // Système responsif unifié - utiliser le device courant comme base
   const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
 
-  // Convertir les textes en format responsif
+  // Convertir les textes en format responsif - utiliser la config synchronisée
   const responsiveTexts = useMemo(() => {
-    if (!config.customTexts) return [];
-    const convertedTexts = config.customTexts.map(text => ({
+    if (!synchronizedConfig.customTexts) return [];
+    const convertedTexts = synchronizedConfig.customTexts.map(text => ({
       ...text,
       type: 'text' as const,
       x: text.x || 0,
@@ -52,12 +80,12 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       textAlign: (text.textAlign || 'left') as 'left' | 'center' | 'right'
     }));
     return applyAutoResponsive(convertedTexts);
-  }, [config.customTexts, applyAutoResponsive]);
+  }, [synchronizedConfig.customTexts, applyAutoResponsive]);
 
-  // Convertir les images en format responsif
+  // Convertir les images en format responsif - utiliser la config synchronisée
   const responsiveImages = useMemo(() => {
-    if (!config.design?.customImages) return [];
-    const convertedImages = config.design.customImages.map(image => ({
+    if (!synchronizedConfig.design?.customImages) return [];
+    const convertedImages = synchronizedConfig.design.customImages.map(image => ({
       ...image,
       type: 'image' as const,
       x: image.x || 0,
@@ -66,7 +94,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       height: image.height || 150
     }));
     return applyAutoResponsive(convertedImages);
-  }, [config.design?.customImages, applyAutoResponsive]);
+  }, [synchronizedConfig.design?.customImages, applyAutoResponsive]);
 
   const handleWheelResult = (result: { id: string; label: string; color: string }) => {
     console.log('Résultat de la roue:', result);
@@ -120,7 +148,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       >
         <BackgroundContainer
           device={device}
-          config={config}
+          config={synchronizedConfig}
           className="w-full h-full"
           isMode1={true}
         >
@@ -131,7 +159,7 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       {/* Content zone - connecté directement à la bannière */}
       <div>
         <ContentArea 
-          config={config} 
+          config={synchronizedConfig} 
           isMode1={true}
           device={device}
           wheelResult={wheelResult}

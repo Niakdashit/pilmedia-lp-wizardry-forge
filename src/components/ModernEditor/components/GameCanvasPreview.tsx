@@ -1,5 +1,5 @@
 
-import React, { useCallback, memo, useState } from 'react';
+import React, { useCallback, memo, useState, useMemo } from 'react';
 import DeviceFrame from './DeviceFrame';
 import GameRenderer from './GameRenderer';
 import GamePositioner from './GamePositioner';
@@ -8,6 +8,8 @@ import PreviewErrorBoundary from './ErrorBoundary';
 import PreviewFeedback from './PreviewFeedback';
 import DeviceTransition from './DeviceTransition';
 import InteractiveDragDropOverlay from './InteractiveDragDropOverlay';
+import CustomElementsRenderer from './CustomElementsRenderer';
+import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 
 interface GameCanvasPreviewProps {
   campaign: any;
@@ -28,6 +30,62 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [isChangingDevice, setIsChangingDevice] = useState(false);
+  
+  // Système responsif pour les éléments customisés
+  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
+
+  // Convertir les textes en format responsif
+  const responsiveTexts = useMemo(() => {
+    if (!campaign?.design?.customTexts) return [];
+    const convertedTexts = campaign.design.customTexts.map((text: any) => ({
+      ...text,
+      type: 'text' as const,
+      x: text.x || 0,
+      y: text.y || 0,
+      fontSize: text.fontSize || 16,
+      textAlign: (text.textAlign || 'left') as 'left' | 'center' | 'right'
+    }));
+    return applyAutoResponsive(convertedTexts);
+  }, [campaign?.design?.customTexts, applyAutoResponsive]);
+
+  // Convertir les images en format responsif
+  const responsiveImages = useMemo(() => {
+    if (!campaign?.design?.customImages) return [];
+    const convertedImages = campaign.design.customImages.map((image: any) => ({
+      ...image,
+      type: 'image' as const,
+      x: image.x || 0,
+      y: image.y || 0,
+      width: image.width || 150,
+      height: image.height || 150
+    }));
+    return applyAutoResponsive(convertedImages);
+  }, [campaign?.design?.customImages, applyAutoResponsive]);
+
+  // Préparer les éléments pour CustomElementsRenderer
+  const customTextsForRenderer = useMemo(() => {
+    return responsiveTexts.map((text: any) => {
+      const textProps = getPropertiesForDevice(text, previewDevice);
+      return { ...text, ...textProps };
+    });
+  }, [responsiveTexts, getPropertiesForDevice, previewDevice]);
+
+  const customImagesForRenderer = useMemo(() => {
+    return responsiveImages.map((image: any) => {
+      const imageProps = getPropertiesForDevice(image, previewDevice);
+      return { ...image, ...imageProps };
+    });
+  }, [responsiveImages, getPropertiesForDevice, previewDevice]);
+
+  // Size map pour le rendu responsive
+  const sizeMap = useMemo(() => ({
+    xs: '12px',
+    sm: '14px',
+    md: '16px',
+    lg: '18px',
+    xl: '20px',
+    '2xl': '24px'
+  }), []);
   
 
   // Callback optimisé pour la fin de jeu
@@ -74,6 +132,14 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
                       onGameFinish={handleGameFinish}
                     />
                   </GamePositioner>
+                  
+                  {/* Render custom elements (texts and images) */}
+                  <CustomElementsRenderer
+                    customTexts={customTextsForRenderer}
+                    customImages={customImagesForRenderer}
+                    previewDevice={previewDevice}
+                    sizeMap={sizeMap}
+                  />
                   
                   {/* Always render interactive overlay when setCampaign is available */}
                   {setCampaign && (
