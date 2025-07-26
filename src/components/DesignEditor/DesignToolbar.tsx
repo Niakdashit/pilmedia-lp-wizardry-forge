@@ -1,19 +1,41 @@
 import React from 'react';
-import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo, ExternalLink } from 'lucide-react';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onPreviewToggle?: () => void;
   isPreviewMode?: boolean;
+  campaign?: any; // Ajouter la campaign pour l'aperçu final
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = ({
   selectedDevice,
   onDeviceChange,
   onPreviewToggle,
-  isPreviewMode = false
+  isPreviewMode = false,
+  campaign
 }) => {
+  const handleFinalPreview = () => {
+    if (!campaign) return;
+    
+    // Convertir la campagne du Design Editor au format attendu par FinalPreview
+    const config = {
+      ...campaign,
+      displayMode: 'mode2-background', // Le Design Editor utilise le mode 2 (background)
+      gameType: campaign.type || 'wheel',
+      campaignName: campaign.id || 'Design Editor Campaign',
+      customTexts: [], // Pas de textes customisés dans le Design Editor pour l'instant
+      design: {
+        customImages: [],
+        backgroundImage: campaign.canvasConfig?.background?.type === 'image' ? campaign.canvasConfig.background.value : undefined,
+        ...campaign.design
+      }
+    };
+    
+    const encoded = encodeURIComponent(JSON.stringify(config));
+    window.open(`${window.location.origin}/final-preview?config=${encoded}`, '_blank');
+  };
   return (
     <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
       {/* Left Section - Logo/Title */}
@@ -78,6 +100,13 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
         >
           <Eye className="w-4 h-4 mr-2" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
+        </button>
+        <button 
+          onClick={handleFinalPreview}
+          className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <ExternalLink className="w-4 h-4 mr-2" />
+          Aperçu final
         </button>
         <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
           <Share2 className="w-4 h-4 mr-2" />
