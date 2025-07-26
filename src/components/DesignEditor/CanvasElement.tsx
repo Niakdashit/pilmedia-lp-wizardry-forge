@@ -220,14 +220,11 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             autoFocus
             className="bg-transparent border-none outline-none w-full"
             style={{
-              fontSize: (deviceProps as any)?.fontSize || element.fontSize || 16,
-              fontFamily: (deviceProps as any)?.fontFamily || element.fontFamily || 'Arial',
-              color: (deviceProps as any)?.color || element.color || '#000000',
-              fontWeight: (deviceProps as any)?.fontWeight || element.fontWeight || 'normal',
-              textAlign: (deviceProps as any)?.textAlign || element.textAlign || 'left',
-              fontStyle: (deviceProps as any)?.fontStyle || element.fontStyle || 'normal',
-              textDecoration: (deviceProps as any)?.textDecoration || element.textDecoration || 'none',
-              backgroundColor: (deviceProps as any)?.backgroundColor || element.backgroundColor || 'transparent',
+              fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
+              fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
+              color: element.color || element.style?.color || '#000000',
+              fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
+              textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
               ...elementStyle
             }}
           />
@@ -235,19 +232,16 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
           <div
             className="cursor-move select-none"
             style={{
-              fontSize: (deviceProps as any)?.fontSize || element.fontSize || 16,
-              fontFamily: (deviceProps as any)?.fontFamily || element.fontFamily || 'Arial',
-              color: (deviceProps as any)?.color || element.color || '#000000',
-              fontWeight: (deviceProps as any)?.fontWeight || element.fontWeight || 'normal',
-              textAlign: (deviceProps as any)?.textAlign || element.textAlign || 'left',
-              fontStyle: (deviceProps as any)?.fontStyle || element.fontStyle || 'normal',
-              textDecoration: (deviceProps as any)?.textDecoration || element.textDecoration || 'none',
-              backgroundColor: (deviceProps as any)?.backgroundColor || element.backgroundColor || 'transparent',
+              fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
+              fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
+              color: element.color || element.style?.color || '#000000',
+              fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
+              textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
               ...elementStyle,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: ((deviceProps as any)?.textAlign || element.textAlign) === 'center' ? 'center' : 
-                            ((deviceProps as any)?.textAlign || element.textAlign) === 'right' ? 'flex-end' : 'flex-start'
+              justifyContent: ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'center' ? 'center' : 
+                            ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'right' ? 'flex-end' : 'flex-start'
             }}
           >
             {element.content || 'Texte'}

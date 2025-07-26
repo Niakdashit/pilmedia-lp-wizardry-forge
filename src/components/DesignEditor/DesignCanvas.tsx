@@ -6,7 +6,6 @@ import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
-import { useBrandColorExtraction } from '../QuickCampaign/Preview/hooks/useBrandColorExtraction';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -29,12 +28,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const [wheelBorderStyle, setWheelBorderStyle] = useState('classic');
   const [wheelBorderColor, setWheelBorderColor] = useState('#841b60');
   const [wheelScale, setWheelScale] = useState(1);
-
-  // Système d'extraction de couleurs pour l'éditeur de design
-  const { finalColors } = useBrandColorExtraction(
-    { primary: wheelBorderColor, secondary: '#4ecdc4', accent: '#45b7d1' },
-    background?.type === 'image' ? background.value : undefined
-  );
 
   // Intégration du système auto-responsive
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
@@ -146,16 +139,16 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                     theme="modern"
                     size={getWheelSize()}
                     borderStyle={wheelBorderStyle}
-                     brandColors={{
-                       primary: finalColors.primary,
-                       secondary: finalColors.secondary,
-                       accent: finalColors.accent
-                     }}
-                     customButton={{
-                       text: 'JOUER',
-                       color: finalColors.primary,
-                       textColor: '#ffffff'
-                     }}
+                    brandColors={{
+                      primary: wheelBorderColor,
+                      secondary: '#4ecdc4',
+                      accent: '#45b7d1'
+                    }}
+                    customButton={{
+                      text: 'JOUER',
+                      color: wheelBorderColor,
+                      textColor: '#ffffff'
+                    }}
                     disabled={true}
                   />
                 </div>
@@ -175,14 +168,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                 width: responsiveProps.width,
                 height: responsiveProps.height,
                 fontSize: responsiveProps.fontSize,
-                color: (responsiveProps as any).color,
-                fontFamily: (responsiveProps as any).fontFamily,
-                fontWeight: (responsiveProps as any).fontWeight,
-                fontStyle: (responsiveProps as any).fontStyle,
-                textDecoration: (responsiveProps as any).textDecoration,
-                backgroundColor: (responsiveProps as any).backgroundColor,
                 // Appliquer l'alignement de texte responsive si disponible
-                textAlign: (responsiveProps as any).textAlign || element.textAlign
+                textAlign: responsiveProps.textAlign || element.textAlign
               };
 
               return (

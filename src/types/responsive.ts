@@ -15,9 +15,6 @@ export interface ResponsiveTextElement extends ResponsiveElementBase {
   fontFamily: string;
   fontWeight: string;
   textAlign: 'left' | 'center' | 'right';
-  fontStyle?: string;
-  textDecoration?: string;
-  backgroundColor?: string;
 }
 
 export interface ResponsiveImageElement extends ResponsiveElementBase {
