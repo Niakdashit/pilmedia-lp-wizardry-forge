@@ -11,7 +11,19 @@ const FinalPreview: React.FC = () => {
   
   // Récupérer la configuration depuis les paramètres URL
   const configParam = searchParams.get('config');
-  const config: EditorConfig = configParam ? JSON.parse(decodeURIComponent(configParam)) : null;
+  let config: EditorConfig | null = null;
+  
+  try {
+    if (configParam) {
+      // Décoder depuis Base64
+      const decodedBase64 = atob(configParam);
+      const decodedConfig = decodeURIComponent(escape(decodedBase64));
+      config = JSON.parse(decodedConfig);
+    }
+  } catch (error) {
+    console.error('Erreur lors du décodage de la configuration:', error);
+    console.log('Config param raw:', configParam);
+  }
 
   if (!config) {
     return (

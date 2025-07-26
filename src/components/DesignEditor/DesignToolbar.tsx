@@ -74,9 +74,17 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
         campaign.canvasConfig.background.value : undefined
     };
     
-    const encoded = encodeURIComponent(JSON.stringify(config));
-    const url = `/final-preview?config=${encoded}`;
-    window.location.href = url;
+    try {
+      // Utiliser Base64 pour éviter les problèmes d'encodage URI
+      const configStr = JSON.stringify(config);
+      const encoded = btoa(unescape(encodeURIComponent(configStr)));
+      const url = `/final-preview?config=${encoded}`;
+      window.location.href = url;
+    } catch (error) {
+      console.error('Erreur lors de l\'encodage de la configuration:', error);
+      // Fallback : naviguer sans paramètres
+      window.location.href = '/final-preview';
+    }
   };
   return (
     <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
