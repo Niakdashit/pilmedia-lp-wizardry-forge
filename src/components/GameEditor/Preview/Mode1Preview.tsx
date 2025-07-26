@@ -37,8 +37,8 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
-  // Système responsif unifié
-  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive();
+  // Système responsif unifié - utiliser le device courant comme base
+  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
 
   // Convertir les textes en format responsif
   const responsiveTexts = useMemo(() => {
