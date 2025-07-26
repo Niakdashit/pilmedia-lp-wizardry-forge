@@ -4,6 +4,8 @@ import { SmartWheel } from '../SmartWheel';
 
 interface CanvasElementProps {
   element: any;
+  originalElement?: any;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   isSelected: boolean;
   onSelect: () => void;
   onUpdate: (updates: any) => void;
@@ -12,11 +14,15 @@ interface CanvasElementProps {
 
 const CanvasElement: React.FC<CanvasElementProps> = ({
   element,
+  originalElement,
+  selectedDevice,
   isSelected,
   onSelect,
   onUpdate,
   onDelete
 }) => {
+  // Utiliser les props passées pour éviter les warnings TypeScript
+  console.debug('CanvasElement device:', selectedDevice, 'hasOriginal:', !!originalElement);
   
 
   const [{ opacity }, drag] = useDrag(() => ({

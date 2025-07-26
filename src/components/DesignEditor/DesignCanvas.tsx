@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
+import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 interface DesignCanvasProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   elements: any[];
@@ -25,33 +26,32 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const [wheelBorderStyle, setWheelBorderStyle] = useState('classic');
   const [wheelBorderColor, setWheelBorderColor] = useState('#841b60');
   const [wheelScale, setWheelScale] = useState(1);
+
+  // Intégration du système auto-responsive
+  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
+  // Convertir les éléments en format compatible avec useAutoResponsive
+  const responsiveElements = useMemo(() => {
+    return elements.map(element => ({
+      id: element.id,
+      x: element.x || 0,
+      y: element.y || 0,
+      width: element.width,
+      height: element.height,
+      fontSize: element.fontSize || 16,
+      type: element.type,
+      content: element.content,
+      // Préserver les autres propriétés
+      ...element
+    }));
+  }, [elements]);
+
+  // Appliquer les calculs responsives
+  const elementsWithResponsive = useMemo(() => {
+    return applyAutoResponsive(responsiveElements);
+  }, [responsiveElements, applyAutoResponsive]);
   const getCanvasSize = () => {
-    switch (selectedDevice) {
-      case 'desktop':
-        return {
-          width: 1200,
-          height: 675
-        };
-      // 16:9 ratio
-      case 'tablet':
-        return {
-          width: 768,
-          height: 1024
-        };
-      // 3:4 ratio (portrait)
-      case 'mobile':
-        return {
-          width: 360,
-          height: 640
-        };
-      // 9:16 ratio (portrait)
-      default:
-        return {
-          width: 360,
-          height: 640
-        };
-      // 9:16 ratio (portrait)
-    }
+    return DEVICE_DIMENSIONS[selectedDevice];
   };
   const canvasSize = getCanvasSize();
   const handleElementUpdate = (id: string, updates: any) => {
@@ -154,7 +154,33 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             </div>
 
             {/* Canvas Elements */}
-            {elements.map(element => <CanvasElement key={element.id} element={element} isSelected={selectedElement === element.id} onSelect={() => setSelectedElement(element.id)} onUpdate={updates => handleElementUpdate(element.id, updates)} onDelete={() => handleElementDelete(element.id)} />)}
+            {elementsWithResponsive.map(element => {
+              // Obtenir les propriétés pour l'appareil actuel
+              const responsiveProps = getPropertiesForDevice(element, selectedDevice);
+              
+              // Fusionner les propriétés responsive avec l'élément original
+              const elementWithResponsive = {
+                ...element,
+                x: responsiveProps.x,
+                y: responsiveProps.y,
+                width: responsiveProps.width,
+                height: responsiveProps.height,
+                fontSize: responsiveProps.fontSize
+              };
+
+              return (
+                <CanvasElement 
+                  key={element.id} 
+                  element={elementWithResponsive} 
+                  originalElement={element}
+                  selectedDevice={selectedDevice}
+                  isSelected={selectedElement === element.id} 
+                  onSelect={() => setSelectedElement(element.id)} 
+                  onUpdate={updates => handleElementUpdate(element.id, updates)} 
+                  onDelete={() => handleElementDelete(element.id)} 
+                />
+              );
+            })}
 
             {/* Device Frame for mobile/tablet */}
             {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
