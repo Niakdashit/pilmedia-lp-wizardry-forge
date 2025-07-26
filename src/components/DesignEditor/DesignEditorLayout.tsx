@@ -119,9 +119,6 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              selectedDevice={selectedDevice}
-              onDeviceChange={setSelectedDevice}
-              background={canvasBackground}
             />
             
             {/* Main Canvas Area */}
