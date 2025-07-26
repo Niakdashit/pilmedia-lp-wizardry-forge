@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback } from 'react';
 import { 
   DeviceType, 
   getDeviceDimensions, 
@@ -15,8 +15,7 @@ import {
 
 export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
   
-  const calculateResponsiveProperties = useMemo(() => {
-    return (element: ResponsiveElement, targetDevice: DeviceType): ResponsiveElement => {
+  const calculateResponsiveProperties = useCallback((element: ResponsiveElement, targetDevice: DeviceType): ResponsiveElement => {
       if (targetDevice === baseDevice) {
         return element;
       }
@@ -88,11 +87,9 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
       }
 
       return responsiveElement;
-    };
   }, [baseDevice]);
 
-  const applyAutoResponsive = useMemo(() => {
-    return (elements: ResponsiveElement[]): ResponsiveElementWithConfig[] => {
+  const applyAutoResponsive = useCallback((elements: ResponsiveElement[]): ResponsiveElementWithConfig[] => {
       return elements.map(element => {
         const desktopProps = calculateResponsiveProperties(element, 'desktop');
         const tabletProps = calculateResponsiveProperties(element, 'tablet');
@@ -165,11 +162,9 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
           isCentered: centering
         } as ResponsiveElementWithConfig;
       });
-    };
   }, [calculateResponsiveProperties, baseDevice]);
 
-  const getPropertiesForDevice = useMemo(() => {
-    return (element: ResponsiveElementWithConfig, device: DeviceType): any => {
+  const getPropertiesForDevice = useCallback((element: ResponsiveElementWithConfig, device: DeviceType): any => {
       const deviceProps = element.deviceConfig?.[device];
       if (!deviceProps) return element;
 
@@ -177,11 +172,9 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
         ...element,
         ...deviceProps
       };
-    };
   }, []);
 
-  const needsAdaptation = useMemo(() => {
-    return (element: ResponsiveElementWithConfig, device: DeviceType): boolean => {
+  const needsAdaptation = useCallback((element: ResponsiveElementWithConfig, device: DeviceType): boolean => {
       const container = getDeviceDimensions(device);
       const props = getPropertiesForDevice(element, device);
       
@@ -195,11 +188,9 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
         'fontSize' in props && props.fontSize < 12;
 
       return isOutOfBounds || hasTinyFont;
-    };
   }, [getPropertiesForDevice]);
 
-  const getAdaptationSuggestions = useMemo(() => {
-    return (elements: ResponsiveElementWithConfig[]): ResponsiveCalculationResult[] => {
+  const getAdaptationSuggestions = useCallback((elements: ResponsiveElementWithConfig[]): ResponsiveCalculationResult[] => {
       return elements.map(element => {
         const reasons: string[] = [];
         let needsAdapt = false;
@@ -217,7 +208,6 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
           adaptationReasons: reasons
         };
       });
-    };
   }, [needsAdaptation]);
 
   return {
