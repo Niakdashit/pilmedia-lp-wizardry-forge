@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
-import { GameSize } from '../../configurators/GameSizeSelector';
 
 interface CanvasGameRendererProps {
   campaign: any;
@@ -27,135 +26,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const canvasConfig = campaign.canvasConfig || {};
   const canvasElements = canvasConfig.elements || [];
   const canvasBackground = canvasConfig.background || campaign.design?.background;
-  const animationConfig = canvasConfig.animations || campaign.design?.animationConfig || {};
   
-  const [shouldTriggerAnimation, setShouldTriggerAnimation] = useState(false);
   
-  const gameSize: GameSize = 'medium';
-  const gamePosition = 'center';
-
-  // Gérer les déclencheurs d'animation
-  useEffect(() => {
-    const handleAnimationTrigger = () => {
-      switch (animationConfig.trigger) {
-        case 'onLoad':
-          setTimeout(() => {
-            setShouldTriggerAnimation(true);
-          }, animationConfig.delay || 0);
-          break;
-        case 'onScroll':
-          const handleScroll = () => {
-            if (window.scrollY > 100) {
-              setTimeout(() => {
-                setShouldTriggerAnimation(true);
-              }, animationConfig.delay || 0);
-            }
-          };
-          window.addEventListener('scroll', handleScroll);
-          return () => window.removeEventListener('scroll', handleScroll);
-        case 'onVisible':
-          // Intersection Observer pour detecter la visibilité
-          const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                setTimeout(() => {
-                  setShouldTriggerAnimation(true);
-                }, animationConfig.delay || 0);
-              }
-            });
-          });
-          const element = document.querySelector('.canvas-container');
-          if (element) observer.observe(element);
-          return () => observer.disconnect();
-        default:
-          setShouldTriggerAnimation(true);
-      }
-    };
-
-    handleAnimationTrigger();
-  }, [animationConfig]);
 
   // Générer les classes CSS d'animation
-  const getAnimationClasses = () => {
-    if (!shouldTriggerAnimation) return '';
-    
-    const duration = `duration-${Math.round(animationConfig.duration / 100) * 100 || 800}`;
-    const delay = animationConfig.delay ? `delay-${Math.round(animationConfig.delay / 100) * 100}` : '';
-    
-    let animationClass = '';
-    
-    switch (animationConfig.type) {
-      case 'fadeIn':
-        animationClass = 'animate-fade-in opacity-100';
-        break;
-      case 'slideIn':
-        switch (animationConfig.direction) {
-          case 'top':
-            animationClass = 'animate-slide-in-from-top';
-            break;
-          case 'bottom':
-            animationClass = 'animate-slide-in-from-bottom';
-            break;
-          case 'left':
-            animationClass = 'animate-slide-in-from-left';
-            break;
-          case 'right':
-            animationClass = 'animate-slide-in-from-right';
-            break;
-          default:
-            animationClass = 'animate-slide-in-right';
-        }
-        break;
-      case 'scaleIn':
-        animationClass = 'animate-scale-in scale-100';
-        break;
-      case 'bounceIn':
-        animationClass = 'animate-bounce-in';
-        break;
-      case 'rotateIn':
-        animationClass = 'animate-spin-once';
-        break;
-      case 'flipIn':
-        animationClass = 'animate-flip-in';
-        break;
-      default:
-        animationClass = 'animate-fade-in opacity-100';
-    }
-    
-    return `${animationClass} ${duration} ${delay}`.trim();
-  };
-
-  const getInitialClasses = () => {
-    if (shouldTriggerAnimation) return '';
-    
-    switch (animationConfig.type) {
-      case 'fadeIn':
-        return 'opacity-0';
-      case 'slideIn':
-        switch (animationConfig.direction) {
-          case 'top':
-            return 'transform -translate-y-full';
-          case 'bottom':
-            return 'transform translate-y-full';
-          case 'left':
-            return 'transform -translate-x-full';
-          case 'right':
-            return 'transform translate-x-full';
-          default:
-            return 'transform translate-x-full';
-        }
-      case 'scaleIn':
-        return 'transform scale-0';
-      case 'bounceIn':
-        return 'transform scale-0';
-      case 'rotateIn':
-        return 'transform rotate-180 scale-0';
-      case 'flipIn':
-        return 'transform rotateY-90 scale-95';
-      default:
-        return 'opacity-0';
-    }
-  };
 
   // Calculer les dimensions du canvas selon l'appareil
   const getCanvasSize = () => {
@@ -226,7 +100,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     if (campaign.type === 'wheel') {
       return (
         <div 
-          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all ease-out ${getInitialClasses()} ${getAnimationClasses()}`}
+          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100`}
           style={{ zIndex: 10 }}
         >
           <WheelPreview
@@ -239,8 +113,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             }}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
-            gameSize={gameSize}
-            gamePosition={gamePosition}
+            gameSize={'medium'}
+            gamePosition={'center'}
             previewDevice={previewMode}
             disabled={!formValidated}
             disableForm={false}
