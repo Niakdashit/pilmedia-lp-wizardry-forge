@@ -34,35 +34,49 @@ const DesignEditorLayout: React.FC = () => {
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
   const generateCampaignFromCanvas = () => {
-    // Extraire les textes depuis les éléments canvas
+    // Extraire les éléments du canvas selon leur type et rôle
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
+    
+    // Séparer les textes et images personnalisés des éléments UI
+    const customTexts = canvasElements.filter(el => 
+      el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
+    );
+    const customImages = canvasElements.filter(el => el.type === 'image');
 
     return {
       id: 'wheel-design-preview',
       type: 'wheel',
       design: {
-        buttonColor: campaignConfig.buttonColor || '#841b60',
-        borderRadius: campaignConfig.borderRadius || '8px',
         background: canvasBackground,
-        customElements: canvasElements,
-        
+        customTexts: customTexts,
+        customImages: customImages,
         extractedColors: extractedColors,
-        textStyles: {
-          title: { 
-            color: titleElement?.style?.color || '#333333', 
-            fontSize: titleElement?.style?.fontSize || '24px', 
-            fontWeight: 'bold' 
-          },
-          description: {
-            color: descriptionElement?.style?.color || '#666666',
-            fontSize: descriptionElement?.style?.fontSize || '16px'
-          },
-          button: { 
-            color: buttonElement?.style?.color || '#ffffff' 
-          }
+        customColors: {
+          primary: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
+          secondary: extractedColors[1] || '#4ecdc4',
+          accent: extractedColors[2] || '#45b7d1'
         }
+      },
+      gameConfig: {
+        wheel: {
+          segments: [
+            { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
+            { id: '2', label: 'Prix 2', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: true },
+            { id: '3', label: 'Prix 3', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
+            { id: '4', label: 'Dommage', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: false }
+          ],
+          winProbability: 0.75,
+          maxWinners: 100,
+          buttonLabel: buttonElement?.content || 'Faire tourner'
+        }
+      },
+      buttonConfig: {
+        text: buttonElement?.content || 'Faire tourner',
+        color: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
+        textColor: buttonElement?.style?.color || '#ffffff',
+        borderRadius: campaignConfig.borderRadius || '8px'
       },
       screens: [
         {
@@ -76,11 +90,11 @@ const DesignEditorLayout: React.FC = () => {
         { id: 'nom', label: 'Nom', type: 'text', required: true },
         { id: 'email', label: 'Email', type: 'email', required: true }
       ],
+      // Garder la configuration canvas pour compatibilité
       canvasConfig: {
         elements: canvasElements,
         background: canvasBackground,
-        device: selectedDevice,
-        
+        device: selectedDevice
       }
     };
   };

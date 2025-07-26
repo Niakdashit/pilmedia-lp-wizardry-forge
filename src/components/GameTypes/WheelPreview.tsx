@@ -34,13 +34,13 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const { getResponsiveDimensions } = useGameSize(gameSize);
   const gameDimensions = getResponsiveDimensions(previewDevice);
 
-  // Récupérer les segments depuis la configuration de la campagne
+  // Récupérer les segments depuis la configuration de la campagne avec priorité aux couleurs extraites
   const segments = campaign.gameConfig?.wheel?.segments || 
                   campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: '#ff6b6b' },
-    { id: '2', label: 'Prix 2', color: '#4ecdc4' },
-    { id: '3', label: 'Prix 3', color: '#45b7d1' },
-    { id: '4', label: 'Dommage', color: '#feca57' }
+    { id: '1', label: 'Prix 1', color: campaign.design?.customColors?.primary || '#ff6b6b' },
+    { id: '2', label: 'Prix 2', color: campaign.design?.customColors?.secondary || '#4ecdc4' },
+    { id: '3', label: 'Prix 3', color: campaign.design?.customColors?.primary || '#45b7d1' },
+    { id: '4', label: 'Dommage', color: campaign.design?.customColors?.secondary || '#feca57' }
   ];
 
   // Fonctions utilitaires (déclarées AVANT leur utilisation)
@@ -94,11 +94,11 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     };
   });
 
-  // Couleurs de marque depuis la campagne avec couleurs extraites en priorité
+  // Couleurs de marque unifiées - priorité aux customColors de la campagne
   const brandColors = {
-    primary: extractedColors[0] || campaign.design?.customColors?.primary || '#841b60',
-    secondary: extractedColors[1] || campaign.design?.customColors?.secondary || '#4ecdc4',
-    accent: extractedColors[2] || campaign.design?.customColors?.accent || '#45b7d1'
+    primary: campaign.design?.customColors?.primary || extractedColors[0] || '#841b60',
+    secondary: campaign.design?.customColors?.secondary || extractedColors[1] || '#4ecdc4',
+    accent: campaign.design?.customColors?.accent || extractedColors[2] || '#45b7d1'
   };
 
   const handleResult = () => {

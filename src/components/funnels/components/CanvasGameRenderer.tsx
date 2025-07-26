@@ -42,25 +42,29 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     '2xl': '24px'
   }), []);
 
-  // Convertir les textes en format responsif si disponibles
+  // Utiliser prioritairement les données structurées de design
   const responsiveTexts = useMemo(() => {
-    const customTexts = campaign.design?.customTexts || campaign.customTexts || [];
+    const customTexts = campaign.design?.customTexts || [];
     if (!customTexts.length) return [];
+    
     const convertedTexts = customTexts.map((text: any) => ({
       ...text,
       type: 'text' as const,
       x: text.x || 0,
       y: text.y || 0,
-      fontSize: text.fontSize || 16,
-      textAlign: (text.textAlign || 'left') as 'left' | 'center' | 'right'
+      fontSize: text.fontSize || parseInt(text.style?.fontSize) || 16,
+      textAlign: text.textAlign || text.style?.textAlign || 'left',
+      color: text.color || text.style?.color || '#000000',
+      fontWeight: text.fontWeight || text.style?.fontWeight || 'normal'
     }));
     return applyAutoResponsive(convertedTexts);
-  }, [campaign.design?.customTexts, campaign.customTexts, applyAutoResponsive]);
+  }, [campaign.design?.customTexts, applyAutoResponsive]);
 
-  // Convertir les images en format responsif si disponibles
+  // Convertir les images en format responsif
   const responsiveImages = useMemo(() => {
     const customImages = campaign.design?.customImages || [];
     if (!customImages.length) return [];
+    
     const convertedImages = customImages.map((image: any) => ({
       ...image,
       type: 'image' as const,
@@ -205,9 +209,9 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         <div 
           className="absolute inset-0" 
           style={{
-            background: canvasBackground?.type === 'image' 
-              ? `url(${canvasBackground.value}) center/cover no-repeat` 
-              : canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+            background: campaign.design?.background?.type === 'image' 
+              ? `url(${campaign.design.background.value}) center/cover no-repeat` 
+              : campaign.design?.background?.value || canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
           }}
         >
           {/* Rendu des éléments responsive customisés */}
