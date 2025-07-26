@@ -21,16 +21,28 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
     
     // Convertir la campagne du Design Editor au format attendu par FinalPreview
     const config = {
-      ...campaign,
-      displayMode: 'mode2-background', // Le Design Editor utilise le mode 2 (background)
-      gameType: campaign.type || 'wheel',
+      id: campaign.id || 'design-editor-campaign',
+      type: campaign.type || 'wheel',
+      gameType: 'wheel',
+      displayMode: 'mode2-background',
       campaignName: campaign.id || 'Design Editor Campaign',
-      customTexts: [], // Pas de textes customisés dans le Design Editor pour l'instant
+      customTexts: [],
       design: {
         customImages: [],
         backgroundImage: campaign.canvasConfig?.background?.type === 'image' ? campaign.canvasConfig.background.value : undefined,
         ...campaign.design
-      }
+      },
+      canvasConfig: campaign.canvasConfig,
+      screens: campaign.screens || [],
+      formFields: campaign.formFields || [],
+      // Couleurs pour la roue
+      participateButtonColor: campaign.design?.buttonColor || '#841b60',
+      outlineColor: '#dc2626',
+      backgroundColor: campaign.canvasConfig?.background?.type === 'color' ? 
+        campaign.canvasConfig.background.value : '#10b981',
+      // Image de bannière si elle existe
+      bannerImage: campaign.canvasConfig?.background?.type === 'image' ? 
+        campaign.canvasConfig.background.value : undefined
     };
     
     const encoded = encodeURIComponent(JSON.stringify(config));

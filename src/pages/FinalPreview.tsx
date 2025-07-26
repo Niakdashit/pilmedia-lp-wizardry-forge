@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Monitor, Tablet, Smartphone, X } from 'lucide-react';
-import Mode1Preview from '../components/GameEditor/Preview/Mode1Preview';
 import Mode2Preview from '../components/GameEditor/Preview/Mode2Preview';
 import type { DeviceType, EditorConfig } from '../components/GameEditor/GameEditorLayout';
 
@@ -56,11 +55,11 @@ const FinalPreview: React.FC = () => {
       onImageDelete: () => {}, // Lecture seule
     };
 
-    if (config.displayMode === 'mode1-banner-game') {
-      return <Mode1Preview {...commonProps} />;
-    } else {
-      return <Mode2Preview {...commonProps} />;
-    }
+    // Debug log pour voir la config
+    console.log('FinalPreview config:', config);
+
+    // Toujours utiliser Mode2Preview pour le Design Editor
+    return <Mode2Preview {...commonProps} />;
   };
 
   return (
