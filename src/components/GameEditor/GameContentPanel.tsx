@@ -5,7 +5,7 @@ import DesignTab from './SidebarTabs/DesignTab';
 import TextsTab from './SidebarTabs/TextsTab';
 import LayersTab from './SidebarTabs/LayersTab';
 import LayoutResponsiveTab from './SidebarTabs/LayoutResponsiveTab';
-import AnimationsTab from './SidebarTabs/AnimationsTab';
+
 import FinalizationTab from './SidebarTabs/FinalizationTab';
 import type { EditorConfig } from './GameEditorLayout';
 
@@ -58,13 +58,6 @@ const GameContentPanel: React.FC<GameContentPanelProps> = ({
             config={config}
             onConfigUpdate={onConfigUpdate}
             triggerAutoSync={triggerAutoSync}
-          />
-        );
-      case 'animations':
-        return (
-          <AnimationsTab
-            config={config}
-            onConfigUpdate={onConfigUpdate}
           />
         );
       case 'finalization':

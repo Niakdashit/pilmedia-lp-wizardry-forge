@@ -20,14 +20,6 @@ const DesignEditorLayout: React.FC = () => {
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
   const [campaignConfig, setCampaignConfig] = useState<any>({});
-  const [animationConfig, setAnimationConfig] = useState<any>({
-    type: 'fadeIn',
-    direction: 'none',
-    duration: 800,
-    delay: 0,
-    trigger: 'onLoad',
-    easing: 'easeOut'
-  });
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
 
@@ -46,7 +38,7 @@ const DesignEditorLayout: React.FC = () => {
         borderRadius: campaignConfig.borderRadius || '8px',
         background: canvasBackground,
         customElements: canvasElements,
-        animationConfig: animationConfig,
+        
         extractedColors: extractedColors,
         textStyles: {
           title: { 
@@ -79,7 +71,7 @@ const DesignEditorLayout: React.FC = () => {
         elements: canvasElements,
         background: canvasBackground,
         device: selectedDevice,
-        animations: animationConfig
+        
       }
     };
   };
@@ -127,8 +119,6 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              animationConfig={animationConfig}
-              onAnimationConfigChange={setAnimationConfig}
             />
             
             {/* Main Canvas Area */}

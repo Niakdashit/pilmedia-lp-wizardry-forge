@@ -7,8 +7,7 @@ import {
   Settings,
   Gamepad2,
   Share,
-  Palette,
-  Zap
+  Palette
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
@@ -16,7 +15,7 @@ import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
-import AnimationEntrancePanel from './panels/AnimationEntrancePanel';
+
 
 interface HybridSidebarProps {
   onAddElement: (element: any) => void;
@@ -26,8 +25,6 @@ interface HybridSidebarProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
-  animationConfig?: any;
-  onAnimationConfigChange?: (config: any) => void;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = ({
@@ -37,9 +34,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
-  onElementsChange,
-  animationConfig,
-  onAnimationConfigChange
+  onElementsChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
@@ -59,11 +54,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
       id: 'layers', 
       label: 'Layers', 
       icon: Layers
-    },
-    { 
-      id: 'animations', 
-      label: 'Animations', 
-      icon: Zap
     },
     { 
       id: 'campaign', 
@@ -103,13 +93,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
         );
       case 'layers':
         return <LayersPanel elements={elements} onElementsChange={onElementsChange || (() => {})} />;
-      case 'animations':
-        return (
-          <AnimationEntrancePanel 
-            animationConfig={animationConfig}
-            onAnimationChange={onAnimationConfigChange || (() => {})} 
-          />
-        );
       case 'campaign':
         return (
           <CampaignConfigPanel 

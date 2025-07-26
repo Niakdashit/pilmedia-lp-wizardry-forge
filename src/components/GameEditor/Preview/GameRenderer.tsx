@@ -8,7 +8,7 @@ import QuizPreview from '../../GameTypes/QuizPreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
-import { AnimatedGameContainer } from '../Animation/AnimatedGameContainer';
+
 import ParticipationModal from '../../SmartWheel/components/ParticipationModal';
 interface GameRendererProps {
   gameType: EditorConfig['gameType'];
@@ -268,9 +268,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     <div className="relative w-full h-full">
       <div style={getGameContainerStyle()} className="game-container mx-0 my-0">
         <div style={getGameContentStyle()}>
-          <AnimatedGameContainer gameType={gameType} device={device}>
-            {renderGameComponent()}
-          </AnimatedGameContainer>
+          {renderGameComponent()}
         </div>
       </div>
 

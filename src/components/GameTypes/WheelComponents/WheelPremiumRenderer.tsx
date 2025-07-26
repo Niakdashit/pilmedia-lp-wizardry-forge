@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { createWheelGradients } from './WheelGradients';
-import { getPremiumTheme, applyThemeEffects } from './WheelPremiumThemes';
-import { usePremiumWheelAnimations, createPremiumSpinningEffects } from './WheelPremiumAnimations';
+import { getPremiumTheme } from './WheelPremiumThemes';
+
 
 interface Segment {
   label: string;
@@ -44,16 +44,9 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
   const mainCanvasRef = canvasRef || internalCanvasRef;
   const [gradients, setGradients] = useState<any>(null);
-  const [animationTime, setAnimationTime] = useState(0);
+  
 
   const premiumTheme = getPremiumTheme(theme);
-
-  usePremiumWheelAnimations({
-    spinning,
-    onAnimationFrame: (elapsed) => {
-      setAnimationTime(elapsed);
-    }
-  });
 
   const drawModernFortuneWheel = () => {
     const canvas = mainCanvasRef.current;
@@ -93,11 +86,6 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
     // Draw premium center
     drawPremiumCenter(ctx, center, premiumTheme, centerImage, centerLogo);
 
-    // Apply theme-specific effects only when spinning
-    if (spinning) {
-      applyThemeEffects(ctx, premiumTheme, center, radius, spinning);
-      createPremiumSpinningEffects(ctx, center, radius, theme, animationTime);
-    }
   };
 
   const drawSimpleWheelSegments = ({
@@ -308,7 +296,7 @@ const WheelPremiumRenderer: React.FC<WheelPremiumRendererProps> = ({
 
   useEffect(() => {
     drawModernFortuneWheel();
-  }, [segments, rotation, centerImage, centerLogo, theme, customColors, borderColor, canvasSize, spinning, gradients, animationTime]);
+  }, [segments, rotation, centerImage, centerLogo, theme, customColors, borderColor, canvasSize, spinning, gradients]);
 
   return (
     <div style={{ 

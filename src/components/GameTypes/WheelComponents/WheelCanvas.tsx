@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import WheelPremiumRenderer from './WheelPremiumRenderer';
-import { useWheelAnimations } from './WheelAnimations';
+
 
 interface Segment {
   label: string;
@@ -40,15 +40,6 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
   canvasSize
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const shadowCanvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Use premium animations
-  useWheelAnimations({
-    spinning,
-    rotation,
-    canvasRef,
-    shadowCanvasRef
-  });
 
   return (
     <div style={{ position: 'relative' }}>
