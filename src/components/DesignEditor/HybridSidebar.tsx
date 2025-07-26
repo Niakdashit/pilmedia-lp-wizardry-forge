@@ -7,7 +7,8 @@ import {
   Settings,
   Gamepad2,
   Share,
-  Palette
+  Palette,
+  Smartphone
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
@@ -15,6 +16,7 @@ import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
+import ResponsivePanel from './panels/ResponsivePanel';
 
 
 interface HybridSidebarProps {
@@ -25,6 +27,9 @@ interface HybridSidebarProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  onDeviceChange?: (device: 'desktop' | 'tablet' | 'mobile') => void;
+  background?: any;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = ({
@@ -34,7 +39,10 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
-  onElementsChange
+  onElementsChange,
+  selectedDevice = 'desktop',
+  onDeviceChange = () => {},
+  background
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
@@ -49,6 +57,12 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
       id: 'background', 
       label: 'Design', 
       icon: Palette
+    },
+    { 
+      id: 'responsive', 
+      label: 'Responsive', 
+      icon: Smartphone,
+      badge: 'Auto'
     },
     { 
       id: 'layers', 
@@ -89,6 +103,16 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
           <BackgroundPanel 
             onBackgroundChange={onBackgroundChange || (() => {})} 
             onExtractedColorsChange={onExtractedColorsChange}
+          />
+        );
+      case 'responsive':
+        return (
+          <ResponsivePanel
+            elements={elements}
+            onElementsChange={onElementsChange || (() => {})}
+            selectedDevice={selectedDevice}
+            onDeviceChange={onDeviceChange}
+            background={background}
           />
         );
       case 'layers':
@@ -171,7 +195,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`p-4 flex flex-col items-center justify-center border-b border-gray-200 transition-colors ${
+                className={`p-4 flex flex-col items-center justify-center border-b border-gray-200 transition-colors relative ${
                   isActive 
                     ? 'bg-white text-blue-600 border-r-2 border-r-blue-600' 
                     : 'text-gray-600 hover:bg-gray-50'
@@ -180,6 +204,11 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
               >
                 <Icon className="w-6 h-6 mb-1" />
                 <span className="text-xs font-medium">{tab.label}</span>
+                {tab.badge && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             );
           })}
