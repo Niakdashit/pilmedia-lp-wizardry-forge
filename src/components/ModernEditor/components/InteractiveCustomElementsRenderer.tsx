@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { Move } from 'lucide-react';
+import React, { memo, useState, useRef } from 'react';
+import { Move, Edit2 } from 'lucide-react';
 
 interface InteractiveCustomElementsRendererProps {
   customTexts: any[];
@@ -27,6 +27,10 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
   onDragStart,
   dragState
 }) => {
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>('');
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTapTimeRef = useRef<number>(0);
   const getElementDeviceConfig = (element: any) => {
     if (previewDevice !== 'desktop' && element[previewDevice]) {
       return { ...element, ...element[previewDevice] };
@@ -41,12 +45,49 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
     return 'none';
   };
 
+  const handleTextEdit = (textId: string, newText: string) => {
+    // Update the text in the campaign
+    window.dispatchEvent(new CustomEvent('updateTextElement', {
+      detail: { id: textId, text: newText }
+    }));
+  };
+
+  const handleDoubleTap = (e: React.MouseEvent | React.TouchEvent, textId: string, currentText: string) => {
+    e.stopPropagation();
+    const now = Date.now();
+    const timeSince = now - lastTapTimeRef.current;
+    
+    if (timeSince < 300 && timeSince > 0) {
+      // Double tap detected
+      setEditingTextId(textId);
+      setEditingText(currentText);
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+    } else {
+      // Single tap
+      lastTapTimeRef.current = now;
+      tapTimeoutRef.current = setTimeout(() => {
+        onElementSelect(textId);
+        tapTimeoutRef.current = null;
+      }, 300);
+    }
+  };
+
+  const handleTextEditSubmit = (textId: string) => {
+    handleTextEdit(textId, editingText);
+    setEditingTextId(null);
+    setEditingText('');
+  };
+
   const renderInteractiveText = (customText: any) => {
     if (!customText?.enabled) return null;
 
     const config = getElementDeviceConfig(customText);
     const isSelected = selectedElementId === customText.id.toString();
     const isDragged = dragState.draggedElementId === customText.id.toString();
+    const isEditing = editingTextId === customText.id.toString();
     
     const textStyle: React.CSSProperties = {
       position: 'absolute',
@@ -90,26 +131,89 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
         data-element-id={customText.id}
         style={textStyle}
         onClick={(e) => {
-          e.stopPropagation();
-          onElementSelect(customText.id.toString());
+          if (!isEditing) {
+            handleDoubleTap(e, customText.id.toString(), config.text || 'Texte personnalisé');
+          }
         }}
         onMouseDown={(e) => {
-          e.preventDefault();
-          onDragStart(e, customText.id.toString(), 'text');
+          if (!isEditing) {
+            e.preventDefault();
+            onDragStart(e, customText.id.toString(), 'text');
+          }
         }}
         onTouchStart={(e) => {
-          e.preventDefault();
-          onDragStart(e, customText.id.toString(), 'text');
+          if (!isEditing) {
+            e.preventDefault();
+            // Handle touch for mobile editing and dragging
+            const now = Date.now();
+            const timeSince = now - lastTapTimeRef.current;
+            
+            if (timeSince < 300 && timeSince > 0) {
+              // Double tap - start editing
+              setEditingTextId(customText.id.toString());
+              setEditingText(config.text || 'Texte personnalisé');
+              return;
+            }
+            
+            lastTapTimeRef.current = now;
+            
+            // Single tap - start drag after delay
+            setTimeout(() => {
+              if (lastTapTimeRef.current === now) {
+                onDragStart(e, customText.id.toString(), 'text');
+              }
+            }, 150);
+          }
         }}
         className="group hover:shadow-lg"
       >
-        {config.text || 'Texte personnalisé'}
+        {isEditing ? (
+          <input
+            type="text"
+            value={editingText}
+            onChange={(e) => setEditingText(e.target.value)}
+            onBlur={() => handleTextEditSubmit(customText.id.toString())}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleTextEditSubmit(customText.id.toString());
+              }
+            }}
+            autoFocus
+            className="bg-transparent border-none outline-none w-full"
+            style={{
+              color: config.color || '#000000',
+              fontFamily: config.fontFamily || 'Inter, sans-serif',
+              fontSize: 'inherit',
+              fontWeight: 'inherit',
+              fontStyle: 'inherit'
+            }}
+          />
+        ) : (
+          config.text || 'Texte personnalisé'
+        )}
         
-        {/* Drag handle */}
-        {isSelected && (
-          <div className="absolute -top-6 -right-6 bg-blue-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-            <Move className="w-3 h-3" />
-          </div>
+        {/* Mobile editing and drag handles */}
+        {isSelected && !isEditing && (
+          <>
+            <div className="absolute -top-6 -right-6 bg-blue-500 text-white p-1.5 rounded-full shadow-lg opacity-100 transition-opacity touch-manipulation">
+              <Move className="w-4 h-4" />
+            </div>
+            <button
+              className="absolute -top-6 -left-6 bg-green-500 text-white p-1.5 rounded-full shadow-lg opacity-100 transition-opacity touch-manipulation"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingTextId(customText.id.toString());
+                setEditingText(config.text || 'Texte personnalisé');
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                setEditingTextId(customText.id.toString());
+                setEditingText(config.text || 'Texte personnalisé');
+              }}
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          </>
         )}
       </div>
     );
@@ -156,7 +260,24 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
         }}
         onTouchStart={(e) => {
           e.preventDefault();
-          onDragStart(e, customImage.id.toString(), 'image');
+          // Better touch handling for images
+          const now = Date.now();
+          const timeSince = now - lastTapTimeRef.current;
+          
+          if (timeSince < 300 && timeSince > 0) {
+            // Double tap - just select for now
+            onElementSelect(customImage.id.toString());
+            return;
+          }
+          
+          lastTapTimeRef.current = now;
+          
+          // Single touch - start drag after brief delay
+          setTimeout(() => {
+            if (lastTapTimeRef.current === now) {
+              onDragStart(e, customImage.id.toString(), 'image');
+            }
+          }, 100);
         }}
         className="group hover:shadow-lg"
       >
@@ -173,8 +294,8 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
         
         {/* Drag handle */}
         {isSelected && (
-          <div className="absolute -top-6 -right-6 bg-blue-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-            <Move className="w-3 h-3" />
+          <div className="absolute -top-6 -right-6 bg-blue-500 text-white p-1.5 rounded-full shadow-lg opacity-100 transition-opacity touch-manipulation">
+            <Move className="w-4 h-4" />
           </div>
         )}
 
