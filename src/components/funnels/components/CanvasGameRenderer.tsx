@@ -108,7 +108,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   const canvasSize = getCanvasSize();
-  const scale = previewMode === 'desktop' ? 1 : previewMode === 'tablet' ? 0.9 : 1;
+  
 
   const handleGameComplete = (result: 'win' | 'lose') => {
     console.log('Game completed with result:', result);
@@ -201,8 +201,9 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
           margin: '0 auto',
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center'
+          // Utiliser la même logique de transformation que l'éditeur pour cohérence
+          transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
+          transformOrigin: 'top center'
         }}
       >
         {/* Canvas Background */}

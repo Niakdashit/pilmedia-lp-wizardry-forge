@@ -15,18 +15,6 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
   sizeMap
 }) => {
 
-  // Facteurs d'échelle appliqués dans l'éditeur pour cohérence
-  const getScaleFactor = () => {
-    switch (previewDevice) {
-      case 'desktop': return 0.8; // Même échelle que dans DesignCanvas.tsx
-      case 'tablet': return 0.9;
-      case 'mobile': return 1;
-      default: return 1;
-    }
-  };
-
-  const scaleFactor = getScaleFactor();
-
   const renderTextElement = (customText: any) => {
     if (!customText?.content && !customText?.text) return null;
 
@@ -36,25 +24,19 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
     
     const textContent = customText.content || customText.text || 'Texte personnalisé';
     
-    // Responsive font sizes based on device with scale factor
+    // Responsive font sizes based on device
     const getFontSize = () => {
-      let fontSize = 16; // default fallback
-      
-      if (config.fontSize) {
-        fontSize = config.fontSize;
-      } else if (sizeMap[config.size || customText.size || 'base']) {
-        fontSize = parseInt(sizeMap[config.size || customText.size || 'base']);
-      } else {
-        // Fallback responsive sizing
-        switch (previewDevice) {
-          case 'mobile': fontSize = 14; break;
-          case 'tablet': fontSize = 16; break;
-          case 'desktop': fontSize = 18; break;
-          default: fontSize = 16; break;
-        }
+      if (config.fontSize) return `${config.fontSize}px`;
+      if (sizeMap[config.size || customText.size || 'base']) {
+        return sizeMap[config.size || customText.size || 'base'];
       }
-      
-      return `${fontSize * scaleFactor}px`;
+      // Fallback responsive sizing
+      switch (previewDevice) {
+        case 'mobile': return '14px';
+        case 'tablet': return '16px';
+        case 'desktop': return '18px';
+        default: return '16px';
+      }
     };
 
     // Responsive width calculations
@@ -73,8 +55,8 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
 
     const textStyle: React.CSSProperties = {
       position: 'absolute',
-      left: `${(config.x || customText.x || 0) * scaleFactor}px`,
-      top: `${(config.y || customText.y || 0) * scaleFactor}px`,
+      left: `${config.x || customText.x || 0}px`,
+      top: `${config.y || customText.y || 0}px`,
       fontSize: getFontSize(),
       color: config.color || customText.color || '#ffffff',
       fontFamily: config.fontFamily || customText.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
@@ -127,10 +109,10 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
     
     const imageStyle: React.CSSProperties = {
       position: 'absolute',
-      left: `${(config.x || customImage.x || 0) * scaleFactor}px`,
-      top: `${(config.y || customImage.y || 0) * scaleFactor}px`,
-      width: `${(config.width || customImage.width || 100) * scaleFactor}px`,
-      height: `${(config.height || customImage.height || 100) * scaleFactor}px`,
+      left: `${config.x || customImage.x || 0}px`,
+      top: `${config.y || customImage.y || 0}px`,
+      width: `${config.width || customImage.width || 100}px`,
+      height: `${config.height || customImage.height || 100}px`,
       transform: `rotate(${config.rotation || customImage.rotation || 0}deg)`,
       zIndex: 99,
       pointerEvents: 'none',
