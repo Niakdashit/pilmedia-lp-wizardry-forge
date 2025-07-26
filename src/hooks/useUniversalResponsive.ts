@@ -78,6 +78,13 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
         if (centering.horizontal) {
           (responsiveElement as any).textAlign = 'center';
         }
+        // Préserver toutes les autres propriétés de style de texte
+        (responsiveElement as any).color = element.color;
+        (responsiveElement as any).fontFamily = element.fontFamily;
+        (responsiveElement as any).fontWeight = element.fontWeight;
+        (responsiveElement as any).fontStyle = element.fontStyle;
+        (responsiveElement as any).textDecoration = element.textDecoration;
+        (responsiveElement as any).backgroundColor = element.backgroundColor;
       }
 
       return responsiveElement;
@@ -109,7 +116,13 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
             height: desktopProps.height,
             ...(element.type === 'text' ? { 
               fontSize: (desktopProps as any).fontSize,
-              textAlign: (desktopProps as any).textAlign 
+              textAlign: (desktopProps as any).textAlign,
+              color: (desktopProps as any).color,
+              fontFamily: (desktopProps as any).fontFamily,
+              fontWeight: (desktopProps as any).fontWeight,
+              fontStyle: (desktopProps as any).fontStyle,
+              textDecoration: (desktopProps as any).textDecoration,
+              backgroundColor: (desktopProps as any).backgroundColor
             } : {})
           },
           tablet: baseDevice === 'tablet' ? undefined : {
@@ -119,7 +132,13 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
             height: tabletProps.height,
             ...(element.type === 'text' ? { 
               fontSize: (tabletProps as any).fontSize,
-              textAlign: (tabletProps as any).textAlign 
+              textAlign: (tabletProps as any).textAlign,
+              color: (tabletProps as any).color,
+              fontFamily: (tabletProps as any).fontFamily,
+              fontWeight: (tabletProps as any).fontWeight,
+              fontStyle: (tabletProps as any).fontStyle,
+              textDecoration: (tabletProps as any).textDecoration,
+              backgroundColor: (tabletProps as any).backgroundColor
             } : {})
           },
           mobile: baseDevice === 'mobile' ? undefined : {
@@ -129,7 +148,13 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
             height: mobileProps.height,
             ...(element.type === 'text' ? { 
               fontSize: (mobileProps as any).fontSize,
-              textAlign: (mobileProps as any).textAlign 
+              textAlign: (mobileProps as any).textAlign,
+              color: (mobileProps as any).color,
+              fontFamily: (mobileProps as any).fontFamily,
+              fontWeight: (mobileProps as any).fontWeight,
+              fontStyle: (mobileProps as any).fontStyle,
+              textDecoration: (mobileProps as any).textDecoration,
+              backgroundColor: (mobileProps as any).backgroundColor
             } : {})
           }
         };

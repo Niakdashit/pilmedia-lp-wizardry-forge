@@ -3,6 +3,7 @@ import React from 'react';
 import { SmartWheel } from '../../SmartWheel';
 import type { DeviceType, EditorConfig } from '../GameEditorLayout';
 import { createSegments } from './wheelHelpers';
+import { useBrandColorExtraction } from '../../QuickCampaign/Preview/hooks/useBrandColorExtraction';
 
 interface WheelContainerProps {
   device: DeviceType;
@@ -23,14 +24,24 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onShowParticipationModal,
   scale = 1.7 // Échelle par défaut à 1.7x
 }) => {
-  const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
+  // Extraction de couleurs automatique pour synchroniser avec DesignEditor
+  const { finalColors } = useBrandColorExtraction(
+    { 
+      primary: config.brandAssets?.primaryColor || config.participateButtonColor || '#841b60', 
+      secondary: '#4ecdc4', 
+      accent: '#45b7d1' 
+    },
+    config.deviceConfig?.[device]?.backgroundImage
+  );
 
-  // Utiliser les couleurs extraites de l'image si disponibles
-  const brandColors = config.brandAssets ? {
-    primary: brandColor,
-    secondary: config.brandAssets.secondaryColor || '#F7B731',
-    accent: config.brandAssets.accentColor || '#E74C3C'
-  } : undefined;
+  const brandColor = finalColors.primary;
+
+  // Utiliser les couleurs extraites
+  const brandColors = {
+    primary: finalColors.primary,
+    secondary: finalColors.secondary,
+    accent: finalColors.accent
+  };
 
   const wheelSegments = createSegments(config, brandColor);
 
@@ -92,7 +103,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         onShowParticipationModal={onShowParticipationModal}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
-          color: brandColors?.primary || "#8E44AD",
+          color: brandColors.primary,
           textColor: "#ffffff"
         }}
       />
