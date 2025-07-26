@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -22,6 +23,13 @@ const DesignEditorLayout: React.FC = () => {
   const [campaignConfig, setCampaignConfig] = useState<any>({});
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+
+  // Auto-responsive logic
+  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
+  
+  const adaptationSuggestions = useMemo(() => {
+    return getAdaptationSuggestions(canvasElements);
+  }, [canvasElements, getAdaptationSuggestions]);
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
   const generateCampaignFromCanvas = () => {
@@ -119,6 +127,9 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
+              selectedDevice={selectedDevice}
+              onDeviceChange={setSelectedDevice}
+              adaptationSuggestions={adaptationSuggestions}
             />
             
             {/* Main Canvas Area */}
