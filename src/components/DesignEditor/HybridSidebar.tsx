@@ -15,7 +15,6 @@ import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
-import AutoResponsivePanel from './panels/AutoResponsivePanel';
 
 
 interface HybridSidebarProps {
@@ -26,14 +25,6 @@ interface HybridSidebarProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
-  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
-  onDeviceChange?: (device: 'desktop' | 'tablet' | 'mobile') => void;
-  adaptationSuggestions?: Array<{
-    elementId: string;
-    device: 'desktop' | 'tablet' | 'mobile';
-    issue: string;
-    suggestion: string;
-  }>;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = ({
@@ -43,20 +34,12 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
-  onElementsChange,
-  selectedDevice = 'desktop',
-  onDeviceChange = () => {},
-  adaptationSuggestions = []
+  onElementsChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<string | null>('responsive');
+  const [activeTab, setActiveTab] = useState<string | null>('assets');
 
   const tabs = [
-    { 
-      id: 'responsive', 
-      label: 'Auto-Responsive', 
-      icon: ChevronRight
-    },
     { 
       id: 'assets', 
       label: 'Elements', 
@@ -99,15 +82,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
-      case 'responsive':
-        return (
-          <AutoResponsivePanel
-            elements={elements}
-            selectedDevice={selectedDevice}
-            onDeviceChange={onDeviceChange}
-            adaptationSuggestions={adaptationSuggestions}
-          />
-        );
       case 'assets':
         return <AssetsPanel onAddElement={onAddElement} />;
       case 'background':

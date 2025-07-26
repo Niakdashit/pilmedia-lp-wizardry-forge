@@ -4,6 +4,7 @@ import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -127,9 +128,6 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              selectedDevice={selectedDevice}
-              onDeviceChange={setSelectedDevice}
-              adaptationSuggestions={adaptationSuggestions}
             />
             
             {/* Main Canvas Area */}
@@ -139,6 +137,9 @@ const DesignEditorLayout: React.FC = () => {
               onElementsChange={setCanvasElements}
               background={canvasBackground}
             />
+            
+            {/* Auto-Responsive Indicator - Always visible in bottom right */}
+            <AutoResponsiveIndicator adaptationSuggestions={adaptationSuggestions} />
           </>
         )}
       </div>
