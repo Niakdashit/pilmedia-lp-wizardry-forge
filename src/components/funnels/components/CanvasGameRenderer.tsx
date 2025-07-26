@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
+import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
+import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 
 interface CanvasGameRendererProps {
   campaign: any;
@@ -27,7 +29,63 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const canvasElements = canvasConfig.elements || [];
   const canvasBackground = canvasConfig.background || campaign.design?.background;
   
-  
+  // Système responsif pour les éléments customisés
+  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
+
+  // Size map pour le rendu responsive
+  const sizeMap = useMemo(() => ({
+    xs: '12px',
+    sm: '14px', 
+    md: '16px',
+    lg: '18px',
+    xl: '20px',
+    '2xl': '24px'
+  }), []);
+
+  // Convertir les textes en format responsif si disponibles
+  const responsiveTexts = useMemo(() => {
+    const customTexts = campaign.design?.customTexts || campaign.customTexts || [];
+    if (!customTexts.length) return [];
+    const convertedTexts = customTexts.map((text: any) => ({
+      ...text,
+      type: 'text' as const,
+      x: text.x || 0,
+      y: text.y || 0,
+      fontSize: text.fontSize || 16,
+      textAlign: (text.textAlign || 'left') as 'left' | 'center' | 'right'
+    }));
+    return applyAutoResponsive(convertedTexts);
+  }, [campaign.design?.customTexts, campaign.customTexts, applyAutoResponsive]);
+
+  // Convertir les images en format responsif si disponibles
+  const responsiveImages = useMemo(() => {
+    const customImages = campaign.design?.customImages || [];
+    if (!customImages.length) return [];
+    const convertedImages = customImages.map((image: any) => ({
+      ...image,
+      type: 'image' as const,
+      x: image.x || 0,
+      y: image.y || 0,
+      width: image.width || 150,
+      height: image.height || 150
+    }));
+    return applyAutoResponsive(convertedImages);
+  }, [campaign.design?.customImages, applyAutoResponsive]);
+
+  // Préparer les éléments pour CustomElementsRenderer
+  const customTextsForRenderer = useMemo(() => {
+    return responsiveTexts.map((text: any) => {
+      const textProps = getPropertiesForDevice(text, previewMode);
+      return { ...text, ...textProps };
+    });
+  }, [responsiveTexts, getPropertiesForDevice, previewMode]);
+
+  const customImagesForRenderer = useMemo(() => {
+    return responsiveImages.map((image: any) => {
+      const imageProps = getPropertiesForDevice(image, previewMode);
+      return { ...image, ...imageProps };
+    });
+  }, [responsiveImages, getPropertiesForDevice, previewMode]);
 
   // Générer les classes CSS d'animation
 
@@ -152,7 +210,15 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
               : canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
           }}
         >
-          {/* Rendu des éléments du canvas */}
+          {/* Rendu des éléments responsive customisés */}
+          <CustomElementsRenderer
+            customTexts={customTextsForRenderer}
+            customImages={customImagesForRenderer}
+            previewDevice={previewMode}
+            sizeMap={sizeMap}
+          />
+          
+          {/* Rendu des éléments du canvas (fallback pour compatibilité) */}
           {canvasElements.map(renderCanvasElement)}
           
           {/* Composant de jeu (roue) */}
