@@ -16,18 +16,70 @@ export interface DesignCanvasProps {
     type: 'color' | 'image';
     value: string;
   };
+  campaign?: any;
+  onCampaignChange?: (campaign: any) => void;
 }
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
   selectedDevice,
   elements,
   onElementsChange,
-  background
+  background,
+  campaign,
+  onCampaignChange
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
-  const [wheelBorderStyle, setWheelBorderStyle] = useState('classic');
-  const [wheelBorderColor, setWheelBorderColor] = useState('#841b60');
-  const [wheelScale, setWheelScale] = useState(1);
+  
+  // Récupérer les configurations de la roue depuis la campagne
+  const wheelBorderStyle = campaign?.design?.wheelConfig?.borderStyle || 'classic';
+  const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
+  const wheelScale = campaign?.design?.wheelConfig?.scale || 1;
+
+  // Fonctions pour mettre à jour la configuration de la roue
+  const setWheelBorderStyle = (style: string) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelConfig: {
+            ...campaign?.design?.wheelConfig,
+            borderStyle: style
+          }
+        }
+      });
+    }
+  };
+
+  const setWheelBorderColor = (color: string) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelConfig: {
+            ...campaign?.design?.wheelConfig,
+            borderColor: color
+          }
+        }
+      });
+    }
+  };
+
+  const setWheelScale = (scale: number) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelConfig: {
+            ...campaign?.design?.wheelConfig,
+            scale: scale
+          }
+        }
+      });
+    }
+  };
 
   // Intégration du système auto-responsive
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();

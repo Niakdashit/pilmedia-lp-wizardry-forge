@@ -115,9 +115,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue adaptée sans débordement
+  // Calculer une taille de roue adaptée avec l'échelle de la campagne
   const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const wheelSize = Math.min(baseSize * 1.5, Math.min(gameDimensions.width, gameDimensions.height) - 20);
+  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
+  const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
   const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
   return (
@@ -142,7 +143,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
-        borderStyle={borderStyle}
+        borderStyle={campaign?.design?.wheelConfig?.borderStyle || borderStyle}
         customButton={{
           text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
           color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,

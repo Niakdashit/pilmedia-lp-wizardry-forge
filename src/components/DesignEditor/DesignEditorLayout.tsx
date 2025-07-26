@@ -57,6 +57,11 @@ const DesignEditorLayout: React.FC = () => {
           primary: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
           secondary: extractedColors[1] || '#4ecdc4',
           accent: extractedColors[2] || '#45b7d1'
+        },
+        wheelConfig: campaignConfig.wheelConfig || {
+          borderStyle: 'classic',
+          borderColor: '#841b60',
+          scale: 1
         }
       },
       gameConfig: {
@@ -150,6 +155,8 @@ const DesignEditorLayout: React.FC = () => {
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
+              campaign={campaignConfig}
+              onCampaignChange={setCampaignConfig}
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
