@@ -43,9 +43,14 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
     const handleMouseUp = handleDragEnd;
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       handleDragMove(e);
     };
-    const handleTouchEnd = handleDragEnd;
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleDragEnd();
+    };
 
     if (dragState.isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -109,7 +114,8 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       onClick={handleContainerClick}
       style={{
         cursor: dragState.isDragging ? 'grabbing' : 'default',
-        zIndex: 1000
+        zIndex: 1000,
+        touchAction: 'none' // Empêche le défilement natif
       }}
     >
       {/* Interactive elements overlay */}

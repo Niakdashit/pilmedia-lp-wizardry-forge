@@ -103,6 +103,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       cursor: 'grab',
       userSelect: 'none',
       whiteSpace: 'nowrap',
+      touchAction: 'none', // Empêche le défilement natif
       maxWidth: '400px',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
@@ -144,6 +145,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
         onTouchStart={(e) => {
           if (!isEditing) {
             e.preventDefault();
+            e.stopPropagation();
             // Handle touch for mobile editing and dragging
             const now = Date.now();
             const timeSince = now - lastTapTimeRef.current;
@@ -160,6 +162,8 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
             // Single tap - start drag after delay
             setTimeout(() => {
               if (lastTapTimeRef.current === now) {
+                // Empêcher le défilement pendant le drag
+                document.body.style.overflow = 'hidden';
                 onDragStart(e, customText.id.toString(), 'text');
               }
             }, 150);
@@ -236,6 +240,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       zIndex: isSelected ? 1000 : (isDragged ? 999 : 199),
       cursor: 'grab',
       borderRadius: '6px',
+      touchAction: 'none', // Empêche le défilement natif
       transition: isDragged ? 'none' : 'all 0.2s ease',
       outline: isSelected ? '2px solid #3b82f6' : 'none',
       outlineOffset: '2px'
@@ -260,6 +265,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
         }}
         onTouchStart={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           // Better touch handling for images
           const now = Date.now();
           const timeSince = now - lastTapTimeRef.current;
@@ -275,6 +281,8 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
           // Single touch - start drag after brief delay
           setTimeout(() => {
             if (lastTapTimeRef.current === now) {
+              // Empêcher le défilement pendant le drag
+              document.body.style.overflow = 'hidden';
               onDragStart(e, customImage.id.toString(), 'image');
             }
           }, 100);

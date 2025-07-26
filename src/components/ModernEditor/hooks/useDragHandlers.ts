@@ -124,6 +124,8 @@ export const useDragHandlers = ({
     resetDragState();
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+    // Rétablir le défilement
+    document.body.style.overflow = '';
   }, [dragState.isDragging, resetDragState]);
 
   return {
