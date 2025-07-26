@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { DeviceType, EditorConfig, CustomText } from '../GameEditorLayout';
 import BackgroundContainer from './BackgroundContainer';
 import SocialButtons from './SocialButtons';
@@ -6,6 +6,7 @@ import RulesButton from './RulesButton';
 import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
+import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 
 interface Mode1PreviewProps {
   device: DeviceType;
@@ -35,6 +36,37 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   } | null>(null);
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+
+  // Système responsif unifié
+  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive();
+
+  // Convertir les textes en format responsif
+  const responsiveTexts = useMemo(() => {
+    if (!config.customTexts) return [];
+    const convertedTexts = config.customTexts.map(text => ({
+      ...text,
+      type: 'text' as const,
+      x: text.x || 0,
+      y: text.y || 0,
+      fontSize: text.fontSize || 16,
+      textAlign: (text.textAlign || 'left') as 'left' | 'center' | 'right'
+    }));
+    return applyAutoResponsive(convertedTexts);
+  }, [config.customTexts, applyAutoResponsive]);
+
+  // Convertir les images en format responsif
+  const responsiveImages = useMemo(() => {
+    if (!config.design?.customImages) return [];
+    const convertedImages = config.design.customImages.map(image => ({
+      ...image,
+      type: 'image' as const,
+      x: image.x || 0,
+      y: image.y || 0,
+      width: image.width || 150,
+      height: image.height || 150
+    }));
+    return applyAutoResponsive(convertedImages);
+  }, [config.design?.customImages, applyAutoResponsive]);
 
   const handleWheelResult = (result: { id: string; label: string; color: string }) => {
     console.log('Résultat de la roue:', result);
@@ -109,50 +141,59 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
       </div>
       
       {/* Custom editable images - positioned absolutely over the whole layout */}
-      {config.design?.customImages?.map((image: any) => (
-        <div
-          key={image.id}
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{ zIndex: 9 }}
-        >
-          <div className="relative w-full h-full pointer-events-auto">
-            <EditableImage
-              image={image}
-              onUpdate={onImageUpdate}
-              onDelete={onImageDelete}
-              isSelected={selectedImageId === image.id}
-              onSelect={setSelectedImageId}
-            />
+      {responsiveImages.map((image: any) => {
+        const imageProps = getPropertiesForDevice(image, device);
+        const responsiveImage = { ...image, ...imageProps };
+        
+        return (
+          <div
+            key={image.id}
+            className="absolute top-0 left-0 w-full h-full pointer-events-none"
+            style={{ zIndex: 9 }}
+          >
+            <div className="relative w-full h-full pointer-events-auto">
+              <EditableImage
+                image={responsiveImage}
+                onUpdate={onImageUpdate}
+                onDelete={onImageDelete}
+                isSelected={selectedImageId === image.id}
+                onSelect={setSelectedImageId}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Custom editable texts - only render in header area for Mode 1, not over content area */}
-      {config.customTexts?.map((text) => (
-        <div
-          key={text.id}
-          className="absolute pointer-events-none"
-          style={{ 
-            zIndex: 10,
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: getHeaderHeight() === 'auto' ? '70vh' : getHeaderHeight()
-          }}
-        >
-          <div className="relative w-full h-full">
-            <EditableText
-              text={text}
-              onUpdate={onTextUpdate}
-              onDelete={onTextDelete}
-              isSelected={selectedTextId === text.id}
-              onSelect={setSelectedTextId}
-              device={device}
-              triggerAutoSync={triggerAutoSync}
-            />
+      {responsiveTexts.map((text) => {
+        const textProps = getPropertiesForDevice(text, device);
+        const responsiveText = { ...text, ...textProps };
+        
+        return (
+          <div
+            key={text.id}
+            className="absolute pointer-events-none"
+            style={{ 
+              zIndex: 10,
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: getHeaderHeight() === 'auto' ? '70vh' : getHeaderHeight()
+            }}
+          >
+            <div className="relative w-full h-full">
+              <EditableText
+                text={responsiveText}
+                onUpdate={onTextUpdate}
+                onDelete={onTextDelete}
+                isSelected={selectedTextId === text.id}
+                onSelect={setSelectedTextId}
+                triggerAutoSync={triggerAutoSync}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

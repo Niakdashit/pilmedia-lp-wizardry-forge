@@ -11,7 +11,6 @@ interface EditableTextProps {
   onDelete: (id: string) => void;
   isSelected: boolean;
   onSelect: (id: string) => void;
-  device?: 'desktop' | 'tablet' | 'mobile';
   triggerAutoSync?: () => void;
 }
 
@@ -21,7 +20,6 @@ const EditableText: React.FC<EditableTextProps> = ({
   onDelete, 
   isSelected, 
   onSelect,
-  device = 'desktop',
   triggerAutoSync
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -83,19 +81,11 @@ const EditableText: React.FC<EditableTextProps> = ({
   const handleDrag = (_: any, data: any) => {
     setShowToolbar(false);
     
-    // Mettre à jour la position pour l'appareil actuel
+    // Mettre à jour la position directement
     const updatedText = {
       ...text,
       x: data.x,
-      y: data.y,
-      deviceConfig: {
-        ...text.deviceConfig,
-        [device]: {
-          ...text.deviceConfig?.[device],
-          x: data.x,
-          y: data.y
-        }
-      }
+      y: data.y
     };
     
     onUpdate(updatedText);
@@ -152,25 +142,14 @@ const EditableText: React.FC<EditableTextProps> = ({
       
       const newFontSize = Math.max(8, Math.min(128, Math.round(startFontSize * scaleRatio)));
       
-      // Mettre à jour les dimensions pour l'appareil actuel
+      // Mettre à jour les dimensions directement
       const updatedText = {
         ...text,
         width: newWidth,
         height: newHeight,
         x: newX,
         y: newY,
-        fontSize: newFontSize,
-        deviceConfig: {
-          ...text.deviceConfig,
-          [device]: {
-            ...text.deviceConfig?.[device],
-            x: newX,
-            y: newY,
-            width: newWidth,
-            height: newHeight,
-            fontSize: newFontSize
-          }
-        }
+        fontSize: newFontSize
       };
       
       onUpdate(updatedText);
@@ -209,17 +188,12 @@ const EditableText: React.FC<EditableTextProps> = ({
     setShowToolbar(false);
   };
 
-  // Obtenir les valeurs actuelles en fonction de l'appareil
-  const getDeviceValue = (baseValue: any, deviceConfigValue: any) => {
-    return deviceConfigValue !== undefined ? deviceConfigValue : baseValue;
-  };
-
-  const deviceConfig = text.deviceConfig?.[device];
-  const currentX = getDeviceValue(text.x, deviceConfig?.x);
-  const currentY = getDeviceValue(text.y, deviceConfig?.y);
-  const currentWidth = getDeviceValue(text.width, deviceConfig?.width);
-  const currentHeight = getDeviceValue(text.height, deviceConfig?.height);
-  const currentFontSize = getDeviceValue(text.fontSize, deviceConfig?.fontSize);
+  // Les propriétés responsives sont déjà calculées et appliquées au text
+  const currentX = text.x;
+  const currentY = text.y;
+  const currentWidth = text.width;
+  const currentHeight = text.height;
+  const currentFontSize = text.fontSize;
 
   const textStyle: React.CSSProperties = {
     fontSize: `${currentFontSize}px`,
