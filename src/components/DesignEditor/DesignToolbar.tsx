@@ -19,6 +19,35 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
   const handleFinalPreview = () => {
     if (!campaign) return;
     
+    // Récupérer les éléments canvas et créer les textes et images customisés
+    const elements = campaign.canvasConfig?.elements || [];
+    const customTexts = elements
+      .filter((el: any) => el.type === 'text')
+      .map((el: any) => ({
+        id: el.id,
+        content: el.content,
+        style: {
+          ...el.style,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height
+        }
+      }));
+    
+    const customImages = elements
+      .filter((el: any) => el.type === 'image')
+      .map((el: any) => ({
+        id: el.id,
+        src: el.src,
+        style: {
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height
+        }
+      }));
+    
     // Convertir la campagne du Design Editor au format attendu par FinalPreview
     const config = {
       id: campaign.id || 'design-editor-campaign',
@@ -26,9 +55,9 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
       gameType: 'wheel',
       displayMode: 'mode2-background',
       campaignName: campaign.id || 'Design Editor Campaign',
-      customTexts: [],
+      customTexts,
       design: {
-        customImages: [],
+        customImages,
         backgroundImage: campaign.canvasConfig?.background?.type === 'image' ? campaign.canvasConfig.background.value : undefined,
         ...campaign.design
       },
