@@ -9,14 +9,15 @@ interface ResponsiveElement {
   width?: number;
   height?: number;
   fontSize?: number;
+  textAlign?: string;
   // Style et contenu
   style?: any;
   content?: string;
   // Configuration responsive automatique
   responsive?: {
-    desktop: { x: number; y: number; width?: number; height?: number; fontSize?: number };
-    tablet: { x: number; y: number; width?: number; height?: number; fontSize?: number };
-    mobile: { x: number; y: number; width?: number; height?: number; fontSize?: number };
+    desktop: { x: number; y: number; width?: number; height?: number; fontSize?: number; textAlign?: string };
+    tablet: { x: number; y: number; width?: number; height?: number; fontSize?: number; textAlign?: string };
+    mobile: { x: number; y: number; width?: number; height?: number; fontSize?: number; textAlign?: string };
   };
 }
 
@@ -40,7 +41,52 @@ export const useAutoResponsive = (
 ) => {
   
   /**
-   * Calcule les propriétés responsives intelligemment
+   * Détecte si un élément est centré intentionnellement
+   */
+  const isElementCentered = useMemo(() => {
+    return (
+      element: ResponsiveElement,
+      container: { width: number; height: number },
+      tolerance: number = 30
+    ) => {
+      const elementWidth = element.width || 200;
+      const elementHeight = element.height || 50;
+      
+      const centerX = container.width / 2;
+      const centerY = container.height / 2;
+      
+      const elementCenterX = element.x + (elementWidth / 2);
+      const elementCenterY = element.y + (elementHeight / 2);
+      
+      const isHorizontallyCentered = Math.abs(elementCenterX - centerX) <= tolerance;
+      const isVerticallyCentered = Math.abs(elementCenterY - centerY) <= tolerance;
+      
+      return {
+        horizontal: isHorizontallyCentered,
+        vertical: isVerticallyCentered,
+        both: isHorizontallyCentered && isVerticallyCentered
+      };
+    };
+  }, []);
+
+  /**
+   * Calcule la position pour un élément centré
+   */
+  const calculateCenteredPosition = useMemo(() => {
+    return (
+      container: { width: number; height: number },
+      elementWidth: number = 200,
+      elementHeight: number = 50
+    ) => {
+      return {
+        x: Math.round((container.width - elementWidth) / 2),
+        y: Math.round((container.height - elementHeight) / 2)
+      };
+    };
+  }, []);
+
+  /**
+   * Calcule les propriétés responsives intelligemment avec détection de centrage
    */
   const calculateResponsiveProperties = useMemo(() => {
     return (
@@ -53,63 +99,77 @@ export const useAutoResponsive = (
           y: element.y,
           width: element.width,
           height: element.height,
-          fontSize: element.fontSize
+          fontSize: element.fontSize,
+          textAlign: element.textAlign
         };
       }
 
       const baseContainer = DEVICE_DIMENSIONS[baseDevice];
       const targetContainer = DEVICE_DIMENSIONS[targetDevice];
-
-      // Ratios de transformation intelligents
+      
+      // Détecter si l'élément est centré sur l'appareil de base
+      const centeringInfo = isElementCentered(element, baseContainer);
+      
+      // Calcul des ratios de transformation
       const widthRatio = targetContainer.width / baseContainer.width;
       const heightRatio = targetContainer.height / baseContainer.height;
-
-      // Position proportionnelle
-      const xRatio = element.x / baseContainer.width;
-      const yRatio = element.y / baseContainer.height;
-
-      const newX = Math.round(xRatio * targetContainer.width);
-      const newY = Math.round(yRatio * targetContainer.height);
-
-      // Adaptation intelligente de la taille de police
-      let fontSizeMultiplier = 1;
-      if (element.type === 'text' && element.fontSize) {
-        // Logique d'adaptation spécialisée par appareil
-        switch (targetDevice) {
-          case 'mobile':
-            // Mobile : réduction modérée pour lisibilité
-            fontSizeMultiplier = Math.max(0.7, widthRatio * 0.9);
-            break;
-          case 'tablet':
-            // Tablette : légère adaptation
-            fontSizeMultiplier = Math.max(0.8, widthRatio * 0.95);
-            break;
-          default:
-            fontSizeMultiplier = widthRatio;
-        }
+      
+      // Calcul intelligent de la taille de police
+      const fontScaleRatio = (widthRatio * 0.7) + (heightRatio * 0.3);
+      const newFontSize = element.fontSize ? Math.round(element.fontSize * fontScaleRatio) : undefined;
+      
+      // Calcul des dimensions adaptées
+      const newWidth = element.width ? Math.round(element.width * widthRatio) : undefined;
+      const newHeight = element.height ? Math.round(element.height * heightRatio) : undefined;
+      
+      let newX, newY;
+      let textAlignment = element.textAlign;
+      
+      // Si l'élément est centré, le recentrer sur le nouvel appareil
+      if (centeringInfo.both) {
+        const centeredPos = calculateCenteredPosition(
+          targetContainer, 
+          newWidth || 200, 
+          newHeight || 50
+        );
+        newX = centeredPos.x;
+        newY = centeredPos.y;
+        textAlignment = 'center'; // Forcer l'alignement centré
+      } else if (centeringInfo.horizontal) {
+        // Centrage horizontal uniquement
+        const centeredPos = calculateCenteredPosition(
+          targetContainer, 
+          newWidth || 200, 
+          newHeight || 50
+        );
+        newX = centeredPos.x;
+        newY = Math.round((element.y / baseContainer.height) * targetContainer.height);
+        textAlignment = 'center';
+      } else if (centeringInfo.vertical) {
+        // Centrage vertical uniquement
+        const centeredPos = calculateCenteredPosition(
+          targetContainer, 
+          newWidth || 200, 
+          newHeight || 50
+        );
+        newX = Math.round((element.x / baseContainer.width) * targetContainer.width);
+        newY = centeredPos.y;
+      } else {
+        // Positionnement proportionnel normal
+        newX = Math.round((element.x / baseContainer.width) * targetContainer.width);
+        newY = Math.round((element.y / baseContainer.height) * targetContainer.height);
       }
 
-      const newFontSize = element.fontSize 
-        ? Math.round(element.fontSize * fontSizeMultiplier)
-        : undefined;
-
-      // Dimensions adaptées
-      const newWidth = element.width 
-        ? Math.round(element.width * widthRatio) 
-        : undefined;
-      const newHeight = element.height 
-        ? Math.round(element.height * heightRatio) 
-        : undefined;
-
       return {
-        x: Math.max(0, Math.min(newX, targetContainer.width - (newWidth || 50))),
-        y: Math.max(0, Math.min(newY, targetContainer.height - (newHeight || 30))),
-        width: newWidth,
-        height: newHeight,
-        fontSize: newFontSize ? Math.max(10, Math.min(72, newFontSize)) : undefined
+        x: Math.max(0, newX),
+        y: Math.max(0, newY),
+        width: newWidth ? Math.max(50, newWidth) : undefined,
+        height: newHeight ? Math.max(20, newHeight) : undefined,
+        fontSize: newFontSize ? Math.max(10, Math.min(72, newFontSize)) : undefined,
+        textAlign: textAlignment
       };
     };
-  }, [baseDevice]);
+  }, [baseDevice, isElementCentered, calculateCenteredPosition]);
 
   /**
    * Applique automatiquement la responsiveness à tous les éléments

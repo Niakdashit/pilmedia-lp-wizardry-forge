@@ -20,8 +20,49 @@ const getContainerDimensions = (device: 'desktop' | 'tablet' | 'mobile') => {
 };
 
 /**
+ * Détecte si un élément est centré intentionnellement
+ */
+const isElementCentered = (
+  element: CustomText,
+  container: { width: number; height: number },
+  tolerance: number = 30
+) => {
+  const elementWidth = element.width || 200; // Largeur estimée si non définie
+  const elementHeight = element.height || 50; // Hauteur estimée si non définie
+  
+  const centerX = container.width / 2;
+  const centerY = container.height / 2;
+  
+  const elementCenterX = element.x + (elementWidth / 2);
+  const elementCenterY = element.y + (elementHeight / 2);
+  
+  const isHorizontallyCentered = Math.abs(elementCenterX - centerX) <= tolerance;
+  const isVerticallyCentered = Math.abs(elementCenterY - centerY) <= tolerance;
+  
+  return {
+    horizontal: isHorizontallyCentered,
+    vertical: isVerticallyCentered,
+    both: isHorizontallyCentered && isVerticallyCentered
+  };
+};
+
+/**
+ * Calcule la position pour un élément centré
+ */
+const calculateCenteredPosition = (
+  container: { width: number; height: number },
+  elementWidth: number = 200,
+  elementHeight: number = 50
+) => {
+  return {
+    x: Math.round((container.width - elementWidth) / 2),
+    y: Math.round((container.height - elementHeight) / 2)
+  };
+};
+
+/**
  * Calcule la position proportionnelle pour maintenir le même placement relatif
- * Amélioration: utilise des calculs plus précis pour éviter les décalages
+ * Amélioration: détection et préservation du centrage intelligent
  */
 export const calculateResponsiveProperties = (
   baseText: CustomText,
@@ -31,32 +72,64 @@ export const calculateResponsiveProperties = (
   const baseContainer = getContainerDimensions(baseDevice);
   const targetContainer = getContainerDimensions(targetDevice);
   
+  // Détecter si l'élément est centré sur l'appareil de base
+  const centeringInfo = isElementCentered(baseText, baseContainer);
+  
   // Calcul des ratios de transformation
   const widthRatio = targetContainer.width / baseContainer.width;
   const heightRatio = targetContainer.height / baseContainer.height;
   
-  // Positions proportionnelles plus précises
-  const xRatio = baseText.x / baseContainer.width;
-  const yRatio = baseText.y / baseContainer.height;
-  
-  const newX = Math.round(xRatio * targetContainer.width);
-  const newY = Math.round(yRatio * targetContainer.height);
-  
   // Calcul intelligent de la taille de police
-  // Utilise une approche hybride: ratio moyen pondéré vers la largeur
   const fontScaleRatio = (widthRatio * 0.7) + (heightRatio * 0.3);
   const newFontSize = Math.round(baseText.fontSize * fontScaleRatio);
   
-  // Calcul des dimensions si elles existent
+  // Calcul des dimensions adaptées
   const newWidth = baseText.width ? Math.round(baseText.width * widthRatio) : undefined;
   const newHeight = baseText.height ? Math.round(baseText.height * heightRatio) : undefined;
+  
+  let newX, newY;
+  
+  // Si l'élément est centré, le recentrer sur le nouvel appareil
+  if (centeringInfo.both) {
+    const centeredPos = calculateCenteredPosition(
+      targetContainer, 
+      newWidth || 200, 
+      newHeight || 50
+    );
+    newX = centeredPos.x;
+    newY = centeredPos.y;
+  } else if (centeringInfo.horizontal) {
+    // Centrage horizontal uniquement
+    const centeredPos = calculateCenteredPosition(
+      targetContainer, 
+      newWidth || 200, 
+      newHeight || 50
+    );
+    newX = centeredPos.x;
+    newY = Math.round((baseText.y / baseContainer.height) * targetContainer.height);
+  } else if (centeringInfo.vertical) {
+    // Centrage vertical uniquement
+    const centeredPos = calculateCenteredPosition(
+      targetContainer, 
+      newWidth || 200, 
+      newHeight || 50
+    );
+    newX = Math.round((baseText.x / baseContainer.width) * targetContainer.width);
+    newY = centeredPos.y;
+  } else {
+    // Positionnement proportionnel normal
+    newX = Math.round((baseText.x / baseContainer.width) * targetContainer.width);
+    newY = Math.round((baseText.y / baseContainer.height) * targetContainer.height);
+  }
   
   return {
     x: Math.max(0, newX),
     y: Math.max(0, newY),
     fontSize: Math.max(10, Math.min(72, newFontSize)),
     width: newWidth ? Math.max(50, newWidth) : undefined,
-    height: newHeight ? Math.max(20, newHeight) : undefined
+    height: newHeight ? Math.max(20, newHeight) : undefined,
+    // Ajouter l'alignement de texte pour les éléments centrés
+    textAlign: centeringInfo.horizontal ? 'center' : undefined
   };
 };
 

@@ -165,7 +165,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                 y: responsiveProps.y,
                 width: responsiveProps.width,
                 height: responsiveProps.height,
-                fontSize: responsiveProps.fontSize
+                fontSize: responsiveProps.fontSize,
+                // Appliquer l'alignement de texte responsive si disponible
+                textAlign: responsiveProps.textAlign || element.textAlign
               };
 
               return (
