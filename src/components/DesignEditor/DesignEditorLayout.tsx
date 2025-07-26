@@ -94,7 +94,6 @@ const DesignEditorLayout: React.FC = () => {
           onDeviceChange={setSelectedDevice}
           onPreviewToggle={() => setShowFunnel(!showFunnel)}
           isPreviewMode={showFunnel}
-          campaign={generateCampaignFromCanvas()}
         />
       )}
       

@@ -1,91 +1,19 @@
 import React from 'react';
-import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo, ExternalLink } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo } from 'lucide-react';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onPreviewToggle?: () => void;
   isPreviewMode?: boolean;
-  campaign?: any; // Ajouter la campaign pour l'aperçu final
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = ({
   selectedDevice,
   onDeviceChange,
   onPreviewToggle,
-  isPreviewMode = false,
-  campaign
+  isPreviewMode = false
 }) => {
-  const handleFinalPreview = () => {
-    if (!campaign) return;
-    
-    // Récupérer les éléments canvas et créer les textes et images customisés
-    const elements = campaign.canvasConfig?.elements || [];
-    const customTexts = elements
-      .filter((el: any) => el.type === 'text')
-      .map((el: any) => ({
-        id: el.id,
-        content: el.content,
-        style: {
-          ...el.style,
-          x: el.x,
-          y: el.y,
-          width: el.width,
-          height: el.height
-        }
-      }));
-    
-    const customImages = elements
-      .filter((el: any) => el.type === 'image')
-      .map((el: any) => ({
-        id: el.id,
-        src: el.src,
-        style: {
-          x: el.x,
-          y: el.y,
-          width: el.width,
-          height: el.height
-        }
-      }));
-    
-    // Convertir la campagne du Design Editor au format attendu par FinalPreview
-    const config = {
-      id: campaign.id || 'design-editor-campaign',
-      type: campaign.type || 'wheel',
-      gameType: 'wheel',
-      displayMode: 'mode2-background',
-      campaignName: campaign.id || 'Design Editor Campaign',
-      customTexts,
-      design: {
-        customImages,
-        backgroundImage: campaign.canvasConfig?.background?.type === 'image' ? campaign.canvasConfig.background.value : undefined,
-        ...campaign.design
-      },
-      canvasConfig: campaign.canvasConfig,
-      screens: campaign.screens || [],
-      formFields: campaign.formFields || [],
-      // Couleurs pour la roue
-      participateButtonColor: campaign.design?.buttonColor || '#841b60',
-      outlineColor: '#dc2626',
-      backgroundColor: campaign.canvasConfig?.background?.type === 'color' ? 
-        campaign.canvasConfig.background.value : '#10b981',
-      // Image de bannière si elle existe
-      bannerImage: campaign.canvasConfig?.background?.type === 'image' ? 
-        campaign.canvasConfig.background.value : undefined
-    };
-    
-    try {
-      // Utiliser Base64 pour éviter les problèmes d'encodage URI
-      const configStr = JSON.stringify(config);
-      const encoded = btoa(unescape(encodeURIComponent(configStr)));
-      const url = `/final-preview?config=${encoded}`;
-      window.location.href = url;
-    } catch (error) {
-      console.error('Erreur lors de l\'encodage de la configuration:', error);
-      // Fallback : naviguer sans paramètres
-      window.location.href = '/final-preview';
-    }
-  };
   return (
     <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
       {/* Left Section - Logo/Title */}
@@ -150,13 +78,6 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
         >
           <Eye className="w-4 h-4 mr-2" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
-        </button>
-        <button 
-          onClick={handleFinalPreview}
-          className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <ExternalLink className="w-4 h-4 mr-2" />
-          Aperçu final
         </button>
         <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
           <Share2 className="w-4 h-4 mr-2" />

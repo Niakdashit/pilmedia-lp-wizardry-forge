@@ -31,7 +31,6 @@ import GameEditor from './pages/GameEditor';
 import DesignEditor from './pages/DesignEditor';
 import LivePreview from './pages/LivePreview';
 import Auth from './pages/Auth';
-import FinalPreview from './pages/FinalPreview';
 import PublicCampaign from './pages/PublicCampaign';
 
 function App() {
@@ -65,7 +64,6 @@ function App() {
             
             <Route path="/campaign-editor" element={<GameEditor />} />
             <Route path="/design-editor" element={<DesignEditor />} />
-            <Route path="/final-preview" element={<FinalPreview />} />
             <Route path="/live-preview" element={<LivePreview />} />
             
             <Route path="/admin" element={<AdminLayout />}>

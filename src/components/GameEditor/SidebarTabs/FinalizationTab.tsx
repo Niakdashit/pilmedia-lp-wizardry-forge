@@ -217,12 +217,12 @@ document.addEventListener('game:gameComplete', function(event) {
             <button
               onClick={() => {
                 const encoded = encodeURIComponent(JSON.stringify(config));
-                window.open(`${window.location.origin}/final-preview?config=${encoded}`, '_blank');
+                window.open(`${window.location.origin}/live-preview?config=${encoded}`, '_blank');
               }}
               className="px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors font-medium"
             >
               <Eye className="w-5 h-5 inline mr-2" />
-              Aperçu final
+              Aperçu en plein écran
             </button>
           </div>
           
