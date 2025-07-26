@@ -46,9 +46,28 @@ const FinalPreview: React.FC = () => {
   };
 
   const renderPreview = () => {
+    // Créer une configuration complète avec des valeurs par défaut pour la roue
+    const fullConfig = {
+      ...config,
+      gameType: 'wheel' as const,
+      wheelSegments: [
+        { label: 'Prix 1', color: '#FF6B6B' },
+        { label: 'Prix 2', color: '#4ECDC4' },
+        { label: 'Prix 3', color: '#45B7D1' },
+        { label: 'Prix 4', color: '#96CEB4' },
+        { label: 'Prix 5', color: '#FFEAA7' },
+        { label: 'Prix 6', color: '#DDA0DD' }
+      ],
+      wheelSize: 300,
+      wheelTheme: 'classic',
+      participateButtonColor: config.participateButtonColor || '#841b60',
+      backgroundColor: config.backgroundColor || '#10b981',
+      outlineColor: config.outlineColor || '#dc2626'
+    } as EditorConfig;
+
     const commonProps = {
       device,
-      config,
+      config: fullConfig,
       onTextUpdate: () => {}, // Lecture seule
       onTextDelete: () => {}, // Lecture seule
       onImageUpdate: () => {}, // Lecture seule
@@ -56,7 +75,7 @@ const FinalPreview: React.FC = () => {
     };
 
     // Debug log pour voir la config
-    console.log('FinalPreview config:', config);
+    console.log('FinalPreview config:', fullConfig);
 
     // Toujours utiliser Mode2Preview pour le Design Editor
     return <Mode2Preview {...commonProps} />;
