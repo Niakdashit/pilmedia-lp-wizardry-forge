@@ -214,7 +214,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
               : campaign.design?.background?.value || canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
           }}
         >
-          {/* Rendu des éléments responsive customisés */}
+          {/* Rendu des éléments responsive customisés (textes et images) */}
           <CustomElementsRenderer
             customTexts={customTextsForRenderer}
             customImages={customImagesForRenderer}
@@ -222,8 +222,11 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             sizeMap={sizeMap}
           />
           
-          {/* Rendu des éléments du canvas (fallback pour compatibilité) */}
-          {canvasElements.map(renderCanvasElement)}
+          {/* Rendu des éléments du canvas uniquement pour les types non gérés par CustomElementsRenderer */}
+          {canvasElements
+            .filter((element: any) => !['text', 'image'].includes(element.type))
+            .map(renderCanvasElement)
+          }
           
           {/* Composant de jeu (roue) */}
           {renderGameComponent()}
