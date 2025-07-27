@@ -102,11 +102,12 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             brandColors={brandColors}
             borderStyle={borderStyle}
             customBorderColor={borderStyle === 'classic' ? brandColors.primary : undefined}
+            buttonPosition="center"
             onResult={(segment) => {
               console.log('Segment gagné dans l\'éditeur:', segment);
             }}
             customButton={{
-              text: enhancedCampaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+              text: "GO",
               color: brandColors.primary,
               textColor: '#ffffff'
             }}

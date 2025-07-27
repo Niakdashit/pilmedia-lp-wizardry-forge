@@ -119,8 +119,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         disabled={disabled}
         borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
         customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
+        buttonPosition="center"
         customButton={{
-          text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
+          text: "GO",
           color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
           textColor: campaign.buttonConfig?.textColor || '#ffffff'
         }}

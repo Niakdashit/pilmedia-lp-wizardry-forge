@@ -196,8 +196,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                       secondary: '#4ecdc4',
                       accent: '#45b7d1'
                     }}
+                    buttonPosition="center"
                     customButton={{
-                      text: 'JOUER',
+                      text: 'GO',
                       color: wheelBorderColor,
                       textColor: '#ffffff'
                     }}
