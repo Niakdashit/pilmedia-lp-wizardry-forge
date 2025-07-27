@@ -50,22 +50,57 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     onCampaignChange?.(updatedCampaign);
   };
 
+  const getContainerClass = () => {
+    if (selectedDevice === 'desktop') {
+      return "flex-1 bg-gray-100 p-4 overflow-auto";
+    } else {
+      return "flex-1 bg-gray-100 overflow-auto flex flex-col";
+    }
+  };
+
+  const getCanvasContainerClass = () => {
+    if (selectedDevice === 'desktop') {
+      return "flex justify-center";
+    } else {
+      return "flex-1 flex justify-center items-center";
+    }
+  };
+
+  const getContainerSize = () => {
+    if (selectedDevice === 'desktop') {
+      return {
+        width: canvasSize.width,
+        height: canvasSize.height
+      };
+    } else {
+      // On mobile et tablet, utiliser toute la hauteur disponible moins l'info
+      return {
+        width: canvasSize.width,
+        height: '100%'
+      };
+    }
+  };
+
+  const containerSize = getContainerSize();
+
   return (
-    <div className="flex-1 bg-gray-100 p-4 overflow-auto">
-      <div className="flex justify-center">
+    <div className={getContainerClass()}>
+      <div className={getCanvasContainerClass()}>
         <ScaledGamePreview
           campaign={editorCampaign}
           selectedDevice={selectedDevice}
-          containerWidth={canvasSize.width}
-          containerHeight={canvasSize.height}
+          containerWidth={typeof containerSize.width === 'string' ? canvasSize.width : containerSize.width}
+          containerHeight={typeof containerSize.height === 'string' ? window.innerHeight - 120 : containerSize.height}
           onCampaignChange={handleCampaignUpdate}
         />
       </div>
 
       {/* Canvas Info */}
-      <div className="text-center mt-4 text-sm text-gray-500">
-        {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Aperçu synchronisé avec le bouton "Aperçu"
-      </div>
+      {selectedDevice === 'desktop' && (
+        <div className="text-center mt-4 text-sm text-gray-500">
+          {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Aperçu synchronisé avec le bouton "Aperçu"
+        </div>
+      )}
     </div>
   );
 };
