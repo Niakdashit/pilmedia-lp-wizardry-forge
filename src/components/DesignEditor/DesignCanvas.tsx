@@ -54,7 +54,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     if (selectedDevice === 'desktop') {
       return "flex-1 bg-gray-100 p-4 overflow-auto";
     } else {
-      return "flex-1 bg-gray-100 overflow-auto flex flex-col";
+      return "flex-1 overflow-hidden flex flex-col";
     }
   };
 
