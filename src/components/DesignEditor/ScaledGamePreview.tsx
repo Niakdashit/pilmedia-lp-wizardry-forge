@@ -91,7 +91,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       if (selectedDevice === 'desktop') {
         return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
       } else {
-        return "relative cursor-pointer w-full h-full";
+        return "relative cursor-pointer w-full h-full rounded-xl overflow-hidden";
       }
     };
 
@@ -172,7 +172,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     if (selectedDevice === 'desktop') {
       return "relative bg-white shadow-lg rounded-lg overflow-hidden";
     } else {
-      return "relative w-full h-full";
+      return "relative w-full h-full rounded-xl overflow-hidden";
     }
   };
 
