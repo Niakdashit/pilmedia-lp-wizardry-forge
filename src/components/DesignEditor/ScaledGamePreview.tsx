@@ -33,17 +33,23 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const capturePreview = async () => {
     if (previewRef.current) {
       try {
+        console.log('🎯 Début de la capture d\'écran...');
         const canvas = await html2canvas(previewRef.current, {
           allowTaint: true,
           useCORS: true,
           scale: 1,
+          backgroundColor: '#f3f4f6',
+          logging: false,
           width: previewRef.current.offsetWidth,
           height: previewRef.current.offsetHeight
         });
         const url = canvas.toDataURL('image/png');
+        console.log('✅ Capture réussie, URL générée');
         setScreenshotUrl(url);
       } catch (error) {
-        console.error('Erreur lors de la capture d\'écran:', error);
+        console.error('❌ Erreur lors de la capture d\'écran:', error);
+        // Fallback: afficher directement le composant
+        setScreenshotUrl(null);
       }
     }
   };
@@ -51,10 +57,12 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   // Effect pour capturer l'aperçu quand la campagne change
   useEffect(() => {
     if (campaign?.type === 'wheel') {
-      // Délai pour laisser le temps au composant de se rendre
+      // Délai plus long et vérification du rendu
       const timer = setTimeout(() => {
-        capturePreview();
-      }, 100);
+        requestAnimationFrame(() => {
+          capturePreview();
+        });
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [campaign, selectedDevice, wheelBorderStyle, wheelBorderColor, wheelScale]);
@@ -123,11 +131,16 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           height: containerHeight
         }}
       >
-        {/* Aperçu caché pour capture d'écran */}
+        {/* Aperçu visible pour capture d'écran */}
         <div 
           ref={previewRef}
-          className="absolute opacity-0 pointer-events-none"
-          style={{ top: -9999, left: -9999 }}
+          className="fixed opacity-0 pointer-events-none"
+          style={{ 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)',
+            zIndex: -1 
+          }}
         >
           <div
             className="relative bg-white shadow-lg rounded-lg overflow-hidden"
