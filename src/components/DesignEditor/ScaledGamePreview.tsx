@@ -48,7 +48,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
     } else {
       // For mobile and tablet, use more aggressive scaling to fill space
-      finalScale = Math.min(scaleX, scaleY) * 0.98; // Use 98% to minimize margins
+      finalScale = Math.min(scaleX, scaleY) * 0.95; // Use 95% to leave small margin
     }
     
     setScale(finalScale);
