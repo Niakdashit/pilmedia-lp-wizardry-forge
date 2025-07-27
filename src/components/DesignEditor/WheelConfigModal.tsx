@@ -69,23 +69,32 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
+        className="fixed inset-0 bg-black/50 z-[100] pointer-events-auto"
+        onClick={() => {
+          console.log('Backdrop clicked');
+          onClose();
+        }}
       />
       
       {/* Modal */}
       <div 
-        className="bg-white rounded-lg shadow-xl z-50 border"
+        className="bg-white rounded-lg shadow-xl z-[110] border pointer-events-auto"
         style={modalStyle}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          console.log('Modal clicked');
+          e.stopPropagation();
+        }}
       >
         <div className="p-4">
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Configuration de la roue</h3>
             <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => {
+                console.log('Close button clicked');
+                onClose();
+              }}
+              className="text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -106,8 +115,11 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 max="2"
                 step="0.1"
                 value={wheelScale}
-                onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                onChange={(e) => {
+                  console.log('Scale changed:', e.target.value);
+                  onScaleChange(parseFloat(e.target.value));
+                }}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer pointer-events-auto"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>50%</span>
@@ -124,15 +136,21 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 <input
                   type="color"
                   value={wheelBorderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                  onChange={(e) => {
+                    console.log('Color picker changed:', e.target.value);
+                    onBorderColorChange(e.target.value);
+                  }}
+                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer pointer-events-auto"
                 />
                 <input
                   type="text"
                   value={wheelBorderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Color text changed:', e.target.value);
+                    onBorderColorChange(e.target.value);
+                  }}
                   placeholder="#841b60"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pointer-events-auto"
                 />
               </div>
             </div>
@@ -144,7 +162,11 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
               </label>
               <BorderStyleSelector
                 currentStyle={wheelBorderStyle}
-                onStyleChange={onBorderStyleChange}
+                onStyleChange={(style) => {
+                  console.log('Border style changed:', style);
+                  onBorderStyleChange(style);
+                }}
+                className="pointer-events-auto"
               />
             </div>
           </div>
