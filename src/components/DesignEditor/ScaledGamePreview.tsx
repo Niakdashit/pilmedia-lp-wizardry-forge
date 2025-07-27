@@ -106,7 +106,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     return (
       <div 
         ref={containerRef}
-        className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : "relative w-full h-full flex items-center justify-center p-4"}
+        className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : selectedDevice === 'tablet' ? "relative w-full h-full flex items-center justify-center p-4 pb-8" : "relative w-full h-full flex items-center justify-center p-4"}
         style={{
           width: containerWidth,
           height: containerHeight
