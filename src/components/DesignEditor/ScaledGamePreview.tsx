@@ -42,7 +42,14 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     // Calculate scale to fit while maintaining aspect ratio
     const scaleX = containerWidth / original.width;
     const scaleY = containerHeight / original.height;
-    const finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+    
+    let finalScale;
+    if (selectedDevice === 'desktop') {
+      finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+    } else {
+      // For mobile and tablet, use more aggressive scaling to fill space
+      finalScale = Math.min(scaleX, scaleY) * 0.95; // Use 95% to leave small margin
+    }
     
     setScale(finalScale);
   }, [selectedDevice, containerWidth, containerHeight]);
