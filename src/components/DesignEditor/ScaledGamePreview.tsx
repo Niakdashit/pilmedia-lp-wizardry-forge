@@ -88,20 +88,16 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
     const getDeviceFrame = () => {
-      if (selectedDevice === 'desktop') {
+      if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
         return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
-      } else if (selectedDevice === 'tablet') {
-        return "relative bg-black rounded-[24px] p-3 cursor-pointer";
       } else {
         return "relative bg-black rounded-[32px] p-1 cursor-pointer";
       }
     };
 
     const getContentFrame = () => {
-      if (selectedDevice === 'desktop') {
+      if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
         return "relative w-full h-full";
-      } else if (selectedDevice === 'tablet') {
-        return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
       } else {
         return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
       }
@@ -173,20 +169,16 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Rendu par défaut pour les autres types de campagnes
   const getDeviceFrame = () => {
-    if (selectedDevice === 'desktop') {
+    if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
       return "relative bg-white shadow-lg rounded-lg overflow-hidden";
-    } else if (selectedDevice === 'tablet') {
-      return "relative bg-black rounded-[24px] p-3";
     } else {
       return "relative bg-black rounded-[32px] p-1";
     }
   };
 
   const getContentFrame = () => {
-    if (selectedDevice === 'desktop') {
+    if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
       return "relative w-full h-full";
-    } else if (selectedDevice === 'tablet') {
-      return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
     } else {
       return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
     }
