@@ -93,6 +93,21 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
 
   // Générer les classes CSS d'animation
 
+  // Calculer les dimensions du canvas selon l'appareil
+  const getCanvasSize = () => {
+    switch (previewMode) {
+      case 'desktop':
+        return { width: '100%', height: '100%' };
+      case 'tablet':
+        return { width: 768, height: 1024 };
+      case 'mobile':
+        return { width: 360, height: 640 };
+      default:
+        return { width: 360, height: 640 };
+    }
+  };
+
+  const canvasSize = getCanvasSize();
   
 
   const handleGameComplete = (result: 'win' | 'lose') => {
@@ -175,10 +190,20 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   return (
     <div className="w-full h-full">
       <div 
-        className="canvas-container relative overflow-hidden w-full h-full"
-        style={{
+        className="canvas-container relative bg-white overflow-hidden w-full h-full"
+        style={previewMode === 'desktop' ? {
           width: '100%',
-          height: '100%'
+          height: '100vh',
+        } : previewMode === 'mobile' ? {
+          width: '100%',
+          height: '100vh',
+        } : {
+          width: `${canvasSize.width}px`,
+          height: `${canvasSize.height}px`,
+          margin: '0 auto',
+          // Utiliser la même logique de transformation que l'éditeur pour cohérence
+          transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
+          transformOrigin: 'top center'
         }}
       >
         {/* Canvas Background */}
