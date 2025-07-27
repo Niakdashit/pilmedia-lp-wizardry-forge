@@ -162,7 +162,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     if (campaign.type === 'wheel') {
       return (
         <div 
-          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100`}
+          className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 opacity-100`}
           style={{ zIndex: 10 }}
         >
           <WheelPreview
