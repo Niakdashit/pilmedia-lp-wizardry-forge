@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
+import { SmartWheel } from '../SmartWheel';
+import WheelConfigModal from './WheelConfigModal';
 
 interface ScaledGamePreviewProps {
   campaign: any;
@@ -18,6 +20,12 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [showWheelConfig, setShowWheelConfig] = useState(false);
+  
+  // États pour la configuration de la roue
+  const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.borderStyle || 'classic');
+  const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.borderColor || '#841b60');
+  const [wheelScale, setWheelScale] = useState(campaign?.design?.wheelScale || 1);
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
@@ -38,6 +46,119 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     setScale(finalScale);
   }, [selectedDevice, containerWidth, containerHeight]);
 
+  // Gestionnaires pour la configuration de la roue
+  const handleWheelClick = () => {
+    if (campaign?.type === 'wheel') {
+      setShowWheelConfig(true);
+    }
+  };
+
+  const handleWheelConfigUpdate = (updates: any) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign.design,
+          ...updates
+        }
+      });
+    }
+  };
+
+  const handleBorderStyleChange = (style: string) => {
+    setWheelBorderStyle(style);
+    handleWheelConfigUpdate({ borderStyle: style });
+  };
+
+  const handleBorderColorChange = (color: string) => {
+    setWheelBorderColor(color);
+    handleWheelConfigUpdate({ borderColor: color });
+  };
+
+  const handleScaleChange = (scale: number) => {
+    setWheelScale(scale);
+    handleWheelConfigUpdate({ wheelScale: scale });
+  };
+
+  // Rendu spécial pour les campagnes de type roue
+  if (campaign?.type === 'wheel') {
+    const segments = campaign?.design?.segments || [
+      { id: '1', label: 'Segment 1', color: '#FF6B6B' },
+      { id: '2', label: 'Segment 2', color: '#4ECDC4' },
+      { id: '3', label: 'Segment 3', color: '#45B7D1' },
+      { id: '4', label: 'Segment 4', color: '#96CEB4' },
+      { id: '5', label: 'Segment 5', color: '#FFEAA7' },
+      { id: '6', label: 'Segment 6', color: '#DDA0DD' }
+    ];
+
+    const backgroundImage = campaign?.design?.background?.type === 'image' ? campaign.design.background.value : null;
+
+    return (
+      <div 
+        ref={containerRef}
+        className="relative w-full h-full flex items-center justify-center bg-gray-100"
+        style={{
+          width: containerWidth,
+          height: containerHeight
+        }}
+      >
+        <div
+          className="relative bg-white shadow-lg rounded-lg overflow-hidden"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
+            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px',
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <div onClick={handleWheelClick} className="cursor-pointer">
+              <SmartWheel
+                segments={segments}
+                size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
+                borderStyle={wheelBorderStyle}
+                customBorderColor={wheelBorderColor}
+                disabled={false}
+                onSpin={() => {}}
+                onResult={() => {}}
+                gamePosition={{ x: 0, y: 0, scale: wheelScale }}
+                buttonPosition="center"
+                customButton={{
+                  text: "TOURNER",
+                  color: "#841b60",
+                  textColor: "#FFFFFF"
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Scale info */}
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white/80 rounded px-2 py-1">
+          Scale: {Math.round(scale * 100)}%
+        </div>
+
+        {/* Modale de configuration */}
+        <WheelConfigModal
+          isOpen={showWheelConfig}
+          onClose={() => setShowWheelConfig(false)}
+          wheelBorderStyle={wheelBorderStyle}
+          wheelBorderColor={wheelBorderColor}
+          wheelScale={wheelScale}
+          onBorderStyleChange={handleBorderStyleChange}
+          onBorderColorChange={handleBorderColorChange}
+          onScaleChange={handleScaleChange}
+          selectedDevice={selectedDevice}
+        />
+      </div>
+    );
+  }
+
+  // Rendu par défaut pour les autres types de campagnes
   return (
     <div 
       ref={containerRef}
