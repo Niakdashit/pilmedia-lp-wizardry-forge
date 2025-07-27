@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import HybridSidebar from './HybridSidebar';
-import DesignCanvas from './DesignCanvas';
+import ProCanvasEditor from './ProCanvas/ProCanvasEditor';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
@@ -189,8 +189,8 @@ const DesignEditorLayout: React.FC = () => {
               onElementsChange={setCanvasElements}
             />
             
-            {/* Main Canvas Area */}
-            <DesignCanvas 
+            {/* Professional Canvas Area */}
+            <ProCanvasEditor 
               selectedDevice={selectedDevice}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
