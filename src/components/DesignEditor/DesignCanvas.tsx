@@ -56,8 +56,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         <ScaledGamePreview
           campaign={editorCampaign}
           selectedDevice={selectedDevice}
-          containerWidth={canvasSize.width * 0.95}
-          containerHeight={canvasSize.height * 0.9}
+          containerWidth={canvasSize.width}
+          containerHeight={canvasSize.height}
           onCampaignChange={handleCampaignUpdate}
         />
       </div>

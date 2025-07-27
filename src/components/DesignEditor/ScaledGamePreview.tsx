@@ -34,8 +34,8 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     const original = STANDARD_DEVICE_DIMENSIONS[selectedDevice];
     
     // Calculate scale to fit while maintaining aspect ratio with minimal padding
-    const availableWidth = containerWidth - 40; // Reduced padding
-    const availableHeight = containerHeight - 40;
+    const availableWidth = containerWidth - 20; // Minimal padding
+    const availableHeight = containerHeight - 20;
     
     const scaleX = availableWidth / original.width;
     const scaleY = availableHeight / original.height;
