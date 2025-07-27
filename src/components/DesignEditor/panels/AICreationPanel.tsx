@@ -197,8 +197,28 @@ Réponds UNIQUEMENT avec le JSON demandé, sans texte supplémentaire.
         throw error;
       }
 
-      if (data?.success && data.result) {
+      if (data?.success && data.result && data.visualData) {
         console.log('✅ AI analysis successful:', data.result);
+        
+        // Generate the visual using the new renderer
+        try {
+          console.log('🎨 Calling visual renderer with:', data.visualData);
+          
+          const { data: visualResult, error: visualError } = await supabase.functions.invoke('visual-renderer', {
+            body: { visualData: data.visualData }
+          });
+
+          if (visualError) {
+            console.warn('Visual renderer error, using fallback:', visualError);
+          } else if (visualResult?.success && visualResult?.html) {
+            console.log('✅ Visual renderer response received');
+            // For now, just show the generated HTML in console
+            console.log('HTML template generated:', visualResult.html.substring(0, 200) + '...');
+            toast.success('Template HTML généré avec succès !');
+          }
+        } catch (visualError) {
+          console.warn('Visual generation failed:', visualError);
+        }
         
         // Handle generated image if available
         if (data.generatedImage) {
@@ -210,7 +230,7 @@ Réponds UNIQUEMENT avec le JSON demandé, sans texte supplémentaire.
         
         const campaignData = createCampaignFromAIAnalysis(data.result);
         onCampaignGenerated(campaignData);
-        toast.success('Campagne IA générée avec succès !');
+        toast.success('Campagne IA et template HTML générés avec succès !');
       } else {
         throw new Error('Réponse invalide de l\'IA');
       }

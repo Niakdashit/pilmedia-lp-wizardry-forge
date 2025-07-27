@@ -189,20 +189,26 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
       console.log('🎨 Generated palette colors:', parsedResult.palette_couleurs?.length || 0);
       console.log('📝 Generated wording:', parsedResult.wording_jeu_concours?.titre || 'No title');
 
-      // Generate stylized visual image using OpenAI's image API
-      let generatedImageUrl = null;
-      
+      // Generate visual data for the renderer
+      const visualData = {
+        title: parsedResult.wording_jeu_concours?.titre || parsedResult.campaignTitle || "Tentez Votre Chance",
+        subtitle: parsedResult.wording_jeu_concours?.sous_titre || parsedResult.campaignSubtitle || "Une expérience unique vous attend",
+        cta: parsedResult.wording_jeu_concours?.call_to_action || "JOUER MAINTENANT",
+        backgroundImage: body.backgroundUrl || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=1920&fit=crop",
+        logo: body.logoUrl || "",
+        style: parsedResult.styleChoisi || "moderne",
+        colors: {
+          primary: parsedResult.palette_couleurs?.[0]?.hexa || "#d4af37",
+          secondary: parsedResult.palette_couleurs?.[1]?.hexa || "#1a4c7a", 
+          accent: parsedResult.palette_couleurs?.[2]?.hexa || "#ff6b9d"
+        }
+      };
+
+      // Try to generate an image if we have a background prompt
+      let generatedImage = null;
       if (parsedResult.visualGeneration?.backgroundPrompt) {
         try {
-          console.log('🎨 Generating stylized visual with OpenAI image API...');
-          
-          const imagePrompt = `Professional marketing campaign visual in ${parsedResult.styleChoisi} style: ${parsedResult.visualGeneration.backgroundPrompt}. 
-          Include stylized text "${parsedResult.wording_jeu_concours?.titre || parsedResult.campaignTitle}" with ultra-modern typography effects like shadows, outlines, gradients, and colored backgrounds. 
-          Colors: ${parsedResult.palette_couleurs?.map(c => c.hexa).join(', ')}. 
-          Style: ${parsedResult.designElements?.backgroundStyle}. 
-          ${parsedResult.visualGeneration.titleStylePrompt}
-          High quality, professional studio-level design, 16:9 aspect ratio`;
-
+          console.log('🎨 Generating stylized image...');
           const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
             method: 'POST',
             headers: {
@@ -211,9 +217,8 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
             },
             body: JSON.stringify({
               model: 'gpt-image-1',
-              prompt: imagePrompt,
-              n: 1,
-              size: '1536x1024',
+              prompt: `Professional marketing campaign visual: ${parsedResult.visualGeneration.backgroundPrompt}. ${parsedResult.visualGeneration.titleStylePrompt}. Style: luxurious, sophisticated, high-end marketing, premium brand aesthetic. Format: 1080x1920 vertical orientation perfect for mobile campaign display.`,
+              size: '1024x1792',
               quality: 'high',
               output_format: 'png'
             }),
@@ -221,20 +226,23 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
 
           if (imageResponse.ok) {
             const imageData = await imageResponse.json();
-            generatedImageUrl = imageData.data[0].b64_json;
-            console.log('✅ Generated stylized visual successfully');
+            if (imageData.data && imageData.data[0] && imageData.data[0].b64_json) {
+              generatedImage = `data:image/png;base64,${imageData.data[0].b64_json}`;
+              console.log('✅ Image generated successfully');
+            }
           } else {
-            console.warn('⚠️ Image generation failed:', imageResponse.statusText);
+            console.log('⚠️ Image generation failed, continuing without image');
           }
         } catch (imageError) {
-          console.error('❌ Error generating image:', imageError);
+          console.log('⚠️ Image generation error, continuing without image:', imageError.message);
         }
       }
 
       return new Response(JSON.stringify({ 
-        success: true, 
+        success: true,
         result: parsedResult,
-        generatedImage: generatedImageUrl
+        generatedImage,
+        visualData
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -284,9 +292,25 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
         commentaires_design: "Design premium avec une approche voyage luxe et des éléments visuels sophistiqués pour maximiser l'engagement."
       };
 
+      // Generate visual data for fallback
+      const fallbackVisualData = {
+        title: fallbackResult.wording_jeu_concours?.titre || "Tentez Votre Chance",
+        subtitle: fallbackResult.wording_jeu_concours?.sous_titre || "Une aventure exceptionnelle vous attend",
+        cta: fallbackResult.wording_jeu_concours?.call_to_action || "JOUER MAINTENANT",
+        backgroundImage: body.backgroundUrl || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=1920&fit=crop",
+        logo: body.logoUrl || "",
+        style: fallbackResult.styleChoisi || "voyage",
+        colors: {
+          primary: fallbackResult.palette_couleurs?.[0]?.hexa || "#d4af37",
+          secondary: fallbackResult.palette_couleurs?.[1]?.hexa || "#1a4c7a",
+          accent: fallbackResult.palette_couleurs?.[2]?.hexa || "#ff6b9d"
+        }
+      };
+
       return new Response(JSON.stringify({ 
         success: true, 
         result: fallbackResult,
+        visualData: fallbackVisualData,
         warning: 'Fallback result used due to parsing error'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
