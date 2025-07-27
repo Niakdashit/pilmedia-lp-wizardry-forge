@@ -33,7 +33,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   // Récupérer les configurations de la roue depuis la campagne
   const wheelBorderStyle = campaign?.design?.wheelConfig?.borderStyle || 'classic';
   const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
-  const wheelScale = campaign?.design?.wheelConfig?.scale || 1;
+  const wheelScale = campaign?.design?.wheelConfig?.scale || 2;
 
   // Fonctions pour mettre à jour la configuration de la roue
   const setWheelBorderStyle = (style: string) => {
