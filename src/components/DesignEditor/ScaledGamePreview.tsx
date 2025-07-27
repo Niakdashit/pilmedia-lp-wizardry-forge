@@ -25,9 +25,18 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const [showWheelConfig, setShowWheelConfig] = useState(false);
   
   // États pour la configuration de la roue
-  const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.borderStyle || 'classic');
-  const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.borderColor || '#841b60');
+  const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.wheelBorderStyle || campaign?.design?.borderStyle || 'classic');
+  const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.wheelBorderColor || campaign?.design?.borderColor || '#841b60');
   const [wheelScale, setWheelScale] = useState(campaign?.design?.wheelScale || 1);
+
+  // Synchroniser les états avec les changements de campaign
+  useEffect(() => {
+    if (campaign?.design) {
+      setWheelBorderStyle(campaign.design.wheelBorderStyle || campaign.design.borderStyle || 'classic');
+      setWheelBorderColor(campaign.design.wheelBorderColor || campaign.design.borderColor || '#841b60');
+      setWheelScale(campaign.design.wheelScale || 1);
+    }
+  }, [campaign?.design]);
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
@@ -72,12 +81,12 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   const handleBorderStyleChange = (style: string) => {
     setWheelBorderStyle(style);
-    handleWheelConfigUpdate({ borderStyle: style });
+    handleWheelConfigUpdate({ wheelBorderStyle: style, borderStyle: style });
   };
 
   const handleBorderColorChange = (color: string) => {
     setWheelBorderColor(color);
-    handleWheelConfigUpdate({ borderColor: color });
+    handleWheelConfigUpdate({ wheelBorderColor: color, borderColor: color });
   };
 
   const handleScaleChange = (scale: number) => {
@@ -91,7 +100,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       if (selectedDevice === 'desktop') {
         return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
       } else {
-        return "relative cursor-pointer w-full h-full bg-white shadow-lg rounded-xl overflow-hidden";
+        return "relative cursor-pointer w-full h-full";
       }
     };
 
