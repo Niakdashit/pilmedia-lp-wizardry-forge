@@ -19,14 +19,14 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
     if (shouldCropWheel) {
       if (gamePosition === 'left') {
         // Pour position left : pointeur au centre de la partie visible (moitié droite)
-        return canvasSize * 0.25 - pointerSize / 2;
+        return canvasSize * 0.25 - (pointerSize * 1.3) / 2;
       } else if (gamePosition === 'right') {
         // Pour position right : pointeur au centre de la partie visible (moitié gauche)
-        return -canvasSize * 0.25 - pointerSize / 2;
+        return -canvasSize * 0.25 - (pointerSize * 1.3) / 2;
       }
     }
     // Position normale : au centre de la roue complète
-    return canvasSize / 2 - pointerSize / 2;
+    return canvasSize / 2 - (pointerSize * 1.3) / 2;
   };
 
   return (
@@ -35,8 +35,8 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
         position: 'absolute',
         left: getPointerLeft(),
         top: -pointerSize * 0.6, // Ajuster pour que le pointeur touche le bord de la roue
-        width: pointerSize,
-        height: pointerSize * 1.6,
+        width: pointerSize * 1.3,
+        height: pointerSize * 1.8,
         zIndex: 3,
         pointerEvents: 'none',
         display: 'flex',
@@ -44,7 +44,7 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
         alignItems: 'flex-start',
       }}
     >
-      <svg width={pointerSize} height={pointerSize * 1.6}>
+      <svg width={pointerSize * 1.3} height={pointerSize * 1.8}>
         <defs>
           <linearGradient id="pointerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFD700" />
@@ -53,7 +53,7 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
           </linearGradient>
         </defs>
         <polygon
-          points={`${pointerSize/2},${pointerSize*1.6} ${pointerSize*0.85},${pointerSize*0.4} ${pointerSize*0.15},${pointerSize*0.4}`}
+          points={`${pointerSize*0.65},${pointerSize*1.8} ${pointerSize*1.1},${pointerSize*0.4} ${pointerSize*0.2},${pointerSize*0.4}`}
           fill="url(#pointerGradient)"
           stroke="#8B4513"
           strokeWidth="2"

@@ -19,10 +19,10 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
   const getPointerPosition = () => {
     if (shouldCropWheel) {
       return gamePosition === 'left' 
-        ? containerWidth - 15  // Pour left, pointeur au bord droit du conteneur visible
-        : -15;  // Pour right, pointeur au bord gauche du conteneur visible
+        ? containerWidth - 20  // Pour left, pointeur au bord droit du conteneur visible
+        : -20;  // Pour right, pointeur au bord gauche du conteneur visible
     }
-    return canvasSize / 2 - 15;  // Position normale au centre
+    return canvasSize / 2 - 20;  // Position normale au centre
   };
 
   return (
@@ -30,9 +30,9 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
       style={{
         position: 'absolute',
         left: getPointerPosition(),
-        top: -20,
-        width: 30,
-        height: 50,
+        top: -25,
+        width: 40,
+        height: 60,
         zIndex: 3,
         pointerEvents: 'none',
         display: 'flex',
@@ -40,9 +40,9 @@ const WheelPointer: React.FC<WheelPointerProps> = ({
         alignItems: 'flex-start',
       }}
     >
-      <svg width="30" height="50">
+      <svg width="40" height="60">
         <polygon
-          points="15,50 27,15 3,15"
+          points="20,60 32,18 8,18"
           fill={pointerColor}
           stroke="#fff"
           strokeWidth="2"
