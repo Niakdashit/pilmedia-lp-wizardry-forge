@@ -127,6 +127,46 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
               transform: 'translateY(-20px)'
             }}
           >
+            {/* Custom texts */}
+            {campaign?.design?.customTexts?.map((text: any, index: number) => (
+              <div
+                key={`text-${index}`}
+                style={{
+                  position: 'absolute',
+                  left: `${text.x || 0}px`,
+                  top: `${text.y || 0}px`,
+                  color: text.color || '#000000',
+                  fontSize: text.fontSize || '16px',
+                  fontWeight: text.bold ? 'bold' : 'normal',
+                  fontStyle: text.italic ? 'italic' : 'normal',
+                  textDecoration: text.underline ? 'underline' : 'none',
+                  fontFamily: text.fontFamily || 'Inter, sans-serif',
+                  zIndex: 10,
+                  pointerEvents: 'none'
+                }}
+              >
+                {text.text || text.content}
+              </div>
+            ))}
+
+            {/* Custom images */}
+            {campaign?.design?.customImages?.map((image: any, index: number) => (
+              <img
+                key={`image-${index}`}
+                src={image.src || image.url}
+                alt=""
+                style={{
+                  position: 'absolute',
+                  left: `${image.x || 0}px`,
+                  top: `${image.y || 0}px`,
+                  width: `${image.width || 100}px`,
+                  height: `${image.height || 100}px`,
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}
+              />
+            ))}
+
             <div onClick={handleWheelClick} className="cursor-pointer">
               <SmartWheel
                 segments={segments}
