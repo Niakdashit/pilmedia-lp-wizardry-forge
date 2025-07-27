@@ -92,11 +92,11 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   if (campaign?.type === 'wheel') {
     const getDeviceFrame = () => {
       if (selectedDevice === 'desktop') {
-        return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
+        return "relative bg-white shadow-lg rounded-lg overflow-hidden";
       } else if (selectedDevice === 'tablet') {
-        return "relative bg-black rounded-[24px] p-3 cursor-pointer";
+        return "relative bg-black rounded-[24px] p-3";
       } else {
-        return "relative bg-black rounded-[38px] p-4 cursor-pointer";
+        return "relative bg-black rounded-[38px] p-4";
       }
     };
 
@@ -123,7 +123,6 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
         <div
           ref={previewRef}
           className={getDeviceFrame()}
-          onClick={handleWheelClick}
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
@@ -143,12 +142,6 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
               onGameFinish={() => {}}
               onGameStart={() => {}}
               onGameButtonClick={handleWheelClick}
-            />
-            
-            {/* Transparent overlay for configuration */}
-            <div 
-              className="absolute inset-0 bg-transparent cursor-pointer"
-              onClick={handleWheelClick}
             />
           </div>
         </div>
