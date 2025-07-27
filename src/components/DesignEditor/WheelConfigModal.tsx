@@ -34,18 +34,15 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
 
   const handleScaleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
-    console.log('Scale change:', value); // Debug log
     onScaleChange(value);
   }, [onScaleChange]);
 
   const handleBorderColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log('Border color change:', value); // Debug log
     onBorderColorChange(value);
   }, [onBorderColorChange]);
 
   const handleBorderStyleChange = useCallback((style: string) => {
-    console.log('Border style change:', style); // Debug log
     onBorderStyleChange(style);
   }, [onBorderStyleChange]);
 

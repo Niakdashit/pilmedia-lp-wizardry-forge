@@ -71,18 +71,30 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   };
 
   const handleBorderStyleChange = (style: string) => {
+    console.log('Updating border style to:', style); // Debug log
     setWheelBorderStyle(style);
-    handleWheelConfigUpdate({ borderStyle: style });
+    handleWheelConfigUpdate({ 
+      wheelBorderStyle: style,
+      borderStyle: style // Garde les deux pour compatibilité 
+    });
   };
 
   const handleBorderColorChange = (color: string) => {
+    console.log('Updating border color to:', color); // Debug log  
     setWheelBorderColor(color);
-    handleWheelConfigUpdate({ borderColor: color });
+    handleWheelConfigUpdate({ 
+      wheelBorderColor: color,
+      borderColor: color // Garde les deux pour compatibilité
+    });
   };
 
   const handleScaleChange = (scale: number) => {
+    console.log('Updating wheel scale to:', scale); // Debug log
     setWheelScale(scale);
-    handleWheelConfigUpdate({ wheelScale: scale });
+    handleWheelConfigUpdate({ 
+      wheelScale: scale,
+      scale: scale // Garde les deux pour compatibilité
+    });
   };
 
   // Rendu spécial pour les campagnes de type roue
