@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
+import html2canvas from 'html2canvas';
 import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
-import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
 
 interface ScaledGamePreviewProps {
@@ -19,13 +19,45 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   onCampaignChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [showWheelConfig, setShowWheelConfig] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   
   // États pour la configuration de la roue
   const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.borderStyle || 'classic');
   const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.borderColor || '#841b60');
   const [wheelScale, setWheelScale] = useState(campaign?.design?.wheelScale || 1);
+
+  // Capture d'écran de l'aperçu
+  const capturePreview = async () => {
+    if (previewRef.current) {
+      try {
+        const canvas = await html2canvas(previewRef.current, {
+          allowTaint: true,
+          useCORS: true,
+          scale: 1,
+          width: previewRef.current.offsetWidth,
+          height: previewRef.current.offsetHeight
+        });
+        const url = canvas.toDataURL('image/png');
+        setScreenshotUrl(url);
+      } catch (error) {
+        console.error('Erreur lors de la capture d\'écran:', error);
+      }
+    }
+  };
+
+  // Effect pour capturer l'aperçu quand la campagne change
+  useEffect(() => {
+    if (campaign?.type === 'wheel') {
+      // Délai pour laisser le temps au composant de se rendre
+      const timer = setTimeout(() => {
+        capturePreview();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [campaign, selectedDevice, wheelBorderStyle, wheelBorderColor, wheelScale]);
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
@@ -82,17 +114,6 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
-    const segments = campaign?.design?.segments || [
-      { id: '1', label: 'Segment 1', color: '#FF6B6B' },
-      { id: '2', label: 'Segment 2', color: '#4ECDC4' },
-      { id: '3', label: 'Segment 3', color: '#45B7D1' },
-      { id: '4', label: 'Segment 4', color: '#96CEB4' },
-      { id: '5', label: 'Segment 5', color: '#FFEAA7' },
-      { id: '6', label: 'Segment 6', color: '#DDA0DD' }
-    ];
-
-    const backgroundImage = campaign?.design?.background?.type === 'image' ? campaign.design.background.value : null;
-
     return (
       <div 
         ref={containerRef}
@@ -102,58 +123,50 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           height: containerHeight
         }}
       >
+        {/* Aperçu caché pour capture d'écran */}
+        <div 
+          ref={previewRef}
+          className="absolute opacity-0 pointer-events-none"
+          style={{ top: -9999, left: -9999 }}
+        >
+          <div
+            className="relative bg-white shadow-lg rounded-lg overflow-hidden"
+            style={{
+              width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
+              height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
+            }}
+          >
+            <GameCanvasPreview
+              campaign={campaign}
+              previewDevice={selectedDevice}
+              disableForm={true}
+              setCampaign={onCampaignChange}
+            />
+          </div>
+        </div>
+
+        {/* Affichage de la capture d'écran */}
         <div
-          className="relative bg-white shadow-lg rounded-lg overflow-hidden"
+          className="relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer"
+          onClick={handleWheelClick}
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
             width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px',
-            backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
           }}
         >
-          <div 
-            className="w-full flex justify-center"
-            style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              height: '50%',
-              paddingBottom: '-30%',
-              transform: 'translateY(-20px)'
-            }}
-          >
-            <div 
-              className="absolute"
-              style={{
-                bottom: `-${selectedDevice === 'mobile' ? 125 : selectedDevice === 'tablet' ? 150 : 175}px`
-              }}
-            >
-              <div onClick={handleWheelClick} className="cursor-pointer">
-                <SmartWheel
-                  segments={segments}
-                  size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
-                  borderStyle={wheelBorderStyle}
-                  customBorderColor={wheelBorderColor}
-                  disabled={false}
-                  onSpin={() => {}}
-                  onResult={() => {}}
-                  gamePosition={{ x: 0, y: 0, scale: wheelScale }}
-                  buttonPosition="center"
-                  customButton={{
-                    text: "TOURNER",
-                    color: "#841b60",
-                    textColor: "#FFFFFF"
-                  }}
-                />
-              </div>
+          {screenshotUrl ? (
+            <img 
+              src={screenshotUrl} 
+              alt="Preview"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+              <div className="text-gray-500">Chargement...</div>
             </div>
-          </div>
+          )}
         </div>
         
         {/* Scale info */}
