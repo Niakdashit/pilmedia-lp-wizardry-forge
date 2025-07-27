@@ -6,6 +6,7 @@ import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+import { useWheelConfiguration } from '../../hooks/useWheelConfiguration';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -119,35 +120,29 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   };
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
-  // Définir la taille de la roue en fonction de l'appareil et du scale
-  const getWheelSize = () => {
-    const baseSize = (() => {
-      switch (selectedDevice) {
-        case 'desktop':
-          return 200;
-        case 'tablet':
-          return 180;
-        case 'mobile':
-          return 140;
-        default:
-          return 140;
-      }
-    })();
-    return Math.round(baseSize * wheelScale);
-  };
+  // Configuration unifiée de la roue
+  const wheelConfigSource = useMemo(() => ({
+    customColors: campaign?.design?.brandColors || campaign?.design?.customColors,
+    design: campaign?.design,
+    config: campaign?.config,
+    gameConfig: campaign?.gameConfig,
+    buttonConfig: campaign?.buttonConfig,
+    wheelSegments: campaign?.gameConfig?.wheel?.segments || [
+      { id: '1', label: '10€' },
+      { id: '2', label: '20€' },
+      { id: '3', label: '5€' },
+      { id: '4', label: 'Perdu' },
+      { id: '5', label: '50€' },
+      { id: '6', label: '30€' }
+    ]
+  }), [campaign]);
 
-  // Segments pour la roue avec couleurs extraites si disponibles
-  const extractedColor = campaign?.design?.brandColors?.primary || '#ff6b6b';
-  const whiteColor = '#ffffff';
-  
-  const wheelSegments = [
-    { id: '1', label: '10€', color: extractedColor, textColor: whiteColor },
-    { id: '2', label: '20€', color: whiteColor, textColor: extractedColor },
-    { id: '3', label: '5€', color: extractedColor, textColor: whiteColor },
-    { id: '4', label: 'Perdu', color: whiteColor, textColor: extractedColor },
-    { id: '5', label: '50€', color: extractedColor, textColor: whiteColor },
-    { id: '6', label: '30€', color: whiteColor, textColor: extractedColor }
-  ];
+  const wheelConfig = useWheelConfiguration(
+    wheelConfigSource,
+    selectedDevice,
+    wheelScale,
+    400
+  );
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
@@ -187,21 +182,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                   className="cursor-pointer hover:scale-105 transition-transform duration-200"
                 >
                   <SmartWheel
-                    segments={wheelSegments}
+                    segments={wheelConfig.segments}
                     theme="modern"
-                    size={getWheelSize()}
-                    borderStyle={wheelBorderStyle}
-                    brandColors={{
-                      primary: wheelBorderColor,
-                      secondary: '#4ecdc4',
-                      accent: '#45b7d1'
-                    }}
+                    size={wheelConfig.size}
+                    borderStyle={wheelConfig.borderStyle}
+                    customBorderColor={wheelConfig.customBorderColor}
+                    brandColors={wheelConfig.brandColors}
                     buttonPosition="center"
-                    customButton={{
-                      text: 'GO',
-                      color: wheelBorderColor,
-                      textColor: '#ffffff'
-                    }}
+                    customButton={wheelConfig.customButton}
                     disabled={true}
                   />
                 </div>
