@@ -175,7 +175,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             }}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
-            gameSize={'medium'}
+            gameSize={campaign.gameSize || 'medium'}
             gamePosition={'center'}
             previewDevice={previewMode}
             disabled={!formValidated}
