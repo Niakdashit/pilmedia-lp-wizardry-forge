@@ -76,7 +76,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         bottom: 0,
         margin: 0,
         padding: 0,
-        transform: 'translateY(75%)'
+        transform: 'translateY(60%)'
       }}
     >
       <SmartWheel 
