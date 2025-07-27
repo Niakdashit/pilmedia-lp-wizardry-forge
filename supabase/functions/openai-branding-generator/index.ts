@@ -47,8 +47,8 @@ serve(async (req) => {
       websiteContent = `Site web: ${body.websiteUrl}`;
     }
 
-    // Enhanced prompt with website content
-    const enhancedPrompt = `${body.prompt}
+    // Enhanced prompt with website content and professional specifications
+    const enhancedPrompt = `MISSION: Analyser cette marque et créer une campagne de jeu-concours visuelle de niveau studio professionnel.
 
 CONTENU DU SITE WEB À ANALYSER:
 ${websiteContent}
@@ -56,7 +56,51 @@ ${websiteContent}
 ${body.logoUrl ? `LOGO FOURNI: ${body.logoUrl}` : 'AUCUN LOGO FOURNI'}
 ${body.backgroundUrl ? `IMAGE DE FOND FOURNIE: ${body.backgroundUrl}` : 'AUCUNE IMAGE DE FOND FOURNIE'}
 
-Analyse ce contenu web pour extraire l'univers de marque et génère une réponse JSON parfaitement structurée selon le format demandé.`;
+INSTRUCTIONS SPÉCIFIQUES:
+1. Analyse le secteur d'activité et choisis le STYLE le plus adapté parmi les 4 disponibles
+2. Génère une palette de couleurs harmonieuse en cohérence avec la marque
+3. Crée des textes accrocheurs et brandés pour le jeu-concours  
+4. Assure-toi que tous les éléments suivent une hiérarchie visuelle claire
+5. Optimise pour l'engagement et la conversion
+
+FORMAT JSON REQUIS:
+{
+  "styleChoisi": "naturel|sportif|voyage|moderne",
+  "campaignTitle": "Titre principal accrocheur",
+  "campaignSubtitle": "Sous-titre engageant",
+  "palette_couleurs": [
+    {"nom": "Couleur principale", "hexa": "#hexcode"},
+    {"nom": "Couleur secondaire", "hexa": "#hexcode"},
+    {"nom": "Couleur d'accent", "hexa": "#hexcode"}
+  ],
+  "polices": [
+    {"nom": "FontName", "utilisation": "Titres"},
+    {"nom": "FontName", "utilisation": "Texte"}
+  ],
+  "ambiance_et_keywords": ["mot1", "mot2", "mot3"],
+  "extrait_du_ton_editorial": "Description du ton de communication",
+  "wording_jeu_concours": {
+    "titre": "Titre du jeu accrocheur",
+    "sous_titre": "Sous-titre qui donne envie",
+    "mecanique": "Explication simple du jeu",
+    "avantage_client": "Bénéfice clair pour l'utilisateur",
+    "call_to_action": "CTA puissant en MAJUSCULES"
+  },
+  "wheelSegments": [
+    {"label": "Prix 1", "color": "#hexcode", "probability": 0.3, "isWinning": true},
+    {"label": "Prix 2", "color": "#hexcode", "probability": 0.25, "isWinning": true},
+    {"label": "Prix 3", "color": "#hexcode", "probability": 0.25, "isWinning": true},
+    {"label": "Réessayez", "color": "#hexcode", "probability": 0.2, "isWinning": false}
+  ],
+  "designElements": {
+    "backgroundStyle": "Description du style de fond",
+    "graphicElements": ["Element1", "Element2"],
+    "layoutStyle": "Description de la composition"
+  },
+  "commentaires_design": "Justification des choix créatifs"
+}
+
+Génère UNIQUEMENT le JSON, sans texte supplémentaire.`;
 
     console.log('🤖 Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -70,7 +114,23 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
         messages: [
           {
             role: 'system',
-            content: 'Tu es un directeur artistique senior et expert en branding digital. Tu analyses des sites web pour extraire l\'identité de marque et génères des campagnes visuelles de niveau studio professionnel. Tu dois créer des designs sophistiqués avec une hiérarchie typographique parfaite, des palettes de couleurs harmonieuses et des compositions visuelles impactantes. Tu réponds UNIQUEMENT avec du JSON valide, sans texte supplémentaire.'
+            content: `Tu es un directeur artistique senior expert en branding digital et design UX/UI. Tu analyses des sites web pour créer des campagnes visuelles de niveau studio professionnel.
+
+STYLES DISPONIBLES (choisis le plus adapté à la marque):
+1. NATUREL & ORGANIQUE: Couleurs organiques (#5d7c47, #a8c68f, #f4e4c1), typographie Playfair Display, design épuré et chaleureux
+2. SPORTIF & DYNAMIQUE: Couleurs vibrantes (#ff6b35, #004e89, #ffd23f), typographie Montserrat bold, énergie et mouvement
+3. VOYAGE & LUXE: Couleurs premium (#d4af37, #1a4c7a, #ff6b9d), typographie Cormorant Garamond, sophistication et élégance
+4. MODERNE & MINIMALISTE: Couleurs tech (#6c5ce7, #a29bfe, #fd79a8), typographie Poppins, design épuré et géométrique
+
+EXIGENCES DE DESIGN:
+- Hiérarchie typographique parfaite avec tailles et poids optimisés
+- Palettes harmonieuses avec contraste optimal pour accessibilité
+- Compositions centrées avec positionnement précis des éléments
+- Effets visuels professionnels (ombres, dégradés, animations)
+- Cohérence visuelle totale entre tous les éléments
+- Adaptation parfaite au secteur d'activité analysé
+
+Tu dois analyser le contenu web fourni et générer un JSON parfaitement structuré selon le format demandé, en choisissant le style le plus adapté à l'univers de la marque analysée.`
           },
           {
             role: 'user',

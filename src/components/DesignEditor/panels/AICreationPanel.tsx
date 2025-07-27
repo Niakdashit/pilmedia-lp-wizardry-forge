@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, Wand2, Globe, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { CAMPAIGN_TEMPLATES, getTemplateByIndex } from '../templates/CampaignTemplates';
 
 interface AICreationPanelProps {
   onCampaignGenerated: (campaignData: any) => void;
@@ -10,6 +11,9 @@ interface AICreationPanelProps {
 }
 
 interface BrandAnalysis {
+  styleChoisi?: string;
+  campaignTitle?: string;
+  campaignSubtitle?: string;
   palette_couleurs: Array<{ nom: string; hexa: string }>;
   polices: Array<{ nom: string; utilisation: string }>;
   ambiance_et_keywords: string[];
@@ -50,8 +54,8 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
 
-  // Fonction d'extraction de couleurs à partir d'une image
-  const extractColorsFromImage = (imageFile: File): Promise<string[]> => {
+  // Fonction pour extraire les couleurs dominantes d'une image
+  const extractColorsFromImage = async (imageFile: File): Promise<string[]> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -66,43 +70,37 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
         const data = imageData?.data;
         
         if (!data) {
-          resolve(['#3b82f6', '#1e40af', '#0ea5e9']);
+          resolve(['#3498db', '#2c3e50', '#e74c3c']);
           return;
         }
-        
-        // Analyse simplifiée des couleurs dominantes
+
         const colorCounts: { [key: string]: number } = {};
         
-        for (let i = 0; i < data.length; i += 4) {
+        for (let i = 0; i < data.length; i += 16) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
           const alpha = data[i + 3];
           
-          if (alpha > 128) { // Ignorer les pixels transparents
-            // Regrouper les couleurs similaires
-            const groupedR = Math.floor(r / 32) * 32;
-            const groupedG = Math.floor(g / 32) * 32;
-            const groupedB = Math.floor(b / 32) * 32;
-            
-            const hex = `#${groupedR.toString(16).padStart(2, '0')}${groupedG.toString(16).padStart(2, '0')}${groupedB.toString(16).padStart(2, '0')}`;
+          if (alpha > 200) {
+            const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
             colorCounts[hex] = (colorCounts[hex] || 0) + 1;
           }
         }
         
-        // Trier par fréquence et prendre les 3 plus dominantes
         const sortedColors = Object.entries(colorCounts)
           .sort(([,a], [,b]) => b - a)
           .slice(0, 3)
           .map(([color]) => color);
         
-        resolve(sortedColors.length > 0 ? sortedColors : ['#3b82f6', '#1e40af', '#0ea5e9']);
+        resolve(sortedColors.length > 0 ? sortedColors : ['#3498db', '#2c3e50', '#e74c3c']);
       };
       
       img.src = URL.createObjectURL(imageFile);
     });
   };
 
+  // Gestion de l'upload du logo
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -110,17 +108,17 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
       const preview = URL.createObjectURL(file);
       setLogoPreview(preview);
       
-      // Extraire les couleurs du logo
       try {
         const colors = await extractColorsFromImage(file);
         onExtractedColorsChange?.(colors);
-        toast.success('Couleurs extraites du logo !');
+        toast.success('Couleurs extraites du logo avec succès !');
       } catch (error) {
-        console.error('Erreur extraction couleurs:', error);
+        console.error('Erreur lors de l\'extraction des couleurs:', error);
       }
     }
   };
 
+  // Gestion de l'upload du background
   const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -128,25 +126,13 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
       const preview = URL.createObjectURL(file);
       setBackgroundPreview(preview);
       
-      // Appliquer directement comme background
-      onBackgroundChange?.({
-        type: 'image',
-        value: preview
-      });
-      
-      // Extraire les couleurs si pas de logo
-      if (!logoFile) {
-        try {
-          const colors = await extractColorsFromImage(file);
-          onExtractedColorsChange?.(colors);
-          toast.success('Couleurs extraites de l\'image de fond !');
-        } catch (error) {
-          console.error('Erreur extraction couleurs:', error);
-        }
-      }
+      const dataURL = await convertFileToDataURL(file);
+      onBackgroundChange?.({ type: 'image', value: dataURL });
+      toast.success('Image de fond appliquée !');
     }
   };
 
+  // Conversion du file en dataURL
   const convertFileToDataURL = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -156,78 +142,54 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
     });
   };
 
+  // Génération de la campagne IA
   const generateAICampaign = async () => {
     if (!websiteUrl.trim()) {
-      toast.error('Veuillez saisir une URL de marque');
+      toast.error('Veuillez saisir une URL de site web');
       return;
     }
 
     setIsGenerating(true);
     
     try {
-      // Convertir les fichiers en data URLs
       let logoDataURL = '';
       let backgroundDataURL = '';
-      
+
       if (logoFile) {
         logoDataURL = await convertFileToDataURL(logoFile);
       }
-      
+
       if (backgroundFile) {
         backgroundDataURL = await convertFileToDataURL(backgroundFile);
       }
 
-      const prompt = `Génère une campagne promotionnelle de niveau studio basée sur cette marque. 
-        
-        CONTRAINTES QUALITÉ:
-        - Niveau graphique équivalent aux meilleures agences créatives
-        - Visuel principal cohérent avec l'identité de marque
-        - Titre accrocheur et sous-titre complémentaire avec hiérarchie typographique
-        - Éléments graphiques harmonieux (formes, icônes, couleurs)
-        - Roue de la fortune personnalisée aux couleurs de la marque
-        - Typographie extraite de l'univers de marque
-        
-        RÉSULTAT ATTENDU (JSON strict):
-        {
-          "campaignTitle": "Titre accrocheur principal",
-          "campaignSubtitle": "Sous-titre complémentaire engageant",
-          "palette_couleurs": [
-            {"nom": "Couleur principale", "hexa": "#..."},
-            {"nom": "Couleur secondaire", "hexa": "#..."},
-            {"nom": "Couleur d'accent", "hexa": "#..."}
-          ],
-          "polices": [
-            {"nom": "Police principale", "utilisation": "Titres"},
-            {"nom": "Police secondaire", "utilisation": "Texte"}
-          ],
-          "ambiance_et_keywords": ["moderne", "professionnel", "engageant"],
-          "extrait_du_ton_editorial": "Description du ton de communication",
-          "wording_jeu_concours": {
-            "titre": "Titre du jeu-concours",
-            "sous_titre": "Sous-titre engageant", 
-            "mecanique": "Description de la mécanique",
-            "avantage_client": "Avantage pour le participant",
-            "call_to_action": "TEXTE DU BOUTON"
-          },
-          "wheelSegments": [
-            {"label": "Prix 1", "color": "#...", "probability": 0.2},
-            {"label": "Prix 2", "color": "#...", "probability": 0.15},
-            {"label": "Prix 3", "color": "#...", "probability": 0.1}
-          ],
-          "designElements": {
-            "backgroundStyle": "Description style arrière-plan",
-            "graphicElements": ["élément1", "élément2"],
-            "layoutStyle": "Description disposition"
-          },
-          "commentaires_design": "Recommandations pour le design final"
-        }`;
+      const prompt = `
+Tu es un directeur artistique expert. Analyse ce site web et génère une campagne de jeu-concours visuellement impactante.
 
+SECTEURS D'ACTIVITÉ ET STYLES ASSOCIÉS:
+- Bio/Santé/Beauté/Wellness → Style NATUREL (couleurs organiques, design épuré)
+- Sport/Fitness/Outdoor/Jeunesse → Style SPORTIF (couleurs énergiques, design dynamique)
+- Voyage/Luxe/Hôtellerie/Premium → Style VOYAGE (couleurs sophistiquées, design premium)
+- Tech/Digital/Finance/Moderne → Style MODERNE (couleurs tech, design minimaliste)
+
+INSTRUCTIONS:
+1. Identifie le secteur d'activité principal
+2. Choisis le style le plus adapté parmi: naturel, sportif, voyage, moderne
+3. Génère une palette de couleurs cohérente avec la marque
+4. Crée des textes accrocheurs et brandés
+5. Assure une hiérarchie visuelle claire
+
+Réponds UNIQUEMENT avec le JSON demandé, sans texte supplémentaire.
+`;
+
+      console.log('🎨 Calling AI branding generator...');
+      
       const { data, error } = await supabase.functions.invoke('openai-branding-generator', {
         body: {
           prompt,
           websiteUrl,
-          logoUrl: logoDataURL,
-          backgroundUrl: backgroundDataURL,
+          logoUrl: logoDataURL || undefined,
+          backgroundUrl: backgroundDataURL || undefined,
         },
       });
 
@@ -235,328 +197,371 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
         throw error;
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Erreur lors de la génération');
+      if (data?.success && data.result) {
+        console.log('✅ AI analysis successful:', data.result);
+        const campaignData = createCampaignFromAIAnalysis(data.result);
+        onCampaignGenerated(campaignData);
+        toast.success('Campagne IA générée avec succès !');
+      } else {
+        throw new Error('Réponse invalide de l\'IA');
       }
 
-      const brandAnalysis: BrandAnalysis = data.result;
+    } catch (error) {
+      console.error('❌ Erreur lors de la génération IA:', error);
+      console.log('🔄 Utilisation du fallback...');
       
-      // Créer une campagne complète basée sur l'analyse IA
-      const generatedCampaign = createCampaignFromAIAnalysis(brandAnalysis);
-      
-      // Transmettre la campagne générée
-      onCampaignGenerated(generatedCampaign);
-      
-      toast.success('Campagne générée avec succès !');
-      
-    } catch (error: any) {
-      console.error('Erreur génération IA:', error);
-      
-      // Fallback avec une campagne par défaut basée sur l'URL
       const fallbackCampaign = createFallbackCampaign();
       onCampaignGenerated(fallbackCampaign);
-      
-      toast.warning('Campagne générée en mode fallback');
+      toast.warning('Campagne de secours générée (erreur IA)');
     } finally {
       setIsGenerating(false);
     }
   };
 
   const createCampaignFromAIAnalysis = (analysis: BrandAnalysis) => {
-    const primaryColor = analysis.palette_couleurs[0]?.hexa || '#3b82f6';
-    const secondaryColor = analysis.palette_couleurs[1]?.hexa || '#1e40af';
-    const accentColor = analysis.palette_couleurs[2]?.hexa || '#0ea5e9';
+    console.log('Creating campaign from AI analysis:', analysis);
     
-    // Dimensions standard du canvas (desktop par défaut)
-    const canvasWidth = 810;
-    const centerX = canvasWidth / 2;
+    const canvasWidth = 600;
+    const canvasHeight = 800;
     
-    // Extraire les couleurs pour le système
-    onExtractedColorsChange?.([primaryColor, secondaryColor, accentColor]);
-    
-    // Appliquer un background généré si pas d'image de fond
-    if (!backgroundFile) {
-      const gradientBackground = `linear-gradient(135deg, ${primaryColor}15 0%, ${secondaryColor}15 50%, ${accentColor}10 100%)`;
-      onBackgroundChange?.({
-        type: 'color',
-        value: gradientBackground
-      });
+    // Sélection du template basé sur le style choisi par l'IA ou rotation automatique
+    let template;
+    if (analysis.styleChoisi) {
+      template = CAMPAIGN_TEMPLATES.find(t => t.id === analysis.styleChoisi) || getTemplateByIndex(0);
+    } else {
+      // Rotation automatique basée sur un compteur local
+      const generationCount = parseInt(localStorage.getItem('ai-generation-count') || '0');
+      template = getTemplateByIndex(generationCount);
+      localStorage.setItem('ai-generation-count', (generationCount + 1).toString());
     }
 
-    // Polices de la marque
-    const titleFont = analysis.polices.find(p => p.utilisation.includes('Titre'))?.nom || 'Inter';
-    const textFont = analysis.polices.find(p => p.utilisation.includes('Texte'))?.nom || 'Inter';
+    console.log('Using template:', template.name);
+
+    // Couleurs du template ou de l'IA
+    const primaryColor = analysis.palette_couleurs?.[0]?.hexa || template.style.colors.primary;
+    const secondaryColor = analysis.palette_couleurs?.[1]?.hexa || template.style.colors.secondary;
+    const accentColor = analysis.palette_couleurs?.[2]?.hexa || template.style.colors.accent;
+    const backgroundColor = template.style.colors.background;
+    const textColor = template.style.colors.text;
+
+    // Polices du template
+    const titleFont = template.style.typography.titleFont;
+    const textFont = template.style.typography.textFont;
+
+    // Wording optimisé
+    const gameWording = analysis.wording_jeu_concours || {};
+    const title = gameWording.titre || analysis.campaignTitle || 'Tentez Votre Chance';
+    const subtitle = gameWording.sous_titre || analysis.campaignSubtitle || 'Une expérience unique vous attend';
+    const mechanics = gameWording.mecanique || 'Tournez la roue et découvrez votre prix';
+    const benefit = gameWording.avantage_client || 'Des récompenses exclusives à gagner';
+    const cta = gameWording.call_to_action || 'JOUER MAINTENANT';
+
+    // Calcul des positions basées sur le template
+    const titlePos = {
+      x: canvasWidth * template.style.layout.titlePosition.x,
+      y: canvasHeight * template.style.layout.titlePosition.y
+    };
+    const subtitlePos = {
+      x: canvasWidth * template.style.layout.subtitlePosition.x,
+      y: canvasHeight * template.style.layout.subtitlePosition.y
+    };
+    const mechanicsPos = {
+      x: canvasWidth * template.style.layout.mechanicsPosition.x,
+      y: canvasHeight * template.style.layout.mechanicsPosition.y
+    };
+    const benefitPos = {
+      x: canvasWidth * template.style.layout.benefitPosition.x,
+      y: canvasHeight * template.style.layout.benefitPosition.y
+    };
+    const ctaPos = {
+      x: canvasWidth * template.style.layout.ctaPosition.x,
+      y: canvasHeight * template.style.layout.ctaPosition.y
+    };
+    const wheelPos = {
+      x: canvasWidth * template.style.layout.wheelPosition.x,
+      y: canvasHeight * template.style.layout.wheelPosition.y
+    };
+
+    // Styles avancés basés sur le template
+    const shadowStyle = template.style.effects.shadows ? '0 4px 20px rgba(0,0,0,0.15)' : 'none';
+    const titleShadow = template.style.effects.shadows ? '2px 2px 8px rgba(0,0,0,0.2)' : 'none';
+    const gradientBg = template.style.effects.gradients ? 
+      `linear-gradient(135deg, ${primaryColor}15, ${accentColor}10)` : 
+      `${primaryColor}08`;
 
     return {
-      // Éléments canvas pour l'éditeur - Design centré et professionnel
-      elements: [
-        // Logo en haut à gauche (si fourni)
-        ...(logoPreview ? [{
-          id: 'ai-logo',
-          type: 'image',
-          src: logoPreview,
-          position: { x: 60, y: 40 },
-          style: {
-            width: '120px',
-            height: 'auto',
-            maxHeight: '60px',
-            objectFit: 'contain'
-          }
-        }] : []),
-        
-        // Titre principal - Centré et impactant
+      canvasElements: [
+        // Titre principal avec style template
         {
           id: 'ai-title',
           type: 'text',
           role: 'title',
-          content: analysis.wording_jeu_concours.titre,
-          position: { x: centerX, y: 80 },
+          content: title,
+          position: titlePos,
           style: {
-            fontSize: '42px',
-            fontWeight: 'bold',
+            fontSize: template.style.typography.titleSize,
+            fontWeight: template.style.typography.titleWeight,
             color: primaryColor,
             textAlign: 'center',
             fontFamily: titleFont,
-            textShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            textShadow: titleShadow,
+            width: `${canvasWidth - 80}px`,
             lineHeight: '1.2',
-            letterSpacing: '-0.02em',
-            width: `${canvasWidth - 100}px`,
-            maxWidth: '700px'
+            letterSpacing: template.style.typography.letterSpacing,
+            background: template.style.effects.gradients ? gradientBg : 'transparent',
+            padding: template.style.effects.gradients ? '8px 16px' : '0',
+            borderRadius: template.style.effects.gradients ? '12px' : '0'
           }
         },
         
-        // Sous-titre - Élégant et lisible
+        // Sous-titre stylisé
         {
           id: 'ai-subtitle',
           type: 'text',
           role: 'description',
-          content: analysis.wording_jeu_concours.sous_titre,
-          position: { x: centerX, y: 140 },
+          content: subtitle,
+          position: subtitlePos,
           style: {
-            fontSize: '22px',
+            fontSize: template.style.typography.subtitleSize,
             fontWeight: '400',
-            color: secondaryColor,
+            color: textColor,
             textAlign: 'center',
             fontFamily: textFont,
-            opacity: '0.9',
+            width: `${canvasWidth - 100}px`,
             lineHeight: '1.4',
-            width: `${canvasWidth - 120}px`,
-            maxWidth: '600px'
+            opacity: '0.9'
           }
         },
         
-        // Mécanique du jeu - Descriptif
+        // Mécanique du jeu avec style template
         {
           id: 'ai-mechanics',
           type: 'text',
           role: 'mechanics',
-          content: analysis.wording_jeu_concours.mecanique,
-          position: { x: centerX, y: 190 },
+          content: mechanics,
+          position: mechanicsPos,
           style: {
             fontSize: '16px',
-            fontWeight: '300',
-            color: '#64748b',
+            fontWeight: '500',
+            color: secondaryColor,
             textAlign: 'center',
             fontFamily: textFont,
-            width: `${canvasWidth - 140}px`,
-            maxWidth: '550px',
-            lineHeight: '1.5'
+            backgroundColor: `${secondaryColor}12`,
+            padding: '10px 20px',
+            borderRadius: '20px',
+            border: template.style.effects.borders ? `1px solid ${secondaryColor}30` : 'none',
+            boxShadow: template.style.effects.shadows ? shadowStyle : 'none',
+            width: 'auto'
           }
         },
         
-        // Avantage client - Mis en valeur
+        // Avantage client premium
         {
           id: 'ai-benefit',
           type: 'text',
           role: 'benefit',
-          content: analysis.wording_jeu_concours.avantage_client,
-          position: { x: centerX, y: 240 },
+          content: benefit,
+          position: benefitPos,
           style: {
             fontSize: '18px',
             fontWeight: '600',
             color: accentColor,
             textAlign: 'center',
             fontFamily: textFont,
-            backgroundColor: `${accentColor}10`,
-            padding: '10px 20px',
-            borderRadius: '20px',
-            border: `2px solid ${accentColor}30`,
-            width: 'auto',
-            maxWidth: '500px'
+            backgroundColor: template.style.effects.gradients ? 
+              `linear-gradient(45deg, ${accentColor}20, ${primaryColor}15)` : 
+              `${accentColor}15`,
+            padding: '14px 28px',
+            borderRadius: '30px',
+            border: template.style.effects.borders ? `2px solid ${accentColor}50` : 'none',
+            boxShadow: template.style.effects.shadows ? `0 6px 25px ${accentColor}25` : 'none',
+            width: 'auto'
           }
         },
         
-        // Bouton CTA - Design premium (positionné au-dessus de la roue)
+        // Call-to-action avec style template
         {
           id: 'ai-cta',
           type: 'text',
           role: 'button',
-          content: analysis.wording_jeu_concours.call_to_action,
-          position: { x: centerX, y: 320 },
+          content: cta,
+          position: ctaPos,
           style: {
             fontSize: '20px',
             fontWeight: 'bold',
             color: '#ffffff',
-            backgroundColor: primaryColor,
-            padding: '16px 40px',
+            backgroundColor: template.style.effects.gradients ? 
+              `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` : 
+              primaryColor,
+            padding: '18px 36px',
             borderRadius: '40px',
             textAlign: 'center',
-            fontFamily: titleFont,
-            boxShadow: `0 8px 25px ${primaryColor}40`,
-            border: 'none',
-            cursor: 'pointer',
-            letterSpacing: '0.05em',
+            fontFamily: textFont,
+            boxShadow: template.style.effects.shadows ? `0 8px 30px ${primaryColor}40` : 'none',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            width: 'auto'
+            width: 'auto',
+            border: template.style.effects.borders ? `3px solid ${primaryColor}` : 'none'
           }
         }
       ],
-      
-      // Configuration de la roue avec les couleurs de la marque
       wheelConfig: {
-        segments: analysis.wheelSegments.map((segment, index) => ({
-          id: `segment-${index}`,
+        segments: analysis.wheelSegments?.map((segment, index) => ({
+          id: (index + 1).toString(),
           label: segment.label,
           color: segment.color,
           probability: segment.probability,
-          isWinning: segment.isWinning ?? true
-        })),
+          isWinning: segment.isWinning
+        })) || [
+          { id: '1', label: 'Prix Premium', color: primaryColor, probability: 0.3, isWinning: true },
+          { id: '2', label: 'Cadeau Surprise', color: secondaryColor, probability: 0.25, isWinning: true },
+          { id: '3', label: 'Bon d\'achat', color: accentColor, probability: 0.25, isWinning: true },
+          { id: '4', label: 'Réessayez', color: template.style.colors.text, probability: 0.2, isWinning: false }
+        ],
         borderStyle: 'premium',
         borderColor: primaryColor,
         scale: 1.2,
-        center: { x: centerX, y: 450 }
+        center: wheelPos
       },
-      
-      // Données de marque
-      brandData: {
+      design: {
         colors: {
           primary: primaryColor,
           secondary: secondaryColor,
-          accent: accentColor
+          accent: accentColor,
+          background: backgroundColor,
+          text: textColor
         },
-        fonts: analysis.polices,
-        tone: analysis.extrait_du_ton_editorial,
-        keywords: analysis.ambiance_et_keywords
+        fonts: {
+          title: titleFont,
+          text: textFont
+        },
+        template: template
       },
-      
-      // Métadonnées
       metadata: {
-        websiteUrl,
-        hasLogo: !!logoFile,
-        hasBackground: !!backgroundFile,
         aiGenerated: true,
-        designElements: analysis.designElements,
-        comments: analysis.commentaires_design
+        templateUsed: template.name,
+        brandAnalysis: analysis,
+        generatedAt: new Date().toISOString()
       }
     };
   };
 
   const createFallbackCampaign = () => {
-    const fallbackColors = ['#f39c12', '#3498db', '#e74c3c']; // Couleurs Homair
-    onExtractedColorsChange?.(fallbackColors);
+    const canvasWidth = 600;
+    const canvasHeight = 800;
+
+    // Utilisation du template moderne par défaut pour le fallback
+    const fallbackTemplate = CAMPAIGN_TEMPLATES.find(t => t.id === 'modern') || CAMPAIGN_TEMPLATES[0];
     
-    // Dimensions standard du canvas
-    const canvasWidth = 810;
-    const centerX = canvasWidth / 2;
-    
-    if (!backgroundFile) {
-      onBackgroundChange?.({
-        type: 'color',
-        value: 'linear-gradient(135deg, #3498db15 0%, #f39c1215 50%, #e74c3c10 100%)'
-      });
-    }
+    // Positions basées sur le template
+    const titlePos = {
+      x: canvasWidth * fallbackTemplate.style.layout.titlePosition.x,
+      y: canvasHeight * fallbackTemplate.style.layout.titlePosition.y
+    };
+    const subtitlePos = {
+      x: canvasWidth * fallbackTemplate.style.layout.subtitlePosition.x,
+      y: canvasHeight * fallbackTemplate.style.layout.subtitlePosition.y
+    };
+    const benefitPos = {
+      x: canvasWidth * fallbackTemplate.style.layout.benefitPosition.x,
+      y: canvasHeight * fallbackTemplate.style.layout.benefitPosition.y
+    };
+    const ctaPos = {
+      x: canvasWidth * fallbackTemplate.style.layout.ctaPosition.x,
+      y: canvasHeight * fallbackTemplate.style.layout.ctaPosition.y
+    };
+    const wheelPos = {
+      x: canvasWidth * fallbackTemplate.style.layout.wheelPosition.x,
+      y: canvasHeight * fallbackTemplate.style.layout.wheelPosition.y
+    };
+
+    const primaryColor = fallbackTemplate.style.colors.primary;
+    const secondaryColor = fallbackTemplate.style.colors.secondary;
+    const accentColor = fallbackTemplate.style.colors.accent;
 
     return {
-      elements: [
-        // Logo Homair si disponible
-        ...(logoPreview ? [{
-          id: 'fallback-logo',
-          type: 'image',
-          src: logoPreview,
-          position: { x: 60, y: 40 },
-          style: {
-            width: '120px',
-            height: 'auto',
-            maxHeight: '60px'
-          }
-        }] : []),
-        
-        // Titre centré et stylisé
+      canvasElements: [
+        // Titre principal avec style template
         {
           id: 'fallback-title',
           type: 'text',
           role: 'title',
-          content: 'TOURNEZ LA ROUE',
-          position: { x: centerX, y: 80 },
+          content: 'Tentez Votre Chance',
+          position: titlePos,
           style: {
-            fontSize: '42px',
-            fontWeight: 'bold',
-            color: '#3498db',
+            fontSize: fallbackTemplate.style.typography.titleSize,
+            fontWeight: fallbackTemplate.style.typography.titleWeight,
+            color: primaryColor,
             textAlign: 'center',
-            fontFamily: 'Inter',
-            textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            width: `${canvasWidth - 100}px`,
-            letterSpacing: '-0.01em'
+            fontFamily: fallbackTemplate.style.typography.titleFont,
+            textShadow: '2px 2px 8px rgba(108, 92, 231, 0.3)',
+            width: `${canvasWidth - 80}px`,
+            lineHeight: '1.2',
+            letterSpacing: fallbackTemplate.style.typography.letterSpacing,
+            background: 'linear-gradient(135deg, #6c5ce715, #fd79a810)',
+            padding: '8px 16px',
+            borderRadius: '12px'
           }
         },
         
-        // Sous-titre accrocheur
+        // Sous-titre moderne
         {
           id: 'fallback-subtitle',
           type: 'text',
           role: 'description',
-          content: 'Gagnez à coup sûr un cadeau mystère',
-          position: { x: centerX, y: 140 },
+          content: 'Une expérience unique vous attend',
+          position: subtitlePos,
           style: {
-            fontSize: '22px',
+            fontSize: fallbackTemplate.style.typography.subtitleSize,
             fontWeight: '400',
-            color: '#2c3e50',
+            color: fallbackTemplate.style.colors.text,
             textAlign: 'center',
-            fontFamily: 'Inter',
-            width: `${canvasWidth - 120}px`,
-            lineHeight: '1.4'
+            fontFamily: fallbackTemplate.style.typography.textFont,
+            width: `${canvasWidth - 100}px`,
+            lineHeight: '1.4',
+            opacity: '0.9'
           }
         },
         
-        // Avantage mis en valeur
+        // Avantage stylisé
         {
           id: 'fallback-benefit',
           type: 'text',
           role: 'benefit',
-          content: '🎁 Des cadeaux exceptionnels vous attendent',
-          position: { x: centerX, y: 240 },
+          content: '🎁 Des récompenses exclusives à gagner',
+          position: benefitPos,
           style: {
             fontSize: '18px',
             fontWeight: '600',
-            color: '#f39c12',
+            color: accentColor,
             textAlign: 'center',
-            fontFamily: 'Inter',
-            backgroundColor: '#f39c1210',
-            padding: '10px 20px',
-            borderRadius: '20px',
-            border: '2px solid #f39c1230',
+            fontFamily: fallbackTemplate.style.typography.textFont,
+            backgroundColor: 'linear-gradient(45deg, #fd79a820, #6c5ce715)',
+            padding: '14px 28px',
+            borderRadius: '30px',
+            boxShadow: '0 6px 25px #fd79a825',
             width: 'auto'
           }
         },
         
-        // Bouton CTA premium
+        // Bouton CTA moderne
         {
           id: 'fallback-cta',
           type: 'text',
           role: 'button',
           content: 'JOUER MAINTENANT',
-          position: { x: centerX, y: 320 },
+          position: ctaPos,
           style: {
             fontSize: '20px',
             fontWeight: 'bold',
             color: '#ffffff',
-            backgroundColor: '#3498db',
-            padding: '16px 40px',
+            backgroundColor: 'linear-gradient(135deg, #6c5ce7, #a29bfe)',
+            padding: '18px 36px',
             borderRadius: '40px',
             textAlign: 'center',
-            fontFamily: 'Inter',
-            boxShadow: '0 8px 25px #3498db40',
-            letterSpacing: '0.05em',
+            fontFamily: fallbackTemplate.style.typography.textFont,
+            boxShadow: '0 8px 30px #6c5ce740',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
             width: 'auto'
           }
@@ -564,19 +569,28 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
       ],
       wheelConfig: {
         segments: [
-          { id: '1', label: 'Cadeau Premium', color: '#3498db', probability: 0.25, isWinning: true },
-          { id: '2', label: 'Surprise Homair', color: '#f39c12', probability: 0.25, isWinning: true },
-          { id: '3', label: 'Bon d\'achat', color: '#e74c3c', probability: 0.25, isWinning: true },
-          { id: '4', label: 'Réessayez', color: '#95a5a6', probability: 0.25, isWinning: false }
+          { id: '1', label: 'Prix Premium', color: primaryColor, probability: 0.3, isWinning: true },
+          { id: '2', label: 'Cadeau Surprise', color: secondaryColor, probability: 0.25, isWinning: true },
+          { id: '3', label: 'Bon d\'achat', color: accentColor, probability: 0.25, isWinning: true },
+          { id: '4', label: 'Réessayez', color: fallbackTemplate.style.colors.text, probability: 0.2, isWinning: false }
         ],
         borderStyle: 'premium',
-        borderColor: '#3498db',
+        borderColor: primaryColor,
         scale: 1.2,
-        center: { x: centerX, y: 450 }
+        center: wheelPos
+      },
+      design: {
+        colors: fallbackTemplate.style.colors,
+        fonts: {
+          title: fallbackTemplate.style.typography.titleFont,
+          text: fallbackTemplate.style.typography.textFont
+        },
+        template: fallbackTemplate
       },
       metadata: {
         websiteUrl,
         fallback: true,
+        templateUsed: fallbackTemplate.name,
         brandOptimized: true
       }
     };
@@ -586,11 +600,32 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
     <div className="p-6 space-y-6">
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-gray-800 mb-2">
-          Création IA Studio
+          🎨 Création IA Studio Premium
         </h3>
         <p className="text-sm text-gray-600">
-          Générez une campagne professionnelle brandée automatiquement
+          4 styles professionnels • Templates rotatifs • 100% brandé
         </p>
+      </div>
+
+      {/* Aperçu des templates */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {CAMPAIGN_TEMPLATES.map((template) => (
+          <div
+            key={template.id}
+            className="p-2 text-xs text-center rounded-lg border"
+            style={{
+              background: `linear-gradient(135deg, ${template.style.colors.primary}20, ${template.style.colors.accent}15)`,
+              borderColor: template.style.colors.primary + '30'
+            }}
+          >
+            <div className="font-semibold" style={{ color: template.style.colors.primary }}>
+              {template.name}
+            </div>
+            <div className="text-gray-600 text-xs">
+              {template.industries.slice(0, 2).join(', ')}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* URL de la marque */}
@@ -681,19 +716,19 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
       >
         <Wand2 className={`w-5 h-5 ${isGenerating ? 'animate-spin' : ''}`} />
         <span>
-          {isGenerating ? 'Génération en cours...' : 'Générer la campagne IA'}
+          {isGenerating ? 'Génération IA en cours...' : 'Générer Campagne IA Studio'}
         </span>
       </button>
 
       {/* Instructions */}
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h4 className="font-semibold text-blue-800 mb-2">Comment ça marche ?</h4>
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+        <h4 className="font-semibold text-blue-800 mb-2">🚀 Nouveau système IA Studio</h4>
         <ol className="text-sm text-blue-700 space-y-1">
-          <li>1. Saisissez l'URL de la marque à analyser</li>
-          <li>2. Uploadez le logo (les couleurs seront extraites)</li>
-          <li>3. Uploadez une image de fond (optionnel)</li>
-          <li>4. L'IA génère une campagne 100% brandée</li>
-          <li>5. Modifiez ensuite les éléments selon vos besoins</li>
+          <li>• 4 styles professionnels adaptés à chaque secteur</li>
+          <li>• Rotation automatique entre les templates</li>
+          <li>• Design brandé avec couleurs extraites du logo</li>
+          <li>• Typographies et effets optimisés par template</li>
+          <li>• Qualité studio pour tous vos projets</li>
         </ol>
       </div>
     </div>
