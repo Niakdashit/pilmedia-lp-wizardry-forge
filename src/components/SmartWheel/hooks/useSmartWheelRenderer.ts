@@ -121,17 +121,8 @@ export const useSmartWheelRenderer = ({
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
       ctx.closePath();
 
-      if (theme.effects.gradient) {
-        const gradient = ctx.createLinearGradient(
-          centerX - radius, centerY - radius,
-          centerX + radius, centerY + radius
-        );
-        gradient.addColorStop(0, segmentColor);
-        gradient.addColorStop(1, darkenColor(segmentColor, 0.2));
-        ctx.fillStyle = gradient;
-      } else {
-        ctx.fillStyle = segmentColor;
-      }
+      // Utiliser toujours des couleurs nettes, pas de dégradé
+      ctx.fillStyle = segmentColor;
       
       ctx.fill();
 
