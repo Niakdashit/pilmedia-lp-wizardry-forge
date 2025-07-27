@@ -118,6 +118,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onSpin={handleSpin}
         disabled={disabled}
         borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
+        customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
         customButton={{
           text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
           color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,

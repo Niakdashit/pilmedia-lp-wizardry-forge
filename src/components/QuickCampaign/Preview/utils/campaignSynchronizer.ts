@@ -22,8 +22,11 @@ export const synchronizeCampaignWithColors = (
   if (campaign.config?.roulette) {
     campaign.config.roulette = {
       ...campaign.config.roulette,
-      borderColor: finalColors.primary,
-      borderOutlineColor: finalColors.accent || finalColors.secondary,
+      // Ne pas écraser les couleurs de bordure si un style prédéfini est utilisé
+      ...(campaign.design?.wheelBorderStyle === 'classic' && {
+        borderColor: finalColors.primary,
+        borderOutlineColor: finalColors.accent || finalColors.secondary,
+      }),
       segmentColor1: finalColors.primary,
       segmentColor2: finalColors.secondary,
       // Forcer la mise à jour des segments avec les couleurs exactes
