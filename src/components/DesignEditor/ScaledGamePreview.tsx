@@ -31,23 +31,30 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.borderColor || '#841b60');
   const [wheelScale, setWheelScale] = useState(campaign?.design?.wheelScale || 1);
 
-  // Capture d'écran du composant visible
+  // Capture d'écran uniquement du contenu de l'aperçu
   const capturePreview = async () => {
     if (previewRef.current && !isCapturing) {
       try {
         console.log('🎯 Début de la capture d\'écran...');
         setIsCapturing(true);
         
+        // Trouver spécifiquement le contenu GameCanvasPreview
+        const gameCanvas = previewRef.current.querySelector('[data-game-canvas]') || previewRef.current;
+        
         // Attendre que le composant soit complètement rendu
         await new Promise(resolve => setTimeout(resolve, 200));
         
-        const canvas = await html2canvas(previewRef.current, {
+        const canvas = await html2canvas(gameCanvas as HTMLElement, {
           allowTaint: false,
           useCORS: false,
           backgroundColor: '#ffffff',
           scale: 1,
           logging: false,
-          removeContainer: true
+          removeContainer: true,
+          width: gameCanvas.scrollWidth,
+          height: gameCanvas.scrollHeight,
+          windowWidth: gameCanvas.scrollWidth,
+          windowHeight: gameCanvas.scrollHeight
         });
         
         const url = canvas.toDataURL('image/png');
