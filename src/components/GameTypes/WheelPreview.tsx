@@ -90,7 +90,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   // Calculer une taille de roue adaptée avec l'échelle de la campagne
   const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const campaignScale = campaign?.design?.wheelScale || campaign?.design?.scale || campaign?.design?.wheelConfig?.scale || 1;
+  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
   const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
   const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
@@ -117,12 +117,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
-        borderStyle={campaign?.design?.wheelBorderStyle || campaign?.design?.borderStyle || borderStyle}
-        customBorderColor={
-          campaign?.design?.wheelBorderColor || 
-          campaign?.design?.borderColor ||
-          (campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined)
-        }
+        borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
+        customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
         buttonPosition="center"
         customButton={{
           text: "GO",

@@ -3,7 +3,7 @@ import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
-
+import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 
 const DesignEditorLayout: React.FC = () => {
@@ -49,11 +49,12 @@ const DesignEditorLayout: React.FC = () => {
     }
   };
 
-  // Auto-responsive logic - simplified for compatibility
+  // Auto-responsive logic
+  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
+  
   const adaptationSuggestions = useMemo(() => {
-    // Simple placeholder for now - return empty array
-    return [];
-  }, [canvasElements]);
+    return getAdaptationSuggestions(canvasElements);
+  }, [canvasElements, getAdaptationSuggestions]);
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
   const generateCampaignFromCanvas = () => {
@@ -140,7 +141,7 @@ const DesignEditorLayout: React.FC = () => {
       )}
       
       {/* Main Content */}
-      <div className={`flex-1 flex ${selectedDevice === 'tablet' ? 'overflow-auto' : 'overflow-hidden'} relative`}>
+      <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
@@ -173,14 +174,14 @@ const DesignEditorLayout: React.FC = () => {
             />
             
             {/* Main Canvas Area */}
-        <DesignCanvas
-          selectedDevice={selectedDevice}
-          elements={canvasElements}
-          onElementsChange={setCanvasElements}
-          background={canvasBackground}
-          campaign={generateCampaignFromCanvas()}
-          onCampaignChange={setCampaignConfig}
-        />
+            <DesignCanvas 
+              selectedDevice={selectedDevice}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              background={canvasBackground}
+              campaign={campaignConfig}
+              onCampaignChange={setCampaignConfig}
+            />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
             <AutoResponsiveIndicator adaptationSuggestions={adaptationSuggestions} />

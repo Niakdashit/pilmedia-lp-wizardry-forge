@@ -8,7 +8,6 @@ import DicePreview from '../../GameTypes/DicePreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
-import { useWheelConfiguration } from '../../../hooks/useWheelConfiguration';
 
 interface GameRendererProps {
   campaign: any;
@@ -41,24 +40,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     );
   }
 
-  // Configuration unifiée pour la roue
-  const wheelConfigSource = {
-    customColors: campaign.design?.customColors,
-    brandAssets: campaign.brandAssets,
-    design: campaign.design,
-    config: campaign.config,
-    gameConfig: campaign.gameConfig,
-    buttonConfig: campaign.buttonConfig,
-    wheelSegments: campaign.gameConfig?.wheel?.segments
-  };
-
-  const wheelConfig = useWheelConfiguration(
-    wheelConfigSource,
-    previewDevice,
-    1,
-    400
-  );
-
   const commonProps = {
     campaign,
     config: gameConfig,
@@ -67,8 +48,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     previewDevice,
     gameSize: campaign.gameSize || 'medium',
     gamePosition: campaign.gamePosition || 'center',
-    borderStyle: campaign.design?.wheelBorderStyle || 'classic',
-    wheelConfig // Ajout de la configuration unifiée pour la roue
+    borderStyle: campaign.design?.wheelBorderStyle || 'classic'
   };
 
   try {

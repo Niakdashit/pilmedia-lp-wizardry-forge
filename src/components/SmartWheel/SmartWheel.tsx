@@ -15,7 +15,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   onSpin,
   onResult,
   onShowParticipationModal,
-  onParticipationComplete,
   brandColors,
   customButton,
   borderStyle = 'classic',
@@ -34,37 +33,11 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   const [showParticipationModal, setShowParticipationModal] = useState(false);
   const [participantData, setParticipantData] = useState<any>(null);
   const [finalResult, setFinalResult] = useState<any>(null);
-  const [showWheelAnimation, setShowWheelAnimation] = useState(false);
 
   // Synchroniser l'état local avec la prop borderStyle
   useEffect(() => {
     setCurrentBorderStyle(borderStyle);
   }, [borderStyle]);
-
-  // Écouter le callback de participation externe
-  useEffect(() => {
-    if (onParticipationComplete) {
-      // Créer une fonction temporaire pour gérer le callback externe
-      const handleExternalParticipation = (formData: any) => {
-        setParticipantData(formData);
-        setMode2State('wheel');
-        
-        // Déclencher l'animation après la transition d'état
-        setTimeout(() => {
-          setShowWheelAnimation(true);
-        }, 100);
-      };
-      
-      // Stocker la fonction pour pouvoir l'appeler depuis l'extérieur
-      (window as any).__wheelParticipationHandler = handleExternalParticipation;
-    }
-    
-    return () => {
-      if ((window as any).__wheelParticipationHandler) {
-        delete (window as any).__wheelParticipationHandler;
-      }
-    };
-  }, [onParticipationComplete]);
 
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
@@ -137,18 +110,12 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     setParticipantData(formData);
     setShowParticipationModal(false);
     setMode2State('wheel');
-    
-    // Déclencher l'animation après la fermeture de la modal
-    setTimeout(() => {
-      setShowWheelAnimation(true);
-    }, 100);
   };
   
   const handlePlayAgain = () => {
     setMode2State('form');
     setParticipantData(null);
     setFinalResult(null);
-    setShowWheelAnimation(false);
   };
 
   // Fonction pour déterminer la position optimale du bouton
@@ -246,7 +213,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   return (
     <>
-      <div className={`${getLayoutClasses()} ${className} ${showWheelAnimation ? 'animate-wheel-up' : ''}`}>
+      <div className={`${getLayoutClasses()} ${className}`}>
         {/* Container de la roue */}
         <div className="relative flex items-center justify-center" style={{
           width: actualSize,

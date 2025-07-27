@@ -40,7 +40,6 @@ export interface SmartWheelProps {
   onSpin?: () => void;
   onResult?: (segment: WheelSegment) => void;
   onShowParticipationModal?: () => void; // Callback pour ouvrir le modal de participation au niveau supérieur
-  onParticipationComplete?: (formData: any) => void; // Callback quand la modal externe se ferme avec succès
   brandColors?: {
     primary: string;
     secondary: string;

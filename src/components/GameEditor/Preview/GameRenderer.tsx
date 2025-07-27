@@ -35,19 +35,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   // Callback pour gérer la soumission du formulaire de participation
   const handleParticipationSubmit = (formData: any) => {
     setShowParticipationModal(false);
-    // Déclencher l'animation dans SmartWheel via le handler global
-    if ((window as any).__wheelParticipationHandler) {
-      (window as any).__wheelParticipationHandler(formData);
-    }
     // Vous pouvez ajouter ici la logique pour traiter les données du formulaire
     console.log('Données de participation:', formData);
     // Transmettre les données au parent si nécessaire
     onResult?.(formData);
-  };
-
-  // Callback pour notifier SmartWheel de la completion de participation
-  const handleParticipationComplete = (formData: any) => {
-    console.log('Participation complétée:', formData);
   };
 
   // Récupérer les paramètres de position et d'échelle pour le device actuel
@@ -133,8 +124,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           isVisible={true} 
           onResult={onResult} 
           onShowParticipationModal={handleShowParticipationModal}
-          onParticipationComplete={handleParticipationComplete}
-          scale={gamePosition.scale}
+          scale={gamePosition.scale} 
         />;
       case 'jackpot':
         return <Jackpot isPreview={true} buttonLabel="Lancer le Jackpot" buttonColor={primaryColor} backgroundColor={config.jackpotBackgroundColor || '#f3f4f6'} borderStyle={config.jackpotBorderStyle || 'classic'} slotBorderColor={secondaryColor} slotBorderWidth={2} slotBackgroundColor={secondaryColor} containerBackgroundColor="#1f2937" onStart={() => console.log('Jackpot started')} onFinish={result => {

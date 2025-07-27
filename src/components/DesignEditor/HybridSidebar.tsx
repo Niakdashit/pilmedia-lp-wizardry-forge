@@ -12,7 +12,7 @@ import {
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
 import CampaignConfigPanel from './panels/CampaignConfigPanel';
-import GameConfigPanel from './panels/GameConfigPanel';
+import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
 
@@ -101,7 +101,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
           />
         );
       case 'gamelogic':
-        return <GameConfigPanel campaign={campaignConfig} onCampaignChange={onCampaignConfigChange} />;
+        return <GameLogicPanel />;
       case 'export':
         return <ExportPanel />;
       default:
