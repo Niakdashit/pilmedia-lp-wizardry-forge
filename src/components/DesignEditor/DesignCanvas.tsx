@@ -155,14 +155,15 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-        <div className="flex justify-center">
+        <div className="flex justify-start">
           <div 
             className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
             style={{
               width: `${canvasSize.width}px`,
               height: `${canvasSize.height}px`,
-              transform: selectedDevice === 'desktop' ? 'scale(0.8)' : selectedDevice === 'tablet' ? 'scale(0.9)' : 'scale(1)',
-              transformOrigin: 'top center'
+              minWidth: `${canvasSize.width}px`,
+              minHeight: `${canvasSize.height}px`,
+              flexShrink: 0
             }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
