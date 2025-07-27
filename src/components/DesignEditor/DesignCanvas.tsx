@@ -51,19 +51,19 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 bg-gray-100 flex flex-col overflow-hidden">
-      <div className="flex-1 flex items-center justify-center p-4">
+    <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+      <div className="flex justify-center">
         <ScaledGamePreview
           campaign={editorCampaign}
           selectedDevice={selectedDevice}
-          containerWidth={canvasSize.width}
-          containerHeight={canvasSize.height}
+          containerWidth={canvasSize.width * 0.9}
+          containerHeight={canvasSize.height * 0.8}
           onCampaignChange={handleCampaignUpdate}
         />
       </div>
 
       {/* Canvas Info */}
-      <div className="text-center py-2 text-sm text-gray-500 bg-white/50">
+      <div className="text-center mt-4 text-sm text-gray-500">
         {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Aperçu synchronisé avec le bouton "Aperçu"
       </div>
     </div>

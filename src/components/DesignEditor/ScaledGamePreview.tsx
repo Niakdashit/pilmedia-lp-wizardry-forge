@@ -39,10 +39,10 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
     const original = previewDimensions[selectedDevice];
     
-    // Calculate scale to fit while maintaining aspect ratio and maximizing space usage
-    const scaleX = (containerWidth - 40) / original.width; // 40px padding
-    const scaleY = (containerHeight - 40) / original.height; // 40px padding
-    const finalScale = Math.min(scaleX, scaleY); // Allow scaling up for better space usage
+    // Calculate scale to fit while maintaining aspect ratio
+    const scaleX = containerWidth / original.width;
+    const scaleY = containerHeight / original.height;
+    const finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
     
     setScale(finalScale);
   }, [selectedDevice, containerWidth, containerHeight]);
