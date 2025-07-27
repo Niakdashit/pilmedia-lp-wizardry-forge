@@ -29,14 +29,16 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
   const pointerColor = desktopRouletteConfig.pointerColor || '#841b60';
   const hideLaunchButton = campaign?.mobileConfig?.hideLaunchButton || false;
 
-  // Get game size from campaign and calculate canvas size
+  // Get game size from campaign and calculate canvas size avec échelle 200% par défaut
   const gameSize: GameSize = campaign.gameSize || 'medium';
   const gameDimensions = GAME_SIZES[gameSize];
   
-  // Scale the wheel size based on game size settings
+  // Scale the wheel size based on game size settings with 200% default scale
   // Use the smaller dimension to maintain aspect ratio
   const scaleFactor = Math.min(gameDimensions.width, gameDimensions.height) / 400; // 400 is our reference size
-  const calculatedCanvasSize = Math.max(200, Math.min(600, DEFAULT_CANVAS_SIZE * scaleFactor));
+  const defaultScale = 2.0; // 200% par défaut
+  const campaignScale = campaign?.design?.wheelConfig?.scale || defaultScale;
+  const calculatedCanvasSize = Math.max(200, Math.min(600, DEFAULT_CANVAS_SIZE * scaleFactor * campaignScale));
 
   const canvasSize =
     mobileRouletteConfig.size ||
