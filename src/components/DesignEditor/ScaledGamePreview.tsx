@@ -33,9 +33,9 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   useEffect(() => {
     const original = STANDARD_DEVICE_DIMENSIONS[selectedDevice];
     
-    // Calculate scale to fit while maintaining aspect ratio with minimal padding
-    const availableWidth = containerWidth - 20; // Minimal padding
-    const availableHeight = containerHeight - 20;
+    // Calculate scale to fit while maintaining aspect ratio without padding
+    const availableWidth = containerWidth;
+    const availableHeight = containerHeight;
     
     const scaleX = availableWidth / original.width;
     const scaleY = availableHeight / original.height;
@@ -45,7 +45,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
     } else {
       // For mobile and tablet, use optimized scaling for maximum space utilization
-      finalScale = Math.min(scaleX, scaleY) * 0.98; // Optimized scaling
+      finalScale = Math.min(scaleX, scaleY); // Use full space
     }
     
     setScale(finalScale);
@@ -106,7 +106,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     return (
       <div 
         ref={containerRef}
-        className="relative w-full h-full flex items-center justify-center bg-gray-100"
+        className="relative w-full h-full flex items-center justify-center"
         style={{
           width: containerWidth,
           height: containerHeight
@@ -187,7 +187,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center bg-gray-100"
+      className="relative w-full h-full flex items-center justify-center"
       style={{
         width: containerWidth,
         height: containerHeight
