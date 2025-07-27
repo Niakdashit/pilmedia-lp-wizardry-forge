@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
+import InteractiveDragDropOverlay from '../ModernEditor/components/InteractiveDragDropOverlay';
 
 interface ScaledGamePreviewProps {
   campaign: any;
@@ -115,77 +116,47 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             backgroundRepeat: 'no-repeat'
           }}
         >
-          <div 
-            className="w-full h-full flex justify-center"
-            style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              paddingBottom: '-30%',
-              transform: 'translateY(-20px)'
+          <InteractiveDragDropOverlay
+            campaign={campaign}
+            setCampaign={(updater) => {
+              const updated = typeof updater === 'function' ? updater(campaign) : updater;
+              onCampaignChange?.(updated);
             }}
+            previewDevice={selectedDevice}
+            isEnabled={true}
           >
-            {/* Custom texts */}
-            {campaign?.design?.customTexts?.map((text: any, index: number) => (
-              <div
-                key={`text-${index}`}
-                style={{
-                  position: 'absolute',
-                  left: `${text.x || 0}px`,
-                  top: `${text.y || 0}px`,
-                  color: text.color || '#000000',
-                  fontSize: text.fontSize || '16px',
-                  fontWeight: text.bold ? 'bold' : 'normal',
-                  fontStyle: text.italic ? 'italic' : 'normal',
-                  textDecoration: text.underline ? 'underline' : 'none',
-                  fontFamily: text.fontFamily || 'Inter, sans-serif',
-                  zIndex: 10,
-                  pointerEvents: 'none'
-                }}
-              >
-                {text.text || text.content}
+            <div 
+              className="w-full h-full flex justify-center"
+              style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+                paddingBottom: '-30%',
+                transform: 'translateY(-20px)'
+              }}
+            >
+              <div onClick={handleWheelClick} className="cursor-pointer">
+                <SmartWheel
+                  segments={segments}
+                  size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
+                  borderStyle={wheelBorderStyle}
+                  customBorderColor={wheelBorderColor}
+                  disabled={false}
+                  onSpin={() => {}}
+                  onResult={() => {}}
+                  gamePosition={{ x: 0, y: 0, scale: wheelScale }}
+                  buttonPosition="center"
+                  customButton={{
+                    text: "TOURNER",
+                    color: "#841b60",
+                    textColor: "#FFFFFF"
+                  }}
+                />
               </div>
-            ))}
-
-            {/* Custom images */}
-            {campaign?.design?.customImages?.map((image: any, index: number) => (
-              <img
-                key={`image-${index}`}
-                src={image.src || image.url}
-                alt=""
-                style={{
-                  position: 'absolute',
-                  left: `${image.x || 0}px`,
-                  top: `${image.y || 0}px`,
-                  width: `${image.width || 100}px`,
-                  height: `${image.height || 100}px`,
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}
-              />
-            ))}
-
-            <div onClick={handleWheelClick} className="cursor-pointer">
-              <SmartWheel
-                segments={segments}
-                size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
-                borderStyle={wheelBorderStyle}
-                customBorderColor={wheelBorderColor}
-                disabled={false}
-                onSpin={() => {}}
-                onResult={() => {}}
-                gamePosition={{ x: 0, y: 0, scale: wheelScale }}
-                buttonPosition="center"
-                customButton={{
-                  text: "TOURNER",
-                  color: "#841b60",
-                  textColor: "#FFFFFF"
-                }}
-              />
             </div>
-          </div>
+          </InteractiveDragDropOverlay>
         </div>
         
         {/* Scale info */}
