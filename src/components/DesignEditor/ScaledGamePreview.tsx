@@ -88,25 +88,25 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
     const getDeviceFrame = () => {
-      if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
+      if (selectedDevice === 'desktop') {
         return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
       } else {
-        return "relative bg-black rounded-[32px] p-1 cursor-pointer";
+        return "relative cursor-pointer w-full h-full";
       }
     };
 
     const getContentFrame = () => {
-      if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
+      if (selectedDevice === 'desktop') {
         return "relative w-full h-full";
       } else {
-        return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
+        return "relative w-full h-full";
       }
     };
 
     return (
       <div 
         ref={containerRef}
-        className="relative w-full h-full flex items-center justify-center"
+        className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : "relative w-full h-full"}
         style={{
           width: containerWidth,
           height: containerHeight
@@ -117,16 +117,16 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           ref={previewRef}
           className={getDeviceFrame()}
           onClick={handleWheelClick}
-          style={{
+          style={selectedDevice === 'desktop' ? {
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
             width: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].width}px`,
             height: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].height}px`
+          } : {
+            width: '100%',
+            height: '100%'
           }}
         >
-          {selectedDevice === 'mobile' && (
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
-          )}
           <div className={getContentFrame()}>
             <CanvasGameRenderer
               campaign={campaign}
@@ -146,10 +146,12 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           </div>
         </div>
         
-        {/* Scale info */}
-        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white/80 rounded px-2 py-1">
-          Scale: {Math.round(scale * 100)}%
-        </div>
+        {/* Scale info - only show on desktop */}
+        {selectedDevice === 'desktop' && (
+          <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white/80 rounded px-2 py-1">
+            Scale: {Math.round(scale * 100)}%
+          </div>
+        )}
 
         {/* Modale de configuration */}
         <WheelConfigModal
@@ -169,25 +171,25 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Rendu par défaut pour les autres types de campagnes
   const getDeviceFrame = () => {
-    if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
+    if (selectedDevice === 'desktop') {
       return "relative bg-white shadow-lg rounded-lg overflow-hidden";
     } else {
-      return "relative bg-black rounded-[32px] p-1";
+      return "relative w-full h-full";
     }
   };
 
   const getContentFrame = () => {
-    if (selectedDevice === 'desktop' || selectedDevice === 'tablet') {
+    if (selectedDevice === 'desktop') {
       return "relative w-full h-full";
     } else {
-      return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
+      return "relative w-full h-full";
     }
   };
 
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center"
+      className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : "relative w-full h-full"}
       style={{
         width: containerWidth,
         height: containerHeight
@@ -195,16 +197,16 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     >
       <div
         className={getDeviceFrame()}
-        style={{
+        style={selectedDevice === 'desktop' ? {
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
           width: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].width}px`,
           height: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].height}px`
+        } : {
+          width: '100%',
+          height: '100%'
         }}
       >
-        {selectedDevice === 'mobile' && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
-        )}
         <div className={getContentFrame()}>
           <CanvasGameRenderer
             campaign={campaign}
@@ -218,10 +220,12 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
         </div>
       </div>
       
-      {/* Scale info */}
-      <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white/80 rounded px-2 py-1">
-        Scale: {Math.round(scale * 100)}%
-      </div>
+      {/* Scale info - only show on desktop */}
+      {selectedDevice === 'desktop' && (
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white/80 rounded px-2 py-1">
+          Scale: {Math.round(scale * 100)}%
+        </div>
+      )}
     </div>
   );
 };
