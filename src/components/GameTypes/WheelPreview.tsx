@@ -88,10 +88,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue adaptée avec l'échelle de la campagne
+  // Calculer une taille de roue adaptée avec l'échelle de la campagne (200% par défaut)
   const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
-  const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
+  const campaignScale = campaign?.design?.wheelConfig?.scale || 2.0;
+  const wheelSize = Math.min(baseSize * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
   const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
   return (
