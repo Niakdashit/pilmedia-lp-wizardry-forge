@@ -10,7 +10,6 @@ interface UseSmartWheelRendererProps {
   size: number;
   borderStyle?: string;
   customBorderColor?: string;
-  isMonochromeBorder?: boolean;
 }
 
 export const useSmartWheelRenderer = ({
@@ -19,8 +18,7 @@ export const useSmartWheelRenderer = ({
   wheelState,
   size,
   borderStyle = 'classic',
-  customBorderColor,
-  isMonochromeBorder = false
+  customBorderColor
 }: UseSmartWheelRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -78,7 +76,7 @@ export const useSmartWheelRenderer = ({
     }
 
     // Dessiner les bordures stylisées
-    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, customBorderColor, isMonochromeBorder, animationTime);
+    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime);
 
     // Dessiner l'ombre intérieure
     drawInnerShadow(ctx, centerX, centerY, maxRadius);
@@ -89,7 +87,7 @@ export const useSmartWheelRenderer = ({
     // Dessiner le pointeur
     drawPointer(ctx, centerX, centerY, maxRadius, theme);
 
-  }, [segments, theme, wheelState, size, borderStyle, customBorderColor, isMonochromeBorder, animationTime]);
+  }, [segments, theme, wheelState, size, borderStyle, animationTime]);
 
   const drawBackground = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
     if (theme.effects.gradient) {
@@ -138,7 +136,7 @@ export const useSmartWheelRenderer = ({
     });
   };
 
-  const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, customColor?: string, isMonochrome: boolean = false, animationTime: number = 0) => {
+  const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
 
     // Utiliser la couleur personnalisée seulement pour le style "classique"
@@ -148,7 +146,7 @@ export const useSmartWheelRenderer = ({
         return borderStyleConfig.colors[index];
       }
       // Pour "classic", utiliser la couleur personnalisée ou la couleur par défaut
-      return customColor || borderStyleConfig.colors[index];
+      return customBorderColor || borderStyleConfig.colors[index];
     };
 
     ctx.save();
@@ -157,35 +155,11 @@ export const useSmartWheelRenderer = ({
       case 'solid':
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        
-        if (borderStyleName === 'classic') {
-          if (isMonochrome && customColor) {
-            // Mode monochrome : applique la couleur personnalisée à toute la bordure
-            ctx.strokeStyle = customColor;
-            ctx.lineWidth = 8;
-          } else {
-            // Mode normal : bordure multicouche
-            // Bordure extérieure noire
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 6;
-            ctx.stroke();
-            
-            // Bordure principale colorée
-            ctx.strokeStyle = getBorderColor(0);
-            ctx.lineWidth = 4;
-            ctx.stroke();
-            
-            // Bordure intérieure blanche
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-          }
-        } else {
-          ctx.strokeStyle = getBorderColor(0);
-          ctx.lineWidth = borderStyleConfig.width;
-          if (borderStyleConfig.effects.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-            ctx.shadowBlur = 10;
-          }
+        ctx.strokeStyle = getBorderColor(0);
+        ctx.lineWidth = borderStyleConfig.width;
+        if (borderStyleConfig.effects.shadow) {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+          ctx.shadowBlur = 10;
         }
         ctx.stroke();
         break;
@@ -195,7 +169,7 @@ export const useSmartWheelRenderer = ({
         // Pour les styles prédéfinis, toujours utiliser leurs couleurs définies
         const colors = borderStyleName !== 'classic' 
           ? borderStyleConfig.colors 
-          : (customColor ? [customColor] : borderStyleConfig.colors);
+          : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
         const metallicGradient = createMetallicGradient(ctx, colors, centerX, centerY, radius);
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
@@ -242,7 +216,7 @@ export const useSmartWheelRenderer = ({
           );
           const gradientColors = borderStyleName !== 'classic' 
             ? borderStyleConfig.colors 
-            : (customColor ? [customColor] : borderStyleConfig.colors);
+            : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
           gradientColors.forEach((color, index) => {
             const position = gradientColors.length === 1 ? 0 : index / (gradientColors.length - 1);
             gradient.addColorStop(position, color);
