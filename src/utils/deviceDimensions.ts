@@ -2,7 +2,7 @@
 export const STANDARD_DEVICE_DIMENSIONS = {
   desktop: { width: 1200, height: 800 },
   tablet: { width: 850, height: 1200 },   // Portrait format for editor preview
-  mobile: { width: 390, height: 844 }     // iPhone 14 Pro dimensions (realistic mobile ratio)
+  mobile: { width: 375, height: 812 }     // iPhone X/11/12/13 realistic mobile ratio
 } as const;
 
 export type DeviceType = keyof typeof STANDARD_DEVICE_DIMENSIONS;

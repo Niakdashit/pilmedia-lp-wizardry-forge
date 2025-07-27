@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import CanvasGameRenderer from '../funnels/components/CanvasGameRenderer';
 import WheelConfigModal from './WheelConfigModal';
+import { STANDARD_DEVICE_DIMENSIONS } from '../../utils/deviceDimensions';
 
 interface ScaledGamePreviewProps {
   campaign: any;
@@ -30,14 +31,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
-    // Optimized device dimensions for better editor display
-    const previewDimensions = {
-      desktop: { width: 1200, height: 800 },
-      tablet: { width: 768, height: 1024 }, // iPad standard
-      mobile: { width: 480, height: 960 }   // Optimized mobile size
-    };
-
-    const original = previewDimensions[selectedDevice];
+    const original = STANDARD_DEVICE_DIMENSIONS[selectedDevice];
     
     // Calculate scale to fit while maintaining aspect ratio with minimal padding
     const availableWidth = containerWidth - 40; // Reduced padding
@@ -130,8 +124,8 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
-            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '480px',
-            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '960px'
+            width: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].width}px`,
+            height: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].height}px`
           }}
         >
           {selectedDevice === 'mobile' && (
@@ -212,8 +206,8 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
-          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '480px',
-          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '960px'
+          width: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].width}px`,
+          height: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].height}px`
         }}
       >
         {selectedDevice === 'mobile' && (
