@@ -1,5 +1,12 @@
-import React, { useMemo } from 'react';
-import ScaledGamePreview from './ScaledGamePreview';
+import React, { useState, useMemo } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import CanvasElement from './CanvasElement';
+import CanvasToolbar from './CanvasToolbar';
+import { SmartWheel } from '../SmartWheel';
+import WheelConfigModal from './WheelConfigModal';
+import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
+import { useWheelConfiguration } from '../../hooks/useWheelConfiguration';
 import { DEVICE_CONSTRAINTS } from '../QuickCampaign/Preview/utils/previewConstraints';
 
 export interface DesignCanvasProps {
@@ -21,17 +28,82 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   campaign,
   onCampaignChange
 }) => {
-  // Prepare campaign with current editor state
-  const editorCampaign = useMemo(() => ({
-    ...campaign,
-    design: {
-      ...campaign?.design,
-      customTexts: elements.filter(el => el.type === 'text'),
-      customImages: elements.filter(el => el.type === 'image'),
-      background: background
-    }
-  }), [campaign, elements, background]);
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [showBorderModal, setShowBorderModal] = useState(false);
+  
+  // Récupérer les configurations de la roue depuis la campagne
+  const wheelBorderStyle = campaign?.design?.wheelBorderStyle || 'classic';
+  const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
+  const wheelScale = campaign?.design?.wheelConfig?.scale || 2;
 
+  // Fonctions pour mettre à jour la configuration de la roue
+  const setWheelBorderStyle = (style: string) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelBorderStyle: style
+        }
+      });
+    }
+  };
+
+  const setWheelBorderColor = (color: string) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelConfig: {
+            ...campaign?.design?.wheelConfig,
+            borderColor: color
+          }
+        }
+      });
+    }
+  };
+
+  const setWheelScale = (scale: number) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelConfig: {
+            ...campaign?.design?.wheelConfig,
+            scale: scale
+          }
+        }
+      });
+    }
+  };
+
+  // Utiliser le système responsif unifié
+  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
+
+  // Convertir les éléments en format compatible avec useUniversalResponsive
+  const responsiveElements = useMemo(() => {
+    return elements.map(element => ({
+      id: element.id,
+      x: element.x || 0,
+      y: element.y || 0,
+      width: element.width,
+      height: element.height,
+      fontSize: element.fontSize || 16,
+      type: element.type,
+      content: element.content,
+      textAlign: (element.textAlign || 'left') as 'left' | 'center' | 'right',
+      // Préserver les autres propriétés
+      ...element
+    }));
+  }, [elements]);
+
+  // Appliquer les calculs responsives
+  const elementsWithResponsive = useMemo(() => {
+    return applyAutoResponsive(responsiveElements);
+  }, [responsiveElements, applyAutoResponsive]);
+  
   const getCanvasSize = () => {
     const constraints = DEVICE_CONSTRAINTS[selectedDevice];
     return {
@@ -40,33 +112,167 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     };
   };
   const canvasSize = getCanvasSize();
-  
-  const handleCampaignUpdate = (updatedCampaign: any) => {
-    // Extract elements from the updated campaign and sync back to editor state
-    const texts = updatedCampaign?.design?.customTexts || [];
-    const images = updatedCampaign?.design?.customImages || [];
-    const allElements = [...texts, ...images];
-    onElementsChange(allElements);
-    onCampaignChange?.(updatedCampaign);
+  const handleElementUpdate = (id: string, updates: any) => {
+    onElementsChange(elements.map(el => el.id === id ? {
+      ...el,
+      ...updates
+    } : el));
   };
+  const handleElementDelete = (id: string) => {
+    onElementsChange(elements.filter(el => el.id !== id));
+    if (selectedElement === id) {
+      setSelectedElement(null);
+    }
+  };
+  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
-  return (
-    <div className="flex-1 bg-gray-100 p-8 overflow-auto">
-      <div className="flex justify-center">
-        <ScaledGamePreview
-          campaign={editorCampaign}
+  // Configuration unifiée de la roue
+  const wheelConfigSource = useMemo(() => ({
+    customColors: campaign?.design?.brandColors || campaign?.design?.customColors,
+    design: campaign?.design,
+    config: campaign?.config,
+    gameConfig: campaign?.gameConfig,
+    buttonConfig: campaign?.buttonConfig,
+    wheelSegments: campaign?.gameConfig?.wheel?.segments || [
+      { id: '1', label: '10€' },
+      { id: '2', label: '20€' },
+      { id: '3', label: '5€' },
+      { id: '4', label: 'Perdu' },
+      { id: '5', label: '50€' },
+      { id: '6', label: '30€' }
+    ]
+  }), [campaign]);
+
+  const wheelConfig = useWheelConfiguration(
+    wheelConfigSource,
+    selectedDevice,
+    wheelScale,
+    400
+  );
+  return <DndProvider backend={HTML5Backend}>
+      <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+        {/* Canvas Toolbar - Only show when text element is selected */}
+        {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4">
+            <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
+          </div>}
+        
+        <div className="flex justify-center">
+          <div 
+            className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+            style={{
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              transform: selectedDevice === 'desktop' ? 'scale(0.8)' : selectedDevice === 'tablet' ? 'scale(0.9)' : 'scale(1)',
+              transformOrigin: 'top center'
+            }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedElement(null);
+              }
+            }}
+          >
+            {/* Canvas Background - Identique à l'aperçu */}
+            <div 
+              className="absolute inset-0" 
+              style={{
+                background: background?.type === 'image' 
+                  ? `url(${background.value}) center/cover no-repeat` 
+                  : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              {/* Clouds */}
+              
+              
+              
+              
+              
+              {/* Roue de la fortune - Position identique à l'aperçu */}
+              <div className="absolute inset-0 flex items-end justify-center" style={{ transform: 'translateY(-20px)' }}>
+                <div 
+                  onClick={() => setShowBorderModal(true)}
+                  className="cursor-pointer hover:scale-105 transition-transform duration-200"
+                >
+                  <SmartWheel
+                    segments={wheelConfig.segments}
+                    theme="modern"
+                    size={wheelConfig.size}
+                    borderStyle={wheelConfig.borderStyle}
+                    customBorderColor={wheelConfig.customBorderColor}
+                    brandColors={wheelConfig.brandColors}
+                    buttonPosition="center"
+                    customButton={wheelConfig.customButton}
+                    disabled={true}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Canvas Elements */}
+            {elementsWithResponsive.map((element: any) => {
+              // Obtenir les propriétés pour l'appareil actuel
+              const responsiveProps = getPropertiesForDevice(element, selectedDevice);
+              
+              // Fusionner les propriétés responsive avec l'élément original
+              const elementWithResponsive = {
+                ...element,
+                x: responsiveProps.x,
+                y: responsiveProps.y,
+                width: responsiveProps.width,
+                height: responsiveProps.height,
+                fontSize: responsiveProps.fontSize,
+                // Appliquer l'alignement de texte responsive si disponible
+                textAlign: responsiveProps.textAlign || element.textAlign
+              };
+
+              return (
+                <CanvasElement 
+                  key={element.id} 
+                  element={elementWithResponsive} 
+                  selectedDevice={selectedDevice}
+                  isSelected={selectedElement === element.id} 
+                  onSelect={setSelectedElement} 
+                  onUpdate={handleElementUpdate} 
+                  onDelete={handleElementDelete} 
+                />
+              );
+            })}
+
+            {/* Device Frame for mobile/tablet */}
+            {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
+                {selectedDevice === 'mobile' && <>
+                    {/* iPhone-like frame */}
+                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-6 bg-black rounded-full"></div>
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full"></div>
+                  </>}
+                {selectedDevice === 'tablet' && <>
+                    {/* Tablet-like frame */}
+                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-gray-300 rounded-full"></div>
+                  </>}
+              </div>}
+          </div>
+        </div>
+
+        {/* Canvas Info */}
+        <div className="text-center mt-4 text-sm text-gray-500">
+          {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
+        </div>
+
+        {/* Modal pour la configuration de la roue */}
+        <WheelConfigModal
+          isOpen={showBorderModal}
+          onClose={() => setShowBorderModal(false)}
+          wheelBorderStyle={wheelBorderStyle}
+          wheelBorderColor={wheelBorderColor}
+          wheelScale={wheelScale}
+          onBorderStyleChange={setWheelBorderStyle}
+          onBorderColorChange={setWheelBorderColor}
+          onScaleChange={setWheelScale}
           selectedDevice={selectedDevice}
-          containerWidth={canvasSize.width * 0.9}
-          containerHeight={canvasSize.height * 0.8}
-          onCampaignChange={handleCampaignUpdate}
         />
       </div>
-
-      {/* Canvas Info */}
-      <div className="text-center mt-4 text-sm text-gray-500">
-        {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Aperçu synchronisé avec le bouton "Aperçu"
-      </div>
-    </div>
-  );
+    </DndProvider>;
 };
 export default DesignCanvas;

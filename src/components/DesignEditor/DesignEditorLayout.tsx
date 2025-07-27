@@ -173,14 +173,14 @@ const DesignEditorLayout: React.FC = () => {
             />
             
             {/* Main Canvas Area */}
-        <DesignCanvas
-          selectedDevice={selectedDevice}
-          elements={canvasElements}
-          onElementsChange={setCanvasElements}
-          background={canvasBackground}
-          campaign={generateCampaignFromCanvas()}
-          onCampaignChange={setCampaignConfig}
-        />
+            <DesignCanvas 
+              selectedDevice={selectedDevice}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              background={canvasBackground}
+              campaign={campaignConfig}
+              onCampaignChange={setCampaignConfig}
+            />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
             <AutoResponsiveIndicator adaptationSuggestions={adaptationSuggestions} />
