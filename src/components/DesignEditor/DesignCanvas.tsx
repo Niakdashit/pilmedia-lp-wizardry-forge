@@ -53,6 +53,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const getContainerClass = () => {
     if (selectedDevice === 'desktop') {
       return "flex-1 bg-gray-100 p-4 overflow-auto";
+    } else if (selectedDevice === 'tablet') {
+      return "flex-1 overflow-auto flex flex-col";
     } else {
       return "flex-1 overflow-hidden flex flex-col";
     }
