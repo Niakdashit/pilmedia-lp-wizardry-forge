@@ -124,10 +124,20 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
               position: 'relative',
               overflow: 'hidden',
               paddingBottom: '-30%',
-              transform: 'translateY(-20px)'
+              transform: 'translateY(-20px)',
+              height: '50%' // Coupe la roue en montrant seulement la moitié supérieure
             }}
           >
-            <div onClick={handleWheelClick} className="cursor-pointer">
+            <div 
+              onClick={handleWheelClick} 
+              className="cursor-pointer"
+              style={{
+                position: 'absolute',
+                bottom: `-${(selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350) * 0.5}px`, // Décale la roue vers le bas pour ne montrer que la partie supérieure
+                left: '50%',
+                transform: 'translateX(-50%)'
+              }}
+            >
               <SmartWheel
                 segments={segments}
                 size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
