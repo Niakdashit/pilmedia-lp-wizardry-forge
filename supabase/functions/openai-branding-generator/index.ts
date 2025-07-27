@@ -245,38 +245,43 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
       
       // Return a fallback response with studio-level design
       const fallbackResult = {
-        campaignTitle: "Campagne Exclusive",
-        campaignSubtitle: "Une expérience unique vous attend",
+        styleChoisi: "voyage",
+        campaignTitle: "Découvrez l'Exception",
+        campaignSubtitle: "Une expérience premium vous attend",
         palette_couleurs: [
-          {"nom": "Couleur principale", "hexa": "#2563eb"},
-          {"nom": "Couleur secondaire", "hexa": "#1d4ed8"},
-          {"nom": "Couleur d'accent", "hexa": "#3b82f6"}
+          {"nom": "Couleur principale", "hexa": "#d4af37"},
+          {"nom": "Couleur secondaire", "hexa": "#1a4c7a"},
+          {"nom": "Couleur d'accent", "hexa": "#ff6b9d"}
         ],
         polices: [
-          {"nom": "Inter", "utilisation": "Titres"},
+          {"nom": "Cormorant Garamond", "utilisation": "Titres"},
           {"nom": "Inter", "utilisation": "Texte courant"}
         ],
-        ambiance_et_keywords: ["moderne", "premium", "élégant", "professionnel"],
-        extrait_du_ton_editorial: "Communication sophistiquée et engageante, ton premium avec une approche moderne et accessible.",
+        ambiance_et_keywords: ["voyage", "premium", "luxe", "sophistication"],
+        extrait_du_ton_editorial: "Communication élégante et sophistiquée, ton premium avec une approche chaleureuse et exclusive.",
         wording_jeu_concours: {
           titre: "Tentez Votre Chance",
-          sous_titre: "Une expérience exceptionnelle vous attend", 
+          sous_titre: "Une aventure exceptionnelle vous attend", 
           mecanique: "Tournez la roue et découvrez votre prix",
           avantage_client: "Des récompenses exclusives à gagner",
           call_to_action: "JOUER MAINTENANT"
         },
         wheelSegments: [
-          {"label": "Prix Premium", "color": "#2563eb", "probability": 0.2, "isWinning": true},
-          {"label": "Cadeau Surprise", "color": "#1d4ed8", "probability": 0.25, "isWinning": true},
-          {"label": "Bon d'achat", "color": "#3b82f6", "probability": 0.25, "isWinning": true},
+          {"label": "Séjour Premium", "color": "#d4af37", "probability": 0.2, "isWinning": true},
+          {"label": "Week-end Détente", "color": "#1a4c7a", "probability": 0.25, "isWinning": true},
+          {"label": "Bon d'achat", "color": "#ff6b9d", "probability": 0.25, "isWinning": true},
           {"label": "Réessayez", "color": "#64748b", "probability": 0.3, "isWinning": false}
         ],
         designElements: {
-          backgroundStyle: "Dégradé sophistiqué avec effets de profondeur",
-          graphicElements: ["Formes géométriques", "Éléments premium", "Effets de lumière"],
+          backgroundStyle: "Dégradé sophistiqué bleu-doré avec effets de profondeur",
+          graphicElements: ["Formes géométriques élégantes", "Éléments premium", "Effets de lumière dorée"],
           layoutStyle: "Composition centrée avec hiérarchie visuelle forte"
         },
-        commentaires_design: "Design professionnel avec une approche moderne et des éléments visuels premium pour maximiser l'engagement."
+        visualGeneration: {
+          backgroundPrompt: "Professional luxury travel campaign background with golden and blue gradients",
+          titleStylePrompt: "Elegant stylized text with golden effects and sophisticated typography"
+        },
+        commentaires_design: "Design premium avec une approche voyage luxe et des éléments visuels sophistiqués pour maximiser l'engagement."
       };
 
       return new Response(JSON.stringify({ 
