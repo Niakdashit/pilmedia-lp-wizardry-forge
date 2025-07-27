@@ -30,25 +30,28 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
-    // Real device dimensions for accurate preview
+    // Optimized device dimensions for better editor display
     const previewDimensions = {
       desktop: { width: 1200, height: 800 },
       tablet: { width: 768, height: 1024 }, // iPad standard
-      mobile: { width: 375, height: 812 }   // iPhone 13/14 standard
+      mobile: { width: 480, height: 960 }   // Optimized mobile size
     };
 
     const original = previewDimensions[selectedDevice];
     
-    // Calculate scale to fit while maintaining aspect ratio
-    const scaleX = containerWidth / original.width;
-    const scaleY = containerHeight / original.height;
+    // Calculate scale to fit while maintaining aspect ratio with minimal padding
+    const availableWidth = containerWidth - 40; // Reduced padding
+    const availableHeight = containerHeight - 40;
+    
+    const scaleX = availableWidth / original.width;
+    const scaleY = availableHeight / original.height;
     
     let finalScale;
     if (selectedDevice === 'desktop') {
       finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
     } else {
-      // For mobile and tablet, use more aggressive scaling to fill space
-      finalScale = Math.min(scaleX, scaleY) * 0.95; // Use 95% to leave small margin
+      // For mobile and tablet, use optimized scaling for maximum space utilization
+      finalScale = Math.min(scaleX, scaleY) * 0.98; // Optimized scaling
     }
     
     setScale(finalScale);
@@ -96,7 +99,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       } else if (selectedDevice === 'tablet') {
         return "relative bg-black rounded-[24px] p-3 cursor-pointer";
       } else {
-        return "relative bg-black rounded-[32px] p-2 cursor-pointer";
+        return "relative bg-black rounded-[32px] p-1 cursor-pointer";
       }
     };
 
@@ -127,8 +130,8 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
-            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '812px'
+            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '480px',
+            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '960px'
           }}
         >
           {selectedDevice === 'mobile' && (
@@ -181,7 +184,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     } else if (selectedDevice === 'tablet') {
       return "relative bg-black rounded-[24px] p-3";
     } else {
-      return "relative bg-black rounded-[32px] p-2";
+      return "relative bg-black rounded-[32px] p-1";
     }
   };
 
@@ -209,8 +212,8 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
-          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '812px'
+          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '480px',
+          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '960px'
         }}
       >
         {selectedDevice === 'mobile' && (
