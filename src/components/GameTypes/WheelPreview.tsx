@@ -88,31 +88,25 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue adaptée avec l'échelle de la campagne (défaut 200%)
+  // Calculer une taille de roue adaptée avec l'échelle de la campagne
   const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const campaignScale = campaign?.design?.wheelConfig?.scale || 2;
+  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
   const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
   const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
   return (
     <div 
-      className="wheel-preview-container w-full h-full"
+      className="wheel-preview-container w-full h-full flex items-center justify-center"
       style={{
         width: '100%',
         height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
-      <div 
-        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2"
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: '50%',
-          transform: 'translateX(-50%) translateY(50%)'
-        }}
-      >
       <SmartWheel
         segments={smartWheelSegments}
         theme="modern"
@@ -128,8 +122,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
           textColor: campaign.buttonConfig?.textColor || '#ffffff'
         }}
-        />
-      </div>
+      />
     </div>
   );
 };
