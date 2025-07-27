@@ -106,7 +106,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     return (
       <div 
         ref={containerRef}
-        className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : "relative w-full h-full"}
+        className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : "relative w-full h-full flex items-center justify-center"}
         style={{
           width: containerWidth,
           height: containerHeight
@@ -117,14 +117,11 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           ref={previewRef}
           className={getDeviceFrame()}
           onClick={handleWheelClick}
-          style={selectedDevice === 'desktop' ? {
+          style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
             width: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].width}px`,
             height: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].height}px`
-          } : {
-            width: '100%',
-            height: '100%'
           }}
         >
           <div className={getContentFrame()}>
@@ -189,7 +186,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={selectedDevice === 'desktop' ? "relative w-full h-full flex items-center justify-center" : "relative w-full h-full"}
+      className="relative w-full h-full flex items-center justify-center"
       style={{
         width: containerWidth,
         height: containerHeight
@@ -197,14 +194,11 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     >
       <div
         className={getDeviceFrame()}
-        style={selectedDevice === 'desktop' ? {
+        style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
           width: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].width}px`,
           height: `${STANDARD_DEVICE_DIMENSIONS[selectedDevice].height}px`
-        } : {
-          width: '100%',
-          height: '100%'
         }}
       >
         <div className={getContentFrame()}>
