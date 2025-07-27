@@ -18,6 +18,7 @@ export interface DesignCanvasProps {
   };
   campaign?: any;
   onCampaignChange?: (campaign: any) => void;
+  zoom?: number;
 }
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
   selectedDevice,
@@ -25,7 +26,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   onElementsChange,
   background,
   campaign,
-  onCampaignChange
+  onCampaignChange,
+  zoom = 1
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
@@ -155,7 +157,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-        <div className="flex justify-start">
+        <div className="flex justify-start items-center min-h-full">
           <div 
             className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
             style={{
@@ -163,7 +165,10 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               height: `${canvasSize.height}px`,
               minWidth: `${canvasSize.width}px`,
               minHeight: `${canvasSize.height}px`,
-              flexShrink: 0
+              flexShrink: 0,
+              transform: `scale(${zoom})`,
+              transformOrigin: 'center',
+              margin: `${(canvasSize.height * zoom - canvasSize.height) / 2}px ${(canvasSize.width * zoom - canvasSize.width) / 2}px`
             }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {

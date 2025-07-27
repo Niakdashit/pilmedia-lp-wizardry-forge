@@ -5,6 +5,7 @@ import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
+import ZoomSlider from './components/ZoomSlider';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -24,6 +25,7 @@ const DesignEditorLayout: React.FC = () => {
   const [campaignConfig, setCampaignConfig] = useState<any>({});
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [canvasZoom, setCanvasZoom] = useState(1);
 
   // Fonction pour appliquer les couleurs extraites à la roue
   const handleExtractedColorsChange = (colors: string[]) => {
@@ -181,10 +183,20 @@ const DesignEditorLayout: React.FC = () => {
               background={canvasBackground}
               campaign={campaignConfig}
               onCampaignChange={setCampaignConfig}
+              zoom={canvasZoom}
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
             <AutoResponsiveIndicator adaptationSuggestions={adaptationSuggestions} />
+            
+            {/* Zoom Slider - Always visible in bottom center */}
+            <ZoomSlider 
+              zoom={canvasZoom}
+              onZoomChange={setCanvasZoom}
+              minZoom={0.25}
+              maxZoom={3}
+              step={0.05}
+            />
           </>
         )}
       </div>
