@@ -18,19 +18,75 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
     'Courier New', 'Impact', 'Comic Sans MS', 'Trebuchet MS'
   ];
 
-  const addText = (preset?: any) => {
+const stylePresets = [
+    {
+      id: 'fitness',
+      name: 'Style Fitness',
+      preview: 'FITNESS',
+      style: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#000000',
+        backgroundColor: '#00FF88',
+        borderRadius: 8,
+        padding: { top: 8, right: 16, bottom: 8, left: 16 },
+        textShadow: { color: '#000000', blur: 2, offsetX: 1, offsetY: 1 }
+      }
+    },
+    {
+      id: 'price',
+      name: 'Style Prix',
+      preview: '49€',
+      style: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#000000',
+        backgroundColor: '#FFD700',
+        borderRadius: 20,
+        padding: { top: 12, right: 20, bottom: 12, left: 20 }
+      }
+    },
+    {
+      id: 'button',
+      name: 'Style Bouton',
+      preview: 'CLIQUEZ ICI',
+      style: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        backgroundColor: '#007BFF',
+        borderRadius: 25,
+        padding: { top: 12, right: 24, bottom: 12, left: 24 }
+      }
+    },
+    {
+      id: 'cursive',
+      name: 'Style Cursif',
+      preview: 'Élégant',
+      style: {
+        fontSize: 24,
+        fontStyle: 'italic',
+        color: '#2C3E50',
+        fontFamily: 'Georgia',
+        textShadow: { color: '#BDC3C7', blur: 1, offsetX: 1, offsetY: 1 }
+      }
+    }
+  ];
+
+  const addText = (preset?: any, stylePreset?: any) => {
     const newText = {
       id: `text-${Date.now()}`,
       type: 'text',
       x: 100,
       y: 100,
-      content: preset?.text || 'Votre texte ici',
-      fontSize: preset?.fontSize || 16,
-      fontWeight: preset?.fontWeight || 'normal',
-      fontFamily: 'Arial',
-      color: '#000000',
+      content: preset?.text || stylePreset?.preview || 'Votre texte ici',
+      fontSize: preset?.fontSize || stylePreset?.style?.fontSize || 16,
+      fontWeight: preset?.fontWeight || stylePreset?.style?.fontWeight || 'normal',
+      fontFamily: stylePreset?.style?.fontFamily || 'Arial',
+      color: stylePreset?.style?.color || '#000000',
       textAlign: 'left',
-      zIndex: 10
+      zIndex: 10,
+      ...(stylePreset?.style || {})
     };
     onAddElement(newText);
   };
@@ -64,6 +120,42 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
               >
                 {preset.text}
               </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold text-sm text-gray-700 mb-3">STYLES AVANCÉS</h3>
+        <div className="space-y-2">
+          {stylePresets.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => addText(undefined, preset)}
+              className="w-full p-3 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              title={preset.name}
+            >
+              <div 
+                style={{ 
+                  fontSize: 14,
+                  fontWeight: preset.style.fontWeight || 'normal',
+                  color: preset.style.color,
+                  backgroundColor: preset.style.backgroundColor,
+                  borderRadius: preset.style.borderRadius ? `${preset.style.borderRadius}px` : '0',
+                  padding: preset.style.padding ? 
+                    `${preset.style.padding.top}px ${preset.style.padding.right}px ${preset.style.padding.bottom}px ${preset.style.padding.left}px` : 
+                    '2px 4px',
+                  textShadow: preset.style.textShadow ? 
+                    `${preset.style.textShadow.offsetX}px ${preset.style.textShadow.offsetY}px ${preset.style.textShadow.blur}px ${preset.style.textShadow.color}` : 
+                    'none',
+                  fontStyle: preset.style.fontStyle || 'normal',
+                  fontFamily: preset.style.fontFamily || 'Arial',
+                  display: 'inline-block'
+                }}
+              >
+                {preset.preview}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{preset.name}</div>
             </button>
           ))}
         </div>

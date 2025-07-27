@@ -49,26 +49,61 @@ const TextElement: React.FC<TextElementProps> = ({
     onUpdate({ x: centerX, y: centerY });
   }, [onUpdate, containerRef]);
 
-  const getTextStyles = useCallback((): React.CSSProperties => ({
-    color: element.color || '#000000',
-    fontSize: sizeMap[element.size || 'base'] || '14px',
-    fontWeight: element.bold ? 'bold' : 'normal',
-    fontStyle: element.italic ? 'italic' : 'normal',
-    textDecoration: element.underline ? 'underline' : 'none',
-    fontFamily: element.fontFamily || 'Inter, sans-serif',
-    cursor: isDragging ? 'grabbing' : 'grab',
-    userSelect: 'none',
-    willChange: isDragging ? 'transform' : 'auto',
-    transition: isDragging ? 'none' : 'box-shadow 0.1s ease',
-    ...(element.showFrame
-      ? {
-          backgroundColor: element.frameColor || '#ffffff',
-          border: `1px solid ${element.frameBorderColor || '#e5e7eb'}`,
-          padding: '4px 8px',
-          borderRadius: '4px'
-        }
-      : {})
-  }), [element, sizeMap, isDragging]);
+  const hexToRgb = useCallback((hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }, []);
+
+  const getTextStyles = useCallback((): React.CSSProperties => {
+    const baseStyles: React.CSSProperties = {
+      color: element.color || '#000000',
+      fontSize: sizeMap[element.size || 'base'] || '14px',
+      fontWeight: element.bold ? 'bold' : (element.fontWeight || 'normal'),
+      fontStyle: element.italic ? 'italic' : (element.fontStyle || 'normal'),
+      textDecoration: element.underline ? 'underline' : (element.textDecoration || 'none'),
+      fontFamily: element.fontFamily || 'Inter, sans-serif',
+      cursor: isDragging ? 'grabbing' : 'grab',
+      userSelect: 'none',
+      willChange: isDragging ? 'transform' : 'auto',
+      transition: isDragging ? 'none' : 'box-shadow 0.1s ease'
+    };
+
+    // Legacy frame support
+    if (element.showFrame) {
+      baseStyles.backgroundColor = element.frameColor || '#ffffff';
+      baseStyles.border = `1px solid ${element.frameBorderColor || '#e5e7eb'}`;
+      baseStyles.padding = '4px 8px';
+      baseStyles.borderRadius = '4px';
+    }
+
+    // Advanced styling - background with opacity
+    if (element.backgroundColor && !element.showFrame) {
+      const opacity = element.backgroundOpacity !== undefined ? element.backgroundOpacity : 1;
+      const rgb = hexToRgb(element.backgroundColor);
+      baseStyles.backgroundColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})` : element.backgroundColor;
+    }
+
+    // Border radius (if not using legacy frame)
+    if (element.borderRadius && !element.showFrame) {
+      baseStyles.borderRadius = `${element.borderRadius}px`;
+    }
+
+    // Padding (if not using legacy frame)
+    if (element.padding && !element.showFrame) {
+      baseStyles.padding = `${element.padding.top}px ${element.padding.right}px ${element.padding.bottom}px ${element.padding.left}px`;
+    }
+
+    // Text shadow
+    if (element.textShadow && (element.textShadow.blur > 0 || element.textShadow.offsetX !== 0 || element.textShadow.offsetY !== 0)) {
+      baseStyles.textShadow = `${element.textShadow.offsetX}px ${element.textShadow.offsetY}px ${element.textShadow.blur}px ${element.textShadow.color}`;
+    }
+
+    return baseStyles;
+  }, [element, sizeMap, isDragging, hexToRgb]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     console.log('Text element mouse down:', element.id);

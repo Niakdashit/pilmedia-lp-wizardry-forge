@@ -210,6 +210,52 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
     switch (element.type) {
       case 'text':
+        const getTextStyle = (): React.CSSProperties => {
+          const baseStyle: React.CSSProperties = {
+            fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
+            fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
+            color: element.color || element.style?.color || '#000000',
+            fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
+            fontStyle: element.fontStyle || element.style?.fontStyle || 'normal',
+            textDecoration: element.textDecoration || element.style?.textDecoration || 'none',
+            textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
+            ...elementStyle
+          };
+
+          // Add background styling
+          if (element.backgroundColor) {
+            const opacity = element.backgroundOpacity !== undefined ? element.backgroundOpacity : 1;
+            const rgb = hexToRgb(element.backgroundColor);
+            baseStyle.backgroundColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})` : element.backgroundColor;
+          }
+
+          // Add border radius
+          if (element.borderRadius) {
+            baseStyle.borderRadius = `${element.borderRadius}px`;
+          }
+
+          // Add padding
+          if (element.padding) {
+            baseStyle.padding = `${element.padding.top}px ${element.padding.right}px ${element.padding.bottom}px ${element.padding.left}px`;
+          }
+
+          // Add text shadow
+          if (element.textShadow && (element.textShadow.blur > 0 || element.textShadow.offsetX !== 0 || element.textShadow.offsetY !== 0)) {
+            baseStyle.textShadow = `${element.textShadow.offsetX}px ${element.textShadow.offsetY}px ${element.textShadow.blur}px ${element.textShadow.color}`;
+          }
+
+          return baseStyle;
+        };
+
+        const hexToRgb = (hex: string) => {
+          const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+          } : null;
+        };
+
         return isEditing ? (
           <input
             type="text"
@@ -219,25 +265,13 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             onBlur={handleTextBlur}
             autoFocus
             className="bg-transparent border-none outline-none w-full"
-            style={{
-              fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
-              fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
-              color: element.color || element.style?.color || '#000000',
-              fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
-              textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
-              ...elementStyle
-            }}
+            style={getTextStyle()}
           />
         ) : (
           <div
             className="cursor-move select-none"
             style={{
-              fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
-              fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
-              color: element.color || element.style?.color || '#000000',
-              fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
-              textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
-              ...elementStyle,
+              ...getTextStyle(),
               display: 'flex',
               alignItems: 'center',
               justifyContent: ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'center' ? 'center' : 

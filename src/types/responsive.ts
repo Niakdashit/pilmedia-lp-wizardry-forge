@@ -15,6 +15,26 @@ export interface ResponsiveTextElement extends ResponsiveElementBase {
   fontFamily: string;
   fontWeight: string;
   textAlign: 'left' | 'center' | 'right';
+  // Advanced styling properties
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  textShadow?: {
+    color: string;
+    blur: number;
+    offsetX: number;
+    offsetY: number;
+  };
+  borderRadius?: number;
+  padding?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: string; // Allow any string for backwards compatibility
+  // Allow additional properties for compatibility
+  [key: string]: any;
 }
 
 export interface ResponsiveImageElement extends ResponsiveElementBase {
