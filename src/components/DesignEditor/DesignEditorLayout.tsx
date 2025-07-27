@@ -8,8 +8,8 @@ import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
 
 const DesignEditorLayout: React.FC = () => {
-  // Intelligent device selection - desktop for editing, tablet/mobile for preview
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  // Force desktop mode only
+  const [selectedDevice] = useState<'desktop'>('desktop');
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
@@ -129,7 +129,7 @@ const DesignEditorLayout: React.FC = () => {
       {!showFunnel && (
         <DesignToolbar 
           selectedDevice={selectedDevice}
-          onDeviceChange={setSelectedDevice}
+          onDeviceChange={() => {}} // No device change needed
           onPreviewToggle={() => setShowFunnel(!showFunnel)}
           isPreviewMode={showFunnel}
         />
@@ -147,33 +147,10 @@ const DesignEditorLayout: React.FC = () => {
             >
               Mode édition
             </button>
-            {/* Device-specific preview container */}
-            <div className={`
-              ${selectedDevice === 'desktop' ? 'max-w-[810px] w-full' : ''}
-              ${selectedDevice === 'tablet' ? 'w-[768px] h-[1024px] bg-white rounded-2xl shadow-2xl border border-gray-300 overflow-hidden' : ''}
-              ${selectedDevice === 'mobile' ? 'w-[375px] h-[812px] bg-white rounded-[2.5rem] shadow-2xl border-4 border-gray-800 overflow-hidden relative' : ''}
-              transition-all duration-300 ease-in-out
-            `}>
-              {selectedDevice === 'mobile' && (
-                <>
-                  {/* Mobile notch */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
-                  {/* Mobile home indicator */}
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gray-400 rounded-full"></div>
-                </>
-              )}
-              
-              <div className={`
-                w-full h-full
-                ${selectedDevice === 'mobile' ? 'pt-6 pb-4' : ''}
-                ${selectedDevice === 'tablet' ? 'p-2' : ''}
-              `}>
-                <FunnelUnlockedGame
-                  campaign={generateCampaignFromCanvas()}
-                  previewMode={selectedDevice}
-                />
-              </div>
-            </div>
+            <FunnelUnlockedGame
+              campaign={generateCampaignFromCanvas()}
+              previewMode={selectedDevice}
+            />
           </div>
         ) : (
           /* Design Editor Mode */
