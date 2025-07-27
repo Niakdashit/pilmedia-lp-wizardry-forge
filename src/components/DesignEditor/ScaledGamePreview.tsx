@@ -1,6 +1,6 @@
-
 import React, { useRef, useEffect, useState } from 'react';
-import CanvasGameRenderer from '../funnels/components/CanvasGameRenderer';
+import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
+import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
 
 interface ScaledGamePreviewProps {
@@ -19,7 +19,6 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   onCampaignChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [showWheelConfig, setShowWheelConfig] = useState(false);
   
@@ -30,11 +29,11 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
-    // Real device dimensions for accurate preview
+    // Original preview dimensions (these are the dimensions GameCanvasPreview uses)
     const previewDimensions = {
       desktop: { width: 1200, height: 800 },
-      tablet: { width: 768, height: 1024 }, // iPad standard
-      mobile: { width: 420, height: 860 }   // Plus large pour respecter la forme moderne
+      tablet: { width: 768, height: 1024 },
+      mobile: { width: 375, height: 667 }
     };
 
     const original = previewDimensions[selectedDevice];
@@ -42,14 +41,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     // Calculate scale to fit while maintaining aspect ratio
     const scaleX = containerWidth / original.width;
     const scaleY = containerHeight / original.height;
-    
-    let finalScale;
-    if (selectedDevice === 'desktop') {
-      finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
-    } else {
-      // For mobile and tablet, use more aggressive scaling to fill space
-      finalScale = Math.min(scaleX, scaleY) * 0.95; // Use 95% to leave small margin
-    }
+    const finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
     
     setScale(finalScale);
   }, [selectedDevice, containerWidth, containerHeight]);
@@ -90,25 +82,16 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
-    const getDeviceFrame = () => {
-      if (selectedDevice === 'desktop') {
-        return "relative bg-white shadow-lg rounded-lg overflow-hidden";
-      } else if (selectedDevice === 'tablet') {
-        return "relative bg-black rounded-[24px] p-3";
-      } else {
-        return "relative bg-black rounded-[38px] p-4";
-      }
-    };
+    const segments = campaign?.design?.segments || [
+      { id: '1', label: 'Segment 1', color: '#FF6B6B' },
+      { id: '2', label: 'Segment 2', color: '#4ECDC4' },
+      { id: '3', label: 'Segment 3', color: '#45B7D1' },
+      { id: '4', label: 'Segment 4', color: '#96CEB4' },
+      { id: '5', label: 'Segment 5', color: '#FFEAA7' },
+      { id: '6', label: 'Segment 6', color: '#DDA0DD' }
+    ];
 
-    const getContentFrame = () => {
-      if (selectedDevice === 'desktop') {
-        return "relative w-full h-full";
-      } else if (selectedDevice === 'tablet') {
-        return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
-      } else {
-        return "relative bg-white rounded-[28px] overflow-hidden w-full h-full";
-      }
-    };
+    const backgroundImage = campaign?.design?.background?.type === 'image' ? campaign.design.background.value : null;
 
     return (
       <div 
@@ -119,30 +102,38 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           height: containerHeight
         }}
       >
-        {/* Aperçu principal - utilisé pour l'affichage ET la capture */}
         <div
-          ref={previewRef}
-          className={getDeviceFrame()}
+          className="relative bg-white shadow-lg rounded-lg overflow-hidden"
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
-            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '420px',
-            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '860px'
+            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
+            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px',
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
           }}
         >
-          {selectedDevice === 'mobile' && (
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
-          )}
-          <div className={getContentFrame()}>
-            <CanvasGameRenderer
-              campaign={campaign}
-              formValidated={true}
-              showValidationMessage={false}
-              previewMode={selectedDevice}
-              onGameFinish={() => {}}
-              onGameStart={() => {}}
-              onGameButtonClick={handleWheelClick}
-            />
+          <div className="w-full h-full flex items-center justify-center">
+            <div onClick={handleWheelClick} className="cursor-pointer">
+              <SmartWheel
+                segments={segments}
+                size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
+                borderStyle={wheelBorderStyle}
+                customBorderColor={wheelBorderColor}
+                disabled={false}
+                onSpin={() => {}}
+                onResult={() => {}}
+                gamePosition={{ x: 0, y: 0, scale: wheelScale }}
+                buttonPosition="center"
+                customButton={{
+                  text: "TOURNER",
+                  color: "#841b60",
+                  textColor: "#FFFFFF"
+                }}
+              />
+            </div>
           </div>
         </div>
         
@@ -168,26 +159,6 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   }
 
   // Rendu par défaut pour les autres types de campagnes
-  const getDeviceFrame = () => {
-    if (selectedDevice === 'desktop') {
-      return "relative bg-white shadow-lg rounded-lg overflow-hidden";
-    } else if (selectedDevice === 'tablet') {
-      return "relative bg-black rounded-[24px] p-3";
-      } else {
-        return "relative bg-black rounded-[38px] p-4";
-      }
-  };
-
-  const getContentFrame = () => {
-    if (selectedDevice === 'desktop') {
-      return "relative w-full h-full";
-    } else if (selectedDevice === 'tablet') {
-      return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
-    } else {
-      return "relative bg-white rounded-[28px] overflow-hidden w-full h-full";
-    }
-  };
-
   return (
     <div 
       ref={containerRef}
@@ -198,28 +169,20 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       }}
     >
       <div
-        className={getDeviceFrame()}
+        className="relative bg-white shadow-lg rounded-lg overflow-hidden"
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
-          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '420px',
-          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '860px'
+          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
+          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
         }}
       >
-        {selectedDevice === 'mobile' && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
-        )}
-        <div className={getContentFrame()}>
-          <CanvasGameRenderer
-            campaign={campaign}
-            formValidated={true}
-            showValidationMessage={false}
-            previewMode={selectedDevice}
-            onGameFinish={() => {}}
-            onGameStart={() => {}}
-            onGameButtonClick={() => {}}
-          />
-        </div>
+        <GameCanvasPreview
+          campaign={campaign}
+          previewDevice={selectedDevice}
+          disableForm={true}
+          setCampaign={onCampaignChange}
+        />
       </div>
       
       {/* Scale info */}

@@ -11,14 +11,14 @@ export const DEVICE_CONSTRAINTS = {
     maxHeight: 1200,
   },
   tablet: {
-    maxWidth: 768,   // iPad standard
-    maxHeight: 1024, // iPad standard
-    aspectRatio: 768 / 1024,
+    maxWidth: 850,  // Qualifio standard
+    maxHeight: 1200, // Qualifio standard
+    aspectRatio: 850 / 1200,
   },
   mobile: {
-    maxWidth: 375,   // iPhone 13/14 standard
-    maxHeight: 812,  // iPhone 13/14 standard
-    aspectRatio: 375 / 812,
+    maxWidth: 520,  // Qualifio standard  
+    maxHeight: 1100, // Qualifio standard
+    aspectRatio: 520 / 1100,
   },
 } as const;
 

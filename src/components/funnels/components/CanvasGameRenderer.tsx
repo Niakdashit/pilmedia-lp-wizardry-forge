@@ -180,8 +180,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             previewDevice={previewMode}
             disabled={!formValidated}
             disableForm={false}
-            formValidated={formValidated}
-            onGameButtonClick={onGameButtonClick}
           />
         </div>
       );
@@ -236,6 +234,15 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         </div>
 
         {/* Overlay pour déclencher le formulaire si pas validé */}
+        {!formValidated && (
+          <div 
+            onClick={() => {
+              console.log('Canvas overlay clicked - triggering form');
+              onGameButtonClick();
+            }}
+            className="absolute inset-0 flex items-center justify-center z-30 rounded-lg cursor-pointer bg-black/0" 
+          />
+        )}
 
       </div>
 
