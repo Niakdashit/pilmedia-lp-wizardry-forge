@@ -116,34 +116,42 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           }}
         >
           <div 
-            className="w-full h-full flex justify-center"
+            className="w-full flex justify-center"
             style={{
               display: 'flex',
               alignItems: 'flex-end',
               justifyContent: 'center',
               position: 'relative',
               overflow: 'hidden',
+              height: '50%',
               paddingBottom: '-30%',
               transform: 'translateY(-20px)'
             }}
           >
-            <div onClick={handleWheelClick} className="cursor-pointer">
-              <SmartWheel
-                segments={segments}
-                size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
-                borderStyle={wheelBorderStyle}
-                customBorderColor={wheelBorderColor}
-                disabled={false}
-                onSpin={() => {}}
-                onResult={() => {}}
-                gamePosition={{ x: 0, y: 0, scale: wheelScale }}
-                buttonPosition="center"
-                customButton={{
-                  text: "TOURNER",
-                  color: "#841b60",
-                  textColor: "#FFFFFF"
-                }}
-              />
+            <div 
+              className="absolute"
+              style={{
+                bottom: `-${selectedDevice === 'mobile' ? 125 : selectedDevice === 'tablet' ? 150 : 175}px`
+              }}
+            >
+              <div onClick={handleWheelClick} className="cursor-pointer">
+                <SmartWheel
+                  segments={segments}
+                  size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
+                  borderStyle={wheelBorderStyle}
+                  customBorderColor={wheelBorderColor}
+                  disabled={false}
+                  onSpin={() => {}}
+                  onResult={() => {}}
+                  gamePosition={{ x: 0, y: 0, scale: wheelScale }}
+                  buttonPosition="center"
+                  customButton={{
+                    text: "TOURNER",
+                    color: "#841b60",
+                    textColor: "#FFFFFF"
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
