@@ -8,15 +8,8 @@ import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
 
 const DesignEditorLayout: React.FC = () => {
-  // Détection automatique de l'appareil
-  const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
-    const width = window.innerWidth;
-    if (width >= 1024) return 'desktop';
-    if (width >= 768) return 'tablet';
-    return 'mobile';
-  };
-
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+  // Intelligent device selection - desktop for editing, tablet/mobile for preview
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
@@ -48,102 +41,6 @@ const DesignEditorLayout: React.FC = () => {
           }
         }
       }));
-    }
-  };
-
-  // Fonction pour gérer les campagnes générées par IA
-  const handleAICampaignGenerated = (campaignData: any) => {
-    // Appliquer la configuration de campagne générée
-    setCampaignConfig(campaignData);
-    
-    // Générer les éléments du canvas depuis les données IA
-    const elements = [];
-    
-    // Ajouter le titre principal
-    if (campaignData.title) {
-      elements.push({
-        id: 'ai-title-' + Date.now(),
-        type: 'text',
-        content: campaignData.title,
-        position: { x: 100, y: 80 },
-        style: {
-          fontSize: 28,
-          fontWeight: 'bold',
-          color: campaignData.design?.customColors?.primary || '#3b82f6',
-          fontFamily: campaignData.design?.fonts?.[0]?.nom || 'Montserrat',
-          textAlign: 'center'
-        },
-        role: 'title'
-      });
-    }
-    
-    // Ajouter le sous-titre
-    if (campaignData.subtitle) {
-      elements.push({
-        id: 'ai-subtitle-' + Date.now(),
-        type: 'text',
-        content: campaignData.subtitle,
-        position: { x: 100, y: 130 },
-        style: {
-          fontSize: 16,
-          color: campaignData.design?.customColors?.secondary || '#1e40af',
-          fontFamily: campaignData.design?.fonts?.[1]?.nom || 'Inter',
-          textAlign: 'center'
-        },
-        role: 'description'
-      });
-    }
-    
-    // Ajouter l'élément roue de la fortune
-    if (campaignData.config?.roulette) {
-      elements.push({
-        id: 'ai-wheel-' + Date.now(),
-        type: 'wheel',
-        position: { x: 200, y: 200 },
-        config: campaignData.config.roulette,
-        style: {
-          width: 300,
-          height: 300
-        }
-      });
-    }
-    
-    // Ajouter le bouton CTA
-    if (campaignData.buttonConfig?.text) {
-      elements.push({
-        id: 'ai-button-' + Date.now(),
-        type: 'text',
-        content: campaignData.buttonConfig.text,
-        position: { x: 300, y: 520 },
-        style: {
-          backgroundColor: campaignData.buttonConfig.color || campaignData.design?.customColors?.primary,
-          color: '#ffffff',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontWeight: '600',
-          fontSize: 16,
-          textAlign: 'center',
-          cursor: 'pointer'
-        },
-        role: 'button'
-      });
-    }
-    
-    // Mettre à jour les éléments du canvas
-    setCanvasElements(elements);
-    
-    // Mettre à jour les couleurs extraites depuis l'IA
-    if (campaignData.design?.customColors) {
-      const colors = Object.values(campaignData.design.customColors).filter(Boolean);
-      setExtractedColors(colors as string[]);
-    }
-    
-    // Mettre à jour l'arrière-plan si défini
-    if (campaignData.design?.backgroundStyle) {
-      setCanvasBackground({
-        type: 'color',
-        value: campaignData.design.customColors?.primary || '#f3f4f6'
-      });
     }
   };
 
@@ -242,9 +139,7 @@ const DesignEditorLayout: React.FC = () => {
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
-            selectedDevice === 'tablet' ? 'fixed inset-0 z-40' : ''
-          }`}>
+          <div className="flex-1 flex items-center justify-center bg-gray-100 group">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -252,10 +147,33 @@ const DesignEditorLayout: React.FC = () => {
             >
               Mode édition
             </button>
-            <FunnelUnlockedGame
-              campaign={generateCampaignFromCanvas()}
-              previewMode={selectedDevice}
-            />
+            {/* Device-specific preview container */}
+            <div className={`
+              ${selectedDevice === 'desktop' ? 'max-w-[810px] w-full' : ''}
+              ${selectedDevice === 'tablet' ? 'w-[768px] h-[1024px] bg-white rounded-2xl shadow-2xl border border-gray-300 overflow-hidden' : ''}
+              ${selectedDevice === 'mobile' ? 'w-[375px] h-[812px] bg-white rounded-[2.5rem] shadow-2xl border-4 border-gray-800 overflow-hidden relative' : ''}
+              transition-all duration-300 ease-in-out
+            `}>
+              {selectedDevice === 'mobile' && (
+                <>
+                  {/* Mobile notch */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
+                  {/* Mobile home indicator */}
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gray-400 rounded-full"></div>
+                </>
+              )}
+              
+              <div className={`
+                w-full h-full
+                ${selectedDevice === 'mobile' ? 'pt-6 pb-4' : ''}
+                ${selectedDevice === 'tablet' ? 'p-2' : ''}
+              `}>
+                <FunnelUnlockedGame
+                  campaign={generateCampaignFromCanvas()}
+                  previewMode={selectedDevice}
+                />
+              </div>
+            </div>
           </div>
         ) : (
           /* Design Editor Mode */
@@ -269,7 +187,6 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              onCampaignGenerated={handleAICampaignGenerated}
             />
             
             {/* Main Canvas Area */}
