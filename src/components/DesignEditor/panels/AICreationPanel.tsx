@@ -267,6 +267,10 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
     const secondaryColor = analysis.palette_couleurs[1]?.hexa || '#1e40af';
     const accentColor = analysis.palette_couleurs[2]?.hexa || '#0ea5e9';
     
+    // Dimensions standard du canvas (desktop par défaut)
+    const canvasWidth = 810;
+    const centerX = canvasWidth / 2;
+    
     // Extraire les couleurs pour le système
     onExtractedColorsChange?.([primaryColor, secondaryColor, accentColor]);
     
@@ -291,11 +295,11 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           id: 'ai-logo',
           type: 'image',
           src: logoPreview,
-          position: { x: 80, y: 60 },
+          position: { x: 60, y: 40 },
           style: {
-            width: '150px',
+            width: '120px',
             height: 'auto',
-            maxHeight: '80px',
+            maxHeight: '60px',
             objectFit: 'contain'
           }
         }] : []),
@@ -306,9 +310,9 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'title',
           content: analysis.wording_jeu_concours.titre,
-          position: { x: 400, y: 200 },
+          position: { x: centerX, y: 80 },
           style: {
-            fontSize: '56px',
+            fontSize: '42px',
             fontWeight: 'bold',
             color: primaryColor,
             textAlign: 'center',
@@ -316,8 +320,8 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
             textShadow: '0 2px 10px rgba(0,0,0,0.1)',
             lineHeight: '1.2',
             letterSpacing: '-0.02em',
-            width: '800px',
-            transform: 'translateX(-50%)'
+            width: `${canvasWidth - 100}px`,
+            maxWidth: '700px'
           }
         },
         
@@ -327,17 +331,17 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'description',
           content: analysis.wording_jeu_concours.sous_titre,
-          position: { x: 400, y: 300 },
+          position: { x: centerX, y: 140 },
           style: {
-            fontSize: '28px',
+            fontSize: '22px',
             fontWeight: '400',
             color: secondaryColor,
             textAlign: 'center',
             fontFamily: textFont,
             opacity: '0.9',
             lineHeight: '1.4',
-            width: '700px',
-            transform: 'translateX(-50%)'
+            width: `${canvasWidth - 120}px`,
+            maxWidth: '600px'
           }
         },
         
@@ -347,15 +351,15 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'mechanics',
           content: analysis.wording_jeu_concours.mecanique,
-          position: { x: 400, y: 380 },
+          position: { x: centerX, y: 190 },
           style: {
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: '300',
             color: '#64748b',
             textAlign: 'center',
             fontFamily: textFont,
-            width: '600px',
-            transform: 'translateX(-50%)',
+            width: `${canvasWidth - 140}px`,
+            maxWidth: '550px',
             lineHeight: '1.5'
           }
         },
@@ -366,46 +370,44 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'benefit',
           content: analysis.wording_jeu_concours.avantage_client,
-          position: { x: 400, y: 450 },
+          position: { x: centerX, y: 240 },
           style: {
-            fontSize: '20px',
+            fontSize: '18px',
             fontWeight: '600',
             color: accentColor,
             textAlign: 'center',
             fontFamily: textFont,
             backgroundColor: `${accentColor}10`,
-            padding: '12px 24px',
-            borderRadius: '25px',
+            padding: '10px 20px',
+            borderRadius: '20px',
             border: `2px solid ${accentColor}30`,
             width: 'auto',
-            transform: 'translateX(-50%)',
-            whiteSpace: 'nowrap'
+            maxWidth: '500px'
           }
         },
         
-        // Bouton CTA - Design premium
+        // Bouton CTA - Design premium (positionné au-dessus de la roue)
         {
           id: 'ai-cta',
           type: 'text',
           role: 'button',
           content: analysis.wording_jeu_concours.call_to_action,
-          position: { x: 400, y: 550 },
+          position: { x: centerX, y: 320 },
           style: {
-            fontSize: '24px',
+            fontSize: '20px',
             fontWeight: 'bold',
             color: '#ffffff',
             backgroundColor: primaryColor,
-            padding: '20px 50px',
-            borderRadius: '50px',
+            padding: '16px 40px',
+            borderRadius: '40px',
             textAlign: 'center',
             fontFamily: titleFont,
-            boxShadow: `0 10px 30px ${primaryColor}40`,
+            boxShadow: `0 8px 25px ${primaryColor}40`,
             border: 'none',
             cursor: 'pointer',
-            transform: 'translateX(-50%)',
-            transition: 'all 0.3s ease',
             letterSpacing: '0.05em',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            width: 'auto'
           }
         }
       ],
@@ -422,7 +424,7 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
         borderStyle: 'premium',
         borderColor: primaryColor,
         scale: 1.2,
-        center: { x: 400, y: 350 }
+        center: { x: centerX, y: 450 }
       },
       
       // Données de marque
@@ -453,6 +455,10 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
     const fallbackColors = ['#f39c12', '#3498db', '#e74c3c']; // Couleurs Homair
     onExtractedColorsChange?.(fallbackColors);
     
+    // Dimensions standard du canvas
+    const canvasWidth = 810;
+    const centerX = canvasWidth / 2;
+    
     if (!backgroundFile) {
       onBackgroundChange?.({
         type: 'color',
@@ -467,11 +473,11 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           id: 'fallback-logo',
           type: 'image',
           src: logoPreview,
-          position: { x: 80, y: 60 },
+          position: { x: 60, y: 40 },
           style: {
-            width: '150px',
+            width: '120px',
             height: 'auto',
-            maxHeight: '80px'
+            maxHeight: '60px'
           }
         }] : []),
         
@@ -481,16 +487,15 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'title',
           content: 'TOURNEZ LA ROUE',
-          position: { x: 400, y: 200 },
+          position: { x: centerX, y: 80 },
           style: {
-            fontSize: '52px',
+            fontSize: '42px',
             fontWeight: 'bold',
             color: '#3498db',
             textAlign: 'center',
             fontFamily: 'Inter',
             textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            width: '800px',
-            transform: 'translateX(-50%)',
+            width: `${canvasWidth - 100}px`,
             letterSpacing: '-0.01em'
           }
         },
@@ -501,15 +506,14 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'description',
           content: 'Gagnez à coup sûr un cadeau mystère',
-          position: { x: 400, y: 280 },
+          position: { x: centerX, y: 140 },
           style: {
-            fontSize: '26px',
+            fontSize: '22px',
             fontWeight: '400',
             color: '#2c3e50',
             textAlign: 'center',
             fontFamily: 'Inter',
-            width: '700px',
-            transform: 'translateX(-50%)',
+            width: `${canvasWidth - 120}px`,
             lineHeight: '1.4'
           }
         },
@@ -520,19 +524,18 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'benefit',
           content: '🎁 Des cadeaux exceptionnels vous attendent',
-          position: { x: 400, y: 450 },
+          position: { x: centerX, y: 240 },
           style: {
-            fontSize: '20px',
+            fontSize: '18px',
             fontWeight: '600',
             color: '#f39c12',
             textAlign: 'center',
             fontFamily: 'Inter',
             backgroundColor: '#f39c1210',
-            padding: '12px 24px',
-            borderRadius: '25px',
+            padding: '10px 20px',
+            borderRadius: '20px',
             border: '2px solid #f39c1230',
-            transform: 'translateX(-50%)',
-            whiteSpace: 'nowrap'
+            width: 'auto'
           }
         },
         
@@ -542,20 +545,20 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
           type: 'text',
           role: 'button',
           content: 'JOUER MAINTENANT',
-          position: { x: 400, y: 550 },
+          position: { x: centerX, y: 320 },
           style: {
-            fontSize: '22px',
+            fontSize: '20px',
             fontWeight: 'bold',
             color: '#ffffff',
             backgroundColor: '#3498db',
-            padding: '18px 45px',
-            borderRadius: '50px',
+            padding: '16px 40px',
+            borderRadius: '40px',
             textAlign: 'center',
             fontFamily: 'Inter',
             boxShadow: '0 8px 25px #3498db40',
-            transform: 'translateX(-50%)',
             letterSpacing: '0.05em',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            width: 'auto'
           }
         }
       ],
@@ -569,7 +572,7 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
         borderStyle: 'premium',
         borderColor: '#3498db',
         scale: 1.2,
-        center: { x: 400, y: 350 }
+        center: { x: centerX, y: 450 }
       },
       metadata: {
         websiteUrl,
