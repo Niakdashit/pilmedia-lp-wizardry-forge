@@ -44,6 +44,43 @@ const DesignEditorLayout: React.FC = () => {
     }
   };
 
+  // Gestionnaire pour les campagnes générées par IA
+  const handleAICampaignGenerated = (campaignData: any) => {
+    console.log('Campagne IA générée:', campaignData);
+    
+    // Appliquer les éléments au canvas
+    if (campaignData.elements) {
+      setCanvasElements(campaignData.elements);
+    }
+    
+    // Appliquer la configuration de la roue
+    if (campaignData.wheelConfig) {
+      setCampaignConfig((prev: any) => ({
+        ...prev,
+        wheelConfig: campaignData.wheelConfig,
+        design: {
+          ...prev?.design,
+          wheelConfig: campaignData.wheelConfig
+        }
+      }));
+    }
+    
+    // Appliquer les données de marque
+    if (campaignData.brandData) {
+      const brandColors = campaignData.brandData.colors;
+      setExtractedColors([brandColors.primary, brandColors.secondary, brandColors.accent]);
+      
+      setCampaignConfig((prev: any) => ({
+        ...prev,
+        brandData: campaignData.brandData,
+        design: {
+          ...prev?.design,
+          brandColors: brandColors
+        }
+      }));
+    }
+  };
+
   // Auto-responsive logic
   const { getAdaptationSuggestions } = useAutoResponsive('desktop');
   
@@ -187,6 +224,7 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
+              onAICampaignGenerated={handleAICampaignGenerated}
             />
             
             {/* Main Canvas Area */}

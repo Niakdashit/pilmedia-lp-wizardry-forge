@@ -70,14 +70,14 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en branding et marketing digital. Tu analyses des sites web pour extraire l\'identité de marque et génères des campagnes de jeu-concours professionnelles. Tu réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.'
+            content: 'Tu es un directeur artistique senior et expert en branding digital. Tu analyses des sites web pour extraire l\'identité de marque et génères des campagnes visuelles de niveau studio professionnel. Tu dois créer des designs sophistiqués avec une hiérarchie typographique parfaite, des palettes de couleurs harmonieuses et des compositions visuelles impactantes. Tu réponds UNIQUEMENT avec du JSON valide, sans texte supplémentaire.'
           },
           {
             role: 'user',
             content: enhancedPrompt
           }
         ],
-        temperature: 0.7,
+        temperature: 0.8,
         max_tokens: 4000
       }),
     });
@@ -123,63 +123,40 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
       console.error('❌ Failed to parse OpenAI response as JSON:', parseError);
       console.error('Raw content that failed to parse:', content);
       
-      // Return a fallback response
+      // Return a fallback response with studio-level design
       const fallbackResult = {
+        campaignTitle: "Campagne Exclusive",
+        campaignSubtitle: "Une expérience unique vous attend",
         palette_couleurs: [
-          {"nom": "Couleur principale", "hexa": "#3b82f6"},
-          {"nom": "Couleur secondaire", "hexa": "#1e40af"},
-          {"nom": "Couleur d'accent", "hexa": "#0ea5e9"}
+          {"nom": "Couleur principale", "hexa": "#2563eb"},
+          {"nom": "Couleur secondaire", "hexa": "#1d4ed8"},
+          {"nom": "Couleur d'accent", "hexa": "#3b82f6"}
         ],
         polices: [
-          {"nom": "Montserrat", "utilisation": "Titres"},
-          {"nom": "Roboto", "utilisation": "Texte courant"}
+          {"nom": "Inter", "utilisation": "Titres"},
+          {"nom": "Inter", "utilisation": "Texte courant"}
         ],
-        ambiance_et_keywords: ["moderne", "professionnel", "dynamique"],
-        extrait_du_ton_editorial: "Ton moderne et professionnel, orienté vers l'engagement client.",
-        slogan_officiel: null,
+        ambiance_et_keywords: ["moderne", "premium", "élégant", "professionnel"],
+        extrait_du_ton_editorial: "Communication sophistiquée et engageante, ton premium avec une approche moderne et accessible.",
         wording_jeu_concours: {
-          titre: "Participez et gagnez !",
-          sous_titre: "Tentez votre chance et remportez de superbes prix",
-          mecanique: "Remplissez le formulaire pour participer",
-          avantage_client: "Des prix exceptionnels à gagner",
-          call_to_action: "PARTICIPER"
+          titre: "Tentez Votre Chance",
+          sous_titre: "Une expérience exceptionnelle vous attend", 
+          mecanique: "Tournez la roue et découvrez votre prix",
+          avantage_client: "Des récompenses exclusives à gagner",
+          call_to_action: "JOUER MAINTENANT"
         },
-        structure_visuelle: {
-          format_pc_16_9: {
-            logo: "En haut à gauche",
-            image_fond: "En arrière-plan avec overlay",
-            emplacements_textes: {
-              titre: "Centré en haut",
-              sous_titre: "Sous le titre",
-              mecanique: "Centre de l'écran",
-              avantage_client: "Bas de l'écran",
-              call_to_action: "Bouton proéminent en bas"
-            }
-          },
-          format_tablette: {
-            logo: "En haut centré",
-            image_fond: "Adapté au format tablette",
-            emplacements_textes: {
-              titre: "Centré",
-              sous_titre: "Sous le titre",
-              mecanique: "Centre",
-              avantage_client: "Bas",
-              call_to_action: "Bouton en bas"
-            }
-          },
-          format_mobile_9_16: {
-            logo: "En haut centré",
-            image_fond: "Optimisé mobile",
-            emplacements_textes: {
-              titre: "Haut de l'écran",
-              sous_titre: "Sous le titre",
-              mecanique: "Centre",
-              avantage_client: "Avant le bouton",
-              call_to_action: "Bouton fixe en bas"
-            }
-          }
+        wheelSegments: [
+          {"label": "Prix Premium", "color": "#2563eb", "probability": 0.2, "isWinning": true},
+          {"label": "Cadeau Surprise", "color": "#1d4ed8", "probability": 0.25, "isWinning": true},
+          {"label": "Bon d'achat", "color": "#3b82f6", "probability": 0.25, "isWinning": true},
+          {"label": "Réessayez", "color": "#64748b", "probability": 0.3, "isWinning": false}
+        ],
+        designElements: {
+          backgroundStyle: "Dégradé sophistiqué avec effets de profondeur",
+          graphicElements: ["Formes géométriques", "Éléments premium", "Effets de lumière"],
+          layoutStyle: "Composition centrée avec hiérarchie visuelle forte"
         },
-        commentaires_design: "Design moderne et épuré, optimisé pour tous les formats d'écran."
+        commentaires_design: "Design professionnel avec une approche moderne et des éléments visuels premium pour maximiser l'engagement."
       };
 
       return new Response(JSON.stringify({ 
