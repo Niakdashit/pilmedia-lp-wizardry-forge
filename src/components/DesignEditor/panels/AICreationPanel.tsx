@@ -199,6 +199,15 @@ Réponds UNIQUEMENT avec le JSON demandé, sans texte supplémentaire.
 
       if (data?.success && data.result) {
         console.log('✅ AI analysis successful:', data.result);
+        
+        // Handle generated image if available
+        if (data.generatedImage) {
+          console.log('🎨 AI generated image received');
+          const generatedImageDataUrl = `data:image/png;base64,${data.generatedImage}`;
+          onBackgroundChange?.({ type: 'image', value: generatedImageDataUrl });
+          toast.success('Visuel stylisé généré avec l\'IA !');
+        }
+        
         const campaignData = createCampaignFromAIAnalysis(data.result);
         onCampaignGenerated(campaignData);
         toast.success('Campagne IA générée avec succès !');

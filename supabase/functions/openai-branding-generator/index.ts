@@ -189,9 +189,52 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
       console.log('🎨 Generated palette colors:', parsedResult.palette_couleurs?.length || 0);
       console.log('📝 Generated wording:', parsedResult.wording_jeu_concours?.titre || 'No title');
 
+      // Generate stylized visual image using OpenAI's image API
+      let generatedImageUrl = null;
+      
+      if (parsedResult.visualGeneration?.backgroundPrompt) {
+        try {
+          console.log('🎨 Generating stylized visual with OpenAI image API...');
+          
+          const imagePrompt = `Professional marketing campaign visual in ${parsedResult.styleChoisi} style: ${parsedResult.visualGeneration.backgroundPrompt}. 
+          Include stylized text "${parsedResult.wording_jeu_concours?.titre || parsedResult.campaignTitle}" with ultra-modern typography effects like shadows, outlines, gradients, and colored backgrounds. 
+          Colors: ${parsedResult.palette_couleurs?.map(c => c.hexa).join(', ')}. 
+          Style: ${parsedResult.designElements?.backgroundStyle}. 
+          ${parsedResult.visualGeneration.titleStylePrompt}
+          High quality, professional studio-level design, 16:9 aspect ratio`;
+
+          const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-image-1',
+              prompt: imagePrompt,
+              n: 1,
+              size: '1536x1024',
+              quality: 'high',
+              output_format: 'png'
+            }),
+          });
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            generatedImageUrl = imageData.data[0].b64_json;
+            console.log('✅ Generated stylized visual successfully');
+          } else {
+            console.warn('⚠️ Image generation failed:', imageResponse.statusText);
+          }
+        } catch (imageError) {
+          console.error('❌ Error generating image:', imageError);
+        }
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
-        result: parsedResult 
+        result: parsedResult,
+        generatedImage: generatedImageUrl
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
