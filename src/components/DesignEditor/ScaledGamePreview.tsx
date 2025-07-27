@@ -115,7 +115,18 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             backgroundRepeat: 'no-repeat'
           }}
         >
-          <div className="w-full h-full flex items-center justify-center">
+          <div 
+            className="w-full h-full flex justify-center"
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              paddingBottom: '-30%',
+              transform: 'translateY(-20px)'
+            }}
+          >
             <div onClick={handleWheelClick} className="cursor-pointer">
               <SmartWheel
                 segments={segments}
