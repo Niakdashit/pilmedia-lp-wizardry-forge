@@ -71,7 +71,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
       <div 
         className="fixed inset-0 bg-black/50 z-[100] pointer-events-auto"
         onClick={() => {
-          console.log('Backdrop clicked');
           onClose();
         }}
       />
@@ -81,7 +80,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
         className="bg-white rounded-lg shadow-xl z-[110] border pointer-events-auto"
         style={modalStyle}
         onClick={(e) => {
-          console.log('Modal clicked');
           e.stopPropagation();
         }}
       >
@@ -91,7 +89,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">Configuration de la roue</h3>
             <button
               onClick={() => {
-                console.log('Close button clicked');
                 onClose();
               }}
               className="text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto"
@@ -116,7 +113,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 step="0.1"
                 value={wheelScale}
                 onChange={(e) => {
-                  console.log('Scale changed:', e.target.value);
                   onScaleChange(parseFloat(e.target.value));
                 }}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer pointer-events-auto"
@@ -137,7 +133,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                   type="color"
                   value={wheelBorderColor}
                   onChange={(e) => {
-                    console.log('Color picker changed:', e.target.value);
                     onBorderColorChange(e.target.value);
                   }}
                   className="w-12 h-10 rounded border border-gray-300 cursor-pointer pointer-events-auto"
@@ -146,7 +141,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                   type="text"
                   value={wheelBorderColor}
                   onChange={(e) => {
-                    console.log('Color text changed:', e.target.value);
                     onBorderColorChange(e.target.value);
                   }}
                   placeholder="#841b60"
@@ -163,7 +157,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
               <BorderStyleSelector
                 currentStyle={wheelBorderStyle}
                 onStyleChange={(style) => {
-                  console.log('Border style changed:', style);
                   onBorderStyleChange(style);
                 }}
                 className="pointer-events-auto"

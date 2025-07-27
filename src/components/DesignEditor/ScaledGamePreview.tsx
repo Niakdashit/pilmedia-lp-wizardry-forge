@@ -68,18 +68,27 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   };
 
   const handleWheelConfigUpdate = (updates: any) => {
+    console.log('🟠 handleWheelConfigUpdate called with:', updates);
+    console.log('🟠 onCampaignChange exists:', !!onCampaignChange);
+    console.log('🟠 current campaign:', campaign);
+    
     if (onCampaignChange) {
-      onCampaignChange({
+      const updatedCampaign = {
         ...campaign,
         design: {
           ...campaign.design,
           ...updates
         }
-      });
+      };
+      console.log('🟠 calling onCampaignChange with:', updatedCampaign);
+      onCampaignChange(updatedCampaign);
+    } else {
+      console.log('🔴 onCampaignChange is not provided!');
     }
   };
 
   const handleBorderStyleChange = (style: string) => {
+    console.log('🟡 handleBorderStyleChange called with:', style);
     setWheelBorderStyle(style);
     handleWheelConfigUpdate({ wheelBorderStyle: style, borderStyle: style });
   };
