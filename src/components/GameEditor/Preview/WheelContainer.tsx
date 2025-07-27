@@ -21,7 +21,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   isVisible = true,
   onResult,
   onShowParticipationModal,
-  scale = 1.7 // Échelle par défaut à 1.7x
+  scale = 2 // Échelle par défaut à 200%
 }) => {
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
 
@@ -64,16 +64,12 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
 
   return (
     <div 
-      className="absolute inset-0 flex items-center justify-center w-full h-full"
+      className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2"
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
         bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%) translateY(50%)',
         margin: 0,
         padding: 0
       }}
