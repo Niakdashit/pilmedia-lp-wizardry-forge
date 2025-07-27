@@ -2,6 +2,7 @@
 import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
+import WheelInteractionHandler from './WheelComponents/WheelInteractionHandler';
 
 interface WheelPreviewProps {
   campaign: any;
@@ -19,6 +20,8 @@ interface WheelPreviewProps {
   disabled?: boolean;
   disableForm?: boolean;
   borderStyle?: string;
+  formValidated?: boolean;
+  onGameButtonClick?: () => void;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -29,7 +32,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'medium',
   previewDevice = 'desktop',
   disabled = false,
-  borderStyle = 'classic'
+  borderStyle = 'classic',
+  formValidated = true,
+  onGameButtonClick
 }) => {
   const { getResponsiveDimensions } = useGameSize(gameSize);
   const gameDimensions = getResponsiveDimensions(previewDevice);
@@ -94,6 +99,14 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
   const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
+  const handleWheelClick = () => {
+    if (!formValidated && onGameButtonClick) {
+      onGameButtonClick();
+    } else if (formValidated) {
+      handleSpin();
+    }
+  };
+
   return (
     <div 
       className="wheel-preview-container w-full h-full flex items-end justify-center"
@@ -108,24 +121,29 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         paddingBottom: '-30%'
       }}
     >
-      <SmartWheel
-        segments={smartWheelSegments}
-        theme="modern"
-        size={wheelSize}
-        maxSize={maxWheelSize}
-        brandColors={brandColors}
-        onResult={handleResult}
-        onSpin={handleSpin}
-        disabled={disabled}
-        borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
-        customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
-        buttonPosition="center"
-        customButton={{
-          text: "GO",
-          color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
-          textColor: campaign.buttonConfig?.textColor || '#ffffff'
-        }}
-      />
+      <WheelInteractionHandler
+        formValidated={formValidated}
+        onWheelClick={handleWheelClick}
+      >
+        <SmartWheel
+          segments={smartWheelSegments}
+          theme="modern"
+          size={wheelSize}
+          maxSize={maxWheelSize}
+          brandColors={brandColors}
+          onResult={handleResult}
+          onSpin={formValidated ? handleSpin : undefined}
+          disabled={disabled}
+          borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
+          customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
+          buttonPosition="center"
+          customButton={{
+            text: "GO",
+            color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
+            textColor: campaign.buttonConfig?.textColor || '#ffffff'
+          }}
+        />
+      </WheelInteractionHandler>
     </div>
   );
 };
