@@ -272,74 +272,145 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
     
     // Appliquer un background généré si pas d'image de fond
     if (!backgroundFile) {
-      const gradientBackground = `linear-gradient(135deg, ${primaryColor}20 0%, ${secondaryColor}20 100%)`;
+      const gradientBackground = `linear-gradient(135deg, ${primaryColor}15 0%, ${secondaryColor}15 50%, ${accentColor}10 100%)`;
       onBackgroundChange?.({
         type: 'color',
         value: gradientBackground
       });
     }
 
+    // Polices de la marque
+    const titleFont = analysis.polices.find(p => p.utilisation.includes('Titre'))?.nom || 'Inter';
+    const textFont = analysis.polices.find(p => p.utilisation.includes('Texte'))?.nom || 'Inter';
+
     return {
-      // Éléments canvas pour l'éditeur
+      // Éléments canvas pour l'éditeur - Design centré et professionnel
       elements: [
+        // Logo en haut à gauche (si fourni)
+        ...(logoPreview ? [{
+          id: 'ai-logo',
+          type: 'image',
+          src: logoPreview,
+          position: { x: 80, y: 60 },
+          style: {
+            width: '150px',
+            height: 'auto',
+            maxHeight: '80px',
+            objectFit: 'contain'
+          }
+        }] : []),
+        
+        // Titre principal - Centré et impactant
         {
           id: 'ai-title',
           type: 'text',
           role: 'title',
           content: analysis.wording_jeu_concours.titre,
-          position: { x: 400, y: 100 },
+          position: { x: 400, y: 200 },
           style: {
-            fontSize: '48px',
+            fontSize: '56px',
             fontWeight: 'bold',
             color: primaryColor,
             textAlign: 'center',
-            fontFamily: analysis.polices.find(p => p.utilisation.includes('Titre'))?.nom || 'Montserrat'
+            fontFamily: titleFont,
+            textShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            lineHeight: '1.2',
+            letterSpacing: '-0.02em',
+            width: '800px',
+            transform: 'translateX(-50%)'
           }
         },
+        
+        // Sous-titre - Élégant et lisible
         {
           id: 'ai-subtitle',
           type: 'text',
           role: 'description',
           content: analysis.wording_jeu_concours.sous_titre,
-          position: { x: 400, y: 180 },
+          position: { x: 400, y: 300 },
           style: {
-            fontSize: '24px',
-            fontWeight: 'normal',
+            fontSize: '28px',
+            fontWeight: '400',
             color: secondaryColor,
             textAlign: 'center',
-            fontFamily: analysis.polices.find(p => p.utilisation.includes('Texte'))?.nom || 'Roboto'
+            fontFamily: textFont,
+            opacity: '0.9',
+            lineHeight: '1.4',
+            width: '700px',
+            transform: 'translateX(-50%)'
           }
         },
+        
+        // Mécanique du jeu - Descriptif
         {
-          id: 'ai-button',
+          id: 'ai-mechanics',
+          type: 'text',
+          role: 'mechanics',
+          content: analysis.wording_jeu_concours.mecanique,
+          position: { x: 400, y: 380 },
+          style: {
+            fontSize: '18px',
+            fontWeight: '300',
+            color: '#64748b',
+            textAlign: 'center',
+            fontFamily: textFont,
+            width: '600px',
+            transform: 'translateX(-50%)',
+            lineHeight: '1.5'
+          }
+        },
+        
+        // Avantage client - Mis en valeur
+        {
+          id: 'ai-benefit',
+          type: 'text',
+          role: 'benefit',
+          content: analysis.wording_jeu_concours.avantage_client,
+          position: { x: 400, y: 450 },
+          style: {
+            fontSize: '20px',
+            fontWeight: '600',
+            color: accentColor,
+            textAlign: 'center',
+            fontFamily: textFont,
+            backgroundColor: `${accentColor}10`,
+            padding: '12px 24px',
+            borderRadius: '25px',
+            border: `2px solid ${accentColor}30`,
+            width: 'auto',
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap'
+          }
+        },
+        
+        // Bouton CTA - Design premium
+        {
+          id: 'ai-cta',
           type: 'text',
           role: 'button',
           content: analysis.wording_jeu_concours.call_to_action,
-          position: { x: 400, y: 500 },
+          position: { x: 400, y: 550 },
           style: {
-            fontSize: '20px',
+            fontSize: '24px',
             fontWeight: 'bold',
             color: '#ffffff',
             backgroundColor: primaryColor,
-            padding: '16px 32px',
-            borderRadius: '12px',
-            textAlign: 'center'
+            padding: '20px 50px',
+            borderRadius: '50px',
+            textAlign: 'center',
+            fontFamily: titleFont,
+            boxShadow: `0 10px 30px ${primaryColor}40`,
+            border: 'none',
+            cursor: 'pointer',
+            transform: 'translateX(-50%)',
+            transition: 'all 0.3s ease',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase'
           }
-        },
-        // Ajouter le logo si fourni
-        ...(logoPreview ? [{
-          id: 'ai-logo',
-          type: 'image',
-          src: logoPreview,
-          position: { x: 50, y: 50 },
-          style: {
-            width: '120px',
-            height: 'auto'
-          }
-        }] : [])
+        }
       ],
       
-      // Configuration de la roue
+      // Configuration de la roue avec les couleurs de la marque
       wheelConfig: {
         segments: analysis.wheelSegments.map((segment, index) => ({
           id: `segment-${index}`,
@@ -350,7 +421,8 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
         })),
         borderStyle: 'premium',
         borderColor: primaryColor,
-        scale: 1
+        scale: 1.2,
+        center: { x: 400, y: 350 }
       },
       
       // Données de marque
@@ -378,77 +450,131 @@ const AICreationPanel: React.FC<AICreationPanelProps> = ({
   };
 
   const createFallbackCampaign = () => {
-    const fallbackColors = ['#3b82f6', '#1e40af', '#0ea5e9'];
+    const fallbackColors = ['#f39c12', '#3498db', '#e74c3c']; // Couleurs Homair
     onExtractedColorsChange?.(fallbackColors);
     
     if (!backgroundFile) {
       onBackgroundChange?.({
         type: 'color',
-        value: 'linear-gradient(135deg, #3b82f620 0%, #1e40af20 100%)'
+        value: 'linear-gradient(135deg, #3498db15 0%, #f39c1215 50%, #e74c3c10 100%)'
       });
     }
 
     return {
       elements: [
+        // Logo Homair si disponible
+        ...(logoPreview ? [{
+          id: 'fallback-logo',
+          type: 'image',
+          src: logoPreview,
+          position: { x: 80, y: 60 },
+          style: {
+            width: '150px',
+            height: 'auto',
+            maxHeight: '80px'
+          }
+        }] : []),
+        
+        // Titre centré et stylisé
         {
           id: 'fallback-title',
           type: 'text',
           role: 'title',
-          content: 'Tentez votre chance !',
-          position: { x: 400, y: 100 },
+          content: 'TOURNEZ LA ROUE',
+          position: { x: 400, y: 200 },
           style: {
-            fontSize: '48px',
+            fontSize: '52px',
             fontWeight: 'bold',
-            color: '#3b82f6',
+            color: '#3498db',
             textAlign: 'center',
-            fontFamily: 'Montserrat'
+            fontFamily: 'Inter',
+            textShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            width: '800px',
+            transform: 'translateX(-50%)',
+            letterSpacing: '-0.01em'
           }
         },
+        
+        // Sous-titre accrocheur
         {
           id: 'fallback-subtitle',
           type: 'text',
           role: 'description',
-          content: 'Participez à notre jeu-concours et gagnez des prix exceptionnels',
-          position: { x: 400, y: 180 },
+          content: 'Gagnez à coup sûr un cadeau mystère',
+          position: { x: 400, y: 280 },
           style: {
-            fontSize: '24px',
-            fontWeight: 'normal',
-            color: '#1e40af',
+            fontSize: '26px',
+            fontWeight: '400',
+            color: '#2c3e50',
             textAlign: 'center',
-            fontFamily: 'Roboto'
+            fontFamily: 'Inter',
+            width: '700px',
+            transform: 'translateX(-50%)',
+            lineHeight: '1.4'
           }
         },
+        
+        // Avantage mis en valeur
         {
-          id: 'fallback-button',
+          id: 'fallback-benefit',
           type: 'text',
-          role: 'button',
-          content: 'PARTICIPER',
-          position: { x: 400, y: 500 },
+          role: 'benefit',
+          content: '🎁 Des cadeaux exceptionnels vous attendent',
+          position: { x: 400, y: 450 },
           style: {
             fontSize: '20px',
+            fontWeight: '600',
+            color: '#f39c12',
+            textAlign: 'center',
+            fontFamily: 'Inter',
+            backgroundColor: '#f39c1210',
+            padding: '12px 24px',
+            borderRadius: '25px',
+            border: '2px solid #f39c1230',
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap'
+          }
+        },
+        
+        // Bouton CTA premium
+        {
+          id: 'fallback-cta',
+          type: 'text',
+          role: 'button',
+          content: 'JOUER MAINTENANT',
+          position: { x: 400, y: 550 },
+          style: {
+            fontSize: '22px',
             fontWeight: 'bold',
             color: '#ffffff',
-            backgroundColor: '#3b82f6',
-            padding: '16px 32px',
-            borderRadius: '12px',
-            textAlign: 'center'
+            backgroundColor: '#3498db',
+            padding: '18px 45px',
+            borderRadius: '50px',
+            textAlign: 'center',
+            fontFamily: 'Inter',
+            boxShadow: '0 8px 25px #3498db40',
+            transform: 'translateX(-50%)',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase'
           }
         }
       ],
       wheelConfig: {
         segments: [
-          { id: '1', label: 'Prix 1', color: '#3b82f6', probability: 0.25, isWinning: true },
-          { id: '2', label: 'Prix 2', color: '#1e40af', probability: 0.25, isWinning: true },
-          { id: '3', label: 'Prix 3', color: '#0ea5e9', probability: 0.25, isWinning: true },
-          { id: '4', label: 'Dommage', color: '#6b7280', probability: 0.25, isWinning: false }
+          { id: '1', label: 'Cadeau Premium', color: '#3498db', probability: 0.25, isWinning: true },
+          { id: '2', label: 'Surprise Homair', color: '#f39c12', probability: 0.25, isWinning: true },
+          { id: '3', label: 'Bon d\'achat', color: '#e74c3c', probability: 0.25, isWinning: true },
+          { id: '4', label: 'Réessayez', color: '#95a5a6', probability: 0.25, isWinning: false }
         ],
-        borderStyle: 'classic',
-        borderColor: '#3b82f6',
-        scale: 1
+        borderStyle: 'premium',
+        borderColor: '#3498db',
+        scale: 1.2,
+        center: { x: 400, y: 350 }
       },
       metadata: {
         websiteUrl,
-        fallback: true
+        fallback: true,
+        brandOptimized: true
       }
     };
   };
