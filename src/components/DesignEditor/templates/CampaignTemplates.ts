@@ -22,6 +22,10 @@ export interface CampaignTemplate {
       gradients: boolean;
       animations: boolean;
       borders: boolean;
+      titleBackground?: string;
+      titleStyle?: 'normal' | 'italic' | 'underline' | 'gradient' | 'stroke';
+      titleStroke?: string;
+      titleGradient?: string;
     };
     layout: {
       titlePosition: { x: number; y: number };
@@ -62,7 +66,9 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         shadows: true,
         gradients: false,
         animations: true,
-        borders: true
+        borders: true,
+        titleStyle: 'italic',
+        titleBackground: 'rgba(93, 124, 71, 0.15)'
       },
       layout: {
         titlePosition: { x: 0.5, y: 0.15 },
@@ -99,7 +105,10 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         shadows: true,
         gradients: true,
         animations: true,
-        borders: true
+        borders: true,
+        titleStyle: 'stroke',
+        titleStroke: '#000000',
+        titleBackground: 'linear-gradient(45deg, #ff6b35, #ffd23f)'
       },
       layout: {
         titlePosition: { x: 0.5, y: 0.2 },
@@ -136,7 +145,10 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         shadows: true,
         gradients: true,
         animations: true,
-        borders: true
+        borders: true,
+        titleStyle: 'gradient',
+        titleBackground: 'rgba(26, 76, 122, 0.9)',
+        titleGradient: 'linear-gradient(45deg, #d4af37, #ff6b9d)'
       },
       layout: {
         titlePosition: { x: 0.5, y: 0.18 },
@@ -173,7 +185,9 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
         shadows: true,
         gradients: true,
         animations: true,
-        borders: false
+        borders: false,
+        titleStyle: 'normal',
+        titleBackground: 'rgba(108, 92, 231, 0.1)'
       },
       layout: {
         titlePosition: { x: 0.5, y: 0.22 },

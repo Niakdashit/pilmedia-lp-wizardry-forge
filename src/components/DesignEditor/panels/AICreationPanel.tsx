@@ -285,13 +285,10 @@ Réponds UNIQUEMENT avec le JSON demandé, sans texte supplémentaire.
     // Styles avancés basés sur le template
     const shadowStyle = template.style.effects.shadows ? '0 4px 20px rgba(0,0,0,0.15)' : 'none';
     const titleShadow = template.style.effects.shadows ? '2px 2px 8px rgba(0,0,0,0.2)' : 'none';
-    const gradientBg = template.style.effects.gradients ? 
-      `linear-gradient(135deg, ${primaryColor}15, ${accentColor}10)` : 
-      `${primaryColor}08`;
 
     return {
       canvasElements: [
-        // Titre principal avec style template
+        // Titre principal avec effets stylisés avancés
         {
           id: 'ai-title',
           type: 'text',
@@ -301,16 +298,27 @@ Réponds UNIQUEMENT avec le JSON demandé, sans texte supplémentaire.
           style: {
             fontSize: template.style.typography.titleSize,
             fontWeight: template.style.typography.titleWeight,
-            color: primaryColor,
+            color: template.style.effects.titleStyle === 'gradient' ? 'transparent' : (template.style.effects.titleStyle === 'stroke' ? textColor : primaryColor),
             textAlign: 'center',
             fontFamily: titleFont,
-            textShadow: titleShadow,
+            textShadow: template.style.effects.titleStyle === 'stroke' ? 'none' : titleShadow,
             width: `${canvasWidth - 80}px`,
-            lineHeight: '1.2',
+            lineHeight: '1.1',
             letterSpacing: template.style.typography.letterSpacing,
-            background: template.style.effects.gradients ? gradientBg : 'transparent',
-            padding: template.style.effects.gradients ? '8px 16px' : '0',
-            borderRadius: template.style.effects.gradients ? '12px' : '0'
+            fontStyle: template.style.effects.titleStyle === 'italic' ? 'italic' : 'normal',
+            textDecoration: template.style.effects.titleStyle === 'underline' ? 'underline' : 'none',
+            background: template.style.effects.titleBackground || 'transparent',
+            backgroundImage: template.style.effects.titleGradient || 'none',
+            backgroundClip: template.style.effects.titleStyle === 'gradient' ? 'text' : 'border-box',
+            WebkitBackgroundClip: template.style.effects.titleStyle === 'gradient' ? 'text' : 'border-box',
+            WebkitTextFillColor: template.style.effects.titleStyle === 'gradient' ? 'transparent' : 'inherit',
+            WebkitTextStroke: template.style.effects.titleStyle === 'stroke' ? `3px ${template.style.effects.titleStroke}` : 'none',
+            padding: template.style.effects.titleBackground ? '16px 24px' : '8px 16px',
+            borderRadius: template.style.effects.titleBackground ? '15px' : '0',
+            textTransform: template.name === 'Sportif & Dynamique' ? 'uppercase' : 'none',
+            transform: template.name === 'Sportif & Dynamique' ? 'rotate(-1deg)' : 'none',
+            boxShadow: template.style.effects.shadows && template.style.effects.titleBackground ? 
+              '0 8px 32px rgba(0,0,0,0.2)' : 'none'
           }
         },
         
