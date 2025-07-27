@@ -7,9 +7,11 @@ interface WheelConfigModalProps {
   wheelBorderStyle: string;
   wheelBorderColor: string;
   wheelScale: number;
+  wheelFullBorder: boolean;
   onBorderStyleChange: (style: string) => void;
   onBorderColorChange: (color: string) => void;
   onScaleChange: (scale: number) => void;
+  onFullBorderChange: (fullBorder: boolean) => void;
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
@@ -19,9 +21,11 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
   wheelBorderStyle,
   wheelBorderColor,
   wheelScale,
+  wheelFullBorder,
   onBorderStyleChange,
   onBorderColorChange,
   onScaleChange,
+  onFullBorderChange,
   selectedDevice
 }) => {
   if (!isOpen) return null;
@@ -127,6 +131,22 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                   placeholder="#841b60"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+              </div>
+              
+              {/* Option bordure pleine */}
+              <div className="mt-3">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={wheelFullBorder}
+                    onChange={(e) => onFullBorderChange(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Bordure pleine</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Bordure entièrement de la couleur choisie au lieu de blanc + couleur
+                </p>
               </div>
             </div>
 
