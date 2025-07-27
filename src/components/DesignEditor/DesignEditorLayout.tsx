@@ -8,8 +8,15 @@ import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
 
 const DesignEditorLayout: React.FC = () => {
-  // Force desktop mode only
-  const [selectedDevice] = useState<'desktop'>('desktop');
+  // Détection automatique de l'appareil
+  const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
+    const width = window.innerWidth;
+    if (width >= 1024) return 'desktop';
+    if (width >= 768) return 'tablet';
+    return 'mobile';
+  };
+
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
@@ -129,7 +136,7 @@ const DesignEditorLayout: React.FC = () => {
       {!showFunnel && (
         <DesignToolbar 
           selectedDevice={selectedDevice}
-          onDeviceChange={() => {}} // No device change needed
+          onDeviceChange={setSelectedDevice}
           onPreviewToggle={() => setShowFunnel(!showFunnel)}
           isPreviewMode={showFunnel}
         />
@@ -139,7 +146,9 @@ const DesignEditorLayout: React.FC = () => {
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="flex-1 flex items-center justify-center bg-gray-100 group">
+          <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
+            selectedDevice === 'tablet' ? 'fixed inset-0 z-40' : ''
+          }`}>
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
