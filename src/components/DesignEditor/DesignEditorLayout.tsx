@@ -29,8 +29,8 @@ const DesignEditorLayout: React.FC = () => {
   const handleExtractedColorsChange = (colors: string[]) => {
     setExtractedColors(colors);
     
-    // Appliquer automatiquement les couleurs extraites à la configuration de la roue
-    if (colors.length >= 2) {
+    // Appliquer automatiquement la couleur extraite (dominante) et le blanc comme seconde couleur
+    if (colors.length >= 1) {
       setCampaignConfig((prev: any) => ({
         ...prev,
         design: {
@@ -41,8 +41,8 @@ const DesignEditorLayout: React.FC = () => {
           },
           brandColors: {
             primary: colors[0] || '#841b60',
-            secondary: colors[1] || '#4ecdc4',
-            accent: colors[2] || '#45b7d1'
+            secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
+            accent: colors[0] || '#45b7d1'
           }
         }
       }));

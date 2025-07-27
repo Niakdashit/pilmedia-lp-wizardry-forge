@@ -38,9 +38,10 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       img.onload = () => {
         try {
           const colorThief = new ColorThief();
-          const palette = colorThief.getPalette(img, 6);
-          const colors = palette.map(rgb => `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
-          resolve(colors);
+          // Extraire uniquement la couleur dominante
+          const dominantColor = colorThief.getColor(img);
+          const extractedColor = `rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`;
+          resolve([extractedColor]);
         } catch (error) {
           console.error('Error extracting colors:', error);
           resolve([]);
