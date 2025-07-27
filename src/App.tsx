@@ -32,6 +32,7 @@ import DesignEditor from './pages/DesignEditor';
 import LivePreview from './pages/LivePreview';
 import Auth from './pages/Auth';
 import PublicCampaign from './pages/PublicCampaign';
+import PageBeta from './pages/PageBeta';
 
 function App() {
   return (
@@ -81,6 +82,7 @@ function App() {
             
             <Route path="/login" element={<Login />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pagebeta" element={<PageBeta />} />
             <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
