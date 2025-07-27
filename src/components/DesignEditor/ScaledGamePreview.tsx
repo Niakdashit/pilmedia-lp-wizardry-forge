@@ -31,21 +31,23 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.borderColor || '#841b60');
   const [wheelScale, setWheelScale] = useState(campaign?.design?.wheelScale || 1);
 
-  // Capture d'écran de l'aperçu
+  // Capture d'écran du composant visible
   const capturePreview = async () => {
     if (previewRef.current && !isCapturing) {
       try {
         console.log('🎯 Début de la capture d\'écran...');
         setIsCapturing(true);
         
+        // Attendre que le composant soit complètement rendu
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         const canvas = await html2canvas(previewRef.current, {
-          allowTaint: true,
-          useCORS: true,
+          allowTaint: false,
+          useCORS: false,
+          backgroundColor: '#ffffff',
           scale: 1,
-          backgroundColor: '#f3f4f6',
           logging: false,
-          width: previewRef.current.offsetWidth,
-          height: previewRef.current.offsetHeight
+          removeContainer: true
         });
         
         const url = canvas.toDataURL('image/png');
@@ -136,36 +138,9 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           height: containerHeight
         }}
       >
-        {/* Aperçu visible pour capture d'écran */}
-        <div 
-          ref={previewRef}
-          className="fixed pointer-events-none"
-          style={{ 
-            top: '50%', 
-            left: '50%', 
-            transform: 'translate(-50%, -50%)',
-            zIndex: -1,
-            opacity: 0
-          }}
-        >
-          <div
-            className="relative bg-white shadow-lg rounded-lg overflow-hidden"
-            style={{
-              width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-              height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
-            }}
-          >
-            <GameCanvasPreview
-              campaign={campaign}
-              previewDevice={selectedDevice}
-              disableForm={true}
-              setCampaign={onCampaignChange}
-            />
-          </div>
-        </div>
-
-        {/* Affichage de la capture d'écran ou du composant direct */}
+        {/* Aperçu principal - utilisé pour l'affichage ET la capture */}
         <div
+          ref={previewRef}
           className="relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer"
           onClick={handleWheelClick}
           style={{
@@ -175,6 +150,12 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
           }}
         >
+          {isCapturing && (
+            <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+              <div className="text-sm text-gray-600">Capture en cours...</div>
+            </div>
+          )}
+          
           {screenshotUrl && !isCapturing ? (
             <img 
               src={screenshotUrl} 
