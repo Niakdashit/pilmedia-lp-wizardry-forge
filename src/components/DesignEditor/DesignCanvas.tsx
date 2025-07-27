@@ -184,7 +184,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               
               
               {/* Roue de la fortune en bas */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3">
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
                 <div 
                   onClick={() => setShowBorderModal(true)}
                   className="cursor-pointer hover:scale-105 transition-transform duration-200"
