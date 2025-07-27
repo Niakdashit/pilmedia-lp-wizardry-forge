@@ -34,7 +34,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const wheelBorderStyle = campaign?.design?.wheelConfig?.borderStyle || 'classic';
   const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
   const wheelScale = campaign?.design?.wheelConfig?.scale || 1;
-  const wheelFullBorder = campaign?.design?.wheelConfig?.fullBorder || false;
 
   // Fonctions pour mettre à jour la configuration de la roue
   const setWheelBorderStyle = (style: string) => {
@@ -76,21 +75,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           wheelConfig: {
             ...campaign?.design?.wheelConfig,
             scale: scale
-          }
-        }
-      });
-    }
-  };
-
-  const setWheelFullBorder = (fullBorder: boolean) => {
-    if (onCampaignChange) {
-      onCampaignChange({
-        ...campaign,
-        design: {
-          ...campaign?.design,
-          wheelConfig: {
-            ...campaign?.design?.wheelConfig,
-            fullBorder: fullBorder
           }
         }
       });
@@ -210,7 +194,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                     theme="modern"
                     size={getWheelSize()}
                     borderStyle={wheelBorderStyle}
-                    fullBorder={wheelFullBorder}
                     brandColors={{
                       primary: wheelBorderColor,
                       secondary: '#4ecdc4',
@@ -284,11 +267,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           wheelBorderStyle={wheelBorderStyle}
           wheelBorderColor={wheelBorderColor}
           wheelScale={wheelScale}
-          wheelFullBorder={wheelFullBorder}
           onBorderStyleChange={setWheelBorderStyle}
           onBorderColorChange={setWheelBorderColor}
           onScaleChange={setWheelScale}
-          onFullBorderChange={setWheelFullBorder}
           selectedDevice={selectedDevice}
         />
       </div>

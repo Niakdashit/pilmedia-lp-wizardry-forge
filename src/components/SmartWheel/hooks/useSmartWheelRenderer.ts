@@ -10,7 +10,6 @@ interface UseSmartWheelRendererProps {
   size: number;
   borderStyle?: string;
   customBorderColor?: string;
-  fullBorder?: boolean;
 }
 
 export const useSmartWheelRenderer = ({
@@ -19,8 +18,7 @@ export const useSmartWheelRenderer = ({
   wheelState,
   size,
   borderStyle = 'classic',
-  customBorderColor,
-  fullBorder = false
+  customBorderColor
 }: UseSmartWheelRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -78,7 +76,7 @@ export const useSmartWheelRenderer = ({
     }
 
     // Dessiner les bordures stylisées
-    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime, fullBorder);
+    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime);
 
     // Dessiner l'ombre intérieure
     drawInnerShadow(ctx, centerX, centerY, maxRadius);
@@ -89,7 +87,7 @@ export const useSmartWheelRenderer = ({
     // Dessiner le pointeur
     drawPointer(ctx, centerX, centerY, maxRadius, theme);
 
-  }, [segments, theme, wheelState, size, borderStyle, animationTime, fullBorder]);
+  }, [segments, theme, wheelState, size, borderStyle, animationTime]);
 
   const drawBackground = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
     if (theme.effects.gradient) {
@@ -138,7 +136,7 @@ export const useSmartWheelRenderer = ({
     });
   };
 
-  const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number, fullBorder: boolean = false) => {
+  const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
 
     // Utiliser la couleur personnalisée seulement si c'est un style "classique" ou si explicitement demandé
@@ -154,40 +152,15 @@ export const useSmartWheelRenderer = ({
 
     switch (borderStyleConfig.type) {
       case 'solid':
-        if (borderStyleName === 'classic' && fullBorder) {
-          // Bordure pleine : une seule couleur sur toute l'épaisseur
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-          ctx.strokeStyle = getBorderColor(0);
-          ctx.lineWidth = 16; // Épaisseur totale
-          ctx.stroke();
-        } else if (borderStyleName === 'classic' && !fullBorder) {
-          // Bordure mixte : blanc (outline) + couleur personnalisée (inner)
-          // Outer outline (épaisse, blanche)
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 8;
-          ctx.stroke();
-          
-          // Inner border (fine, couleur personnalisée)
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius - 4, 0, 2 * Math.PI);
-          ctx.strokeStyle = getBorderColor(0);
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        } else {
-          // Autres styles solid (non classic)
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-          ctx.strokeStyle = getBorderColor(0);
-          ctx.lineWidth = borderStyleConfig.width;
-          if (borderStyleConfig.effects.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-            ctx.shadowBlur = 10;
-          }
-          ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = getBorderColor(0);
+        ctx.lineWidth = borderStyleConfig.width;
+        if (borderStyleConfig.effects.shadow) {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+          ctx.shadowBlur = 10;
         }
+        ctx.stroke();
         break;
 
       case 'metallic':
