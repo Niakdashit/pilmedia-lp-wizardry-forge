@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
-import InteractiveDragDropOverlay from '../ModernEditor/components/InteractiveDragDropOverlay';
+import InteractiveCustomElementsRenderer from '../ModernEditor/components/InteractiveCustomElementsRenderer';
 
 interface ScaledGamePreviewProps {
   campaign: any;
@@ -22,6 +22,13 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [showWheelConfig, setShowWheelConfig] = useState(false);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    draggedElementId: null as string | null,
+    draggedElementType: null as 'text' | 'image' | null,
+    currentOffset: { x: 0, y: 0 }
+  });
   
   // États pour la configuration de la roue
   const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.borderStyle || 'classic');
@@ -81,6 +88,32 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     handleWheelConfigUpdate({ wheelScale: scale });
   };
 
+  // Gestionnaires pour les éléments interactifs
+  const handleElementSelect = (elementId: string) => {
+    setSelectedElementId(elementId);
+  };
+
+  const handleDragStart = (_e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'text' | 'image') => {
+    setDragState({
+      isDragging: true,
+      draggedElementId: elementId,
+      draggedElementType: elementType,
+      currentOffset: { x: 0, y: 0 }
+    });
+  };
+
+  // Size map pour les textes
+  const sizeMap = {
+    xs: '12px',
+    sm: '14px',
+    base: '16px',
+    lg: '18px',
+    xl: '20px',
+    '2xl': '24px',
+    '3xl': '30px',
+    '4xl': '36px'
+  };
+
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
     const segments = campaign?.design?.segments || [
@@ -116,47 +149,58 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             backgroundRepeat: 'no-repeat'
           }}
         >
-          <InteractiveDragDropOverlay
-            campaign={campaign}
-            setCampaign={(updater) => {
-              const updated = typeof updater === 'function' ? updater(campaign) : updater;
-              onCampaignChange?.(updated);
+          {/* Couche de base avec la roue */}
+          <div 
+            className="w-full h-full flex justify-center"
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              paddingBottom: '-30%',
+              transform: 'translateY(-20px)'
             }}
-            previewDevice={selectedDevice}
-            isEnabled={true}
           >
-            <div 
-              className="w-full h-full flex justify-center"
-              style={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                paddingBottom: '-30%',
-                transform: 'translateY(-20px)'
-              }}
-            >
-              <div onClick={handleWheelClick} className="cursor-pointer">
-                <SmartWheel
-                  segments={segments}
-                  size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
-                  borderStyle={wheelBorderStyle}
-                  customBorderColor={wheelBorderColor}
-                  disabled={false}
-                  onSpin={() => {}}
-                  onResult={() => {}}
-                  gamePosition={{ x: 0, y: 0, scale: wheelScale }}
-                  buttonPosition="center"
-                  customButton={{
-                    text: "TOURNER",
-                    color: "#841b60",
-                    textColor: "#FFFFFF"
-                  }}
-                />
-              </div>
+            <div onClick={handleWheelClick} className="cursor-pointer">
+              <SmartWheel
+                segments={segments}
+                size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
+                borderStyle={wheelBorderStyle}
+                customBorderColor={wheelBorderColor}
+                disabled={false}
+                onSpin={() => {}}
+                onResult={() => {}}
+                gamePosition={{ x: 0, y: 0, scale: wheelScale }}
+                buttonPosition="center"
+                customButton={{
+                  text: "TOURNER",
+                  color: "#841b60",
+                  textColor: "#FFFFFF"
+                }}
+              />
             </div>
-          </InteractiveDragDropOverlay>
+          </div>
+
+          {/* Couche interactive par-dessus */}
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              pointerEvents: 'auto',
+              zIndex: 10 
+            }}
+          >
+            <InteractiveCustomElementsRenderer
+              customTexts={campaign?.design?.customTexts || []}
+              customImages={campaign?.design?.customImages || []}
+              previewDevice={selectedDevice}
+              sizeMap={sizeMap}
+              selectedElementId={selectedElementId}
+              onElementSelect={handleElementSelect}
+              onDragStart={handleDragStart}
+              dragState={dragState}
+            />
+          </div>
         </div>
         
         {/* Scale info */}
