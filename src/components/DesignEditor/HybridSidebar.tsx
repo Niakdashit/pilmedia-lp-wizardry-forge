@@ -7,7 +7,8 @@ import {
   Settings,
   Gamepad2,
   Share,
-  Palette
+  Palette,
+  Sparkles
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
@@ -15,6 +16,7 @@ import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
+import AIGeneratorPanel from './panels/AIGeneratorPanel';
 
 
 interface HybridSidebarProps {
@@ -25,6 +27,7 @@ interface HybridSidebarProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
+  onCampaignGenerated?: (campaignData: any) => void;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = ({
@@ -34,12 +37,18 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
-  onElementsChange
+  onElementsChange,
+  onCampaignGenerated
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
 
   const tabs = [
+    { 
+      id: 'aigenerate', 
+      label: 'IA Studio', 
+      icon: Sparkles
+    },
     { 
       id: 'assets', 
       label: 'Elements', 
@@ -82,6 +91,8 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
+      case 'aigenerate':
+        return <AIGeneratorPanel onCampaignGenerated={onCampaignGenerated || (() => {})} />;
       case 'assets':
         return <AssetsPanel onAddElement={onAddElement} />;
       case 'background':

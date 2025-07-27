@@ -66,19 +66,32 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en branding et marketing digital. Tu analyses des sites web pour extraire l\'identité de marque et génères des campagnes de jeu-concours professionnelles. Tu réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.'
+            content: `Tu es un directeur artistique expert en campagnes marketing premium de niveau studio. 
+            Tu crées des concepts de jeu-concours sophistiqués qui rivalisent avec les meilleures agences créatives.
+            
+            MISSION : Analyser l'identité de marque et générer une campagne promotionnelle 100% brandée.
+            
+            QUALITÉ REQUISE : Niveau équivalent aux meilleures agences (Publicis, TBWA, Ogilvy).
+            
+            ANALYSE OBLIGATOIRE :
+            - Charte graphique complète (couleurs dominantes, typographies, style visuel)
+            - Ton éditorial et personnalité de marque
+            - Secteur d'activité et positionnement
+            - Identification des éléments différenciants
+            
+            RÉPONSE STRICTE : JSON structuré uniquement, aucun texte supplémentaire.`
           },
           {
             role: 'user',
             content: enhancedPrompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 4000
+        temperature: 0.8,
+        max_tokens: 6000
       }),
     });
 
@@ -125,6 +138,8 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
       
       // Return a fallback response
       const fallbackResult = {
+        campaignTitle: "Campagne promotionnelle",
+        campaignSubtitle: "Découvrez votre chance de gagner",
         palette_couleurs: [
           {"nom": "Couleur principale", "hexa": "#3b82f6"},
           {"nom": "Couleur secondaire", "hexa": "#1e40af"},
@@ -143,6 +158,17 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
           mecanique: "Remplissez le formulaire pour participer",
           avantage_client: "Des prix exceptionnels à gagner",
           call_to_action: "PARTICIPER"
+        },
+        wheelSegments: [
+          {"label": "Prix 1", "color": "#3b82f6", "probability": 0.3},
+          {"label": "Prix 2", "color": "#1e40af", "probability": 0.2},
+          {"label": "Prix 3", "color": "#0ea5e9", "probability": 0.15},
+          {"label": "Essayez encore", "color": "#6b7280", "probability": 0.35}
+        ],
+        designElements: {
+          backgroundStyle: "Arrière-plan moderne avec dégradé",
+          graphicElements: ["Roue interactive", "Bouton d'action", "Éléments de marque"],
+          layoutStyle: "Disposition centrée et équilibrée"
         },
         structure_visuelle: {
           format_pc_16_9: {

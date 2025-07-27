@@ -51,6 +51,102 @@ const DesignEditorLayout: React.FC = () => {
     }
   };
 
+  // Fonction pour gérer les campagnes générées par IA
+  const handleAICampaignGenerated = (campaignData: any) => {
+    // Appliquer la configuration de campagne générée
+    setCampaignConfig(campaignData);
+    
+    // Générer les éléments du canvas depuis les données IA
+    const elements = [];
+    
+    // Ajouter le titre principal
+    if (campaignData.title) {
+      elements.push({
+        id: 'ai-title-' + Date.now(),
+        type: 'text',
+        content: campaignData.title,
+        position: { x: 100, y: 80 },
+        style: {
+          fontSize: 28,
+          fontWeight: 'bold',
+          color: campaignData.design?.customColors?.primary || '#3b82f6',
+          fontFamily: campaignData.design?.fonts?.[0]?.nom || 'Montserrat',
+          textAlign: 'center'
+        },
+        role: 'title'
+      });
+    }
+    
+    // Ajouter le sous-titre
+    if (campaignData.subtitle) {
+      elements.push({
+        id: 'ai-subtitle-' + Date.now(),
+        type: 'text',
+        content: campaignData.subtitle,
+        position: { x: 100, y: 130 },
+        style: {
+          fontSize: 16,
+          color: campaignData.design?.customColors?.secondary || '#1e40af',
+          fontFamily: campaignData.design?.fonts?.[1]?.nom || 'Inter',
+          textAlign: 'center'
+        },
+        role: 'description'
+      });
+    }
+    
+    // Ajouter l'élément roue de la fortune
+    if (campaignData.config?.roulette) {
+      elements.push({
+        id: 'ai-wheel-' + Date.now(),
+        type: 'wheel',
+        position: { x: 200, y: 200 },
+        config: campaignData.config.roulette,
+        style: {
+          width: 300,
+          height: 300
+        }
+      });
+    }
+    
+    // Ajouter le bouton CTA
+    if (campaignData.buttonConfig?.text) {
+      elements.push({
+        id: 'ai-button-' + Date.now(),
+        type: 'text',
+        content: campaignData.buttonConfig.text,
+        position: { x: 300, y: 520 },
+        style: {
+          backgroundColor: campaignData.buttonConfig.color || campaignData.design?.customColors?.primary,
+          color: '#ffffff',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontWeight: '600',
+          fontSize: 16,
+          textAlign: 'center',
+          cursor: 'pointer'
+        },
+        role: 'button'
+      });
+    }
+    
+    // Mettre à jour les éléments du canvas
+    setCanvasElements(elements);
+    
+    // Mettre à jour les couleurs extraites depuis l'IA
+    if (campaignData.design?.customColors) {
+      const colors = Object.values(campaignData.design.customColors).filter(Boolean);
+      setExtractedColors(colors as string[]);
+    }
+    
+    // Mettre à jour l'arrière-plan si défini
+    if (campaignData.design?.backgroundStyle) {
+      setCanvasBackground({
+        type: 'color',
+        value: campaignData.design.customColors?.primary || '#f3f4f6'
+      });
+    }
+  };
+
   // Auto-responsive logic
   const { getAdaptationSuggestions } = useAutoResponsive('desktop');
   
@@ -173,6 +269,7 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
+              onCampaignGenerated={handleAICampaignGenerated}
             />
             
             {/* Main Canvas Area */}
