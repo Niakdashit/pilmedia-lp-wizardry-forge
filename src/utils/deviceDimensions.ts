@@ -1,7 +1,7 @@
 // Unified device dimensions for the entire application - Optimized for editor display
 export const STANDARD_DEVICE_DIMENSIONS = {
   desktop: { width: 1200, height: 800 },
-  tablet: { width: 850, height: 1200 },   // Portrait format for editor preview
+  tablet: { width: 768, height: 1024 },   // iPad 4:3 ratio - plus représentatif d'une vraie tablette
   mobile: { width: 375, height: 812 }     // iPhone X/11/12/13 realistic mobile ratio
 } as const;
 
