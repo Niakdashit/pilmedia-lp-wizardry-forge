@@ -88,51 +88,41 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue adaptée avec l'échelle de la campagne (200% par défaut)
+  // Calculer une taille de roue adaptée avec l'échelle de la campagne
   const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const campaignScale = campaign?.design?.wheelConfig?.scale || 2.0;
-  const wheelSize = Math.min(baseSize * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
+  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
+  const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
   const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
   return (
     <div 
-      className="wheel-preview-container w-full h-full"
+      className="wheel-preview-container w-full h-full flex items-center justify-center"
       style={{
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'flex-end', // Alignement vers le bas
+        alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: '50%',
-          transform: 'translateX(-50%) translateY(50%)', // Position comme dans l'éditeur
-          zIndex: 10
+      <SmartWheel
+        segments={smartWheelSegments}
+        theme="modern"
+        size={wheelSize}
+        maxSize={maxWheelSize}
+        brandColors={brandColors}
+        onResult={handleResult}
+        onSpin={handleSpin}
+        disabled={disabled}
+        borderStyle={campaign?.design?.wheelConfig?.borderStyle || borderStyle}
+        customButton={{
+          text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
+          color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
+          textColor: campaign.buttonConfig?.textColor || '#ffffff'
         }}
-      >
-        <SmartWheel
-          segments={smartWheelSegments}
-          theme="modern"
-          size={wheelSize}
-          maxSize={maxWheelSize}
-          brandColors={brandColors}
-          onResult={handleResult}
-          onSpin={handleSpin}
-          disabled={disabled}
-          borderStyle={campaign?.design?.wheelConfig?.borderStyle || borderStyle}
-          customButton={{
-            text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
-            color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
-            textColor: campaign.buttonConfig?.textColor || '#ffffff'
-          }}
-        />
-      </div>
+      />
     </div>
   );
 };

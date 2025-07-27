@@ -21,7 +21,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   isVisible = true,
   onResult,
   onShowParticipationModal,
-  scale = 2.0 // Échelle par défaut à 200%
+  scale = 1.7 // Échelle par défaut à 1.7x
 }) => {
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
 
