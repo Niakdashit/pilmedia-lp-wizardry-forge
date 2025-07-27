@@ -29,22 +29,26 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const [wheelBorderColor, setWheelBorderColor] = useState(campaign?.design?.borderColor || '#841b60');
   const [wheelScale, setWheelScale] = useState(campaign?.design?.wheelScale || 1);
 
-  // Calculate the scale to fit the preview into the editor space with proper margins
+  // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
     const original = STANDARD_DEVICE_DIMENSIONS[selectedDevice];
     
-    // Add margin space to ensure good spacing around preview
-    const margin = 40; // 20px margin on each side
-    const availableWidth = containerWidth - margin;
-    const availableHeight = containerHeight - margin;
+    // Calculate scale to fit while maintaining aspect ratio without padding
+    const availableWidth = containerWidth;
+    const availableHeight = containerHeight;
     
     const scaleX = availableWidth / original.width;
     const scaleY = availableHeight / original.height;
     
-    // Always maintain aspect ratio and ensure good spacing
-    const finalScale = Math.min(scaleX, scaleY, 0.9); // Max 90% to ensure margins
+    let finalScale;
+    if (selectedDevice === 'desktop') {
+      finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+    } else {
+      // For mobile and tablet, use optimized scaling for maximum space utilization
+      finalScale = Math.min(scaleX, scaleY); // Use full space
+    }
     
-    setScale(Math.max(finalScale, 0.1)); // Minimum scale to avoid invisible previews
+    setScale(finalScale);
   }, [selectedDevice, containerWidth, containerHeight]);
 
   // Gestionnaires pour la configuration de la roue
