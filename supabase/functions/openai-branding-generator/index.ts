@@ -47,8 +47,8 @@ serve(async (req) => {
       websiteContent = `Site web: ${body.websiteUrl}`;
     }
 
-    // Enhanced prompt with website content and professional specifications
-    const enhancedPrompt = `MISSION: Analyser cette marque et créer une campagne de jeu-concours visuelle de niveau studio professionnel avec VISUELS DE FOND COLORÉS ET POLICES ULTRA-STYLISÉES.
+    // Enhanced prompt with website content
+    const enhancedPrompt = `${body.prompt}
 
 CONTENU DU SITE WEB À ANALYSER:
 ${websiteContent}
@@ -56,68 +56,7 @@ ${websiteContent}
 ${body.logoUrl ? `LOGO FOURNI: ${body.logoUrl}` : 'AUCUN LOGO FOURNI'}
 ${body.backgroundUrl ? `IMAGE DE FOND FOURNIE: ${body.backgroundUrl}` : 'AUCUNE IMAGE DE FOND FOURNIE'}
 
-EXEMPLES DE STYLES DE POLICES À REPRODUIRE:
-1. STYLE NATUREL: Typographie scripte italique avec ombres douces (ex: "Roue de la Chance" en écriture cursive)
-2. STYLE SPORTIF: Blocs de texte ÉNORMES en MAJUSCULES avec backgrounds colorés jaune/vert fluo (ex: "GAGNEZ 1 MOIS DE FITNESS GRATUIT !")  
-3. STYLE VOYAGE: Texte blanc sur fond sombre avec éléments premium et typographie élégante
-4. STYLE MODERNE: Texte sur blocs colorés noirs/pastel avec éléments décoratifs floraux
-
-INSTRUCTIONS SPÉCIFIQUES:
-1. Analyse le secteur d'activité et choisis le STYLE le plus adapté parmi les 4 disponibles
-2. Génère une palette de couleurs harmonieuse en cohérence avec la marque
-3. Crée des textes accrocheurs et brandés pour le jeu-concours avec EFFETS VISUELS ULTRA-STYLISÉS
-4. Décris précisément les VISUELS DE FOND colorés à générer
-5. Spécifie les EFFETS TYPOGRAPHIQUES avancés (ombres, contours, dégradés, blocs colorés)
-6. Assure-toi que tous les éléments suivent une hiérarchie visuelle claire
-7. Optimise pour l'engagement et la conversion
-
-FORMAT JSON REQUIS:
-{
-  "styleChoisi": "naturel|sportif|voyage|moderne",
-  "campaignTitle": "Titre principal accrocheur",
-  "campaignSubtitle": "Sous-titre engageant",
-  "palette_couleurs": [
-    {"nom": "Couleur principale", "hexa": "#hexcode"},
-    {"nom": "Couleur secondaire", "hexa": "#hexcode"},
-    {"nom": "Couleur d'accent", "hexa": "#hexcode"}
-  ],
-  "polices": [
-    {"nom": "FontName", "utilisation": "Titres"},
-    {"nom": "FontName", "utilisation": "Texte"}
-  ],
-  "ambiance_et_keywords": ["mot1", "mot2", "mot3"],
-  "extrait_du_ton_editorial": "Description du ton de communication",
-  "wording_jeu_concours": {
-    "titre": "Titre du jeu accrocheur avec effets visuels",
-    "sous_titre": "Sous-titre qui donne envie",
-    "mecanique": "Explication simple du jeu",
-    "avantage_client": "Bénéfice clair pour l'utilisateur",
-    "call_to_action": "CTA puissant en MAJUSCULES"
-  },
-  "wheelSegments": [
-    {"label": "Prix 1", "color": "#hexcode", "probability": 0.3, "isWinning": true},
-    {"label": "Prix 2", "color": "#hexcode", "probability": 0.25, "isWinning": true},
-    {"label": "Prix 3", "color": "#hexcode", "probability": 0.25, "isWinning": true},
-    {"label": "Réessayez", "color": "#hexcode", "probability": 0.2, "isWinning": false}
-  ],
-  "designElements": {
-    "backgroundStyle": "Description détaillée du visuel de fond coloré à générer",
-    "graphicElements": ["Element1", "Element2"],
-    "layoutStyle": "Description de la composition",
-    "typographyEffects": {
-      "titleEffect": "Description précise de l'effet typographique du titre (ombre, contour, dégradé, bloc coloré)",
-      "backgroundElements": "Description des éléments visuels de fond à générer",
-      "colorBlocks": "Description des blocs colorés pour le texte si applicable"
-    }
-  },
-  "visualGeneration": {
-    "backgroundPrompt": "Prompt détaillé pour générer l'image de fond colorée stylisée",
-    "titleStylePrompt": "Prompt pour générer le style typographique ultra-stylisé du titre"
-  },
-  "commentaires_design": "Justification des choix créatifs avec focus sur les effets visuels"
-}
-
-Génère UNIQUEMENT le JSON, sans texte supplémentaire.`;
+Analyse ce contenu web pour extraire l'univers de marque et génère une réponse JSON parfaitement structurée selon le format demandé.`;
 
     console.log('🤖 Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -131,30 +70,14 @@ Génère UNIQUEMENT le JSON, sans texte supplémentaire.`;
         messages: [
           {
             role: 'system',
-            content: `Tu es un directeur artistique senior expert en branding digital et design UX/UI. Tu analyses des sites web pour créer des campagnes visuelles de niveau studio professionnel.
-
-STYLES DISPONIBLES (choisis le plus adapté à la marque):
-1. NATUREL & ORGANIQUE: Couleurs organiques (#5d7c47, #a8c68f, #f4e4c1), typographie Playfair Display, design épuré et chaleureux
-2. SPORTIF & DYNAMIQUE: Couleurs vibrantes (#ff6b35, #004e89, #ffd23f), typographie Montserrat bold, énergie et mouvement
-3. VOYAGE & LUXE: Couleurs premium (#d4af37, #1a4c7a, #ff6b9d), typographie Cormorant Garamond, sophistication et élégance
-4. MODERNE & MINIMALISTE: Couleurs tech (#6c5ce7, #a29bfe, #fd79a8), typographie Poppins, design épuré et géométrique
-
-EXIGENCES DE DESIGN:
-- Hiérarchie typographique parfaite avec tailles et poids optimisés
-- Palettes harmonieuses avec contraste optimal pour accessibilité
-- Compositions centrées avec positionnement précis des éléments
-- Effets visuels professionnels (ombres, dégradés, animations)
-- Cohérence visuelle totale entre tous les éléments
-- Adaptation parfaite au secteur d'activité analysé
-
-Tu dois analyser le contenu web fourni et générer un JSON parfaitement structuré selon le format demandé, en choisissant le style le plus adapté à l'univers de la marque analysée.`
+            content: 'Tu es un expert en branding et marketing digital. Tu analyses des sites web pour extraire l\'identité de marque et génères des campagnes de jeu-concours professionnelles. Tu réponds UNIQUEMENT avec du JSON valide, aucun texte supplémentaire.'
           },
           {
             role: 'user',
             content: enhancedPrompt
           }
         ],
-        temperature: 0.8,
+        temperature: 0.7,
         max_tokens: 4000
       }),
     });
@@ -189,60 +112,9 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
       console.log('🎨 Generated palette colors:', parsedResult.palette_couleurs?.length || 0);
       console.log('📝 Generated wording:', parsedResult.wording_jeu_concours?.titre || 'No title');
 
-      // Generate visual data for the renderer
-      const visualData = {
-        title: parsedResult.wording_jeu_concours?.titre || parsedResult.campaignTitle || "Tentez Votre Chance",
-        subtitle: parsedResult.wording_jeu_concours?.sous_titre || parsedResult.campaignSubtitle || "Une expérience unique vous attend",
-        cta: parsedResult.wording_jeu_concours?.call_to_action || "JOUER MAINTENANT",
-        backgroundImage: body.backgroundUrl || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=1920&fit=crop",
-        logo: body.logoUrl || "",
-        style: parsedResult.styleChoisi || "moderne",
-        colors: {
-          primary: parsedResult.palette_couleurs?.[0]?.hexa || "#d4af37",
-          secondary: parsedResult.palette_couleurs?.[1]?.hexa || "#1a4c7a", 
-          accent: parsedResult.palette_couleurs?.[2]?.hexa || "#ff6b9d"
-        }
-      };
-
-      // Try to generate an image if we have a background prompt
-      let generatedImage = null;
-      if (parsedResult.visualGeneration?.backgroundPrompt) {
-        try {
-          console.log('🎨 Generating stylized image...');
-          const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${OPENAI_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'gpt-image-1',
-              prompt: `Professional marketing campaign visual: ${parsedResult.visualGeneration.backgroundPrompt}. ${parsedResult.visualGeneration.titleStylePrompt}. Style: luxurious, sophisticated, high-end marketing, premium brand aesthetic. Format: 1080x1920 vertical orientation perfect for mobile campaign display.`,
-              size: '1024x1792',
-              quality: 'high',
-              output_format: 'png'
-            }),
-          });
-
-          if (imageResponse.ok) {
-            const imageData = await imageResponse.json();
-            if (imageData.data && imageData.data[0] && imageData.data[0].b64_json) {
-              generatedImage = `data:image/png;base64,${imageData.data[0].b64_json}`;
-              console.log('✅ Image generated successfully');
-            }
-          } else {
-            console.log('⚠️ Image generation failed, continuing without image');
-          }
-        } catch (imageError) {
-          console.log('⚠️ Image generation error, continuing without image:', imageError.message);
-        }
-      }
-
       return new Response(JSON.stringify({ 
-        success: true,
-        result: parsedResult,
-        generatedImage,
-        visualData
+        success: true, 
+        result: parsedResult 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -251,66 +123,68 @@ Tu dois analyser le contenu web fourni et générer un JSON parfaitement structu
       console.error('❌ Failed to parse OpenAI response as JSON:', parseError);
       console.error('Raw content that failed to parse:', content);
       
-      // Return a fallback response with studio-level design
+      // Return a fallback response
       const fallbackResult = {
-        styleChoisi: "voyage",
-        campaignTitle: "Découvrez l'Exception",
-        campaignSubtitle: "Une expérience premium vous attend",
         palette_couleurs: [
-          {"nom": "Couleur principale", "hexa": "#d4af37"},
-          {"nom": "Couleur secondaire", "hexa": "#1a4c7a"},
-          {"nom": "Couleur d'accent", "hexa": "#ff6b9d"}
+          {"nom": "Couleur principale", "hexa": "#3b82f6"},
+          {"nom": "Couleur secondaire", "hexa": "#1e40af"},
+          {"nom": "Couleur d'accent", "hexa": "#0ea5e9"}
         ],
         polices: [
-          {"nom": "Cormorant Garamond", "utilisation": "Titres"},
-          {"nom": "Inter", "utilisation": "Texte courant"}
+          {"nom": "Montserrat", "utilisation": "Titres"},
+          {"nom": "Roboto", "utilisation": "Texte courant"}
         ],
-        ambiance_et_keywords: ["voyage", "premium", "luxe", "sophistication"],
-        extrait_du_ton_editorial: "Communication élégante et sophistiquée, ton premium avec une approche chaleureuse et exclusive.",
+        ambiance_et_keywords: ["moderne", "professionnel", "dynamique"],
+        extrait_du_ton_editorial: "Ton moderne et professionnel, orienté vers l'engagement client.",
+        slogan_officiel: null,
         wording_jeu_concours: {
-          titre: "Tentez Votre Chance",
-          sous_titre: "Une aventure exceptionnelle vous attend", 
-          mecanique: "Tournez la roue et découvrez votre prix",
-          avantage_client: "Des récompenses exclusives à gagner",
-          call_to_action: "JOUER MAINTENANT"
+          titre: "Participez et gagnez !",
+          sous_titre: "Tentez votre chance et remportez de superbes prix",
+          mecanique: "Remplissez le formulaire pour participer",
+          avantage_client: "Des prix exceptionnels à gagner",
+          call_to_action: "PARTICIPER"
         },
-        wheelSegments: [
-          {"label": "Séjour Premium", "color": "#d4af37", "probability": 0.2, "isWinning": true},
-          {"label": "Week-end Détente", "color": "#1a4c7a", "probability": 0.25, "isWinning": true},
-          {"label": "Bon d'achat", "color": "#ff6b9d", "probability": 0.25, "isWinning": true},
-          {"label": "Réessayez", "color": "#64748b", "probability": 0.3, "isWinning": false}
-        ],
-        designElements: {
-          backgroundStyle: "Dégradé sophistiqué bleu-doré avec effets de profondeur",
-          graphicElements: ["Formes géométriques élégantes", "Éléments premium", "Effets de lumière dorée"],
-          layoutStyle: "Composition centrée avec hiérarchie visuelle forte"
+        structure_visuelle: {
+          format_pc_16_9: {
+            logo: "En haut à gauche",
+            image_fond: "En arrière-plan avec overlay",
+            emplacements_textes: {
+              titre: "Centré en haut",
+              sous_titre: "Sous le titre",
+              mecanique: "Centre de l'écran",
+              avantage_client: "Bas de l'écran",
+              call_to_action: "Bouton proéminent en bas"
+            }
+          },
+          format_tablette: {
+            logo: "En haut centré",
+            image_fond: "Adapté au format tablette",
+            emplacements_textes: {
+              titre: "Centré",
+              sous_titre: "Sous le titre",
+              mecanique: "Centre",
+              avantage_client: "Bas",
+              call_to_action: "Bouton en bas"
+            }
+          },
+          format_mobile_9_16: {
+            logo: "En haut centré",
+            image_fond: "Optimisé mobile",
+            emplacements_textes: {
+              titre: "Haut de l'écran",
+              sous_titre: "Sous le titre",
+              mecanique: "Centre",
+              avantage_client: "Avant le bouton",
+              call_to_action: "Bouton fixe en bas"
+            }
+          }
         },
-        visualGeneration: {
-          backgroundPrompt: "Professional luxury travel campaign background with golden and blue gradients",
-          titleStylePrompt: "Elegant stylized text with golden effects and sophisticated typography"
-        },
-        commentaires_design: "Design premium avec une approche voyage luxe et des éléments visuels sophistiqués pour maximiser l'engagement."
-      };
-
-      // Generate visual data for fallback
-      const fallbackVisualData = {
-        title: fallbackResult.wording_jeu_concours?.titre || "Tentez Votre Chance",
-        subtitle: fallbackResult.wording_jeu_concours?.sous_titre || "Une aventure exceptionnelle vous attend",
-        cta: fallbackResult.wording_jeu_concours?.call_to_action || "JOUER MAINTENANT",
-        backgroundImage: body.backgroundUrl || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=1920&fit=crop",
-        logo: body.logoUrl || "",
-        style: fallbackResult.styleChoisi || "voyage",
-        colors: {
-          primary: fallbackResult.palette_couleurs?.[0]?.hexa || "#d4af37",
-          secondary: fallbackResult.palette_couleurs?.[1]?.hexa || "#1a4c7a",
-          accent: fallbackResult.palette_couleurs?.[2]?.hexa || "#ff6b9d"
-        }
+        commentaires_design: "Design moderne et épuré, optimisé pour tous les formats d'écran."
       };
 
       return new Response(JSON.stringify({ 
         success: true, 
         result: fallbackResult,
-        visualData: fallbackVisualData,
         warning: 'Fallback result used due to parsing error'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

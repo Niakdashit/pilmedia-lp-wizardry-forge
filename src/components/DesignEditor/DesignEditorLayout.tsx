@@ -8,8 +8,15 @@ import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
 
 const DesignEditorLayout: React.FC = () => {
-  // Intelligent device selection - desktop for editing, tablet/mobile for preview
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  // Détection automatique de l'appareil
+  const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
+    const width = window.innerWidth;
+    if (width >= 1024) return 'desktop';
+    if (width >= 768) return 'tablet';
+    return 'mobile';
+  };
+
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
@@ -39,43 +46,6 @@ const DesignEditorLayout: React.FC = () => {
             secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
             accent: colors[0] || '#45b7d1'
           }
-        }
-      }));
-    }
-  };
-
-  // Gestionnaire pour les campagnes générées par IA
-  const handleAICampaignGenerated = (campaignData: any) => {
-    console.log('Campagne IA générée:', campaignData);
-    
-    // Appliquer les éléments au canvas
-    if (campaignData.elements) {
-      setCanvasElements(campaignData.elements);
-    }
-    
-    // Appliquer la configuration de la roue
-    if (campaignData.wheelConfig) {
-      setCampaignConfig((prev: any) => ({
-        ...prev,
-        wheelConfig: campaignData.wheelConfig,
-        design: {
-          ...prev?.design,
-          wheelConfig: campaignData.wheelConfig
-        }
-      }));
-    }
-    
-    // Appliquer les données de marque
-    if (campaignData.brandData) {
-      const brandColors = campaignData.brandData.colors;
-      setExtractedColors([brandColors.primary, brandColors.secondary, brandColors.accent]);
-      
-      setCampaignConfig((prev: any) => ({
-        ...prev,
-        brandData: campaignData.brandData,
-        design: {
-          ...prev?.design,
-          brandColors: brandColors
         }
       }));
     }
@@ -176,7 +146,9 @@ const DesignEditorLayout: React.FC = () => {
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="flex-1 flex items-center justify-center bg-gray-100 group">
+          <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
+            selectedDevice === 'tablet' ? 'fixed inset-0 z-40' : ''
+          }`}>
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -184,33 +156,10 @@ const DesignEditorLayout: React.FC = () => {
             >
               Mode édition
             </button>
-            {/* Device-specific preview container */}
-            <div className={`
-              ${selectedDevice === 'desktop' ? 'max-w-[810px] w-full' : ''}
-              ${selectedDevice === 'tablet' ? 'w-[768px] h-[1024px] bg-white rounded-2xl shadow-2xl border border-gray-300 overflow-hidden' : ''}
-              ${selectedDevice === 'mobile' ? 'w-[375px] h-[812px] bg-white rounded-[2.5rem] shadow-2xl border-4 border-gray-800 overflow-hidden relative' : ''}
-              transition-all duration-300 ease-in-out
-            `}>
-              {selectedDevice === 'mobile' && (
-                <>
-                  {/* Mobile notch */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
-                  {/* Mobile home indicator */}
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gray-400 rounded-full"></div>
-                </>
-              )}
-              
-              <div className={`
-                w-full h-full
-                ${selectedDevice === 'mobile' ? 'pt-6 pb-4' : ''}
-                ${selectedDevice === 'tablet' ? 'p-2' : ''}
-              `}>
-                <FunnelUnlockedGame
-                  campaign={generateCampaignFromCanvas()}
-                  previewMode={selectedDevice}
-                />
-              </div>
-            </div>
+            <FunnelUnlockedGame
+              campaign={generateCampaignFromCanvas()}
+              previewMode={selectedDevice}
+            />
           </div>
         ) : (
           /* Design Editor Mode */
@@ -224,7 +173,6 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              onAICampaignGenerated={handleAICampaignGenerated}
             />
             
             {/* Main Canvas Area */}
