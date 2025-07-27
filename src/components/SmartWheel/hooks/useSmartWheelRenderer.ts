@@ -139,12 +139,13 @@ export const useSmartWheelRenderer = ({
   const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
 
-    // Utiliser la couleur personnalisée seulement si c'est un style "classique" ou si explicitement demandé
+    // Utiliser la couleur personnalisée seulement pour le style "classique"
     const getBorderColor = (index: number = 0) => {
-      // Pour les styles prédéfinis avec leurs propres couleurs, ne pas utiliser customBorderColor
-      if (borderStyleName !== 'classic' && borderStyleConfig.colors.length > 1) {
+      // Pour tous les styles prédéfinis sauf "classic", toujours utiliser leurs couleurs définies
+      if (borderStyleName !== 'classic') {
         return borderStyleConfig.colors[index];
       }
+      // Pour "classic", utiliser la couleur personnalisée ou la couleur par défaut
       return customBorderColor || borderStyleConfig.colors[index];
     };
 
@@ -165,7 +166,8 @@ export const useSmartWheelRenderer = ({
 
       case 'metallic':
       case 'luxury':
-        const colors = (borderStyleName !== 'classic' && borderStyleConfig.colors.length > 1) 
+        // Pour les styles prédéfinis, toujours utiliser leurs couleurs définies
+        const colors = borderStyleName !== 'classic' 
           ? borderStyleConfig.colors 
           : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
         const metallicGradient = createMetallicGradient(ctx, colors, centerX, centerY, radius);
@@ -212,7 +214,7 @@ export const useSmartWheelRenderer = ({
             centerX - radius, centerY - radius,
             centerX + radius, centerY + radius
           );
-          const gradientColors = (borderStyleName !== 'classic' && borderStyleConfig.colors.length > 1) 
+          const gradientColors = borderStyleName !== 'classic' 
             ? borderStyleConfig.colors 
             : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
           gradientColors.forEach((color, index) => {
