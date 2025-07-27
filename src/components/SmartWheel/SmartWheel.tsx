@@ -33,6 +33,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   const [showParticipationModal, setShowParticipationModal] = useState(false);
   const [participantData, setParticipantData] = useState<any>(null);
   const [finalResult, setFinalResult] = useState<any>(null);
+  const [showWheelAnimation, setShowWheelAnimation] = useState(false);
 
   // Synchroniser l'état local avec la prop borderStyle
   useEffect(() => {
@@ -110,12 +111,18 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     setParticipantData(formData);
     setShowParticipationModal(false);
     setMode2State('wheel');
+    
+    // Déclencher l'animation après la fermeture de la modal
+    setTimeout(() => {
+      setShowWheelAnimation(true);
+    }, 100);
   };
   
   const handlePlayAgain = () => {
     setMode2State('form');
     setParticipantData(null);
     setFinalResult(null);
+    setShowWheelAnimation(false);
   };
 
   // Fonction pour déterminer la position optimale du bouton
@@ -213,7 +220,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   return (
     <>
-      <div className={`${getLayoutClasses()} ${className} ${!isMode1 && mode2State === 'wheel' ? 'animate-wheel-up' : ''}`}>
+      <div className={`${getLayoutClasses()} ${className} ${showWheelAnimation ? 'animate-wheel-up' : ''}`}>
         {/* Container de la roue */}
         <div className="relative flex items-center justify-center" style={{
           width: actualSize,
