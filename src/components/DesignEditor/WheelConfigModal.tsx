@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import BorderStyleSelector from '../SmartWheel/components/BorderStyleSelector';
 
 interface WheelConfigModalProps {
@@ -24,53 +25,57 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
   onScaleChange,
   selectedDevice
 }) => {
+  // Optimized event handlers with useCallback
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const handleScaleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    console.log('Scale change:', value); // Debug log
+    onScaleChange(value);
+  }, [onScaleChange]);
+
+  const handleBorderColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    console.log('Border color change:', value); // Debug log
+    onBorderColorChange(value);
+  }, [onBorderColorChange]);
+
+  const handleBorderStyleChange = useCallback((style: string) => {
+    console.log('Border style change:', style); // Debug log
+    onBorderStyleChange(style);
+  }, [onBorderStyleChange]);
+
   if (!isOpen) return null;
 
-  // Calculer la position de la modale selon l'appareil
-  const getModalPosition = () => {
+  // Get modal position styles based on device
+  const getModalClasses = () => {
     switch (selectedDevice) {
       case 'mobile':
-        return {
-          position: 'fixed' as const,
-          right: '20px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          maxWidth: '300px',
-          maxHeight: '80vh',
-          overflowY: 'auto' as const
-        };
+        return 'fixed right-5 top-1/2 -translate-y-1/2 max-w-[300px] max-h-[80vh]';
       case 'tablet':
-        return {
-          position: 'fixed' as const,
-          right: '20px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          maxWidth: '350px',
-          maxHeight: '80vh',
-          overflowY: 'auto' as const
-        };
+        return 'fixed right-5 top-1/2 -translate-y-1/2 max-w-[350px] max-h-[80vh]';
       case 'desktop':
       default:
-        return {
-          position: 'fixed' as const,
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          maxWidth: '600px',
-          maxHeight: '400px',
-          overflowY: 'auto' as const
-        };
+        return 'fixed bottom-5 left-1/2 -translate-x-1/2 max-w-[600px] max-h-[400px]';
     }
   };
 
-  const modalStyle = getModalPosition();
-
-  return (
+  const modalContent = (
     <>
-      {/* Modal */}
+      {/* Backdrop with high z-index */}
       <div 
-        className="bg-white rounded-lg shadow-xl z-50 border"
-        style={modalStyle}
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9998] pointer-events-auto"
+        onClick={handleBackdropClick}
+      />
+      
+      {/* Modal with highest z-index */}
+      <div 
+        className={`${getModalClasses()} bg-white rounded-lg shadow-xl z-[9999] border overflow-y-auto pointer-events-auto`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4">
           {/* Header */}
@@ -78,7 +83,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">Configuration de la roue</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -86,9 +91,9 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
             </button>
           </div>
 
-          {/* Contrôles */}
+          {/* Controls */}
           <div className="space-y-6">
-            {/* Taille de la roue */}
+            {/* Wheel size */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Taille de la roue: {Math.round(wheelScale * 100)}%
@@ -99,8 +104,8 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 max="2"
                 step="0.1"
                 value={wheelScale}
-                onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                onChange={handleScaleChange}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer pointer-events-auto"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>50%</span>
@@ -108,7 +113,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
               </div>
             </div>
 
-            {/* Couleur de la bordure */}
+            {/* Border color */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Couleur de la bordure
@@ -117,34 +122,39 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 <input
                   type="color"
                   value={wheelBorderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                  onChange={handleBorderColorChange}
+                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer pointer-events-auto"
                 />
                 <input
                   type="text"
                   value={wheelBorderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
+                  onChange={handleBorderColorChange}
                   placeholder="#841b60"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pointer-events-auto"
                 />
               </div>
             </div>
 
-            {/* Styles de bordure */}
+            {/* Border styles */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Style de bordure
               </label>
-              <BorderStyleSelector
-                currentStyle={wheelBorderStyle}
-                onStyleChange={onBorderStyleChange}
-              />
+              <div className="pointer-events-auto">
+                <BorderStyleSelector
+                  currentStyle={wheelBorderStyle}
+                  onStyleChange={handleBorderStyleChange}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </>
   );
+
+  // Use portal to render modal at body level
+  return createPortal(modalContent, document.body);
 };
 
 export default WheelConfigModal;
