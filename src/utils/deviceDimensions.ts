@@ -1,8 +1,8 @@
 // Unified device dimensions for the entire application - Optimized for editor display
 export const STANDARD_DEVICE_DIMENSIONS = {
   desktop: { width: 1200, height: 800 },
-  tablet: { width: 1024, height: 1366 },   // Portrait format for editor preview - larger to fill space
-  mobile: { width: 375, height: 812 }      // iPhone X/11/12/13 realistic mobile ratio
+  tablet: { width: 850, height: 1200 },   // Portrait format for editor preview
+  mobile: { width: 375, height: 812 }     // iPhone X/11/12/13 realistic mobile ratio
 } as const;
 
 export type DeviceType = keyof typeof STANDARD_DEVICE_DIMENSIONS;
