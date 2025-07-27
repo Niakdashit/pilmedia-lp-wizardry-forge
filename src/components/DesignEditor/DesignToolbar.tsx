@@ -1,15 +1,14 @@
 import React from 'react';
-import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo } from 'lucide-react';
+import { Monitor, Download, Eye, Share2, Undo, Redo } from 'lucide-react';
 
 interface DesignToolbarProps {
-  selectedDevice: 'desktop' | 'tablet' | 'mobile';
-  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
+  selectedDevice: 'desktop';
+  onDeviceChange: (device: 'desktop') => void;
   onPreviewToggle?: () => void;
   isPreviewMode?: boolean;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = ({
-  selectedDevice,
   onDeviceChange,
   onPreviewToggle,
   isPreviewMode = false
@@ -29,40 +28,14 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
         </div>
       </div>
 
-      {/* Center Section - Device Selector */}
+      {/* Center Section - Desktop Only */}
       <div className="flex items-center bg-gray-100 rounded-lg p-1">
         <button
           onClick={() => onDeviceChange('desktop')}
-          className={`p-2 rounded-md transition-colors ${
-            selectedDevice === 'desktop' 
-              ? 'bg-white shadow-sm text-blue-600' 
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
+          className="p-2 rounded-md bg-white shadow-sm text-blue-600"
           title="Desktop"
         >
           <Monitor className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDeviceChange('tablet')}
-          className={`p-2 rounded-md transition-colors ${
-            selectedDevice === 'tablet' 
-              ? 'bg-white shadow-sm text-blue-600' 
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-          title="Tablet"
-        >
-          <Tablet className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDeviceChange('mobile')}
-          className={`p-2 rounded-md transition-colors ${
-            selectedDevice === 'mobile' 
-              ? 'bg-white shadow-sm text-blue-600' 
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-          title="Mobile"
-        >
-          <Smartphone className="w-4 h-4" />
         </button>
       </div>
 
