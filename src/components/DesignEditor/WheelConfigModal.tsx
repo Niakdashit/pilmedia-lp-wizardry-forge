@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import BorderStyleSelector from '../SmartWheel/components/BorderStyleSelector';
 
@@ -25,6 +25,60 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
   onScaleChange,
   selectedDevice
 }) => {
+  // Handle ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  }, [onClose]);
+
+  const handleModalClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleCloseClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  }, [onClose]);
+
+  const handleScaleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const value = parseFloat(e.target.value);
+    onScaleChange(value);
+  }, [onScaleChange]);
+
+  const handleColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onBorderColorChange(e.target.value);
+  }, [onBorderColorChange]);
+
+  const handleTextColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onBorderColorChange(e.target.value);
+  }, [onBorderColorChange]);
+
+  const handleBorderStyleChange = useCallback((style: string) => {
+    onBorderStyleChange(style);
+  }, [onBorderStyleChange]);
+
   if (!isOpen) return null;
 
   const getModalPosition = () => {
@@ -40,17 +94,29 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999]">
+    <div 
+      className="fixed inset-0 pointer-events-auto"
+      style={{ 
+        zIndex: 99999,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
+    >
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50"
-        onClick={onClose}
+        className="fixed inset-0 bg-black/50 pointer-events-auto cursor-pointer"
+        onClick={handleBackdropClick}
+        style={{ zIndex: 99999 }}
       />
       
       {/* Modal */}
       <div 
-        className={`${getModalPosition()} bg-white rounded-xl shadow-2xl border overflow-auto z-[10000]`}
-        onClick={(e) => e.stopPropagation()}
+        className={`${getModalPosition()} bg-white rounded-xl shadow-2xl border overflow-auto pointer-events-auto`}
+        onClick={handleModalClick}
+        style={{ zIndex: 100000 }}
       >
         <div className="p-6">
           {/* Header */}
@@ -59,8 +125,9 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
               Configuration de la roue
             </h3>
             <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
+              onClick={handleCloseClick}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full pointer-events-auto"
+              style={{ pointerEvents: 'auto' }}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -81,8 +148,9 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 max="2"
                 step="0.1"
                 value={wheelScale}
-                onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                onChange={handleScaleChange}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider pointer-events-auto"
+                style={{ pointerEvents: 'auto' }}
               />
               <div className="flex justify-between text-xs text-gray-500 mt-2">
                 <span>50%</span>
@@ -99,15 +167,17 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
                 <input
                   type="color"
                   value={wheelBorderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="w-12 h-12 rounded border-2 border-gray-300 cursor-pointer"
+                  onChange={handleColorChange}
+                  className="w-12 h-12 rounded border-2 border-gray-300 cursor-pointer pointer-events-auto"
+                  style={{ pointerEvents: 'auto' }}
                 />
                 <input
                   type="text"
                   value={wheelBorderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
+                  onChange={handleTextColorChange}
                   placeholder="#841b60"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pointer-events-auto"
+                  style={{ pointerEvents: 'auto' }}
                 />
               </div>
             </div>
@@ -117,10 +187,12 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Style de bordure
               </label>
-              <BorderStyleSelector
-                currentStyle={wheelBorderStyle}
-                onStyleChange={onBorderStyleChange}
-              />
+              <div className="pointer-events-auto" style={{ pointerEvents: 'auto' }}>
+                <BorderStyleSelector
+                  currentStyle={wheelBorderStyle}
+                  onStyleChange={handleBorderStyleChange}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -128,7 +200,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
     </div>
   );
 
-  // Use portal to render outside of component tree
+  // Create portal with specific container
   return createPortal(modalContent, document.body);
 };
 
