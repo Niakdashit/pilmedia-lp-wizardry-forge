@@ -34,6 +34,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const wheelBorderStyle = campaign?.design?.wheelBorderStyle || 'classic';
   const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
   const wheelScale = campaign?.design?.wheelConfig?.scale || 2;
+  const isMonochromeBorder = campaign?.design?.wheelConfig?.isMonochromeBorder || false;
 
   // Fonctions pour mettre à jour la configuration de la roue
   const setWheelBorderStyle = (style: string) => {
@@ -72,6 +73,21 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           wheelConfig: {
             ...campaign?.design?.wheelConfig,
             scale: scale
+          }
+        }
+      });
+    }
+  };
+
+  const setIsMonochromeBorder = (isMonochrome: boolean) => {
+    if (onCampaignChange) {
+      onCampaignChange({
+        ...campaign,
+        design: {
+          ...campaign?.design,
+          wheelConfig: {
+            ...campaign?.design?.wheelConfig,
+            isMonochromeBorder: isMonochrome
           }
         }
       });
@@ -191,6 +207,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                     theme="modern"
                     size={getWheelSize()}
                     borderStyle={wheelBorderStyle}
+                    customBorderColor={wheelBorderColor}
+                    isMonochromeBorder={isMonochromeBorder}
                     brandColors={{
                       primary: wheelBorderColor,
                       secondary: '#4ecdc4',
@@ -265,9 +283,11 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
           wheelBorderStyle={wheelBorderStyle}
           wheelBorderColor={wheelBorderColor}
           wheelScale={wheelScale}
+          isMonochromeBorder={isMonochromeBorder}
           onBorderStyleChange={setWheelBorderStyle}
           onBorderColorChange={setWheelBorderColor}
           onScaleChange={setWheelScale}
+          onMonochromeBorderChange={setIsMonochromeBorder}
           selectedDevice={selectedDevice}
         />
       </div>

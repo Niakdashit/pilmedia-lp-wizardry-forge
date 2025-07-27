@@ -53,6 +53,7 @@ export interface SmartWheelProps {
   };
   borderStyle?: string; // Nouveau prop pour le style de bordure
   customBorderColor?: string; // Couleur personnalisée pour le style de bordure classic
+  isMonochromeBorder?: boolean; // Applique la couleur personnalisée à toute la bordure
   className?: string;
   maxSize?: number; // Limite la taille maximum de la roue
   buttonPosition?: 'top' | 'bottom' | 'left' | 'right' | 'center'; // Position du bouton
