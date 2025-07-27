@@ -210,6 +210,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                     theme="modern"
                     size={getWheelSize()}
                     borderStyle={wheelBorderStyle}
+                    fullBorder={wheelFullBorder}
                     brandColors={{
                       primary: wheelBorderColor,
                       secondary: '#4ecdc4',
