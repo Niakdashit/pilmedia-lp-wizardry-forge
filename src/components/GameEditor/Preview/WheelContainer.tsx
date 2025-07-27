@@ -11,6 +11,7 @@ interface WheelContainerProps {
   isVisible?: boolean;
   onResult?: (segment: { id: string; label: string; color: string }) => void;
   onShowParticipationModal?: () => void;
+  onParticipationComplete?: (formData: any) => void;
   scale?: number;
 }
 
@@ -21,6 +22,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   isVisible = true,
   onResult,
   onShowParticipationModal,
+  onParticipationComplete,
   scale = 1.7 // Échelle par défaut à 1.7x
 }) => {
   const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
@@ -91,6 +93,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         brandColors={brandColors}
         buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : 'bottom'}
         onShowParticipationModal={onShowParticipationModal}
+        onParticipationComplete={onParticipationComplete}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: brandColors?.primary || "#8E44AD",

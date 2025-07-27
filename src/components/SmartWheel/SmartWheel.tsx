@@ -15,6 +15,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   onSpin,
   onResult,
   onShowParticipationModal,
+  onParticipationComplete,
   brandColors,
   customButton,
   borderStyle = 'classic',
@@ -39,6 +40,31 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   useEffect(() => {
     setCurrentBorderStyle(borderStyle);
   }, [borderStyle]);
+
+  // Écouter le callback de participation externe
+  useEffect(() => {
+    if (onParticipationComplete) {
+      // Créer une fonction temporaire pour gérer le callback externe
+      const handleExternalParticipation = (formData: any) => {
+        setParticipantData(formData);
+        setMode2State('wheel');
+        
+        // Déclencher l'animation après la transition d'état
+        setTimeout(() => {
+          setShowWheelAnimation(true);
+        }, 100);
+      };
+      
+      // Stocker la fonction pour pouvoir l'appeler depuis l'extérieur
+      (window as any).__wheelParticipationHandler = handleExternalParticipation;
+    }
+    
+    return () => {
+      if ((window as any).__wheelParticipationHandler) {
+        delete (window as any).__wheelParticipationHandler;
+      }
+    };
+  }, [onParticipationComplete]);
 
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
