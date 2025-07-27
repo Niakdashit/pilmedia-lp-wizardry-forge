@@ -80,16 +80,19 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   };
 
   const handleBorderStyleChange = (style: string) => {
+    console.log('🎨 Changement de style de bordure:', style);
     setWheelBorderStyle(style);
     handleWheelConfigUpdate({ wheelBorderStyle: style, borderStyle: style });
   };
 
   const handleBorderColorChange = (color: string) => {
+    console.log('🎨 Changement de couleur de bordure:', color);
     setWheelBorderColor(color);
     handleWheelConfigUpdate({ wheelBorderColor: color, borderColor: color });
   };
 
   const handleScaleChange = (scale: number) => {
+    console.log('🎨 Changement de taille:', scale);
     setWheelScale(scale);
     handleWheelConfigUpdate({ wheelScale: scale });
   };

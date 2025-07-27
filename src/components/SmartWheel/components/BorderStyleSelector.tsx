@@ -14,7 +14,10 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
       
       
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {Object.entries(BORDER_STYLES).map(([key, style]) => <button key={key} onClick={() => onStyleChange(key)} className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${currentStyle === key ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
+        {Object.entries(BORDER_STYLES).map(([key, style]) => <button key={key} onClick={() => {
+          console.log('🎯 Clic sur style de bordure:', key, style.name);
+          onStyleChange(key);
+        }} className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${currentStyle === key ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
             <div className="flex flex-col items-center space-y-2">
               {/* Aperçu visuel du style */}
               <div className="w-12 h-12 rounded-full border-4 flex items-center justify-center" style={{
