@@ -114,6 +114,13 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     '4xl': '36px'
   };
 
+  // Debug des éléments
+  useEffect(() => {
+    console.log('🔍 Campaign data:', campaign);
+    console.log('📝 Custom texts:', campaign?.design?.customTexts);
+    console.log('🖼️ Custom images:', campaign?.design?.customImages);
+  }, [campaign]);
+
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
     const segments = campaign?.design?.segments || [
