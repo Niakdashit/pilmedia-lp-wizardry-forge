@@ -16,7 +16,7 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
     const offsetX = campaign?.design?.gameOffsetX || 0;
     const offsetY = campaign?.design?.gameOffsetY || 0;
     
-    // Pour la roue, forcer toujours le centrage parfait sans décalage ni position
+    // Pour la roue, position identique à l'éditeur (en bas, visible entièrement)
     if (campaign?.type === 'wheel') {
       return {
         width: '100%',
@@ -24,7 +24,7 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
         minWidth: '1400px',
         minHeight: '900px',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'center',
         position: 'relative' as const,
         overflow: 'hidden',
@@ -33,8 +33,7 @@ const GamePositioner: React.FC<GamePositionerProps> = ({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        // Ignorer complètement les offsets pour la roue
-        transform: 'none'
+        transform: 'translateY(-20px)'
       };
     }
     

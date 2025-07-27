@@ -3,7 +3,7 @@ import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
-import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+
 import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 
 const DesignEditorLayout: React.FC = () => {
@@ -49,12 +49,11 @@ const DesignEditorLayout: React.FC = () => {
     }
   };
 
-  // Auto-responsive logic
-  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
-  
+  // Auto-responsive logic - simplified for compatibility
   const adaptationSuggestions = useMemo(() => {
-    return getAdaptationSuggestions(canvasElements);
-  }, [canvasElements, getAdaptationSuggestions]);
+    // Simple placeholder for now - return empty array
+    return [];
+  }, [canvasElements]);
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
   const generateCampaignFromCanvas = () => {

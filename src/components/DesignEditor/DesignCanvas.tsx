@@ -5,12 +5,12 @@ import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
-import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useWheelConfiguration } from '../../hooks/useWheelConfiguration';
-import type { DeviceType } from '../../utils/deviceDimensions';
+import { DEVICE_CONSTRAINTS } from '../QuickCampaign/Preview/utils/previewConstraints';
 
 export interface DesignCanvasProps {
-  selectedDevice: DeviceType;
+  selectedDevice: 'desktop' | 'tablet' | 'mobile';
   elements: any[];
   onElementsChange: (elements: any[]) => void;
   background?: {
@@ -79,10 +79,10 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   };
 
-  // Intégration du système auto-responsive
-  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+  // Utiliser le système responsif unifié
+  const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
 
-  // Convertir les éléments en format compatible avec useAutoResponsive
+  // Convertir les éléments en format compatible avec useUniversalResponsive
   const responsiveElements = useMemo(() => {
     return elements.map(element => ({
       id: element.id,
@@ -93,6 +93,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
       fontSize: element.fontSize || 16,
       type: element.type,
       content: element.content,
+      textAlign: (element.textAlign || 'left') as 'left' | 'center' | 'right',
       // Préserver les autres propriétés
       ...element
     }));
@@ -102,8 +103,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const elementsWithResponsive = useMemo(() => {
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
+  
   const getCanvasSize = () => {
-    return DEVICE_DIMENSIONS[selectedDevice];
+    const constraints = DEVICE_CONSTRAINTS[selectedDevice];
+    return {
+      width: constraints.maxWidth,
+      height: constraints.maxHeight
+    };
   };
   const canvasSize = getCanvasSize();
   const handleElementUpdate = (id: string, updates: any) => {
@@ -165,18 +171,26 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               }
             }}
           >
-            {/* Canvas Background */}
-            <div className="absolute inset-0" style={{
-            background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-          }}>
+            {/* Canvas Background - Identique à l'aperçu */}
+            <div 
+              className="absolute inset-0" 
+              style={{
+                background: background?.type === 'image' 
+                  ? `url(${background.value}) center/cover no-repeat` 
+                  : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
               {/* Clouds */}
               
               
               
               
               
-              {/* Roue de la fortune en bas */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-3/5">
+              {/* Roue de la fortune - Position identique à l'aperçu */}
+              <div className="absolute inset-0 flex items-end justify-center" style={{ transform: 'translateY(-20px)' }}>
                 <div 
                   onClick={() => setShowBorderModal(true)}
                   className="cursor-pointer hover:scale-105 transition-transform duration-200"
