@@ -1,8 +1,8 @@
 // Unified device dimensions for the entire application
 export const STANDARD_DEVICE_DIMENSIONS = {
   desktop: { width: 1700, height: 850 },
-  tablet: { width: 850, height: 1200 },
-  mobile: { width: 520, height: 1100 }
+  tablet: { width: 820, height: 1180 }, // Plus réaliste: iPad Pro 11" (834x1194) avec ratio d'affichage 
+  mobile: { width: 375, height: 812 }   // iPhone 13/14 standard (375x812)
 } as const;
 
 export type DeviceType = keyof typeof STANDARD_DEVICE_DIMENSIONS;
