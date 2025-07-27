@@ -213,7 +213,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   return (
     <>
-      <div className={`${getLayoutClasses()} ${className}`}>
+      <div className={`${getLayoutClasses()} ${className} ${!isMode1 && mode2State === 'wheel' ? 'animate-wheel-up' : ''}`}>
         {/* Container de la roue */}
         <div className="relative flex items-center justify-center" style={{
           width: actualSize,
