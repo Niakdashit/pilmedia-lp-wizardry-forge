@@ -17,7 +17,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Classique',
     type: 'solid',
     colors: ['#d1d5db'],
-    width: 4,
+    width: 6,
     effects: {
       shadow: true
     }
