@@ -51,13 +51,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+    <div className="flex-1 bg-gray-100 p-4 overflow-auto">
       <div className="flex justify-center">
         <ScaledGamePreview
           campaign={editorCampaign}
           selectedDevice={selectedDevice}
-          containerWidth={canvasSize.width * 0.9}
-          containerHeight={canvasSize.height * 0.8}
+          containerWidth={canvasSize.width * 0.95}
+          containerHeight={canvasSize.height * 0.9}
           onCampaignChange={handleCampaignUpdate}
         />
       </div>

@@ -1,8 +1,7 @@
+
 import React, { useRef, useEffect, useState } from 'react';
-import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
-import { SmartWheel } from '../SmartWheel';
+import CanvasGameRenderer from '../funnels/components/CanvasGameRenderer';
 import WheelConfigModal from './WheelConfigModal';
-import InteractiveCustomElementsRenderer from '../ModernEditor/components/InteractiveCustomElementsRenderer';
 
 interface ScaledGamePreviewProps {
   campaign: any;
@@ -20,15 +19,9 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   onCampaignChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [showWheelConfig, setShowWheelConfig] = useState(false);
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [dragState, setDragState] = useState({
-    isDragging: false,
-    draggedElementId: null as string | null,
-    draggedElementType: null as 'text' | 'image' | null,
-    currentOffset: { x: 0, y: 0 }
-  });
   
   // États pour la configuration de la roue
   const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.borderStyle || 'classic');
@@ -37,19 +30,29 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
-    // Original preview dimensions (these are the dimensions GameCanvasPreview uses)
+    // Optimized device dimensions for better editor display
     const previewDimensions = {
       desktop: { width: 1200, height: 800 },
-      tablet: { width: 768, height: 1024 },
-      mobile: { width: 375, height: 667 }
+      tablet: { width: 768, height: 1024 }, // iPad standard
+      mobile: { width: 480, height: 960 }   // Optimized mobile size
     };
 
     const original = previewDimensions[selectedDevice];
     
-    // Calculate scale to fit while maintaining aspect ratio
-    const scaleX = containerWidth / original.width;
-    const scaleY = containerHeight / original.height;
-    const finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+    // Calculate scale to fit while maintaining aspect ratio with minimal padding
+    const availableWidth = containerWidth - 40; // Reduced padding
+    const availableHeight = containerHeight - 40;
+    
+    const scaleX = availableWidth / original.width;
+    const scaleY = availableHeight / original.height;
+    
+    let finalScale;
+    if (selectedDevice === 'desktop') {
+      finalScale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+    } else {
+      // For mobile and tablet, use optimized scaling for maximum space utilization
+      finalScale = Math.min(scaleX, scaleY) * 0.98; // Optimized scaling
+    }
     
     setScale(finalScale);
   }, [selectedDevice, containerWidth, containerHeight]);
@@ -88,51 +91,27 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
     handleWheelConfigUpdate({ wheelScale: scale });
   };
 
-  // Gestionnaires pour les éléments interactifs
-  const handleElementSelect = (elementId: string) => {
-    setSelectedElementId(elementId);
-  };
-
-  const handleDragStart = (_e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'text' | 'image') => {
-    setDragState({
-      isDragging: true,
-      draggedElementId: elementId,
-      draggedElementType: elementType,
-      currentOffset: { x: 0, y: 0 }
-    });
-  };
-
-  // Size map pour les textes
-  const sizeMap = {
-    xs: '12px',
-    sm: '14px',
-    base: '16px',
-    lg: '18px',
-    xl: '20px',
-    '2xl': '24px',
-    '3xl': '30px',
-    '4xl': '36px'
-  };
-
-  // Debug des éléments
-  useEffect(() => {
-    console.log('🔍 Campaign data:', campaign);
-    console.log('📝 Custom texts:', campaign?.design?.customTexts);
-    console.log('🖼️ Custom images:', campaign?.design?.customImages);
-  }, [campaign]);
-
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
-    const segments = campaign?.design?.segments || [
-      { id: '1', label: 'Segment 1', color: '#FF6B6B' },
-      { id: '2', label: 'Segment 2', color: '#4ECDC4' },
-      { id: '3', label: 'Segment 3', color: '#45B7D1' },
-      { id: '4', label: 'Segment 4', color: '#96CEB4' },
-      { id: '5', label: 'Segment 5', color: '#FFEAA7' },
-      { id: '6', label: 'Segment 6', color: '#DDA0DD' }
-    ];
+    const getDeviceFrame = () => {
+      if (selectedDevice === 'desktop') {
+        return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
+      } else if (selectedDevice === 'tablet') {
+        return "relative bg-black rounded-[24px] p-3 cursor-pointer";
+      } else {
+        return "relative bg-black rounded-[32px] p-1 cursor-pointer";
+      }
+    };
 
-    const backgroundImage = campaign?.design?.background?.type === 'image' ? campaign.design.background.value : null;
+    const getContentFrame = () => {
+      if (selectedDevice === 'desktop') {
+        return "relative w-full h-full";
+      } else if (selectedDevice === 'tablet') {
+        return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
+      } else {
+        return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
+      }
+    };
 
     return (
       <div 
@@ -143,76 +122,36 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           height: containerHeight
         }}
       >
+        {/* Aperçu principal - utilisé pour l'affichage ET la capture */}
         <div
-          className="relative bg-white shadow-lg rounded-lg overflow-hidden"
+          ref={previewRef}
+          className={getDeviceFrame()}
+          onClick={handleWheelClick}
           style={{
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
-            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px',
-            backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '480px',
+            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '960px'
           }}
         >
-          {/* Couche de base avec la roue */}
-          <div 
-            className="w-full h-full flex justify-center"
-            style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              paddingBottom: '-30%',
-              transform: 'translateY(-20px)'
-            }}
-          >
-            <div onClick={handleWheelClick} className="cursor-pointer">
-              <SmartWheel
-                segments={segments}
-                size={selectedDevice === 'mobile' ? 250 : selectedDevice === 'tablet' ? 300 : 350}
-                borderStyle={wheelBorderStyle}
-                customBorderColor={wheelBorderColor}
-                disabled={false}
-                onSpin={() => {}}
-                onResult={() => {}}
-                gamePosition={{ x: 0, y: 0, scale: wheelScale }}
-                buttonPosition="center"
-                customButton={{
-                  text: "TOURNER",
-                  color: "#841b60",
-                  textColor: "#FFFFFF"
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Couche interactive par-dessus */}
-          <div 
-            className="absolute inset-0"
-            style={{ 
-              pointerEvents: 'auto',
-              zIndex: 10 
-            }}
-          >
-            <InteractiveCustomElementsRenderer
-              customTexts={(campaign?.design?.customTexts || []).map((text: any) => ({
-                ...text,
-                text: text.content || text.text, // Adapter content -> text
-                size: text.style?.fontSize ? 'lg' : 'base',
-                color: text.style?.color || '#000000',
-                bold: text.style?.fontWeight === 'bold',
-                italic: text.style?.fontStyle === 'italic'
-              }))}
-              customImages={campaign?.design?.customImages || []}
-              previewDevice={selectedDevice}
-              sizeMap={sizeMap}
-              selectedElementId={selectedElementId}
-              onElementSelect={handleElementSelect}
-              onDragStart={handleDragStart}
-              dragState={dragState}
+          {selectedDevice === 'mobile' && (
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
+          )}
+          <div className={getContentFrame()}>
+            <CanvasGameRenderer
+              campaign={campaign}
+              formValidated={true}
+              showValidationMessage={false}
+              previewMode={selectedDevice}
+              onGameFinish={() => {}}
+              onGameStart={() => {}}
+              onGameButtonClick={handleWheelClick}
+            />
+            
+            {/* Transparent overlay for configuration */}
+            <div 
+              className="absolute inset-0 bg-transparent cursor-pointer"
+              onClick={handleWheelClick}
             />
           </div>
         </div>
@@ -239,6 +178,26 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   }
 
   // Rendu par défaut pour les autres types de campagnes
+  const getDeviceFrame = () => {
+    if (selectedDevice === 'desktop') {
+      return "relative bg-white shadow-lg rounded-lg overflow-hidden";
+    } else if (selectedDevice === 'tablet') {
+      return "relative bg-black rounded-[24px] p-3";
+    } else {
+      return "relative bg-black rounded-[32px] p-1";
+    }
+  };
+
+  const getContentFrame = () => {
+    if (selectedDevice === 'desktop') {
+      return "relative w-full h-full";
+    } else if (selectedDevice === 'tablet') {
+      return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
+    } else {
+      return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -249,20 +208,28 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       }}
     >
       <div
-        className="relative bg-white shadow-lg rounded-lg overflow-hidden"
+        className={getDeviceFrame()}
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
-          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
+          width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '480px',
+          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '960px'
         }}
       >
-        <GameCanvasPreview
-          campaign={campaign}
-          previewDevice={selectedDevice}
-          disableForm={true}
-          setCampaign={onCampaignChange}
-        />
+        {selectedDevice === 'mobile' && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
+        )}
+        <div className={getContentFrame()}>
+          <CanvasGameRenderer
+            campaign={campaign}
+            formValidated={true}
+            showValidationMessage={false}
+            previewMode={selectedDevice}
+            onGameFinish={() => {}}
+            onGameStart={() => {}}
+            onGameButtonClick={() => {}}
+          />
+        </div>
       </div>
       
       {/* Scale info */}
