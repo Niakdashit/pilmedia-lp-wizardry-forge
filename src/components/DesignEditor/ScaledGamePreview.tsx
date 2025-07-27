@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import html2canvas from 'html2canvas';
 import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
@@ -23,6 +24,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   const [scale, setScale] = useState(1);
   const [showWheelConfig, setShowWheelConfig] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   
   // États pour la configuration de la roue
   const [wheelBorderStyle, setWheelBorderStyle] = useState(campaign?.design?.borderStyle || 'classic');
@@ -31,9 +33,11 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Capture d'écran de l'aperçu
   const capturePreview = async () => {
-    if (previewRef.current) {
+    if (previewRef.current && !isCapturing) {
       try {
         console.log('🎯 Début de la capture d\'écran...');
+        setIsCapturing(true);
+        
         const canvas = await html2canvas(previewRef.current, {
           allowTaint: true,
           useCORS: true,
@@ -43,21 +47,22 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           width: previewRef.current.offsetWidth,
           height: previewRef.current.offsetHeight
         });
+        
         const url = canvas.toDataURL('image/png');
         console.log('✅ Capture réussie, URL générée');
         setScreenshotUrl(url);
       } catch (error) {
         console.error('❌ Erreur lors de la capture d\'écran:', error);
-        // Fallback: afficher directement le composant
         setScreenshotUrl(null);
+      } finally {
+        setIsCapturing(false);
       }
     }
   };
 
-  // Effect pour capturer l'aperçu quand la campagne change
+  // Effect pour capturer l'aperçu - SANS la screenshotUrl dans les dépendances
   useEffect(() => {
-    if (campaign?.type === 'wheel') {
-      // Délai plus long et vérification du rendu
+    if (campaign?.type === 'wheel' && !isCapturing) {
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           capturePreview();
@@ -65,7 +70,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [campaign, selectedDevice, wheelBorderStyle, wheelBorderColor, wheelScale]);
+  }, [campaign?.type, selectedDevice, wheelBorderStyle, wheelBorderColor, wheelScale, campaign?.design, campaign?.gameConfig]);
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
@@ -134,12 +139,13 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
         {/* Aperçu visible pour capture d'écran */}
         <div 
           ref={previewRef}
-          className="fixed opacity-0 pointer-events-none"
+          className="fixed pointer-events-none"
           style={{ 
             top: '50%', 
             left: '50%', 
             transform: 'translate(-50%, -50%)',
-            zIndex: -1 
+            zIndex: -1,
+            opacity: 0
           }}
         >
           <div
@@ -158,7 +164,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           </div>
         </div>
 
-        {/* Affichage de la capture d'écran */}
+        {/* Affichage de la capture d'écran ou du composant direct */}
         <div
           className="relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer"
           onClick={handleWheelClick}
@@ -169,7 +175,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
           }}
         >
-          {screenshotUrl ? (
+          {screenshotUrl && !isCapturing ? (
             <img 
               src={screenshotUrl} 
               alt="Preview"
