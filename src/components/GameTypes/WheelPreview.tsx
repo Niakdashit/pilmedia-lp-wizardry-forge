@@ -96,15 +96,16 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   return (
     <div 
-      className="wheel-preview-container w-full h-full flex items-center justify-center"
+      className="wheel-preview-container w-full h-full flex items-end justify-center"
       style={{
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'center',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        paddingBottom: '-30%'
       }}
     >
       <SmartWheel

@@ -64,10 +64,10 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
 
   return (
     <div 
-      className="absolute inset-0 flex items-center justify-center w-full h-full"
+      className="absolute inset-0 flex items-end justify-center w-full h-full"
       style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'center',
         position: 'absolute',
         top: 0,
@@ -75,7 +75,8 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         right: 0,
         bottom: 0,
         margin: 0,
-        padding: 0
+        padding: 0,
+        paddingBottom: '-30%'
       }}
     >
       <SmartWheel 
