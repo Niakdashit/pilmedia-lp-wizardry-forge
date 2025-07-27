@@ -198,7 +198,14 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             }}
           >
             <InteractiveCustomElementsRenderer
-              customTexts={campaign?.design?.customTexts || []}
+              customTexts={(campaign?.design?.customTexts || []).map((text: any) => ({
+                ...text,
+                text: text.content || text.text, // Adapter content -> text
+                size: text.style?.fontSize ? 'lg' : 'base',
+                color: text.style?.color || '#000000',
+                bold: text.style?.fontWeight === 'bold',
+                italic: text.style?.fontStyle === 'italic'
+              }))}
               customImages={campaign?.design?.customImages || []}
               previewDevice={selectedDevice}
               sizeMap={sizeMap}
