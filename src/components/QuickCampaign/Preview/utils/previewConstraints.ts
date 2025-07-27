@@ -7,8 +7,8 @@ export interface PreviewConstraints {
 
 export const DEVICE_CONSTRAINTS = {
   desktop: {
-    maxWidth: 1700,
-    maxHeight: 850,
+    maxWidth: 1800,
+    maxHeight: 1200,
   },
   tablet: {
     maxWidth: 850,  // Qualifio standard

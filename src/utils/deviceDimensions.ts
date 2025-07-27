@@ -1,6 +1,6 @@
 // Unified device dimensions for the entire application
 export const STANDARD_DEVICE_DIMENSIONS = {
-  desktop: { width: 1700, height: 850 },
+  desktop: { width: 1200, height: 800 },
   tablet: { width: 850, height: 1200 },
   mobile: { width: 520, height: 1100 }
 } as const;
