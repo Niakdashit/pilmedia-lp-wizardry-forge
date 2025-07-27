@@ -140,7 +140,7 @@ const DesignEditorLayout: React.FC = () => {
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex ${selectedDevice === 'tablet' ? 'overflow-auto' : 'overflow-hidden'} relative`}>
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
