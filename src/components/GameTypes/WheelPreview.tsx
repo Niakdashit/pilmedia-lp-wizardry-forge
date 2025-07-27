@@ -96,33 +96,43 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   return (
     <div 
-      className="wheel-preview-container w-full h-full flex items-center justify-center"
+      className="wheel-preview-container w-full h-full"
       style={{
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end', // Alignement vers le bas
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
-      <SmartWheel
-        segments={smartWheelSegments}
-        theme="modern"
-        size={wheelSize}
-        maxSize={maxWheelSize}
-        brandColors={brandColors}
-        onResult={handleResult}
-        onSpin={handleSpin}
-        disabled={disabled}
-        borderStyle={campaign?.design?.wheelConfig?.borderStyle || borderStyle}
-        customButton={{
-          text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
-          color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
-          textColor: campaign.buttonConfig?.textColor || '#ffffff'
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%) translateY(50%)', // Position comme dans l'éditeur
+          zIndex: 10
         }}
-      />
+      >
+        <SmartWheel
+          segments={smartWheelSegments}
+          theme="modern"
+          size={wheelSize}
+          maxSize={maxWheelSize}
+          brandColors={brandColors}
+          onResult={handleResult}
+          onSpin={handleSpin}
+          disabled={disabled}
+          borderStyle={campaign?.design?.wheelConfig?.borderStyle || borderStyle}
+          customButton={{
+            text: campaign.gameConfig?.wheel?.buttonLabel || campaign.buttonConfig?.text || 'Faire tourner',
+            color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
+            textColor: campaign.buttonConfig?.textColor || '#ffffff'
+          }}
+        />
+      </div>
     </div>
   );
 };
