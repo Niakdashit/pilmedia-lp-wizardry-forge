@@ -48,7 +48,7 @@ serve(async (req) => {
     }
 
     // Enhanced prompt with website content and professional specifications
-    const enhancedPrompt = `MISSION: Analyser cette marque et créer une campagne de jeu-concours visuelle de niveau studio professionnel.
+    const enhancedPrompt = `MISSION: Analyser cette marque et créer une campagne de jeu-concours visuelle de niveau studio professionnel avec VISUELS DE FOND COLORÉS ET POLICES ULTRA-STYLISÉES.
 
 CONTENU DU SITE WEB À ANALYSER:
 ${websiteContent}
@@ -56,12 +56,20 @@ ${websiteContent}
 ${body.logoUrl ? `LOGO FOURNI: ${body.logoUrl}` : 'AUCUN LOGO FOURNI'}
 ${body.backgroundUrl ? `IMAGE DE FOND FOURNIE: ${body.backgroundUrl}` : 'AUCUNE IMAGE DE FOND FOURNIE'}
 
+EXEMPLES DE STYLES DE POLICES À REPRODUIRE:
+1. STYLE NATUREL: Typographie scripte italique avec ombres douces (ex: "Roue de la Chance" en écriture cursive)
+2. STYLE SPORTIF: Blocs de texte ÉNORMES en MAJUSCULES avec backgrounds colorés jaune/vert fluo (ex: "GAGNEZ 1 MOIS DE FITNESS GRATUIT !")  
+3. STYLE VOYAGE: Texte blanc sur fond sombre avec éléments premium et typographie élégante
+4. STYLE MODERNE: Texte sur blocs colorés noirs/pastel avec éléments décoratifs floraux
+
 INSTRUCTIONS SPÉCIFIQUES:
 1. Analyse le secteur d'activité et choisis le STYLE le plus adapté parmi les 4 disponibles
 2. Génère une palette de couleurs harmonieuse en cohérence avec la marque
-3. Crée des textes accrocheurs et brandés pour le jeu-concours  
-4. Assure-toi que tous les éléments suivent une hiérarchie visuelle claire
-5. Optimise pour l'engagement et la conversion
+3. Crée des textes accrocheurs et brandés pour le jeu-concours avec EFFETS VISUELS ULTRA-STYLISÉS
+4. Décris précisément les VISUELS DE FOND colorés à générer
+5. Spécifie les EFFETS TYPOGRAPHIQUES avancés (ombres, contours, dégradés, blocs colorés)
+6. Assure-toi que tous les éléments suivent une hiérarchie visuelle claire
+7. Optimise pour l'engagement et la conversion
 
 FORMAT JSON REQUIS:
 {
@@ -80,7 +88,7 @@ FORMAT JSON REQUIS:
   "ambiance_et_keywords": ["mot1", "mot2", "mot3"],
   "extrait_du_ton_editorial": "Description du ton de communication",
   "wording_jeu_concours": {
-    "titre": "Titre du jeu accrocheur",
+    "titre": "Titre du jeu accrocheur avec effets visuels",
     "sous_titre": "Sous-titre qui donne envie",
     "mecanique": "Explication simple du jeu",
     "avantage_client": "Bénéfice clair pour l'utilisateur",
@@ -93,11 +101,20 @@ FORMAT JSON REQUIS:
     {"label": "Réessayez", "color": "#hexcode", "probability": 0.2, "isWinning": false}
   ],
   "designElements": {
-    "backgroundStyle": "Description du style de fond",
+    "backgroundStyle": "Description détaillée du visuel de fond coloré à générer",
     "graphicElements": ["Element1", "Element2"],
-    "layoutStyle": "Description de la composition"
+    "layoutStyle": "Description de la composition",
+    "typographyEffects": {
+      "titleEffect": "Description précise de l'effet typographique du titre (ombre, contour, dégradé, bloc coloré)",
+      "backgroundElements": "Description des éléments visuels de fond à générer",
+      "colorBlocks": "Description des blocs colorés pour le texte si applicable"
+    }
   },
-  "commentaires_design": "Justification des choix créatifs"
+  "visualGeneration": {
+    "backgroundPrompt": "Prompt détaillé pour générer l'image de fond colorée stylisée",
+    "titleStylePrompt": "Prompt pour générer le style typographique ultra-stylisé du titre"
+  },
+  "commentaires_design": "Justification des choix créatifs avec focus sur les effets visuels"
 }
 
 Génère UNIQUEMENT le JSON, sans texte supplémentaire.`;
