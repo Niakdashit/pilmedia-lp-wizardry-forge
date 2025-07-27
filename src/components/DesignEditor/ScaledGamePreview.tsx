@@ -30,11 +30,11 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Calculate the scale to fit the preview into the editor space
   useEffect(() => {
-    // Original preview dimensions (same as CanvasGameRenderer uses)
+    // Real device dimensions for accurate preview
     const previewDimensions = {
       desktop: { width: 1200, height: 800 },
-      tablet: { width: 768, height: 1024 },
-      mobile: { width: 375, height: 667 }
+      tablet: { width: 768, height: 1024 }, // iPad standard
+      mobile: { width: 375, height: 812 }   // iPhone 13/14 standard
     };
 
     const original = previewDimensions[selectedDevice];
@@ -101,7 +101,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
             width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
+            height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '812px'
           }}
         >
           <CanvasGameRenderer
@@ -158,7 +158,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
           width: selectedDevice === 'desktop' ? '1200px' : selectedDevice === 'tablet' ? '768px' : '375px',
-          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '667px'
+          height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '812px'
         }}
       >
         <CanvasGameRenderer
