@@ -8,7 +8,7 @@ interface DeviceFrameProps {
 }
 
 const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
-  if (device === 'desktop') {
+  if (device === 'desktop' || device === 'tablet') {
     return (
       <div className="w-full h-full flex items-center justify-center overflow-hidden">
         {children}
