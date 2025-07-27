@@ -142,15 +142,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   // Segments pour la roue avec couleurs extraites si disponibles
   const extractedColor = campaign?.design?.brandColors?.primary || '#ff6b6b';
   const whiteColor = '#ffffff';
-  const textColor = campaign?.design?.brandColors?.primary || '#000000';
   
   const wheelSegments = [
-    { id: '1', label: '10€', color: extractedColor, textColor: textColor },
-    { id: '2', label: '20€', color: whiteColor, textColor: textColor },
-    { id: '3', label: '5€', color: extractedColor, textColor: textColor },
-    { id: '4', label: 'Perdu', color: whiteColor, textColor: textColor },
-    { id: '5', label: '50€', color: extractedColor, textColor: textColor },
-    { id: '6', label: '30€', color: whiteColor, textColor: textColor }
+    { id: '1', label: '10€', color: extractedColor, textColor: whiteColor },
+    { id: '2', label: '20€', color: whiteColor, textColor: extractedColor },
+    { id: '3', label: '5€', color: extractedColor, textColor: whiteColor },
+    { id: '4', label: 'Perdu', color: whiteColor, textColor: extractedColor },
+    { id: '5', label: '50€', color: extractedColor, textColor: whiteColor },
+    { id: '6', label: '30€', color: whiteColor, textColor: extractedColor }
   ];
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">

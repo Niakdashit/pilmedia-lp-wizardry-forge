@@ -43,32 +43,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     { id: '4', label: 'Dommage', color: campaign.design?.customColors?.secondary || '#feca57' }
   ];
 
-  // Fonctions utilitaires (déclarées AVANT leur utilisation)
-  const adjustColorBrightness = (color: string, amount: number): string => {
-    // Conversion basique pour RGB
-    if (color.startsWith('rgb')) {
-      const values = color.match(/\d+/g);
-      if (values && values.length >= 3) {
-        const r = Math.max(0, Math.min(255, parseInt(values[0]) + amount));
-        const g = Math.max(0, Math.min(255, parseInt(values[1]) + amount));
-        const b = Math.max(0, Math.min(255, parseInt(values[2]) + amount));
-        return `rgb(${r}, ${g}, ${b})`;
-      }
-    }
-    return color;
-  };
-
-  const getContrastColor = (bgColor: string): string => {
-    // Logique simplifiée - vous pouvez l'améliorer
-    if (bgColor.includes('rgb')) {
-      const values = bgColor.match(/\d+/g);
-      if (values && values.length >= 3) {
-        const brightness = (parseInt(values[0]) * 299 + parseInt(values[1]) * 587 + parseInt(values[2]) * 114) / 1000;
-        return brightness > 128 ? '#000000' : '#ffffff';
-      }
-    }
-    return '#ffffff';
-  };
 
   // Utiliser les couleurs extraites de l'image de fond si disponibles
   const extractedColors = campaign.design?.extractedColors || [];
@@ -77,20 +51,19 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const smartWheelSegments = segments.map((segment: any, index: number) => {
     let color = segment.color;
     
-    // Si on a des couleurs extraites, utiliser seulement les 2 premières en alternance
-    if (extractedColors.length >= 2) {
-      color = extractedColors[index % 2];
-    } else if (extractedColors.length === 1) {
-      // Si une seule couleur extraite, alterner avec une version plus claire/foncée
-      const baseColor = extractedColors[0];
-      color = index % 2 === 0 ? baseColor : adjustColorBrightness(baseColor, index % 2 === 1 ? -20 : 20);
+    // Si on a des couleurs extraites, utiliser la couleur extraite et le blanc en alternance
+    if (extractedColors.length >= 1) {
+      color = index % 2 === 0 ? extractedColors[0] : '#ffffff';
     }
+    
+    // Couleur de texte opposée au segment
+    const textColor = index % 2 === 0 ? '#ffffff' : extractedColors[0] || '#000000';
     
     return {
       id: segment.id || index.toString(),
       label: segment.label,
       color: color,
-      textColor: getContrastColor(color)
+      textColor: textColor
     };
   });
 
