@@ -76,10 +76,11 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({
     </div>
   );
 
+  // Use realistic device dimensions that match real mobile/tablet screens
   const deviceDims =
     previewMode === 'tablet'
-      ? { width: 300, height: 400 }
-      : { width: 200, height: 360 };
+      ? { width: 410, height: 590 } // iPad Pro 11" ratio scaled for preview (820x1180 * 0.5)
+      : { width: 188, height: 406 }; // iPhone 13/14 ratio scaled for preview (375x812 * 0.5)
 
   const DeviceFrame = () => {
     if (previewMode === 'tablet') {
