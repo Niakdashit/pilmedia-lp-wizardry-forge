@@ -136,13 +136,9 @@ const AIGeneratorPanel: React.FC<AIGeneratorPanelProps> = ({ onCampaignGenerated
           "commentaires_design": "Recommandations pour le design final"
         }`;
 
-      // Call the edge function  
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
+      // Call the edge function using the integrated Supabase client
+      const { supabase } = await import('../../../integrations/supabase/client');
+      
       const { data, error } = await supabase.functions.invoke('openai-branding-generator', {
         body: {
           prompt,
