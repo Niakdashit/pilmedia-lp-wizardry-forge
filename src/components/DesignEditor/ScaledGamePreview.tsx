@@ -90,6 +90,26 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
 
   // Rendu spécial pour les campagnes de type roue
   if (campaign?.type === 'wheel') {
+    const getDeviceFrame = () => {
+      if (selectedDevice === 'desktop') {
+        return "relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer";
+      } else if (selectedDevice === 'tablet') {
+        return "relative bg-black rounded-[24px] p-3 cursor-pointer";
+      } else {
+        return "relative bg-black rounded-[32px] p-2 cursor-pointer";
+      }
+    };
+
+    const getContentFrame = () => {
+      if (selectedDevice === 'desktop') {
+        return "relative w-full h-full";
+      } else if (selectedDevice === 'tablet') {
+        return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
+      } else {
+        return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
+      }
+    };
+
     return (
       <div 
         ref={containerRef}
@@ -102,7 +122,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
         {/* Aperçu principal - utilisé pour l'affichage ET la capture */}
         <div
           ref={previewRef}
-          className="relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer"
+          className={getDeviceFrame()}
           onClick={handleWheelClick}
           style={{
             transform: `scale(${scale})`,
@@ -111,21 +131,26 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
             height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '812px'
           }}
         >
-          <CanvasGameRenderer
-            campaign={campaign}
-            formValidated={true}
-            showValidationMessage={false}
-            previewMode={selectedDevice}
-            onGameFinish={() => {}}
-            onGameStart={() => {}}
-            onGameButtonClick={handleWheelClick}
-          />
-          
-          {/* Transparent overlay for configuration */}
-          <div 
-            className="absolute inset-0 bg-transparent cursor-pointer"
-            onClick={handleWheelClick}
-          />
+          {selectedDevice === 'mobile' && (
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
+          )}
+          <div className={getContentFrame()}>
+            <CanvasGameRenderer
+              campaign={campaign}
+              formValidated={true}
+              showValidationMessage={false}
+              previewMode={selectedDevice}
+              onGameFinish={() => {}}
+              onGameStart={() => {}}
+              onGameButtonClick={handleWheelClick}
+            />
+            
+            {/* Transparent overlay for configuration */}
+            <div 
+              className="absolute inset-0 bg-transparent cursor-pointer"
+              onClick={handleWheelClick}
+            />
+          </div>
         </div>
         
         {/* Scale info */}
@@ -150,6 +175,26 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
   }
 
   // Rendu par défaut pour les autres types de campagnes
+  const getDeviceFrame = () => {
+    if (selectedDevice === 'desktop') {
+      return "relative bg-white shadow-lg rounded-lg overflow-hidden";
+    } else if (selectedDevice === 'tablet') {
+      return "relative bg-black rounded-[24px] p-3";
+    } else {
+      return "relative bg-black rounded-[32px] p-2";
+    }
+  };
+
+  const getContentFrame = () => {
+    if (selectedDevice === 'desktop') {
+      return "relative w-full h-full";
+    } else if (selectedDevice === 'tablet') {
+      return "relative bg-white rounded-[16px] overflow-hidden w-full h-full";
+    } else {
+      return "relative bg-white rounded-[24px] overflow-hidden w-full h-full";
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -160,7 +205,7 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
       }}
     >
       <div
-        className="relative bg-white shadow-lg rounded-lg overflow-hidden"
+        className={getDeviceFrame()}
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
@@ -168,15 +213,20 @@ const ScaledGamePreview: React.FC<ScaledGamePreviewProps> = ({
           height: selectedDevice === 'desktop' ? '800px' : selectedDevice === 'tablet' ? '1024px' : '812px'
         }}
       >
-        <CanvasGameRenderer
-          campaign={campaign}
-          formValidated={true}
-          showValidationMessage={false}
-          previewMode={selectedDevice}
-          onGameFinish={() => {}}
-          onGameStart={() => {}}
-          onGameButtonClick={() => {}}
-        />
+        {selectedDevice === 'mobile' && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full z-10"></div>
+        )}
+        <div className={getContentFrame()}>
+          <CanvasGameRenderer
+            campaign={campaign}
+            formValidated={true}
+            showValidationMessage={false}
+            previewMode={selectedDevice}
+            onGameFinish={() => {}}
+            onGameStart={() => {}}
+            onGameButtonClick={() => {}}
+          />
+        </div>
       </div>
       
       {/* Scale info */}
