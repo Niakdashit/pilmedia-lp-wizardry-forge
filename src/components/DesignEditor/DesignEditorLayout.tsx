@@ -25,6 +25,30 @@ const DesignEditorLayout: React.FC = () => {
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
 
+  // Fonction pour appliquer les couleurs extraites à la roue
+  const handleExtractedColorsChange = (colors: string[]) => {
+    setExtractedColors(colors);
+    
+    // Appliquer automatiquement les couleurs extraites à la configuration de la roue
+    if (colors.length >= 2) {
+      setCampaignConfig((prev: any) => ({
+        ...prev,
+        design: {
+          ...prev?.design,
+          wheelConfig: {
+            ...prev?.design?.wheelConfig,
+            borderColor: colors[0] || '#841b60'
+          },
+          brandColors: {
+            primary: colors[0] || '#841b60',
+            secondary: colors[1] || '#4ecdc4',
+            accent: colors[2] || '#45b7d1'
+          }
+        }
+      }));
+    }
+  };
+
   // Auto-responsive logic
   const { getAdaptationSuggestions } = useAutoResponsive('desktop');
   
@@ -142,7 +166,7 @@ const DesignEditorLayout: React.FC = () => {
             <HybridSidebar 
               onAddElement={(element) => setCanvasElements(prev => [...prev, element])}
               onBackgroundChange={setCanvasBackground}
-              onExtractedColorsChange={setExtractedColors}
+              onExtractedColorsChange={handleExtractedColorsChange}
               campaignConfig={campaignConfig}
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}

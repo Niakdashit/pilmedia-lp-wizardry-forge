@@ -139,14 +139,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
     return Math.round(baseSize * wheelScale);
   };
 
-  // Segments par défaut pour la roue
+  // Segments pour la roue avec couleurs extraites si disponibles
   const wheelSegments = [
-    { id: '1', label: '10€', color: '#ff6b6b', textColor: '#ffffff' },
-    { id: '2', label: '20€', color: '#4ecdc4', textColor: '#ffffff' },
-    { id: '3', label: '5€', color: '#45b7d1', textColor: '#ffffff' },
-    { id: '4', label: 'Perdu', color: '#96ceb4', textColor: '#ffffff' },
-    { id: '5', label: '50€', color: '#feca57', textColor: '#ffffff' },
-    { id: '6', label: '30€', color: '#ff9ff3', textColor: '#ffffff' }
+    { id: '1', label: '10€', color: campaign?.design?.brandColors?.primary || '#ff6b6b', textColor: '#ffffff' },
+    { id: '2', label: '20€', color: campaign?.design?.brandColors?.secondary || '#4ecdc4', textColor: '#ffffff' },
+    { id: '3', label: '5€', color: campaign?.design?.brandColors?.accent || '#45b7d1', textColor: '#ffffff' },
+    { id: '4', label: 'Perdu', color: campaign?.design?.brandColors?.primary || '#96ceb4', textColor: '#ffffff' },
+    { id: '5', label: '50€', color: campaign?.design?.brandColors?.secondary || '#feca57', textColor: '#ffffff' },
+    { id: '6', label: '30€', color: campaign?.design?.brandColors?.accent || '#ff9ff3', textColor: '#ffffff' }
   ];
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
