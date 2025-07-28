@@ -1,10 +1,15 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModernEditorSidebar from './ModernEditorSidebar';
 import ModernEditorPanel from './ModernEditorPanel';
 import AIAssistantSidebar from './AIAssistantSidebar';
 import EditorHeader from './components/EditorHeader';
-import GameCanvasPreview from './components/GameCanvasPreview';
+import OptimizedGameCanvasPreview from './components/OptimizedGameCanvasPreview';
+import PerformanceMonitor from './components/PerformanceMonitor';
+import { useEditorStore } from '@/stores/editorStore';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useHistoryManager } from './hooks/useHistoryManager';
+
 interface ModernEditorLayoutProps {
   campaign: any;
   setCampaign: (updater: (prev: any) => any) => void;
@@ -21,7 +26,8 @@ interface ModernEditorLayoutProps {
   previewKey?: string;
   isPreviewLoading?: boolean;
 }
-const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
+
+const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
   campaign,
   setCampaign,
   activeTab,
@@ -39,25 +45,76 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
   const [showAIAssistant] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   
-  // Enhanced setCampaign to show loading feedback
-  const enhancedSetCampaign = (updater: any) => {
+  // Initialize store with current data
+  const { setCampaign: setStoreCampaign } = useEditorStore();
+  
+  useEffect(() => {
+    if (campaign) {
+      setStoreCampaign(campaign);
+    }
+  }, [campaign, setStoreCampaign]);
+  
+  // Enhanced setCampaign with performance optimizations
+  const enhancedSetCampaign = useCallback((updater: any) => {
     setIsGenerating(true);
     setCampaign(updater);
-    // Clear loading after a short delay to show feedback
-    setTimeout(() => setIsGenerating(false), 300);
-  };
+    setStoreCampaign(updater);
+    // Clear loading after optimized delay
+    requestAnimationFrame(() => {
+      setTimeout(() => setIsGenerating(false), 100);
+    });
+  }, [setCampaign, setStoreCampaign]);
+  
+  // History manager for undo/redo
+  const { addToHistory, undo, redo } = useHistoryManager({
+    maxHistorySize: 50,
+    onUndo: (state) => {
+      setCampaign(state);
+      setStoreCampaign(state);
+    },
+    onRedo: (state) => {
+      setCampaign(state);
+      setStoreCampaign(state);
+    }
+  });
+
+  // Track changes for history
+  useEffect(() => {
+    if (campaign) {
+      addToHistory(campaign, 'update');
+    }
+  }, [campaign, addToHistory]);
+
+  // Setup keyboard shortcuts with history support
+  useKeyboardShortcuts({
+    onSave,
+    onPreview,
+    onUndo: undo,
+    onRedo: redo
+  });
   
   // Use provided preview key or fallback
   const optimizedPreviewKey = previewKey || `fallback-${Date.now()}`;
+  
   const handleAIGenerate = async () => {
     setIsGenerating(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsGenerating(false);
   };
-  return <div className="flex flex-col h-screen overflow-hidden">
+
+  return (
+    <div className="flex flex-col h-screen overflow-hidden">
       {/* Header - hauteur fixe */}
       <div className="flex-shrink-0">
-        <EditorHeader campaign={campaign} onSave={onSave} onPreview={onPreview} isLoading={isLoading} isNewCampaign={isNewCampaign} selectedDevice={previewDevice} onDeviceChange={onDeviceChange} />
+        <EditorHeader 
+          campaign={campaign} 
+          onSave={onSave} 
+          onPreview={onPreview} 
+          isLoading={isLoading} 
+          isNewCampaign={isNewCampaign} 
+          selectedDevice={previewDevice} 
+          onDeviceChange={onDeviceChange} 
+        />
       </div>
 
       {/* Main Content - prend le reste de l'écran */}
@@ -67,12 +124,20 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
           <div className="flex h-full">
             {/* Navigation tabs - alignés à gauche */}
             <div className="w-16 border-r border-gray-200/50 flex-shrink-0">
-              <ModernEditorSidebar activeTab={activeTab} onTabChange={onTabChange} campaignType={campaignType as any} />
+              <ModernEditorSidebar 
+                activeTab={activeTab} 
+                onTabChange={onTabChange} 
+                campaignType={campaignType as any} 
+              />
             </div>
 
             {/* Panel content - scroll interne uniquement */}
             <div className="flex-1 overflow-y-auto px-2">
-              <ModernEditorPanel activeStep={activeTab} campaign={campaign} setCampaign={enhancedSetCampaign} />
+              <ModernEditorPanel 
+                activeStep={activeTab} 
+                campaign={campaign} 
+                setCampaign={enhancedSetCampaign} 
+              />
             </div>
           </div>
         </div>
@@ -102,12 +167,13 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
                 </div>
               )}
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                <GameCanvasPreview 
+                <OptimizedGameCanvasPreview
                   campaign={campaign} 
                   previewDevice={previewDevice} 
                   key={optimizedPreviewKey}
                   isLoading={isPreviewLoading}
                   setCampaign={enhancedSetCampaign}
+                  previewKey={optimizedPreviewKey}
                 />
               </div>
             </div>
@@ -115,23 +181,32 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = ({
 
           {/* AI Assistant Sidebar - positionné absolument */}
           <AnimatePresence>
-            {showAIAssistant && <motion.div initial={{
-            opacity: 0,
-            x: 300
-          }} animate={{
-            opacity: 1,
-            x: 0
-          }} exit={{
-            opacity: 0,
-            x: 300
-          }} transition={{
-            duration: 0.3
-          }} className="absolute top-4 right-4 w-80 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 p-6 z-10">
-                <AIAssistantSidebar campaign={campaign} setCampaign={setCampaign} isGenerating={isGenerating} onGenerate={handleAIGenerate} />
-              </motion.div>}
+            {showAIAssistant && (
+              <motion.div 
+                initial={{ opacity: 0, x: 300 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                exit={{ opacity: 0, x: 300 }} 
+                transition={{ duration: 0.3 }} 
+                className="absolute top-4 right-4 w-80 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 p-6 z-10"
+              >
+                <AIAssistantSidebar 
+                  campaign={campaign} 
+                  setCampaign={setCampaign} 
+                  isGenerating={isGenerating} 
+                  onGenerate={handleAIGenerate} 
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
-    </div>;
-};
-export default memo(ModernEditorLayout);
+      
+      {/* Performance Monitor */}
+      <PerformanceMonitor />
+    </div>
+  );
+});
+
+ModernEditorLayout.displayName = 'ModernEditorLayout';
+
+export default ModernEditorLayout;
