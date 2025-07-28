@@ -104,7 +104,7 @@ const stylePresets = [
       </div>
 
       <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">PRESETS DE TEXTE</h3>
+        <h3 className="font-semibold text-sm text-gray-700 mb-3">STYLES DE TEXTE</h3>
         <div className="space-y-2">
           {textPresets.map((preset) => (
             <button
@@ -122,12 +122,7 @@ const stylePresets = [
               </div>
             </button>
           ))}
-        </div>
-      </div>
-
-      <div className="border-t pt-4 mt-4">
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">✨ STYLES AVANCÉS</h3>
-        <div className="space-y-2">
+          
           {stylePresets.map((preset) => (
             <button
               key={preset.id}
