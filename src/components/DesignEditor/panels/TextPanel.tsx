@@ -91,7 +91,8 @@ const stylePresets = [
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px',
+      textShadow: '0 4px 8px rgba(102, 126, 234, 0.3)'
     }
   },
   {
@@ -100,9 +101,22 @@ const stylePresets = [
     text: 'NÉON',
     style: {
       color: '#00ffff',
-      textShadow: '0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff',
+      textShadow: '0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px',
+      filter: 'brightness(1.2)'
+    }
+  },
+  {
+    id: 'neon-pink',
+    name: 'Néon Rose',
+    text: 'NÉON',
+    style: {
+      color: '#ff00ff',
+      textShadow: '0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 30px #ff00ff',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      animation: 'pulse 2s infinite'
     }
   },
   {
@@ -110,11 +124,25 @@ const stylePresets = [
     name: 'Or Luxe',
     text: 'LUXE',
     style: {
-      background: 'linear-gradient(45deg, #ffd700, #ffed4a, #ffd700)',
+      background: 'linear-gradient(45deg, #ffd700, #ffed4a, #ffd700, #b8860b)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px',
+      textShadow: '2px 2px 4px rgba(255, 215, 0, 0.5)'
+    }
+  },
+  {
+    id: 'silver',
+    name: 'Argent',
+    text: 'ARGENT',
+    style: {
+      background: 'linear-gradient(45deg, #c0c0c0, #e8e8e8, #a8a8a8, #d3d3d3)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      textShadow: '1px 1px 3px rgba(169, 169, 169, 0.7)'
     }
   },
   {
@@ -122,10 +150,21 @@ const stylePresets = [
     name: '3D Classique',
     text: '3D',
     style: {
-      textShadow: '2px 2px 0px #ccc, 4px 4px 0px #aaa, 6px 6px 0px #888',
+      textShadow: '1px 1px 0px #ccc, 2px 2px 0px #c9c9c9, 3px 3px 0px #bbb, 4px 4px 0px #b9b9b9, 5px 5px 0px #aaa, 6px 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 1px 1px 3px rgba(0,0,0,.3), 3px 3px 5px rgba(0,0,0,.2), 5px 5px 10px rgba(0,0,0,.25)',
       fontWeight: 'bold',
-      fontSize: '32px',
+      fontSize: '28px',
       color: '#333'
+    }
+  },
+  {
+    id: '3d-deep',
+    name: '3D Profond',
+    text: '3D PRO',
+    style: {
+      textShadow: '0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15)',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      color: '#fff'
     }
   },
   {
@@ -133,10 +172,22 @@ const stylePresets = [
     name: 'Contour',
     text: 'CONTOUR',
     style: {
-      WebkitTextStroke: '2px #000',
+      WebkitTextStroke: '3px #000',
       color: 'transparent',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px'
+    }
+  },
+  {
+    id: 'outline-neon',
+    name: 'Contour Néon',
+    text: 'NÉON',
+    style: {
+      WebkitTextStroke: '2px #00ffff',
+      color: 'transparent',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      filter: 'drop-shadow(0 0 10px #00ffff)'
     }
   },
   {
@@ -144,11 +195,12 @@ const stylePresets = [
     name: 'Feu',
     text: 'FEU',
     style: {
-      background: 'linear-gradient(45deg, #ff6b35, #ff9068, #ffb347)',
+      background: 'linear-gradient(45deg, #ff4500, #ff6347, #ff8c00, #ffd700)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px',
+      textShadow: '0 0 20px rgba(255, 69, 0, 0.8)'
     }
   },
   {
@@ -156,12 +208,12 @@ const stylePresets = [
     name: 'Glace',
     text: 'GLACE',
     style: {
-      background: 'linear-gradient(45deg, #a8e6cf, #dcedc8, #f0f4c3)',
+      background: 'linear-gradient(45deg, #87ceeb, #b0e0e6, #afeeee, #e0ffff)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
-      textShadow: '0 0 10px rgba(168, 230, 207, 0.7)',
+      textShadow: '0 0 10px rgba(135, 206, 235, 0.7)',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px'
     }
   },
   {
@@ -169,12 +221,61 @@ const stylePresets = [
     name: 'Rétro',
     text: 'RÉTRO',
     style: {
-      background: 'linear-gradient(45deg, #ff00ff, #00ffff)',
+      background: 'linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
-      textShadow: '0 0 10px #ff00ff',
+      textShadow: '0 0 10px #ff00ff, 0 0 20px #00ffff',
       fontWeight: 'bold',
-      fontSize: '32px'
+      fontSize: '28px'
+    }
+  },
+  {
+    id: 'chrome',
+    name: 'Chrome',
+    text: 'CHROME',
+    style: {
+      background: 'linear-gradient(45deg, #eee, #999, #eee, #999, #eee)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+    }
+  },
+  {
+    id: 'rainbow',
+    name: 'Arc-en-ciel',
+    text: 'RAINBOW',
+    style: {
+      background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      fontWeight: 'bold',
+      fontSize: '28px'
+    }
+  },
+  {
+    id: 'glitch',
+    name: 'Glitch',
+    text: 'GLITCH',
+    style: {
+      color: '#ff0040',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      textShadow: '0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00',
+      animation: 'glitch 2s infinite'
+    }
+  },
+  {
+    id: 'vintage',
+    name: 'Vintage',
+    text: 'VINTAGE',
+    style: {
+      color: '#8b4513',
+      fontWeight: 'bold',
+      fontSize: '28px',
+      textShadow: '2px 2px 0px #d2691e, 4px 4px 0px #cd853f',
+      filter: 'sepia(30%)'
     }
   }
 ];
@@ -318,6 +419,44 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
               >
                 +
               </button>
+            </div>
+            
+            {/* Import de styles CSS personnalisés */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Style CSS personnalisé
+              </label>
+              <textarea
+                placeholder="color: #ff0000; font-size: 24px; text-shadow: 0 0 10px #ff0000;"
+                className="w-full p-2 border border-gray-300 rounded-md text-xs"
+                rows={3}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    const textarea = e.target as HTMLTextAreaElement;
+                    if (textarea.value.trim()) {
+                      try {
+                        const customStyle: any = {};
+                        textarea.value.split(';').forEach(rule => {
+                          const [property, value] = rule.split(':').map(s => s.trim());
+                          if (property && value) {
+                            customStyle[property] = value;
+                          }
+                        });
+                        addText(null, {
+                          id: `custom-${Date.now()}`,
+                          name: 'Style personnalisé',
+                          text: 'CUSTOM',
+                          style: customStyle
+                        });
+                        textarea.value = '';
+                      } catch (error) {
+                        console.error('Erreur dans le CSS personnalisé:', error);
+                      }
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-1">Appuyez sur Ctrl+Entrée pour appliquer</p>
             </div>
           </div>
         </div>
