@@ -457,6 +457,7 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
                 }}
               />
               <p className="text-xs text-gray-500 mt-1">Appuyez sur Ctrl+Entrée pour appliquer</p>
+            </div>
             
             {/* Import de HTML personnalisé */}
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
@@ -464,7 +465,7 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
                 HTML personnalisé
               </label>
               <textarea
-                placeholder="<div><h1>Mon titre</h1><p>Mon texte</p></div>"
+                placeholder="<div style='font-family: Lobster, cursive; font-size: 36px; color: #ff6600;'>Mon titre stylé</div>"
                 className="w-full p-2 border border-gray-300 rounded-md text-xs font-mono"
                 rows={4}
                 onKeyPress={(e) => {
@@ -495,9 +496,7 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
               />
               <p className="text-xs text-gray-500 mt-1">Appuyez sur Ctrl+Entrée pour appliquer</p>
             </div>
-          </div>
-          </div>
-        </div>
+            </div>
 
           {/* Alignement et style */}
           <div className="space-y-3">
@@ -546,6 +545,7 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
                 <Underline className="w-4 h-4" />
               </button>
             </div>
+          </div>
         </div>
       </div>
     );
