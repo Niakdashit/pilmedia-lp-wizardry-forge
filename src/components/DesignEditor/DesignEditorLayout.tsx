@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
@@ -6,6 +6,10 @@ import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
+import { useEditorStore } from '../../stores/editorStore';
+import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
+import { useHistoryManager } from '../ModernEditor/hooks/useHistoryManager';
+import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -16,6 +20,15 @@ const DesignEditorLayout: React.FC = () => {
     return 'mobile';
   };
 
+  // Store centralisé pour l'optimisation
+  const { 
+    setCampaign,
+    setPreviewDevice,
+    setIsLoading,
+    setIsModified
+  } = useEditorStore();
+
+  // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
@@ -26,6 +39,52 @@ const DesignEditorLayout: React.FC = () => {
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [canvasZoom, setCanvasZoom] = useState(1);
+
+  // Système d'historique pour undo/redo
+  const { addToHistory, undo, redo } = useHistoryManager({
+    maxHistorySize: 50,
+    onUndo: (restoredCampaign) => {
+      if (restoredCampaign) {
+        setCampaign(restoredCampaign);
+        console.log('Undo appliqué');
+      }
+    },
+    onRedo: (restoredCampaign) => {
+      if (restoredCampaign) {
+        setCampaign(restoredCampaign);
+        console.log('Redo appliqué');
+      }
+    }
+  });
+
+  // Synchronisation avec le store
+  useEffect(() => {
+    setPreviewDevice(selectedDevice);
+  }, [selectedDevice, setPreviewDevice]);
+
+  // Sauvegarde dans l'historique à chaque modification
+  useEffect(() => {
+    const campaignData = generateCampaignFromCanvas();
+    addToHistory(campaignData, 'canvas_update');
+    setCampaign(campaignData);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, addToHistory, setCampaign]);
+
+  // Actions optimisées
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      // Simulation de sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsModified(false);
+      console.log('Campagne sauvegardée');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePreview = () => {
+    setShowFunnel(!showFunnel);
+  };
 
   // Fonction pour appliquer les couleurs extraites à la roue
   const handleExtractedColorsChange = (colors: string[]) => {
@@ -50,6 +109,14 @@ const DesignEditorLayout: React.FC = () => {
       }));
     }
   };
+
+  // Raccourcis clavier professionnels
+  useKeyboardShortcuts({
+    onSave: handleSave,
+    onPreview: handlePreview,
+    onUndo: undo,
+    onRedo: redo
+  });
 
   // Auto-responsive logic
   const { getAdaptationSuggestions } = useAutoResponsive('desktop');
@@ -137,7 +204,7 @@ const DesignEditorLayout: React.FC = () => {
         <DesignToolbar 
           selectedDevice={selectedDevice}
           onDeviceChange={setSelectedDevice}
-          onPreviewToggle={() => setShowFunnel(!showFunnel)}
+          onPreviewToggle={handlePreview}
           isPreviewMode={showFunnel}
         />
       )}
@@ -200,6 +267,9 @@ const DesignEditorLayout: React.FC = () => {
           </>
         )}
       </div>
+      
+      {/* Performance Monitor */}
+      <PerformanceMonitor />
     </div>
   );
 };

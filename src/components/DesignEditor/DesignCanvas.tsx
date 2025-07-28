@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
@@ -8,6 +8,9 @@ import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+import { useOptimizedDragDrop } from '../ModernEditor/hooks/useOptimizedDragDrop';
+import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
+import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -22,7 +25,7 @@ export interface DesignCanvasProps {
   onCampaignChange?: (campaign: any) => void;
   zoom?: number;
 }
-const DesignCanvas: React.FC<DesignCanvasProps> = ({
+const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   selectedDevice,
   elements,
   onElementsChange,
@@ -31,17 +34,32 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   onCampaignChange,
   zoom = 1
 }) => {
+  const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
+
+  // Store centralisé pour la grille
+  const { showGridLines, setShowGridLines } = useEditorStore();
+
+  // Hooks optimisés pour drag & drop et snapping
+  useOptimizedDragDrop({
+    containerRef: canvasRef,
+    previewDevice: selectedDevice
+  });
+
+  const { applySnapping } = useSmartSnapping({
+    containerRef: canvasRef,
+    gridSize: 20,
+    snapTolerance: 10
+  });
   
   // Récupérer les configurations de la roue depuis la campagne
   const wheelBorderStyle = campaign?.design?.wheelBorderStyle || 'classic';
   const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
   const wheelScale = campaign?.design?.wheelConfig?.scale || 2;
 
-  // Fonctions pour mettre à jour la configuration de la roue
-  const setWheelBorderStyle = (style: string) => {
+  // Fonctions optimisées pour mettre à jour la configuration de la roue
+  const setWheelBorderStyle = useCallback((style: string) => {
     if (onCampaignChange) {
       onCampaignChange({
         ...campaign,
@@ -51,9 +69,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         }
       });
     }
-  };
+  }, [campaign, onCampaignChange]);
 
-  const setWheelBorderColor = (color: string) => {
+  const setWheelBorderColor = useCallback((color: string) => {
     if (onCampaignChange) {
       onCampaignChange({
         ...campaign,
@@ -66,9 +84,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         }
       });
     }
-  };
+  }, [campaign, onCampaignChange]);
 
-  const setWheelScale = (scale: number) => {
+  const setWheelScale = useCallback((scale: number) => {
     if (onCampaignChange) {
       onCampaignChange({
         ...campaign,
@@ -81,7 +99,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         }
       });
     }
-  };
+  }, [campaign, onCampaignChange]);
 
   // Intégration du système auto-responsive
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
@@ -106,26 +124,44 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const elementsWithResponsive = useMemo(() => {
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
-  const getCanvasSize = () => {
+  // Taille du canvas memoized
+  const canvasSize = useMemo(() => {
     return DEVICE_DIMENSIONS[selectedDevice];
-  };
-  const canvasSize = getCanvasSize();
-  const handleElementUpdate = (id: string, updates: any) => {
+  }, [selectedDevice, DEVICE_DIMENSIONS]);
+  // Handlers optimisés avec snapping
+  const handleElementUpdate = useCallback((id: string, updates: any) => {
+    // Appliquer le snapping si c'est un déplacement
+    if (updates.x !== undefined && updates.y !== undefined) {
+      const element = elements.find(el => el.id === id);
+      if (element) {
+        const snappedPosition = applySnapping(
+          updates.x,
+          updates.y,
+          element.width || 100,
+          element.height || 100,
+          id
+        );
+        updates.x = snappedPosition.x;
+        updates.y = snappedPosition.y;
+      }
+    }
+
     onElementsChange(elements.map(el => el.id === id ? {
       ...el,
       ...updates
     } : el));
-  };
-  const handleElementDelete = (id: string) => {
+  }, [elements, onElementsChange, applySnapping]);
+
+  const handleElementDelete = useCallback((id: string) => {
     onElementsChange(elements.filter(el => el.id !== id));
     if (selectedElement === id) {
       setSelectedElement(null);
     }
-  };
+  }, [elements, onElementsChange, selectedElement]);
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
-  // Définir la taille de la roue en fonction de l'appareil et du scale
-  const getWheelSize = () => {
+  // Taille de la roue memoized
+  const wheelSize = useMemo(() => {
     const baseSize = (() => {
       switch (selectedDevice) {
         case 'desktop':
@@ -139,20 +175,22 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
       }
     })();
     return Math.round(baseSize * wheelScale);
-  };
+  }, [selectedDevice, wheelScale]);
 
-  // Segments pour la roue avec couleurs extraites si disponibles
-  const extractedColor = campaign?.design?.brandColors?.primary || '#ff6b6b';
-  const whiteColor = '#ffffff';
-  
-  const wheelSegments = [
-    { id: '1', label: '10€', color: extractedColor, textColor: whiteColor },
-    { id: '2', label: '20€', color: whiteColor, textColor: extractedColor },
-    { id: '3', label: '5€', color: extractedColor, textColor: whiteColor },
-    { id: '4', label: 'Perdu', color: whiteColor, textColor: extractedColor },
-    { id: '5', label: '50€', color: extractedColor, textColor: whiteColor },
-    { id: '6', label: '30€', color: whiteColor, textColor: extractedColor }
-  ];
+  // Segments de roue memoized
+  const wheelSegments = useMemo(() => {
+    const extractedColor = campaign?.design?.brandColors?.primary || '#ff6b6b';
+    const whiteColor = '#ffffff';
+    
+    return [
+      { id: '1', label: '10€', color: extractedColor, textColor: whiteColor },
+      { id: '2', label: '20€', color: whiteColor, textColor: extractedColor },
+      { id: '3', label: '5€', color: extractedColor, textColor: whiteColor },
+      { id: '4', label: 'Perdu', color: whiteColor, textColor: extractedColor },
+      { id: '5', label: '50€', color: extractedColor, textColor: whiteColor },
+      { id: '6', label: '30€', color: whiteColor, textColor: extractedColor }
+    ];
+  }, [campaign?.design?.brandColors?.primary]);
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
@@ -160,8 +198,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-        <div className="flex justify-start items-center min-h-full">
+          <div className="flex justify-start items-center min-h-full">
           <div 
+            ref={canvasRef}
             className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
             style={{
               width: `${canvasSize.width}px`,
@@ -183,10 +222,10 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             <div className="absolute inset-0" style={{
             background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
           }}>
-              {/* Grid Overlay */}
+              {/* Grid Overlay Optimisé */}
               <GridOverlay 
                 canvasSize={canvasSize}
-                showGrid={showGrid}
+                showGrid={showGridLines}
                 gridSize={20}
                 opacity={0.15}
               />
@@ -212,7 +251,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                   <SmartWheel
                     segments={wheelSegments}
                     theme="modern"
-                    size={getWheelSize()}
+                    size={wheelSize}
                     borderStyle={wheelBorderStyle}
                     brandColors={{
                       primary: wheelBorderColor,
@@ -264,13 +303,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             {/* Grid and Guides Toggle */}
             <div className="absolute top-2 right-2 flex gap-2">
               <button
-                onClick={() => setShowGrid(!showGrid)}
+                onClick={() => setShowGridLines(!showGridLines)}
                 className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
-                  showGrid 
+                  showGridLines 
                     ? 'bg-blue-500 text-white hover:bg-blue-600' 
                     : 'bg-white/80 hover:bg-white text-gray-700'
                 }`}
-                title="Afficher/masquer la grille"
+                title="Afficher/masquer la grille (G)"
               >
                 📐
               </button>
@@ -310,5 +349,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         />
       </div>
     </DndProvider>;
-};
+});
+
+DesignCanvas.displayName = 'DesignCanvas';
+
 export default DesignCanvas;

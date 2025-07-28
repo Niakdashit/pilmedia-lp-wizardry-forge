@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
@@ -13,7 +13,7 @@ export interface CanvasElementProps {
   selectedDevice: DeviceType;
 }
 
-const CanvasElement: React.FC<CanvasElementProps> = ({
+const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   element,
   isSelected,
   selectedDevice,
@@ -23,8 +23,11 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
-  // Get device-specific properties with proper typing
-  const deviceProps = getPropertiesForDevice(element, selectedDevice);
+  // Get device-specific properties with proper typing - memoized
+  const deviceProps = useMemo(() => 
+    getPropertiesForDevice(element, selectedDevice), 
+    [element, selectedDevice, getPropertiesForDevice]
+  );
   
 
   const [{ opacity }, drag] = useDrag(() => ({
@@ -37,7 +40,8 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
   const [isEditing, setIsEditing] = React.useState(false);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Optimized drag handlers with useCallback
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     onSelect(element.id);
 
@@ -46,9 +50,12 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
     const startY = e.clientY - currentProps.y;
 
     const handleMouseMove = (e: MouseEvent) => {
-      onUpdate(element.id, {
-        x: e.clientX - startX,
-        y: e.clientY - startY,
+      // Throttled updates for smooth 60fps movement
+      requestAnimationFrame(() => {
+        onUpdate(element.id, {
+          x: e.clientX - startX,
+          y: e.clientY - startY,
+        });
       });
     };
 
@@ -59,29 +66,31 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  };
+  }, [element.id, deviceProps, onSelect, onUpdate]);
 
-  const handleDoubleClick = () => {
+  // Optimized text editing handlers with useCallback
+  const handleDoubleClick = useCallback(() => {
     if (element.type === 'text') {
       setIsEditing(true);
     }
-  };
+  }, [element.type]);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate(element.id, { content: e.target.value });
-  };
+  }, [element.id, onUpdate]);
 
-  const handleTextKeyDown = (e: React.KeyboardEvent) => {
+  const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       setIsEditing(false);
     }
-  };
+  }, []);
 
-  const handleTextBlur = () => {
+  const handleTextBlur = useCallback(() => {
     setIsEditing(false);
-  };
+  }, []);
 
-  const handleResizeMouseDown = (e: React.MouseEvent, direction: string) => {
+  // Optimized resize handler with useCallback
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent, direction: string) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -96,9 +105,11 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
     // Detect if it's a corner handle (for proportional scaling with font size change)
     const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
 
-    const handleResizeMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
+      const handleResizeMouseMove = (e: MouseEvent) => {
+        // Throttled resize for smooth performance
+        requestAnimationFrame(() => {
+          const deltaX = e.clientX - startX;
+          const deltaY = e.clientY - startY;
 
       let newWidth = startWidth;
       let newHeight = startHeight;
@@ -178,15 +189,16 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             break;
         }
 
-        onUpdate(element.id, {
-          width: newWidth,
-          height: newHeight,
-          x: newX,
-          y: newY,
-          isCornerScaled: false,
+          onUpdate(element.id, {
+            width: newWidth,
+            height: newHeight,
+            x: newX,
+            y: newY,
+            isCornerScaled: false,
+          });
+        }
         });
-      }
-    };
+      };
 
     const handleResizeMouseUp = () => {
       document.removeEventListener('mousemove', handleResizeMouseMove);
@@ -195,9 +207,10 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
 
     document.addEventListener('mousemove', handleResizeMouseMove);
     document.addEventListener('mouseup', handleResizeMouseUp);
-  };
+  }, [element.id, onUpdate]);
 
-  const renderElement = () => {
+  // Memoized element rendering for performance
+  const renderElement = useMemo(() => {
     // For text elements, only apply dimensions if they were set by edge handles (not corner scaling)
     const shouldApplyDimensions = element.type !== 'text' || (element.width && element.height && !element.isCornerScaled);
     
@@ -330,7 +343,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       default:
         return <div className="w-20 h-20 bg-gray-300 cursor-move" style={elementStyle} />;
     }
-  };
+  }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur]);
 
   return (
     <div
@@ -345,7 +358,7 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
     >
-      {renderElement()}
+      {renderElement}
       
       {/* Selection handles */}
       {isSelected && (
@@ -410,6 +423,8 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
       )}
     </div>
   );
-};
+});
+
+CanvasElement.displayName = 'CanvasElement';
 
 export default CanvasElement;

@@ -18,7 +18,7 @@ interface CanvasToolbarProps {
   onElementUpdate: (updates: any) => void;
 }
 
-const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
+const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   selectedElement,
   onElementUpdate
 }) => {
@@ -177,6 +177,8 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
       )}
     </div>
   );
-};
+});
+
+CanvasToolbar.displayName = 'CanvasToolbar';
 
 export default CanvasToolbar;
