@@ -142,7 +142,17 @@ const TextElement: React.FC<TextElementProps> = ({
         left: `${deviceConfig.x}px`,
         top: `${deviceConfig.y}px`,
         zIndex: isSelected ? 30 : 20,
-        ...getTextStyles()
+        ...(element.type === 'html' ? {
+          minWidth: '200px',
+          minHeight: '50px',
+          border: isSelected ? '1px dashed #60a5fa' : 'none',
+          borderRadius: '4px',
+          backgroundColor: isSelected ? 'rgba(96, 165, 250, 0.1)' : 'transparent',
+          padding: '8px',
+          overflow: 'hidden',
+          wordWrap: 'break-word',
+          cursor: isDragging ? 'grabbing' : 'grab'
+        } : getTextStyles())
       }}
       onMouseDown={handleMouseDown}
       className={`${
@@ -151,7 +161,20 @@ const TextElement: React.FC<TextElementProps> = ({
           : 'hover:ring-2 hover:ring-gray-300'
       }`}
     >
-      {element.content || element.text}
+      {element.type === 'html' ? (
+        <div 
+          dangerouslySetInnerHTML={{ __html: element.content }}
+          style={{
+            fontSize: `${element.fontSize}px`,
+            color: element.color,
+            fontFamily: element.fontFamily,
+            width: '100%',
+            height: '100%'
+          }}
+        />
+      ) : (
+        element.content || element.text
+      )}
       
       {isSelected && (
         <div className="absolute -top-10 left-0 flex space-x-1 bg-white rounded shadow-lg px-2 py-1 border">
