@@ -75,7 +75,10 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
       textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)', // Améliorer la lisibilité
       display: 'flex',
       alignItems: 'center',
-      justifyContent: config.textAlign || customText.textAlign || 'center'
+      justifyContent: config.textAlign || customText.textAlign || 'center',
+      // Appliquer les styles personnalisés (customCSS) si disponibles
+      ...(customText.customCSS || {}),
+      ...(config.customCSS || {})
     };
 
     if (config.showFrame || customText.showFrame) {
