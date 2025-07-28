@@ -5,30 +5,7 @@ export interface TextStyleEffect {
   category: 'gradient' | '3d' | 'neon' | 'metallic' | 'outline' | 'shadow' | 'vintage' | 'modern' | 'gaming' | 'luxury';
   preview?: string;
   css: {
-    background?: string;
-    backgroundClip?: string;
-    webkitBackgroundClip?: string;
-    webkitTextFillColor?: string;
-    textShadow?: string;
-    filter?: string;
-    fontWeight?: string;
-    textStroke?: string;
-    webkitTextStroke?: string;
-    letterSpacing?: string;
-    textTransform?: string;
-    position?: string;
-    zIndex?: number;
-    // Pseudo-elements support
-    before?: {
-      content: string;
-      position: string;
-      [key: string]: any;
-    };
-    after?: {
-      content: string;
-      position: string;
-      [key: string]: any;
-    };
+    [key: string]: any;
   };
 }
 
@@ -279,7 +256,6 @@ export const advancedTextStyles: TextStyleEffect[] = [
     category: 'modern',
     css: {
       background: 'rgba(255, 255, 255, 0.1)',
-      webkitBackdropFilter: 'blur(10px)',
       backdropFilter: 'blur(10px)',
       webkitTextStroke: '1px rgba(255, 255, 255, 0.3)',
       fontWeight: 'bold'

@@ -120,6 +120,11 @@ const TextElement: React.FC<TextElementProps> = ({
       baseStyles.textShadow = `${element.textShadow.offsetX}px ${element.textShadow.offsetY}px ${element.textShadow.blur}px ${element.textShadow.color}`;
     }
 
+    // Appliquer les styles CSS avancés si disponibles
+    if (element.customCSS) {
+      Object.assign(baseStyles, element.customCSS);
+    }
+
     return baseStyles;
   }, [element, sizeMap, isDragging, hexToRgb]);
 

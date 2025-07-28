@@ -1,23 +1,11 @@
 import React, { useState } from 'react';
-import { advancedTextStyles, getStylesByCategory, specializedFonts, applyTextStyle } from '../../../config/advancedTextStyles';
+import { advancedTextStyles, getStylesByCategory, specializedFonts } from '../../../config/advancedTextStyles';
 import { Palette, Zap, Sparkles, Crown, Gamepad2, Clock, Eye, Type } from 'lucide-react';
 
 interface AdvancedTextPanelProps {
   onAddElement: (element: any) => void;
 }
 
-const categoryIcons = {
-  gradient: Palette,
-  '3d': Zap,
-  neon: Sparkles,
-  metallic: Crown,
-  gaming: Gamepad2,
-  vintage: Clock,
-  modern: Eye,
-  luxury: Crown,
-  outline: Type,
-  shadow: Eye
-};
 
 const AdvancedTextPanel: React.FC<AdvancedTextPanelProps> = ({ onAddElement }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('gradient');
@@ -133,11 +121,7 @@ const AdvancedTextPanel: React.FC<AdvancedTextPanelProps> = ({ onAddElement }) =
                 className="text-2xl font-bold transition-transform group-hover:scale-105"
                 style={{
                   fontFamily: selectedFont,
-                  ...style.css,
-                  // Simplifier pour l'aperçu
-                  WebkitTextStroke: style.css.webkitTextStroke,
-                  WebkitBackgroundClip: style.css.webkitBackgroundClip,
-                  WebkitTextFillColor: style.css.webkitTextFillColor
+                  ...style.css
                 }}
               >
                 APERÇU
