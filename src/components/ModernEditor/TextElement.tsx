@@ -61,7 +61,7 @@ const TextElement: React.FC<TextElementProps> = ({
   const getTextStyles = useCallback((): React.CSSProperties => {
     const baseStyles: React.CSSProperties = {
       color: element.color || '#000000',
-      fontSize: sizeMap[element.size || 'base'] || '14px',
+      fontSize: element.fontSize ? `${element.fontSize}px` : (sizeMap[element.size || 'base'] || '14px'),
       fontWeight: element.bold ? 'bold' : (element.fontWeight || 'normal'),
       fontStyle: element.italic ? 'italic' : (element.fontStyle || 'normal'),
       textDecoration: element.underline ? 'underline' : (element.textDecoration || 'none'),
@@ -69,8 +69,26 @@ const TextElement: React.FC<TextElementProps> = ({
       cursor: isDragging ? 'grabbing' : 'grab',
       userSelect: 'none',
       willChange: isDragging ? 'transform' : 'auto',
-      transition: isDragging ? 'none' : 'box-shadow 0.1s ease'
+      transition: isDragging ? 'none' : 'box-shadow 0.1s ease',
+      textAlign: element.textAlign || 'left'
     };
+
+    // Modern typography enhancements
+    if (element.letterSpacing) {
+      baseStyles.letterSpacing = element.letterSpacing;
+    }
+
+    if (element.textTransform) {
+      baseStyles.textTransform = element.textTransform;
+    }
+
+    if (element.lineHeight) {
+      baseStyles.lineHeight = element.lineHeight;
+    }
+
+    if (element.textStroke) {
+      baseStyles.WebkitTextStroke = `${element.textStroke.width}px ${element.textStroke.color}`;
+    }
 
     // Legacy frame support
     if (element.showFrame) {
@@ -128,7 +146,7 @@ const TextElement: React.FC<TextElementProps> = ({
           : 'hover:ring-2 hover:ring-gray-300'
       }`}
     >
-      {element.text}
+      {element.content || element.text}
       
       {isSelected && (
         <div className="absolute -top-10 left-0 flex space-x-1 bg-white rounded shadow-lg px-2 py-1 border">

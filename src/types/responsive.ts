@@ -32,7 +32,14 @@ export interface ResponsiveTextElement extends ResponsiveElementBase {
     left: number;
   };
   fontStyle?: 'normal' | 'italic';
-  textDecoration?: string; // Allow any string for backwards compatibility
+  textDecoration?: string;
+  letterSpacing?: string;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  lineHeight?: number;
+  textStroke?: {
+    width: number;
+    color: string;
+  };
   // Allow additional properties for compatibility
   [key: string]: any;
 }

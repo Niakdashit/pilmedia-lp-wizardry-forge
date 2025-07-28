@@ -14,61 +14,177 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
   ];
 
   const fonts = [
-    'Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana', 
-    'Courier New', 'Impact', 'Comic Sans MS', 'Trebuchet MS'
+    // Polices Impact & Display
+    'Bebas Neue', 'Anton', 'Oswald', 'Fjalla One', 'Bangers', 'Russo One',
+    'Righteous', 'Fredoka One', 'Titan One', 'Squada One', 'Changa One',
+    
+    // Polices Modernes
+    'Montserrat', 'Poppins', 'Roboto', 'Open Sans', 'Lato', 'Nunito',
+    'Raleway', 'Source Sans Pro', 'Work Sans', 'Rubik', 'Fira Sans',
+    'Kanit', 'Exo 2',
+    
+    // Polices Script & Décorative
+    'Dancing Script', 'Pacifico', 'Lobster', 'Great Vibes', 'Sacramento',
+    'Satisfy', 'Cookie', 'Caveat', 'Kalam', 'Shadows Into Light',
+    'Amatic SC', 'Indie Flower', 'Permanent Marker', 'Architects Daughter',
+    
+    // Polices Élégantes
+    'Playfair Display', 'Merriweather', 'Lora', 'Crimson Text', 'Libre Baskerville',
+    
+    // Polices Tech & Gaming
+    'Orbitron', 'Audiowide', 'Press Start 2P', 'Creepster', 'Bungee',
+    
+    // Polices Classiques Améliorées
+    'Ubuntu', 'Quicksand', 'Comfortaa', 'Inter'
   ];
 
 const stylePresets = [
     {
-      id: 'fitness',
-      name: 'Style Fitness',
-      preview: 'FITNESS',
+      id: 'concours',
+      name: 'Concours Impact',
+      preview: 'CONCOURS',
       style: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#000000',
-        backgroundColor: '#00FF88',
-        borderRadius: 8,
-        padding: { top: 8, right: 16, bottom: 8, left: 16 },
-        textShadow: { color: '#000000', blur: 2, offsetX: 1, offsetY: 1 }
+        fontSize: 42,
+        fontWeight: '900',
+        color: '#FFFFFF',
+        backgroundColor: '#1A1A1A',
+        borderRadius: 15,
+        padding: { top: 16, right: 32, bottom: 16, left: 32 },
+        fontFamily: 'Bebas Neue',
+        textShadow: { color: '#000000', blur: 8, offsetX: 2, offsetY: 2 },
+        letterSpacing: '2px',
+        textTransform: 'uppercase'
       }
     },
     {
-      id: 'price',
-      name: 'Style Prix',
-      preview: '49€',
+      id: 'jeu-concours',
+      name: 'Jeu Concours',
+      preview: 'JEU CONCOURS',
+      style: {
+        fontSize: 36,
+        fontWeight: '800',
+        color: '#FFFFFF',
+        backgroundColor: 'rgba(0,100,0,0.8)',
+        borderRadius: 12,
+        padding: { top: 20, right: 30, bottom: 20, left: 30 },
+        fontFamily: 'Montserrat',
+        textShadow: { color: '#000000', blur: 6, offsetX: 3, offsetY: 3 },
+        letterSpacing: '1.5px'
+      }
+    },
+    {
+      id: 'gagnez-fitness',
+      name: 'Fitness Gagnez',
+      preview: 'GAGNEZ',
+      style: {
+        fontSize: 48,
+        fontWeight: '900',
+        color: '#000000',
+        backgroundColor: '#CCFF00',
+        borderRadius: 0,
+        padding: { top: 12, right: 24, bottom: 12, left: 24 },
+        fontFamily: 'Bebas Neue',
+        textShadow: { color: '#666666', blur: 2, offsetX: 2, offsetY: 2 },
+        letterSpacing: '3px'
+      }
+    },
+    {
+      id: 'gratuit-fitness',
+      name: 'Gratuit Fitness',
+      preview: 'GRATUIT !',
+      style: {
+        fontSize: 40,
+        fontWeight: '900',
+        color: '#000000',
+        backgroundColor: '#CCFF00',
+        borderRadius: 0,
+        padding: { top: 16, right: 32, bottom: 16, left: 32 },
+        fontFamily: 'Anton',
+        letterSpacing: '2px'
+      }
+    },
+    {
+      id: 'roue-chance',
+      name: 'Roue Chance Script',
+      preview: 'Roue de la Chance',
       style: {
         fontSize: 32,
-        fontWeight: 'bold',
-        color: '#000000',
-        backgroundColor: '#FFD700',
-        borderRadius: 20,
-        padding: { top: 12, right: 20, bottom: 12, left: 20 }
+        fontWeight: '700',
+        color: '#6B8E23',
+        fontFamily: 'Dancing Script',
+        fontStyle: 'italic',
+        textShadow: { color: '#B8D4A8', blur: 3, offsetX: 2, offsetY: 2 }
       }
     },
     {
-      id: 'button',
-      name: 'Style Bouton',
-      preview: 'CLIQUEZ ICI',
+      id: 'tempo-modern',
+      name: 'Tempo Moderne',
+      preview: 'Tempo',
       style: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#FFFFFF',
-        backgroundColor: '#007BFF',
+        fontSize: 38,
+        fontWeight: '800',
+        color: '#2D2D2D',
+        backgroundColor: 'rgba(255,255,255,0.9)',
         borderRadius: 25,
-        padding: { top: 12, right: 24, bottom: 12, left: 24 }
+        padding: { top: 12, right: 28, bottom: 12, left: 28 },
+        fontFamily: 'Poppins',
+        letterSpacing: '1px'
       }
     },
     {
-      id: 'cursive',
-      name: 'Style Cursif',
-      preview: 'Élégant',
+      id: 'valeur-prix',
+      name: 'Valeur Prix',
+      preview: 'VALEUR 890€',
+      style: {
+        fontSize: 28,
+        fontWeight: '800',
+        color: '#2D2D2D',
+        backgroundColor: '#FFD700',
+        borderRadius: 30,
+        padding: { top: 14, right: 28, bottom: 14, left: 28 },
+        fontFamily: 'Montserrat',
+        letterSpacing: '1px'
+      }
+    },
+    {
+      id: 'swipe-up',
+      name: 'Swipe Up',
+      preview: 'swipe up',
       style: {
         fontSize: 24,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        fontFamily: 'Caveat',
         fontStyle: 'italic',
-        color: '#2C3E50',
-        fontFamily: 'Georgia',
-        textShadow: { color: '#BDC3C7', blur: 1, offsetX: 1, offsetY: 1 }
+        textShadow: { color: '#000000', blur: 4, offsetX: 2, offsetY: 2 }
+      }
+    },
+    {
+      id: 'tournez-roue',
+      name: 'Tournez la Roue',
+      preview: 'TOURNEZ LA ROUE >',
+      style: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#4A5D2A',
+        backgroundColor: 'rgba(200,220,180,0.9)',
+        borderRadius: 8,
+        padding: { top: 12, right: 20, bottom: 12, left: 20 },
+        fontFamily: 'Oswald',
+        letterSpacing: '1px'
+      }
+    },
+    {
+      id: 'cadeau-mystere',
+      name: 'Cadeau Mystère',
+      preview: 'CADEAU MYSTÈRE',
+      style: {
+        fontSize: 32,
+        fontWeight: '900',
+        color: '#2D4A2D',
+        fontFamily: 'Anton',
+        letterSpacing: '2px',
+        textShadow: { color: 'rgba(0,0,0,0.3)', blur: 2, offsetX: 1, offsetY: 1 }
       }
     }
   ];
@@ -82,10 +198,14 @@ const stylePresets = [
       content: preset?.text || stylePreset?.preview || 'Votre texte ici',
       fontSize: preset?.fontSize || stylePreset?.style?.fontSize || 16,
       fontWeight: preset?.fontWeight || stylePreset?.style?.fontWeight || 'normal',
-      fontFamily: stylePreset?.style?.fontFamily || 'Arial',
+      fontFamily: stylePreset?.style?.fontFamily || 'Montserrat',
       color: stylePreset?.style?.color || '#000000',
       textAlign: 'left',
       zIndex: 10,
+      // Support for advanced typography
+      letterSpacing: stylePreset?.style?.letterSpacing || 'normal',
+      textTransform: stylePreset?.style?.textTransform || 'none',
+      lineHeight: stylePreset?.style?.lineHeight || 1.2,
       ...(stylePreset?.style || {})
     };
     onAddElement(newText);
@@ -145,6 +265,7 @@ const stylePresets = [
                     'none',
                   fontStyle: preset.style.fontStyle || 'normal',
                   fontFamily: preset.style.fontFamily || 'Arial',
+                  letterSpacing: preset.style.letterSpacing || 'normal',
                   display: 'inline-block'
                 }}
               >

@@ -93,12 +93,13 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       position: 'absolute',
       left: `${config.x || 0}px`,
       top: `${config.y || 0}px`,
-      fontSize: sizeMap[config.size || 'base'] || '14px',
+      fontSize: config.fontSize ? `${config.fontSize}px` : (sizeMap[config.size || 'base'] || '14px'),
       color: config.color || '#000000',
       fontFamily: config.fontFamily || 'Inter, sans-serif',
-      fontWeight: config.bold ? 'bold' : 'normal',
-      fontStyle: config.italic ? 'italic' : 'normal',
-      textDecoration: config.underline ? 'underline' : 'none',
+      fontWeight: config.bold ? 'bold' : (config.fontWeight || 'normal'),
+      fontStyle: config.italic ? 'italic' : (config.fontStyle || 'normal'),
+      textDecoration: config.underline ? 'underline' : (config.textDecoration || 'none'),
+      textAlign: config.textAlign || 'left',
       zIndex: isSelected ? 1000 : (isDragged ? 999 : 200),
       cursor: 'grab',
       userSelect: 'none',
@@ -111,8 +112,49 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       transition: isDragged ? 'none' : 'all 0.2s ease',
       outline: isSelected ? '2px solid #3b82f6' : 'none',
       outlineOffset: '2px',
-      borderRadius: '4px'
+      borderRadius: config.borderRadius ? `${config.borderRadius}px` : '4px'
     };
+
+    // Support des propriétés typographiques avancées
+    if (config.letterSpacing) {
+      textStyle.letterSpacing = config.letterSpacing;
+    }
+
+    if (config.textTransform) {
+      textStyle.textTransform = config.textTransform as any;
+    }
+
+    if (config.lineHeight) {
+      textStyle.lineHeight = config.lineHeight;
+    }
+
+    if (config.textStroke) {
+      textStyle.WebkitTextStroke = `${config.textStroke.width}px ${config.textStroke.color}`;
+    }
+
+    // Support des backgrounds et padding avancés
+    if (config.backgroundColor && !config.showFrame) {
+      const opacity = config.backgroundOpacity !== undefined ? config.backgroundOpacity : 1;
+      if (config.backgroundColor.includes('rgba')) {
+        textStyle.backgroundColor = config.backgroundColor;
+      } else {
+        // Convertir hex en rgba si nécessaire
+        const r = parseInt(config.backgroundColor.slice(1, 3), 16);
+        const g = parseInt(config.backgroundColor.slice(3, 5), 16);
+        const b = parseInt(config.backgroundColor.slice(5, 7), 16);
+        textStyle.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      }
+    }
+
+    if (config.padding && !config.showFrame) {
+      textStyle.padding = `${config.padding.top}px ${config.padding.right}px ${config.padding.bottom}px ${config.padding.left}px`;
+      textStyle.whiteSpace = 'normal'; // Permettre le wrap si padding
+    }
+
+    // Text shadow support
+    if (config.textShadow) {
+      textStyle.textShadow = `${config.textShadow.offsetX}px ${config.textShadow.offsetY}px ${config.textShadow.blur}px ${config.textShadow.color}`;
+    }
 
     if (config.showFrame) {
       textStyle.backgroundColor = config.frameColor || '#ffffff';
