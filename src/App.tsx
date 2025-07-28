@@ -33,6 +33,7 @@ import LivePreview from './pages/LivePreview';
 import Auth from './pages/Auth';
 import PublicCampaign from './pages/PublicCampaign';
 import PageBeta from './pages/PageBeta';
+import TestPage from './pages/TestPage';
 
 function App() {
   return (
@@ -83,6 +84,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pagebeta" element={<PageBeta />} />
+            <Route path="/testpage" element={<TestPage />} />
             <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
