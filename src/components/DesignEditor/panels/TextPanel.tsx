@@ -1,11 +1,13 @@
-import React from 'react';
-import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react';
+import React, { useState } from 'react';
+import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, Sparkles } from 'lucide-react';
+import AdvancedTextPanel from './AdvancedTextPanel';
 
 interface TextPanelProps {
   onAddElement: (element: any) => void;
 }
 
 const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const textPresets = [
     { id: 'heading', text: 'Titre principal', fontSize: 48, fontWeight: 'bold' },
     { id: 'subheading', text: 'Sous-titre', fontSize: 32, fontWeight: '600' },
@@ -320,7 +322,9 @@ const stylePresets = [
             <Underline className="w-4 h-4" />
           </button>
         </div>
-      </div>
+        </div>
+        </div>
+      )}
     </div>
   );
 };

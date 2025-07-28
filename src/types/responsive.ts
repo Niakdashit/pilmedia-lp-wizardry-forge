@@ -40,6 +40,14 @@ export interface ResponsiveTextElement extends ResponsiveElementBase {
     width: number;
     color: string;
   };
+  // Advanced CSS effects
+  advancedStyle?: {
+    id: string;
+    name: string;
+    category: string;
+    css: Record<string, any>;
+  };
+  customCSS?: Record<string, any>;
   // Allow additional properties for compatibility
   [key: string]: any;
 }
