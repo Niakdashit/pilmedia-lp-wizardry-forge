@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, Sparkles } from 'lucide-react';
-import AdvancedTextPanel from './AdvancedTextPanel';
+import React from 'react';
+import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react';
 
 interface TextPanelProps {
   onAddElement: (element: any) => void;
@@ -51,9 +50,35 @@ const textPresets = [
 ];
 
 const fonts = [
-  'Inter', 'Roboto', 'Montserrat', 'Poppins', 'Open Sans', 'Lato', 'Nunito', 'Raleway',
-  'Playfair Display', 'Merriweather', 'Oswald', 'Bebas Neue', 'Anton', 'Dancing Script',
-  'Pacifico', 'Lobster', 'Righteous', 'Fredoka One', 'Orbitron', 'Press Start 2P'
+  // Sans Serif Classiques
+  'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Montserrat', 'Nunito', 'Source Sans Pro', 'Raleway', 'Ubuntu', 'Work Sans', 'Fira Sans', 'Rubik',
+  
+  // Serif Élégants
+  'Playfair Display', 'Merriweather', 'Cormorant Garamond', 'Cinzel',
+  
+  // Display Bold & Impact
+  'Oswald', 'Anton', 'Bebas Neue', 'Fjalla One', 'Kanit', 'Quicksand', 'Comfortaa', 'Alfa Slab One', 'Racing Sans One', 'Teko', 'Staatliches',
+  
+  // Handwriting & Script
+  'Dancing Script', 'Pacifico', 'Kalam', 'Caveat', 'Architects Daughter', 'Sacramento', 'Great Vibes', 'Satisfy', 'Cookie', 'Shadows Into Light', 'Indie Flower',
+  
+  // Fun & Creative
+  'Fredoka One', 'Lobster', 'Righteous', 'Bungee', 'Bungee Shade', 'Bungee Outline', 'Russo One', 'Bangers', 'Amatic SC', 'Permanent Marker', 'Londrina Solid',
+  
+  // Gaming & Tech
+  'Press Start 2P', 'Orbitron', 'Audiowide', 'Exo 2', 'Black Ops One', 'Zen Dots', 'Wallpoet',
+  
+  // Horror & Special
+  'Creepster', 'Eater', 'Metal Mania', 'Nosifer', 'Butcherman', 'New Rocker', 'Griffy', 'Rye',
+  
+  // Vintage & Retro
+  'Special Elite', 'Fontdiner Swanky', 'Macondo',
+  
+  // Ultra Bold & Strong
+  'Titan One', 'Squada One', 'Changa One', 'Impact',
+  
+  // Decorative & Artistic
+  'Fascinate', 'Fascinate Inline', 'Mystery Quest', 'Trade Winds', 'Pirata One', 'Emblema One', 'Plaster', 'Condiment', 'Caesar Dressing', 'Faster One', 'Spicy Rice', 'Ewert', 'Gravitas One', 'Kumar One', 'Kumar One Outline'
 ];
 
 const stylePresets = [
@@ -155,8 +180,6 @@ const stylePresets = [
 ];
 
 const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
   // Ajouter un texte avec préréglages optionnels
   const addText = (preset?: any, stylePreset?: any) => {
     const newElement = {
@@ -189,40 +212,9 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Texte</h3>
         <p className="text-sm text-muted-foreground">Ajoutez et personnalisez du texte</p>
-        
-        {/* Toggle entre mode basique et avancé */}
-        <div className="flex justify-center mt-3">
-          <div className="bg-muted rounded-lg p-1 flex">
-            <button
-              onClick={() => setShowAdvanced(false)}
-              className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                !showAdvanced 
-                  ? 'bg-background text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Type className="w-4 h-4 inline mr-1" />
-              Basique
-            </button>
-            <button
-              onClick={() => setShowAdvanced(true)}
-              className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                showAdvanced 
-                  ? 'bg-background text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 inline mr-1" />
-              Avancé
-            </button>
-          </div>
-        </div>
       </div>
 
-      {showAdvanced ? (
-        <AdvancedTextPanel onAddElement={onAddElement} />
-      ) : (
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Bouton d'ajout simple */}
           <div>
             <button
@@ -282,11 +274,11 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
             </div>
           </div>
 
-          {/* Polices populaires */}
+          {/* Polices créatives étendues */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-700">Polices populaires</h4>
-            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
-              {fonts.slice(0, 8).map((font) => (
+            <h4 className="text-sm font-semibold text-gray-700">Polices créatives</h4>
+            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+              {fonts.map((font) => (
                 <button
                   key={font}
                   onClick={() => addText({ text: 'Exemple de texte', fontFamily: font, fontSize: 24 })}
@@ -299,6 +291,36 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
               ))}
             </div>
           </div>
+
+          {/* Texte personnalisé avec styles avancés */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700">Texte personnalisé</h4>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                placeholder="Votre texte..."
+                className="flex-1 p-2 border border-gray-300 rounded-md text-sm"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.target as HTMLInputElement;
+                    addText({ text: input.value || 'Nouveau texte', fontSize: 24 });
+                    input.value = '';
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  const input = document.querySelector('input[placeholder="Votre texte..."]') as HTMLInputElement;
+                  addText({ text: input?.value || 'Nouveau texte', fontSize: 24 });
+                  if (input) input.value = '';
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
 
           {/* Alignement et style */}
           <div className="space-y-3">
@@ -347,11 +369,9 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
                 <Underline className="w-4 h-4" />
               </button>
             </div>
-          </div>
         </div>
-      )}
-    </div>
-  );
-};
+      </div>
+    );
+  };
 
 export default TextPanel;
