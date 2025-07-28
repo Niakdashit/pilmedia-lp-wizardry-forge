@@ -42,19 +42,38 @@ export const useTextElementDrag = (
       let newX = moveEvent.clientX - containerRect.left - dragStartRef.current.offsetX;
       let newY = moveEvent.clientY - containerRect.top - dragStartRef.current.offsetY;
       
-      // Snap to alignment guides
-      const snapTolerance = 8;
+      // Snap to alignment guides avec précision accrue
+      const snapTolerance = 15; // Zone de magnétisme plus large
+      const strongSnapTolerance = 5; // Zone de blocage fort
       const centerX = containerRect.width / 2;
       const centerY = containerRect.height / 2;
       const elementCenterX = newX + elementWidth / 2;
       const elementCenterY = newY + elementHeight / 2;
       
-      // Snap to center
+      // Magnétisme fort pour l'alignement centre horizontal
       if (Math.abs(elementCenterX - centerX) <= snapTolerance) {
-        newX = centerX - elementWidth / 2;
+        const exactCenterX = centerX - elementWidth / 2;
+        if (Math.abs(elementCenterX - centerX) <= strongSnapTolerance) {
+          // Blocage fort - position exacte
+          newX = exactCenterX;
+        } else {
+          // Magnétisme progressif
+          const factor = 1 - (Math.abs(elementCenterX - centerX) / snapTolerance);
+          newX = newX + (exactCenterX - newX) * factor * 0.8;
+        }
       }
+      
+      // Magnétisme fort pour l'alignement centre vertical
       if (Math.abs(elementCenterY - centerY) <= snapTolerance) {
-        newY = centerY - elementHeight / 2;
+        const exactCenterY = centerY - elementHeight / 2;
+        if (Math.abs(elementCenterY - centerY) <= strongSnapTolerance) {
+          // Blocage fort - position exacte
+          newY = exactCenterY;
+        } else {
+          // Magnétisme progressif
+          const factor = 1 - (Math.abs(elementCenterY - centerY) / snapTolerance);
+          newY = newY + (exactCenterY - newY) * factor * 0.8;
+        }
       }
       
       // Constrain to container bounds
