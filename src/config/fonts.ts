@@ -1,7 +1,7 @@
 export interface FontOption {
   value: string;
   label: string;
-  category: 'sans-serif' | 'serif' | 'display' | 'handwriting' | 'monospace' | 'fun' | 'branded';
+  category: 'sans-serif' | 'serif' | 'display' | 'handwriting' | 'artistic' | 'monospace' | 'fun' | 'branded';
   preview?: string;
 }
 
@@ -10,6 +10,7 @@ export const fontCategories = {
   'serif': 'Serif', 
   'display': 'Display',
   'handwriting': 'Handwriting',
+  'artistic': 'Artistic & Script',
   'monospace': 'Monospace',
   'fun': 'Fun & Creative',
   'branded': 'Branded Style'
@@ -70,6 +71,17 @@ export const fontOptions: FontOption[] = [
   { value: 'Shadows Into Light, cursive', label: 'Shadows Into Light', category: 'handwriting' },
   { value: 'Indie Flower, cursive', label: 'Indie Flower', category: 'handwriting' },
   { value: 'Permanent Marker, cursive', label: 'Permanent Marker', category: 'handwriting' },
+
+  // Artistic & Script (polices très artistiques de TestPage)
+  { value: 'Kaushan Script, cursive', label: 'Kaushan Script', category: 'artistic' },
+  { value: 'Tangerine, cursive', label: 'Tangerine', category: 'artistic' },
+  { value: 'Yellowtail, cursive', label: 'Yellowtail', category: 'artistic' },
+  { value: 'Pinyon Script, cursive', label: 'Pinyon Script', category: 'artistic' },
+  { value: 'Marck Script, cursive', label: 'Marck Script', category: 'artistic' },
+  { value: 'Allura, cursive', label: 'Allura', category: 'artistic' },
+  { value: 'Homemade Apple, cursive', label: 'Homemade Apple', category: 'artistic' },
+  { value: 'Covered By Your Grace, cursive', label: 'Covered By Your Grace', category: 'artistic' },
+  { value: 'Rock Salt, cursive', label: 'Rock Salt', category: 'artistic' },
 
   // Fun & Creative
   { value: 'Fredoka One, cursive', label: 'Fredoka One', category: 'fun' },
