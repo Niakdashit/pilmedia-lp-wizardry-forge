@@ -457,7 +457,45 @@ const TextPanel: React.FC<TextPanelProps> = ({ onAddElement }) => {
                 }}
               />
               <p className="text-xs text-gray-500 mt-1">Appuyez sur Ctrl+Entrée pour appliquer</p>
+            
+            {/* Import de HTML personnalisé */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                HTML personnalisé
+              </label>
+              <textarea
+                placeholder="<div><h1>Mon titre</h1><p>Mon texte</p></div>"
+                className="w-full p-2 border border-gray-300 rounded-md text-xs font-mono"
+                rows={4}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    const textarea = e.target as HTMLTextAreaElement;
+                    if (textarea.value.trim()) {
+                      try {
+                        const newElement = {
+                          id: `html-${Date.now()}`,
+                          type: 'html',
+                          content: textarea.value.trim(),
+                          x: Math.random() * 400 + 100,
+                          y: Math.random() * 300 + 100,
+                          width: 300,
+                          height: 150,
+                          fontSize: 16,
+                          color: '#000000',
+                          fontFamily: 'Inter'
+                        };
+                        onAddElement(newElement);
+                        textarea.value = '';
+                      } catch (error) {
+                        console.error('Erreur dans le HTML personnalisé:', error);
+                      }
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-1">Appuyez sur Ctrl+Entrée pour appliquer</p>
             </div>
+          </div>
           </div>
         </div>
 
