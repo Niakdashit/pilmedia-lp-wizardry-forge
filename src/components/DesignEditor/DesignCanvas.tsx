@@ -5,6 +5,8 @@ import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import { SmartWheel } from '../SmartWheel';
 import WheelConfigModal from './WheelConfigModal';
+import AlignmentGuides from './components/AlignmentGuides';
+import GridOverlay from './components/GridOverlay';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
@@ -31,6 +33,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
 }) => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
+  const [showGuides, setShowGuides] = useState(true);
   
   // Récupérer les configurations de la roue depuis la campagne
   const wheelBorderStyle = campaign?.design?.wheelBorderStyle || 'classic';
@@ -180,6 +184,22 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             <div className="absolute inset-0" style={{
             background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
           }}>
+              {/* Grid Overlay */}
+              <GridOverlay 
+                canvasSize={canvasSize}
+                showGrid={showGrid}
+                gridSize={20}
+                opacity={0.15}
+              />
+              
+              {/* Alignment Guides */}
+              <AlignmentGuides
+                canvasSize={canvasSize}
+                elements={elementsWithResponsive}
+                activeElementId={selectedElement}
+                showGuides={showGuides}
+              />
+              
               {/* Clouds */}
               
               
@@ -243,6 +263,32 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                 />
               );
             })}
+
+            {/* Grid and Guides Toggle */}
+            <div className="absolute top-2 right-2 flex gap-2">
+              <button
+                onClick={() => setShowGrid(!showGrid)}
+                className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
+                  showGrid 
+                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    : 'bg-white/80 hover:bg-white text-gray-700'
+                }`}
+                title="Afficher/masquer la grille"
+              >
+                📐
+              </button>
+              <button
+                onClick={() => setShowGuides(!showGuides)}
+                className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
+                  showGuides 
+                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                    : 'bg-white/80 hover:bg-white text-gray-700'
+                }`}
+                title="Afficher/masquer les guides d'alignement"
+              >
+                📏
+              </button>
+            </div>
 
             {/* Device Frame for mobile/tablet */}
             {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
