@@ -12,6 +12,7 @@ import {
   Search,
   Grid3X3
 } from 'lucide-react';
+import TextPanel from './TextPanel';
 
 interface AssetsPanelProps {
   onAddElement: (element: any) => void;
@@ -30,12 +31,6 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
     { id: 'uploads', label: 'Uploads', icon: Upload }
   ];
 
-  const textElements = [
-    { type: 'heading', label: 'Titre principal', style: { fontSize: '32px', fontWeight: 'bold' } },
-    { type: 'subheading', label: 'Sous-titre', style: { fontSize: '24px', fontWeight: '600' } },
-    { type: 'body', label: 'Texte normal', style: { fontSize: '16px', fontWeight: 'normal' } },
-    { type: 'caption', label: 'Légende', style: { fontSize: '14px', fontWeight: 'normal' } }
-  ];
 
   const shapes = [
     { type: 'rectangle', label: 'Rectangle', icon: Square, color: '#3B82F6' },
@@ -51,22 +46,6 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
     { id: 4, url: '/api/placeholder/150/100', category: 'celebration' }
   ];
 
-  const handleAddText = (textType: any) => {
-    const element = {
-      id: `text-${Date.now()}`,
-      type: 'text',
-      content: textType.label,
-      x: 100,
-      y: 100,
-      width: 200,
-      height: 50,
-      style: {
-        ...textType.style,
-        color: '#000000'
-      }
-    };
-    onAddElement(element);
-  };
 
   const handleAddShape = (shape: any) => {
     const element = {
@@ -116,49 +95,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
   const renderContent = () => {
     switch (activeCategory) {
       case 'text':
-        return (
-          <div className="space-y-2">
-            {textElements.map((text) => (
-              <button
-                key={text.type}
-                onClick={() => handleAddText(text)}
-                className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                style={text.style}
-              >
-                {text.label}
-              </button>
-            ))}
-            
-            {/* Texte personnalisé */}
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Texte personnalisé
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Votre texte..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const input = e.target as HTMLInputElement;
-                      if (input.value.trim()) {
-                        handleAddText({
-                          label: input.value,
-                          style: { fontSize: '16px', fontWeight: 'normal' }
-                        });
-                        input.value = '';
-                      }
-                    }
-                  }}
-                />
-                <button className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-        );
+        return <TextPanel onAddElement={onAddElement} />;
 
       case 'shapes':
         return (
