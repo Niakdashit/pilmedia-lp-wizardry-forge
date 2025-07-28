@@ -34,7 +34,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
-  const [showGuides, setShowGuides] = useState(true);
   
   // Récupérer les configurations de la roue depuis la campagne
   const wheelBorderStyle = campaign?.design?.wheelBorderStyle || 'classic';
@@ -196,8 +195,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               <AlignmentGuides
                 canvasSize={canvasSize}
                 elements={elementsWithResponsive}
-                activeElementId={selectedElement}
-                showGuides={showGuides}
               />
               
               {/* Clouds */}
@@ -276,17 +273,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                 title="Afficher/masquer la grille"
               >
                 📐
-              </button>
-              <button
-                onClick={() => setShowGuides(!showGuides)}
-                className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
-                  showGuides 
-                    ? 'bg-green-500 text-white hover:bg-green-600' 
-                    : 'bg-white/80 hover:bg-white text-gray-700'
-                }`}
-                title="Afficher/masquer les guides d'alignement"
-              >
-                📏
               </button>
             </div>
 
