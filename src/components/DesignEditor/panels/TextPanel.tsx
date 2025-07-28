@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react';
+import { Type, Wand2 } from 'lucide-react';
+import TextEffectsPanel from './TextEffectsPanel';
+
 interface TextPanelProps {
   onAddElement: (element: any) => void;
 }
@@ -28,6 +30,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
   onAddElement
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(fontCategories[0]);
+  const [showEffects, setShowEffects] = useState(false);
 
   // Ajouter un texte avec préréglages optionnels
   const addText = (preset?: any, stylePreset?: any) => {
@@ -54,6 +57,11 @@ const TextPanel: React.FC<TextPanelProps> = ({
     };
     onAddElement(newElement);
   };
+
+  if (showEffects) {
+    return <TextEffectsPanel onAddElement={onAddElement} onBack={() => setShowEffects(false)} />;
+  }
+
   return <div className="p-4 space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Texte</h3>
@@ -98,20 +106,16 @@ const TextPanel: React.FC<TextPanelProps> = ({
             </div>
           </div>
 
-          {/* Texte personnalisé avec styles avancés */}
-          
-
-          {/* Alignement et style */}
-          <div className="space-y-3">
-            
-            <div className="flex space-x-2">
-              
-              
-              
-            </div>
+          {/* Bouton Effets */}
+          <div>
+            <button 
+              onClick={() => setShowEffects(true)} 
+              className="w-full p-4 border-2 border-dashed border-purple-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors flex items-center justify-center"
+            >
+              <Wand2 className="w-5 h-5 mr-2 text-purple-600" />
+              <span className="text-sm text-purple-600">Effets de texte</span>
+            </button>
           </div>
-
-          
         </div>
       </div>;
 };
