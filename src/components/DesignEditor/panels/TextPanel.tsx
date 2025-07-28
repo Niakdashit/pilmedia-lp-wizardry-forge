@@ -50,35 +50,17 @@ const textPresets = [
 ];
 
 const fonts = [
-  // Sans Serif Classiques
-  'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Montserrat', 'Nunito', 'Source Sans Pro', 'Raleway', 'Ubuntu', 'Work Sans', 'Fira Sans', 'Rubik',
-  
-  // Serif Élégants
-  'Playfair Display', 'Merriweather', 'Cormorant Garamond', 'Cinzel',
-  
-  // Display Bold & Impact
-  'Oswald', 'Anton', 'Bebas Neue', 'Fjalla One', 'Kanit', 'Quicksand', 'Comfortaa', 'Alfa Slab One', 'Racing Sans One', 'Teko', 'Staatliches',
-  
+  // Artistic Display Fonts
+  'Abril Fatface', 'Alegreya SC', 'Alfa Slab One', 'Anton', 'Arvo', 'Barlow Condensed', 'Bebas Neue', 'Big Shoulders Display', 'Calistoga', 'Catamaran', 'Creepster', 'Crimson Text', 'DM Serif Display', 'Domine', 'Exo', 'Fjalla One', 'Francois One', 'Fredoka One', 'Gelasio', 'Gravitas One', 'Hammersmith One', 'IBM Plex Serif', 'Josefin Sans', 'Kalam', 'Kanit', 'Lalezar', 'Lexend', 'Libre Baskerville', 'Lilita One', 'Lobster', 'Lora', 'Merriweather', 'Montserrat Alternates', 'Noto Serif', 'Nunito Sans', 'Old Standard TT', 'Oswald', 'Patua One', 'Playfair Display', 'Poppins', 'PT Serif', 'Quattrocento', 'Raleway', 'Righteous', 'Roboto Condensed', 'Roboto Slab', 'Russo One', 'Saira', 'Source Serif Pro', 'Spectral', 'Squada One', 'Staatliches', 'Titillium Web', 'Ubuntu', 'Ultra', 'Vollkorn', 'Work Sans', 'Yeseva One', 'Zilla Slab',
+
   // Handwriting & Script
-  'Dancing Script, cursive', 'Pacifico, cursive', 'Kalam, cursive', 'Caveat, cursive', 'Architects Daughter, cursive', 'Sacramento, cursive', 'Great Vibes, cursive', 'Satisfy, cursive', 'Cookie, cursive', 'Shadows Into Light, cursive', 'Indie Flower, cursive',
-  
-  // Fun & Creative
-  'Fredoka One', 'Lobster, cursive', 'Righteous', 'Bungee', 'Bungee Shade', 'Bungee Outline', 'Russo One', 'Bangers', 'Amatic SC', 'Permanent Marker', 'Londrina Solid',
-  
-  // Gaming & Tech
-  'Press Start 2P', 'Orbitron', 'Audiowide', 'Exo 2', 'Black Ops One', 'Zen Dots', 'Wallpoet',
-  
-  // Horror & Special
-  'Creepster', 'Eater', 'Metal Mania', 'Nosifer', 'Butcherman', 'New Rocker', 'Griffy', 'Rye',
-  
-  // Vintage & Retro
-  'Special Elite', 'Fontdiner Swanky', 'Macondo',
-  
-  // Ultra Bold & Strong
-  'Titan One', 'Squada One', 'Changa One', 'Impact',
-  
-  // Decorative & Artistic
-  'Fascinate', 'Fascinate Inline', 'Mystery Quest', 'Trade Winds', 'Pirata One', 'Emblema One', 'Plaster', 'Condiment', 'Caesar Dressing', 'Faster One', 'Spicy Rice', 'Ewert', 'Gravitas One', 'Kumar One', 'Kumar One Outline'
+  'Amatic SC', 'Architects Daughter', 'Caveat', 'Cookie', 'Dancing Script', 'Great Vibes', 'Indie Flower', 'Kaushan Script', 'Lobster Two', 'Pacifico', 'Patrick Hand', 'Permanent Marker', 'Rock Salt', 'Sacramento', 'Satisfy', 'Shadows Into Light', 'Yellowtail',
+
+  // Decorative & Stylized
+  'Bangers', 'Black Ops One', 'Bungee', 'Bungee Shade', 'Cinzel', 'Comfortaa', 'Covered By Your Grace', 'Faster One', 'Fontdiner Swanky', 'Griffy', 'Henny Penny', 'Indie Flower', 'Luckiest Guy', 'Metal Mania', 'Modak', 'Nosifer', 'Orbitron', 'Press Start 2P', 'Rajdhani', 'Righteous', 'Shrikhand', 'Special Elite', 'Titan One', 'Trade Winds', 'Wallpoet',
+
+  // Modern & Trendy
+  'Barlow', 'DM Sans', 'Epilogue', 'Fira Sans', 'Inter', 'JetBrains Mono', 'Karla', 'Lato', 'Manrope', 'Mulish', 'Open Sans', 'Plus Jakarta Sans', 'Roboto', 'Rubik', 'Space Grotesk', 'Space Mono'
 ];
 
 const stylePresets = [
