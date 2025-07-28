@@ -85,6 +85,19 @@
   --ring: 309 78% 31%;
 }
 
+/* Animations pour les effets de texte */
+@keyframes glitch {
+  0% {
+    text-shadow: 2px 0 #ff00ff, -2px 0 #ffff00;
+  }
+  50% {
+    text-shadow: -2px 0 #ff00ff, 2px 0 #ffff00;
+  }
+  100% {
+    text-shadow: 2px 0 #ff00ff, -2px 0 #ffff00;
+  }
+}
+
 /* Classes utilitaires pour les couleurs de marque */
 @layer utilities {
   .bg-brand-primary {

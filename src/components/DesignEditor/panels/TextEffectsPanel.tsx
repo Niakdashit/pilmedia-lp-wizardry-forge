@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 interface TextEffectsPanelProps {
   onAddElement: (element: any) => void;
   onBack: () => void;
+  isToolbarMode?: boolean;
+  selectedElement?: any;
+  onElementUpdate?: (updates: any) => void;
 }
 
 const textEffects = [
@@ -79,7 +82,13 @@ const shapeTypes = [
   { id: 'curve', name: 'Curve', css: { borderRadius: '20px', padding: '8px 16px', backgroundColor: 'rgba(255,255,255,0.1)' } }
 ];
 
-const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({ onAddElement, onBack }) => {
+const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({ 
+  onAddElement, 
+  onBack, 
+  isToolbarMode = false, 
+  selectedElement, 
+  onElementUpdate 
+}) => {
   const [selectedStyle, setSelectedStyle] = useState('lift');
   const [selectedShape, setSelectedShape] = useState('none');
   const [intensity, setIntensity] = useState(100);
@@ -103,27 +112,41 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({ onAddElement, onBac
       });
     }
 
-    const newElement = {
-      id: `text-${Date.now()}`,
-      type: 'text',
-      content: 'Texte avec effet',
-      x: Math.random() * 400 + 100,
-      y: Math.random() * 300 + 100,
-      fontSize: 32,
-      color: effect.css.color || '#000000',
-      fontFamily: 'Inter',
-      fontWeight: 'bold',
-      textAlign: 'left' as const,
-      customCSS: combinedCSS,
-      advancedStyle: {
-        id: effect.id,
-        name: effect.name,
-        category: 'effect',
-        css: combinedCSS
-      }
-    };
+    if (isToolbarMode && selectedElement && onElementUpdate) {
+      // Mode toolbar : appliquer l'effet au texte sélectionné
+      onElementUpdate({ 
+        customCSS: combinedCSS,
+        advancedStyle: {
+          id: effect.id,
+          name: effect.name,
+          category: 'effect',
+          css: combinedCSS
+        }
+      });
+    } else {
+      // Mode normal : créer un nouveau texte avec l'effet
+      const newElement = {
+        id: `text-${Date.now()}`,
+        type: 'text',
+        content: 'Texte avec effet',
+        x: Math.random() * 400 + 100,
+        y: Math.random() * 300 + 100,
+        fontSize: 32,
+        color: effect.css.color || '#000000',
+        fontFamily: 'Inter',
+        fontWeight: 'bold',
+        textAlign: 'left' as const,
+        customCSS: combinedCSS,
+        advancedStyle: {
+          id: effect.id,
+          name: effect.name,
+          category: 'effect',
+          css: combinedCSS
+        }
+      };
 
-    onAddElement(newElement);
+      onAddElement(newElement);
+    }
   };
 
   return (

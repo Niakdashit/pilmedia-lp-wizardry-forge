@@ -244,6 +244,11 @@ const CanvasElement: React.FC<CanvasElementProps> = ({
             baseStyle.textShadow = `${element.textShadow.offsetX}px ${element.textShadow.offsetY}px ${element.textShadow.blur}px ${element.textShadow.color}`;
           }
 
+          // Add custom CSS from effects
+          if (element.customCSS) {
+            Object.assign(baseStyle, element.customCSS);
+          }
+
           return baseStyle;
         };
 
