@@ -1,36 +1,111 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react';
 interface TextPanelProps {
   onAddElement: (element: any) => void;
 }
 
-// Polices artistiques de TestPage
-const fonts = [
-  'Dancing Script',
-  'Pacifico',
-  'Satisfy',
-  'Great Vibes',
-  'Lobster',
-  'Kaushan Script',
-  'Tangerine',
-  'Sacramento',
-  'Yellowtail',
-  'Pinyon Script',
-  'Marck Script',
-  'Allura',
-  'Amatic SC',
-  'Caveat',
-  'Indie Flower',
-  'Shadows Into Light',
-  'Permanent Marker',
-  'Architects Daughter',
-  'Homemade Apple',
-  'Covered By Your Grace',
-  'Rock Salt'
+// Polices organisées par catégories (identique à TestPage)
+const fontCategories = [
+  {
+    name: "Business",
+    fonts: [
+      'Roboto',
+      'Open Sans',
+      'Lato',
+      'Montserrat',
+      'Source Sans Pro',
+      'Nunito Sans',
+      'Inter',
+      'Poppins',
+      'Work Sans',
+      'IBM Plex Sans'
+    ]
+  },
+  {
+    name: "Calm",
+    fonts: [
+      'Libre Baskerville',
+      'Crimson Text',
+      'EB Garamond',
+      'Lora',
+      'Merriweather',
+      'Playfair Display',
+      'Cormorant Garamond',
+      'Spectral',
+      'Source Serif Pro',
+      'Vollkorn'
+    ]
+  },
+  {
+    name: "Cute",
+    fonts: [
+      'Caveat',
+      'Indie Flower',
+      'Architects Daughter',
+      'Shadows Into Light',
+      'Covered By Your Grace',
+      'Handlee',
+      'Kalam',
+      'Coming Soon',
+      'Sue Ellen Francisco',
+      'Schoolbell'
+    ]
+  },
+  {
+    name: "Fancy",
+    fonts: [
+      'Cinzel',
+      'Cormorant',
+      'Abril Fatface',
+      'Yeseva One',
+      'Fredericka the Great',
+      'Almendra',
+      'UnifrakturMaguntia',
+      'Cardo',
+      'Old Standard TT',
+      'Libre Caslon Text'
+    ]
+  },
+  {
+    name: "Playful",
+    fonts: [
+      'Lobster',
+      'Pacifico',
+      'Fredoka One',
+      'Righteous',
+      'Bungee',
+      'Chewy',
+      'Leckerli One',
+      'Creepster',
+      'Sigmar One',
+      'Shrikhand'
+    ]
+  },
+  {
+    name: "Artistic",
+    fonts: [
+      'Dancing Script',
+      'Great Vibes',
+      'Allura',
+      'Satisfy',
+      'Kaushan Script',
+      'Tangerine',
+      'Sacramento',
+      'Yellowtail',
+      'Pinyon Script',
+      'Marck Script',
+      'Amatic SC',
+      'Permanent Marker',
+      'Homemade Apple',
+      'Rock Salt'
+    ]
+  }
 ];
 const TextPanel: React.FC<TextPanelProps> = ({
   onAddElement
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState(fontCategories[0]);
+
   // Ajouter un texte avec préréglages optionnels
   const addText = (preset?: any, stylePreset?: any) => {
     const newElement = {
@@ -71,24 +146,46 @@ const TextPanel: React.FC<TextPanelProps> = ({
             </button>
           </div>
 
-
-
-          {/* Polices artistiques */}
+          {/* Sélecteur de catégories */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-700">Polices artistiques</h4>
+            <h4 className="text-sm font-semibold text-gray-700">Catégories de polices</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {fontCategories.map((category, index) => (
+                <button
+                  key={index}
+                  className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${
+                    selectedCategory.name === category.name 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Polices de la catégorie sélectionnée */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700">{selectedCategory.name}</h4>
             <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-              {fonts.map(font => <button key={font} onClick={() => addText({
-            text: 'Texte artistique',
-            fontFamily: font,
-            fontSize: 24
-          })} className="p-2 border border-gray-200 rounded hover:border-blue-300 hover:bg-blue-50 transition-colors text-left">
-                  <span style={{
-              fontFamily: font
-            }} className="text-xl">
+              {selectedCategory.fonts.map(font => (
+                <button 
+                  key={font} 
+                  onClick={() => addText({
+                    text: 'Texte stylé',
+                    fontFamily: font,
+                    fontSize: 24
+                  })} 
+                  className="p-2 border border-gray-200 rounded hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <span style={{ fontFamily: font }} className="text-xl">
                     {font}
                   </span>
-                  <p className="text-xs text-gray-500 mt-1">Texte artistique</p>
-                </button>)}
+                  <p className="text-xs text-gray-500 mt-1">{selectedCategory.name}</p>
+                </button>
+              ))}
             </div>
           </div>
 
