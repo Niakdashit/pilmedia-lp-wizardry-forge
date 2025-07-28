@@ -14,6 +14,7 @@ export default {
         'impact': ['Impact', 'Bebas Neue', 'Oswald', 'sans-serif'],
         'condensed': ['Bebas Neue', 'Oswald', 'Anton', 'Impact', 'sans-serif'],
         'oswald': ['Oswald', 'sans-serif'],
+        'lobster': ['Lobster', 'cursive'],
       },
       colors: {
         primary: {
