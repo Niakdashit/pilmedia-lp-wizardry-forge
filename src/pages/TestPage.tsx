@@ -10,33 +10,110 @@ interface TextElement {
   fontFamily: string;
 }
 
-const fonts = [
-  { name: 'Dancing Script', className: 'font-dancing-script' },
-  { name: 'Pacifico', className: 'font-pacifico' },
-  { name: 'Satisfy', className: 'font-satisfy' },
-  { name: 'Great Vibes', className: 'font-great-vibes' },
-  { name: 'Lobster', className: 'font-lobster' },
-  { name: 'Kaushan Script', className: 'font-kaushan-script' },
-  { name: 'Tangerine', className: 'font-tangerine' },
-  { name: 'Sacramento', className: 'font-sacramento' },
-  { name: 'Yellowtail', className: 'font-yellowtail' },
-  { name: 'Pinyon Script', className: 'font-pinyon-script' },
-  { name: 'Marck Script', className: 'font-marck-script' },
-  { name: 'Allura', className: 'font-allura' },
-  { name: 'Amatic SC', className: 'font-amatic-sc' },
-  { name: 'Caveat', className: 'font-caveat' },
-  { name: 'Indie Flower', className: 'font-indie-flower' },
-  { name: 'Shadows Into Light', className: 'font-shadows-into-light' },
-  { name: 'Permanent Marker', className: 'font-permanent-marker' },
-  { name: 'Architects Daughter', className: 'font-architects-daughter' },
-  { name: 'Homemade Apple', className: 'font-homemade-apple' },
-  { name: 'Covered By Your Grace', className: 'font-covered-by-your-grace' },
-  { name: 'Rock Salt', className: 'font-rock-salt' }
+const fontCategories = [
+  {
+    name: "Business",
+    fonts: [
+      { name: 'Roboto', className: 'font-roboto' },
+      { name: 'Open Sans', className: 'font-open-sans' },
+      { name: 'Lato', className: 'font-lato' },
+      { name: 'Montserrat', className: 'font-montserrat' },
+      { name: 'Source Sans Pro', className: 'font-source-sans-pro' },
+      { name: 'Nunito Sans', className: 'font-nunito-sans' },
+      { name: 'Inter', className: 'font-inter' },
+      { name: 'Poppins', className: 'font-poppins' },
+      { name: 'Work Sans', className: 'font-work-sans' },
+      { name: 'IBM Plex Sans', className: 'font-ibm-plex-sans' }
+    ]
+  },
+  {
+    name: "Calm",
+    fonts: [
+      { name: 'Libre Baskerville', className: 'font-libre-baskerville' },
+      { name: 'Crimson Text', className: 'font-crimson-text' },
+      { name: 'EB Garamond', className: 'font-eb-garamond' },
+      { name: 'Lora', className: 'font-lora' },
+      { name: 'Merriweather', className: 'font-merriweather' },
+      { name: 'Playfair Display', className: 'font-playfair-display' },
+      { name: 'Cormorant Garamond', className: 'font-cormorant-garamond' },
+      { name: 'Spectral', className: 'font-spectral' },
+      { name: 'Source Serif Pro', className: 'font-source-serif-pro' },
+      { name: 'Vollkorn', className: 'font-vollkorn' }
+    ]
+  },
+  {
+    name: "Cute",
+    fonts: [
+      { name: 'Caveat', className: 'font-caveat' },
+      { name: 'Indie Flower', className: 'font-indie-flower' },
+      { name: 'Architects Daughter', className: 'font-architects-daughter' },
+      { name: 'Shadows Into Light', className: 'font-shadows-into-light' },
+      { name: 'Covered By Your Grace', className: 'font-covered-by-your-grace' },
+      { name: 'Handlee', className: 'font-handlee' },
+      { name: 'Kalam', className: 'font-kalam' },
+      { name: 'Coming Soon', className: 'font-coming-soon' },
+      { name: 'Sue Ellen Francisco', className: 'font-sue-ellen-francisco' },
+      { name: 'Schoolbell', className: 'font-schoolbell' }
+    ]
+  },
+  {
+    name: "Fancy",
+    fonts: [
+      { name: 'Cinzel', className: 'font-cinzel' },
+      { name: 'Cormorant', className: 'font-cormorant' },
+      { name: 'Abril Fatface', className: 'font-abril-fatface' },
+      { name: 'Yeseva One', className: 'font-yeseva-one' },
+      { name: 'Fredericka the Great', className: 'font-fredericka-the-great' },
+      { name: 'Almendra', className: 'font-almendra' },
+      { name: 'UnifrakturMaguntia', className: 'font-unifraktur-maguntia' },
+      { name: 'Cardo', className: 'font-cardo' },
+      { name: 'Old Standard TT', className: 'font-old-standard-tt' },
+      { name: 'Libre Caslon Text', className: 'font-libre-caslon-text' }
+    ]
+  },
+  {
+    name: "Playful",
+    fonts: [
+      { name: 'Lobster', className: 'font-lobster' },
+      { name: 'Pacifico', className: 'font-pacifico' },
+      { name: 'Fredoka One', className: 'font-fredoka-one' },
+      { name: 'Righteous', className: 'font-righteous' },
+      { name: 'Bungee', className: 'font-bungee' },
+      { name: 'Chewy', className: 'font-chewy' },
+      { name: 'Leckerli One', className: 'font-leckerli-one' },
+      { name: 'Creepster', className: 'font-creepster' },
+      { name: 'Sigmar One', className: 'font-sigmar-one' },
+      { name: 'Shrikhand', className: 'font-shrikhand' }
+    ]
+  },
+  {
+    name: "Artistic",
+    fonts: [
+      { name: 'Dancing Script', className: 'font-dancing-script' },
+      { name: 'Great Vibes', className: 'font-great-vibes' },
+      { name: 'Allura', className: 'font-allura' },
+      { name: 'Satisfy', className: 'font-satisfy' },
+      { name: 'Kaushan Script', className: 'font-kaushan-script' },
+      { name: 'Tangerine', className: 'font-tangerine' },
+      { name: 'Sacramento', className: 'font-sacramento' },
+      { name: 'Yellowtail', className: 'font-yellowtail' },
+      { name: 'Pinyon Script', className: 'font-pinyon-script' },
+      { name: 'Marck Script', className: 'font-marck-script' },
+      { name: 'Amatic SC', className: 'font-amatic-sc' },
+      { name: 'Permanent Marker', className: 'font-permanent-marker' },
+      { name: 'Homemade Apple', className: 'font-homemade-apple' },
+      { name: 'Rock Salt', className: 'font-rock-salt' }
+    ]
+  }
 ];
+
+// Flatten all fonts for easy access
+const allFonts = fontCategories.flatMap(category => category.fonts);
 
 const TestPage: React.FC = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
-  const [currentFont, setCurrentFont] = useState(fonts[0]);
+  const [currentFont, setCurrentFont] = useState(allFonts[0]);
+  const [currentCategory, setCurrentCategory] = useState(fontCategories[0]);
   const [textElements, setTextElements] = useState<TextElement[]>([]);
   const [activeElement, setActiveElement] = useState<string | null>(null);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
@@ -128,26 +205,80 @@ const TestPage: React.FC = () => {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
       <style>{`
-        .font-dancing-script { font-family: 'Dancing Script', cursive; }
-        .font-pacifico { font-family: 'Pacifico', cursive; }
-        .font-satisfy { font-family: 'Satisfy', cursive; }
-        .font-great-vibes { font-family: 'Great Vibes', cursive; }
+        /* Business Fonts */
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-open-sans { font-family: 'Open Sans', sans-serif; }
+        .font-lato { font-family: 'Lato', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-source-sans-pro { font-family: 'Source Sans Pro', sans-serif; }
+        .font-nunito-sans { font-family: 'Nunito Sans', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-work-sans { font-family: 'Work Sans', sans-serif; }
+        .font-ibm-plex-sans { font-family: 'IBM Plex Sans', sans-serif; }
+        
+        /* Calm Fonts */
+        .font-libre-baskerville { font-family: 'Libre Baskerville', serif; }
+        .font-crimson-text { font-family: 'Crimson Text', serif; }
+        .font-eb-garamond { font-family: 'EB Garamond', serif; }
+        .font-lora { font-family: 'Lora', serif; }
+        .font-merriweather { font-family: 'Merriweather', serif; }
+        .font-playfair-display { font-family: 'Playfair Display', serif; }
+        .font-cormorant-garamond { font-family: 'Cormorant Garamond', serif; }
+        .font-spectral { font-family: 'Spectral', serif; }
+        .font-source-serif-pro { font-family: 'Source Serif Pro', serif; }
+        .font-vollkorn { font-family: 'Vollkorn', serif; }
+        
+        /* Cute Fonts */
+        .font-caveat { font-family: 'Caveat', cursive; }
+        .font-indie-flower { font-family: 'Indie Flower', cursive; }
+        .font-architects-daughter { font-family: 'Architects Daughter', cursive; }
+        .font-shadows-into-light { font-family: 'Shadows Into Light', cursive; }
+        .font-covered-by-your-grace { font-family: 'Covered By Your Grace', cursive; }
+        .font-handlee { font-family: 'Handlee', cursive; }
+        .font-kalam { font-family: 'Kalam', cursive; }
+        .font-coming-soon { font-family: 'Coming Soon', cursive; }
+        .font-sue-ellen-francisco { font-family: 'Sue Ellen Francisco', cursive; }
+        .font-schoolbell { font-family: 'Schoolbell', cursive; }
+        
+        /* Fancy Fonts */
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-cormorant { font-family: 'Cormorant', serif; }
+        .font-abril-fatface { font-family: 'Abril Fatface', serif; }
+        .font-yeseva-one { font-family: 'Yeseva One', serif; }
+        .font-fredericka-the-great { font-family: 'Fredericka the Great', cursive; }
+        .font-almendra { font-family: 'Almendra', serif; }
+        .font-unifraktur-maguntia { font-family: 'UnifrakturMaguntia', cursive; }
+        .font-cardo { font-family: 'Cardo', serif; }
+        .font-old-standard-tt { font-family: 'Old Standard TT', serif; }
+        .font-libre-caslon-text { font-family: 'Libre Caslon Text', serif; }
+        
+        /* Playful Fonts */
         .font-lobster { font-family: 'Lobster', cursive; }
+        .font-pacifico { font-family: 'Pacifico', cursive; }
+        .font-fredoka-one { font-family: 'Fredoka One', cursive; }
+        .font-righteous { font-family: 'Righteous', cursive; }
+        .font-bungee { font-family: 'Bungee', cursive; }
+        .font-chewy { font-family: 'Chewy', cursive; }
+        .font-leckerli-one { font-family: 'Leckerli One', cursive; }
+        .font-creepster { font-family: 'Creepster', cursive; }
+        .font-sigmar-one { font-family: 'Sigmar One', cursive; }
+        .font-shrikhand { font-family: 'Shrikhand', cursive; }
+        
+        /* Artistic Fonts */
+        .font-dancing-script { font-family: 'Dancing Script', cursive; }
+        .font-great-vibes { font-family: 'Great Vibes', cursive; }
+        .font-allura { font-family: 'Allura', cursive; }
+        .font-satisfy { font-family: 'Satisfy', cursive; }
         .font-kaushan-script { font-family: 'Kaushan Script', cursive; }
         .font-tangerine { font-family: 'Tangerine', cursive; }
         .font-sacramento { font-family: 'Sacramento', cursive; }
         .font-yellowtail { font-family: 'Yellowtail', cursive; }
         .font-pinyon-script { font-family: 'Pinyon Script', cursive; }
         .font-marck-script { font-family: 'Marck Script', cursive; }
-        .font-allura { font-family: 'Allura', cursive; }
         .font-amatic-sc { font-family: 'Amatic SC', cursive; }
-        .font-caveat { font-family: 'Caveat', cursive; }
-        .font-indie-flower { font-family: 'Indie Flower', cursive; }
-        .font-shadows-into-light { font-family: 'Shadows Into Light', cursive; }
         .font-permanent-marker { font-family: 'Permanent Marker', cursive; }
-        .font-architects-daughter { font-family: 'Architects Daughter', cursive; }
         .font-homemade-apple { font-family: 'Homemade Apple', cursive; }
-        .font-covered-by-your-grace { font-family: 'Covered By Your Grace', cursive; }
         .font-rock-salt { font-family: 'Rock Salt', cursive; }
         
         .text-element {
@@ -189,8 +320,30 @@ const TestPage: React.FC = () => {
           </button>
         </div>
         
+        {/* Sélecteur de catégorie */}
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold mb-2 opacity-75">Catégories</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {fontCategories.map((category, index) => (
+              <button
+                key={index}
+                className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${
+                  currentCategory.name === category.name 
+                    ? 'bg-purple-800 text-white' 
+                    : 'bg-white/10 hover:bg-white/20'
+                }`}
+                onClick={() => setCurrentCategory(category)}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Liste des polices de la catégorie sélectionnée */}
         <div className="space-y-4">
-          {fonts.map((font, index) => (
+          <h3 className="text-lg font-semibold">{currentCategory.name}</h3>
+          {currentCategory.fonts.map((font, index) => (
             <div
               key={index}
               className={`p-2 rounded cursor-pointer transition-all duration-200 hover:translate-x-2 hover:bg-white hover:bg-opacity-10 ${
@@ -204,7 +357,7 @@ const TestPage: React.FC = () => {
               }}
             >
               <p className="text-xl">{font.name}</p>
-              <p className="opacity-75">Texte artistique</p>
+              <p className="opacity-75">{currentCategory.name}</p>
             </div>
           ))}
         </div>
