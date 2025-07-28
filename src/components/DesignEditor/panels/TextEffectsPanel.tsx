@@ -123,30 +123,31 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           css: combinedCSS
         }
       });
-    } else {
-      // Mode normal : créer un nouveau texte avec l'effet
-      const newElement = {
-        id: `text-${Date.now()}`,
-        type: 'text',
-        content: 'Texte avec effet',
-        x: Math.random() * 400 + 100,
-        y: Math.random() * 300 + 100,
-        fontSize: 32,
-        color: effect.css.color || '#000000',
-        fontFamily: 'Inter',
-        fontWeight: 'bold',
-        textAlign: 'left' as const,
-        customCSS: combinedCSS,
-        advancedStyle: {
-          id: effect.id,
-          name: effect.name,
-          category: 'effect',
-          css: combinedCSS
-        }
-      };
-
-      onAddElement(newElement);
+      return; // Arrêter ici pour éviter de créer un nouveau texte
     }
+    
+    // Mode normal : créer un nouveau texte avec l'effet uniquement si pas en mode toolbar
+    const newElement = {
+      id: `text-${Date.now()}`,
+      type: 'text',
+      content: 'Texte avec effet',
+      x: Math.random() * 400 + 100,
+      y: Math.random() * 300 + 100,
+      fontSize: 32,
+      color: effect.css.color || '#000000',
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'left' as const,
+      customCSS: combinedCSS,
+      advancedStyle: {
+        id: effect.id,
+        name: effect.name,
+        category: 'effect',
+        css: combinedCSS
+      }
+    };
+
+    onAddElement(newElement);
   };
 
   return (
