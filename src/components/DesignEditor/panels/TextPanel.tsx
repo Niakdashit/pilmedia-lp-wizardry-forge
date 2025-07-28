@@ -60,10 +60,10 @@ const fonts = [
   'Oswald', 'Anton', 'Bebas Neue', 'Fjalla One', 'Kanit', 'Quicksand', 'Comfortaa', 'Alfa Slab One', 'Racing Sans One', 'Teko', 'Staatliches',
   
   // Handwriting & Script
-  'Dancing Script', 'Pacifico', 'Kalam', 'Caveat', 'Architects Daughter', 'Sacramento', 'Great Vibes', 'Satisfy', 'Cookie', 'Shadows Into Light', 'Indie Flower',
+  'Dancing Script, cursive', 'Pacifico, cursive', 'Kalam, cursive', 'Caveat, cursive', 'Architects Daughter, cursive', 'Sacramento, cursive', 'Great Vibes, cursive', 'Satisfy, cursive', 'Cookie, cursive', 'Shadows Into Light, cursive', 'Indie Flower, cursive',
   
   // Fun & Creative
-  'Fredoka One', 'Lobster', 'Righteous', 'Bungee', 'Bungee Shade', 'Bungee Outline', 'Russo One', 'Bangers', 'Amatic SC', 'Permanent Marker', 'Londrina Solid',
+  'Fredoka One', 'Lobster, cursive', 'Righteous', 'Bungee', 'Bungee Shade', 'Bungee Outline', 'Russo One', 'Bangers', 'Amatic SC', 'Permanent Marker', 'Londrina Solid',
   
   // Gaming & Tech
   'Press Start 2P', 'Orbitron', 'Audiowide', 'Exo 2', 'Black Ops One', 'Zen Dots', 'Wallpoet',
