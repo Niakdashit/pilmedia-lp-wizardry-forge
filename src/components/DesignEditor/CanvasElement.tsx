@@ -47,7 +47,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const [isEditing, setIsEditing] = React.useState(false);
 
   // Optimized drag handlers with useCallback
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     onSelect(element.id);
 
@@ -76,7 +76,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const startX = canvasX - currentProps.x;
     const startY = canvasY - currentProps.y;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       // Convertir les coordonnées de la souris en coordonnées canvas
       const newCanvasX = (e.clientX - containerRect.left) / zoomScale;
       const newCanvasY = (e.clientY - containerRect.top) / zoomScale;
@@ -128,15 +128,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       });
     };
 
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
       // Hide guides when drag ends
       document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
   }, [element.id, deviceProps, onSelect, onUpdate, containerRef]);
 
   // Optimized text editing handlers with useCallback
@@ -426,7 +426,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         opacity,
         zIndex: element.zIndex || 1,
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       onDoubleClick={handleDoubleClick}
     >
       {renderElement}
