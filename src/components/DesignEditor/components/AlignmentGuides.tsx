@@ -41,13 +41,13 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
       const elementCenterY = y + height / 2;
       const tolerance = 10;
 
-      // Show center alignment guides
+      // Show center alignment guides (plus visible)
       if (Math.abs(elementCenterX - centerX) <= tolerance) {
         guides.push({
           type: 'vertical',
           position: centerX,
           color: '#3b82f6',
-          thickness: 2
+          thickness: 3
         });
       }
 
@@ -56,7 +56,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           type: 'horizontal',
           position: centerY,
           color: '#3b82f6',
-          thickness: 2
+          thickness: 3
         });
       }
 
@@ -173,9 +173,10 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
               width: '100%',
             }),
             backgroundColor: guide.color,
-            opacity: 0.8,
-            boxShadow: `0 0 6px ${guide.color}`,
-            transition: 'opacity 0.2s ease-in-out'
+            opacity: 0.9,
+            boxShadow: `0 0 8px ${guide.color}`,
+            transition: 'opacity 0.2s ease-in-out',
+            zIndex: 25
           }}
         />
       ))}

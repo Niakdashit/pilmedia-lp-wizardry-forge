@@ -62,11 +62,17 @@ const DesignEditorLayout: React.FC = () => {
     setPreviewDevice(selectedDevice);
   }, [selectedDevice, setPreviewDevice]);
 
-  // Sauvegarde dans l'historique à chaque modification
+  // Sauvegarde dans l'historique à chaque modification significative
   useEffect(() => {
     const campaignData = generateCampaignFromCanvas();
-    addToHistory(campaignData, 'canvas_update');
     setCampaign(campaignData);
+    
+    // Ajouter à l'historique avec un délai pour éviter trop d'entrées
+    const timeoutId = setTimeout(() => {
+      addToHistory(campaignData, 'canvas_update');
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, addToHistory, setCampaign]);
 
   // Actions optimisées

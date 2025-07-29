@@ -212,19 +212,23 @@ export const useKeyboardShortcuts = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Détecter le système d'exploitation
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const modifierKey = isMac ? 'Cmd' : 'Ctrl';
+
   return {
     // Return available shortcuts for documentation
     shortcuts: {
-      'Ctrl+S': 'Save campaign',
-      'Ctrl+P': 'Preview campaign', 
-      'Ctrl+Z': 'Undo',
-      'Ctrl+Y / Ctrl+Shift+Z': 'Redo',
+      [`${modifierKey}+S`]: 'Save campaign',
+      [`${modifierKey}+P`]: 'Preview campaign', 
+      [`${modifierKey}+Z`]: 'Undo',
+      [`${modifierKey}+Y / ${modifierKey}+Shift+Z`]: 'Redo',
       'Escape': 'Deselect all',
       'Delete': 'Delete selected element',
       'G': 'Toggle grid',
-      'Ctrl+C': 'Copy selected element',
-      'Ctrl+V': 'Paste element',
-      'Ctrl+A': 'Select all (future)'
+      [`${modifierKey}+C`]: 'Copy selected element',
+      [`${modifierKey}+V`]: 'Paste element',
+      [`${modifierKey}+A`]: 'Select all (future)'
     }
   };
 };
