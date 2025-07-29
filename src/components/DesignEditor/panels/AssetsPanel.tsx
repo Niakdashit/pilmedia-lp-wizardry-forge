@@ -132,10 +132,11 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                     onClick={() => handleAddImage(image)}
                     className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors"
                   >
-                    <img 
-                      src={image.url} 
+                    <img
+                      src={image.url}
                       alt={`Stock ${image.category}`}
                       className="w-full h-20 object-cover"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
                       <span className="text-white text-xs opacity-0 group-hover:opacity-100">
@@ -176,10 +177,11 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                     onClick={() => handleAddImage(image)}
                     className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors"
                   >
-                    <img 
-                      src={image.url} 
+                    <img
+                      src={image.url}
                       alt="Uploaded image"
                       className="w-full h-20 object-cover"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
                       <span className="text-white text-xs opacity-0 group-hover:opacity-100">

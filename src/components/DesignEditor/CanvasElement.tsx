@@ -47,8 +47,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const [isEditing, setIsEditing] = React.useState(false);
 
   // Optimized drag handlers with useCallback
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     onSelect(element.id);
 
     const currentProps = deviceProps;
@@ -76,7 +77,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const startX = canvasX - currentProps.x;
     const startY = canvasY - currentProps.y;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       // Convertir les coordonnées de la souris en coordonnées canvas
       const newCanvasX = (e.clientX - containerRect.left) / zoomScale;
       const newCanvasY = (e.clientY - containerRect.top) / zoomScale;
@@ -128,15 +129,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       });
     };
 
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
       // Hide guides when drag ends
       document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
   }, [element.id, deviceProps, onSelect, onUpdate, containerRef]);
 
   // Optimized text editing handlers with useCallback
@@ -161,7 +162,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   }, []);
 
   // Optimized resize handler with useCallback
-  const handleResizeMouseDown = useCallback((e: React.MouseEvent, direction: string) => {
+  const handleResizePointerDown = useCallback((e: React.PointerEvent, direction: string) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -176,7 +177,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     // Detect if it's a corner handle (for proportional scaling with font size change)
     const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
 
-      const handleResizeMouseMove = (e: MouseEvent) => {
+      const handleResizePointerMove = (e: PointerEvent) => {
         // Throttled resize for smooth performance
         requestAnimationFrame(() => {
           const deltaX = e.clientX - startX;
@@ -190,7 +191,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
       if (isCornerHandle && element.type === 'text') {
         // For corner handles on text: scale font size proportionally
-        console.log('Text resize - deltaX:', deltaX, 'deltaY:', deltaY, 'startFontSize:', startFontSize);
         
         let scaleFactor = 1;
         
@@ -212,7 +212,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         scaleFactor = Math.max(0.2, scaleFactor);
         newFontSize = Math.max(8, Math.round(startFontSize * scaleFactor));
         
-        console.log('Text resize - scaleFactor:', scaleFactor, 'newFontSize:', newFontSize);
         
         // Keep text box dimensions tight to content (remove width/height to make it auto)
         onUpdate(element.id, {
@@ -271,13 +270,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         });
       };
 
-    const handleResizeMouseUp = () => {
-      document.removeEventListener('mousemove', handleResizeMouseMove);
-      document.removeEventListener('mouseup', handleResizeMouseUp);
+    const handleResizePointerUp = () => {
+      document.removeEventListener('pointermove', handleResizePointerMove);
+      document.removeEventListener('pointerup', handleResizePointerUp);
     };
 
-    document.addEventListener('mousemove', handleResizeMouseMove);
-    document.addEventListener('mouseup', handleResizeMouseUp);
+    document.addEventListener('pointermove', handleResizePointerMove);
+    document.addEventListener('pointerup', handleResizePointerUp);
   }, [element.id, onUpdate]);
 
   // Memoized element rendering for performance
@@ -377,6 +376,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             alt={element.alt || 'Image'}
             className="cursor-move object-cover"
             draggable={false}
+            loading="lazy"
             style={elementStyle}
           />
         );
@@ -426,7 +426,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         opacity,
         zIndex: element.zIndex || 1,
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       onDoubleClick={handleDoubleClick}
     >
       {renderElement}
@@ -437,22 +437,22 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           {/* Corner handles - for proportional scaling */}
           <div 
             className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize shadow-lg" 
-            onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
+            onPointerDown={(e) => handleResizePointerDown(e, 'nw')}
             style={{ zIndex: 1001 }}
           />
           <div 
             className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize shadow-lg" 
-            onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
+            onPointerDown={(e) => handleResizePointerDown(e, 'ne')}
             style={{ zIndex: 1001 }}
           />
           <div 
             className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize shadow-lg" 
-            onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
+            onPointerDown={(e) => handleResizePointerDown(e, 'sw')}
             style={{ zIndex: 1001 }}
           />
           <div 
             className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize shadow-lg" 
-            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+            onPointerDown={(e) => handleResizePointerDown(e, 'se')}
             style={{ zIndex: 1001 }}
           />
           
@@ -461,12 +461,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             <>
               <div 
                 className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-w-resize shadow-lg" 
-                onMouseDown={(e) => handleResizeMouseDown(e, 'w')}
+                onPointerDown={(e) => handleResizePointerDown(e, 'w')}
                 style={{ zIndex: 1001 }}
               />
               <div 
                 className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-e-resize shadow-lg" 
-                onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+                onPointerDown={(e) => handleResizePointerDown(e, 'e')}
                 style={{ zIndex: 1001 }}
               />
             </>

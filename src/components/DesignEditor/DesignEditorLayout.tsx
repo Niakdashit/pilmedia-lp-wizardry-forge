@@ -47,13 +47,11 @@ const DesignEditorLayout: React.FC = () => {
     onUndo: (restoredCampaign) => {
       if (restoredCampaign) {
         setCampaign(restoredCampaign);
-        console.log('Undo appliqué');
       }
     },
     onRedo: (restoredCampaign) => {
       if (restoredCampaign) {
         setCampaign(restoredCampaign);
-        console.log('Redo appliqué');
       }
     }
   });
@@ -154,7 +152,6 @@ const DesignEditorLayout: React.FC = () => {
       // Simulation de sauvegarde
       await new Promise(resolve => setTimeout(resolve, 500));
       setIsModified(false);
-      console.log('Campagne sauvegardée');
     } finally {
       setIsLoading(false);
     }
@@ -188,22 +185,18 @@ const DesignEditorLayout: React.FC = () => {
     }
   };
 
-  // Raccourcis clavier professionnels - avec logs pour debug
+  // Raccourcis clavier professionnels
   useKeyboardShortcuts({
     onSave: () => {
-      console.log('Save shortcut triggered');
       handleSave();
     },
     onPreview: () => {
-      console.log('Preview shortcut triggered');
       handlePreview();
     },
     onUndo: () => {
-      console.log('Undo shortcut triggered');
       undo();
     },
     onRedo: () => {
-      console.log('Redo shortcut triggered');
       redo();
     }
   });

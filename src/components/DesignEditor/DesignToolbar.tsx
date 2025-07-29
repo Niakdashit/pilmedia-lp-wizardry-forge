@@ -8,7 +8,7 @@ interface DesignToolbarProps {
   isPreviewMode?: boolean;
 }
 
-const DesignToolbar: React.FC<DesignToolbarProps> = ({
+const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   selectedDevice,
   onDeviceChange,
   onPreviewToggle,
@@ -90,6 +90,8 @@ const DesignToolbar: React.FC<DesignToolbarProps> = ({
       </div>
     </div>
   );
-};
+});
+
+DesignToolbar.displayName = 'DesignToolbar';
 
 export default DesignToolbar;

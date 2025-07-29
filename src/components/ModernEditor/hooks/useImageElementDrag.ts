@@ -10,14 +10,11 @@ export const useImageElementDrag = (
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{offsetX: number, offsetY: number} | null>(null);
 
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
+  const handleDragStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    console.log('Starting image drag for element:', deviceConfig);
 
     if (!containerRef.current || !elementRef.current) {
-      console.log('Missing refs:', { container: !!containerRef.current, element: !!elementRef.current });
       return;
     }
 
@@ -26,12 +23,11 @@ export const useImageElementDrag = (
     const offsetX = e.clientX - elementRect.left;
     const offsetY = e.clientY - elementRect.top;
     
-    console.log('Drag start - offset:', { offsetX, offsetY });
     
     dragStartRef.current = { offsetX, offsetY };
     setIsDragging(true);
 
-    const handleMouseMove = (moveEvent: MouseEvent) => {
+    const handlePointerMove = (moveEvent: PointerEvent) => {
       if (!containerRef.current || !dragStartRef.current) return;
       
       const containerRect = containerRef.current.getBoundingClientRect();
@@ -43,22 +39,20 @@ export const useImageElementDrag = (
       newX = Math.max(0, Math.min(newX, containerRect.width - deviceConfig.width));
       newY = Math.max(0, Math.min(newY, containerRect.height - deviceConfig.height));
       
-      console.log('Moving image to:', { newX, newY });
       
       // Update immediately for real-time feedback
       onUpdate({ x: newX, y: newY });
     };
 
-    const handleMouseUp = () => {
-      console.log('Image drag ended');
+    const handlePointerUp = () => {
       setIsDragging(false);
       dragStartRef.current = null;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
   }, [containerRef, deviceConfig, onUpdate]);
 
   return {

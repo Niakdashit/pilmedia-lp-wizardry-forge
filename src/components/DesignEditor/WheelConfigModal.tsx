@@ -13,7 +13,7 @@ interface WheelConfigModalProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
-const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
+const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
   isOpen,
   onClose,
   wheelBorderStyle,
@@ -145,6 +145,8 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = ({
       </div>
     </>
   );
-};
+});
+
+WheelConfigModal.displayName = 'WheelConfigModal';
 
 export default WheelConfigModal;
