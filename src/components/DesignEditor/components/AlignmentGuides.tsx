@@ -34,29 +34,30 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         thickness: number;
       }> = [];
 
-      // Center guides
+      // Center guides - toujours afficher quand on approche du centre
       const centerX = canvasSize.width / 2;
       const centerY = canvasSize.height / 2;
       const elementCenterX = x + width / 2;
       const elementCenterY = y + height / 2;
-      const tolerance = 10;
+      const tolerance = 15; // Augmenté pour une détection plus facile
 
-      // Show center alignment guides (plus visible)
+      // Guides de centre vertical - plus visibles
       if (Math.abs(elementCenterX - centerX) <= tolerance) {
         guides.push({
           type: 'vertical',
           position: centerX,
-          color: '#3b82f6',
-          thickness: 3
+          color: '#ef4444', // Rouge pour le centre
+          thickness: 4
         });
       }
 
+      // Guides de centre horizontal - plus visibles  
       if (Math.abs(elementCenterY - centerY) <= tolerance) {
         guides.push({
           type: 'horizontal',
           position: centerY,
-          color: '#3b82f6',
-          thickness: 3
+          color: '#ef4444', // Rouge pour le centre
+          thickness: 4
         });
       }
 

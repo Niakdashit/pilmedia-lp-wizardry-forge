@@ -30,11 +30,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   );
   
 
-  const [{ opacity }, drag] = useDrag(() => ({
+  const [{ opacity, isDragging }, drag] = useDrag(() => ({
     type: 'canvas-element',
     item: { id: element.id },
     collect: (monitor) => ({
       opacity: monitor.isDragging() ? 0.5 : 1,
+      isDragging: monitor.isDragging(),
     }),
   }));
 
@@ -360,8 +361,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     >
       {renderElement}
       
-      {/* Selection handles */}
-      {isSelected && (
+      {/* Selection handles - masqués pendant le drag */}
+      {isSelected && !isDragging && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 
