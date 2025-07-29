@@ -27,7 +27,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Or',
     type: 'luxury',
     colors: ['#FFD700', '#DAA520', '#B8860B'],
-    width: 8,
+    width: 16,
     effects: {
       metallic: true,
       glow: true,
@@ -39,7 +39,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Argent',
     type: 'metallic',
     colors: ['#C0C0C0', '#A8A8A8', '#808080'],
-    width: 6,
+    width: 12,
     effects: {
       metallic: true,
       shadow: true
@@ -50,7 +50,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Cuivre',
     type: 'metallic',
     colors: ['#B87333', '#A0522D', '#8B4513'],
-    width: 6,
+    width: 12,
     effects: {
       metallic: true,
       shadow: true
@@ -61,7 +61,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Néon Bleu',
     type: 'neon',
     colors: ['#00BFFF', '#1E90FF'],
-    width: 4,
+    width: 8,
     effects: {
       glow: true,
       animated: true
@@ -72,7 +72,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Néon Rose',
     type: 'neon',
     colors: ['#FF1493', '#FF69B4'],
-    width: 4,
+    width: 8,
     effects: {
       glow: true,
       animated: true
@@ -83,7 +83,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Arc-en-ciel',
     type: 'gradient',
     colors: ['#ff0000', '#ff8000', '#ffff00', '#80ff00', '#00ff00', '#00ff80', '#00ffff', '#0080ff', '#0000ff', '#8000ff', '#ff00ff', '#ff0080'],
-    width: 6,
+    width: 12,
     effects: {
       animated: true,
       glow: true
@@ -94,7 +94,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Feu',
     type: 'gradient',
     colors: ['#FF4500', '#FF6347', '#FFD700'],
-    width: 5,
+    width: 10,
     effects: {
       glow: true,
       animated: true
@@ -105,7 +105,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Glace',
     type: 'gradient',
     colors: ['#E0FFFF', '#B0E0E6', '#87CEEB'],
-    width: 5,
+    width: 10,
     effects: {
       glow: true,
       shadow: true
@@ -116,7 +116,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Casino',
     type: 'luxury',
     colors: ['#DC143C', '#FFD700'],
-    width: 8,
+    width: 16,
     effects: {
       metallic: true,
       glow: true,
