@@ -192,27 +192,34 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
     ];
   }, [campaign?.design?.brandColors?.primary]);
   return <DndProvider backend={HTML5Backend}>
-      <div className="relative flex-1 w-full h-full bg-gray-100 p-8 overflow-auto">
+      <div className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4">
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-        <div className="relative w-full h-full min-h-[600px]">
-          {/* Canvas absolutely centered */}
-          <div
-            ref={canvasRef}
-            className="absolute bg-white shadow-lg rounded-lg overflow-hidden"
+        <div className="flex justify-center items-center min-h-full">
+          {/* Canvas wrapper pour maintenir le centrage avec zoom */}
+          <div 
+            className="flex justify-center items-center"
             style={{
-              width: `${canvasSize.width}px`,
-              height: `${canvasSize.height}px`,
-              minWidth: `${canvasSize.width}px`,
-              minHeight: `${canvasSize.height}px`,
-              left: '50%',
-              top: '50%',
-              transform: `translate(-50%, -50%) scale(${zoom})`,
-              transformOrigin: 'center center'
+              width: '100%',
+              height: '100%',
+              minHeight: '600px'
             }}
+          >
+            <div 
+              ref={canvasRef}
+              className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+              style={{
+                width: `${canvasSize.width}px`,
+                height: `${canvasSize.height}px`,
+                minWidth: `${canvasSize.width}px`,
+                minHeight: `${canvasSize.height}px`,
+                flexShrink: 0,
+                transform: `scale(${zoom})`,
+                transformOrigin: 'center center'
+              }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
