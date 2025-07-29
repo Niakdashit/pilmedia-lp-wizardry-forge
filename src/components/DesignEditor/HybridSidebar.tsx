@@ -27,7 +27,7 @@ interface HybridSidebarProps {
   onElementsChange?: (elements: any[]) => void;
 }
 
-const HybridSidebar: React.FC<HybridSidebarProps> = ({
+const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   onAddElement,
   onBackgroundChange,
   onExtractedColorsChange,
@@ -204,6 +204,8 @@ const HybridSidebar: React.FC<HybridSidebarProps> = ({
       )}
     </div>
   );
-};
+});
+
+HybridSidebar.displayName = 'HybridSidebar';
 
 export default HybridSidebar;

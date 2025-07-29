@@ -9,7 +9,7 @@ interface ZoomSliderProps {
   step?: number;
 }
 
-const ZoomSlider: React.FC<ZoomSliderProps> = ({
+const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
   zoom,
   onZoomChange,
   minZoom = 0.25,
@@ -124,6 +124,8 @@ const ZoomSlider: React.FC<ZoomSliderProps> = ({
       }} />
     </div>
   );
-};
+});
+
+ZoomSlider.displayName = 'ZoomSlider';
 
 export default ZoomSlider;
