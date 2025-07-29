@@ -19,7 +19,19 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
 
   useEffect(() => {
     const handleShowGuides = (event: CustomEvent) => {
-      const { elementId, x, y, width, height, isDragging: dragging } = event.detail;
+      const { 
+        elementId, 
+        x, 
+        y, 
+        width, 
+        height, 
+        elementCenterX,
+        elementCenterY,
+        canvasCenterX,
+        canvasCenterY,
+        isDragging: dragging 
+      } = event.detail;
+      
       setIsDragging(dragging);
 
       if (!dragging) {
@@ -34,15 +46,18 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         thickness: number;
       }> = [];
 
-      // Center guides - toujours afficher quand on approche du centre
-      const centerX = canvasSize.width / 2;
-      const centerY = canvasSize.height / 2;
-      const elementCenterX = x + width / 2;
-      const elementCenterY = y + height / 2;
-      const tolerance = 15; // Augmenté pour une détection plus facile
+      const tolerance = 15; // Tolérance pour la détection
 
-      // Guides de centre vertical - plus visibles
-      if (Math.abs(elementCenterX - centerX) <= tolerance) {
+      // Guides de centre - utiliser les centres calculés
+      const centerX = canvasCenterX || canvasSize.width / 2;
+      const centerY = canvasCenterY || canvasSize.height / 2;
+      
+      // Centre de l'élément calculé depuis les coordonnées réelles
+      const elemCenterX = elementCenterX || (x + width / 2);
+      const elemCenterY = elementCenterY || (y + height / 2);
+
+      // Guide vertical centre - ligne rouge épaisse quand l'élément est centré horizontalement
+      if (Math.abs(elemCenterX - centerX) <= tolerance) {
         guides.push({
           type: 'vertical',
           position: centerX,
@@ -51,8 +66,8 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         });
       }
 
-      // Guides de centre horizontal - plus visibles  
-      if (Math.abs(elementCenterY - centerY) <= tolerance) {
+      // Guide horizontal centre - ligne rouge épaisse quand l'élément est centré verticalement  
+      if (Math.abs(elemCenterY - centerY) <= tolerance) {
         guides.push({
           type: 'horizontal',
           position: centerY,
@@ -61,7 +76,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         });
       }
 
-      // Alignment with other elements
+      // Alignment with other elements (guides verts plus fins)
       const otherElements = elements.filter(el => el.id !== elementId);
       otherElements.forEach(element => {
         const elX = element.x || 0;
@@ -72,7 +87,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         const elCenterY = elY + elHeight / 2;
 
         // Center alignment with other elements
-        if (Math.abs(elementCenterX - elCenterX) <= tolerance) {
+        if (Math.abs(elemCenterX - elCenterX) <= tolerance) {
           guides.push({
             type: 'vertical',
             position: elCenterX,
@@ -81,7 +96,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           });
         }
 
-        if (Math.abs(elementCenterY - elCenterY) <= tolerance) {
+        if (Math.abs(elemCenterY - elCenterY) <= tolerance) {
           guides.push({
             type: 'horizontal',
             position: elCenterY,

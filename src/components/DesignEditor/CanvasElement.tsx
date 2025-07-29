@@ -59,16 +59,28 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       const newX = e.clientX - startX;
       const newY = e.clientY - startY;
       
+      // Calculer le centre de l'élément pour les guides
+      const elementCenterX = newX + (currentProps.width || 100) / 2;
+      const elementCenterY = newY + (currentProps.height || 30) / 2;
+      
       // Get canvas dimensions for alignment guides
       if (containerRef?.current) {
         const rect = containerRef.current.getBoundingClientRect();
+        const canvasCenterX = rect.width / 2;
+        const canvasCenterY = rect.height / 2;
+        
+        // Déclencher les guides avec la position en temps réel
         document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
           detail: {
             elementId: element.id,
-            x: Math.max(0, newX),
-            y: Math.max(0, newY),
+            x: newX,
+            y: newY,
             width: currentProps.width || 100,
             height: currentProps.height || 30,
+            elementCenterX,
+            elementCenterY,
+            canvasCenterX,
+            canvasCenterY,
             isDragging: true,
             canvasSize: { width: rect.width, height: rect.height }
           }
