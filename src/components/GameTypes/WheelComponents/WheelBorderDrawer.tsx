@@ -15,18 +15,18 @@ export const drawWheelBorders = ({
 }: WheelBorderDrawerProps) => {
   // Outer outline (épaisse, couleur accent)
   ctx.beginPath();
-  ctx.arc(center, center, radius + 15, 0, 2 * Math.PI);
+  ctx.arc(center, center, radius + 25, 0, 2 * Math.PI);
   ctx.closePath();
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 16;
   ctx.strokeStyle = borderOutlineColor;
   ctx.lineJoin = 'round';
   ctx.stroke();
 
   // Inner border (finesse, couleur principale)
   ctx.beginPath();
-  ctx.arc(center, center, radius + 8, 0, 2 * Math.PI);
+  ctx.arc(center, center, radius + 12, 0, 2 * Math.PI);
   ctx.closePath();
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 6;
   ctx.strokeStyle = borderColor;
   ctx.stroke();
 };

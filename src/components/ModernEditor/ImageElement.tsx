@@ -62,8 +62,8 @@ const ImageElement: React.FC<ImageElementProps> = ({
     onUpdate({ rotation: (element.rotation || 0) + 15 });
   }, [onUpdate, element.rotation]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    console.log('Image element mouse down:', element.id);
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    console.log('Image element pointer down:', element.id);
     onSelect();
     handleDragStart(e);
   }, [onSelect, handleDragStart, element.id]);
@@ -108,7 +108,7 @@ const ImageElement: React.FC<ImageElementProps> = ({
         willChange: isDragging || isResizing ? 'transform' : 'auto',
         transition: isDragging || isResizing ? 'none' : 'box-shadow 0.1s ease'
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       className={`${isSelected ? 'ring-2 ring-blue-500' : 'hover:ring-2 hover:ring-gray-300'}`}
     >
       <img
