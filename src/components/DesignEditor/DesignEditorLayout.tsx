@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
@@ -63,8 +63,9 @@ const DesignEditorLayout: React.FC = () => {
     setPreviewDevice(selectedDevice);
   }, [selectedDevice, setPreviewDevice]);
 
-  // Configuration de campagne dynamique basée sur les éléments du canvas
-  const generateCampaignFromCanvas = useCallback(() => {
+
+  // Configuration de campagne dynamique optimisée
+  const campaignData = useMemo(() => {
     // Extraire les éléments du canvas selon leur type et rôle
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
@@ -134,11 +135,6 @@ const DesignEditorLayout: React.FC = () => {
       }
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice]);
-
-  // Configuration de campagne dynamique optimisée
-  const campaignData = useMemo(() => {
-    return generateCampaignFromCanvas();
-  }, [generateCampaignFromCanvas]);
 
   // Debounced history update pour éviter trop d'entrées
   const debouncedAddToHistory = useDebouncedCallback((data: any) => {
@@ -235,7 +231,7 @@ const DesignEditorLayout: React.FC = () => {
               Mode édition
             </button>
             <FunnelUnlockedGame
-              campaign={generateCampaignFromCanvas()}
+              campaign={campaignData}
               previewMode={selectedDevice}
             />
           </div>

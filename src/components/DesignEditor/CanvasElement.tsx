@@ -39,27 +39,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       opacity: monitor.isDragging() ? 0.5 : 1,
       isDragging: monitor.isDragging(),
     }),
-    begin: () => {
-      // Trigger real-time alignment guides calculation
-      const rect = containerRef?.current?.getBoundingClientRect();
-      if (rect) {
-        document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
-          detail: {
-            elementId: element.id,
-            x: deviceProps.x || 0,
-            y: deviceProps.y || 0,
-            width: deviceProps.width || 100,
-            height: deviceProps.height || 30,
-            isDragging: true,
-            canvasSize: { width: rect.width, height: rect.height }
-          }
-        }));
-      }
-    },
-    end: () => {
-      // Hide guides when drag ends
-      document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
-    }
   }));
 
   const [isEditing, setIsEditing] = React.useState(false);
