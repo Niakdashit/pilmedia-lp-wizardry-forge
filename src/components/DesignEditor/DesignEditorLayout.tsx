@@ -63,78 +63,6 @@ const DesignEditorLayout: React.FC = () => {
     setPreviewDevice(selectedDevice);
   }, [selectedDevice, setPreviewDevice]);
 
-  // Configuration de campagne dynamique optimisée
-  const campaignData = useMemo(() => {
-    return generateCampaignFromCanvas();
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors]);
-
-  // Debounced history update pour éviter trop d'entrées
-  const debouncedAddToHistory = useDebouncedCallback((data: any) => {
-    addToHistory(data, 'canvas_update');
-  }, 300);
-
-  // Synchronisation avec le store et historique
-  useEffect(() => {
-    setCampaign(campaignData);
-    debouncedAddToHistory(campaignData);
-  }, [campaignData, setCampaign, debouncedAddToHistory]);
-
-  // Actions optimisées
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      // Simulation de sauvegarde
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setIsModified(false);
-      console.log('Campagne sauvegardée');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePreview = () => {
-    setShowFunnel(!showFunnel);
-  };
-
-  // Fonction pour appliquer les couleurs extraites à la roue
-  const handleExtractedColorsChange = (colors: string[]) => {
-    setExtractedColors(colors);
-    
-    // Appliquer automatiquement la couleur extraite (dominante) et le blanc comme seconde couleur
-    if (colors.length >= 1) {
-      setCampaignConfig((prev: any) => ({
-        ...prev,
-        design: {
-          ...prev?.design,
-          wheelConfig: {
-            ...prev?.design?.wheelConfig,
-            borderColor: colors[0] || '#841b60'
-          },
-          brandColors: {
-            primary: colors[0] || '#841b60',
-            secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
-            accent: colors[0] || '#45b7d1'
-          }
-        }
-      }));
-    }
-  };
-
-  // Raccourcis clavier professionnels
-  useKeyboardShortcuts({
-    onSave: handleSave,
-    onPreview: handlePreview,
-    onUndo: undo,
-    onRedo: redo
-  });
-
-  // Auto-responsive logic
-  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
-  
-  const adaptationSuggestions = useMemo(() => {
-    return getAdaptationSuggestions(canvasElements);
-  }, [canvasElements, getAdaptationSuggestions]);
-
   // Configuration de campagne dynamique basée sur les éléments du canvas
   const generateCampaignFromCanvas = useCallback(() => {
     // Extraire les éléments du canvas selon leur type et rôle
@@ -206,6 +134,79 @@ const DesignEditorLayout: React.FC = () => {
       }
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice]);
+
+  // Configuration de campagne dynamique optimisée
+  const campaignData = useMemo(() => {
+    return generateCampaignFromCanvas();
+  }, [generateCampaignFromCanvas]);
+
+  // Debounced history update pour éviter trop d'entrées
+  const debouncedAddToHistory = useDebouncedCallback((data: any) => {
+    addToHistory(data, 'canvas_update');
+  }, 300);
+
+  // Synchronisation avec le store et historique
+  useEffect(() => {
+    setCampaign(campaignData);
+    debouncedAddToHistory(campaignData);
+  }, [campaignData, setCampaign, debouncedAddToHistory]);
+
+  // Actions optimisées
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      // Simulation de sauvegarde
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsModified(false);
+      console.log('Campagne sauvegardée');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePreview = () => {
+    setShowFunnel(!showFunnel);
+  };
+
+  // Fonction pour appliquer les couleurs extraites à la roue
+  const handleExtractedColorsChange = (colors: string[]) => {
+    setExtractedColors(colors);
+    
+    // Appliquer automatiquement la couleur extraite (dominante) et le blanc comme seconde couleur
+    if (colors.length >= 1) {
+      setCampaignConfig((prev: any) => ({
+        ...prev,
+        design: {
+          ...prev?.design,
+          wheelConfig: {
+            ...prev?.design?.wheelConfig,
+            borderColor: colors[0] || '#841b60'
+          },
+          brandColors: {
+            primary: colors[0] || '#841b60',
+            secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
+            accent: colors[0] || '#45b7d1'
+          }
+        }
+      }));
+    }
+  };
+
+  // Raccourcis clavier professionnels
+  useKeyboardShortcuts({
+    onSave: handleSave,
+    onPreview: handlePreview,
+    onUndo: undo,
+    onRedo: redo
+  });
+
+  // Auto-responsive logic
+  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
+  
+  const adaptationSuggestions = useMemo(() => {
+    return getAdaptationSuggestions(canvasElements);
+  }, [canvasElements, getAdaptationSuggestions]);
+
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
