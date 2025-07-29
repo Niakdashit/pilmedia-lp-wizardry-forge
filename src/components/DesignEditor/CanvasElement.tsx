@@ -4,6 +4,8 @@ import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
+// Force cache invalidation - React DnD v14+ compliant
+
 export interface CanvasElementProps {
   element: any;
   isSelected: boolean;
@@ -32,6 +34,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   );
   
 
+  // Modern useDrag hook (v14+ compatible) - no deprecated begin/end callbacks
   const [{ opacity, isDragging }, drag] = useDrag(() => ({
     type: 'canvas-element',
     item: { id: element.id },
