@@ -198,20 +198,28 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-          <div className="flex justify-center items-center min-h-full">
+        <div className="flex justify-center items-center min-h-full">
+          {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
-            ref={canvasRef}
-            className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+            className="flex justify-center items-center"
             style={{
-              width: `${canvasSize.width}px`,
-              height: `${canvasSize.height}px`,
-              minWidth: `${canvasSize.width}px`,
-              minHeight: `${canvasSize.height}px`,
-              flexShrink: 0,
-              transform: `scale(${zoom})`,
-              transformOrigin: 'center',
-              margin: `${(canvasSize.height * zoom - canvasSize.height) / 2}px ${(canvasSize.width * zoom - canvasSize.width) / 2}px`
+              width: '100%',
+              height: '100%',
+              minHeight: '600px'
             }}
+          >
+            <div 
+              ref={canvasRef}
+              className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+              style={{
+                width: `${canvasSize.width}px`,
+                height: `${canvasSize.height}px`,
+                minWidth: `${canvasSize.width}px`,
+                minHeight: `${canvasSize.height}px`,
+                flexShrink: 0,
+                transform: `scale(${zoom})`,
+                transformOrigin: 'center center'
+              }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
@@ -328,6 +336,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
                     <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-gray-300 rounded-full"></div>
                   </>}
               </div>}
+            </div>
           </div>
         </div>
 

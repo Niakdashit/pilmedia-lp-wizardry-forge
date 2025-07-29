@@ -52,12 +52,37 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     onSelect(element.id);
 
     const currentProps = deviceProps;
-    const startX = e.clientX - currentProps.x;
-    const startY = e.clientY - currentProps.y;
+    
+    // Obtenir les informations du conteneur pour les calculs précis
+    if (!containerRef?.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    // Calculer l'échelle du zoom depuis le style transform
+    const containerStyle = getComputedStyle(containerRef.current);
+    const transform = containerStyle.transform;
+    let zoomScale = 1;
+    if (transform && transform !== 'none') {
+      const matrix = transform.match(/matrix\(([^)]+)\)/);
+      if (matrix) {
+        const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
+        zoomScale = values[0]; // Premier élément de la matrice = scale X
+      }
+    }
+
+    // Position initiale relative au canvas avec correction du zoom
+    const canvasX = (e.clientX - containerRect.left) / zoomScale;
+    const canvasY = (e.clientY - containerRect.top) / zoomScale;
+    
+    const startX = canvasX - currentProps.x;
+    const startY = canvasY - currentProps.y;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newX = e.clientX - startX;
-      const newY = e.clientY - startY;
+      // Convertir les coordonnées de la souris en coordonnées canvas
+      const newCanvasX = (e.clientX - containerRect.left) / zoomScale;
+      const newCanvasY = (e.clientY - containerRect.top) / zoomScale;
+      
+      const newX = newCanvasX - startX;
+      const newY = newCanvasY - startY;
       
       // Calculer le centre réel de l'élément
       const elementWidth = currentProps.width || 100;
@@ -67,10 +92,14 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       
       // Get canvas dimensions for alignment guides
       if (containerRef?.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        // Le centre du canvas est au milieu de ses dimensions
-        const canvasCenterX = rect.width / 2;
-        const canvasCenterY = rect.height / 2;
+        // Utiliser les dimensions intrinsèques du canvas, pas les dimensions du rect
+        const canvasElement = containerRef.current;
+        const canvasWidth = parseInt(canvasElement.style.width) || canvasElement.offsetWidth;
+        const canvasHeight = parseInt(canvasElement.style.height) || canvasElement.offsetHeight;
+        
+        // Le centre du canvas basé sur ses dimensions réelles (pas le zoom)
+        const canvasCenterX = canvasWidth / 2;
+        const canvasCenterY = canvasHeight / 2;
         
         // Déclencher les guides avec la position en temps réel
         document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
@@ -85,7 +114,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             canvasCenterX,
             canvasCenterY,
             isDragging: true,
-            canvasSize: { width: rect.width, height: rect.height }
+            canvasSize: { width: canvasWidth, height: canvasHeight }
           }
         }));
       }
