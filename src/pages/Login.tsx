@@ -22,7 +22,7 @@ const Login: React.FC = () => {
       </div>
 
       <div className="relative w-full max-w-md">
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/25 p-8">
+        <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-xl border border-white/25 p-8">
           <div className="text-center mb-8">
             <img src={logo} alt="Leadya Logo" className="h-16 w-auto mx-auto mb-4" />
             

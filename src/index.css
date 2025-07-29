@@ -41,7 +41,7 @@
   --border: 202 35% 85%;             /* Bordures plus subtiles avec accent */
   --input: 202 35% 85%;
   --ring: 309 78% 31%;               /* Focus ring avec couleur principale */
-  --radius: 0.5rem;
+  --radius: 0.25rem;
 }
 
 /* Styles de centrage forcé pour les roues */
@@ -184,7 +184,7 @@ html, body {
   
   /* Ensure dropdowns have proper z-index and background */
   .dropdown-menu {
-    @apply z-50 bg-white border border-gray-200 rounded-lg shadow-lg;
+    @apply z-50 bg-white border border-gray-200 rounded-md shadow-lg;
   }
   
   /* Button avec couleurs de marque */
@@ -294,7 +294,7 @@ html, body {
   }
 
   .dice-result {
-    @apply p-3 rounded-lg;
+    @apply p-3 rounded-md;
   }
 
   .dice-result-win {
@@ -314,7 +314,7 @@ html, body {
   }
 
   .dice-button {
-    @apply px-6 py-3 rounded-lg font-bold text-white transition-all duration-200;
+    @apply px-6 py-3 rounded-md font-bold text-white transition-all duration-200;
     @apply hover:scale-105 active:scale-95;
     background-color: hsl(var(--brand-primary));
     
@@ -374,7 +374,7 @@ html, body {
   }
 
   .scratch-preview-button {
-    @apply px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200;
+    @apply px-8 py-4 rounded-lg font-semibold text-white transition-all duration-200;
     @apply hover:scale-105 shadow-lg;
     
     &:disabled {
@@ -387,7 +387,7 @@ html, body {
     @apply relative transition-all duration-300 ease-out;
     background: transparent;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     margin: 2px 16px;
     padding: 16px 20px;
     color: hsl(var(--sidebar-text));
@@ -428,7 +428,7 @@ html, body {
     @apply relative transition-all duration-300 ease-out w-full text-left;
     background: hsl(var(--sidebar-surface));
     border: 1px solid hsl(var(--sidebar-border));
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 12px 16px;
     color: hsl(var(--sidebar-text));
     display: flex;
@@ -490,7 +490,7 @@ html, body {
     }
     
     input, select, textarea {
-      @apply w-full px-4 py-3 rounded-xl border transition-all duration-200;
+      @apply w-full px-4 py-3 rounded-lg border transition-all duration-200;
       background: hsl(var(--sidebar-bg));
       border: 1px solid hsl(var(--sidebar-border));
       color: hsl(var(--sidebar-text-primary));
@@ -518,7 +518,7 @@ html, body {
   .premium-card {
     background: hsl(var(--sidebar-surface));
     border: 1px solid hsl(var(--sidebar-border));
-    border-radius: 16px;
+    border-radius: 12px;
     padding: 24px;
     margin-bottom: 24px;
     box-shadow: 0 1px 3px hsl(var(--sidebar-shadow));
@@ -548,7 +548,7 @@ html, body {
     input[type="color"] {
       width: 52px !important;
       height: 52px !important;
-      border-radius: 12px !important;
+      border-radius: 8px !important;
       border: 2px solid hsl(var(--sidebar-border)) !important;
       background: none !important;
       cursor: pointer;

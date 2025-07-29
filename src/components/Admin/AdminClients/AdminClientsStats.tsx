@@ -10,7 +10,7 @@ interface AdminClientsStatsProps {
 const AdminClientsStats: React.FC<AdminClientsStatsProps> = ({ clients }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-      <div className="bg-white p-6 rounded-2xl shadow-md">
+      <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Clients</p>
@@ -22,7 +22,7 @@ const AdminClientsStats: React.FC<AdminClientsStatsProps> = ({ clients }) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-md">
+      <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-600 text-sm font-medium">Clients Actifs</p>
@@ -36,7 +36,7 @@ const AdminClientsStats: React.FC<AdminClientsStatsProps> = ({ clients }) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-md">
+      <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Campagnes</p>
@@ -50,7 +50,7 @@ const AdminClientsStats: React.FC<AdminClientsStatsProps> = ({ clients }) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-md">
+      <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-600 text-sm font-medium">Taux Conversion Moyen</p>

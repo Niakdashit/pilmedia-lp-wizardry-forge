@@ -60,7 +60,7 @@ const Step1GameSelection: React.FC = () => {
   };
   return <div className="min-h-screen bg-[#ebf4f7] py-12 px-0">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 md:p-12">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 md:p-12">
           {/* Header */}
           <div className="text-center mb-16">
             <motion.h1 initial={{
@@ -99,7 +99,7 @@ const Step1GameSelection: React.FC = () => {
             }} transition={{
               delay: index * 0.1
             }} onClick={() => handleGameSelect(game.id)} className={`
-                    relative p-8 rounded-3xl border-2 cursor-pointer transition-all duration-300
+                    relative p-8 rounded-xl border-2 cursor-pointer transition-all duration-300
                     ${isSelected ? 'border-[#841b60] bg-[#841b60]/5 shadow-xl' : 'border-gray-200 bg-gray-50 hover:border-[#841b60]/50 hover:shadow-lg'}
                   `}>
                   {game.popular && <div className="absolute -top-3 -right-3 bg-[#841b60] text-white text-xs px-3 py-1 rounded-full font-medium">

@@ -57,7 +57,7 @@ const Step2BasicSettings: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#ebf4f7] py-12 px-0">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 md:p-12">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 md:p-12">
           {/* Header */}
           <div className="text-center mb-16">
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl mb-4 text-[#841b60] font-semibold">

@@ -46,7 +46,7 @@ const ClientCampaignsTable: React.FC<ClientCampaignsTableProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="p-4 sm:p-6 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h3 className="text-lg font-semibold text-gray-900">Campagnes du Client</h3>

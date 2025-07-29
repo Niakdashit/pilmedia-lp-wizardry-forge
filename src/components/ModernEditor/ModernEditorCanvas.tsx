@@ -112,7 +112,7 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
     <div className="w-full h-full flex items-center justify-center p-4 md:p-6 bg-gradient-to-br from-gray-50 to-white overflow-hidden">
       {/* Canvas container avec largeur responsive et hauteur fixe */}
       <div 
-        className="bg-white rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden relative w-full max-w-none"
+        className="bg-white rounded-xl shadow-2xl border border-gray-200/50 overflow-hidden relative w-full max-w-none"
         style={{
           height: `${FIXED_CANVAS_HEIGHT}px`,
           minHeight: `${FIXED_CANVAS_HEIGHT}px`,

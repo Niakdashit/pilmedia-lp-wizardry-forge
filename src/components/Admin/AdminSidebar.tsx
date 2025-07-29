@@ -69,7 +69,7 @@ const AdminSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-xl transition-all duration-200 group ${isActive ? 'bg-[#841b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
+                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 group ${isActive ? 'bg-[#841b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
               >
                 <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>
                   {item.icon}
@@ -85,7 +85,7 @@ const AdminSidebar: React.FC = () => {
       <div className="p-3 border-t border-gray-200/50">
         <Link
           to="/dashboard"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group mb-2"
+          className="flex items-center px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group mb-2"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
             <LayoutDashboard className="w-5 h-5" />
@@ -95,7 +95,7 @@ const AdminSidebar: React.FC = () => {
         
         <Link
           to="/login"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
+          className="flex items-center px-3 py-2 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
             <LogOut className="w-5 h-5" />

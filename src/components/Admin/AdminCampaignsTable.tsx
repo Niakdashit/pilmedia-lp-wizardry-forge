@@ -23,7 +23,7 @@ const AdminCampaignsTable: React.FC<AdminCampaignsTableProps> = ({ campaigns }) 
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100">
       <div className="p-4 sm:p-6 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
           <h3 className="text-lg font-semibold text-gray-900">Campagnes Récentes</h3>

@@ -48,7 +48,7 @@ const AdminKPICards: React.FC<AdminKPICardsProps> = ({ stats }) => {
       {kpiData.map((kpi, index) => {
         const Icon = kpi.icon;
         return (
-          <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+          <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-600 mb-2">{kpi.title}</p>

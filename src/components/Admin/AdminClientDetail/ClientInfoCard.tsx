@@ -16,7 +16,7 @@ const ClientInfoCard: React.FC<ClientInfoCardProps> = ({ clientData, campaigns }
     : 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations Client</h3>

@@ -117,7 +117,7 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full h-full flex flex-col relative overflow-hidden rounded-3xl shadow-2xl max-w-7xl max-h-[90vh]">
+      <div className="bg-white w-full h-full flex flex-col relative overflow-hidden rounded-xl shadow-2xl max-w-7xl max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-white">
           <div className="flex items-center space-x-4">

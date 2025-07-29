@@ -39,7 +39,7 @@ const AdminRecentActivity: React.FC<AdminRecentActivityProps> = ({ activities })
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100">
       <div className="p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Activité Récente</h3>
         <div className="space-y-4">
