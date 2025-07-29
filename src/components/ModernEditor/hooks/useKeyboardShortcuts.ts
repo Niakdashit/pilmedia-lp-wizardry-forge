@@ -53,25 +53,21 @@ export const useKeyboardShortcuts = ({
         }
         break;
 
-      // Undo
+      // Undo and Redo
       case 'z':
-        if (isModifierPressed && !shiftKey) {
+        if (isModifierPressed) {
           event.preventDefault();
-          onUndo?.();
+          if (shiftKey) {
+            onRedo?.(); // Ctrl+Shift+Z for redo
+          } else {
+            onUndo?.(); // Ctrl+Z for undo
+          }
         }
         break;
 
       // Redo
       case 'y':
         if (isModifierPressed) {
-          event.preventDefault();
-          onRedo?.();
-        }
-        break;
-
-      // Redo (alternative)
-      case 'z':
-        if (isModifierPressed && shiftKey) {
           event.preventDefault();
           onRedo?.();
         }

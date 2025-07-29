@@ -30,15 +30,7 @@ const ImageElementResizeHandles: React.FC<ImageElementResizeHandlesProps> = ({
         onMouseDown={onResizeStart('se')}
       />
       
-      {/* Edge handles */}
-      <div
-        className={`${handleStyle} -top-1 left-1/2 transform -translate-x-1/2 cursor-n-resize`}
-        onMouseDown={onResizeStart('n')}
-      />
-      <div
-        className={`${handleStyle} -bottom-1 left-1/2 transform -translate-x-1/2 cursor-s-resize`}
-        onMouseDown={onResizeStart('s')}
-      />
+      {/* Edge handles - only left and right */}
       <div
         className={`${handleStyle} -left-1 top-1/2 transform -translate-y-1/2 cursor-w-resize`}
         onMouseDown={onResizeStart('w')}
