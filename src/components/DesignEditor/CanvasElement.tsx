@@ -11,6 +11,7 @@ export interface CanvasElementProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
+  containerRef?: React.RefObject<HTMLDivElement>;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -19,7 +20,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   selectedDevice,
   onSelect,
   onUpdate,
-  onDelete
+  onDelete,
+  containerRef
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -37,6 +39,27 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       opacity: monitor.isDragging() ? 0.5 : 1,
       isDragging: monitor.isDragging(),
     }),
+    begin: () => {
+      // Trigger real-time alignment guides calculation
+      const rect = containerRef?.current?.getBoundingClientRect();
+      if (rect) {
+        document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
+          detail: {
+            elementId: element.id,
+            x: deviceProps.x || 0,
+            y: deviceProps.y || 0,
+            width: deviceProps.width || 100,
+            height: deviceProps.height || 30,
+            isDragging: true,
+            canvasSize: { width: rect.width, height: rect.height }
+          }
+        }));
+      }
+    },
+    end: () => {
+      // Hide guides when drag ends
+      document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
+    }
   }));
 
   const [isEditing, setIsEditing] = React.useState(false);
@@ -51,11 +74,30 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const startY = e.clientY - currentProps.y;
 
     const handleMouseMove = (e: MouseEvent) => {
+      const newX = e.clientX - startX;
+      const newY = e.clientY - startY;
+      
+      // Get canvas dimensions for alignment guides
+      if (containerRef?.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
+          detail: {
+            elementId: element.id,
+            x: Math.max(0, newX),
+            y: Math.max(0, newY),
+            width: currentProps.width || 100,
+            height: currentProps.height || 30,
+            isDragging: true,
+            canvasSize: { width: rect.width, height: rect.height }
+          }
+        }));
+      }
+      
       // Throttled updates for smooth 60fps movement
       requestAnimationFrame(() => {
         onUpdate(element.id, {
-          x: e.clientX - startX,
-          y: e.clientY - startY,
+          x: newX,
+          y: newY,
         });
       });
     };
@@ -63,11 +105,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const handleMouseUp = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      // Hide guides when drag ends
+      document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [element.id, deviceProps, onSelect, onUpdate]);
+  }, [element.id, deviceProps, onSelect, onUpdate, containerRef]);
 
   // Optimized text editing handlers with useCallback
   const handleDoubleClick = useCallback(() => {

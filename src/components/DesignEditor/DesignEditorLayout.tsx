@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
@@ -10,6 +10,7 @@ import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useHistoryManager } from '../ModernEditor/hooks/useHistoryManager';
 import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
+import { useDebouncedCallback } from 'use-debounce';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -62,18 +63,21 @@ const DesignEditorLayout: React.FC = () => {
     setPreviewDevice(selectedDevice);
   }, [selectedDevice, setPreviewDevice]);
 
-  // Sauvegarde dans l'historique à chaque modification significative
+  // Configuration de campagne dynamique optimisée
+  const campaignData = useMemo(() => {
+    return generateCampaignFromCanvas();
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors]);
+
+  // Debounced history update pour éviter trop d'entrées
+  const debouncedAddToHistory = useDebouncedCallback((data: any) => {
+    addToHistory(data, 'canvas_update');
+  }, 300);
+
+  // Synchronisation avec le store et historique
   useEffect(() => {
-    const campaignData = generateCampaignFromCanvas();
     setCampaign(campaignData);
-    
-    // Ajouter à l'historique avec un délai pour éviter trop d'entrées
-    const timeoutId = setTimeout(() => {
-      addToHistory(campaignData, 'canvas_update');
-    }, 500);
-    
-    return () => clearTimeout(timeoutId);
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, addToHistory, setCampaign]);
+    debouncedAddToHistory(campaignData);
+  }, [campaignData, setCampaign, debouncedAddToHistory]);
 
   // Actions optimisées
   const handleSave = async () => {
@@ -132,7 +136,7 @@ const DesignEditorLayout: React.FC = () => {
   }, [canvasElements, getAdaptationSuggestions]);
 
   // Configuration de campagne dynamique basée sur les éléments du canvas
-  const generateCampaignFromCanvas = () => {
+  const generateCampaignFromCanvas = useCallback(() => {
     // Extraire les éléments du canvas selon leur type et rôle
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
@@ -201,7 +205,7 @@ const DesignEditorLayout: React.FC = () => {
         device: selectedDevice
       }
     };
-  };
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice]);
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">

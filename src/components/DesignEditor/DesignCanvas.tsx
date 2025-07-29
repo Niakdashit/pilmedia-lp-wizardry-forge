@@ -295,7 +295,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
                   isSelected={selectedElement === element.id} 
                   onSelect={setSelectedElement} 
                   onUpdate={handleElementUpdate} 
-                  onDelete={handleElementDelete} 
+                  onDelete={handleElementDelete}
+                  containerRef={canvasRef}
                 />
               );
             })}

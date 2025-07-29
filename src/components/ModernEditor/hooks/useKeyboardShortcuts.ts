@@ -24,7 +24,10 @@ export const useKeyboardShortcuts = ({
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const { ctrlKey, metaKey, shiftKey, key, target } = event;
-    const isModifierPressed = ctrlKey || metaKey;
+    
+    // Detect macOS and prioritize correct modifier key
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isModifierPressed = isMac ? metaKey : ctrlKey;
     
     // Don't trigger shortcuts when typing in inputs
     if ((target as Element)?.tagName === 'INPUT' || 
