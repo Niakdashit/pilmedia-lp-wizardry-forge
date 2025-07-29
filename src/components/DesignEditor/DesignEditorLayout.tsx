@@ -188,12 +188,24 @@ const DesignEditorLayout: React.FC = () => {
     }
   };
 
-  // Raccourcis clavier professionnels
+  // Raccourcis clavier professionnels - avec logs pour debug
   useKeyboardShortcuts({
-    onSave: handleSave,
-    onPreview: handlePreview,
-    onUndo: undo,
-    onRedo: redo
+    onSave: () => {
+      console.log('Save shortcut triggered');
+      handleSave();
+    },
+    onPreview: () => {
+      console.log('Preview shortcut triggered');
+      handlePreview();
+    },
+    onUndo: () => {
+      console.log('Undo shortcut triggered');
+      undo();
+    },
+    onRedo: () => {
+      console.log('Redo shortcut triggered');
+      redo();
+    }
   });
 
   // Auto-responsive logic

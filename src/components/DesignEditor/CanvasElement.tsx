@@ -59,13 +59,16 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       const newX = e.clientX - startX;
       const newY = e.clientY - startY;
       
-      // Calculer le centre de l'élément pour les guides
-      const elementCenterX = newX + (currentProps.width || 100) / 2;
-      const elementCenterY = newY + (currentProps.height || 30) / 2;
+      // Calculer le centre réel de l'élément
+      const elementWidth = currentProps.width || 100;
+      const elementHeight = currentProps.height || 30;
+      const elementCenterX = newX + elementWidth / 2;
+      const elementCenterY = newY + elementHeight / 2;
       
       // Get canvas dimensions for alignment guides
       if (containerRef?.current) {
         const rect = containerRef.current.getBoundingClientRect();
+        // Le centre du canvas est au milieu de ses dimensions
         const canvasCenterX = rect.width / 2;
         const canvasCenterY = rect.height / 2;
         
@@ -424,19 +427,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             style={{ zIndex: 1001 }}
           />
           
-          {/* Edge handles - for stretching shape only */}
+          {/* Edge handles - only left and right (w, e) */}
           {element.type === 'text' && (
             <>
-              <div 
-                className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-n-resize shadow-lg" 
-                onMouseDown={(e) => handleResizeMouseDown(e, 'n')}
-                style={{ zIndex: 1001 }}
-              />
-              <div 
-                className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-2 bg-blue-500 border border-white rounded cursor-s-resize shadow-lg" 
-                onMouseDown={(e) => handleResizeMouseDown(e, 's')}
-                style={{ zIndex: 1001 }}
-              />
               <div 
                 className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-w-resize shadow-lg" 
                 onMouseDown={(e) => handleResizeMouseDown(e, 'w')}
