@@ -198,7 +198,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-          <div className="flex justify-start items-center min-h-full">
+          <div className="flex justify-center items-center min-h-full">
           <div 
             ref={canvasRef}
             className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
