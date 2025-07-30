@@ -88,11 +88,12 @@ const DesignEditorLayout: React.FC = () => {
           secondary: extractedColors[1] || '#4ecdc4',
           accent: extractedColors[2] || '#45b7d1'
         },
-        wheelConfig: campaignConfig.wheelConfig || {
-          borderStyle: 'classic',
-          borderColor: '#841b60',
-          scale: 1
-        }
+        wheelConfig: {
+          borderStyle: campaignConfig.wheelConfig?.borderStyle || 'classic',
+          borderColor: campaignConfig.wheelConfig?.borderColor || '#841b60',
+          scale: campaignConfig.wheelConfig?.scale || 1
+        },
+        wheelBorderStyle: campaignConfig.wheelConfig?.borderStyle || 'classic'
       },
       gameConfig: {
         wheel: {
@@ -167,21 +168,34 @@ const DesignEditorLayout: React.FC = () => {
     
     // Appliquer automatiquement la couleur extraite (dominante) et le blanc comme seconde couleur
     if (colors.length >= 1) {
-      setCampaignConfig((prev: any) => ({
-        ...prev,
-        design: {
-          ...prev?.design,
-          wheelConfig: {
-            ...prev?.design?.wheelConfig,
-            borderColor: colors[0] || '#841b60'
-          },
-          brandColors: {
-            primary: colors[0] || '#841b60',
-            secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
-            accent: colors[0] || '#45b7d1'
+      setCampaignConfig((prev: any) => {
+        const currentWheelConfig = prev?.design?.wheelConfig;
+        const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
+        
+        // Ne mettre à jour la couleur de bordure que si :
+        // 1. Le style est "classic" ET
+        // 2. L'utilisateur n'a pas déjà configuré manuellement une couleur personnalisée différente de la couleur par défaut
+        const shouldUpdateBorderColor = isClassicBorder && 
+          (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
+        
+        return {
+          ...prev,
+          design: {
+            ...prev?.design,
+            wheelConfig: {
+              ...currentWheelConfig,
+              ...(shouldUpdateBorderColor && {
+                borderColor: colors[0] || '#841b60'
+              })
+            },
+            brandColors: {
+              primary: colors[0] || '#841b60',
+              secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
+              accent: colors[0] || '#45b7d1'
+            }
           }
-        }
-      }));
+        };
+      });
     }
   };
 
