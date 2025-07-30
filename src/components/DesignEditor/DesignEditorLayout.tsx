@@ -40,6 +40,7 @@ const DesignEditorLayout: React.FC = () => {
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [canvasZoom, setCanvasZoom] = useState(1);
+  const [wheelModalConfig, setWheelModalConfig] = useState<any>({}); // Pour stocker la config modifiée par la modal
 
   // Système d'historique pour undo/redo
   const { addToHistory, undo, redo } = useHistoryManager({
@@ -89,11 +90,11 @@ const DesignEditorLayout: React.FC = () => {
           accent: extractedColors[2] || '#45b7d1'
         },
         wheelConfig: {
-          borderStyle: campaignConfig.wheelConfig?.borderStyle || 'classic',
-          borderColor: campaignConfig.wheelConfig?.borderColor || '#841b60',
-          scale: campaignConfig.wheelConfig?.scale || 1
+          borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic',
+          borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#841b60',
+          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 1
         },
-        wheelBorderStyle: campaignConfig.wheelConfig?.borderStyle || 'classic'
+        wheelBorderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic'
       },
       gameConfig: {
         wheel: {
@@ -133,7 +134,7 @@ const DesignEditorLayout: React.FC = () => {
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig]);
 
   // Debounced history update pour éviter trop d'entrées
   const debouncedAddToHistory = useDebouncedCallback((data: any) => {
@@ -275,7 +276,17 @@ const DesignEditorLayout: React.FC = () => {
               onElementsChange={setCanvasElements}
               background={canvasBackground}
               campaign={campaignConfig}
-              onCampaignChange={setCampaignConfig}
+              onCampaignChange={(updatedCampaign) => {
+                setCampaignConfig(updatedCampaign);
+                // Mettre à jour wheelModalConfig avec les nouvelles valeurs
+                if (updatedCampaign?.design?.wheelConfig) {
+                  setWheelModalConfig({
+                    wheelBorderStyle: updatedCampaign.design.wheelBorderStyle,
+                    wheelBorderColor: updatedCampaign.design.wheelConfig.borderColor,
+                    wheelScale: updatedCampaign.design.wheelConfig.scale
+                  });
+                }
+              }}
               zoom={canvasZoom}
             />
             
