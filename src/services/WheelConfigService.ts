@@ -137,9 +137,9 @@ export class WheelConfigService {
     }
 
     return {
-      containerClass: 'absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-3/5',
+      containerClass: 'absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 overflow-hidden',
       wheelClass: 'cursor-pointer hover:scale-105 transition-transform duration-200',
-      transform: 'translate-y-3/5',
+      transform: 'translate-y-1/3',
       styles: {
         paddingBottom: '-30%'
       }

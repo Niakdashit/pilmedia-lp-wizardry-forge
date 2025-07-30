@@ -98,7 +98,7 @@ const DesignEditorLayout: React.FC = () => {
         wheelConfig: {
           borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic',
           borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#841b60',
-          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 1
+          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 2
         },
         wheelBorderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic'
       },
