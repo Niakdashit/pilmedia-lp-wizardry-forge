@@ -118,7 +118,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onSpin={handleSpin}
         disabled={disabled}
         borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
-        customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
+        customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.wheelConfig?.borderColor || campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
         buttonPosition="center"
         customButton={{
           text: "GO",

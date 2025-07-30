@@ -101,7 +101,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             size={wheelSize}
             brandColors={brandColors}
             borderStyle={borderStyle}
-            customBorderColor={borderStyle === 'classic' ? brandColors.primary : undefined}
+            customBorderColor={borderStyle === 'classic' ? (campaign?.design?.wheelConfig?.borderColor || brandColors.primary) : undefined}
             buttonPosition="center"
             onResult={(segment) => {
               console.log('Segment gagné dans l\'éditeur:', segment);
