@@ -3,7 +3,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
-import { SmartWheel } from '../SmartWheel';
+import StandardizedWheel from '../shared/StandardizedWheel';
 import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
@@ -11,6 +11,7 @@ import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useOptimizedDragDrop } from '../ModernEditor/hooks/useOptimizedDragDrop';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useEditorStore } from '../../stores/editorStore';
+import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -41,6 +42,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
 
+  // Hook de synchronisation unifié pour la roue
+  const { updateWheelConfig, getCanonicalConfig } = useWheelConfigSync({
+    campaign,
+    extractedColors: campaign?.design?.brandColors ? Object.values(campaign.design.brandColors) : [],
+    onCampaignChange
+  });
+
   // Hooks optimisés pour drag & drop et snapping
   useOptimizedDragDrop({
     containerRef: canvasRef,
@@ -52,54 +60,12 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
     gridSize: 20,
     snapTolerance: 10
   });
-  
-  // Récupérer les configurations de la roue depuis la campagne
-  const wheelBorderStyle = campaign?.design?.wheelBorderStyle || 'classic';
-  const wheelBorderColor = campaign?.design?.wheelConfig?.borderColor || '#841b60';
-  const wheelScale = campaign?.design?.wheelConfig?.scale || 2;
 
-  // Fonctions optimisées pour mettre à jour la configuration de la roue
-  const setWheelBorderStyle = useCallback((style: string) => {
-    if (onCampaignChange) {
-      onCampaignChange({
-        ...campaign,
-        design: {
-          ...campaign?.design,
-          wheelBorderStyle: style
-        }
-      });
-    }
-  }, [campaign, onCampaignChange]);
-
-  const setWheelBorderColor = useCallback((color: string) => {
-    if (onCampaignChange) {
-      onCampaignChange({
-        ...campaign,
-        design: {
-          ...campaign?.design,
-          wheelConfig: {
-            ...campaign?.design?.wheelConfig,
-            borderColor: color
-          }
-        }
-      });
-    }
-  }, [campaign, onCampaignChange]);
-
-  const setWheelScale = useCallback((scale: number) => {
-    if (onCampaignChange) {
-      onCampaignChange({
-        ...campaign,
-        design: {
-          ...campaign?.design,
-          wheelConfig: {
-            ...campaign?.design?.wheelConfig,
-            scale: scale
-          }
-        }
-      });
-    }
-  }, [campaign, onCampaignChange]);
+  // Configuration canonique de la roue
+  const wheelConfig = useMemo(() => 
+    getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true }),
+    [getCanonicalConfig, selectedDevice]
+  );
 
   // Intégration du système auto-responsive
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
@@ -160,37 +126,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   }, [elements, onElementsChange, selectedElement]);
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
-  // Taille de la roue memoized
-  const wheelSize = useMemo(() => {
-    const baseSize = (() => {
-      switch (selectedDevice) {
-        case 'desktop':
-          return 200;
-        case 'tablet':
-          return 180;
-        case 'mobile':
-          return 140;
-        default:
-          return 140;
-      }
-    })();
-    return Math.round(baseSize * wheelScale);
-  }, [selectedDevice, wheelScale]);
-
-  // Segments de roue memoized
-  const wheelSegments = useMemo(() => {
-    const extractedColor = campaign?.design?.brandColors?.primary || '#ff6b6b';
-    const whiteColor = '#ffffff';
-    
-    return [
-      { id: '1', label: '10€', color: extractedColor, textColor: whiteColor },
-      { id: '2', label: '20€', color: whiteColor, textColor: extractedColor },
-      { id: '3', label: '5€', color: extractedColor, textColor: whiteColor },
-      { id: '4', label: 'Perdu', color: whiteColor, textColor: extractedColor },
-      { id: '5', label: '50€', color: extractedColor, textColor: whiteColor },
-      { id: '6', label: '30€', color: whiteColor, textColor: extractedColor }
-    ];
-  }, [campaign?.design?.brandColors?.primary]);
+  // Les segments et tailles sont maintenant gérés par StandardizedWheel
   return <DndProvider backend={HTML5Backend}>
       <div className="flex-1 bg-gray-100 p-8 overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
@@ -250,32 +186,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
               
               
               
-              {/* Roue de la fortune en bas */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-3/5">
-                <div 
-                  onClick={() => setShowBorderModal(true)}
-                  className="cursor-pointer hover:scale-105 transition-transform duration-200"
-                >
-                  <SmartWheel
-                    segments={wheelSegments}
-                    theme="modern"
-                    size={wheelSize}
-                    borderStyle={wheelBorderStyle}
-                    brandColors={{
-                      primary: wheelBorderColor,
-                      secondary: '#4ecdc4',
-                      accent: '#45b7d1'
-                    }}
-                    buttonPosition="center"
-                    customButton={{
-                      text: 'GO',
-                      color: wheelBorderColor,
-                      textColor: '#ffffff'
-                    }}
-                    disabled={true}
-                  />
-                </div>
-              </div>
+              {/* Roue standardisée avec découpage cohérent */}
+              <StandardizedWheel
+                campaign={campaign}
+                device={selectedDevice}
+                shouldCropWheel={true}
+                disabled={true}
+                onClick={() => setShowBorderModal(true)}
+              />
             </div>
 
             {/* Canvas Elements */}
@@ -349,12 +267,12 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
         <WheelConfigModal
           isOpen={showBorderModal}
           onClose={() => setShowBorderModal(false)}
-          wheelBorderStyle={wheelBorderStyle}
-          wheelBorderColor={wheelBorderColor}
-          wheelScale={wheelScale}
-          onBorderStyleChange={setWheelBorderStyle}
-          onBorderColorChange={setWheelBorderColor}
-          onScaleChange={setWheelScale}
+          wheelBorderStyle={wheelConfig.borderStyle}
+          wheelBorderColor={wheelConfig.borderColor}
+          wheelScale={wheelConfig.scale}
+          onBorderStyleChange={(style) => updateWheelConfig({ borderStyle: style })}
+          onBorderColorChange={(color) => updateWheelConfig({ borderColor: color })}
+          onScaleChange={(scale) => updateWheelConfig({ scale })}
           selectedDevice={selectedDevice}
         />
       </div>

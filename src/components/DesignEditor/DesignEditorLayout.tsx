@@ -9,6 +9,7 @@ import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useHistoryManager } from '../ModernEditor/hooks/useHistoryManager';
+import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -40,7 +41,12 @@ const DesignEditorLayout: React.FC = () => {
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [canvasZoom, setCanvasZoom] = useState(1);
-  const [wheelModalConfig, setWheelModalConfig] = useState<any>({}); // Pour stocker la config modifiée par la modal
+  // Utilisation du hook de synchronisation unifié
+  const { wheelModalConfig } = useWheelConfigSync({
+    campaign: campaignConfig,
+    extractedColors,
+    onCampaignChange: setCampaignConfig
+  });
 
   // Système d'historique pour undo/redo
   const { addToHistory, undo, redo } = useHistoryManager({
@@ -276,17 +282,7 @@ const DesignEditorLayout: React.FC = () => {
               onElementsChange={setCanvasElements}
               background={canvasBackground}
               campaign={campaignConfig}
-              onCampaignChange={(updatedCampaign) => {
-                setCampaignConfig(updatedCampaign);
-                // Mettre à jour wheelModalConfig avec les nouvelles valeurs
-                if (updatedCampaign?.design?.wheelConfig) {
-                  setWheelModalConfig({
-                    wheelBorderStyle: updatedCampaign.design.wheelBorderStyle,
-                    wheelBorderColor: updatedCampaign.design.wheelConfig.borderColor,
-                    wheelScale: updatedCampaign.design.wheelConfig.scale
-                  });
-                }
-              }}
+              onCampaignChange={setCampaignConfig}
               zoom={canvasZoom}
             />
             
