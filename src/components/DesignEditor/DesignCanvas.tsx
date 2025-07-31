@@ -15,6 +15,7 @@ import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDr
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
+import TouchDebugOverlay from './components/TouchDebugOverlay';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -41,6 +42,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
+  const [showTouchDebug, setShowTouchDebug] = useState(false);
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
@@ -365,6 +367,21 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
               >
                 📐
               </button>
+              
+              {/* Touch Debug Toggle - Only show on mobile/tablet */}
+              {selectedDevice !== 'desktop' && (
+                <button
+                  onClick={() => setShowTouchDebug(!showTouchDebug)}
+                  className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
+                    showTouchDebug 
+                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                      : 'bg-white/80 hover:bg-white text-gray-700'
+                  }`}
+                  title="Debug tactile (mobile/tablette)"
+                >
+                  🔧
+                </button>
+              )}
             </div>
 
             {/* Device Frame for mobile/tablet */}
@@ -386,6 +403,11 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
         {/* Canvas Info */}
         <div className="text-center mt-4 text-sm text-gray-500">
           {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
+          {selectedDevice !== 'desktop' && (
+            <span className="block text-xs text-orange-600 mt-1">
+              💡 Mode tactile optimisé - Utilisez le bouton 🔧 pour le debug
+            </span>
+          )}
         </div>
 
         {/* Modal pour la configuration de la roue */}
@@ -399,6 +421,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
           onBorderColorChange={(color) => updateWheelConfig({ borderColor: color })}
           onScaleChange={(scale) => updateWheelConfig({ scale })}
           selectedDevice={selectedDevice}
+        />
+        
+        {/* Touch Debug Overlay */}
+        <TouchDebugOverlay
+          selectedDevice={selectedDevice}
+          containerRef={canvasRef}
+          isVisible={showTouchDebug}
+          onToggle={() => setShowTouchDebug(!showTouchDebug)}
         />
       </div>
     </DndProvider>;

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
+import { useTouchOptimization } from './hooks/useTouchOptimization';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 // Force cache invalidation - React DnD v14+ compliant
@@ -27,6 +28,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
+  // 📱 Hook d'optimisation tactile pour mobile/tablette
+  const touchOptimization = useTouchOptimization({ 
+    selectedDevice, 
+    containerRef 
+  });
+  
   // Get device-specific properties with proper typing - memoized
   const deviceProps = useMemo(() => 
     getPropertiesForDevice(element, selectedDevice), 
@@ -46,7 +53,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   const [isEditing, setIsEditing] = React.useState(false);
 
-  // Optimized drag handlers with useCallback
+  // Optimized drag handlers with useCallback - Enhanced for mobile/tablet
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -58,29 +65,73 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     if (!containerRef?.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    // Calculer l'échelle du zoom depuis le style transform
-    const containerStyle = getComputedStyle(containerRef.current);
-    const transform = containerStyle.transform;
-    let zoomScale = 1;
-    if (transform && transform !== 'none') {
-      const matrix = transform.match(/matrix\(([^)]+)\)/);
-      if (matrix) {
-        const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
-        zoomScale = values[0]; // Premier élément de la matrice = scale X
+    // 📱 Détection et optimisation tactile
+    const isTouchInteraction = touchOptimization.isTouchInteraction(e);
+    
+    // Convertir les coordonnées avec fallback robuste
+    let canvasX: number, canvasY: number;
+    
+    try {
+      const canvasCoords = touchOptimization.convertToCanvasCoordinates(
+        e.clientX, 
+        e.clientY, 
+        isTouchInteraction
+      );
+      canvasX = canvasCoords.x;
+      canvasY = canvasCoords.y;
+    } catch (error) {
+      // Fallback : calcul manuel si le hook échoue
+      console.warn('TouchOptimization fallback activated:', error);
+      
+      const zoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
+      canvasX = (e.clientX - containerRect.left) / zoomScale;
+      canvasY = (e.clientY - containerRect.top) / zoomScale;
+      
+      // Appliquer la compensation tactile manuellement si nécessaire
+      if (isTouchInteraction && selectedDevice !== 'desktop') {
+        const touchOffset = selectedDevice === 'mobile' ? 45 : 35;
+        canvasY -= touchOffset;
+        
+        const precisionFactor = selectedDevice === 'mobile' ? 0.98 : 0.99;
+        canvasX *= precisionFactor;
+        canvasY *= precisionFactor;
       }
     }
-
-    // Position initiale relative au canvas avec correction du zoom
-    const canvasX = (e.clientX - containerRect.left) / zoomScale;
-    const canvasY = (e.clientY - containerRect.top) / zoomScale;
     
     const startX = canvasX - currentProps.x;
     const startY = canvasY - currentProps.y;
 
     const handlePointerMove = (e: PointerEvent) => {
-      // Convertir les coordonnées de la souris en coordonnées canvas
-      const newCanvasX = (e.clientX - containerRect.left) / zoomScale;
-      const newCanvasY = (e.clientY - containerRect.top) / zoomScale;
+      // 📱 Détecter et optimiser pour les interactions tactiles
+      const isTouchMove = touchOptimization.isTouchInteraction(e);
+      
+      // Convertir les coordonnées avec fallback robuste
+      let newCanvasX: number, newCanvasY: number;
+      
+      try {
+        const moveCoords = touchOptimization.convertToCanvasCoordinates(
+          e.clientX, 
+          e.clientY, 
+          isTouchMove
+        );
+        newCanvasX = moveCoords.x;
+        newCanvasY = moveCoords.y;
+      } catch (error) {
+        // Fallback : calcul manuel si le hook échoue
+        const zoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
+        newCanvasX = (e.clientX - containerRect.left) / zoomScale;
+        newCanvasY = (e.clientY - containerRect.top) / zoomScale;
+        
+        // Appliquer la compensation tactile manuellement si nécessaire
+        if (isTouchMove && selectedDevice !== 'desktop') {
+          const touchOffset = selectedDevice === 'mobile' ? 45 : 35;
+          newCanvasY -= touchOffset;
+          
+          const precisionFactor = selectedDevice === 'mobile' ? 0.98 : 0.99;
+          newCanvasX *= precisionFactor;
+          newCanvasY *= precisionFactor;
+        }
+      }
       
       const newX = newCanvasX - startX;
       const newY = newCanvasY - startY;
@@ -97,9 +148,21 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         const textElement = e.target.closest('[data-element-type="text"]');
         if (textElement) {
           const rect = textElement.getBoundingClientRect();
-          actualWidth = rect.width / zoomScale;
-          actualHeight = rect.height / zoomScale;
+          const currentZoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
+          actualWidth = rect.width / currentZoomScale;
+          actualHeight = rect.height / currentZoomScale;
         }
+      }
+      
+      // 📱 Ajustement des dimensions pour les interactions tactiles
+      if (isTouchMove) {
+        const adjustedDimensions = touchOptimization.adjustDimensionsForTouch(
+          actualWidth, 
+          actualHeight, 
+          isTouchMove
+        );
+        actualWidth = adjustedDimensions.width;
+        actualHeight = adjustedDimensions.height;
       }
       
       // Calculer le centre précis de l'élément
@@ -111,8 +174,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         // Obtenir les dimensions réelles du canvas
         const canvasElement = containerRef.current;
         const canvasRect = canvasElement.getBoundingClientRect();
-        const canvasWidth = canvasRect.width / zoomScale;
-        const canvasHeight = canvasRect.height / zoomScale;
+        const currentZoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
+        const canvasWidth = canvasRect.width / currentZoomScale;
+        const canvasHeight = canvasRect.height / currentZoomScale;
         
         // Le centre du canvas avec calculs précis
         const canvasCenterX = canvasWidth / 2;
@@ -187,11 +251,14 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setIsEditing(false);
   }, []);
 
-  // Optimized resize handler with useCallback
+  // Optimized resize handler with useCallback - Enhanced for mobile/tablet
   const handleResizePointerDown = useCallback((e: React.PointerEvent, direction: string) => {
     e.preventDefault();
     e.stopPropagation();
 
+    // 📱 Détection du type d'interaction pour le redimensionnement
+    const isTouchResize = touchOptimization.isTouchInteraction(e);
+    
     const startX = e.clientX;
     const startY = e.clientY;
     const startWidth = element.width || 100;
@@ -206,8 +273,18 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       const handleResizePointerMove = (e: PointerEvent) => {
         // Throttled resize for smooth performance
         requestAnimationFrame(() => {
-          const deltaX = e.clientX - startX;
-          const deltaY = e.clientY - startY;
+          // 📱 Appliquer la sensibilité tactile aux deltas
+          const rawDeltaX = e.clientX - startX;
+          const rawDeltaY = e.clientY - startY;
+          
+          const adjustedDeltas = touchOptimization.applyTouchSensitivity(
+            rawDeltaX, 
+            rawDeltaY, 
+            isTouchResize
+          );
+          
+          const deltaX = adjustedDeltas.deltaX;
+          const deltaY = adjustedDeltas.deltaY;
 
       let newWidth = startWidth;
       let newHeight = startHeight;
