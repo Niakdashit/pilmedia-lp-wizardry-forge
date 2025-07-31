@@ -1,24 +1,25 @@
 import React from 'react';
 import { Move, ArrowUp, ArrowDown, Layers } from 'lucide-react';
+import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 
 interface MobileLayoutProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({ campaign, setCampaign }) => {
   const mobileConfig = campaign.mobileConfig || {};
   const contrastBg = mobileConfig.contrastBackground || {};
 
-  const updateMobileConfig = (key: string, value: any) => {
-    setCampaign((prev: any) => ({
+  const updateMobileConfig = (key: string, value: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       mobileConfig: { ...prev.mobileConfig, [key]: value }
     }));
   };
 
-  const updateContrastBackground = (key: string, value: any) => {
-    setCampaign((prev: any) => ({
+  const updateContrastBackground = (key: string, value: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       mobileConfig: { 
         ...prev.mobileConfig, 

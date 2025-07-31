@@ -1,18 +1,19 @@
 import React from 'react';
 import { Gamepad2, Maximize, Move } from 'lucide-react';
+import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 import ImageUpload from '../../common/ImageUpload';
 import MobileTabRoulette from '../../configurators/MobileTabRoulette';
 interface MobileGamePlacementProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 const MobileGamePlacement: React.FC<MobileGamePlacementProps> = ({
   campaign,
   setCampaign
 }) => {
   const mobileConfig = campaign.mobileConfig || {};
-  const updateMobileConfig = (key: string, value: any) => {
-    setCampaign((prev: any) => ({
+  const updateMobileConfig = (key: string, value: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       mobileConfig: {
         ...prev.mobileConfig,

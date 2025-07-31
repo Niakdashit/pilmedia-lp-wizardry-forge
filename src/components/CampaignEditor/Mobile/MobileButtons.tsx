@@ -4,17 +4,18 @@ import { MousePointer } from 'lucide-react';
 import ButtonPlacement from './MobileButtons/ButtonPlacement';
 import ButtonAction from './MobileButtons/ButtonAction';
 import ButtonStyle from './MobileButtons/ButtonStyle';
+import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 
 interface MobileButtonsProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) => {
   const mobileConfig = campaign.mobileConfig || {};
 
-  const updateMobileConfig = (key: string, value: any) => {
-    setCampaign((prev: any) => ({
+  const updateMobileConfig = (key: string, value: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       mobileConfig: { ...prev.mobileConfig, [key]: value }
     }));

@@ -71,7 +71,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
       <div className="space-y-6">
           {/* Bouton d'ajout simple */}
           <div>
-            <button onClick={() => addText()} className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors flex items-center justify-center">
+            <button onClick={() => addText()} className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors flex items-center justify-center">
               <Type className="w-5 h-5 mr-2 text-gray-600" />
               <span className="text-sm text-gray-600">Ajouter du texte</span>
             </button>
@@ -81,7 +81,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-gray-700">Catégories de polices</h4>
             <div className="grid grid-cols-3 gap-2">
-              {fontCategories.map((category, index) => <button key={index} className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${selectedCategory.name === category.name ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`} onClick={() => setSelectedCategory(category)}>
+              {fontCategories.map((category, index) => <button key={index} className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${selectedCategory.name === category.name ? 'bg-[hsl(var(--primary))] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`} onClick={() => setSelectedCategory(category)}>
                   {category.name}
                 </button>)}
             </div>
@@ -95,7 +95,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
             text: 'Texte stylé',
             fontFamily: font,
             fontSize: 24
-          })} className="p-2 border border-gray-200 rounded hover:border-blue-300 hover:bg-blue-50 transition-colors text-left">
+          })} className="p-2 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors text-left">
                   <span style={{
               fontFamily: font
             }} className="text-xl">

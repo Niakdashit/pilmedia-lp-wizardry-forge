@@ -9,6 +9,7 @@ import PerformanceMonitor from './components/PerformanceMonitor';
 import { useEditorStore } from '@/stores/editorStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHistoryManager } from './hooks/useHistoryManager';
+import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 
 interface ModernEditorLayoutProps {
   campaign: any;
@@ -86,7 +87,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
   }, [campaign, addToHistory]);
 
   // Setup keyboard shortcuts with history support
-  useKeyboardShortcuts({
+  const { shortcuts } = useKeyboardShortcuts({
     onSave,
     onPreview,
     onUndo: undo,
@@ -115,6 +116,11 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
           selectedDevice={previewDevice} 
           onDeviceChange={onDeviceChange} 
         />
+        
+        {/* Bouton d'aide des raccourcis clavier */}
+        <div className="absolute top-4 right-4 z-20">
+          <KeyboardShortcutsHelp shortcuts={shortcuts} />
+        </div>
       </div>
 
       {/* Main Content - prend le reste de l'écran */}

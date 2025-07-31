@@ -1,11 +1,11 @@
-
 import React from 'react';
+import type { OptimizedCampaign, MobileConfig } from '../../ModernEditor/types/CampaignTypes';
 import ContrastBackground from '../../common/ContrastBackground';
 import { getTextBlockStyle } from './styles';
 
 interface MobileContentProps {
-  mobileConfig: any;
-  campaign: any;
+  mobileConfig: MobileConfig;
+  campaign: OptimizedCampaign;
   previewMode: string;
 }
 

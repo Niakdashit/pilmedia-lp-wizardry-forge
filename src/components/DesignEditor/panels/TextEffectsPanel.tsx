@@ -155,7 +155,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
       <div className="flex items-center justify-between">
         <button 
           onClick={onBack}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
         >
           ← Retour
         </button>
@@ -173,7 +173,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               onClick={() => setSelectedStyle(style.id)}
               className={`p-3 border rounded-lg transition-colors ${
                 selectedStyle === style.id 
-                  ? 'border-blue-500 bg-blue-50' 
+                  ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white' 
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -217,7 +217,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <button
             key={effect.id}
             onClick={() => addTextWithEffect(effect)}
-            className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors"
           >
             <div className="bg-white rounded p-2 mb-2">
               <span 
@@ -242,7 +242,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               onClick={() => setSelectedShape(shape.id)}
               className={`p-3 border rounded-lg transition-colors ${
                 selectedShape === shape.id 
-                  ? 'border-blue-500 bg-blue-50' 
+                  ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white' 
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >

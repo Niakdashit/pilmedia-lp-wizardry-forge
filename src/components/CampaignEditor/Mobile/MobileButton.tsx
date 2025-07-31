@@ -1,12 +1,12 @@
-
 import React from 'react';
+import type { OptimizedCampaign, MobileConfig } from '../../ModernEditor/types/CampaignTypes';
 
 interface MobileButtonProps {
-  mobileConfig: any;
-  campaign: any;
+  mobileConfig: MobileConfig;
+  campaign: OptimizedCampaign;
 }
 
-const getButtonAbsoluteStyle = (mobileConfig: any) => {
+const getButtonAbsoluteStyle = (mobileConfig: MobileConfig) => {
   const buttonPlacement = mobileConfig.buttonPlacement || 'bottom';
   const horizontalPadding = Math.max(12, mobileConfig.horizontalPadding ?? 16);
   const gamePosition = mobileConfig.gamePosition || 'center';
@@ -112,7 +112,7 @@ const getButtonAbsoluteStyle = (mobileConfig: any) => {
   }
 };
 
-const getButtonStyle = (mobileConfig: any, isLateralPosition = false) => {
+const getButtonStyle = (mobileConfig: MobileConfig, isLateralPosition = false) => {
   const buttonSize = mobileConfig.buttonSize || 'medium';
   const buttonWidth = mobileConfig.buttonWidth || 80;
   

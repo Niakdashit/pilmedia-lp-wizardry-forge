@@ -15,28 +15,28 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   isPreviewMode = false
 }) => {
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
       {/* Left Section - Logo/Title */}
-      <div className="flex items-center space-x-4">
-        <h1 className="text-xl font-bold text-gray-800">Design Editor</h1>
-        <div className="flex items-center space-x-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+      <div className="flex items-center space-x-6">
+        <h1 className="text-xl font-bold text-gray-900 font-inter">Design Editor</h1>
+        <div className="flex items-center space-x-1">
+          <button className="p-2 hover:bg-[hsl(var(--sidebar-hover))] rounded-lg transition-all duration-200 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]">
             <Undo className="w-4 h-4" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="p-2 hover:bg-[hsl(var(--sidebar-hover))] rounded-lg transition-all duration-200 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]">
             <Redo className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Center Section - Device Selector */}
-      <div className="flex items-center bg-gray-100 rounded-lg p-1">
+      <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-1 border border-[hsl(var(--sidebar-border))]">
         <button
           onClick={() => onDeviceChange('desktop')}
-          className={`p-2 rounded-md transition-colors ${
+          className={`p-3 rounded-md transition-all duration-200 ${
             selectedDevice === 'desktop' 
-              ? 'bg-white shadow-sm text-blue-600' 
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
+              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
           }`}
           title="Desktop"
         >
@@ -44,10 +44,10 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </button>
         <button
           onClick={() => onDeviceChange('tablet')}
-          className={`p-2 rounded-md transition-colors ${
+          className={`p-3 rounded-md transition-all duration-200 ${
             selectedDevice === 'tablet' 
-              ? 'bg-white shadow-sm text-blue-600' 
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
+              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
           }`}
           title="Tablet"
         >
@@ -55,10 +55,10 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </button>
         <button
           onClick={() => onDeviceChange('mobile')}
-          className={`p-2 rounded-md transition-colors ${
+          className={`p-3 rounded-md transition-all duration-200 ${
             selectedDevice === 'mobile' 
-              ? 'bg-white shadow-sm text-blue-600' 
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
+              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
           }`}
           title="Mobile"
         >
@@ -83,7 +83,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <Share2 className="w-4 h-4 mr-2" />
           Partager
         </button>
-        <button className="flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button className="flex items-center px-4 py-2 text-sm bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[#6b1549] transition-colors">
           <Download className="w-4 h-4 mr-2" />
           Télécharger
         </button>

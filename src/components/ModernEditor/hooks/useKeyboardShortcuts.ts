@@ -6,13 +6,25 @@ interface UseKeyboardShortcutsProps {
   onPreview?: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
+  onDuplicate?: () => void;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onZoomReset?: () => void;
+  onZoomFit?: () => void;
+  onToggleFullscreen?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
   onSave,
   onPreview,
   onUndo,
-  onRedo
+  onRedo,
+  onDuplicate,
+  onZoomIn,
+  onZoomOut,
+  onZoomReset,
+  onZoomFit,
+  onToggleFullscreen
 }: UseKeyboardShortcutsProps = {}) => {
   const {
     selectedElementId,
@@ -193,6 +205,63 @@ export const useKeyboardShortcuts = ({
           // Could implement multi-selection here
         }
         break;
+
+      // Duplicate with Ctrl+D
+      case 'd':
+        if (isModifierPressed && selectedElementId) {
+          event.preventDefault();
+          onDuplicate?.();
+        }
+        break;
+
+      // Zoom controls
+      case '=':
+      case '+':
+        if (isModifierPressed) {
+          event.preventDefault();
+          onZoomIn?.();
+        }
+        break;
+
+      case '-':
+        if (isModifierPressed) {
+          event.preventDefault();
+          onZoomOut?.();
+        }
+        break;
+
+      case '0':
+        if (isModifierPressed) {
+          event.preventDefault();
+          onZoomReset?.();
+        }
+        break;
+
+      case '1':
+        if (isModifierPressed) {
+          event.preventDefault();
+          onZoomFit?.();
+        }
+        break;
+
+      // Toggle fullscreen with F11
+      case 'f11':
+        event.preventDefault();
+        onToggleFullscreen?.();
+        break;
+
+      // Help with F1 or Ctrl+?
+      case 'f1':
+        event.preventDefault();
+        // Could trigger help modal
+        break;
+
+      case '/':
+        if (isModifierPressed && shiftKey) {
+          event.preventDefault();
+          // Could trigger help modal
+        }
+        break;
     }
   }, [
     selectedElementId,
@@ -203,7 +272,13 @@ export const useKeyboardShortcuts = ({
     onSave,
     onPreview,
     onUndo,
-    onRedo
+    onRedo,
+    onDuplicate,
+    onZoomIn,
+    onZoomOut,
+    onZoomReset,
+    onZoomFit,
+    onToggleFullscreen
   ]);
 
   useEffect(() => {
@@ -218,16 +293,26 @@ export const useKeyboardShortcuts = ({
   return {
     // Return available shortcuts for documentation
     shortcuts: {
-      [`${modifierKey}+S`]: 'Save campaign',
-      [`${modifierKey}+P`]: 'Preview campaign', 
-      [`${modifierKey}+Z`]: 'Undo',
-      [`${modifierKey}+Y / ${modifierKey}+Shift+Z`]: 'Redo',
-      'Escape': 'Deselect all',
-      'Delete': 'Delete selected element',
-      'G': 'Toggle grid',
-      [`${modifierKey}+C`]: 'Copy selected element',
-      [`${modifierKey}+V`]: 'Paste element',
-      [`${modifierKey}+A`]: 'Select all (future)'
-    }
+      [`${modifierKey}+S`]: 'Sauvegarder la campagne',
+      [`${modifierKey}+P`]: 'Prévisualiser la campagne',
+      [`${modifierKey}+Z`]: 'Annuler',
+      [`${modifierKey}+Y / ${modifierKey}+Shift+Z`]: 'Rétablir',
+      'Échap': 'Désélectionner tout',
+      'Suppr': 'Supprimer l\'élément sélectionné',
+      'G': 'Basculer la grille',
+      [`${modifierKey}+C`]: 'Copier l\'élément sélectionné',
+      [`${modifierKey}+V`]: 'Coller l\'élément',
+      [`${modifierKey}+A`]: 'Sélectionner tout (futur)',
+      [`${modifierKey}+D`]: 'Dupliquer l\'élément',
+      [`${modifierKey}++`]: 'Zoomer',
+      [`${modifierKey}+-`]: 'Dézoomer',
+      [`${modifierKey}+0`]: 'Zoom 100%',
+      [`${modifierKey}+1`]: 'Ajuster à l\'écran',
+      'F11': 'Mode plein écran',
+      'F1': 'Aide',
+      [`${modifierKey}+?`]: 'Aide'
+    },
+    isMac,
+    modifierKey
   };
 };

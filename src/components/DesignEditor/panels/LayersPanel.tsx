@@ -133,7 +133,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({ elements, onElementsChange })
                 key={element.id}
                 className={`group flex items-center space-x-2 p-2 rounded-lg border transition-colors cursor-pointer ${
                   isSelected
-                    ? 'bg-blue-50 border-blue-200'
+                    ? 'bg-[hsl(var(--primary))] border-[hsl(var(--primary))]'
                     : 'border-transparent hover:bg-gray-50'
                 }`}
                 onClick={() => setSelectedElement(element.id)}

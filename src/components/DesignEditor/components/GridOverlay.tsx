@@ -59,7 +59,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
       
       {/* Center lines with different style */}
       <div
-        className="absolute bg-blue-500"
+        className="absolute bg-[hsl(var(--primary))]"
         style={{
           left: `${canvasSize.width / 2}px`,
           top: 0,
@@ -69,7 +69,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         }}
       />
       <div
-        className="absolute bg-blue-500"
+        className="absolute bg-[hsl(var(--primary))]"
         style={{
           top: `${canvasSize.height / 2}px`,
           left: 0,

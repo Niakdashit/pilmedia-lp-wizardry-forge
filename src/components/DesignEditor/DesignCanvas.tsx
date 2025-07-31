@@ -8,8 +8,11 @@ import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
-import { useOptimizedDragDrop } from '../ModernEditor/hooks/useOptimizedDragDrop';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
+import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
+import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
+import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
+import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -49,16 +52,89 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
     onCampaignChange
   });
 
-  // Hooks optimisés pour drag & drop et snapping
-  useOptimizedDragDrop({
-    containerRef: canvasRef,
-    previewDevice: selectedDevice
+  // 🚀 Cache intelligent pour optimiser les performances
+  const elementCache = useAdvancedCache({
+    maxSize: 5 * 1024 * 1024, // 5MB pour commencer
+    maxEntries: 200,
+    ttl: 10 * 60 * 1000, // 10 minutes
+    enableCompression: true,
+    storageKey: 'design-canvas-cache'
   });
 
+  // 🚀 Auto-save adaptatif pour une sauvegarde intelligente
+  const { updateData: updateAutoSaveData, recordActivity } = useAdaptiveAutoSave({
+    onSave: async (data) => {
+      if (onCampaignChange) {
+        onCampaignChange(data);
+      }
+    },
+    baseDelay: 2000, // 2 secondes de base
+    minDelay: 500,   // Minimum 500ms
+    maxDelay: 8000,  // Maximum 8 secondes
+    onSaveSuccess: () => {
+      console.log('✓ Sauvegarde automatique réussie');
+    },
+    onError: (error) => {
+      console.warn('⚠️ Erreur de sauvegarde automatique:', error);
+    }
+  });
+
+  // Intégration du système auto-responsive (doit être défini avant canvasSize)
+  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
+  // Taille du canvas memoized
+  const canvasSize = useMemo(() => {
+    return DEVICE_DIMENSIONS[selectedDevice];
+  }, [selectedDevice, DEVICE_DIMENSIONS]);
+
+  // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
+  const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
+    containerRef: canvasRef,
+    regionSize: 200,
+    maxRegions: 50,
+    updateThreshold: 16 // 60fps
+  });
+
+  // 🚀 Drag & drop ultra-fluide pour une expérience premium
+  useUltraFluidDragDrop({
+    containerRef: canvasRef,
+    snapToGrid: showGridLines,
+    gridSize: 20,
+    enableInertia: true,
+    onDragStart: (elementId, position) => {
+      // Enregistrer l'activité de début de drag
+      recordActivity('drag', 0.9);
+      // Marquer les éléments affectés pour le rendu optimisé
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      elementCache.set(`drag-start-${elementId}`, { position, timestamp: Date.now() });
+    },
+    onDragMove: (elementId, position, velocity) => {
+      // Optimiser le rendu en marquant seulement les éléments nécessaires
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      const moveKey = `drag-move-${elementId}-${Math.floor(position.x/2)}-${Math.floor(position.y/2)}`;
+      elementCache.set(moveKey, { position, velocity, timestamp: Date.now() });
+    },
+    onDragEnd: (elementId, position) => {
+      // Finaliser le drag avec mise à jour des données
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      handleElementUpdate(elementId, { x: position.x, y: position.y });
+    }
+  });
+
+  // Hooks optimisés pour snapping (gardé pour compatibilité)
   const { applySnapping } = useSmartSnapping({
     containerRef: canvasRef,
     gridSize: 20,
-    snapTolerance: 10
+    snapTolerance: 3 // Réduit pour plus de précision
   });
 
   // Configuration canonique de la roue
@@ -67,8 +143,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
     [getCanonicalConfig, selectedDevice]
   );
 
-  // Intégration du système auto-responsive
-  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
 
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
@@ -90,12 +165,19 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   const elementsWithResponsive = useMemo(() => {
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
-  // Taille du canvas memoized
-  const canvasSize = useMemo(() => {
-    return DEVICE_DIMENSIONS[selectedDevice];
-  }, [selectedDevice, DEVICE_DIMENSIONS]);
-  // Handlers optimisés avec snapping
+
+  // Handlers optimisés avec snapping et cache intelligent
   const handleElementUpdate = useCallback((id: string, updates: any) => {
+    // Vérifier le cache pour éviter les recalculs
+    const cacheKey = `element-update-${id}-${JSON.stringify(updates).slice(0, 50)}`;
+    const cachedResult = elementCache.get(cacheKey);
+    
+    if (cachedResult && Date.now() - cachedResult.timestamp < 1000) {
+      // Utiliser le résultat mis en cache si récent (< 1 seconde)
+      onElementsChange(cachedResult.elements);
+      return;
+    }
+
     // Appliquer le snapping si c'est un déplacement
     if (updates.x !== undefined && updates.y !== undefined) {
       const element = elements.find(el => el.id === id);
@@ -109,44 +191,65 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
         );
         updates.x = snappedPosition.x;
         updates.y = snappedPosition.y;
+        
+        // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
+        const positionCacheKey = `snap-${id}-${Math.floor(updates.x/5)}-${Math.floor(updates.y/5)}`;
+        elementCache.set(positionCacheKey, { x: updates.x, y: updates.y, timestamp: Date.now() });
       }
     }
 
-    onElementsChange(elements.map(el => el.id === id ? {
+    const updatedElements = elements.map(el => el.id === id ? {
       ...el,
       ...updates
-    } : el));
-  }, [elements, onElementsChange, applySnapping]);
+    } : el);
+    
+    // Mettre en cache le résultat
+    elementCache.set(cacheKey, { elements: updatedElements, timestamp: Date.now() });
+    
+    onElementsChange(updatedElements);
+    
+    // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
+    const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
+    const intensity = activityType === 'drag' ? 0.8 : 0.5;
+    updateAutoSaveData(campaign, activityType, intensity);
+  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign]);
 
   const handleElementDelete = useCallback((id: string) => {
-    onElementsChange(elements.filter(el => el.id !== id));
+    const updatedElements = elements.filter(el => el.id !== id);
+    onElementsChange(updatedElements);
+    
+    // 🚀 Auto-save après suppression avec activité élevée
+    updateAutoSaveData(campaign, 'click', 0.9);
     if (selectedElement === id) {
       setSelectedElement(null);
     }
-  }, [elements, onElementsChange, selectedElement]);
+  }, [elements, onElementsChange, updateAutoSaveData, campaign, selectedElement]);
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
   return <DndProvider backend={HTML5Backend}>
-      <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+      <div className="flex-1 bg-[hsl(var(--muted))] overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
-        {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4">
+        {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4 p-4">
             <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
           </div>}
         
-        <div className="flex justify-center items-center min-h-full">
+        <div className="flex justify-center items-center min-h-full" style={{
+          padding: zoom < 1 ? '20px' : '40px',
+          transition: 'padding 0.2s ease-in-out'
+        }}>
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
             className="flex justify-center items-center"
             style={{
-              width: '100%',
-              height: '100%',
-              minHeight: '600px'
+              width: 'fit-content',
+              height: 'fit-content',
+              minHeight: 'auto'
             }}
           >
             <div 
               ref={canvasRef}
-              className="relative bg-white shadow-lg rounded-lg overflow-hidden" 
+              className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
               style={{
                 width: `${canvasSize.width}px`,
                 height: `${canvasSize.height}px`,
@@ -196,8 +299,30 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
               />
             </div>
 
-            {/* Canvas Elements */}
-            {elementsWithResponsive.map((element: any) => {
+            {/* Canvas Elements - Rendu optimisé avec virtualisation */}
+            {elementsWithResponsive
+              .filter((element: any) => {
+                // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
+                const elementWithProps = {
+                  ...element,
+                  ...getPropertiesForDevice(element, selectedDevice)
+                };
+                
+                // Ajouter des dimensions par défaut pour les éléments de texte si manquantes
+                if (element.type === 'text') {
+                  elementWithProps.width = elementWithProps.width || 200;
+                  elementWithProps.height = elementWithProps.height || 40;
+                }
+                
+                // S'assurer que x, y, width, height sont des nombres
+                elementWithProps.x = Number(elementWithProps.x) || 0;
+                elementWithProps.y = Number(elementWithProps.y) || 0;
+                elementWithProps.width = Number(elementWithProps.width) || 100;
+                elementWithProps.height = Number(elementWithProps.height) || 100;
+                
+                return isElementVisible(elementWithProps);
+              })
+              .map((element: any) => {
               // Obtenir les propriétés pour l'appareil actuel
               const responsiveProps = getPropertiesForDevice(element, selectedDevice);
               
@@ -233,7 +358,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
                 onClick={() => setShowGridLines(!showGridLines)}
                 className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
                   showGridLines 
-                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                    ? 'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]' 
                     : 'bg-white/80 hover:bg-white text-gray-700'
                 }`}
                 title="Afficher/masquer la grille (G)"

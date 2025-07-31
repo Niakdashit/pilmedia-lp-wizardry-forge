@@ -1,18 +1,18 @@
-
 import React from 'react';
 import { Smartphone } from 'lucide-react';
 import ImageUpload from '../../common/ImageUpload';
+import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 
 interface MobileVisualsProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const MobileVisuals: React.FC<MobileVisualsProps> = ({ campaign, setCampaign }) => {
   const mobileConfig = campaign.mobileConfig || {};
 
-  const updateMobileConfig = (key: string, value: any) => {
-    setCampaign((prev: any) => ({
+  const updateMobileConfig = (key: string, value: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       mobileConfig: { ...prev.mobileConfig, [key]: value }
     }));

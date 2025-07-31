@@ -134,7 +134,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                 }}
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-blue-100 text-blue-600'
+                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 title={tab.label}
@@ -151,14 +151,14 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   return (
     <div className="flex h-full">
       {/* Vertical Tab Sidebar */}
-      <div className="w-20 bg-gray-100 border-r border-gray-200 flex flex-col">
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm">
         {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
-          className="p-3 hover:bg-gray-200 border-b border-gray-200"
+          className="p-3 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))] transition-all duration-200"
           title="Réduire la sidebar"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
+          <ChevronLeft className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
         
         {/* Vertical Tabs */}
@@ -171,10 +171,10 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`p-4 flex flex-col items-center justify-center border-b border-gray-200 transition-colors ${
+                className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 ${
                   isActive 
-                    ? 'bg-white text-blue-600 border-r-2 border-r-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
+                    : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
               >
@@ -188,10 +188,10 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
 
       {/* Panel Content */}
       {activeTab && (
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full shadow-sm">
           {/* Panel Header */}
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-800">
+          <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
+            <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
               {tabs.find(tab => tab.id === activeTab)?.label}
             </h2>
           </div>

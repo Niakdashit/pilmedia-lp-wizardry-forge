@@ -7,6 +7,25 @@ export interface ResponsiveElementBase {
   height?: number;
 }
 
+interface WheelSegment {
+  id: string;
+  label: string;
+  color: string;
+  probability?: number;
+  isWinning?: boolean;
+}
+
+interface CSSStyleObject {
+  [property: string]: string | number;
+}
+
+interface AdvancedStyle {
+  id: string;
+  name: string;
+  category: string;
+  css: CSSStyleObject;
+}
+
 export interface ResponsiveTextElement extends ResponsiveElementBase {
   type: 'text';
   content: string;
@@ -41,15 +60,10 @@ export interface ResponsiveTextElement extends ResponsiveElementBase {
     color: string;
   };
   // Advanced CSS effects
-  advancedStyle?: {
-    id: string;
-    name: string;
-    category: string;
-    css: Record<string, any>;
-  };
-  customCSS?: Record<string, any>;
+  advancedStyle?: AdvancedStyle;
+  customCSS?: CSSStyleObject;
   // Allow additional properties for compatibility
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ResponsiveImageElement extends ResponsiveElementBase {
@@ -66,7 +80,7 @@ export interface ResponsiveShapeElement extends ResponsiveElementBase {
 
 export interface ResponsiveWheelElement extends ResponsiveElementBase {
   type: 'wheel';
-  segments: any[];
+  segments: WheelSegment[];
   colors: string[];
 }
 
@@ -96,7 +110,7 @@ export interface ResponsiveElementWithConfig {
     both: boolean;
   };
   // Allow additional properties for compatibility
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ResponsiveCalculationResult {

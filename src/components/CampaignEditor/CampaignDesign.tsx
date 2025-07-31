@@ -3,15 +3,16 @@ import React from 'react';
 import { Palette, Type, Image as ImageIcon } from 'lucide-react';
 import ImageUpload from '../common/ImageUpload';
 import JackpotAppearance from './JackpotAppearance';
+import type { OptimizedCampaign } from '../ModernEditor/types/CampaignTypes';
 
 interface CampaignDesignProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const CampaignDesign: React.FC<CampaignDesignProps> = ({ campaign, setCampaign }) => {
   const updateDesign = (key: string, value: string) => {
-    setCampaign((prev: any) => ({
+    setCampaign((prev) => ({
       ...prev,
       design: { ...prev.design, [key]: value }
     }));
@@ -149,19 +150,19 @@ const CampaignDesign: React.FC<CampaignDesignProps> = ({ campaign, setCampaign }
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ImageUpload
             label="Logo"
-            value={campaign.design.logoUrl}
+            value={campaign.design.logoUrl || ''}
             onChange={(value) => updateDesign('logoUrl', value)}
           />
 
           <ImageUpload
             label="Image d'arrière-plan générale"
-            value={campaign.design.backgroundImage}
+            value={campaign.design.backgroundImage || ''}
             onChange={(value) => updateDesign('backgroundImage', value)}
           />
 
           <ImageUpload
             label="Image d'arrière-plan mobile"
-            value={campaign.design.mobileBackgroundImage}
+            value={campaign.design.mobileBackgroundImage || ''}
             onChange={(value) => updateDesign('mobileBackgroundImage', value)}
           />
         </div>

@@ -17,7 +17,7 @@ interface UseSmartSnappingProps {
 export const useSmartSnapping = ({
   containerRef,
   gridSize = 10,
-  snapTolerance = 5
+  snapTolerance = 3
 }: UseSmartSnappingProps) => {
   const { campaign, showGridLines } = useEditorStore();
 
@@ -139,11 +139,20 @@ export const useSmartSnapping = ({
       });
     });
 
-    // Center alignment guides
+    // Center alignment guides avec calculs précis
     const centerX = containerWidth / 2;
     const centerY = containerHeight / 2;
     
-    if (Math.abs(draggedElement.x + draggedElement.width / 2 - centerX) <= snapTolerance) {
+    // Calculer le centre réel de l'élément en cours de déplacement
+    const draggedCenterX = draggedElement.x + draggedElement.width / 2;
+    const draggedCenterY = draggedElement.y + draggedElement.height / 2;
+    
+    // Tolérance adaptative basée sur la taille de l'élément (plus précise pour les petits éléments)
+    const adaptiveToleranceX = Math.max(2, Math.min(snapTolerance, draggedElement.width * 0.1));
+    const adaptiveToleranceY = Math.max(2, Math.min(snapTolerance, draggedElement.height * 0.1));
+    
+    // Guide vertical (alignement horizontal au centre)
+    if (Math.abs(draggedCenterX - centerX) <= adaptiveToleranceX) {
       guides.push({
         type: 'center',
         orientation: 'vertical',
@@ -151,7 +160,8 @@ export const useSmartSnapping = ({
       });
     }
     
-    if (Math.abs(draggedElement.y + draggedElement.height / 2 - centerY) <= snapTolerance) {
+    // Guide horizontal (alignement vertical au centre)
+    if (Math.abs(draggedCenterY - centerY) <= adaptiveToleranceY) {
       guides.push({
         type: 'center',
         orientation: 'horizontal',
@@ -162,7 +172,7 @@ export const useSmartSnapping = ({
     return guides;
   }, [allElements, showGridLines, gridSize, snapTolerance, containerRef]);
 
-  // Apply snapping to position
+  // Apply snapping to position avec priorité au centre
   const applySnapping = useCallback((
     x: number,
     y: number,
@@ -174,41 +184,56 @@ export const useSmartSnapping = ({
     
     let snappedX = x;
     let snappedY = y;
+    let snapPriorityX = 0; // 0 = pas de snap, 1 = edge, 2 = center
+    let snapPriorityY = 0;
 
     guides.forEach(guide => {
       if (guide.orientation === 'vertical') {
-        // Snap to left edge, right edge, or center
+        // Calculer les différences avec plus de précision
         const leftDiff = Math.abs(x - guide.position);
         const rightDiff = Math.abs(x + width - guide.position);
         const centerDiff = Math.abs(x + width / 2 - guide.position);
         
-        if (leftDiff <= snapTolerance) {
-          snappedX = guide.position;
-        } else if (rightDiff <= snapTolerance) {
-          snappedX = guide.position - width;
-        } else if (centerDiff <= snapTolerance) {
+        // Tolérance adaptative
+        const tolerance = guide.type === 'center' ? Math.max(1, width * 0.05) : snapTolerance;
+        
+        // Priorité au centre pour un alignement plus intuitif
+        if (centerDiff <= tolerance && (snapPriorityX < 2 || guide.type === 'center')) {
           snappedX = guide.position - width / 2;
+          snapPriorityX = guide.type === 'center' ? 2 : 1;
+        } else if (leftDiff <= tolerance && snapPriorityX < 1) {
+          snappedX = guide.position;
+          snapPriorityX = 1;
+        } else if (rightDiff <= tolerance && snapPriorityX < 1) {
+          snappedX = guide.position - width;
+          snapPriorityX = 1;
         }
       } else {
-        // Snap to top edge, bottom edge, or center
+        // Même logique pour l'axe Y
         const topDiff = Math.abs(y - guide.position);
         const bottomDiff = Math.abs(y + height - guide.position);
         const centerDiff = Math.abs(y + height / 2 - guide.position);
         
-        if (topDiff <= snapTolerance) {
-          snappedY = guide.position;
-        } else if (bottomDiff <= snapTolerance) {
-          snappedY = guide.position - height;
-        } else if (centerDiff <= snapTolerance) {
+        const tolerance = guide.type === 'center' ? Math.max(1, height * 0.05) : snapTolerance;
+        
+        if (centerDiff <= tolerance && (snapPriorityY < 2 || guide.type === 'center')) {
           snappedY = guide.position - height / 2;
+          snapPriorityY = guide.type === 'center' ? 2 : 1;
+        } else if (topDiff <= tolerance && snapPriorityY < 1) {
+          snappedY = guide.position;
+          snapPriorityY = 1;
+        } else if (bottomDiff <= tolerance && snapPriorityY < 1) {
+          snappedY = guide.position - height;
+          snapPriorityY = 1;
         }
       }
     });
 
     return {
-      x: snappedX,
-      y: snappedY,
-      guides
+      x: Math.round(snappedX * 2) / 2, // Arrondir à 0.5px pour plus de précision
+      y: Math.round(snappedY * 2) / 2,
+      guides,
+      snappedToCenter: snapPriorityX === 2 || snapPriorityY === 2
     };
   }, [calculateSnapGuides, snapTolerance]);
 

@@ -1,5 +1,5 @@
-
 import React from 'react';
+import type { OptimizedCampaign, MobileElement, CustomImage } from '../../ModernEditor/types/CampaignTypes';
 import MobileWheelPreview from '../../GameTypes/MobileWheelPreview';
 import MobileButton from './MobileButton';
 import MobileContent from './MobileContent';
@@ -7,7 +7,7 @@ import MobileOverlays from './MobileOverlays';
 import { getScreenStyle, getContentLayoutStyle } from './styles';
 
 interface MobilePreviewProps {
-  campaign: any;
+  campaign: OptimizedCampaign;
   previewMode: 'mobile' | 'tablet';
 }
 
@@ -25,7 +25,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({
   const customImages = campaign.design?.customImages || [];
 
   // Helper function to get mobile-specific config for elements
-  const getElementMobileConfig = (element: any) => {
+  const getElementMobileConfig = (element: MobileElement) => {
     const mobileConfig = element.deviceConfig?.mobile;
     return {
       x: mobileConfig?.x ?? element.x ?? 0,
@@ -36,7 +36,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({
   };
 
   /**
-   * Ajout d'un conteneur centré « scaled-fit-container », qui
+   * Ajout d'un conteneur centré "scaled-fit-container", qui
    * garantit que le contenu a toujours 100% de largeur/hauteur du phone/tablette
    * mais SANS déborder, ni crop, ni scroll.
    * 
@@ -128,7 +128,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({
                     )}
 
                     {/* Custom Images Layer */}
-                    {customImages.map((customImage: any) => {
+                    {customImages.map((customImage: CustomImage) => {
                       if (!customImage?.src) return null;
                       
                       const mobileConfig = getElementMobileConfig(customImage);
@@ -245,7 +245,7 @@ const MobilePreview: React.FC<MobilePreviewProps> = ({
                   )}
 
                   {/* Custom Images Layer */}
-                  {customImages.map((customImage: any) => {
+                  {customImages.map((customImage: CustomImage) => {
                     if (!customImage?.src) return null;
                     
                     const mobileConfig = getElementMobileConfig(customImage);

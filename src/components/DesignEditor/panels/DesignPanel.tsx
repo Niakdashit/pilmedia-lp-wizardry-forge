@@ -8,7 +8,7 @@ const DesignPanel: React.FC<DesignPanelProps> = ({ onAddElement }) => {
   const templates = [
     { id: 1, name: 'Post Instagram', size: '1080 × 1080 px', color: 'bg-pink-100' },
     { id: 2, name: 'Story Instagram', size: '1080 × 1920 px', color: 'bg-purple-100' },
-    { id: 3, name: 'Publication Facebook', size: '1200 × 630 px', color: 'bg-blue-100' },
+    { id: 3, name: 'Publication Facebook', size: '1200 × 630 px', color: 'bg-[hsl(var(--primary))]' },
     { id: 4, name: 'Bannière LinkedIn', size: '1584 × 396 px', color: 'bg-indigo-100' },
     { id: 5, name: 'Logo', size: '500 × 500 px', color: 'bg-green-100' },
     { id: 6, name: 'Flyer', size: '2480 × 3508 px', color: 'bg-orange-100' },
@@ -32,7 +32,7 @@ const DesignPanel: React.FC<DesignPanelProps> = ({ onAddElement }) => {
         <input
           type="text"
           placeholder="Rechercher des designs..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]"
         />
       </div>
 
@@ -43,7 +43,7 @@ const DesignPanel: React.FC<DesignPanelProps> = ({ onAddElement }) => {
             <div
               key={template.id}
               onClick={() => handleTemplateClick(template)}
-              className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer transition-colors"
+              className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-[hsl(var(--primary))] cursor-pointer transition-colors"
             >
               <div className={`w-12 h-12 ${template.color} rounded-lg mr-3 flex items-center justify-center`}>
                 <div className="w-8 h-8 bg-white rounded opacity-80"></div>
@@ -59,7 +59,7 @@ const DesignPanel: React.FC<DesignPanelProps> = ({ onAddElement }) => {
 
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">DIMENSIONS PERSONNALISÉES</h3>
-        <button className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors">
+        <button className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors">
           + Créer un design personnalisé
         </button>
       </div>

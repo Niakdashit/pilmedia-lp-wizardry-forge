@@ -57,7 +57,7 @@ const GameLogicPanel: React.FC = () => {
               <input
                 type="checkbox"
                 id={mechanic.id}
-                className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-1 rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
               <div className="flex-1">
                 <label htmlFor={mechanic.id} className="text-sm font-medium text-gray-700 cursor-pointer">
@@ -81,7 +81,7 @@ const GameLogicPanel: React.FC = () => {
             <input
               type="checkbox"
               id="enable-points"
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
             />
             <label htmlFor="enable-points" className="text-sm text-gray-700">
               Activer le système de points
@@ -93,7 +93,7 @@ const GameLogicPanel: React.FC = () => {
               <input
                 type="number"
                 defaultValue="10"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent text-sm"
               />
             </div>
             <div>
@@ -101,7 +101,7 @@ const GameLogicPanel: React.FC = () => {
               <input
                 type="number"
                 defaultValue="50"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent text-sm"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ const GameLogicPanel: React.FC = () => {
         <div className="space-y-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">Tentatives par utilisateur</label>
-            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent text-sm">
               <option value="1">1 tentative</option>
               <option value="3">3 tentatives</option>
               <option value="5">5 tentatives</option>
@@ -126,7 +126,7 @@ const GameLogicPanel: React.FC = () => {
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Délai entre tentatives</label>
-            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent text-sm">
               <option value="none">Aucun délai</option>
               <option value="1h">1 heure</option>
               <option value="24h">24 heures</option>

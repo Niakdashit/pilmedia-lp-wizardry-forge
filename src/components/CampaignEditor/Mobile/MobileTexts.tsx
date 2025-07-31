@@ -1,17 +1,17 @@
-
 import React from 'react';
 import { Type, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff } from 'lucide-react';
+import type { OptimizedCampaign } from '../../ModernEditor/types/CampaignTypes';
 
 interface MobileTextsProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const MobileTexts: React.FC<MobileTextsProps> = ({ campaign, setCampaign }) => {
   const mobileConfig = campaign.mobileConfig || {};
 
-  const updateMobileConfig = (key: string, value: any) => {
-    setCampaign((prev: any) => ({
+  const updateMobileConfig = (key: string, value: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       mobileConfig: { ...prev.mobileConfig, [key]: value }
     }));

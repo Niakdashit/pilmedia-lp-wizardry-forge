@@ -81,7 +81,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
         })}
         className={`p-1 rounded hover:bg-gray-700 ${
-          selectedElement.fontWeight === 'bold' ? 'bg-blue-600' : ''
+          selectedElement.fontWeight === 'bold' ? 'bg-[hsl(var(--primary))]' : ''
         }`}
       >
         <Bold className="w-4 h-4" />
@@ -92,7 +92,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
         })}
         className={`p-1 rounded hover:bg-gray-700 ${
-          selectedElement.fontStyle === 'italic' ? 'bg-blue-600' : ''
+          selectedElement.fontStyle === 'italic' ? 'bg-[hsl(var(--primary))]' : ''
         }`}
       >
         <Italic className="w-4 h-4" />
@@ -103,7 +103,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
         })}
         className={`p-1 rounded hover:bg-gray-700 ${
-          selectedElement.textDecoration === 'underline' ? 'bg-blue-600' : ''
+          selectedElement.textDecoration === 'underline' ? 'bg-[hsl(var(--primary))]' : ''
         }`}
       >
         <Underline className="w-4 h-4" />
@@ -115,7 +115,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       <button 
         onClick={() => onElementUpdate({ textAlign: 'left' })}
         className={`p-1 rounded hover:bg-gray-700 ${
-          selectedElement.textAlign === 'left' ? 'bg-blue-600' : ''
+          selectedElement.textAlign === 'left' ? 'bg-[hsl(var(--primary))]' : ''
         }`}
       >
         <AlignLeft className="w-4 h-4" />
@@ -124,7 +124,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       <button 
         onClick={() => onElementUpdate({ textAlign: 'center' })}
         className={`p-1 rounded hover:bg-gray-700 ${
-          selectedElement.textAlign === 'center' ? 'bg-blue-600' : ''
+          selectedElement.textAlign === 'center' ? 'bg-[hsl(var(--primary))]' : ''
         }`}
       >
         <AlignCenter className="w-4 h-4" />
@@ -133,7 +133,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       <button 
         onClick={() => onElementUpdate({ textAlign: 'right' })}
         className={`p-1 rounded hover:bg-gray-700 ${
-          selectedElement.textAlign === 'right' ? 'bg-blue-600' : ''
+          selectedElement.textAlign === 'right' ? 'bg-[hsl(var(--primary))]' : ''
         }`}
       >
         <AlignRight className="w-4 h-4" />
@@ -144,7 +144,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       {/* Advanced Tools */}
       <button 
         onClick={() => setShowEffectsPanel(!showEffectsPanel)}
-        className={`p-1 rounded hover:bg-gray-700 flex items-center space-x-1 ${showEffectsPanel ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 flex items-center space-x-1 ${showEffectsPanel ? 'bg-[hsl(var(--primary))]' : ''}`}
       >
         <Wand2 className="w-4 h-4" />
         <span className="text-sm">Effets</span>

@@ -6,10 +6,11 @@ import JackpotAppearance from '@/components/configurators/JackpotAppearance';
 import ImageUpload from '../common/ImageUpload';
 import GameCanvasPreview from './GameCanvasPreview';
 import { Settings, Eye, Palette } from 'lucide-react';
+import type { OptimizedCampaign, QuizQuestion } from '../ModernEditor/types/CampaignTypes';
 
 interface CampaignContentProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const CampaignContent: React.FC<CampaignContentProps> = ({
@@ -18,12 +19,12 @@ const CampaignContent: React.FC<CampaignContentProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<'game' | 'visual'>('game');
   const [activeQuizQuestion, setActiveQuizQuestion] = useState(0);
-  const [previewQuestion, setPreviewQuestion] = useState<any>(
+  const [previewQuestion, setPreviewQuestion] = useState<QuizQuestion | undefined>(
     campaign.gameConfig?.quiz?.questions?.[0]
   );
 
-  const updateGameConfig = (gameType: string, config: any) => {
-    setCampaign((prev: any) => ({
+  const updateGameConfig = (gameType: string, config: unknown) => {
+    setCampaign((prev) => ({
       ...prev,
       gameConfig: {
         ...prev.gameConfig,
@@ -158,9 +159,9 @@ const CampaignContent: React.FC<CampaignContentProps> = ({
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Image de fond du jeu</h3>
                 <ImageUpload
-                  value={campaign.gameConfig?.[campaign.type]?.backgroundImage || campaign.design.backgroundImage}
+                  value={campaign.design.backgroundImage || ''}
                   onChange={(value) => {
-                    setCampaign((prev: any) => ({
+                    setCampaign((prev) => ({
                       ...prev,
                       gameConfig: {
                         ...prev.gameConfig,

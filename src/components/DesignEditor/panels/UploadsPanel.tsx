@@ -119,8 +119,8 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
           onClick={triggerFileUpload}
           className={`w-full p-6 border-2 border-dashed rounded-lg transition-colors ${
             dragOver 
-              ? 'border-blue-500 bg-blue-100' 
-              : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+              ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white' 
+              : 'border-gray-300 hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white'
           }`}
         >
           <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
@@ -142,7 +142,7 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
               <button
                 key={type.type}
                 onClick={triggerFileUpload}
-                className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors"
               >
                 <Icon className="w-6 h-6 mx-auto text-gray-600 mb-1" />
                 <div className="text-xs text-gray-600">{type.label}</div>
@@ -170,9 +170,9 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
 
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">DOSSIERS</h3>
-        <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+        <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors">
           <div className="flex items-center">
-            <div className="w-6 h-6 bg-blue-100 rounded mr-3 flex items-center justify-center">
+            <div className="w-6 h-6 bg-[hsl(var(--primary))] text-white rounded mr-3 flex items-center justify-center">
               📁
             </div>
             <span className="text-sm">Tous les uploads</span>

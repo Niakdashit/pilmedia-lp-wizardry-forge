@@ -25,7 +25,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
         <select
           value={config.type || 'instant-win'}
           onChange={(e) => handleChange('type', e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
         >
           <option value="instant-win">Instant Gagnant</option>
           <option value="quiz">Quiz</option>
@@ -46,7 +46,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
           value={config.title || ''}
           onChange={(e) => handleChange('title', e.target.value)}
           placeholder="Ex: Grande Tombola de Noël"
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
         />
       </div>
 
@@ -59,7 +59,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
           onChange={(e) => handleChange('description', e.target.value)}
           placeholder="Description de votre campagne..."
           rows={3}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
         />
       </div>
 
@@ -76,7 +76,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
               type="datetime-local"
               value={config.startDate || ''}
               onChange={(e) => handleChange('startDate', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent text-sm"
             />
           </div>
           <div>
@@ -85,7 +85,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
               type="datetime-local"
               value={config.endDate || ''}
               onChange={(e) => handleChange('endDate', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -103,7 +103,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
             id="unlimited"
             checked={config.unlimitedParticipants || false}
             onChange={(e) => handleChange('unlimitedParticipants', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
           />
           <label htmlFor="unlimited" className="text-sm text-gray-700">
             Illimité
@@ -115,7 +115,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
             value={config.maxParticipants || ''}
             onChange={(e) => handleChange('maxParticipants', parseInt(e.target.value))}
             placeholder="Ex: 1000"
-            className="w-full mt-2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full mt-2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
           />
         )}
       </div>
@@ -132,7 +132,7 @@ const CampaignConfigPanel: React.FC<CampaignConfigPanelProps> = ({
               onClick={() => handleChange('template', template.toLowerCase())}
               className={`p-3 text-sm border rounded-md transition-colors ${
                 config.template === template.toLowerCase()
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary))]'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >

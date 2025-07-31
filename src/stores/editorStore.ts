@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import type { OptimizedCampaign } from '../components/ModernEditor/types/CampaignTypes';
 
 interface EditorState {
   // Core state
-  campaign: any;
+  campaign: OptimizedCampaign | null;
   activeTab: string;
   previewDevice: 'desktop' | 'tablet' | 'mobile';
   
@@ -27,17 +28,17 @@ interface EditorState {
   };
   
   // Performance optimizations
-  batchedUpdates: any[];
+  batchedUpdates: Array<Partial<OptimizedCampaign> | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)>;
   updateCounter: number;
   lastUpdateTime: number;
 }
 
 interface EditorActions {
   // Campaign actions
-  setCampaign: (updater: any) => void;
-  updateCampaignField: (field: string, value: any) => void;
-  updateDesign: (designUpdates: any) => void;
-  updateGameConfig: (gameConfigUpdates: any) => void;
+  setCampaign: (updater: OptimizedCampaign | null | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)) => void;
+  updateCampaignField: (field: keyof OptimizedCampaign, value: OptimizedCampaign[keyof OptimizedCampaign]) => void;
+  updateDesign: (designUpdates: Partial<OptimizedCampaign['design']>) => void;
+  updateGameConfig: (gameConfigUpdates: Partial<OptimizedCampaign['gameConfig']>) => void;
   
   // UI actions
   setActiveTab: (tab: string) => void;
@@ -58,7 +59,7 @@ interface EditorActions {
   resetDragState: () => void;
   
   // Batch actions for performance
-  batchUpdate: (updates: any[]) => void;
+  batchUpdate: (updates: Array<Partial<OptimizedCampaign> | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)>) => void;
   flushBatchedUpdates: () => void;
 }
 
@@ -94,43 +95,45 @@ export const useEditorStore = create<EditorStore>()(
       const state = get();
       const newCampaign = typeof updater === 'function' ? updater(state.campaign) : updater;
       
-      set({
-        campaign: {
-          ...newCampaign,
-          _lastUpdate: Date.now(),
-          _version: (state.campaign?._version || 0) + 1
-        },
-        isModified: true,
-        updateCounter: state.updateCounter + 1,
-        lastUpdateTime: Date.now()
-      });
+      if (newCampaign) {
+        set({
+          campaign: {
+            ...newCampaign,
+            _lastUpdate: Date.now(),
+            _version: (state.campaign?._version || 0) + 1
+          },
+          isModified: true,
+          updateCounter: state.updateCounter + 1,
+          lastUpdateTime: Date.now()
+        });
+      }
     },
 
     updateCampaignField: (field, value) => {
-      get().setCampaign((prev: any) => ({
+      get().setCampaign((prev) => prev ? ({
         ...prev,
         [field]: value
-      }));
+      }) : null);
     },
 
     updateDesign: (designUpdates) => {
-      get().setCampaign((prev: any) => ({
+      get().setCampaign((prev) => prev ? ({
         ...prev,
         design: {
           ...prev.design,
           ...designUpdates
         }
-      }));
+      }) : null);
     },
 
     updateGameConfig: (gameConfigUpdates) => {
-      get().setCampaign((prev: any) => ({
+      get().setCampaign((prev) => prev ? ({
         ...prev,
         gameConfig: {
           ...prev.gameConfig,
           ...gameConfigUpdates
         }
-      }));
+      }) : null);
     },
 
     // UI actions
@@ -176,6 +179,7 @@ export const useEditorStore = create<EditorStore>()(
       
       // Apply all batched updates at once
       const finalCampaign = state.batchedUpdates.reduce((acc, update) => {
+        if (!acc) return null;
         return typeof update === 'function' ? update(acc) : { ...acc, ...update };
       }, state.campaign);
       

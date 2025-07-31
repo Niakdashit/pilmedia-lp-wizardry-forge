@@ -1,9 +1,9 @@
-
 import React from 'react';
+import type { OptimizedCampaign } from '../ModernEditor/types/CampaignTypes';
 
 interface CampaignSettingsProps {
-  campaign: any;
-  setCampaign: React.Dispatch<React.SetStateAction<any>>;
+  campaign: OptimizedCampaign;
+  setCampaign: React.Dispatch<React.SetStateAction<OptimizedCampaign>>;
 }
 
 const CampaignSettings: React.FC<CampaignSettingsProps> = ({ campaign, setCampaign }) => {
@@ -25,7 +25,7 @@ const CampaignSettings: React.FC<CampaignSettingsProps> = ({ campaign, setCampai
             </label>
             <select
               value={campaign.rewards?.mode || 'probability'}
-              onChange={(e) => setCampaign((prev: any) => ({
+              onChange={(e) => setCampaign((prev) => ({
                 ...prev,
                 rewards: { ...prev.rewards, mode: e.target.value }
               }))}
@@ -46,7 +46,7 @@ const CampaignSettings: React.FC<CampaignSettingsProps> = ({ campaign, setCampai
               min="0"
               max="100"
               value={campaign.rewards?.probability || 10}
-              onChange={(e) => setCampaign((prev: any) => ({
+              onChange={(e) => setCampaign((prev) => ({
                 ...prev,
                 rewards: { ...prev.rewards, probability: Number(e.target.value) }
               }))}
@@ -60,7 +60,7 @@ const CampaignSettings: React.FC<CampaignSettingsProps> = ({ campaign, setCampai
               type="checkbox"
               checked={campaign.previewEnabled || false}
               onChange={(e) =>
-                setCampaign((prev: any) => ({
+                setCampaign((prev) => ({
                   ...prev,
                   previewEnabled: e.target.checked
                 }))
@@ -78,7 +78,7 @@ const CampaignSettings: React.FC<CampaignSettingsProps> = ({ campaign, setCampai
               type="checkbox"
               checked={campaign.accessibility?.highContrast || false}
               onChange={(e) =>
-                setCampaign((prev: any) => ({
+                setCampaign((prev) => ({
                   ...prev,
                   accessibility: {
                     ...prev.accessibility,
@@ -101,7 +101,7 @@ const CampaignSettings: React.FC<CampaignSettingsProps> = ({ campaign, setCampai
               type="text"
               value={campaign.analytics?.gaId || ''}
               onChange={(e) =>
-                setCampaign((prev: any) => ({
+                setCampaign((prev) => ({
                   ...prev,
                   analytics: { ...prev.analytics, gaId: e.target.value }
                 }))

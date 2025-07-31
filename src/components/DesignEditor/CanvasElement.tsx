@@ -85,24 +85,44 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       const newX = newCanvasX - startX;
       const newY = newCanvasY - startY;
       
-      // Calculer le centre réel de l'élément
-      const elementWidth = currentProps.width || 100;
-      const elementHeight = currentProps.height || 30;
-      const elementCenterX = newX + elementWidth / 2;
-      const elementCenterY = newY + elementHeight / 2;
+      // Calculer les dimensions réelles de l'élément avec plus de précision
+      const elementWidth = currentProps.width || (element.type === 'text' ? 100 : 100);
+      const elementHeight = currentProps.height || (element.type === 'text' ? 30 : 100);
+      
+      // Pour les éléments de texte, utiliser les dimensions du contenu si disponibles
+      let actualWidth = elementWidth;
+      let actualHeight = elementHeight;
+      
+      if (element.type === 'text' && e.target instanceof HTMLElement) {
+        const textElement = e.target.closest('[data-element-type="text"]');
+        if (textElement) {
+          const rect = textElement.getBoundingClientRect();
+          actualWidth = rect.width / zoomScale;
+          actualHeight = rect.height / zoomScale;
+        }
+      }
+      
+      // Calculer le centre précis de l'élément
+      const elementCenterX = newX + actualWidth / 2;
+      const elementCenterY = newY + actualHeight / 2;
       
       // Get canvas dimensions for alignment guides
       if (containerRef?.current) {
-        // Utiliser les dimensions intrinsèques du canvas, pas les dimensions du rect
+        // Obtenir les dimensions réelles du canvas
         const canvasElement = containerRef.current;
-        const canvasWidth = parseInt(canvasElement.style.width) || canvasElement.offsetWidth;
-        const canvasHeight = parseInt(canvasElement.style.height) || canvasElement.offsetHeight;
+        const canvasRect = canvasElement.getBoundingClientRect();
+        const canvasWidth = canvasRect.width / zoomScale;
+        const canvasHeight = canvasRect.height / zoomScale;
         
-        // Le centre du canvas basé sur ses dimensions réelles (pas le zoom)
+        // Le centre du canvas avec calculs précis
         const canvasCenterX = canvasWidth / 2;
         const canvasCenterY = canvasHeight / 2;
         
-        // Déclencher les guides avec la position en temps réel
+        // Tolérance adaptative pour l'alignement au centre
+        const centerToleranceX = Math.max(2, actualWidth * 0.05);
+        const centerToleranceY = Math.max(2, actualHeight * 0.05);
+        
+        // Déclencher les guides avec la position en temps réel et tolérance adaptative
         document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
           detail: {
             elementId: element.id,
@@ -114,8 +134,14 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             elementCenterY,
             canvasCenterX,
             canvasCenterY,
-            isDragging: true,
-            canvasSize: { width: canvasWidth, height: canvasHeight }
+            elementWidth: actualWidth,
+            elementHeight: actualHeight,
+            newX,
+            newY,
+            centerToleranceX,
+            centerToleranceY,
+            isNearCenterX: Math.abs(elementCenterX - canvasCenterX) <= centerToleranceX,
+            isNearCenterY: Math.abs(elementCenterY - canvasCenterY) <= centerToleranceY
           }
         }));
       }
@@ -351,20 +377,19 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             onChange={handleTextChange}
             onKeyDown={handleTextKeyDown}
             onBlur={handleTextBlur}
+            className="bg-transparent border-none outline-none resize-none w-full"
+            style={{
+              ...getTextStyle(),
+              minWidth: '50px'
+            }}
             autoFocus
-            className="bg-transparent border-none outline-none w-full"
-            style={getTextStyle()}
+            data-element-type="text"
           />
         ) : (
           <div
-            className="cursor-move select-none"
-            style={{
-              ...getTextStyle(),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'center' ? 'center' : 
-                            ((element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign) === 'right' ? 'flex-end' : 'flex-start'
-            }}
+            className="cursor-move select-none whitespace-pre-wrap break-words"
+            style={getTextStyle()}
+            data-element-type="text"
           >
             {element.content || 'Texte'}
           </div>
@@ -419,7 +444,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   return (
     <div
       ref={drag}
-      className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
       style={{
         left: deviceProps.x || 0,
         top: deviceProps.y || 0,
@@ -436,22 +461,22 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 
-            className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-nw-resize shadow-lg" 
+            className="absolute -top-1 -left-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-nw-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'nw')}
             style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-ne-resize shadow-lg" 
+            className="absolute -top-1 -right-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-ne-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'ne')}
             style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-sw-resize shadow-lg" 
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-sw-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'sw')}
             style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize shadow-lg" 
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-se-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'se')}
             style={{ zIndex: 1001 }}
           />
@@ -460,12 +485,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           {element.type === 'text' && (
             <>
               <div 
-                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-w-resize shadow-lg" 
+                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-[hsl(var(--primary))] border border-white rounded cursor-w-resize shadow-lg" 
                 onPointerDown={(e) => handleResizePointerDown(e, 'w')}
                 style={{ zIndex: 1001 }}
               />
               <div 
-                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-blue-500 border border-white rounded cursor-e-resize shadow-lg" 
+                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-[hsl(var(--primary))] border border-white rounded cursor-e-resize shadow-lg" 
                 onPointerDown={(e) => handleResizePointerDown(e, 'e')}
                 style={{ zIndex: 1001 }}
               />

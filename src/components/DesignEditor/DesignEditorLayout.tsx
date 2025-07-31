@@ -11,6 +11,7 @@ import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts
 import { useHistoryManager } from '../ModernEditor/hooks/useHistoryManager';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
+import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import { useDebouncedCallback } from 'use-debounce';
 
 const DesignEditorLayout: React.FC = () => {
@@ -20,6 +21,20 @@ const DesignEditorLayout: React.FC = () => {
     if (width >= 1024) return 'desktop';
     if (width >= 768) return 'tablet';
     return 'mobile';
+  };
+
+  // Zoom par défaut selon l'appareil
+  const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
+    switch (device) {
+      case 'desktop':
+        return 0.7; // 70%
+      case 'tablet':
+        return 0.7; // 70%
+      case 'mobile':
+        return 0.85; // 85%
+      default:
+        return 0.7;
+    }
   };
 
   // Store centralisé pour l'optimisation
@@ -32,15 +47,27 @@ const DesignEditorLayout: React.FC = () => {
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+
+  // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
+  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
+    setSelectedDevice(device);
+    setCanvasZoom(getDefaultZoom(device));
+  };
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
-  const [campaignConfig, setCampaignConfig] = useState<any>({});
+  const [campaignConfig, setCampaignConfig] = useState<any>({
+  design: {
+    wheelConfig: {
+      scale: 2
+    }
+  }
+});
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
-  const [canvasZoom, setCanvasZoom] = useState(1);
+  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(detectDevice()));
   // Utilisation du hook de synchronisation unifié
   const { wheelModalConfig } = useWheelConfigSync({
     campaign: campaignConfig,
@@ -207,7 +234,7 @@ const DesignEditorLayout: React.FC = () => {
   };
 
   // Raccourcis clavier professionnels
-  useKeyboardShortcuts({
+  const { shortcuts } = useKeyboardShortcuts({
     onSave: () => {
       handleSave();
     },
@@ -219,6 +246,18 @@ const DesignEditorLayout: React.FC = () => {
     },
     onRedo: () => {
       redo();
+    },
+    onZoomIn: () => {
+      setCanvasZoom(prev => Math.min(prev + 0.1, 3));
+    },
+    onZoomOut: () => {
+      setCanvasZoom(prev => Math.max(prev - 0.1, 0.25));
+    },
+    onZoomReset: () => {
+      setCanvasZoom(1);
+    },
+    onZoomFit: () => {
+      setCanvasZoom(1);
     }
   });
 
@@ -234,12 +273,19 @@ const DesignEditorLayout: React.FC = () => {
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Top Toolbar - Hidden in preview mode */}
       {!showFunnel && (
-        <DesignToolbar 
-          selectedDevice={selectedDevice}
-          onDeviceChange={setSelectedDevice}
-          onPreviewToggle={handlePreview}
-          isPreviewMode={showFunnel}
-        />
+        <>
+          <DesignToolbar 
+            selectedDevice={selectedDevice}
+            onDeviceChange={handleDeviceChange}
+            onPreviewToggle={handlePreview}
+            isPreviewMode={showFunnel}
+          />
+          
+          {/* Bouton d'aide des raccourcis clavier */}
+          <div className="absolute top-4 right-4 z-10">
+            <KeyboardShortcutsHelp shortcuts={shortcuts} />
+          </div>
+        </>
       )}
       
       {/* Main Content */}

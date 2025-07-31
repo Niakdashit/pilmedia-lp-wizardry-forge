@@ -32,7 +32,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
   return (
     <div className="p-4 space-y-6">
       <div>
-        <button className="w-full p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+        <button className="w-full p-4 bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[#6b1549] transition-colors flex items-center justify-center">
           <Plus className="w-5 h-5 mr-2" />
           Créer un kit de marque
         </button>
@@ -51,7 +51,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
             />
           ))}
         </div>
-        <button className="mt-2 text-sm text-blue-600 hover:text-blue-700">
+        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#6b1549]">
           + Ajouter une couleur
         </button>
       </div>
@@ -68,7 +68,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
             </div>
           ))}
         </div>
-        <button className="mt-2 text-sm text-blue-600 hover:text-blue-700">
+        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#6b1549]">
           + Ajouter une police
         </button>
       </div>
@@ -78,7 +78,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
           <div className="text-sm text-gray-500 mb-2">Télécharger votre logo</div>
-          <button className="text-xs text-blue-600 hover:text-blue-700">
+          <button className="text-xs text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]">
             Parcourir les fichiers
           </button>
         </div>
@@ -90,7 +90,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
           <div className="aspect-square bg-gray-100 rounded-lg border border-gray-200"></div>
           <div className="aspect-square bg-gray-100 rounded-lg border border-gray-200"></div>
         </div>
-        <button className="mt-2 text-sm text-blue-600 hover:text-blue-700">
+        <button className="mt-2 text-sm text-[hsl(var(--primary))] hover:text-[#6b1549]">
           + Ajouter des assets
         </button>
       </div>

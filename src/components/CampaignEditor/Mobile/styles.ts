@@ -1,5 +1,5 @@
-
 import { PREVIEW_CONTAINER_SPECS, MOBILE_FORMAT_SPECS } from './constants';
+import type { MobileConfig } from '../../ModernEditor/types/CampaignTypes';
 
 export const getDeviceStyle = () => ({
   width: PREVIEW_CONTAINER_SPECS.mobile.width,
@@ -12,7 +12,7 @@ export const getDeviceStyle = () => ({
   overflow: 'hidden'
 });
 
-export const getScreenStyle = (mobileConfig: any) => ({
+export const getScreenStyle = (mobileConfig: MobileConfig) => ({
   width: '100%',
   height: '100%',
   backgroundColor: mobileConfig.backgroundColor || '#ebf4f7',
@@ -27,7 +27,7 @@ export const getScreenStyle = (mobileConfig: any) => ({
   aspectRatio: `${MOBILE_FORMAT_SPECS.width} / ${MOBILE_FORMAT_SPECS.height}`
 });
 
-export const getContentLayoutStyle = (mobileConfig: any) => {
+export const getContentLayoutStyle = (mobileConfig: MobileConfig) => {
   const position = mobileConfig.textPosition || 'top';
   const spacing = mobileConfig.verticalSpacing || 20;
   const padding = mobileConfig.horizontalPadding || 16;

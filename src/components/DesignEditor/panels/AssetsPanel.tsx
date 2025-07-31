@@ -106,7 +106,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                 <button
                   key={shape.type}
                   onClick={() => handleAddShape(shape)}
-                  className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] transition-colors"
                 >
                   <Icon 
                     className="w-8 h-8 mb-2" 
@@ -130,7 +130,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                   <button
                     key={image.id}
                     onClick={() => handleAddImage(image)}
-                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors"
+                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[hsl(var(--primary))] transition-colors"
                   >
                     <img
                       src={image.url}
@@ -149,7 +149,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
             </div>
 
             {/* Upload */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[hsl(var(--primary))] transition-colors">
               <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
               <input
@@ -159,7 +159,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                 className="hidden"
                 id="file-upload"
               />
-              <label htmlFor="file-upload" className="text-blue-600 text-sm font-medium hover:text-blue-700 cursor-pointer">
+              <label htmlFor="file-upload" className="text-[hsl(var(--primary))] text-sm font-medium hover:text-[hsl(var(--primary))] cursor-pointer">
                 Parcourir les fichiers
               </label>
             </div>
@@ -175,7 +175,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                   <button
                     key={image.id}
                     onClick={() => handleAddImage(image)}
-                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors"
+                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[hsl(var(--primary))] transition-colors"
                   >
                     <img
                       src={image.url}
@@ -197,7 +197,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                 <p className="text-gray-500 text-sm">Vos uploads apparaîtront ici</p>
               </div>
             )}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[hsl(var(--primary))] transition-colors">
               <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
               <input
@@ -207,7 +207,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
                 className="hidden"
                 id="file-upload-uploads"
               />
-              <label htmlFor="file-upload-uploads" className="text-blue-600 text-sm font-medium hover:text-blue-700 cursor-pointer">
+              <label htmlFor="file-upload-uploads" className="text-[hsl(var(--primary))] text-sm font-medium hover:text-[hsl(var(--primary))] cursor-pointer">
                 Uploader un fichier
               </label>
             </div>
@@ -234,7 +234,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
           placeholder="Rechercher des éléments..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
         />
       </div>
 
@@ -248,7 +248,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
               onClick={() => setActiveCategory(category.id)}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
                 activeCategory === category.id
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                  ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary))] border border-[hsl(var(--primary))]'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >

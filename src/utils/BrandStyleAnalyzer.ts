@@ -26,11 +26,51 @@ export interface BrandTheme {
   logoUrl?: string;
 }
 
+interface BrandfetchColor {
+  hex?: string;
+  [key: string]: unknown;
+}
+
+interface BrandfetchData {
+  colors?: BrandfetchColor[];
+  logos?: Array<{
+    formats?: Array<{
+      src?: string;
+    }>;
+  }>;
+}
+
+interface CampaignConfig {
+  roulette?: {
+    segments?: Array<{
+      color?: string;
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+interface CampaignData {
+  config?: CampaignConfig;
+  design?: {
+    customColors?: BrandColors;
+    [key: string]: unknown;
+  };
+  buttonConfig?: {
+    color?: string;
+    borderColor?: string;
+    textColor?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 // --- APPEL API Brandfetch AVEC CLÉ ---
-async function fetchBrandfetchData(domain: string): Promise<any> {
+async function fetchBrandfetchData(domain: string): Promise<BrandfetchData | null> {
   const apiKey =
     (typeof import.meta !== "undefined" &&
-      (import.meta as any).env?.VITE_BRANDFETCH_KEY) ||
+      (import.meta as { env?: Record<string, string> }).env?.VITE_BRANDFETCH_KEY) ||
     process.env.VITE_BRANDFETCH_KEY;
   if (!apiKey) {
     console.warn(
@@ -52,7 +92,7 @@ export async function generateBrandThemeFromUrl(
   try {
     if (!/^https?:/.test(url)) url = `https://${url}`;
     const domain = new URL(url).hostname;
-    let brandData: any = null;
+    let brandData: BrandfetchData | null = null;
     let logoUrl: string | undefined;
     try {
       brandData = await fetchBrandfetchData(domain);
@@ -62,7 +102,7 @@ export async function generateBrandThemeFromUrl(
     }
     // 1. Couleurs directes Brandfetch
     if (brandData?.colors?.length) {
-      const colors = brandData.colors.map((c: any) => c.hex || c);
+      const colors = brandData.colors.map((c) => c.hex || String(c));
       const primary = colors[0];
       const secondary = colors[1] || primary;
       const accent = colors[2] || "#ffffff";
@@ -348,9 +388,9 @@ function findAccentColor(
 
 // Génération palette complète cohérente depuis Brandfetch
 export function extractCompletePaletteFromBrandfetch(
-  palette: any[],
+  palette: BrandfetchColor[],
 ): BrandPalette {
-  const colors = palette.map((c) => c.hex || c).filter(Boolean);
+  const colors = palette.map((c) => c.hex || String(c)).filter(Boolean);
   const primaryColor = colors[0] || "#841b60";
   const secondaryColor = colors[1] || primaryColor;
   const accentColor = colors[2] || "#ffffff";
@@ -367,7 +407,7 @@ export function extractCompletePaletteFromBrandfetch(
 
 // Pour compatibilité avec anciens noms
 export function generateBrandThemeFromMicrolinkPalette(
-  palette: any,
+  palette: BrandfetchColor[],
 ): BrandPalette {
   return extractCompletePaletteFromBrandfetch(palette);
 }
@@ -382,9 +422,9 @@ export interface BrandColors {
   secondary: string;
   accent?: string;
 }
-export function applyBrandStyleToWheel(campaign: any, colors: BrandColors) {
+export function applyBrandStyleToWheel(campaign: CampaignData, colors: BrandColors) {
   const updatedSegments = (campaign?.config?.roulette?.segments || []).map(
-    (segment: any, index: number) => ({
+    (segment, index: number) => ({
       ...segment,
       color:
         segment.color || (index % 2 === 0 ? colors.primary : colors.secondary),
@@ -418,7 +458,7 @@ export function applyBrandStyleToWheel(campaign: any, colors: BrandColors) {
 
 // Palette Brandfetch ou logo
 export async function extractBrandPaletteFromBrandfetch(
-  data: any,
+  data: BrandfetchData,
 ): Promise<BrandPalette> {
   const colors = data?.colors || [];
   return extractCompletePaletteFromBrandfetch(colors);

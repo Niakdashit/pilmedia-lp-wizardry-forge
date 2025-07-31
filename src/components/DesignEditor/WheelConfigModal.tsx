@@ -125,7 +125,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
                   value={wheelBorderColor}
                   onChange={(e) => onBorderColorChange(e.target.value)}
                   placeholder="#841b60"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
                 />
               </div>
             </div>

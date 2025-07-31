@@ -46,7 +46,7 @@ const ExportPanel: React.FC = () => {
             return (
               <button
                 key={device.id}
-                className="flex items-center space-x-1 px-3 py-2 bg-white border border-gray-200 rounded-md hover:border-blue-300 text-sm"
+                className="flex items-center space-x-1 px-3 py-2 bg-white border border-gray-200 rounded-md hover:border-[hsl(var(--primary))] text-sm"
               >
                 <Icon className="w-4 h-4" />
                 <span>{device.label}</span>
@@ -63,7 +63,7 @@ const ExportPanel: React.FC = () => {
         </div>
       </div>
 
-      <button className="w-full flex items-center justify-center space-x-2 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+      <button className="w-full flex items-center justify-center space-x-2 py-3 bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[hsl(var(--primary))] transition-colors">
         <Eye className="w-4 h-4" />
         <span>Aperçu en plein écran</span>
       </button>
@@ -96,13 +96,13 @@ const ExportPanel: React.FC = () => {
 
       {/* Options de partage */}
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
-          <Link className="w-4 h-4 text-blue-600" />
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors">
+          <Link className="w-4 h-4 text-[hsl(var(--primary))]" />
           <span className="text-sm">Copier lien</span>
         </button>
         
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
-          <Mail className="w-4 h-4 text-blue-600" />
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors">
+          <Mail className="w-4 h-4 text-[hsl(var(--primary))]" />
           <span className="text-sm">Par email</span>
         </button>
       </div>
@@ -113,15 +113,15 @@ const ExportPanel: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-700">Campagne active</span>
-            <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+            <input type="checkbox" defaultChecked className="rounded border-gray-300 text-[hsl(var(--primary))]" />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-700">Tracking activé</span>
-            <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+            <input type="checkbox" defaultChecked className="rounded border-gray-300 text-[hsl(var(--primary))]" />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-700">Page publique</span>
-            <input type="checkbox" className="rounded border-gray-300 text-blue-600" />
+            <input type="checkbox" className="rounded border-gray-300 text-[hsl(var(--primary))]" />
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ const ExportPanel: React.FC = () => {
           {exportFormats.map((format) => (
             <button
               key={format.id}
-              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors"
             >
               <div className="text-left">
                 <div className="font-medium text-gray-800">{format.label}</div>
@@ -197,7 +197,7 @@ const ExportPanel: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm transition-colors flex-1 justify-center ${
                 activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-[hsl(var(--primary))] shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >

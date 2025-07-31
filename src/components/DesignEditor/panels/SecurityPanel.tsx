@@ -22,7 +22,7 @@ const SecurityPanel: React.FC = () => {
                 type="radio"
                 name="auth-type"
                 id={auth.id}
-                className="mt-1 border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-1 border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
               <div className="flex-1">
                 <label htmlFor={auth.id} className="text-sm font-medium text-gray-700 cursor-pointer">
@@ -52,7 +52,7 @@ const SecurityPanel: React.FC = () => {
               <input
                 type="checkbox"
                 id={protection.id}
-                className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-1 rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
               <div className="flex-1">
                 <label htmlFor={protection.id} className="text-sm font-medium text-gray-700 cursor-pointer">
@@ -76,7 +76,7 @@ const SecurityPanel: React.FC = () => {
             <input
               type="checkbox"
               id="auto-moderation"
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
             />
             <label htmlFor="auto-moderation" className="text-sm text-gray-700">
               Modération automatique des contenus
@@ -86,7 +86,7 @@ const SecurityPanel: React.FC = () => {
             <input
               type="checkbox"
               id="manual-validation"
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
             />
             <label htmlFor="manual-validation" className="text-sm text-gray-700">
               Validation manuelle des gains
@@ -114,7 +114,7 @@ const SecurityPanel: React.FC = () => {
                 id={compliance.id}
                 defaultChecked={compliance.required}
                 disabled={compliance.required}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
               <label htmlFor={compliance.id} className={`text-sm cursor-pointer ${
                 compliance.required ? 'text-gray-900 font-medium' : 'text-gray-700'

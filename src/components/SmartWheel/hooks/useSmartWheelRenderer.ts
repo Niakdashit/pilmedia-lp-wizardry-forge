@@ -51,6 +51,8 @@ export const useSmartWheelRenderer = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+
+
     // Configurer le canvas
     const devicePixelRatio = window.devicePixelRatio || 1;
     canvas.width = size * devicePixelRatio;
@@ -88,6 +90,8 @@ export const useSmartWheelRenderer = ({
     drawPointer(ctx, centerX, centerY, maxRadius, theme);
 
   }, [segments, theme, wheelState, size, borderStyle, animationTime]);
+
+
 
   const drawBackground = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
     if (theme.effects.gradient) {

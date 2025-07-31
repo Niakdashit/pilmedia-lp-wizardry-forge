@@ -1,8 +1,8 @@
-
 import React from 'react';
+import type { MobileConfig } from '../../ModernEditor/types/CampaignTypes';
 
 interface MobileOverlaysProps {
-  mobileConfig: any;
+  mobileConfig: MobileConfig;
   previewMode: string;
 }
 

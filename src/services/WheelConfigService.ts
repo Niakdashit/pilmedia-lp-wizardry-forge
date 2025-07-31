@@ -2,6 +2,22 @@
  * Service centralisé pour gérer les configurations de roue
  * Unifie les sources de données et applique les priorités cohérentes
  */
+import type { OptimizedCampaign } from '../components/ModernEditor/types/CampaignTypes';
+
+interface WheelSegment {
+  id: string;
+  label: string;
+  color: string;
+  textColor?: string;
+  probability?: number;
+  isWinning?: boolean;
+}
+
+interface WheelModalConfig {
+  wheelBorderStyle?: string;
+  wheelBorderColor?: string;
+  wheelScale?: number;
+}
 
 export interface WheelConfig {
   borderStyle: string;
@@ -17,7 +33,7 @@ export interface WheelConfig {
     secondary?: string;
     accent?: string;
   };
-  segments?: any[];
+  segments?: WheelSegment[];
   size?: number;
   shouldCropWheel?: boolean;
 }
@@ -28,9 +44,9 @@ export class WheelConfigService {
    * Applique les priorités : wheelModalConfig > extractedColors > design > defaults
    */
   static getCanonicalWheelConfig(
-    campaign: any,
+    campaign: OptimizedCampaign | null,
     extractedColors: string[] = [],
-    wheelModalConfig: any = {},
+    wheelModalConfig: WheelModalConfig = {},
     options: { shouldCropWheel?: boolean; device?: string } = {}
   ): WheelConfig {
     const defaults = {
@@ -63,7 +79,7 @@ export class WheelConfigService {
     const finalConfig: WheelConfig = {
       borderStyle: modalConfig.borderStyle || designConfig.borderStyle || defaults.borderStyle,
       borderColor: modalConfig.borderColor || designConfig.borderColor || extractedConfig.borderColor || defaults.borderColor,
-      scale: modalConfig.scale || designConfig.scale || defaults.scale,
+      scale: modalConfig.scale !== undefined ? modalConfig.scale : (designConfig.scale || defaults.scale),
       shouldCropWheel: options.shouldCropWheel ?? true,
       
       // Configuration des couleurs avec priorités
@@ -110,7 +126,7 @@ export class WheelConfigService {
   /**
    * Génère les segments standardisés pour l'aperçu
    */
-  static getStandardizedSegments(config: WheelConfig): any[] {
+  static getStandardizedSegments(config: WheelConfig): WheelSegment[] {
     const primaryColor = config.customColors?.primary || config.brandColors?.primary || '#ff6b6b';
     const whiteColor = '#ffffff';
     
@@ -150,31 +166,41 @@ export class WheelConfigService {
    * Synchronise les changements de configuration
    */
   static createConfigUpdateHandler(
-    setCampaign: (updater: any) => void,
-    setWheelModalConfig: (config: any) => void
+    setCampaign: (updater: OptimizedCampaign | null | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)) => void,
+    setWheelModalConfig: (config: WheelModalConfig | ((prev: WheelModalConfig) => WheelModalConfig)) => void
   ) {
     return (updates: Partial<WheelConfig>) => {
       // Mettre à jour la configuration de la modal
-      setWheelModalConfig((prev: any) => ({
-        ...prev,
-        wheelBorderStyle: updates.borderStyle,
-        wheelBorderColor: updates.borderColor,
-        wheelScale: updates.scale
-      }));
+      setWheelModalConfig((prev) => {
+        const newConfig: WheelModalConfig = { ...prev };
+        
+        // Mettre à jour seulement les propriétés définies
+        if (updates.borderStyle !== undefined) {
+          newConfig.wheelBorderStyle = updates.borderStyle;
+        }
+        if (updates.borderColor !== undefined) {
+          newConfig.wheelBorderColor = updates.borderColor;
+        }
+        if (updates.scale !== undefined) {
+          newConfig.wheelScale = updates.scale;
+        }
+        
+        return newConfig;
+      });
 
       // Mettre à jour la campagne
-      setCampaign((prevCampaign: any) => ({
+      setCampaign((prevCampaign) => prevCampaign ? ({
         ...prevCampaign,
         design: {
-          ...prevCampaign?.design,
-          wheelBorderStyle: updates.borderStyle,
+          ...prevCampaign.design,
+          wheelBorderStyle: updates.borderStyle !== undefined ? updates.borderStyle : prevCampaign.design?.wheelBorderStyle,
           wheelConfig: {
-            ...prevCampaign?.design?.wheelConfig,
-            borderColor: updates.borderColor,
-            scale: updates.scale
+            ...prevCampaign.design?.wheelConfig,
+            borderColor: updates.borderColor !== undefined ? updates.borderColor : prevCampaign.design?.wheelConfig?.borderColor,
+            scale: updates.scale !== undefined ? updates.scale : prevCampaign.design?.wheelConfig?.scale
           }
         }
-      }));
+      }) : null);
     };
   }
 }
