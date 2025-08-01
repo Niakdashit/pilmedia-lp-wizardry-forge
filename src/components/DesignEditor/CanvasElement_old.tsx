@@ -2,8 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
-import { useTouchOptimization } from './hooks/useTouchOptimization';
-import { useEnhancedDragCalibration } from './hooks/useEnhancedDragCalibration';
+// Removed complex touch optimization - using simple approach
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 // Force cache invalidation - React DnD v14+ compliant
@@ -16,7 +15,6 @@ export interface CanvasElementProps {
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
   containerRef?: React.RefObject<HTMLDivElement>;
-  zoom?: number;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -26,24 +24,19 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   onSelect,
   onUpdate,
   onDelete,
-  containerRef,
-  zoom = 1
+  containerRef
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
-  // 📱 Hook d'optimisation tactile pour mobile/tablette
-  const touchOptimization = useTouchOptimization({ 
-    selectedDevice, 
-    containerRef,
-    zoom 
-  });
+  // 📱 Simple touch detection for mobile/tablet
+  const isTouchDevice = selectedDevice === 'mobile' || selectedDevice === 'tablet';
   
-  // 🎯 Hook de calibrage avancé pour le drag & drop précis
-  const dragCalibration = useEnhancedDragCalibration({
-    deviceType: selectedDevice,
-    zoom,
-    containerRef: containerRef || { current: null }
-  });
+  // Simple touch offset for better UX
+  const getTouchOffset = () => {
+    if (selectedDevice === 'mobile') return { x: 0, y: -20 };
+    if (selectedDevice === 'tablet') return { x: 0, y: -25 };
+    return { x: 0, y: 0 };
+  };
   
   // Get device-specific properties with proper typing - memoized
   const deviceProps = useMemo(() => 
@@ -74,64 +67,81 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     
     // Obtenir les informations du conteneur pour les calculs précis
     if (!containerRef?.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
 
-    // 🎯 Utiliser le calibrage avancé pour une précision parfaite
-    const isTouchInteraction = dragCalibration.isTouchEvent(e);
+    // 📱 Simple and stable touch handling
+    const isTouch = e.pointerType === 'touch';
     
-    // Vérifier si on doit traiter cet événement tactile
-    if (isTouchInteraction && !dragCalibration.shouldProcessTouchEvent(e.clientX, e.clientY)) {
-      return; // Ignorer les micro-mouvements
+    // Get zoom scale from transform
+    const getZoomScale = () => {
+      const style = getComputedStyle(containerRef.current!);
+      const transform = style.transform;
+      if (transform && transform !== 'none') {
+        const matrix = transform.match(/matrix\(([^)]+)\)/);
+        if (matrix) {
+          const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
+          return values[0]; // Scale X
+        }
+      }
+      return 1;
+    };
+    
+    // Calculate canvas coordinates with simple touch offset
+    const zoomScale = getZoomScale();
+    let canvasX = (e.clientX - containerRect.left) / zoomScale;
+    let canvasY = (e.clientY - containerRect.top) / zoomScale;
+    
+    // Apply simple touch offset to avoid finger covering element
+    if (isTouch) {
+      const offset = getTouchOffset();
+      canvasX += offset.x;
+      canvasY += offset.y;
+        const touchOffset = selectedDevice === 'mobile' ? 45 : 35;
+        canvasY -= touchOffset;
+        
+        const precisionFactor = selectedDevice === 'mobile' ? 0.98 : 0.99;
+        canvasX *= precisionFactor;
+        canvasY *= precisionFactor;
+      }
     }
     
-    // Convertir les coordonnées avec le calibrage avancé
-    const dragCoords = dragCalibration.convertDragCoordinates(
-      e.clientX, 
-      e.clientY, 
-      isTouchInteraction
-    );
-    
-    console.log('🎯 Drag Start Calibration:', {
-      device: selectedDevice,
-      zoom,
-      raw: { x: dragCoords.rawX, y: dragCoords.rawY },
-      calibrated: { x: dragCoords.x, y: dragCoords.y },
-      isTouch: isTouchInteraction,
-      calibrationApplied: dragCoords.calibrated
-    });
-    
-    const startX = dragCoords.x - currentProps.x;
-    const startY = dragCoords.y - currentProps.y;
+    const startX = canvasX - currentProps.x;
+    const startY = canvasY - currentProps.y;
 
     const handlePointerMove = (e: PointerEvent) => {
-      // 🎯 Détecter et optimiser pour les interactions tactiles avec calibrage avancé
-      const isTouchMove = dragCalibration.isTouchEvent(e);
+      // 📱 Détecter et optimiser pour les interactions tactiles
+      const isTouchMove = touchOptimization.isTouchInteraction(e);
       
-      // Vérifier si on doit traiter cet événement tactile (filtrer les micro-mouvements)
-      if (isTouchMove && !dragCalibration.shouldProcessTouchEvent(e.clientX, e.clientY, 1)) {
-        return; // Ignorer les micro-mouvements pour une expérience plus fluide
+      // Convertir les coordonnées avec fallback robuste
+      let newCanvasX: number, newCanvasY: number;
+      
+      try {
+        const moveCoords = touchOptimization.convertToCanvasCoordinates(
+          e.clientX, 
+          e.clientY, 
+          isTouchMove
+        );
+        newCanvasX = moveCoords.x;
+        newCanvasY = moveCoords.y;
+      } catch (error) {
+        // Fallback : calcul manuel si le hook échoue
+        const zoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
+        newCanvasX = (e.clientX - containerRect.left) / zoomScale;
+        newCanvasY = (e.clientY - containerRect.top) / zoomScale;
+        
+        // Appliquer la compensation tactile manuellement si nécessaire
+        if (isTouchMove && selectedDevice !== 'desktop') {
+          const touchOffset = selectedDevice === 'mobile' ? 45 : 35;
+          newCanvasY -= touchOffset;
+          
+          const precisionFactor = selectedDevice === 'mobile' ? 0.98 : 0.99;
+          newCanvasX *= precisionFactor;
+          newCanvasY *= precisionFactor;
+        }
       }
       
-      // Convertir les coordonnées avec le calibrage avancé
-      const moveCoords = dragCalibration.convertDragCoordinates(
-        e.clientX, 
-        e.clientY, 
-        isTouchMove
-      );
-      
-      // Calculer la vitesse pour l'inertie (optionnel)
-      const velocity = dragCalibration.calculateDragVelocity(moveCoords.x, moveCoords.y);
-      
-      const newX = moveCoords.x - startX;
-      const newY = moveCoords.y - startY;
-      
-      console.log('🎯 Drag Move Calibration:', {
-        device: selectedDevice,
-        raw: { x: moveCoords.rawX, y: moveCoords.rawY },
-        calibrated: { x: moveCoords.x, y: moveCoords.y },
-        final: { x: newX, y: newY },
-        velocity,
-        isTouch: isTouchMove
-      });
+      const newX = newCanvasX - startX;
+      const newY = newCanvasY - startY;
       
       // Calculer les dimensions réelles de l'élément avec plus de précision
       const elementWidth = currentProps.width || (element.type === 'text' ? 100 : 100);
@@ -227,7 +237,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     document.addEventListener('pointerup', handlePointerUp);
   }, [element.id, deviceProps, onSelect, onUpdate, containerRef]);
 
-  // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
+  // Optimized text editing handlers with useCallback
   const handleDoubleClick = useCallback(() => {
     if (element.type === 'text') {
       setIsEditing(true);

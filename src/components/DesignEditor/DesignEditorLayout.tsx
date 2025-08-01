@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
@@ -12,6 +12,7 @@ import { useHistoryManager } from '../ModernEditor/hooks/useHistoryManager';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
+import MobileStableEditor from './components/MobileStableEditor';
 import { useDebouncedCallback } from 'use-debounce';
 
 const DesignEditorLayout: React.FC = () => {
@@ -29,9 +30,9 @@ const DesignEditorLayout: React.FC = () => {
       case 'desktop':
         return 0.7; // 70%
       case 'tablet':
-        return 0.7; // 70%
+        return 0.65; // 65%
       case 'mobile':
-        return 0.85; // 85%
+        return 0.95; // 95%
       default:
         return 0.7;
     }
@@ -62,9 +63,13 @@ const DesignEditorLayout: React.FC = () => {
   });
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
   
+  // Référence pour le canvas
+  const canvasRef = useRef<HTMLDivElement>(null);
+  
   // État pour gérer l'affichage des panneaux dans la sidebar
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
+  const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
       wheelConfig: {
@@ -290,7 +295,7 @@ const DesignEditorLayout: React.FC = () => {
 
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <MobileStableEditor className="h-screen bg-gray-50 flex flex-col">
       {/* Top Toolbar - Hidden in preview mode */}
       {!showFunnel && (
         <>
@@ -345,6 +350,9 @@ const DesignEditorLayout: React.FC = () => {
               onEffectsPanelChange={setShowEffectsInSidebar}
               showAnimationsPanel={showAnimationsInSidebar}
               onAnimationsPanelChange={setShowAnimationsInSidebar}
+              showPositionPanel={showPositionInSidebar}
+              onPositionPanelChange={setShowPositionInSidebar}
+              canvasRef={canvasRef}
             />
             
             {/* Main Canvas Area */}
@@ -366,6 +374,12 @@ const DesignEditorLayout: React.FC = () => {
               onShowAnimationsPanel={() => {
                 setShowAnimationsInSidebar(true);
                 setShowEffectsInSidebar(false);
+                setShowPositionInSidebar(false);
+              }}
+              onShowPositionPanel={() => {
+                setShowPositionInSidebar(true);
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
               }}
             />
             
@@ -386,7 +400,7 @@ const DesignEditorLayout: React.FC = () => {
       
       {/* Performance Monitor */}
       <PerformanceMonitor />
-    </div>
+    </MobileStableEditor>
   );
 };
 

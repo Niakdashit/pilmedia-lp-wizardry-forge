@@ -17,6 +17,7 @@ import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
+import { useMobileOptimization } from './hooks/useMobileOptimization';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -35,6 +36,7 @@ export interface DesignCanvasProps {
   onElementUpdate?: (updates: any) => void;
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
+  onShowPositionPanel?: () => void;
 }
 const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   selectedDevice,
@@ -48,7 +50,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   onSelectedElementChange,
   onElementUpdate: externalOnElementUpdate,
   onShowEffectsPanel,
-  onShowAnimationsPanel
+  onShowAnimationsPanel,
+  onShowPositionPanel
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
@@ -57,6 +60,20 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  // Optimisation mobile pour une expérience tactile parfaite
+  const {
+    isMobile,
+    isTablet,
+    deviceType,
+    convertTouchCoordinates,
+    isTouchEvent
+  } = useMobileOptimization(canvasRef, {
+    preventScrollBounce: true,
+    stabilizeViewport: true,
+    optimizeTouchEvents: true,
+    preventZoomGestures: true
+  });
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -316,20 +333,33 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
   return <DndProvider backend={HTML5Backend}>
-      <div className="flex-1 bg-[hsl(var(--muted))] overflow-auto">
+      <div className="flex-1 bg-[hsl(var(--muted))] overflow-auto relative">
         {/* Canvas Toolbar - Only show when text element is selected */}
-        {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4 p-4">
+        {selectedElementData && selectedElementData.type === 'text' && (
+          <div className={`z-10 ${
+            selectedDevice === 'desktop' 
+              ? 'absolute top-4 left-1/2 transform -translate-x-1/2' 
+              : 'flex justify-center py-2 px-4'
+          }`}>
             <CanvasToolbar 
               selectedElement={selectedElementData} 
               onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
+              onShowPositionPanel={onShowPositionPanel}
+              canvasRef={canvasRef}
             />
-          </div>}
+          </div>
+        )}
         
-        <div className="flex justify-center items-center min-h-full" style={{
-          padding: zoom < 1 ? '20px' : '40px',
-          transition: 'padding 0.2s ease-in-out'
+        <div className="flex justify-center items-center h-full" style={{
+          padding: selectedDevice === 'tablet' 
+            ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
+            : selectedDevice === 'mobile'
+            ? (zoom <= 0.7 ? '24px 16px' : '40px 24px')
+            : (zoom <= 0.7 ? '8px' : '32px'),
+          transition: 'padding 0.2s ease-in-out',
+          minHeight: '100%'
         }}>
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
@@ -359,9 +389,17 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
             }}
           >
             {/* Canvas Background */}
-            <div className="absolute inset-0" style={{
-            background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-          }}>
+            <div 
+              className="absolute inset-0" 
+              style={{
+                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+              }}
+              onMouseDown={(e) => {
+                // Désélectionner l'élément quand on clique sur le background
+                e.stopPropagation();
+                setSelectedElement(null);
+              }}
+            >
               {/* Grid Overlay Optimisé */}
               <GridOverlay 
                 canvasSize={canvasSize}
@@ -441,6 +479,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
                   containerRef={canvasRef}
+                  zoom={zoom}
                 />
               );
             })}
