@@ -53,21 +53,41 @@ const DesignEditorLayout: React.FC = () => {
     setSelectedDevice(device);
     setCanvasZoom(getDefaultZoom(device));
   };
+
+  // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
+  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+  
+  // État pour gérer l'affichage des panneaux dans la sidebar
+  const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
+  const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
-  design: {
-    wheelConfig: {
-      scale: 2
+    design: {
+      wheelConfig: {
+        scale: 2
+      }
     }
-  }
-});
+  });
+
+  // État pour l'élément sélectionné
+  const [selectedElement, setSelectedElement] = useState<any>(null);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
-  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(detectDevice()));
+
+  // Fonction pour mettre à jour un élément sélectionné
+  const handleElementUpdate = (updates: any) => {
+    if (selectedElement) {
+      const updatedElement = { ...selectedElement, ...updates };
+      setCanvasElements(prev => 
+        prev.map(el => el.id === selectedElement.id ? updatedElement : el)
+      );
+      setSelectedElement(updatedElement);
+    }
+  };
   // Utilisation du hook de synchronisation unifié
   const { wheelModalConfig } = useWheelConfigSync({
     campaign: campaignConfig,
@@ -125,7 +145,7 @@ const DesignEditorLayout: React.FC = () => {
         wheelConfig: {
           borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic',
           borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#841b60',
-          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 2
+          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 1
         },
         wheelBorderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic'
       },
@@ -319,6 +339,12 @@ const DesignEditorLayout: React.FC = () => {
               onCampaignConfigChange={setCampaignConfig}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
+              selectedElement={selectedElement}
+              onElementUpdate={handleElementUpdate}
+              showEffectsPanel={showEffectsInSidebar}
+              onEffectsPanelChange={setShowEffectsInSidebar}
+              showAnimationsPanel={showAnimationsInSidebar}
+              onAnimationsPanelChange={setShowAnimationsInSidebar}
             />
             
             {/* Main Canvas Area */}
@@ -330,6 +356,17 @@ const DesignEditorLayout: React.FC = () => {
               campaign={campaignConfig}
               onCampaignChange={setCampaignConfig}
               zoom={canvasZoom}
+              selectedElement={selectedElement}
+              onSelectedElementChange={setSelectedElement}
+              onElementUpdate={handleElementUpdate}
+              onShowEffectsPanel={() => {
+                setShowEffectsInSidebar(true);
+                setShowAnimationsInSidebar(false);
+              }}
+              onShowAnimationsPanel={() => {
+                setShowAnimationsInSidebar(true);
+                setShowEffectsInSidebar(false);
+              }}
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}

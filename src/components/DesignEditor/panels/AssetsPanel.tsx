@@ -16,9 +16,11 @@ import TextPanel from './TextPanel';
 
 interface AssetsPanelProps {
   onAddElement: (element: any) => void;
+  selectedElement?: any;
+  onElementUpdate?: (updates: any) => void;
 }
 
-const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
+const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate }) => {
   const [activeCategory, setActiveCategory] = useState('text');
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImages, setUploadedImages] = useState<any[]>([]);
@@ -95,7 +97,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement }) => {
   const renderContent = () => {
     switch (activeCategory) {
       case 'text':
-        return <TextPanel onAddElement={onAddElement} />;
+        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} />;
 
       case 'shapes':
         return (

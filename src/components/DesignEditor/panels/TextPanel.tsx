@@ -4,6 +4,8 @@ import TextEffectsPanel from './TextEffectsPanel';
 
 interface TextPanelProps {
   onAddElement: (element: any) => void;
+  selectedElement?: any;
+  onElementUpdate?: (updates: any) => void;
 }
 
 // Polices organisées par catégories (identique à TestPage)
@@ -27,7 +29,9 @@ const fontCategories = [{
   fonts: ['Dancing Script', 'Great Vibes', 'Allura', 'Satisfy', 'Kaushan Script', 'Tangerine', 'Sacramento', 'Yellowtail', 'Pinyon Script', 'Marck Script', 'Amatic SC', 'Permanent Marker', 'Homemade Apple', 'Rock Salt']
 }];
 const TextPanel: React.FC<TextPanelProps> = ({
-  onAddElement
+  onAddElement,
+  selectedElement,
+  onElementUpdate
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(fontCategories[0]);
   const [showEffects, setShowEffects] = useState(false);
@@ -59,7 +63,13 @@ const TextPanel: React.FC<TextPanelProps> = ({
   };
 
   if (showEffects) {
-    return <TextEffectsPanel onAddElement={onAddElement} onBack={() => setShowEffects(false)} />;
+    return (
+      <TextEffectsPanel 
+        onBack={() => setShowEffects(false)}
+        selectedElement={selectedElement}
+        onElementUpdate={onElementUpdate}
+      />
+    );
   }
 
   return <div className="p-4 space-y-6">

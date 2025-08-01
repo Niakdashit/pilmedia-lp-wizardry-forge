@@ -91,20 +91,20 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
             {/* Taille de la roue */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Taille de la roue: {Math.round(wheelScale * 100)}%
+                Taille de la roue: {Math.round((wheelScale / 3) * 100)}%
               </label>
               <input
                 type="range"
-                min="0.5"
-                max="2"
+                min="0"
+                max="3"
                 step="0.1"
                 value={wheelScale}
                 onChange={(e) => onScaleChange(parseFloat(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>50%</span>
-                <span>200%</span>
+                <span>0%</span>
+                <span>100%</span>
               </div>
             </div>
 

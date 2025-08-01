@@ -15,6 +15,8 @@ import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
+import TextEffectsPanel from './panels/TextEffectsPanel';
+import TextAnimationsPanel from './panels/TextAnimationsPanel';
 
 
 interface HybridSidebarProps {
@@ -25,6 +27,12 @@ interface HybridSidebarProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
+  selectedElement?: any;
+  onElementUpdate?: (updates: any) => void;
+  showEffectsPanel?: boolean;
+  onEffectsPanelChange?: (show: boolean) => void;
+  showAnimationsPanel?: boolean;
+  onAnimationsPanelChange?: (show: boolean) => void;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
@@ -34,10 +42,27 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
-  onElementsChange
+  onElementsChange,
+  selectedElement,
+  onElementUpdate,
+  showEffectsPanel = false,
+  onEffectsPanelChange,
+  showAnimationsPanel = false,
+  onAnimationsPanelChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
+  
+  // Gérer l'affichage des panneaux spéciaux
+  React.useEffect(() => {
+    if (showEffectsPanel) {
+      setActiveTab('effects');
+    } else if (showAnimationsPanel) {
+      setActiveTab('animations');
+    } else if (activeTab === 'effects' || activeTab === 'animations') {
+      setActiveTab('assets'); // Retourner aux éléments quand on ferme les panneaux spéciaux
+    }
+  }, [showEffectsPanel, showAnimationsPanel, activeTab]);
 
   const tabs = [
     { 
@@ -73,6 +98,14 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   ];
 
   const handleTabClick = (tabId: string) => {
+    // Si on clique sur un onglet différent, fermer les panneaux spéciaux
+    if (showEffectsPanel && tabId !== 'effects') {
+      onEffectsPanelChange?.(false);
+    }
+    if (showAnimationsPanel && tabId !== 'animations') {
+      onAnimationsPanelChange?.(false);
+    }
+    
     if (activeTab === tabId) {
       setActiveTab(null); // Close if clicking on active tab
     } else {
@@ -82,8 +115,30 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
+      case 'effects':
+        return (
+          <TextEffectsPanel 
+            onBack={() => {
+              onEffectsPanelChange?.(false);
+              setActiveTab('assets');
+            }}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
+          />
+        );
+      case 'animations':
+        return (
+          <TextAnimationsPanel 
+            onBack={() => {
+              onAnimationsPanelChange?.(false);
+              setActiveTab('assets');
+            }}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
+          />
+        );
       case 'assets':
-        return <AssetsPanel onAddElement={onAddElement} />;
+        return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} />;
       case 'background':
         return (
           <BackgroundPanel 
@@ -192,7 +247,9 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
-              {tabs.find(tab => tab.id === activeTab)?.label}
+              {activeTab === 'effects' ? 'Effets de texte' : 
+               activeTab === 'animations' ? 'Animations de texte' : 
+               tabs.find(tab => tab.id === activeTab)?.label}
             </h2>
           </div>
 

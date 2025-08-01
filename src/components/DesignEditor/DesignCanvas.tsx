@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
@@ -16,6 +16,7 @@ import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas
 import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
+import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -29,6 +30,11 @@ export interface DesignCanvasProps {
   campaign?: any;
   onCampaignChange?: (campaign: any) => void;
   zoom?: number;
+  selectedElement?: any;
+  onSelectedElementChange?: (element: any) => void;
+  onElementUpdate?: (updates: any) => void;
+  onShowEffectsPanel?: () => void;
+  onShowAnimationsPanel?: () => void;
 }
 const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   selectedDevice,
@@ -37,12 +43,36 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   background,
   campaign,
   onCampaignChange,
-  zoom = 1
+  zoom = 1,
+  selectedElement: externalSelectedElement,
+  onSelectedElementChange,
+  onElementUpdate: externalOnElementUpdate,
+  onShowEffectsPanel,
+  onShowAnimationsPanel
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showTouchDebug, setShowTouchDebug] = useState(false);
+  const [showAnimationPopup, setShowAnimationPopup] = useState(false);
+  const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  // Synchroniser la sélection avec l'état externe
+  useEffect(() => {
+    if (externalSelectedElement && externalSelectedElement.id !== selectedElement) {
+      setSelectedElement(externalSelectedElement.id);
+    }
+  }, [externalSelectedElement]);
+
+  // Fonction de sélection qui notifie l'état externe
+  const handleElementSelect = useCallback((elementId: string | null) => {
+    setSelectedElement(elementId);
+    if (onSelectedElementChange) {
+      const element = elementId ? elements.find(el => el.id === elementId) : null;
+      onSelectedElementChange(element);
+    }
+  }, [elements, onSelectedElementChange]);
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
@@ -53,6 +83,57 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
     extractedColors: campaign?.design?.brandColors ? Object.values(campaign.design.brandColors) : [],
     onCampaignChange
   });
+
+  // Écouteur d'événement pour l'application des effets de texte depuis le panneau latéral
+  useEffect(() => {
+    const handleApplyTextEffect = (event: CustomEvent) => {
+      console.log('🎯 Événement applyTextEffect reçu:', event.detail);
+      if (selectedElement) {
+        console.log('✅ Application de l\'effet au texte sélectionné:', selectedElement);
+        handleElementUpdate(selectedElement, event.detail);
+      } else {
+        console.log('❌ Aucun élément sélectionné pour appliquer l\'effet');
+      }
+    };
+
+    window.addEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
+    return () => {
+      window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
+    };
+  }, [selectedElement]);
+
+  // Écouteur d'événement pour afficher le popup d'animation
+  useEffect(() => {
+    const handleShowAnimationPopup = (event: CustomEvent) => {
+      const { animation, selectedElementId } = event.detail;
+      
+      // Calculer la position du popup sous l'élément sélectionné
+      const elementInDOM = document.querySelector(`[data-element-id="${selectedElementId}"]`);
+      let position = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      
+      if (elementInDOM) {
+        const rect = elementInDOM.getBoundingClientRect();
+        const canvasRect = canvasRef.current?.getBoundingClientRect();
+        
+        if (canvasRect) {
+          // Position relative au canvas
+          position = {
+            x: rect.left + rect.width / 2,
+            y: rect.bottom + 10
+          };
+        }
+      }
+      
+      setSelectedAnimation(animation);
+      setPopupPosition(position);
+      setShowAnimationPopup(true);
+    };
+
+    window.addEventListener('showAnimationPopup', handleShowAnimationPopup as EventListener);
+    return () => {
+      window.removeEventListener('showAnimationPopup', handleShowAnimationPopup as EventListener);
+    };
+  }, []);
 
   // 🚀 Cache intelligent pour optimiser les performances
   const elementCache = useAdvancedCache({
@@ -170,6 +251,11 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
 
   // Handlers optimisés avec snapping et cache intelligent
   const handleElementUpdate = useCallback((id: string, updates: any) => {
+    // Utiliser la fonction externe si disponible
+    if (externalOnElementUpdate && selectedElement === id) {
+      externalOnElementUpdate(updates);
+      return;
+    }
     // Vérifier le cache pour éviter les recalculs
     const cacheKey = `element-update-${id}-${JSON.stringify(updates).slice(0, 50)}`;
     const cachedResult = elementCache.get(cacheKey);
@@ -233,7 +319,12 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
       <div className="flex-1 bg-[hsl(var(--muted))] overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4 p-4">
-            <CanvasToolbar selectedElement={selectedElementData} onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)} />
+            <CanvasToolbar 
+              selectedElement={selectedElementData} 
+              onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
+              onShowEffectsPanel={onShowEffectsPanel}
+              onShowAnimationsPanel={onShowAnimationsPanel}
+            />
           </div>}
         
         <div className="flex justify-center items-center min-h-full" style={{
@@ -346,7 +437,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
                   element={elementWithResponsive} 
                   selectedDevice={selectedDevice}
                   isSelected={selectedElement === element.id} 
-                  onSelect={setSelectedElement} 
+                  onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
                   containerRef={canvasRef}
@@ -430,6 +521,22 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
           isVisible={showTouchDebug}
           onToggle={() => setShowTouchDebug(!showTouchDebug)}
         />
+        
+        {/* Popup contextuel d'animation */}
+        {showAnimationPopup && selectedAnimation && (
+          <AnimationSettingsPopup
+            animation={selectedAnimation}
+            position={popupPosition}
+            onApply={(settings) => {
+              if (selectedElement) {
+                handleElementUpdate(selectedElement, settings);
+                setShowAnimationPopup(false);
+              }
+            }}
+            onClose={() => setShowAnimationPopup(false)}
+            visible={showAnimationPopup}
+          />
+        )}
       </div>
     </DndProvider>;
 });
