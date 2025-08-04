@@ -131,7 +131,8 @@ const DesignEditorLayout: React.FC = () => {
 
     return {
       id: 'wheel-design-preview',
-      type: 'wheel',
+      name: 'Preview Campaign',
+      type: 'wheel' as const,
       design: {
         background: canvasBackground,
         customTexts: customTexts,
