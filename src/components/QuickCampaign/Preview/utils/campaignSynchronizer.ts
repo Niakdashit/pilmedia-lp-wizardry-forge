@@ -10,7 +10,7 @@ interface CustomColors {
 export const synchronizeCampaignWithColors = (
   mockCampaign: any,
   finalColors: CustomColors,
-  _logoUrl?: string // Préfixe avec _ pour indiquer que le paramètre est intentionnellement non utilisé
+  logoUrl?: string
 ) => {
   if (process.env.NODE_ENV !== 'production') {
     console.log('Synchronisation de la campagne avec les couleurs:', finalColors);
@@ -23,7 +23,7 @@ export const synchronizeCampaignWithColors = (
     campaign.config.roulette = {
       ...campaign.config.roulette,
       // Ne pas écraser les couleurs de bordure si un style prédéfini est utilisé
-      ...(((campaign.design as any)?.wheelBorderStyle === 'classic') && {
+      ...(campaign.design?.wheelBorderStyle === 'classic' && {
         borderColor: finalColors.primary,
         borderOutlineColor: finalColors.accent || finalColors.secondary,
       }),
@@ -40,7 +40,7 @@ export const synchronizeCampaignWithColors = (
   // Application forcée des couleurs au design
   campaign.design = {
     ...campaign.design,
-    // centerLogo: logoUrl || (campaign.design as any)?.centerLogo,
+    centerLogo: logoUrl || campaign.design?.centerLogo,
     customColors: finalColors
   };
 

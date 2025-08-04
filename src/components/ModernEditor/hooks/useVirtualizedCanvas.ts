@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import { throttle } from 'lodash-es';
 
 interface CanvasRegion {

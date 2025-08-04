@@ -99,7 +99,7 @@ const CampaignMobile: React.FC<CampaignMobileProps> = ({
                 onClick={() => setPreviewMode('mobile')}
                 className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md font-medium transition-colors ${
                   previewMode === 'mobile'
-                    ? 'bg-brand-gradient text-white'
+                    ? 'bg-[#841b60] text-white'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -110,7 +110,7 @@ const CampaignMobile: React.FC<CampaignMobileProps> = ({
                 onClick={() => setPreviewMode('tablet')}
                 className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md font-medium transition-colors ${
                   previewMode === 'tablet'
-                    ? 'bg-brand-gradient text-white'
+                    ? 'bg-[#841b60] text-white'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >

@@ -189,16 +189,6 @@ export interface MobileConfig {
   buttonPosition?: string;
   hideLaunchButton?: boolean;
   
-  // Button properties
-  buttonActionType?: 'submit' | 'link' | 'custom';
-  buttonLink?: string;
-  buttonColor?: string;
-  buttonTextColor?: string;
-  buttonShape?: 'rounded' | 'rounded-md' | 'rounded-full';
-  buttonShadow?: string | boolean;
-  buttonMargin?: string;
-  buttonHoverEffect?: boolean;
-  
   // Visual properties
   backgroundImage?: string;
   backgroundMode?: string;
@@ -243,11 +233,15 @@ export interface MobileConfig {
   descriptionSize?: string;
   descriptionAlignment?: string;
   
-  // Button placement properties
+  // Button properties
   buttonPlacement?: string;
   horizontalPadding?: number;
   buttonSize?: 'small' | 'medium' | 'large';
   buttonWidth?: number;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  buttonShape?: string;
+  buttonShadow?: boolean;
   buttonText?: string;
   
   // Layout properties

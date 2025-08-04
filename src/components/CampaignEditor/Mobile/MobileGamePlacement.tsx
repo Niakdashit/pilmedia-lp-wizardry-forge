@@ -109,7 +109,7 @@ const MobileGamePlacement: React.FC<MobileGamePlacementProps> = ({
 
       {/* Template personnalisé mobile */}
       <div>
-        <ImageUpload label="Template mobile personnalisé (optionnel)" value={mobileConfig.customTemplate || ''} onChange={value => updateMobileConfig('customTemplate', value)} />
+        <ImageUpload label="Template mobile personnalisé (optionnel)" value={mobileConfig.customTemplate} onChange={value => updateMobileConfig('customTemplate', value)} />
         <p className="text-xs text-gray-500 mt-2">
           Template spécifique pour mobile, superposé au jeu (comme pour le jackpot).
         </p>

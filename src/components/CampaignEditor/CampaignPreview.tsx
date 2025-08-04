@@ -20,13 +20,13 @@ const CampaignPreview: React.FC<CampaignPreviewProps> = ({ campaign, previewDevi
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setPreviewDevice('desktop')}
-              className={`px-3 py-1 text-sm rounded ${previewDevice === 'desktop' ? 'bg-brand-gradient text-white' : 'bg-white text-gray-600 border'}`}
+              className={`px-3 py-1 text-sm rounded ${previewDevice === 'desktop' ? 'bg-[#841b60] text-white' : 'bg-white text-gray-600 border'}`}
             >
               Desktop
             </button>
             <button
               onClick={() => setPreviewDevice('tablet')}
-              className={`px-3 py-1 text-sm rounded ${previewDevice === 'tablet' ? 'bg-brand-gradient text-white' : 'bg-white text-gray-600 border'}`}
+              className={`px-3 py-1 text-sm rounded ${previewDevice === 'tablet' ? 'bg-[#841b60] text-white' : 'bg-white text-gray-600 border'}`}
             >
               Tablet
             </button>
