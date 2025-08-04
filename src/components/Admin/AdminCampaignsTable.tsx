@@ -29,7 +29,7 @@ const AdminCampaignsTable: React.FC<AdminCampaignsTableProps> = ({ campaigns }) 
           <h3 className="text-lg font-semibold text-gray-900">Campagnes Récentes</h3>
           <Link
             to="/admin/campaigns"
-            className="inline-flex items-center px-4 py-2 bg-[#841b60] text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand-gradient text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors"
           >
             Voir tout
           </Link>

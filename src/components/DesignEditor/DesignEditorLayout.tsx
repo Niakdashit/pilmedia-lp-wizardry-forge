@@ -318,7 +318,7 @@ const DesignEditorLayout: React.FC = () => {
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className="absolute top-4 right-4 z-50 px-4 py-2 bg-[#841b60] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
+              className="absolute top-4 right-4 z-50 px-4 py-2 bg-brand-gradient text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
             >
               Mode édition
             </button>

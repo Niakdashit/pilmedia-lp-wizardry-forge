@@ -47,6 +47,7 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'brand-gradient': 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)',
       },
       boxShadow: {
         'glass': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
