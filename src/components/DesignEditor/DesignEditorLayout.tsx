@@ -197,7 +197,7 @@ const DesignEditorLayout: React.FC = () => {
 
   // Synchronisation avec le store et historique
   useEffect(() => {
-    setCampaign(campaignData);
+    setCampaign(campaignData as any);
     debouncedAddToHistory(campaignData);
   }, [campaignData, setCampaign, debouncedAddToHistory]);
 
