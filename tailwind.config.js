@@ -9,13 +9,13 @@ export default {
     extend: {
       borderRadius: {
         'none': '0',
-        'sm': '0.125rem',    // 2px - pour les petits éléments
-        DEFAULT: '0.25rem',  // 4px - par défaut réduit
-        'md': '0.375rem',    // 6px - pour les cartes et boutons
-        'lg': '0.5rem',      // 8px - pour les grandes cartes
-        'xl': '0.75rem',     // 12px - pour les conteneurs principaux
-        '2xl': '1rem',       // 16px - pour les grands conteneurs
-        '3xl': '1.5rem',     // 24px - maximum pour les éléments spéciaux
+        'sm': '0.125rem',    // 2px - minimum
+        DEFAULT: '0.125rem', // 2px - par défaut très réduit
+        'md': '0.125rem',    // 2px - uniformisation 
+        'lg': '0.25rem',     // 4px - pour les grandes cartes
+        'xl': '0.25rem',     // 4px - pour les conteneurs principaux  
+        '2xl': '0.375rem',   // 6px - pour les grands conteneurs
+        '3xl': '0.5rem',     // 8px - maximum réduit
         'full': '9999px',    // pour les cercles
       },
       fontFamily: {

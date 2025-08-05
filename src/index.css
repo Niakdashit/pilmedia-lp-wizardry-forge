@@ -136,17 +136,29 @@
     --tw-ring-color: hsl(var(--brand-primary));
   }
 
-  /* Harmonisation des border-radius - forcer les valeurs réduites */
+  /* Harmonisation des border-radius - valeurs très réduites */
+  .rounded {
+    border-radius: 0.125rem !important; /* 2px par défaut */
+  }
+  
+  .rounded-md {
+    border-radius: 0.125rem !important; /* 2px uniformisé */
+  }
+  
+  .rounded-lg {
+    border-radius: 0.25rem !important; /* 4px réduit */
+  }
+  
   .rounded-xl {
-    border-radius: 0.5rem !important; /* 8px au lieu de 12px */
+    border-radius: 0.25rem !important; /* 4px réduit */
   }
   
   .rounded-2xl {
-    border-radius: 0.75rem !important; /* 12px au lieu de 16px */
+    border-radius: 0.375rem !important; /* 6px réduit */
   }
   
   .rounded-3xl {
-    border-radius: 1rem !important; /* 16px au lieu de 24px */
+    border-radius: 0.5rem !important; /* 8px maximum */
   }
 }
 
