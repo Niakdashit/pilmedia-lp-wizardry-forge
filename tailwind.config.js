@@ -53,11 +53,16 @@ export default {
           900: '#0c4a6e',
           950: '#082f49',
         },
-        brand: '#841b60',
-        'brand-dark': '#6d184d'
+        brand: {
+          DEFAULT: 'hsl(328 75% 31%)',
+          secondary: 'hsl(328 75% 40%)',
+          gradient: 'var(--brand-gradient)',
+        },
+        'brand-dark': 'hsl(328 75% 25%)'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'brand-gradient': 'var(--brand-gradient)',
       },
       boxShadow: {
         'glass': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
