@@ -37,7 +37,7 @@ const Data: React.FC = () => {
                 </select>
               </div>
               <div className="flex space-x-3">
-                <button className="flex-1 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
+                <button className="flex-1 px-4 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
                   Lancer le tirage
                 </button>
                 <button className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200">

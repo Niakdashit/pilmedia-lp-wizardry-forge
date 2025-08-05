@@ -17,7 +17,6 @@ import LayersPanel from './panels/LayersPanel';
 import ExportPanel from './panels/ExportPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
-import PositionPanel from './panels/PositionPanel';
 
 
 interface HybridSidebarProps {
@@ -34,10 +33,6 @@ interface HybridSidebarProps {
   onEffectsPanelChange?: (show: boolean) => void;
   showAnimationsPanel?: boolean;
   onAnimationsPanelChange?: (show: boolean) => void;
-  showPositionPanel?: boolean;
-  onPositionPanelChange?: (show: boolean) => void;
-  onForceElementsTab?: () => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
@@ -53,11 +48,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   showEffectsPanel = false,
   onEffectsPanelChange,
   showAnimationsPanel = false,
-  onAnimationsPanelChange,
-  showPositionPanel = false,
-  onPositionPanelChange,
-  onForceElementsTab,
-  canvasRef
+  onAnimationsPanelChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
@@ -68,30 +59,10 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       setActiveTab('effects');
     } else if (showAnimationsPanel) {
       setActiveTab('animations');
-    } else if (showPositionPanel) {
-      setActiveTab('position');
-    } else if (activeTab === 'effects' || activeTab === 'animations' || activeTab === 'position') {
+    } else if (activeTab === 'effects' || activeTab === 'animations') {
       setActiveTab('assets'); // Retourner aux éléments quand on ferme les panneaux spéciaux
     }
-  }, [showEffectsPanel, showAnimationsPanel, showPositionPanel, activeTab]);
-
-  // Gérer l'ouverture forcée de l'onglet Elements
-  React.useEffect(() => {
-    if (onForceElementsTab) {
-      // Créer un effet qui peut être déclenché depuis l'extérieur
-      const forceElementsTab = () => {
-        setActiveTab('assets');
-        setIsCollapsed(false); // S'assurer que la sidebar est ouverte
-        // Fermer tous les panneaux spéciaux
-        onEffectsPanelChange?.(false);
-        onAnimationsPanelChange?.(false);
-        onPositionPanelChange?.(false);
-      };
-      
-      // Exposer la fonction globalement pour qu'elle puisse être appelée
-      (window as any).forceElementsTab = forceElementsTab;
-    }
-  }, [onForceElementsTab, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange]);
+  }, [showEffectsPanel, showAnimationsPanel, activeTab]);
 
   const tabs = [
     { 
@@ -134,9 +105,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     if (showAnimationsPanel && tabId !== 'animations') {
       onAnimationsPanelChange?.(false);
     }
-    if (showPositionPanel && tabId !== 'position') {
-      onPositionPanelChange?.(false);
-    }
     
     if (activeTab === tabId) {
       setActiveTab(null); // Close if clicking on active tab
@@ -167,18 +135,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             }}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
-          />
-        );
-      case 'position':
-        return (
-          <PositionPanel 
-            onBack={() => {
-              onPositionPanelChange?.(false);
-              setActiveTab('assets');
-            }}
-            selectedElement={selectedElement}
-            onElementUpdate={onElementUpdate}
-            canvasRef={canvasRef}
           />
         );
       case 'assets':
@@ -293,7 +249,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
               {activeTab === 'effects' ? 'Effets de texte' : 
                activeTab === 'animations' ? 'Animations de texte' : 
-               activeTab === 'position' ? 'Position' : 
                tabs.find(tab => tab.id === activeTab)?.label}
             </h2>
           </div>

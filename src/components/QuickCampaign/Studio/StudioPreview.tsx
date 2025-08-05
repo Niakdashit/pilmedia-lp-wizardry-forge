@@ -149,7 +149,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
       console.log('Transferring Studio data:', { fullCampaignData, editorConfig });
       
       // Naviguer vers l'éditeur avec rechargement forcé
-      window.location.href = '/design-editor';
+      window.location.href = '/campaign-editor';
     } catch (error) {
       console.error('Erreur lors du transfert vers l\'éditeur:', error);
     }

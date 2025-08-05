@@ -161,7 +161,7 @@ const Dice: React.FC<DiceProps> = ({
           <button
             onClick={rollDice}
             disabled={isRolling}
-            className="px-8 py-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-xl hover:bg-[#6d164f] transition-colors duration-200 disabled:opacity-50"
+            className="px-8 py-3 bg-[#841b60] text-white font-medium rounded-xl hover:bg-[#6d164f] transition-colors duration-200 disabled:opacity-50"
           >
             {isRolling ? 'Lancement...' : 'Lancer les dés'}
           </button>

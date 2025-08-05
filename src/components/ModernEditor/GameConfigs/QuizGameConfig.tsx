@@ -158,7 +158,7 @@ const QuizGameConfig: React.FC<QuizGameConfigProps> = ({
           </label>
           <button
             onClick={addQuestion}
-            className="flex items-center space-x-1 px-3 py-1 text-sm bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+            className="flex items-center space-x-1 px-3 py-1 text-sm bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Ajouter</span>

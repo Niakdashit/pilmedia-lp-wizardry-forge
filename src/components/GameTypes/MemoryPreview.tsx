@@ -75,7 +75,7 @@ const MemoryPreview: React.FC<MemoryPreviewProps> = ({ config = {} }) => {
                   ? 'bg-green-200 border-green-400' 
                   : isFlipped 
                   ? 'bg-white border-[#841b60]' 
-                  : 'bg-gradient-to-br from-[#841b60] to-[#b41b60] border-[#841b60]'
+                  : 'bg-[#841b60] border-[#841b60]'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

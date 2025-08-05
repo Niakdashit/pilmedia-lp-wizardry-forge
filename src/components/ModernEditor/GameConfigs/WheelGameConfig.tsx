@@ -185,7 +185,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
           <div className="flex space-x-2">
             <button
               onClick={addSegmentPair}
-              className="px-3 py-1 text-sm bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+              className="px-3 py-1 text-sm bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
             >
               + Ajouter une paire
             </button>

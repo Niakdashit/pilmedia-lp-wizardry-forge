@@ -209,7 +209,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     minWidth: '50px',
     minHeight: '20px',
     padding: '8px',
-    border: isSelected && !isEditing ? '2px solid #841b60' : '2px solid transparent',
+    border: isSelected && !isEditing ? '2px solid #3b82f6' : '2px solid transparent',
     borderRadius: '4px',
     cursor: isEditing ? 'text' : (isResizing ? 'resize' : 'move'),
     display: 'inline-block',
@@ -284,49 +284,49 @@ const EditableText: React.FC<EditableTextProps> = ({
             <>
               {/* Coin supérieur gauche */}
               <div
-                className="absolute -top-1 -left-1 w-3 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full cursor-nw-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm z-10"
+                className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize hover:bg-blue-600 border border-white shadow-sm z-10"
                 onMouseDown={(e) => handleResize(e, 'top-left')}
               />
               
               {/* Coin supérieur droit */}
               <div
-                className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full cursor-ne-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm z-10"
+                className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize hover:bg-blue-600 border border-white shadow-sm z-10"
                 onMouseDown={(e) => handleResize(e, 'top-right')}
               />
               
               {/* Coin inférieur gauche */}
               <div
-                className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full cursor-sw-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm z-10"
+                className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize hover:bg-blue-600 border border-white shadow-sm z-10"
                 onMouseDown={(e) => handleResize(e, 'bottom-left')}
               />
               
               {/* Coin inférieur droit */}
               <div
-                className="absolute -bottom-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full cursor-se-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm z-10"
+                className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize hover:bg-blue-600 border border-white shadow-sm z-10"
                 onMouseDown={(e) => handleResize(e, 'bottom-right')}
               />
               
               {/* Poignée droite */}
               <div
-                className="absolute top-1/2 -right-1 w-3 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded cursor-e-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm transform -translate-y-1/2 z-10"
+                className="absolute top-1/2 -right-1 w-3 h-6 bg-blue-500 rounded cursor-e-resize hover:bg-blue-600 border border-white shadow-sm transform -translate-y-1/2 z-10"
                 onMouseDown={(e) => handleResize(e, 'right')}
               />
               
               {/* Poignée bas */}
               <div
-                className="absolute -bottom-1 left-1/2 w-6 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded cursor-s-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm transform -translate-x-1/2 z-10"
+                className="absolute -bottom-1 left-1/2 w-6 h-3 bg-blue-500 rounded cursor-s-resize hover:bg-blue-600 border border-white shadow-sm transform -translate-x-1/2 z-10"
                 onMouseDown={(e) => handleResize(e, 'bottom')}
               />
 
               {/* Poignée gauche */}
               <div
-                className="absolute top-1/2 -left-1 w-3 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded cursor-w-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm transform -translate-y-1/2 z-10"
+                className="absolute top-1/2 -left-1 w-3 h-6 bg-blue-500 rounded cursor-w-resize hover:bg-blue-600 border border-white shadow-sm transform -translate-y-1/2 z-10"
                 onMouseDown={(e) => handleResize(e, 'left')}
               />
               
               {/* Poignée haut */}
               <div
-                className="absolute -top-1 left-1/2 w-6 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded cursor-n-resize hover:from-purple-700 hover:to-pink-700 border border-white shadow-sm transform -translate-x-1/2 z-10"
+                className="absolute -top-1 left-1/2 w-6 h-3 bg-blue-500 rounded cursor-n-resize hover:bg-blue-600 border border-white shadow-sm transform -translate-x-1/2 z-10"
                 onMouseDown={(e) => handleResize(e, 'top')}
               />
             </>

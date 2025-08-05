@@ -43,7 +43,7 @@ const CampaignEditorHeader: React.FC<CampaignEditorHeaderProps> = ({
         
         <button
           onClick={() => onSave(false)}
-          className="inline-flex items-center px-3 py-1.5 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200"
+          className="inline-flex items-center px-3 py-1.5 bg-[#841b60] text-white text-sm font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200"
         >
           Publier
           <ChevronRight className="w-4 h-4 ml-1.5" />

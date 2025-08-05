@@ -4,7 +4,6 @@ import type { DeviceType } from '../../../utils/deviceDimensions';
 interface TouchOptimizationConfig {
   selectedDevice: DeviceType;
   containerRef?: React.RefObject<HTMLElement>;
-  zoom?: number;
 }
 
 interface TouchCalibration {
@@ -19,7 +18,7 @@ interface TouchCalibration {
  * Hook spécialisé pour l'optimisation des interactions tactiles sur mobile/tablette
  * Fournit des compensations et ajustements pour améliorer la précision du drag & drop
  */
-export const useTouchOptimization = ({ selectedDevice, containerRef, zoom = 1 }: TouchOptimizationConfig) => {
+export const useTouchOptimization = ({ selectedDevice, containerRef }: TouchOptimizationConfig) => {
   
   // Configuration des calibrages tactiles par appareil
   const touchCalibration = useMemo((): TouchCalibration => {
@@ -82,16 +81,6 @@ export const useTouchOptimization = ({ selectedDevice, containerRef, zoom = 1 }:
     return zoomScale;
   }, []);
 
-  // Calculer les paddings adaptatifs selon l'appareil et le zoom
-  const getAdaptivePadding = useCallback(() => {
-    if (selectedDevice === 'tablet') {
-      return zoom <= 0.7 ? { top: 40, left: 20 } : { top: 60, left: 32 };
-    } else if (selectedDevice === 'mobile') {
-      return zoom <= 0.7 ? { top: 24, left: 16 } : { top: 40, left: 24 };
-    }
-    return { top: zoom <= 0.7 ? 8 : 32, left: zoom <= 0.7 ? 8 : 32 };
-  }, [selectedDevice, zoom]);
-
   // Convertir les coordonnées avec compensation tactile
   const convertToCanvasCoordinates = useCallback((
     clientX: number,
@@ -104,11 +93,10 @@ export const useTouchOptimization = ({ selectedDevice, containerRef, zoom = 1 }:
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const zoomScale = calculateZoomScale(containerRef.current);
-    const adaptivePadding = getAdaptivePadding();
 
-    // Position de base avec compensation du padding adaptatif
-    let canvasX = (clientX - containerRect.left - adaptivePadding.left) / zoomScale;
-    let canvasY = (clientY - containerRect.top - adaptivePadding.top) / zoomScale;
+    // Position de base
+    let canvasX = (clientX - containerRect.left) / zoomScale;
+    let canvasY = (clientY - containerRect.top) / zoomScale;
 
     // 📱 Appliquer la compensation tactile si nécessaire
     if (isTouch && selectedDevice !== 'desktop') {
@@ -120,7 +108,7 @@ export const useTouchOptimization = ({ selectedDevice, containerRef, zoom = 1 }:
     }
 
     return { x: canvasX, y: canvasY };
-  }, [containerRef, selectedDevice, touchCalibration, calculateZoomScale, getAdaptivePadding]);
+  }, [containerRef, selectedDevice, touchCalibration, calculateZoomScale]);
 
   // Ajuster les dimensions pour les interactions tactiles
   const adjustDimensionsForTouch = useCallback((

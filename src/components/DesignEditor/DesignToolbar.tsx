@@ -6,22 +6,13 @@ interface DesignToolbarProps {
   onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onPreviewToggle?: () => void;
   isPreviewMode?: boolean;
-  // Props pour undo/redo
-  onUndo?: () => void;
-  onRedo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   selectedDevice,
   onDeviceChange,
   onPreviewToggle,
-  isPreviewMode = false,
-  onUndo,
-  onRedo,
-  canUndo = false,
-  canRedo = false
+  isPreviewMode = false
 }) => {
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -29,28 +20,10 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       <div className="flex items-center space-x-6">
         <h1 className="text-xl font-bold text-gray-900 font-inter">Design Editor</h1>
         <div className="flex items-center space-x-1">
-          <button 
-            onClick={onUndo}
-            disabled={!canUndo}
-            className={`p-2 rounded-lg transition-all duration-200 ${
-              canUndo 
-                ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
-                : 'text-gray-400 cursor-not-allowed'
-            }`}
-            title={`Annuler (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+Z)`}
-          >
+          <button className="p-2 hover:bg-[hsl(var(--sidebar-hover))] rounded-lg transition-all duration-200 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]">
             <Undo className="w-4 h-4" />
           </button>
-          <button 
-            onClick={onRedo}
-            disabled={!canRedo}
-            className={`p-2 rounded-lg transition-all duration-200 ${
-              canRedo 
-                ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
-                : 'text-gray-400 cursor-not-allowed'
-            }`}
-            title={`Rétablir (${navigator.platform.includes('Mac') ? 'Cmd+Shift' : 'Ctrl+Y'}+Z)`}
-          >
+          <button className="p-2 hover:bg-[hsl(var(--sidebar-hover))] rounded-lg transition-all duration-200 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]">
             <Redo className="w-4 h-4" />
           </button>
         </div>
@@ -99,7 +72,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           onClick={onPreviewToggle}
           className={`flex items-center px-3 py-2 text-sm border rounded-lg transition-colors ${
             isPreviewMode 
-              ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]' 
+              ? 'bg-[#841b60] text-white border-[#841b60]' 
               : 'border-gray-300 hover:bg-gray-50'
           }`}
         >

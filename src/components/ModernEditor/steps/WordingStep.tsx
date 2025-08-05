@@ -125,7 +125,7 @@ const WordingStep: React.FC<WordingStepProps> = ({
                   </p>
                 )}
                 {activeScreen !== 'game' && (
-                  <button className="px-6 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg font-medium">
+                  <button className="px-6 py-2 bg-[#841b60] text-white rounded-lg font-medium">
                     {currentScreen.buttonText || 'Bouton'}
                   </button>
                 )}

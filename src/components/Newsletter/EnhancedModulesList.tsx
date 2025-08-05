@@ -200,7 +200,7 @@ export const EnhancedModulesList: React.FC = () => {
               onClick={() => setSelectedCategory(category.id)}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                 selectedCategory === category.id
-                  ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white shadow-md'
+                  ? 'bg-[#841b60] text-white shadow-md'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
