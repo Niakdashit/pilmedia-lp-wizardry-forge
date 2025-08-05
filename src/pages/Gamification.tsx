@@ -71,14 +71,14 @@ const Gamification: React.FC = () => {
         actions={
           <div className="flex gap-x-4">
             <Link
-              to="/campaign-editor"
+              to="/design-editor"
               className="inline-flex items-center px-6 py-2.5 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-base"
             >
               <Plus className="w-5 h-5 mr-2" />
               Éditeur de Jeux
             </Link>
             <Link
-              to="/campaign-editor"
+              to="/design-editor"
               className="inline-flex items-center px-6 py-2.5 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-base"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -112,7 +112,7 @@ const Gamification: React.FC = () => {
                     <h3 className="font-bold text-gray-800 mb-1">{game.name}</h3>
                     <p className="text-sm text-gray-600 mb-4">{game.description}</p>
                     <Link
-                      to="/campaign-editor"
+                      to="/design-editor"
                       className="w-full px-4 py-2 bg-gray-100 text-gray-800 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200 block text-center"
                     >
                       Créer avec l'éditeur

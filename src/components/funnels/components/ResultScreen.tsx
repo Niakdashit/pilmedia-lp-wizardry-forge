@@ -88,7 +88,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
       localStorage.setItem('campaignPreview', JSON.stringify(campaign));
       localStorage.setItem('editorConfig', JSON.stringify(editorConfig));
       
-      navigate('/campaign-editor');
+      navigate('/design-editor');
     } catch (error) {
       console.error('Erreur lors du transfert vers l\'éditeur:', error);
     }

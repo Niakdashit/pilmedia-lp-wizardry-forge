@@ -99,7 +99,7 @@ const Step4Finalization: React.FC = () => {
       console.log('Editor config created:', editorConfig);
       
       // Navigate to campaign editor
-      navigate('/campaign-editor');
+      navigate('/design-editor');
     } catch (error) {
       console.error('Erreur lors du transfert vers l\'éditeur:', error);
     }

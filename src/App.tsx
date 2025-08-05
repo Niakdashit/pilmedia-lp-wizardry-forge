@@ -64,7 +64,7 @@ function App() {
               </EditorOnlyLayout>
             } />
             
-            <Route path="/campaign-editor" element={<GameEditor />} />
+            <Route path="/design-editor" element={<GameEditor />} />
             <Route path="/design-editor" element={<DesignEditor />} />
             <Route path="/live-preview" element={<LivePreview />} />
             
