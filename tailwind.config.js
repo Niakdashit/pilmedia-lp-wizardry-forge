@@ -7,17 +7,6 @@ export default {
   ],
   theme: {
     extend: {
-      borderRadius: {
-        'none': '0',
-        'sm': '0.125rem',    // 2px - pour les petits éléments
-        DEFAULT: '0.25rem',  // 4px - par défaut réduit
-        'md': '0.375rem',    // 6px - pour les cartes et boutons
-        'lg': '0.5rem',      // 8px - pour les grandes cartes
-        'xl': '0.75rem',     // 12px - pour les conteneurs principaux
-        '2xl': '1rem',       // 16px - pour les grands conteneurs
-        '3xl': '1.5rem',     // 24px - maximum pour les éléments spéciaux
-        'full': '9999px',    // pour les cercles
-      },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         'brand': ['Titan One', 'Impact', 'Bebas Neue', 'Oswald', 'Anton', 'sans-serif'],
@@ -53,16 +42,11 @@ export default {
           900: '#0c4a6e',
           950: '#082f49',
         },
-        brand: {
-          DEFAULT: 'hsl(328 75% 31%)',
-          secondary: 'hsl(328 75% 40%)',
-          gradient: 'var(--brand-gradient)',
-        },
-        'brand-dark': 'hsl(328 75% 25%)'
+        brand: '#841b60',
+        'brand-dark': '#6d184d'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'brand-gradient': 'var(--brand-gradient)',
       },
       boxShadow: {
         'glass': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',

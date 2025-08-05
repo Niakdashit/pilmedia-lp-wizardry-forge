@@ -7,8 +7,8 @@ export const useBrandTheme = () => {
   
   return {
     // Couleurs de marque
-    primaryColor: context.theme?.customColors.primary || 'hsl(328 75% 31%)',
-    secondaryColor: context.theme?.customColors.secondary || 'hsl(328 75% 40%)',
+    primaryColor: context.theme?.customColors.primary || '#841b60',
+    secondaryColor: context.theme?.customColors.secondary || '#dc2626',
     accentColor: context.theme?.customColors.accent || '#ffffff',
     textColor: context.theme?.customColors.text || '#ffffff',
     
@@ -27,28 +27,28 @@ export const useBrandTheme = () => {
     
     // Utilitaires pour les styles inline
     getButtonStyle: (variant: 'primary' | 'secondary' = 'primary') => ({
-      background: variant === 'primary' 
-        ? context.theme?.customColors.primary ? `linear-gradient(135deg, ${context.theme.customColors.primary}, ${context.theme.customColors.secondary || '#b41b60'})` : 'linear-gradient(135deg, hsl(328 75% 31%), hsl(328 75% 40%))'
-        : context.theme?.customColors.secondary || 'hsl(328 75% 40%)',
+      backgroundColor: variant === 'primary' 
+        ? context.theme?.customColors.primary || '#841b60'
+        : context.theme?.customColors.secondary || '#dc2626',
       color: context.theme?.customColors.text || '#ffffff',
-      borderColor: context.theme?.customColors.primary || 'hsl(328 75% 31%)'
+      borderColor: context.theme?.customColors.primary || '#841b60'
     }),
     
     getBorderStyle: () => ({
-      borderColor: context.theme?.customColors.primary || 'hsl(328 75% 31%)'
+      borderColor: context.theme?.customColors.primary || '#841b60'
     }),
     
     getTextStyle: (variant: 'primary' | 'secondary' = 'primary') => ({
       color: variant === 'primary'
-        ? context.theme?.customColors.primary || 'hsl(328 75% 31%)'
-        : context.theme?.customColors.secondary || 'hsl(328 75% 40%)'
+        ? context.theme?.customColors.primary || '#841b60'
+        : context.theme?.customColors.secondary || '#dc2626'
     }),
     
-    // Classes Tailwind dynamiques avec dégradé
-    primaryBg: context.theme?.customColors.primary ? `bg-[${context.theme.customColors.primary}]` : 'bg-brand-gradient',
-    primaryText: context.theme?.customColors.primary ? `text-[${context.theme.customColors.primary}]` : 'text-brand',
-    primaryBorder: context.theme?.customColors.primary ? `border-[${context.theme.customColors.primary}]` : 'border-brand',
-    secondaryBg: context.theme?.customColors.secondary ? `bg-[${context.theme.customColors.secondary}]` : 'bg-brand-secondary',
-    secondaryText: context.theme?.customColors.secondary ? `text-[${context.theme.customColors.secondary}]` : 'text-brand-secondary'
+    // Classes Tailwind dynamiques
+    primaryBg: `bg-[${context.theme?.customColors.primary || '#841b60'}]`,
+    primaryText: `text-[${context.theme?.customColors.primary || '#841b60'}]`,
+    primaryBorder: `border-[${context.theme?.customColors.primary || '#841b60'}]`,
+    secondaryBg: `bg-[${context.theme?.customColors.secondary || '#dc2626'}]`,
+    secondaryText: `text-[${context.theme?.customColors.secondary || '#dc2626'}]`
   };
 };

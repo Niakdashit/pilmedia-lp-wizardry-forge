@@ -3,7 +3,7 @@ import React from 'react';
 import CampaignGeneral from './CampaignGeneral';
 import CampaignContent from './CampaignContent';
 import CampaignScreens from './CampaignScreens';
-// import CampaignMobile from './CampaignMobile';
+import CampaignMobile from './CampaignMobile';
 import CampaignSettings from './CampaignSettings';
 import TabJackpot from '../configurators/TabJackpot';
 
@@ -30,7 +30,7 @@ const CampaignEditorContent: React.FC<CampaignEditorContentProps> = ({
         return <CampaignScreens campaign={campaign} setCampaign={setCampaign} />;
         
       case 'mobile':
-        return <div>Configuration mobile temporairement indisponible</div>;
+        return <CampaignMobile campaign={campaign} setCampaign={setCampaign} />;
 
       case 'settings':
         return (

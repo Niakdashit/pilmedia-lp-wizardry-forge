@@ -37,10 +37,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   // Récupérer les segments depuis la configuration de la campagne avec priorité aux couleurs extraites
   const segments = campaign.gameConfig?.wheel?.segments || 
                   campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: campaign.design?.customColors?.primary || 'hsl(328 75% 31%)' },
-    { id: '2', label: 'Prix 2', color: campaign.design?.customColors?.secondary || 'hsl(328 75% 40%)' },
-    { id: '3', label: 'Prix 3', color: campaign.design?.customColors?.primary || 'hsl(328 75% 31%)' },
-    { id: '4', label: 'Dommage', color: campaign.design?.customColors?.secondary || 'hsl(328 75% 40%)' }
+    { id: '1', label: 'Prix 1', color: campaign.design?.customColors?.primary || '#ff6b6b' },
+    { id: '2', label: 'Prix 2', color: campaign.design?.customColors?.secondary || '#4ecdc4' },
+    { id: '3', label: 'Prix 3', color: campaign.design?.customColors?.primary || '#45b7d1' },
+    { id: '4', label: 'Dommage', color: campaign.design?.customColors?.secondary || '#feca57' }
   ];
 
 
@@ -69,8 +69,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   // Couleurs de marque unifiées - priorité aux customColors de la campagne
   const brandColors = {
-    primary: campaign.design?.customColors?.primary || extractedColors[0] || 'hsl(328 75% 31%)',
-    secondary: campaign.design?.customColors?.secondary || extractedColors[1] || 'hsl(328 75% 40%)',
+    primary: campaign.design?.customColors?.primary || extractedColors[0] || '#841b60',
+    secondary: campaign.design?.customColors?.secondary || extractedColors[1] || '#4ecdc4',
     accent: campaign.design?.customColors?.accent || extractedColors[2] || '#45b7d1'
   };
 

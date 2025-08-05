@@ -23,12 +23,12 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
   onShowParticipationModal,
   scale = 1.7 // Échelle par défaut à 1.7x
 }) => {
-  const brandColor = config.brandAssets?.primaryColor || 'hsl(328 75% 31%)';
+  const brandColor = config.brandAssets?.primaryColor || '#4ECDC4';
 
   // Utiliser les couleurs extraites de l'image si disponibles
   const brandColors = config.brandAssets ? {
     primary: brandColor,
-    secondary: config.brandAssets.secondaryColor || 'hsl(328 75% 40%)',
+    secondary: config.brandAssets.secondaryColor || '#F7B731',
     accent: config.brandAssets.accentColor || '#E74C3C'
   } : undefined;
 
@@ -93,7 +93,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         onShowParticipationModal={onShowParticipationModal}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
-          color: brandColors?.primary || "hsl(328 75% 31%)",
+          color: brandColors?.primary || "#8E44AD",
           textColor: "#ffffff"
         }}
       />
