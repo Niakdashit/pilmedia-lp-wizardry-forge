@@ -68,9 +68,9 @@ const Sidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-xl transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
+                className={`flex items-center px-3 py-2 rounded transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
               >
-                <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>{item.icon}</div>
+                <div className={`flex items-center justify-center w-8 h-8 rounded ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>{item.icon}</div>
                 {!sidebarCollapsed && <span className="ml-3 font-medium truncate">{item.name}</span>}
               </Link>
             );
@@ -82,9 +82,9 @@ const Sidebar: React.FC = () => {
       <div className="p-3 border-t border-gray-200/50">
         <Link
           to="/admin"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group mb-2"
+          className="flex items-center px-3 py-2 rounded text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group mb-2"
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
+          <div className="flex items-center justify-center w-8 h-8 rounded bg-white group-hover:bg-white">
             <Shield className="w-5 h-5" />
           </div>
           {!sidebarCollapsed && <span className="ml-3 font-medium">Interface Admin</span>}
@@ -92,9 +92,9 @@ const Sidebar: React.FC = () => {
         
         <Link
           to="/login"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
+          className="flex items-center px-3 py-2 rounded text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
+          <div className="flex items-center justify-center w-8 h-8 rounded bg-white group-hover:bg-white">
             <LogOut className="w-5 h-5" />
           </div>
           {!sidebarCollapsed && <span className="ml-3 font-medium">Déconnexion</span>}
