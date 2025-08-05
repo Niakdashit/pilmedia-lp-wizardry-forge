@@ -53,7 +53,7 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
         config,
         finalColors
       );
-      setSynchronizedConfig(updatedConfig as any);
+      setSynchronizedConfig(updatedConfig);
     } else {
       setSynchronizedConfig(config);
     }

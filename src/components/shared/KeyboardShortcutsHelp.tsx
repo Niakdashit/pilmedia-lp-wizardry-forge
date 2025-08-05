@@ -8,7 +8,7 @@ interface KeyboardShortcutsHelpProps {
 }
 
 const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ 
-  // shortcuts, - disponible via props mais pas utilisé dans cette implémentation 
+  shortcuts, 
   className = '' 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,9 +17,34 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const modifierKey = isMac ? 'Cmd' : 'Ctrl';
   
-  // Raccourcis par défaut sont définis directement dans groupedShortcuts ci-dessous
+  // Raccourcis par défaut si non fournis
+  const defaultShortcuts = {
+    [`${modifierKey}+S`]: 'Sauvegarder la campagne',
+    [`${modifierKey}+P`]: 'Prévisualiser la campagne',
+    [`${modifierKey}+Z`]: 'Annuler',
+    [`${modifierKey}+Y / ${modifierKey}+Shift+Z`]: 'Rétablir',
+    'Échap': 'Désélectionner tout',
+    'Suppr': 'Supprimer l\'élément sélectionné',
+    'G': 'Basculer la grille',
+    [`${modifierKey}+C`]: 'Copier l\'élément sélectionné',
+    [`${modifierKey}+V`]: 'Coller l\'élément',
+    [`${modifierKey}+A`]: 'Sélectionner tout (futur)',
+    [`${modifierKey}+D`]: 'Dupliquer l\'élément (futur)',
+    [`${modifierKey}+E`]: 'Exporter (futur)',
+    'F11': 'Mode plein écran (futur)',
+    'Espace': 'Mode main (futur)',
+    'V': 'Outil de sélection (futur)',
+    'T': 'Outil texte (futur)',
+    'R': 'Outil rectangle (futur)',
+    'O': 'Outil cercle (futur)',
+    'I': 'Outil image (futur)',
+    '+': 'Zoomer',
+    '-': 'Dézoomer',
+    '0': 'Zoom 100%',
+    '1': 'Ajuster à l\'écran'
+  };
   
-  // const displayShortcuts = shortcuts || defaultShortcuts;
+  const displayShortcuts = shortcuts || defaultShortcuts;
   
   // Fonction pour formater les raccourcis avec des icônes
   const formatShortcut = (shortcut: string) => {

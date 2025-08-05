@@ -23,7 +23,7 @@ export const synchronizeCampaignWithColors = (
     campaign.config.roulette = {
       ...campaign.config.roulette,
       // Ne pas écraser les couleurs de bordure si un style prédéfini est utilisé
-      ...((campaign.design as any)?.wheelBorderStyle === 'classic' && {
+      ...(campaign.design?.wheelBorderStyle === 'classic' && {
         borderColor: finalColors.primary,
         borderOutlineColor: finalColors.accent || finalColors.secondary,
       }),
@@ -40,9 +40,9 @@ export const synchronizeCampaignWithColors = (
   // Application forcée des couleurs au design
   campaign.design = {
     ...campaign.design,
-    customColors: finalColors,
-    ...(logoUrl && { centerLogo: logoUrl })
-  } as any;
+    centerLogo: logoUrl || campaign.design?.centerLogo,
+    customColors: finalColors
+  };
 
   // Mise à jour de la configuration du bouton
   campaign.buttonConfig = {

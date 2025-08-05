@@ -72,7 +72,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 
   // Si c'est une roue, utiliser le nouveau SmartWheel
   if (gameType === 'wheel') {
-    const segments = (synchronizedCampaign as any).gameConfig?.wheel?.segments || 
+    const segments = synchronizedCampaign.gameConfig?.wheel?.segments || 
                     synchronizedCampaign.config?.roulette?.segments || [
       { id: '1', label: 'Cadeau 1', color: finalColors.primary },
       { id: '2', label: 'Cadeau 2', color: finalColors.secondary },
@@ -95,7 +95,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             console.log('Segment gagné en preview:', segment);
           }}
           customButton={{
-            text: (synchronizedCampaign as any).gameConfig?.wheel?.buttonLabel || 'Faire tourner',
+            text: synchronizedCampaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner',
             color: finalColors.primary,
             textColor: '#ffffff'
           }}

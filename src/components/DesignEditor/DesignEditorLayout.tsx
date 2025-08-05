@@ -3,7 +3,6 @@ import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
-import MobileDesignEditor from './MobileDesignEditor';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
@@ -132,8 +131,7 @@ const DesignEditorLayout: React.FC = () => {
 
     return {
       id: 'wheel-design-preview',
-      name: 'Wheel Campaign',
-      type: 'wheel' as const,
+      type: 'wheel',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
@@ -198,7 +196,7 @@ const DesignEditorLayout: React.FC = () => {
 
   // Synchronisation avec le store et historique
   useEffect(() => {
-    setCampaign(campaignData as any);
+    setCampaign(campaignData);
     debouncedAddToHistory(campaignData);
   }, [campaignData, setCampaign, debouncedAddToHistory]);
 
@@ -290,36 +288,6 @@ const DesignEditorLayout: React.FC = () => {
     return getAdaptationSuggestions(canvasElements);
   }, [canvasElements, getAdaptationSuggestions]);
 
-  // Détection si on est sur mobile
-  const isMobile = selectedDevice === 'mobile' || window.innerWidth < 768;
-
-  // Rendu mobile spécifique
-  if (isMobile) {
-    return (
-      <MobileDesignEditor
-        canvasElements={canvasElements}
-        setCanvasElements={setCanvasElements}
-        canvasBackground={canvasBackground}
-        setCanvasBackground={setCanvasBackground}
-        selectedDevice={selectedDevice}
-        campaignConfig={campaignConfig}
-        setCampaignConfig={setCampaignConfig}
-        canvasZoom={canvasZoom}
-        selectedElement={selectedElement}
-        setSelectedElement={setSelectedElement}
-        handleElementUpdate={handleElementUpdate}
-        showEffectsInSidebar={showEffectsInSidebar}
-        setShowEffectsInSidebar={setShowEffectsInSidebar}
-        showAnimationsInSidebar={showAnimationsInSidebar}
-        setShowAnimationsInSidebar={setShowAnimationsInSidebar}
-        handleExtractedColorsChange={handleExtractedColorsChange}
-        campaignData={campaignData}
-        handleSave={handleSave}
-        showFunnel={showFunnel}
-        setShowFunnel={setShowFunnel}
-      />
-    );
-  }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">

@@ -241,12 +241,8 @@ export interface MobileConfig {
   buttonColor?: string;
   buttonTextColor?: string;
   buttonShape?: string;
-  buttonShadow?: 'none' | 'shadow-sm' | 'shadow-md' | 'shadow-lg' | boolean;
+  buttonShadow?: boolean;
   buttonText?: string;
-  buttonActionType?: 'submit' | 'link' | 'download';
-  buttonLink?: string;
-  buttonMargin?: number;
-  buttonHoverEffect?: boolean;
   
   // Layout properties
   textPosition?: string;
