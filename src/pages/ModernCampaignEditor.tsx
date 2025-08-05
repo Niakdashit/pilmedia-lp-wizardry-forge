@@ -6,22 +6,23 @@ import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
 import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
 
 const ModernCampaignEditor: React.FC = () => {
-  const {
-    campaign,
-    setCampaign,
-    activeTab,
-    setActiveTab,
-    showPreviewModal,
-    setShowPreviewModal,
-    previewDevice,
-    setPreviewDevice,
-    isLoading,
-    campaignType,
-    isNewCampaign,
-    handleSave,
-    previewKey,
-    isPreviewLoading
-  } = useModernCampaignEditor();
+  try {
+    const {
+      campaign,
+      setCampaign,
+      activeTab,
+      setActiveTab,
+      showPreviewModal,
+      setShowPreviewModal,
+      previewDevice,
+      setPreviewDevice,
+      isLoading,
+      campaignType,
+      isNewCampaign,
+      handleSave,
+      previewKey,
+      isPreviewLoading
+    } = useModernCampaignEditor();
 
     if (!campaign) {
       return (
@@ -63,6 +64,26 @@ const ModernCampaignEditor: React.FC = () => {
         )}
       </div>
     );
+  } catch (error) {
+    console.error('Error in ModernCampaignEditor:', error);
+      return (
+        <div className="w-full h-screen bg-red-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Erreur de l'éditeur</h1>
+            <p className="text-red-500 mb-4">L'éditeur moderne n'a pas pu se charger correctement.</p>
+            <pre className="text-xs text-red-400 bg-red-100 p-2 rounded mb-4">
+              {error instanceof Error ? error.message : 'Erreur inconnue'}
+            </pre>
+            <button 
+              onClick={() => window.location.href = '/campaigns'}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Retour aux campagnes
+            </button>
+          </div>
+        </div>
+      );
+  }
 };
 
 export default ModernCampaignEditor;

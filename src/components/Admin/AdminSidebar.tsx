@@ -69,7 +69,7 @@ const AdminSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
+                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 group ${isActive ? 'bg-[#841b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
               >
                 <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>
                   {item.icon}

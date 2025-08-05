@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { useEditorStore } from '../../../stores/editorStore';
+import { useEditorStore } from '@/stores/editorStore';
 
 interface UseKeyboardShortcutsProps {
   onSave?: () => void;
@@ -37,27 +37,14 @@ export const useKeyboardShortcuts = ({
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const { ctrlKey, metaKey, shiftKey, key, target } = event;
     
-    // Debug: Log all keyboard events
-    console.log('🎹 Keyboard event detected:', {
-      key: key,
-      ctrlKey,
-      metaKey,
-      shiftKey,
-      target: (target as Element)?.tagName,
-      contentEditable: (target as HTMLElement)?.contentEditable
-    });
-    
     // Detect macOS and prioritize correct modifier key
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const isModifierPressed = isMac ? metaKey : ctrlKey;
-    
-    console.log('🎹 Platform detection:', { isMac, isModifierPressed });
     
     // Don't trigger shortcuts when typing in inputs
     if ((target as Element)?.tagName === 'INPUT' || 
         (target as Element)?.tagName === 'TEXTAREA' ||
         (target as HTMLElement)?.contentEditable === 'true') {
-      console.log('🎹 Ignoring keyboard event - typing in input field');
       return;
     }
 
@@ -65,7 +52,6 @@ export const useKeyboardShortcuts = ({
       // Save
       case 's':
         if (isModifierPressed) {
-          console.log('🎹 Save shortcut triggered!');
           event.preventDefault();
           onSave?.();
         }
@@ -74,7 +60,6 @@ export const useKeyboardShortcuts = ({
       // Preview
       case 'p':
         if (isModifierPressed) {
-          console.log('🎹 Preview shortcut triggered!');
           event.preventDefault();
           onPreview?.();
         }
@@ -83,7 +68,6 @@ export const useKeyboardShortcuts = ({
       // Undo and Redo
       case 'z':
         if (isModifierPressed) {
-          console.log('🎹 Undo/Redo shortcut triggered!', { shiftKey });
           event.preventDefault();
           if (shiftKey) {
             onRedo?.(); // Ctrl+Shift+Z for redo
@@ -103,7 +87,6 @@ export const useKeyboardShortcuts = ({
 
       // Escape - Deselect all
       case 'escape':
-        console.log('🎹 Escape shortcut triggered!');
         event.preventDefault();
         handleDeselectAll();
         break;
@@ -299,12 +282,8 @@ export const useKeyboardShortcuts = ({
   ]);
 
   useEffect(() => {
-    console.log('🎹 Setting up keyboard shortcuts listener');
     document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      console.log('🎹 Removing keyboard shortcuts listener');
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
   // Détecter le système d'exploitation

@@ -115,7 +115,7 @@ const Memory: React.FC<MemoryProps> = ({ config = {}, onConfigChange, isPreview,
             className={`aspect-square rounded-lg cursor-pointer ${
               flipped.includes(index) || matched.includes(index)
                 ? 'bg-white'
-                : 'bg-gradient-to-br from-[#841b60] to-[#b41b60]'
+                : 'bg-[#841b60]'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

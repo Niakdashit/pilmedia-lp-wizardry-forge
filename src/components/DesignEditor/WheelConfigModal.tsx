@@ -6,11 +6,9 @@ interface WheelConfigModalProps {
   onClose: () => void;
   wheelBorderStyle: string;
   wheelBorderColor: string;
-  wheelBorderWidth: number;
   wheelScale: number;
   onBorderStyleChange: (style: string) => void;
   onBorderColorChange: (color: string) => void;
-  onBorderWidthChange: (width: number) => void;
   onScaleChange: (scale: number) => void;
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
 }
@@ -20,11 +18,9 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
   onClose,
   wheelBorderStyle,
   wheelBorderColor,
-  wheelBorderWidth,
   wheelScale,
   onBorderStyleChange,
   onBorderColorChange,
-  onBorderWidthChange,
   onScaleChange,
   selectedDevice
 }) => {
@@ -131,26 +127,6 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
                   placeholder="#841b60"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
                 />
-              </div>
-            </div>
-
-            {/* Largeur de la bordure */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Largeur de la bordure: {wheelBorderWidth}px
-              </label>
-              <input
-                type="range"
-                min="4"
-                max="32"
-                step="2"
-                value={wheelBorderWidth}
-                onChange={(e) => onBorderWidthChange(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>4px</span>
-                <span>32px</span>
               </div>
             </div>
 

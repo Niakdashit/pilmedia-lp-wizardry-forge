@@ -17,8 +17,6 @@ import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
-import { useMobileOptimization } from './hooks/useMobileOptimization';
-import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -37,11 +35,8 @@ export interface DesignCanvasProps {
   onElementUpdate?: (updates: any) => void;
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
-  onShowPositionPanel?: () => void;
-  onOpenElementsTab?: () => void;
 }
-
-const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
+const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   selectedDevice,
   elements,
   onElementsChange,
@@ -53,33 +48,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onSelectedElementChange,
   onElementUpdate: externalOnElementUpdate,
   onShowEffectsPanel,
-  onShowAnimationsPanel,
-  onShowPositionPanel,
-  onOpenElementsTab
-}, ref) => {
-
+  onShowAnimationsPanel
+}) => {
   const canvasRef = useRef<HTMLDivElement>(null);
-  
-  // Utiliser la référence externe si fournie, sinon utiliser la référence interne
-  const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showTouchDebug, setShowTouchDebug] = useState(false);
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-
-  // Optimisation mobile pour une expérience tactile parfaite
-  const {
-    isMobile,
-    isTablet,
-    deviceType
-  } = useMobileOptimization(activeCanvasRef, {
-    preventScrollBounce: true,
-    stabilizeViewport: true,
-    optimizeTouchEvents: true,
-    preventZoomGestures: true
-  });
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -136,7 +113,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       
       if (elementInDOM) {
         const rect = elementInDOM.getBoundingClientRect();
-        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement>).current?.getBoundingClientRect();
+        const canvasRect = canvasRef.current?.getBoundingClientRect();
         
         if (canvasRect) {
           // Position relative au canvas
@@ -195,7 +172,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
   const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
-    containerRef: activeCanvasRef,
+    containerRef: canvasRef,
     regionSize: 200,
     maxRegions: 50,
     updateThreshold: 16 // 60fps
@@ -203,7 +180,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // 🚀 Drag & drop ultra-fluide pour une expérience premium
   useUltraFluidDragDrop({
-    containerRef: activeCanvasRef,
+    containerRef: canvasRef,
     snapToGrid: showGridLines,
     gridSize: 20,
     enableInertia: true,
@@ -238,7 +215,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Hooks optimisés pour snapping (gardé pour compatibilité)
   const { applySnapping } = useSmartSnapping({
-    containerRef: activeCanvasRef,
+    containerRef: canvasRef,
     gridSize: 20,
     snapTolerance: 3 // Réduit pour plus de précision
   });
@@ -338,49 +315,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <MobileResponsiveLayout
-        selectedElement={elements.find(el => el.id === selectedElement)}
-        onElementUpdate={(updates) => {
-          if (selectedElement) {
-            handleElementUpdate(selectedElement, updates);
-          }
-        }}
-        onShowEffectsPanel={onShowEffectsPanel}
-        onShowAnimationsPanel={onShowAnimationsPanel}
-        onShowPositionPanel={onShowPositionPanel}
-        canvasRef={activeCanvasRef}
-        zoom={zoom}
-        className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
-      >
+  return <DndProvider backend={HTML5Backend}>
+      <div className="flex-1 bg-[hsl(var(--muted))] overflow-auto">
         {/* Canvas Toolbar - Only show when text element is selected */}
-        {selectedElementData && selectedElementData.type === 'text' && (
-          <div className={`z-10 ${
-            selectedDevice === 'desktop' 
-              ? 'absolute top-4 left-1/2 transform -translate-x-1/2' 
-              : 'flex justify-center py-2 px-4'
-          }`}>
+        {selectedElementData && selectedElementData.type === 'text' && <div className="flex justify-center mb-4 p-4">
             <CanvasToolbar 
               selectedElement={selectedElementData} 
               onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
-              onShowPositionPanel={onShowPositionPanel}
-              onOpenElementsTab={onOpenElementsTab}
-              canvasRef={activeCanvasRef}
             />
-          </div>
-        )}
+          </div>}
         
-        <div className="flex justify-center items-center h-full" style={{
-          padding: selectedDevice === 'tablet' 
-            ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
-            : selectedDevice === 'mobile'
-            ? (zoom <= 0.7 ? '24px 16px' : '40px 24px')
-            : (zoom <= 0.7 ? '8px' : '32px'),
-          transition: 'padding 0.2s ease-in-out',
-          minHeight: '100%'
+        <div className="flex justify-center items-center min-h-full" style={{
+          padding: zoom < 1 ? '20px' : '40px',
+          transition: 'padding 0.2s ease-in-out'
         }}>
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
@@ -392,7 +341,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             }}
           >
             <div 
-              ref={activeCanvasRef}
+              ref={canvasRef}
               className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
               style={{
                 width: `${canvasSize.width}px`,
@@ -410,17 +359,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             }}
           >
             {/* Canvas Background */}
-            <div 
-              className="absolute inset-0" 
-              style={{
-                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-              }}
-              onMouseDown={(e) => {
-                // Désélectionner l'élément quand on clique sur le background
-                e.stopPropagation();
-                setSelectedElement(null);
-              }}
-            >
+            <div className="absolute inset-0" style={{
+            background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+          }}>
               {/* Grid Overlay Optimisé */}
               <GridOverlay 
                 canvasSize={canvasSize}
@@ -499,8 +440,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={activeCanvasRef}
-                  zoom={zoom}
+                  containerRef={canvasRef}
                 />
               );
             })}
@@ -567,11 +507,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onClose={() => setShowBorderModal(false)}
           wheelBorderStyle={wheelConfig.borderStyle}
           wheelBorderColor={wheelConfig.borderColor}
-          wheelBorderWidth={wheelConfig.borderWidth}
           wheelScale={wheelConfig.scale}
           onBorderStyleChange={(style) => updateWheelConfig({ borderStyle: style })}
           onBorderColorChange={(color) => updateWheelConfig({ borderColor: color })}
-          onBorderWidthChange={(width) => updateWheelConfig({ borderWidth: width })}
           onScaleChange={(scale) => updateWheelConfig({ scale })}
           selectedDevice={selectedDevice}
         />
@@ -599,9 +537,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             visible={showAnimationPopup}
           />
         )}
-      </MobileResponsiveLayout>
-    </DndProvider>
-  );
+      </div>
+    </DndProvider>;
 });
 
 DesignCanvas.displayName = 'DesignCanvas';

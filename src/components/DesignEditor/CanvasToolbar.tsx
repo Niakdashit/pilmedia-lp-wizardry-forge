@@ -6,41 +6,29 @@ import {
   AlignLeft, 
   AlignCenter, 
   AlignRight,
-  AlignJustify,
-  ChevronDown,
   Type,
   Wand2,
   Play,
   Move3D
 } from 'lucide-react';
 import TextEffectsPanel from './panels/TextEffectsPanel';
-import PositionPanel from './panels/PositionPanel';
 
 interface CanvasToolbarProps {
   selectedElement: any;
   onElementUpdate: (updates: any) => void;
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
-  onShowPositionPanel?: () => void;
-  onOpenElementsTab?: () => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
 const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   selectedElement,
   onElementUpdate,
   onShowEffectsPanel,
-  onShowAnimationsPanel,
-  onShowPositionPanel,
-  onOpenElementsTab,
-  canvasRef
+  onShowAnimationsPanel
 }) => {
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
-  const [showAlignmentMenu, setShowAlignmentMenu] = useState(false);
-  const [showPositionPanel, setShowPositionPanel] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const effectsPanelRef = useRef<HTMLDivElement>(null);
-  const alignmentMenuRef = useRef<HTMLDivElement>(null);
 
   // Fermer le panneau quand on clique ailleurs (comme sur Canva)
   useEffect(() => {
@@ -52,14 +40,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           !effectsPanelRef.current.contains(event.target as Node)) {
         setShowEffectsPanel(false);
       }
-      // Fermer le menu d'alignement si on clique ailleurs
-      if (alignmentMenuRef.current && !alignmentMenuRef.current.contains(event.target as Node)) {
-        setShowAlignmentMenu(false);
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [showEffectsPanel]);
 
   if (!selectedElement || selectedElement.type !== 'text') {
@@ -67,92 +53,40 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   }
 
   const fontSizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 96];
-  
-  // Fonction pour obtenir la vraie taille de police actuelle
-  const getCurrentFontSize = () => {
-    // Priorité : fontSize direct > style.fontSize > défaut 16
-    const directFontSize = selectedElement.fontSize;
-    const styleFontSize = selectedElement.style?.fontSize;
-    
-    // Convertir en nombre si c'est une string (ex: "16px" -> 16)
-    let fontSize = directFontSize || styleFontSize || 16;
-    if (typeof fontSize === 'string') {
-      fontSize = parseInt(fontSize.replace('px', ''));
-    }
-    
-    return Number(fontSize) || 16;
-  };
-  
-  const currentFontSize = getCurrentFontSize();
-  
-  // Liste complète des polices disponibles
-  const fontFamilies = [
-    { value: 'Arial', label: 'Canva Sans' },
-    { value: 'Helvetica', label: 'Helvetica' },
-    { value: 'Times New Roman', label: 'Times New Roman' },
-    { value: 'Georgia', label: 'Georgia' },
-    { value: 'Verdana', label: 'Verdana' },
-    { value: 'Calibri', label: 'Calibri' },
-    { value: 'Roboto', label: 'Roboto' },
-    { value: 'Open Sans', label: 'Open Sans' },
-    { value: 'Lato', label: 'Lato' },
-    { value: 'Montserrat', label: 'Montserrat' },
-    { value: 'Poppins', label: 'Poppins' },
-    { value: 'Source Sans Pro', label: 'Source Sans Pro' },
-    { value: 'Oswald', label: 'Oswald' },
-    { value: 'Raleway', label: 'Raleway' },
-    { value: 'Ubuntu', label: 'Ubuntu' },
-    { value: 'Nunito', label: 'Nunito' },
-    { value: 'Playfair Display', label: 'Playfair Display' },
-    { value: 'Merriweather', label: 'Merriweather' },
-    { value: 'PT Sans', label: 'PT Sans' },
-    { value: 'Noto Sans', label: 'Noto Sans' }
-  ];
-
-  // Options d'alignement
-  const alignmentOptions = [
-    { value: 'left', label: 'Gauche', icon: AlignLeft },
-    { value: 'center', label: 'Centre', icon: AlignCenter },
-    { value: 'right', label: 'Droite', icon: AlignRight },
-    { value: 'justify', label: 'Justifié', icon: AlignJustify }
-  ];
-
-  const currentAlignment = selectedElement.textAlign || 'left';
-  const currentAlignmentOption = alignmentOptions.find(opt => opt.value === currentAlignment) || alignmentOptions[0];
-  const CurrentAlignIcon = currentAlignmentOption.icon;
 
   return (
     <div className="relative">
       <div ref={toolbarRef} className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-1 mb-4">
-      {/* Font Family - Button to open Elements tab */}
-      <button 
-        onClick={() => {
-          if (onOpenElementsTab) {
-            onOpenElementsTab();
-          }
-        }}
-        className="bg-gray-700 text-white px-3 py-1 rounded text-sm border-none outline-none min-w-[120px] focus:bg-gray-600 transition-colors duration-150 hover:bg-gray-600 flex items-center justify-between whitespace-nowrap"
-        title="Changer la police - Ouvre l'onglet Éléments"
+      {/* Font Family */}
+      <select 
+        value={selectedElement.fontFamily || 'Arial'}
+        onChange={(e) => onElementUpdate({ fontFamily: e.target.value })}
+        className="bg-gray-700 text-white px-2 py-1 rounded text-sm border-none outline-none"
       >
-        <span className="truncate">{fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Arial'))?.label || 'Canva Sans'}</span>
-        <ChevronDown className="w-3 h-3 ml-2 flex-shrink-0" />
-      </button>
+        <option value="Arial">Canva Sans</option>
+        <option value="Helvetica">Helvetica</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+      </select>
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
       {/* Font Size */}
       <button 
         onClick={() => {
-          const newSize = Math.max(8, currentFontSize - 2);
-          onElementUpdate({ fontSize: newSize });
+          const currentSize = selectedElement.fontSize || 16;
+          const currentIndex = fontSizes.indexOf(currentSize);
+          const newIndex = Math.max(0, currentIndex - 1);
+          onElementUpdate({ fontSize: fontSizes[newIndex] });
         }}
-        className="text-white hover:bg-gray-700 p-1 rounded transition-colors duration-150 w-6 h-6 flex items-center justify-center text-sm font-bold"
-        title="Diminuer la taille"
+        className="text-white hover:bg-gray-700 p-1.5 rounded transition-colors duration-150"
+        title="Diminuer la taille de police"
       >
         −
       </button>
       <select 
-        value={currentFontSize}
+        value={selectedElement.fontSize || 16}
         onChange={(e) => onElementUpdate({ fontSize: parseInt(e.target.value) })}
         className="bg-gray-700 text-white px-2 py-1 rounded text-sm border-none outline-none w-16 focus:bg-gray-600 transition-colors duration-150"
       >
@@ -162,11 +96,13 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       </select>
       <button 
         onClick={() => {
-          const newSize = Math.min(96, currentFontSize + 2);
-          onElementUpdate({ fontSize: newSize });
+          const currentSize = selectedElement.fontSize || 16;
+          const currentIndex = fontSizes.indexOf(currentSize);
+          const newIndex = Math.min(fontSizes.length - 1, currentIndex + 1);
+          onElementUpdate({ fontSize: fontSizes[newIndex] });
         }}
-        className="text-white hover:bg-gray-700 p-1 rounded transition-colors duration-150 w-6 h-6 flex items-center justify-center text-sm font-bold"
-        title="Augmenter la taille"
+        className="text-white hover:bg-gray-700 p-1.5 rounded transition-colors duration-150"
+        title="Augmenter la taille de police"
       >
         +
       </button>
@@ -199,7 +135,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
         })}
         className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontWeight === 'bold' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
+          selectedElement.fontWeight === 'bold' ? 'bg-blue-600 text-white' : ''
         }`}
         title="Gras (Ctrl+B)"
       >
@@ -211,7 +147,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
         })}
         className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontStyle === 'italic' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
+          selectedElement.fontStyle === 'italic' ? 'bg-blue-600 text-white' : ''
         }`}
         title="Italique (Ctrl+I)"
       >
@@ -223,7 +159,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
         })}
         className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.textDecoration === 'underline' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
+          selectedElement.textDecoration === 'underline' ? 'bg-blue-600 text-white' : ''
         }`}
         title="Souligné (Ctrl+U)"
       >
@@ -232,43 +168,36 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
-      {/* Text Alignment - Single Button with Dropdown */}
-      <div className="relative">
-        <button 
-          onClick={() => setShowAlignmentMenu(!showAlignmentMenu)}
-          className="p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-          title={`Alignement: ${currentAlignmentOption.label}`}
-        >
-          <CurrentAlignIcon className="w-4 h-4" />
-          <ChevronDown className="w-3 h-3" />
-        </button>
-        
-        {showAlignmentMenu && (
-          <div 
-            ref={alignmentMenuRef}
-            className="absolute top-full left-0 mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-50 min-w-[120px] animate-in slide-in-from-top-2 duration-200"
-          >
-            {alignmentOptions.map(option => {
-              const IconComponent = option.icon;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    onElementUpdate({ textAlign: option.value });
-                    setShowAlignmentMenu(false);
-                  }}
-                  className={`w-full px-3 py-2 text-left hover:bg-gray-600 transition-colors duration-150 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg ${
-                    currentAlignment === option.value ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'text-gray-200'
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="text-sm">{option.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* Text Alignment */}
+      <button 
+        onClick={() => onElementUpdate({ textAlign: 'left' })}
+        className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
+          selectedElement.textAlign === 'left' || !selectedElement.textAlign ? 'bg-blue-600 text-white' : ''
+        }`}
+        title="Aligner à gauche"
+      >
+        <AlignLeft className="w-4 h-4" />
+      </button>
+      
+      <button 
+        onClick={() => onElementUpdate({ textAlign: 'center' })}
+        className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
+          selectedElement.textAlign === 'center' ? 'bg-blue-600 text-white' : ''
+        }`}
+        title="Centrer"
+      >
+        <AlignCenter className="w-4 h-4" />
+      </button>
+      
+      <button 
+        onClick={() => onElementUpdate({ textAlign: 'right' })}
+        className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
+          selectedElement.textAlign === 'right' ? 'bg-blue-600 text-white' : ''
+        }`}
+        title="Aligner à droite"
+      >
+        <AlignRight className="w-4 h-4" />
+      </button>
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
@@ -303,14 +232,6 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       </button>
       
       <button 
-        onClick={() => {
-          if (onShowPositionPanel) {
-            onShowPositionPanel();
-          } else {
-            // Fallback pour compatibilité
-            setShowPositionPanel(!showPositionPanel);
-          }
-        }}
         className="p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
         title="Position et transformation"
       >
@@ -335,23 +256,6 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
             onElementUpdate={(updates) => {
               onElementUpdate(updates);
             }}
-          />
-        </div>
-      )}
-      
-      {/* Panneau de position - Fallback pour compatibilité */}
-      {!onShowPositionPanel && showPositionPanel && (
-        <div 
-          className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-80 max-h-96 overflow-y-auto animate-in slide-in-from-top-2 duration-200"
-          style={{
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <PositionPanel 
-            onBack={() => setShowPositionPanel(false)}
-            selectedElement={selectedElement}
-            onElementUpdate={onElementUpdate}
-            canvasRef={canvasRef}
           />
         </div>
       )}

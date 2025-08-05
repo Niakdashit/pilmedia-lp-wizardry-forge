@@ -156,7 +156,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
               onClick={() => handleChange('size', option.value)}
               className={`p-1.5 text-xs rounded border transition-colors ${
                 buttonConfig.size === option.value
-                  ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]'
+                  ? 'bg-[#841b60] text-white border-[#841b60]'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
               }`}
             >
@@ -190,7 +190,7 @@ const ButtonConfigTab: React.FC<ButtonConfigTabProps> = ({
           <button
             onClick={() => handleChange('visible', !buttonConfig.visible)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              buttonConfig.visible ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60]' : 'bg-gray-200'
+              buttonConfig.visible ? 'bg-[#841b60]' : 'bg-gray-200'
             }`}
           >
             <span

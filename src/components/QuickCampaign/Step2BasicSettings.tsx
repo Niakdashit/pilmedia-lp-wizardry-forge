@@ -232,7 +232,7 @@ const Step2BasicSettings: React.FC = () => {
               disabled={!canProceed}
               className={`
                 flex items-center space-x-2 px-8 py-4 rounded-2xl font-medium transition-all
-                ${canProceed ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white hover:bg-[#841b60]/90 shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
+                ${canProceed ? 'bg-[#841b60] text-white hover:bg-[#841b60]/90 shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}
               `}
             >
               <span>Continuer</span>
@@ -243,8 +243,8 @@ const Step2BasicSettings: React.FC = () => {
           {/* Progress Indicator */}
           <div className="text-center mt-16">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-8 h-1 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
-              <div className="w-8 h-1 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
+              <div className="w-8 h-1 bg-[#841b60] rounded-full"></div>
+              <div className="w-8 h-1 bg-[#841b60] rounded-full"></div>
               <div className="w-8 h-1 bg-gray-200 rounded-full"></div>
             </div>
             <p className="text-gray-500 font-light">Étape 2 sur 3</p>

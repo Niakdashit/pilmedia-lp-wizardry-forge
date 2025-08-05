@@ -78,7 +78,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
                 <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
                   <Copy className="w-4 h-4" />
                 </button>
-                <button className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors">
+                <button className="px-4 py-2 bg-[#841b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors">
                   <ExternalLink className="w-4 h-4" />
                 </button>
               </div>

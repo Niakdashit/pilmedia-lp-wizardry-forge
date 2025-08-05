@@ -806,7 +806,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                 onClick={() => applyEffect(effect)}
                 className={`p-2 border rounded-lg transition-colors ${
                   selectedEffect === effect.id 
-                    ? 'border-[#841b60] bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' 
+                    ? 'border-[#841b60] bg-[#841b60] text-white' 
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >

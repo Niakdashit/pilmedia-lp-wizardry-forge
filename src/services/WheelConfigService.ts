@@ -16,14 +16,12 @@ interface WheelSegment {
 interface WheelModalConfig {
   wheelBorderStyle?: string;
   wheelBorderColor?: string;
-  wheelBorderWidth?: number;
   wheelScale?: number;
 }
 
 export interface WheelConfig {
   borderStyle: string;
   borderColor: string;
-  borderWidth: number;
   scale: number;
   customColors?: {
     primary?: string;
@@ -54,29 +52,26 @@ export class WheelConfigService {
     const defaults = {
       borderStyle: 'classic',
       borderColor: '#841b60',
-      borderWidth: 12,
       scale: 1,
       size: 200
     };
 
     // Priorité 1: Configuration de la modal roue (modifications en cours)
-    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number }> = {
+    const modalConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle,
       borderColor: wheelModalConfig?.wheelBorderColor,
-      borderWidth: wheelModalConfig?.wheelBorderWidth,
       scale: wheelModalConfig?.wheelScale
     };
 
     // Priorité 2: Configuration de design existante
-    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number }> = {
+    const designConfig = {
       borderStyle: campaign?.design?.wheelBorderStyle || campaign?.design?.wheelConfig?.borderStyle,
       borderColor: campaign?.design?.wheelConfig?.borderColor,
-      borderWidth: campaign?.design?.wheelConfig?.borderWidth,
       scale: campaign?.design?.wheelConfig?.scale
     };
 
     // Priorité 3: Couleurs extraites (uniquement si style classic et pas de couleur manuelle)
-    const extractedConfig: Partial<{ borderColor: string; borderWidth: number }> = extractedColors.length > 0 && designConfig.borderStyle === 'classic' ? {
+    const extractedConfig = extractedColors.length > 0 && designConfig.borderStyle === 'classic' ? {
       borderColor: modalConfig.borderColor || designConfig.borderColor || extractedColors[0]
     } : {};
 
@@ -84,7 +79,6 @@ export class WheelConfigService {
     const finalConfig: WheelConfig = {
       borderStyle: modalConfig.borderStyle || designConfig.borderStyle || defaults.borderStyle,
       borderColor: modalConfig.borderColor || designConfig.borderColor || extractedConfig.borderColor || defaults.borderColor,
-      borderWidth: modalConfig.borderWidth !== undefined ? modalConfig.borderWidth : (designConfig.borderWidth || defaults.borderWidth),
       scale: modalConfig.scale !== undefined ? modalConfig.scale : (designConfig.scale || defaults.scale),
       shouldCropWheel: options.shouldCropWheel ?? true,
       
@@ -187,9 +181,6 @@ export class WheelConfigService {
         if (updates.borderColor !== undefined) {
           newConfig.wheelBorderColor = updates.borderColor;
         }
-        if (updates.borderWidth !== undefined) {
-          newConfig.wheelBorderWidth = updates.borderWidth;
-        }
         if (updates.scale !== undefined) {
           newConfig.wheelScale = updates.scale;
         }
@@ -206,7 +197,6 @@ export class WheelConfigService {
           wheelConfig: {
             ...prevCampaign.design?.wheelConfig,
             borderColor: updates.borderColor !== undefined ? updates.borderColor : prevCampaign.design?.wheelConfig?.borderColor,
-            borderWidth: updates.borderWidth !== undefined ? updates.borderWidth : prevCampaign.design?.wheelConfig?.borderWidth,
             scale: updates.scale !== undefined ? updates.scale : prevCampaign.design?.wheelConfig?.scale
           }
         }

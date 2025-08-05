@@ -43,7 +43,7 @@ export const ColumnsProperties: React.FC<ColumnsPropertiesProps> = ({ module, on
               onClick={() => handleColumnCountChange(count)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 module.settings?.columns === count
-                  ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white'
+                  ? 'bg-[#841b60] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >

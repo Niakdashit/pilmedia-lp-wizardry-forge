@@ -20,7 +20,7 @@ const Statistics: React.FC = () => {
               <option value="90">90 derniers jours</option>
               <option value="365">Cette année</option>
             </select>
-            <button className="inline-flex items-center px-8 py-4 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-semibold rounded-2xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <button className="inline-flex items-center px-8 py-4 bg-[#841b60] text-white font-semibold rounded-2xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
               <Download className="w-5 h-5 mr-2" />
               Exporter
             </button>
@@ -88,7 +88,7 @@ const Statistics: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-gray-800">Évolution des participations</h2>
               <div className="flex space-x-2">
-                <button className="px-3 py-1.5 text-sm bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg">Participants</button>
+                <button className="px-3 py-1.5 text-sm bg-[#841b60] text-white rounded-lg">Participants</button>
                 <button className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg">Taux de conversion</button>
               </div>
             </div>
@@ -106,7 +106,7 @@ const Statistics: React.FC = () => {
             <div className="mt-6 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-[#841b60] to-[#b41b60] mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#841b60] mr-2"></div>
                   <span className="text-sm text-gray-600">Quiz</span>
                 </div>
                 <span className="text-sm font-medium">42%</span>
@@ -191,7 +191,7 @@ const Statistics: React.FC = () => {
             <div className="mt-6 space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-[#841b60] to-[#b41b60] mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#841b60] mr-2"></div>
                   <span className="text-sm text-gray-600">Réseaux sociaux</span>
                 </div>
                 <span className="text-sm font-medium">45%</span>

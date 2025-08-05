@@ -3,7 +3,7 @@ import { QuickCampaignState } from './types';
 // Helper function to validate and sanitize colors
 const validateAndSanitizeColors = (colors: any) => {
   const defaultColors = {
-    primary: '#841b60',
+    primary: '#3b82f6',
     secondary: '#1e40af',
     accent: '#0ea5e9',
     textColor: '#000000'
