@@ -102,7 +102,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
       {/* Bold */}
       <button
         onClick={() => onUpdate({ fontWeight: text.fontWeight === 'bold' ? 'normal' : 'bold' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.fontWeight === 'bold' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.fontWeight === 'bold' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <Bold className="w-4 h-4" />
       </button>
@@ -110,7 +110,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
       {/* Italic */}
       <button
         onClick={() => onUpdate({ fontStyle: text.fontStyle === 'italic' ? 'normal' : 'italic' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.fontStyle === 'italic' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.fontStyle === 'italic' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <Italic className="w-4 h-4" />
       </button>
@@ -122,7 +122,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
             ? text.textDecoration.replace('underline', '').trim() || 'none'
             : (text.textDecoration === 'none' || !text.textDecoration) ? 'underline' : `${text.textDecoration} underline`
         })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.textDecoration?.includes('underline') ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.textDecoration?.includes('underline') ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <Underline className="w-4 h-4" />
       </button>
@@ -134,7 +134,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
             ? text.textDecoration.replace('line-through', '').trim() || 'none'
             : (text.textDecoration === 'none' || !text.textDecoration) ? 'line-through' : `${text.textDecoration} line-through`
         })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.textDecoration?.includes('line-through') ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.textDecoration?.includes('line-through') ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <Strikethrough className="w-4 h-4" />
       </button>
@@ -144,28 +144,28 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
       {/* Text Alignment */}
       <button
         onClick={() => onUpdate({ textAlign: text.textAlign === 'left' ? 'center' : 'left' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'left' || !text.textAlign ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'left' || !text.textAlign ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <AlignLeft className="w-4 h-4" />
       </button>
 
       <button
         onClick={() => onUpdate({ textAlign: 'center' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'center' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'center' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <AlignCenter className="w-4 h-4" />
       </button>
 
       <button
         onClick={() => onUpdate({ textAlign: 'right' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'right' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'right' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <AlignRight className="w-4 h-4" />
       </button>
 
       <button
         onClick={() => onUpdate({ textAlign: 'justify' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'justify' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.textAlign === 'justify' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <AlignJustify className="w-4 h-4" />
       </button>
@@ -175,14 +175,14 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
       {/* Lists */}
       <button
         onClick={() => onUpdate({ listType: text.listType === 'bullet' ? 'none' : 'bullet' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.listType === 'bullet' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.listType === 'bullet' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <List className="w-4 h-4" />
       </button>
 
       <button
         onClick={() => onUpdate({ listType: text.listType === 'numbered' ? 'none' : 'numbered' })}
-        className={`p-1 rounded hover:bg-gray-700 ${text.listType === 'numbered' ? 'bg-blue-600' : ''}`}
+        className={`p-1 rounded hover:bg-gray-700 ${text.listType === 'numbered' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}`}
       >
         <ListOrdered className="w-4 h-4" />
       </button>

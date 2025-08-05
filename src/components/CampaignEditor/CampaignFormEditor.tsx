@@ -71,7 +71,7 @@ const CampaignFormEditor: React.FC<FormEditorProps> = ({ formFields, setFormFiel
         <h3 className="text-lg font-semibold">Champs du formulaire</h3>
         <button
           type="button"
-          className="bg-[#841b60] text-white px-4 py-2 rounded-lg font-medium"
+          className="bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded-lg font-medium"
           onClick={addField}
         >
           Ajouter un champ

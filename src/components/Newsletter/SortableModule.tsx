@@ -47,7 +47,7 @@ export const SortableModule: React.FC<SortableModuleProps> = ({ module }) => {
       {/* Selection indicator */}
       {isSelected && (
         <motion.div
-          className="absolute -top-3 -left-3 w-6 h-6 bg-[#841b60] rounded-full flex items-center justify-center z-10 shadow-lg"
+          className="absolute -top-3 -left-3 w-6 h-6 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full flex items-center justify-center z-10 shadow-lg"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           exit={{ scale: 0 }}

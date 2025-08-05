@@ -8,12 +8,12 @@ import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
 import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
-import { useHistoryManager } from '../ModernEditor/hooks/useHistoryManager';
+import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
-import { useDebouncedCallback } from 'use-debounce';
+
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -83,16 +83,67 @@ const DesignEditorLayout: React.FC = () => {
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
 
-  // Fonction pour mettre à jour un élément sélectionné
+
+
+  // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
+  const handleAddElement = (element: any) => {
+    setCanvasElements(prev => {
+      const newArr = [...prev, element];
+      setTimeout(() => {
+        addToHistory({
+          campaignConfig: { ...campaignConfig },
+          canvasElements: JSON.parse(JSON.stringify(newArr)),
+          canvasBackground: { ...canvasBackground }
+        }, 'element_create');
+      }, 0);
+      return newArr;
+    });
+    setSelectedElement(element);
+  };
+
+  // Ajoute à l'historique lors du changement de background (granulaire)
+  const handleBackgroundChange = (bg: any) => {
+    setCanvasBackground(bg);
+    setTimeout(() => {
+      addToHistory({
+        campaignConfig: { ...campaignConfig },
+        canvasElements: JSON.parse(JSON.stringify(canvasElements)),
+        canvasBackground: { ...bg }
+      }, 'background_update');
+    }, 0);
+  };
+
+  // Ajoute à l'historique lors du changement de config (granulaire)
+  const handleCampaignConfigChange = (cfg: any) => {
+    setCampaignConfig(cfg);
+    setTimeout(() => {
+      addToHistory({
+        campaignConfig: { ...cfg },
+        canvasElements: JSON.parse(JSON.stringify(canvasElements)),
+        canvasBackground: { ...canvasBackground }
+      }, 'config_update');
+    }, 0);
+  };
+
+  // Ajoute à l'historique à chaque modification d'élément (granulaire)
   const handleElementUpdate = (updates: any) => {
     if (selectedElement) {
       const updatedElement = { ...selectedElement, ...updates };
-      setCanvasElements(prev => 
-        prev.map(el => el.id === selectedElement.id ? updatedElement : el)
-      );
+      setCanvasElements(prev => {
+        const newArr = prev.map(el => el.id === selectedElement.id ? updatedElement : el);
+        setTimeout(() => {
+          addToHistory({
+            campaignConfig: { ...campaignConfig },
+            canvasElements: JSON.parse(JSON.stringify(newArr)),
+            canvasBackground: { ...canvasBackground }
+          }, 'element_update');
+        }, 0);
+        return newArr;
+      });
       setSelectedElement(updatedElement);
     }
   };
+
   // Utilisation du hook de synchronisation unifié
   const { wheelModalConfig } = useWheelConfigSync({
     campaign: campaignConfig,
@@ -100,19 +151,46 @@ const DesignEditorLayout: React.FC = () => {
     onCampaignChange: setCampaignConfig
   });
 
-  // Système d'historique pour undo/redo
-  const { addToHistory, undo, redo } = useHistoryManager({
+  // Système d'historique pour undo/redo avec le nouveau hook
+  const {
+    addToHistory,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    historySize,
+    lastAction
+  } = useUndoRedo({
     maxHistorySize: 50,
-    onUndo: (restoredCampaign) => {
-      if (restoredCampaign) {
-        setCampaign(restoredCampaign);
+    onUndo: (restoredSnapshot) => {
+      console.log(' Undo: Restauration du snapshot', restoredSnapshot);
+      if (restoredSnapshot) {
+        // Restaure tous les sous-états à partir du snapshot
+        setCampaignConfig(restoredSnapshot.campaignConfig || {});
+        setCanvasElements(restoredSnapshot.canvasElements || []);
+        setCanvasBackground(restoredSnapshot.canvasBackground || { type: 'color', value: '#ffffff' });
+        setSelectedElement(null);
       }
     },
-    onRedo: (restoredCampaign) => {
-      if (restoredCampaign) {
-        setCampaign(restoredCampaign);
+    onRedo: (restoredSnapshot) => {
+      console.log(' Redo: Restauration du snapshot', restoredSnapshot);
+      if (restoredSnapshot) {
+        setCampaignConfig(restoredSnapshot.campaignConfig || {});
+        setCanvasElements(restoredSnapshot.canvasElements || []);
+        setCanvasBackground(restoredSnapshot.canvasBackground || { type: 'color', value: '#ffffff' });
+        setSelectedElement(null);
       }
+    },
+    onStateChange: (state, action) => {
+      console.log(` Changement d'état dans l'historique: ${action}`, state);
+      setIsModified(true);
     }
+  });
+
+  // Raccourcis clavier pour undo/redo
+  useUndoRedoShortcuts(undo, redo, {
+    enabled: true,
+    preventDefault: true
   });
 
   // Synchronisation avec le store
@@ -194,16 +272,13 @@ const DesignEditorLayout: React.FC = () => {
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig]);
 
-  // Debounced history update pour éviter trop d'entrées
-  const debouncedAddToHistory = useDebouncedCallback((data: any) => {
-    addToHistory(data, 'canvas_update');
-  }, 300);
 
-  // Synchronisation avec le store et historique
+
+
+  // Synchronisation avec le store
   useEffect(() => {
     setCampaign(campaignData);
-    debouncedAddToHistory(campaignData);
-  }, [campaignData, setCampaign, debouncedAddToHistory]);
+  }, [campaignData, setCampaign]);
 
   // Actions optimisées
   const handleSave = async () => {
@@ -304,6 +379,10 @@ const DesignEditorLayout: React.FC = () => {
             onDeviceChange={handleDeviceChange}
             onPreviewToggle={handlePreview}
             isPreviewMode={showFunnel}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
           
           {/* Bouton d'aide des raccourcis clavier */}
@@ -337,11 +416,11 @@ const DesignEditorLayout: React.FC = () => {
           <>
             {/* Hybrid Sidebar - Design & Technical */}
             <HybridSidebar 
-              onAddElement={(element) => setCanvasElements(prev => [...prev, element])}
-              onBackgroundChange={setCanvasBackground}
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
               onExtractedColorsChange={handleExtractedColorsChange}
               campaignConfig={campaignConfig}
-              onCampaignConfigChange={setCampaignConfig}
+              onCampaignConfigChange={handleCampaignConfigChange}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               selectedElement={selectedElement}
@@ -362,11 +441,12 @@ const DesignEditorLayout: React.FC = () => {
               onElementsChange={setCanvasElements}
               background={canvasBackground}
               campaign={campaignConfig}
-              onCampaignChange={setCampaignConfig}
+              onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               selectedElement={selectedElement}
               onSelectedElementChange={setSelectedElement}
               onElementUpdate={handleElementUpdate}
+
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
                 setShowAnimationsInSidebar(false);

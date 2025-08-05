@@ -59,7 +59,7 @@ const QuickCampaign: React.FC = () => {
       <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-[#841b60] to-[#6d164f] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full flex items-center justify-center mx-auto mb-6">
               <Sparkles className="w-10 h-10 text-white" />
             </div>
             
@@ -75,7 +75,7 @@ const QuickCampaign: React.FC = () => {
             <div className="space-y-4">
               <button
                 onClick={handleStudioCreation}
-                className="w-full px-8 py-4 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
+                className="w-full px-8 py-4 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-3"
               >
                 <Palette className="w-5 h-5" />
                 Studio de Création

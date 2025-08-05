@@ -36,6 +36,7 @@ interface HybridSidebarProps {
   onAnimationsPanelChange?: (show: boolean) => void;
   showPositionPanel?: boolean;
   onPositionPanelChange?: (show: boolean) => void;
+  onForceElementsTab?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -55,6 +56,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   onAnimationsPanelChange,
   showPositionPanel = false,
   onPositionPanelChange,
+  onForceElementsTab,
   canvasRef
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -72,6 +74,24 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       setActiveTab('assets'); // Retourner aux éléments quand on ferme les panneaux spéciaux
     }
   }, [showEffectsPanel, showAnimationsPanel, showPositionPanel, activeTab]);
+
+  // Gérer l'ouverture forcée de l'onglet Elements
+  React.useEffect(() => {
+    if (onForceElementsTab) {
+      // Créer un effet qui peut être déclenché depuis l'extérieur
+      const forceElementsTab = () => {
+        setActiveTab('assets');
+        setIsCollapsed(false); // S'assurer que la sidebar est ouverte
+        // Fermer tous les panneaux spéciaux
+        onEffectsPanelChange?.(false);
+        onAnimationsPanelChange?.(false);
+        onPositionPanelChange?.(false);
+      };
+      
+      // Exposer la fonction globalement pour qu'elle puisse être appelée
+      (window as any).forceElementsTab = forceElementsTab;
+    }
+  }, [onForceElementsTab, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange]);
 
   const tabs = [
     { 

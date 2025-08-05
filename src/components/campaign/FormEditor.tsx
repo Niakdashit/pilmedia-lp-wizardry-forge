@@ -93,7 +93,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Configuration des champs</h3>
-            <button onClick={addField} className="flex items-center gap-2 bg-[#841b60] text-white px-4 py-2 rounded-lg hover:bg-[#6d1550] transition-colors">
+            <button onClick={addField} className="flex items-center gap-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded-lg hover:bg-[#6d1550] transition-colors">
               <Plus className="w-4 h-4" />
               Ajouter un champ
             </button>

@@ -139,7 +139,7 @@ const Account: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <button type="submit" className="px-4 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
+                      <button type="submit" className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
                         Sauvegarder les modifications
                       </button>
                     </div>
@@ -192,7 +192,7 @@ const Account: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <button type="submit" className="px-4 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
+                      <button type="submit" className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
                         Changer le mot de passe
                       </button>
                     </div>
@@ -273,7 +273,7 @@ const Account: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <button type="button" className="px-4 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
+                    <button type="button" className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
                       Sauvegarder les préférences
                     </button>
                   </div>

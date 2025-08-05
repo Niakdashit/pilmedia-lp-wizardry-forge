@@ -9,7 +9,7 @@ const Social: React.FC = () => {
         title="Réseaux sociaux"
         size="sm"
         actions={
-          <button className="inline-flex items-center bg-[#841b60] text-white font-semibold hover:bg-[#6d164f] transition-all duration-300">
+          <button className="inline-flex items-center bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-semibold hover:bg-[#6d164f] transition-all duration-300">
             <Plus className="w-5 h-5 mr-2" />
             Nouvelle Publication
           </button>
@@ -54,7 +54,7 @@ const Social: React.FC = () => {
                     <option>Commentaires</option>
                     <option>Partages</option>
                   </select>
-                  <button className="px-4 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
+                  <button className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors duration-200">
                     Comparer
                   </button>
                 </div>

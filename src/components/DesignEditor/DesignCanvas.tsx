@@ -18,6 +18,7 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import { useMobileOptimization } from './hooks/useMobileOptimization';
+import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 export interface DesignCanvasProps {
@@ -37,8 +38,10 @@ export interface DesignCanvasProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
+  onOpenElementsTab?: () => void;
 }
-const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
+
+const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   selectedDevice,
   elements,
   onElementsChange,
@@ -51,9 +54,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   onElementUpdate: externalOnElementUpdate,
   onShowEffectsPanel,
   onShowAnimationsPanel,
-  onShowPositionPanel
-}) => {
+  onShowPositionPanel,
+  onOpenElementsTab
+}, ref) => {
+
   const canvasRef = useRef<HTMLDivElement>(null);
+  
+  // Utiliser la référence externe si fournie, sinon utiliser la référence interne
+  const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showTouchDebug, setShowTouchDebug] = useState(false);
@@ -65,10 +73,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   const {
     isMobile,
     isTablet,
-    deviceType,
-    convertTouchCoordinates,
-    isTouchEvent
-  } = useMobileOptimization(canvasRef, {
+    deviceType
+  } = useMobileOptimization(activeCanvasRef, {
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
@@ -130,7 +136,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
       
       if (elementInDOM) {
         const rect = elementInDOM.getBoundingClientRect();
-        const canvasRect = canvasRef.current?.getBoundingClientRect();
+        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement>).current?.getBoundingClientRect();
         
         if (canvasRect) {
           // Position relative au canvas
@@ -189,7 +195,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
   const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
-    containerRef: canvasRef,
+    containerRef: activeCanvasRef,
     regionSize: 200,
     maxRegions: 50,
     updateThreshold: 16 // 60fps
@@ -197,7 +203,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
 
   // 🚀 Drag & drop ultra-fluide pour une expérience premium
   useUltraFluidDragDrop({
-    containerRef: canvasRef,
+    containerRef: activeCanvasRef,
     snapToGrid: showGridLines,
     gridSize: 20,
     enableInertia: true,
@@ -232,7 +238,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
 
   // Hooks optimisés pour snapping (gardé pour compatibilité)
   const { applySnapping } = useSmartSnapping({
-    containerRef: canvasRef,
+    containerRef: activeCanvasRef,
     gridSize: 20,
     snapTolerance: 3 // Réduit pour plus de précision
   });
@@ -332,8 +338,22 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
-  return <DndProvider backend={HTML5Backend}>
-      <div className="flex-1 bg-[hsl(var(--muted))] overflow-auto relative">
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <MobileResponsiveLayout
+        selectedElement={elements.find(el => el.id === selectedElement)}
+        onElementUpdate={(updates) => {
+          if (selectedElement) {
+            handleElementUpdate(selectedElement, updates);
+          }
+        }}
+        onShowEffectsPanel={onShowEffectsPanel}
+        onShowAnimationsPanel={onShowAnimationsPanel}
+        onShowPositionPanel={onShowPositionPanel}
+        canvasRef={activeCanvasRef}
+        zoom={zoom}
+        className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
+      >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (
           <div className={`z-10 ${
@@ -347,7 +367,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
-              canvasRef={canvasRef}
+              onOpenElementsTab={onOpenElementsTab}
+              canvasRef={activeCanvasRef}
             />
           </div>
         )}
@@ -371,7 +392,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
             }}
           >
             <div 
-              ref={canvasRef}
+              ref={activeCanvasRef}
               className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
               style={{
                 width: `${canvasSize.width}px`,
@@ -478,7 +499,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={canvasRef}
+                  containerRef={activeCanvasRef}
                   zoom={zoom}
                 />
               );
@@ -546,9 +567,11 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
           onClose={() => setShowBorderModal(false)}
           wheelBorderStyle={wheelConfig.borderStyle}
           wheelBorderColor={wheelConfig.borderColor}
+          wheelBorderWidth={wheelConfig.borderWidth}
           wheelScale={wheelConfig.scale}
           onBorderStyleChange={(style) => updateWheelConfig({ borderStyle: style })}
           onBorderColorChange={(color) => updateWheelConfig({ borderColor: color })}
+          onBorderWidthChange={(width) => updateWheelConfig({ borderWidth: width })}
           onScaleChange={(scale) => updateWheelConfig({ scale })}
           selectedDevice={selectedDevice}
         />
@@ -576,8 +599,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = React.memo(({
             visible={showAnimationPopup}
           />
         )}
-      </div>
-    </DndProvider>;
+      </MobileResponsiveLayout>
+    </DndProvider>
+  );
 });
 
 DesignCanvas.displayName = 'DesignCanvas';

@@ -87,13 +87,13 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
   // Classes CSS dynamiques selon l'appareil
   const getDeviceClasses = () => {
     const baseClasses = 'mobile-stable-editor';
-    const deviceClasses = {
+    const deviceClasses: Record<string, string> = {
       mobile: 'mobile-optimized',
       tablet: 'tablet-optimized', 
       desktop: 'desktop-optimized'
     };
     
-    return `${baseClasses} ${deviceClasses[deviceType]} ${className}`;
+    return `${baseClasses} ${deviceClasses[deviceType] || 'desktop-optimized'} ${className}`;
   };
 
   return (
@@ -101,7 +101,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
       ref={containerRef}
       className={getDeviceClasses()}
       data-device={deviceType}
-      data-mobile-optimized={isMobile || isTablet}
+      data-mobile-optimized={(isMobile || isTablet).toString()}
     >
       {/* Indicateur de statut mobile (dev only) */}
       {process.env.NODE_ENV === 'development' && (isMobile || isTablet) && (
@@ -113,7 +113,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
       {children}
       
       {/* Styles CSS intégrés pour l'optimisation mobile */}
-      <style jsx>{`
+      <style>{`
         .mobile-stable-editor {
           /* Base stable */
           position: relative;

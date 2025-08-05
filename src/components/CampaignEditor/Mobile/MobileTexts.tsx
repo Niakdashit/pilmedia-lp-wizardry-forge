@@ -37,7 +37,7 @@ const MobileTexts: React.FC<MobileTextsProps> = ({ campaign, setCampaign }) => {
               onClick={() => updateMobileConfig('showTitle', !(mobileConfig.showTitle !== false))}
               className={`flex items-center space-x-1 px-3 py-1 rounded-md text-xs transition-colors ${
                 mobileConfig.showTitle !== false
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white'
                   : 'bg-gray-200 text-gray-600'
               }`}
             >
@@ -55,7 +55,7 @@ const MobileTexts: React.FC<MobileTextsProps> = ({ campaign, setCampaign }) => {
               onClick={() => updateMobileConfig('showDescription', !(mobileConfig.showDescription !== false))}
               className={`flex items-center space-x-1 px-3 py-1 rounded-md text-xs transition-colors ${
                 mobileConfig.showDescription !== false
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white'
                   : 'bg-gray-200 text-gray-600'
               }`}
             >

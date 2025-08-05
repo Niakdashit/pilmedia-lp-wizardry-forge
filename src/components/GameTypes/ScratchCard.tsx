@@ -113,7 +113,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         <div className="w-full mb-4" style={{ maxWidth: `${width}px` }}>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-[#841b60] h-2 rounded-full transition-all duration-300" 
+              className="bg-gradient-to-br from-[#841b60] to-[#b41b60] h-2 rounded-full transition-all duration-300" 
               style={{ width: `${Math.min(scratchPercentage, 100)}%` }} 
             />
           </div>

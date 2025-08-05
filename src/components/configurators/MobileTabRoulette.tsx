@@ -137,7 +137,7 @@ const MobileTabRoulette: React.FC<MobileTabRouletteProps> = ({
         />
         <button
           onClick={addSegment}
-          className="bg-[#841b60] text-white px-4 py-2 rounded shadow"
+          className="bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded shadow"
         >
           + Ajouter un segment
         </button>

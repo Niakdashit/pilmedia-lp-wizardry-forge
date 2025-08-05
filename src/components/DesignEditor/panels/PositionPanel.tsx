@@ -236,28 +236,28 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={moveToFront}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   <ArrowUp className="w-4 h-4" />
                   <span className="text-sm font-medium">Premier plan</span>
                 </button>
                 <button
                   onClick={moveToBack}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   <ArrowDown className="w-4 h-4" />
                   <span className="text-sm font-medium">Arrière-plan</span>
                 </button>
                 <button
                   onClick={moveForward}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   <ArrowUp className="w-4 h-4" />
                   <span className="text-sm font-medium">Avancer</span>
                 </button>
                 <button
                   onClick={moveBackward}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   <ArrowDown className="w-4 h-4" />
                   <span className="text-sm font-medium">Reculer</span>
@@ -273,7 +273,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={alignToTop}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   {/* Icône Haut - ligne en haut */}
                   <div className="w-4 h-4 flex items-start justify-center">
@@ -283,7 +283,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
                 </button>
                 <button
                   onClick={alignToLeft}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   {/* Icône Gauche - ligne à gauche */}
                   <div className="w-4 h-4 flex items-center justify-start">
@@ -297,7 +297,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={alignToCenter}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   {/* Icône Centre horizontal - lignes verticales */}
                   <div className="w-4 h-4 flex items-center justify-center space-x-0.5">
@@ -309,7 +309,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
                 </button>
                 <button
                   onClick={alignToMiddle}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   {/* Icône Centre vertical - lignes horizontales */}
                   <div className="w-4 h-4 flex flex-col items-center justify-center space-y-0.5">
@@ -325,7 +325,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={alignToBottom}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   {/* Icône Bas - ligne en bas */}
                   <div className="w-4 h-4 flex items-end justify-center">
@@ -335,7 +335,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
                 </button>
                 <button
                   onClick={alignToRight}
-                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-[#841b60] hover:text-white rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center space-x-2 p-3 border border-gray-200 hover:border-[#841b60] hover:bg-gradient-to-br hover:from-[#841b60] hover:to-[#b41b60] hover:text-white rounded-lg transition-all duration-200"
                 >
                   {/* Icône Droite - ligne à droite */}
                   <div className="w-4 h-4 flex items-center justify-end">
@@ -377,7 +377,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
                       onClick={() => setIsRatioLocked(!isRatioLocked)}
                       className={`p-2 rounded transition-colors ${
                         isRatioLocked 
-                          ? 'bg-[#841b60] text-white' 
+                          ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' 
                           : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                       }`}
                     >

@@ -75,7 +75,7 @@ const GameBubble: React.FC<GameBubbleProps> = ({
       {/* Floating particles */}
       {isSelected && (
         <>
-          <div className="absolute -top-2 -right-2 w-3 h-3 bg-[#841b60] rounded-full animate-ping"></div>
+          <div className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full animate-ping"></div>
           <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-violet-400 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
         </>
       )}

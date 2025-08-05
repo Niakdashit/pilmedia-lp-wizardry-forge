@@ -22,6 +22,7 @@ interface CanvasToolbarProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
+  onOpenElementsTab?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -31,6 +32,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
+  onOpenElementsTab,
   canvasRef
 }) => {
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
@@ -65,6 +67,23 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   }
 
   const fontSizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 96];
+  
+  // Fonction pour obtenir la vraie taille de police actuelle
+  const getCurrentFontSize = () => {
+    // Priorité : fontSize direct > style.fontSize > défaut 16
+    const directFontSize = selectedElement.fontSize;
+    const styleFontSize = selectedElement.style?.fontSize;
+    
+    // Convertir en nombre si c'est une string (ex: "16px" -> 16)
+    let fontSize = directFontSize || styleFontSize || 16;
+    if (typeof fontSize === 'string') {
+      fontSize = parseInt(fontSize.replace('px', ''));
+    }
+    
+    return Number(fontSize) || 16;
+  };
+  
+  const currentFontSize = getCurrentFontSize();
   
   // Liste complète des polices disponibles
   const fontFamilies = [
@@ -105,24 +124,26 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   return (
     <div className="relative">
       <div ref={toolbarRef} className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-1 mb-4">
-      {/* Font Family */}
-      <select 
-        value={selectedElement.fontFamily || 'Arial'}
-        onChange={(e) => onElementUpdate({ fontFamily: e.target.value })}
-        className="bg-gray-700 text-white px-2 py-1 rounded text-sm border-none outline-none"
+      {/* Font Family - Button to open Elements tab */}
+      <button 
+        onClick={() => {
+          if (onOpenElementsTab) {
+            onOpenElementsTab();
+          }
+        }}
+        className="bg-gray-700 text-white px-3 py-1 rounded text-sm border-none outline-none min-w-[120px] focus:bg-gray-600 transition-colors duration-150 hover:bg-gray-600 flex items-center justify-between whitespace-nowrap"
+        title="Changer la police - Ouvre l'onglet Éléments"
       >
-        {fontFamilies.map(font => (
-          <option key={font.value} value={font.value}>{font.label}</option>
-        ))}
-      </select>
+        <span className="truncate">{fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Arial'))?.label || 'Canva Sans'}</span>
+        <ChevronDown className="w-3 h-3 ml-2 flex-shrink-0" />
+      </button>
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
       {/* Font Size */}
       <button 
         onClick={() => {
-          const currentSize = selectedElement.fontSize || selectedElement.style?.fontSize || 16;
-          const newSize = Math.max(8, currentSize - 2);
+          const newSize = Math.max(8, currentFontSize - 2);
           onElementUpdate({ fontSize: newSize });
         }}
         className="text-white hover:bg-gray-700 p-1 rounded transition-colors duration-150 w-6 h-6 flex items-center justify-center text-sm font-bold"
@@ -131,7 +152,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         −
       </button>
       <select 
-        value={selectedElement.fontSize || selectedElement.style?.fontSize || 16}
+        value={currentFontSize}
         onChange={(e) => onElementUpdate({ fontSize: parseInt(e.target.value) })}
         className="bg-gray-700 text-white px-2 py-1 rounded text-sm border-none outline-none w-16 focus:bg-gray-600 transition-colors duration-150"
       >
@@ -141,8 +162,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       </select>
       <button 
         onClick={() => {
-          const currentSize = selectedElement.fontSize || selectedElement.style?.fontSize || 16;
-          const newSize = Math.min(96, currentSize + 2);
+          const newSize = Math.min(96, currentFontSize + 2);
           onElementUpdate({ fontSize: newSize });
         }}
         className="text-white hover:bg-gray-700 p-1 rounded transition-colors duration-150 w-6 h-6 flex items-center justify-center text-sm font-bold"
@@ -179,7 +199,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
         })}
         className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontWeight === 'bold' ? 'bg-blue-600 text-white' : ''
+          selectedElement.fontWeight === 'bold' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
         }`}
         title="Gras (Ctrl+B)"
       >
@@ -191,7 +211,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
         })}
         className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontStyle === 'italic' ? 'bg-blue-600 text-white' : ''
+          selectedElement.fontStyle === 'italic' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
         }`}
         title="Italique (Ctrl+I)"
       >
@@ -203,7 +223,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
         })}
         className={`p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.textDecoration === 'underline' ? 'bg-blue-600 text-white' : ''
+          selectedElement.textDecoration === 'underline' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
         }`}
         title="Souligné (Ctrl+U)"
       >
@@ -216,7 +236,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       <div className="relative">
         <button 
           onClick={() => setShowAlignmentMenu(!showAlignmentMenu)}
-          className="p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-blue-600 text-white"
+          className="p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
           title={`Alignement: ${currentAlignmentOption.label}`}
         >
           <CurrentAlignIcon className="w-4 h-4" />
@@ -238,7 +258,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
                     setShowAlignmentMenu(false);
                   }}
                   className={`w-full px-3 py-2 text-left hover:bg-gray-600 transition-colors duration-150 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg ${
-                    currentAlignment === option.value ? 'bg-blue-600 text-white' : 'text-gray-200'
+                    currentAlignment === option.value ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'text-gray-200'
                   }`}
                 >
                   <IconComponent className="w-4 h-4" />
