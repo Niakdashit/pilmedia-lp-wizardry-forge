@@ -45,10 +45,10 @@ const Sidebar: React.FC = () => {
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">
         {!sidebarCollapsed ? (
-          <img src={logo} alt="Leadya Logo" className="h-11 w-auto ml-14 mt-2" />
+          <img src={logo} alt="Prosplay Logo" className="h-11 w-auto ml-14 mt-2" />
         ) : (
           <div className="w-full flex items-center justify-center">
-            <img src={logoIcon} alt="Leadya Icon" className="h-8 w-8 object-contain" />
+            <img src={logoIcon} alt="Prosplay Icon" className="h-8 w-8 object-contain" />
           </div>
         )}
         <button

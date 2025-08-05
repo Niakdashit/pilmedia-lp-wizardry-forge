@@ -93,7 +93,7 @@ const BrandGeneratorStep: React.FC<BrandGeneratorStepProps> = ({
         <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={onPrev}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back

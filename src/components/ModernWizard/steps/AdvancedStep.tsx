@@ -58,9 +58,9 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
               <div>
                 <label className="block text-[#141e29] text-sm font-medium mb-3">Style des bordures</label>
                 <div className="flex space-x-3">
-                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm hover:bg-gray-100">Arrondies</button>
-                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-700 text-sm hover:bg-gray-100">Droites</button>
-                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-gray-100">Très arrondies</button>
+                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 text-sm hover:bg-[#841b60] hover:text-white">Arrondies</button>
+                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-700 text-sm hover:bg-[#841b60] hover:text-white">Droites</button>
+                  <button className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-[#841b60] hover:text-white">Très arrondies</button>
                 </div>
               </div>
             </div>
@@ -197,7 +197,7 @@ const AdvancedStep: React.FC<AdvancedStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={prevStep}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
           >
             Retour
           </button>

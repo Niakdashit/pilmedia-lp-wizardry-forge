@@ -9,7 +9,7 @@ const Account: React.FC = () => {
   const [profile, setProfile] = useState({
     name: 'Sophie Martin',
     email: 'sophie.martin@example.com',
-    company: 'Leadya Marketing',
+    company: 'Prosplay',
     role: 'Administrateur',
     avatar: ''
   });
@@ -61,7 +61,7 @@ const Account: React.FC = () => {
                     <div>
                       <h3 className="text-gray-800 font-medium mb-1">{profile.name}</h3>
                       <p className="text-gray-500 text-sm mb-3">{profile.email}</p>
-                      <button type="button" className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200">
+                      <button type="button" className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-[#841b60] hover:text-white transition-colors duration-200">
                         Changer la photo
                       </button>
                     </div>

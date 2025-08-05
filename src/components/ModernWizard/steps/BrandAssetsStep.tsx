@@ -147,7 +147,7 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={prevStep}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
           >
             Retour
           </button>

@@ -45,7 +45,7 @@ const AdminLayout: React.FC = () => {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <img src={logo} alt="Leadya Logo" className="h-8 w-auto" />
+            <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
             <span className="text-red-600 font-bold text-sm">ADMIN</span>
           </div>
         </header>

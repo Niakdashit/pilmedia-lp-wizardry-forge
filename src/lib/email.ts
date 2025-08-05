@@ -1,7 +1,7 @@
 import { resend } from './resend';
 
 const defaultFrom =
-  import.meta.env.VITE_DEFAULT_FROM_EMAIL || 'Leadya <contact@leadya.fr>';
+  import.meta.env.VITE_DEFAULT_FROM_EMAIL || 'Prosplay <contact@prosplay.fr>';
 
 export const sendBasicEmail = async (to: string, subject: string, html: string) => {
   try {

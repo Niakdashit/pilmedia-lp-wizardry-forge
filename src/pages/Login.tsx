@@ -24,7 +24,7 @@ const Login: React.FC = () => {
       <div className="relative w-full max-w-md">
         <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-xl border border-white/25 p-8">
           <div className="text-center mb-8">
-            <img src={logo} alt="Leadya Logo" className="h-16 w-auto mx-auto mb-4" />
+            <img src={logo} alt="Prosplay Logo" className="h-16 w-auto mx-auto mb-4" />
             
             <p className="text-gray-600">Connectez-vous pour accéder à votre dashboard</p>
           </div>

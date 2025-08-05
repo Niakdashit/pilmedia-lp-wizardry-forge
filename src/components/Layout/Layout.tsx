@@ -44,7 +44,7 @@ const Layout: React.FC = () => {
           <button onClick={toggleSidebar} className="text-gray-500">
             <Menu className="w-6 h-6" />
           </button>
-          <img src={logo} alt="Leadya Logo" className="h-8 w-auto" />
+          <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
         </header>
         <main className="flex-1 overflow-y-auto w-full py-0 px-0">
           <div className="p-3 sm:p-6 w-full max-w-full py-0 px-[3px]">

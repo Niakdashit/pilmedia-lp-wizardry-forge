@@ -42,7 +42,7 @@ const EditorOnlyLayout: React.FC<EditorOnlyLayoutProps> = ({
               </>
             )}
           </div>
-          <img src={logo} alt="Leadya Logo" className="h-8 w-auto" />
+          <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
         </header>
       )}
       

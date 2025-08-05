@@ -113,7 +113,7 @@ const Gamification: React.FC = () => {
                     <p className="text-sm text-gray-600 mb-4">{game.description}</p>
                     <Link
                       to="/campaign-editor"
-                      className="w-full px-4 py-2 bg-gray-100 text-gray-800 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-200 block text-center"
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-800 font-medium rounded-lg hover:bg-[#841b60] hover:text-white transition-colors duration-200 block text-center"
                     >
                       Créer avec l'éditeur
                     </Link>
