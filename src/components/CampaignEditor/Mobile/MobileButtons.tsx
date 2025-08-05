@@ -59,7 +59,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
         buttonTextColor={mobileConfig.buttonTextColor || '#ffffff'}
         buttonShape={mobileConfig.buttonShape || 'rounded-lg'}
         buttonSize={mobileConfig.buttonSize || 'medium'}
-        buttonShadow={mobileConfig.buttonShadow || 'shadow-md'}
+        buttonShadow={typeof mobileConfig.buttonShadow === 'string' ? mobileConfig.buttonShadow : 'shadow-md'}
         onButtonColorChange={(color) => updateMobileConfig('buttonColor', color)}
         onButtonTextColorChange={(color) => updateMobileConfig('buttonTextColor', color)}
         onButtonShapeChange={(shape) => updateMobileConfig('buttonShape', shape)}
@@ -106,7 +106,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
           <input
             type="checkbox"
             id="button-hover"
-            checked={mobileConfig.buttonHoverEffect !== false}
+            checked={typeof mobileConfig.buttonHoverEffect === 'boolean' ? mobileConfig.buttonHoverEffect : true}
             onChange={(e) => updateMobileConfig('buttonHoverEffect', e.target.checked)}
             className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
           />
