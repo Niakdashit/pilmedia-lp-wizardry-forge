@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAppContext } from '../../context/AppContext';
 import { Menu } from 'lucide-react';
-import logo from '@/assets/logo.png';
+const logo = '/prosplay-logo.svg';
 
 const Layout: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar } = useAppContext();

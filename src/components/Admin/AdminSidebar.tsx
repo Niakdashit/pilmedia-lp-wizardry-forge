@@ -16,8 +16,8 @@ import {
   FileText
 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import logo from '@/assets/logo.png';
-import logoIcon from '@/assets/logo2.png';
+const logo = '/prosplay-logo.svg';
+const logoIcon = '/prosplay-icon.svg';
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();

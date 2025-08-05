@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import logo from '@/assets/logo.png';
+const logo = '/prosplay-logo.svg';
 
 interface EditorOnlyLayoutProps {
   children: React.ReactNode;

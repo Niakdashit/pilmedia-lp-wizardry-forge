@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import logo from "@/assets/logo.png";
+const logo = '/prosplay-logo.svg';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");

@@ -18,8 +18,8 @@ import {
   Shield
 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import logo from '@/assets/logo.png';
-import logoIcon from '@/assets/logo2.png';
+const logo = '/prosplay-logo.svg';
+const logoIcon = '/prosplay-icon.svg';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -45,10 +45,10 @@ const Sidebar: React.FC = () => {
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">
         {!sidebarCollapsed ? (
-          <img src={logo} alt="Prosplay Logo" className="h-11 w-auto ml-14 mt-2" />
+          <img src={logo} alt="Prosplay Logo" className="h-16 w-auto ml-8 mt-2" style={{maxWidth: '180px'}} />
         ) : (
           <div className="w-full flex items-center justify-center">
-            <img src={logoIcon} alt="Prosplay Icon" className="h-8 w-8 object-contain" />
+            <img src={logoIcon} alt="Prosplay Icon" className="h-12 w-12 object-contain" style={{maxWidth: '48px'}} />
           </div>
         )}
         <button
