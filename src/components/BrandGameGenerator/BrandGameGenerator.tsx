@@ -173,7 +173,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
             </h3>
             <div className="space-y-3 text-gray-600 max-w-md mx-auto">
               <div className="flex items-center justify-center gap-2 animate-pulse">
-                <div className="w-2 h-2 bg-[#841b60] rounded-full"></div>
+                <div className="w-2 h-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
                 <span>Analyse du site web et extraction du logo</span>
               </div>
               <div className="flex items-center justify-center gap-2 animate-pulse" style={{animationDelay: '0.5s'}}>

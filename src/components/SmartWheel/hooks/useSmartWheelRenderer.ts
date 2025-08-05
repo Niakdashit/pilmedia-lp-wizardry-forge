@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { WheelSegment, WheelTheme, WheelState } from '../types';
-import { getBorderStyle, createMetallicGradient, createNeonEffect, createRainbowGradient } from '../utils/borderStyles';
+import { getBorderStyle, createMetallicGradient, createNeonEffect, createRainbowGradient, createRoyalRouletteEffect } from '../utils/borderStyles';
 
 interface UseSmartWheelRendererProps {
   segments: WheelSegment[];
@@ -10,6 +10,7 @@ interface UseSmartWheelRendererProps {
   size: number;
   borderStyle?: string;
   customBorderColor?: string;
+  customBorderWidth?: number;
 }
 
 export const useSmartWheelRenderer = ({
@@ -18,7 +19,8 @@ export const useSmartWheelRenderer = ({
   wheelState,
   size,
   borderStyle = 'classic',
-  customBorderColor
+  customBorderColor,
+  customBorderWidth
 }: UseSmartWheelRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -78,7 +80,7 @@ export const useSmartWheelRenderer = ({
     }
 
     // Dessiner les bordures stylisées
-    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime);
+    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime, customBorderWidth);
 
     // Dessiner l'ombre intérieure
     drawInnerShadow(ctx, centerX, centerY, maxRadius);
@@ -87,7 +89,7 @@ export const useSmartWheelRenderer = ({
     drawCenter(ctx, centerX, centerY, size, theme);
 
     // Dessiner le pointeur
-    drawPointer(ctx, centerX, centerY, maxRadius, theme);
+    drawPointer(ctx, centerX, centerY, maxRadius);
 
   }, [segments, theme, wheelState, size, borderStyle, animationTime]);
 
@@ -130,18 +132,32 @@ export const useSmartWheelRenderer = ({
       
       ctx.fill();
 
-      // Bordure fine entre segments
+      // Bordure fine entre segments (largeur fixe, indépendante du curseur de bordure)
+      ctx.save(); // Sauvegarder l'état du contexte
       ctx.strokeStyle = theme.colors.background;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2; // Toujours 2px fixe, jamais mise à l'échelle
+      ctx.lineJoin = 'miter';
+      ctx.lineCap = 'square';
       ctx.stroke();
+      ctx.restore(); // Restaurer l'état du contexte
 
       // Dessiner le texte
       drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);
     });
   };
 
-  const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number) => {
+  const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number, customWidth?: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
+    
+    // Calculer le facteur d'échelle basé sur la taille de la roue
+    // Taille de référence : 200px (taille de base)
+    const scaleFactor = size / 200;
+    
+    // Utiliser la largeur personnalisée si fournie, sinon la largeur du style
+    const baseBorderWidth = customWidth !== undefined ? customWidth : borderStyleConfig.width;
+    
+    // Ajuster la largeur de bordure proportionnellement à l'échelle
+    const borderWidth = baseBorderWidth * scaleFactor;
 
     // Utiliser la couleur personnalisée seulement pour le style "classique"
     const getBorderColor = (index: number = 0) => {
@@ -155,88 +171,101 @@ export const useSmartWheelRenderer = ({
 
     ctx.save();
 
-    switch (borderStyleConfig.type) {
-      case 'solid':
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.strokeStyle = getBorderColor(0);
-        ctx.lineWidth = borderStyleConfig.width;
-        if (borderStyleConfig.effects.shadow) {
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-          ctx.shadowBlur = 10;
-        }
-        ctx.stroke();
-        break;
-
-      case 'metallic':
-      case 'luxury':
-        // Pour les styles prédéfinis, toujours utiliser leurs couleurs définies
-        const colors = borderStyleName !== 'classic' 
-          ? borderStyleConfig.colors 
-          : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
-        const metallicGradient = createMetallicGradient(ctx, colors, centerX, centerY, radius);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.strokeStyle = metallicGradient;
-        ctx.lineWidth = borderStyleConfig.width;
-        
-        if (borderStyleConfig.effects.shadow) {
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-          ctx.shadowBlur = 15;
-        }
-        
-        ctx.stroke();
-
-        // Effet métallique avec highlights
-        if (borderStyleConfig.effects.metallic) {
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-
-        if (borderStyleConfig.effects.glow) {
-          createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0), 0.5);
-        }
-        break;
-
-      case 'neon':
-        createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0));
-        break;
-
-      case 'gradient':
-        if (borderStyleName === 'rainbow') {
-          const rainbowGradient = createRainbowGradient(ctx, centerX, centerY, radius, animationTime);
+    // Gestion spéciale pour Royal Roulette
+    if (borderStyleName === 'royalRoulette') {
+      createRoyalRouletteEffect(ctx, centerX, centerY, radius, animationTime, size);
+    } else {
+      switch (borderStyleConfig.type) {
+        case 'solid':
           ctx.beginPath();
           ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-          ctx.strokeStyle = rainbowGradient;
-          ctx.lineWidth = borderStyleConfig.width;
+          ctx.strokeStyle = getBorderColor(0);
+          ctx.lineWidth = borderWidth;
+          ctx.lineJoin = 'miter';
+          ctx.lineCap = 'square';
+          if (borderStyleConfig.effects.shadow) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 10;
+          }
           ctx.stroke();
-        } else {
-          const gradient = ctx.createLinearGradient(
-            centerX - radius, centerY - radius,
-            centerX + radius, centerY + radius
-          );
-          const gradientColors = borderStyleName !== 'classic' 
+          break;
+
+        case 'metallic':
+        case 'luxury':
+          // Pour les styles prédéfinis, toujours utiliser leurs couleurs définies
+          const colors = borderStyleName !== 'classic' 
             ? borderStyleConfig.colors 
             : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
-          gradientColors.forEach((color, index) => {
-            const position = gradientColors.length === 1 ? 0 : index / (gradientColors.length - 1);
-            gradient.addColorStop(position, color);
-          });
-          
+          const metallicGradient = createMetallicGradient(ctx, colors, centerX, centerY, radius);
           ctx.beginPath();
           ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-          ctx.strokeStyle = gradient;
-          ctx.lineWidth = borderStyleConfig.width;
+          ctx.strokeStyle = metallicGradient;
+          ctx.lineWidth = borderWidth;
+          ctx.lineJoin = 'miter';
+          ctx.lineCap = 'square';
+          
+          if (borderStyleConfig.effects.shadow) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 15;
+          }
+          
           ctx.stroke();
-        }
 
-        if (borderStyleConfig.effects.glow) {
-          createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0), 0.3);
-        }
-        break;
+          // Effet métallique avec highlights
+          if (borderStyleConfig.effects.metallic) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+
+          if (borderStyleConfig.effects.glow) {
+            createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0), 0.5);
+          }
+          break;
+
+        case 'neon':
+          createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0));
+          break;
+
+        case 'gradient':
+          if (borderStyleName === 'rainbow') {
+            const rainbowGradient = createRainbowGradient(ctx, centerX, centerY, radius, animationTime);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = rainbowGradient;
+            ctx.lineWidth = borderWidth;
+            ctx.lineJoin = 'miter';
+            ctx.lineCap = 'square';
+            ctx.stroke();
+          } else {
+            const gradient = ctx.createLinearGradient(
+              centerX - radius, centerY - radius,
+              centerX + radius, centerY + radius
+            );
+            const gradientColors = borderStyleName !== 'classic' 
+              ? borderStyleConfig.colors 
+              : (customBorderColor ? [customBorderColor] : borderStyleConfig.colors);
+            gradientColors.forEach((color, index) => {
+              const position = gradientColors.length === 1 ? 0 : index / (gradientColors.length - 1);
+              gradient.addColorStop(position, color);
+            });
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = borderWidth;
+            ctx.lineJoin = 'miter';
+            ctx.lineCap = 'square';
+            ctx.stroke();
+          }
+
+          if (borderStyleConfig.effects.glow) {
+            createNeonEffect(ctx, centerX, centerY, radius, getBorderColor(0), 0.3);
+          }
+          break;
+      }
     }
 
     ctx.restore();
@@ -306,58 +335,112 @@ export const useSmartWheelRenderer = ({
     ctx.stroke();
   };
 
-  const drawPointer = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, theme: WheelTheme) => {
+  const drawPointer = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) => {
     ctx.save();
     
-    // Positionner le pointeur pour qu'il touche presque les segments
-    const pointerDistance = radius - 5; // Plus proche des segments
+    // Positionner le pointeur pour qu'il touche presque les segments (style Burger King)
+    const pointerDistance = radius - 8;
     ctx.translate(centerX, centerY - pointerDistance);
     
-    // Taille augmentée du pointeur
-    const pointerWidth = size * 0.04; // Largeur proportionnelle à la taille de la roue
-    const pointerHeight = size * 0.08; // Hauteur proportionnelle à la taille de la roue
+    // Taille du pointeur style Burger King (plus large et plus imposant)
+    const pointerWidth = size * 0.06; // Plus large
+    const pointerHeight = size * 0.12; // Plus haut et imposant
+    const scaleFactor = size / 200;
     
-    // Dessiner l'ombre du pointeur
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    // === OMBRE PROFONDE STYLE BURGER KING ===
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 12 * scaleFactor;
+    ctx.shadowOffsetX = 3 * scaleFactor;
+    ctx.shadowOffsetY = 4 * scaleFactor;
+    
+    // === GRADIENT DORÉ/ORANGE PRINCIPAL ===
+    const mainGradient = ctx.createLinearGradient(
+      -pointerWidth, -pointerHeight,
+      pointerWidth, 0
+    );
+    
+    // Couleurs Burger King pour le pointeur
+    mainGradient.addColorStop(0, '#D2691E'); // Orange foncé
+    mainGradient.addColorStop(0.3, '#FF8C00'); // Orange vif
+    mainGradient.addColorStop(0.5, '#FFD700'); // Or brillant
+    mainGradient.addColorStop(0.7, '#FFA500'); // Orange doré
+    mainGradient.addColorStop(1, '#FF7F00'); // Orange moyen
     
     // Dessiner le pointeur principal
-    ctx.fillStyle = theme.colors.accent;
+    ctx.fillStyle = mainGradient;
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-pointerWidth, -pointerHeight);
-    ctx.lineTo(pointerWidth, -pointerHeight);
+    ctx.moveTo(0, 0); // Pointe vers le bas
+    ctx.lineTo(-pointerWidth, -pointerHeight); // Coin gauche
+    ctx.lineTo(pointerWidth, -pointerHeight); // Coin droit
     ctx.closePath();
     ctx.fill();
     
-    // Réinitialiser l'ombre
+    // Réinitialiser l'ombre pour les effets suivants
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
     
-    // Bordure du pointeur
-    ctx.strokeStyle = theme.colors.border;
-    ctx.lineWidth = 3;
+    // === BORDURE DORÉE ÉPAISSE ===
+    const borderGradient = ctx.createLinearGradient(
+      -pointerWidth, -pointerHeight,
+      pointerWidth, 0
+    );
+    borderGradient.addColorStop(0, '#B8860B'); // Or sombre
+    borderGradient.addColorStop(0.5, '#DAA520'); // Or moyen
+    borderGradient.addColorStop(1, '#FFD700'); // Or brillant
+    
+    ctx.strokeStyle = borderGradient;
+    ctx.lineWidth = 4 * scaleFactor; // Bordure plus épaisse
+    ctx.lineJoin = 'miter';
+    ctx.lineCap = 'square';
     ctx.stroke();
     
-    // Ajouter un effet de brillance
-    if (theme.effects.gradient) {
-      const gradient = ctx.createLinearGradient(-pointerWidth, -pointerHeight, pointerWidth, 0);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-      gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
-      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(-pointerWidth, -pointerHeight);
-      ctx.lineTo(pointerWidth, -pointerHeight);
-      ctx.closePath();
-      ctx.fill();
-    }
+    // === EFFET MÉTALLIQUE BRILLANT ===
+    const highlightGradient = ctx.createLinearGradient(
+      -pointerWidth * 0.8, -pointerHeight * 0.9,
+      pointerWidth * 0.8, -pointerHeight * 0.3
+    );
+    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    highlightGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
+    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = highlightGradient;
+    ctx.beginPath();
+    ctx.moveTo(0, -pointerHeight * 0.1);
+    ctx.lineTo(-pointerWidth * 0.7, -pointerHeight * 0.8);
+    ctx.lineTo(pointerWidth * 0.7, -pointerHeight * 0.8);
+    ctx.closePath();
+    ctx.fill();
+    
+    // === REFLET MÉTALLIQUE SUR LE CÔTÉ GAUCHE ===
+    const sideHighlight = ctx.createLinearGradient(
+      -pointerWidth, -pointerHeight,
+      -pointerWidth * 0.5, -pointerHeight * 0.5
+    );
+    sideHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+    sideHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = sideHighlight;
+    ctx.beginPath();
+    ctx.moveTo(0, -pointerHeight * 0.2);
+    ctx.lineTo(-pointerWidth * 0.9, -pointerHeight * 0.9);
+    ctx.lineTo(-pointerWidth * 0.6, -pointerHeight * 0.7);
+    ctx.closePath();
+    ctx.fill();
+    
+    // === PETIT REFLET CENTRAL POUR L'EFFET PREMIUM ===
+    const centerSparkle = ctx.createRadialGradient(
+      0, -pointerHeight * 0.6, 0,
+      0, -pointerHeight * 0.6, pointerWidth * 0.3
+    );
+    centerSparkle.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    centerSparkle.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = centerSparkle;
+    ctx.beginPath();
+    ctx.arc(0, -pointerHeight * 0.6, pointerWidth * 0.2, 0, 2 * Math.PI);
+    ctx.fill();
     
     ctx.restore();
   };

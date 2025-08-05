@@ -9,7 +9,7 @@ export const SocialModule: React.FC = () => {
         {['Facebook', 'Twitter', 'Instagram', 'LinkedIn'].map((network) => (
           <div
             key={network}
-            className="w-10 h-10 rounded-full bg-[#841b60] flex items-center justify-center text-white text-xs font-bold"
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#841b60] to-[#b41b60] flex items-center justify-center text-white text-xs font-bold"
           >
             {network[0]}
           </div>

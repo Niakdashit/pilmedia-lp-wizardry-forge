@@ -116,7 +116,7 @@ const Puzzle: React.FC<PuzzleProps> = ({ config = {}, onConfigChange, isPreview,
           <motion.div
             key={index}
             className={`aspect-square rounded-sm cursor-move ${
-              piece === pieces.length - 1 ? 'invisible' : 'bg-[#841b60]'
+              piece === pieces.length - 1 ? 'invisible' : 'bg-gradient-to-br from-[#841b60] to-[#b41b60]'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

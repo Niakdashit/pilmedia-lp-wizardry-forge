@@ -132,7 +132,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
           
           <button 
             onClick={onReset} 
-            className="inline-flex items-center justify-center px-6 py-2 bg-[#841b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-medium rounded-lg hover:bg-[#6d164f] transition-colors"
           >
             {resultScreen?.replayButtonText || 'Rejouer'}
           </button>

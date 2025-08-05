@@ -109,7 +109,7 @@ const ParticipationsManager: React.FC<ParticipationsManagerProps> = ({
           <button
             onClick={handleExport}
             disabled={participations.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-[#841b60] text-white rounded-lg hover:bg-[#6d1550] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d1550] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
             Exporter CSV

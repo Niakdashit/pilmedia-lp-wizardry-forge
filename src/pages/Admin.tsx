@@ -119,7 +119,7 @@ const Admin: React.FC = () => {
             </Link>
             <Link
               to="/admin/clients"
-              className="inline-flex items-center justify-center px-6 py-2.5 bg-[#841b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm whitespace-nowrap"
+              className="inline-flex items-center justify-center px-6 py-2.5 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm whitespace-nowrap"
             >
               <Users className="w-5 h-5 mr-2" />
               Gestion Clients

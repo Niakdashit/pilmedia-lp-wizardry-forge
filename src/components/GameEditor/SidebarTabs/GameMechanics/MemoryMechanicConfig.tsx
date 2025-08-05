@@ -84,7 +84,7 @@ const MemoryMechanicConfig: React.FC<MemoryMechanicConfigProps> = ({ config, onC
                 type="text"
                 value={config.memoryCardBackColor || '#3b82f6'}
                 onChange={(e) => onConfigUpdate({ memoryCardBackColor: e.target.value })}
-                placeholder="#3b82f6"
+                placeholder="#841b60"
               />
             </div>
           </div>

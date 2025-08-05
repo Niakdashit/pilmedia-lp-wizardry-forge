@@ -111,7 +111,7 @@ export const SettingsTab: React.FC = () => {
           <button
             onClick={handleGenerate}
             disabled={!prompt || isGenerating}
-            className="w-full px-4 py-2 bg-[#841b60] text-white rounded-lg"
+            className="w-full px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg"
           >
             {isGenerating ? 'Génération...' : 'Générer avec l\'IA'}
           </button>
@@ -132,7 +132,7 @@ export const SettingsTab: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveTemplate}
-                  className="px-4 py-2 bg-[#841b60] text-white rounded-lg"
+                  className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg"
                 >
                   <Save className="w-4 h-4 mr-2" /> Sauvegarder comme template
                 </button>

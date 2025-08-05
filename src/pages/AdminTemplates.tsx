@@ -87,7 +87,7 @@ const AdminTemplates: React.FC = () => {
               <span className="hidden sm:inline">Retour Dashboard</span>
               <span className="sm:hidden">Retour</span>
             </Link>
-            <button className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-[#841b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base whitespace-nowrap">
+            <button className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white font-semibold rounded-xl hover:bg-[#6d164f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base whitespace-nowrap">
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               <span className="hidden sm:inline">Créer un Modèle</span>
               <span className="sm:hidden">Créer</span>

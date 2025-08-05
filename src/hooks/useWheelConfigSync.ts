@@ -33,6 +33,7 @@ export const useWheelConfigSync = ({
       setWheelModalConfig({
         wheelBorderStyle: campaign.design.wheelBorderStyle,
         wheelBorderColor: campaign.design.wheelConfig.borderColor,
+        wheelBorderWidth: campaign.design.wheelConfig.borderWidth,
         wheelScale: campaign.design.wheelConfig.scale
       });
     }
@@ -56,6 +57,7 @@ export const useWheelConfigSync = ({
     // Handlers individuels pour compatibilité
     setWheelBorderStyle: (style: string) => updateWheelConfig({ borderStyle: style }),
     setWheelBorderColor: (color: string) => updateWheelConfig({ borderColor: color }),
+    setWheelBorderWidth: (width: number) => updateWheelConfig({ borderWidth: width }),
     setWheelScale: (scale: number) => updateWheelConfig({ scale })
   };
 };

@@ -48,7 +48,7 @@ const WheelResult: React.FC<WheelResultProps> = ({ result, onPlayAgain }) => {
         
         <button
           onClick={onPlayAgain}
-          className="w-full px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors"
+          className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-md hover:from-purple-700 hover:to-pink-700 transition-colors"
         >
           Rejouer
         </button>

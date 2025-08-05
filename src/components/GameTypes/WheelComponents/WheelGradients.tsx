@@ -16,7 +16,7 @@ export const createWheelGradients = (
 
   // Validate and provide fallback colors
   const safeCustomColors = customColors && customColors.primary && customColors.secondary ? {
-    primary: customColors.primary || '#3b82f6',
+    primary: customColors.primary || '#841b60',
     secondary: customColors.secondary || '#1e40af',
     accent: customColors.accent || customColors.secondary || '#1e40af'
   } : null;
@@ -87,7 +87,7 @@ export const createSegmentGradient = (
   theme: string
 ) => {
   // Validate color parameter
-  const safeColor = color && typeof color === 'string' && color.startsWith('#') ? color : '#3b82f6';
+  const safeColor = color && typeof color === 'string' && color.startsWith('#') ? color : '#841b60';
   console.log('Creating segment gradient with color:', { original: color, safe: safeColor });
   
   const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
@@ -125,7 +125,7 @@ const lightenColor = (color: string, percent: number): string => {
   try {
     if (!color || !color.startsWith('#')) {
       console.warn('Invalid color for lightening:', color);
-      return '#3b82f6'; // Default blue
+      return '#841b60'; // Default brand color
     }
     
     const num = parseInt(color.replace("#", ""), 16);
@@ -143,7 +143,7 @@ const lightenColor = (color: string, percent: number): string => {
       (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
   } catch (error) {
     console.error('Error lightening color:', error);
-    return color || '#3b82f6';
+    return color || '#841b60';
   }
 };
 
@@ -151,7 +151,7 @@ const darkenColor = (color: string, percent: number): string => {
   try {
     if (!color || !color.startsWith('#')) {
       console.warn('Invalid color for darkening:', color);
-      return '#1e40af'; // Default dark blue
+      return '#6b1f47'; // Default dark brand color
     }
     
     const num = parseInt(color.replace("#", ""), 16);
