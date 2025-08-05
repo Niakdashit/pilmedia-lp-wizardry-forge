@@ -67,7 +67,7 @@ const MobileVisuals: React.FC<MobileVisualsProps> = ({ campaign, setCampaign }) 
       <div>
         <ImageUpload
           label="Logo mobile (optionnel)"
-          value={mobileConfig.logoOverlay || ''}
+          value={typeof mobileConfig.logoOverlay === 'object' ? mobileConfig.logoOverlay?.src || '' : mobileConfig.logoOverlay || ''}
           onChange={(value) => updateMobileConfig('logoOverlay', value)}
         />
       </div>
@@ -107,7 +107,7 @@ const MobileVisuals: React.FC<MobileVisualsProps> = ({ campaign, setCampaign }) 
       <div>
         <ImageUpload
           label="Calque décoratif (optionnel)"
-          value={mobileConfig.decorativeOverlay || ''}
+          value={typeof mobileConfig.decorativeOverlay === 'object' ? mobileConfig.decorativeOverlay?.type || '' : mobileConfig.decorativeOverlay || ''}
           onChange={(value) => updateMobileConfig('decorativeOverlay', value)}
         />
         <p className="text-xs text-gray-500 mt-2">

@@ -21,7 +21,7 @@ const MobileOverlays: React.FC<MobileOverlaysProps> = ({ mobileConfig, previewMo
           style={{ zIndex: 20 }}
         >
           <img
-            src={mobileConfig.logoOverlay}
+            src={typeof mobileConfig.logoOverlay === 'object' ? mobileConfig.logoOverlay?.src || '' : mobileConfig.logoOverlay}
             alt="Logo"
             className="object-contain"
             style={{
@@ -36,7 +36,7 @@ const MobileOverlays: React.FC<MobileOverlaysProps> = ({ mobileConfig, previewMo
       {mobileConfig.decorativeOverlay && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
           <img
-            src={mobileConfig.decorativeOverlay}
+            src={typeof mobileConfig.decorativeOverlay === 'object' ? mobileConfig.decorativeOverlay?.type || '' : mobileConfig.decorativeOverlay}
             alt="Decorative overlay"
             className="w-full h-full object-contain"
           />
