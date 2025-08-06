@@ -4,19 +4,13 @@ import {
   Layers, Type, Image, Settings, Gamepad2, Download, 
   Smartphone, Tablet, Monitor, Undo2, Redo2, Save,
   Play, Pause, ChevronUp, ChevronDown, Palette,
-  Move, RotateCcw, Copy, Trash2, Eye, EyeOff,
-  AlignLeft, AlignCenter, AlignRight, Bold, Italic,
-  Plus, Minus, ZoomIn, ZoomOut, Grid, MousePointer,
-  PaintBucket, Sparkles, MoreHorizontal, X, Check
+  Trash2, Eye, Bold, Italic
 } from 'lucide-react';
 
 import DesignCanvas from './DesignCanvas';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
-import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
-import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
-import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
-import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
+import { useUndoRedo } from '../../hooks/useUndoRedo';
 
 interface MobileCanvaDesignEditorProps {
   className?: string;
@@ -26,21 +20,44 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
   // Store centralisé
   const { 
     setCampaign,
-    setPreviewDevice,
     setIsLoading,
     setIsModified
   } = useEditorStore();
 
-  // États principaux avec toutes les fonctionnalités
+  // Détection automatique du zoom optimal selon l'appareil
+  const getOptimalZoom = useCallback((device: 'desktop' | 'tablet' | 'mobile'): number => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    // Canvas de référence : 800x600px
+    const canvasWidth = 800;
+    const canvasHeight = 600;
+    
+    // Marges pour l'interface mobile
+    const marginTop = 160; // Header + device selection
+    const marginBottom = 160; // Bottom tabs
+    const marginSide = 20;
+    
+    const availableWidth = screenWidth - marginSide * 2;
+    const availableHeight = screenHeight - marginTop - marginBottom;
+    
+    const zoomWidth = availableWidth / canvasWidth;
+    const zoomHeight = availableHeight / canvasHeight;
+    
+    // Prendre le plus petit zoom pour que tout soit visible
+    return Math.min(zoomWidth, zoomHeight, 1) * 0.9; // 0.9 pour laisser un peu de marge
+  }, []);
+
+  // États principaux avec zoom adaptatif
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
-  const [canvasZoom, setCanvasZoom] = useState(0.95);
+  const [canvasZoom, setCanvasZoom] = useState(() => getOptimalZoom('mobile'));
   const [selectedElement, setSelectedElement] = useState<any>(null);
-  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  const [extractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: { wheelConfig: { scale: 2 } }
@@ -49,6 +66,12 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
   // États pour l'interface mobile
   const [activeTab, setActiveTab] = useState<'elements' | 'design' | 'layers' | 'text' | 'images' | 'settings' | 'game' | 'export'>('elements');
   const [isBottomPanelExpanded, setIsBottomPanelExpanded] = useState(false);
+
+  // Gestion du changement d'appareil avec recalcul du zoom
+  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
+    setSelectedDevice(device);
+    setCanvasZoom(getOptimalZoom(device));
+  };
 
   // Gestion des éléments avec historique
   const handleAddElement = useCallback((element: any) => {
@@ -70,7 +93,6 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
 
   // Système d'historique
   const {
-    addToHistory,
     undo,
     redo,
     canUndo,
@@ -98,12 +120,13 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
     }
   });
 
-  // Configuration campagne
+  // Configuration campagne complète
   const campaignData = useMemo(() => ({
     id: 'wheel-design-preview',
-    type: 'wheel',
+    name: 'Ma Campagne',
+    type: 'wheel' as const,
     design: {
-      background: canvasBackground,
+      background: canvasBackground.value || '#ffffff',
       customTexts: canvasElements.filter(el => el.type === 'text'),
       customImages: canvasElements.filter(el => el.type === 'image'),
       extractedColors: extractedColors,
@@ -112,6 +135,23 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
         secondary: extractedColors[1] || '#4ecdc4',
         accent: extractedColors[2] || '#45b7d1'
       }
+    },
+    gameConfig: {
+      wheel: {
+        segments: [
+          { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
+          { id: '2', label: 'Prix 2', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: true }
+        ],
+        winProbability: 0.75,
+        maxWinners: 100,
+        buttonLabel: 'Faire tourner'
+      }
+    },
+    buttonConfig: {
+      text: 'Faire tourner',
+      color: extractedColors[0] || '#841b60',
+      textColor: '#ffffff',
+      borderRadius: '8px'
     },
     canvasConfig: {
       elements: canvasElements,
@@ -217,7 +257,7 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
             {deviceButtons.map(device => (
               <button
                 key={device.id}
-                onClick={() => setSelectedDevice(device.id as any)}
+                onClick={() => handleDeviceChange(device.id as any)}
                 className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedDevice === device.id 
                     ? 'bg-white/20 text-white' 
@@ -268,17 +308,6 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Zoom slider fixe en bas */}
-            <div className="absolute bottom-20 right-4 z-20">
-              <ZoomSlider 
-                zoom={canvasZoom}
-                onZoomChange={setCanvasZoom}
-                minZoom={0.25}
-                maxZoom={3}
-                step={0.05}
-              />
             </div>
 
             {/* Barre d'onglets en bas */}
@@ -362,6 +391,55 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
                           </div>
                         )}
 
+                        {activeTab === 'layers' && (
+                          <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-800 mb-3">Gestion des calques</h3>
+                            <div className="space-y-2">
+                              {canvasElements.map((element) => (
+                                <div
+                                  key={element.id}
+                                  onClick={() => setSelectedElement(element)}
+                                  className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+                                    selectedElement?.id === element.id
+                                      ? 'border-purple-300 bg-purple-50'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    {element.type === 'text' ? (
+                                      <Type className="w-4 h-4 text-gray-500" />
+                                    ) : (
+                                      <Image className="w-4 h-4 text-gray-500" />
+                                    )}
+                                    <span className="text-sm font-medium">
+                                      {element.type === 'text' ? element.content : 'Image'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <button className="p-1 hover:bg-gray-100 rounded">
+                                      <Eye className="w-3 h-3 text-gray-400" />
+                                    </button>
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCanvasElements(prev => prev.filter(el => el.id !== element.id));
+                                      }}
+                                      className="p-1 hover:bg-gray-100 rounded"
+                                    >
+                                      <Trash2 className="w-3 h-3 text-gray-400" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                              {canvasElements.length === 0 && (
+                                <p className="text-sm text-gray-500 text-center py-4">
+                                  Aucun élément sur le canvas
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {activeTab === 'design' && (
                           <div className="space-y-4">
                             <h3 className="font-semibold text-gray-800 mb-3">Design et couleurs</h3>
@@ -406,7 +484,48 @@ const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ class
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 />
                               </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleElementUpdate({
+                                    style: {
+                                      ...selectedElement.style,
+                                      fontWeight: selectedElement.style?.fontWeight === 'bold' ? 'normal' : 'bold'
+                                    }
+                                  })}
+                                  className={`flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg border transition-colors ${
+                                    selectedElement.style?.fontWeight === 'bold'
+                                      ? 'bg-purple-100 border-purple-300 text-purple-700'
+                                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  <Bold className="w-4 h-4" />
+                                  <span className="text-sm">Gras</span>
+                                </button>
+                                <button
+                                  onClick={() => handleElementUpdate({
+                                    style: {
+                                      ...selectedElement.style,
+                                      fontStyle: selectedElement.style?.fontStyle === 'italic' ? 'normal' : 'italic'
+                                    }
+                                  })}
+                                  className={`flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg border transition-colors ${
+                                    selectedElement.style?.fontStyle === 'italic'
+                                      ? 'bg-purple-100 border-purple-300 text-purple-700'
+                                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  <Italic className="w-4 h-4" />
+                                  <span className="text-sm">Italique</span>
+                                </button>
+                              </div>
                             </div>
+                          </div>
+                        )}
+
+                        {activeTab === 'text' && (!selectedElement || selectedElement.type !== 'text') && (
+                          <div className="text-center py-8">
+                            <Type className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">Sélectionnez un élément texte pour modifier ses propriétés</p>
                           </div>
                         )}
 
