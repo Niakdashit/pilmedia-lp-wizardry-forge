@@ -4,7 +4,7 @@ import CampaignEditorHeader from '../components/CampaignEditor/CampaignEditorHea
 import CampaignEditorTabs from '../components/CampaignEditor/CampaignEditorTabs';
 import CampaignEditorContent from '../components/CampaignEditor/CampaignEditorContent';
 import PreviewModal from '../components/CampaignEditor/PreviewModal';
-import CampaignMobile from '../components/CampaignEditor/CampaignMobile';
+// import CampaignMobile from '../components/CampaignEditor/CampaignMobile';
 import FormEditor from '../components/campaign/FormEditor';
 import ParticipationsViewer from '../components/campaign/ParticipationsViewer';
 import { CampaignType, getDefaultGameConfig } from '../utils/campaignTypes';
@@ -223,7 +223,7 @@ const CampaignEditor: React.FC = () => {
         <div className="flex flex-col w-full">
           <CampaignEditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-          {activeTab === 'mobile' ? <CampaignMobile campaign={campaign} setCampaign={setCampaign} /> : activeTab === 'form' ? <FormEditor formFields={campaign.formFields || []} setFormFields={fields => setCampaign((prev: any) => ({
+          {activeTab === 'mobile' ? <div className="p-4 text-center text-gray-500">Configuration mobile temporairement indisponible</div> : activeTab === 'form' ? <FormEditor formFields={campaign.formFields || []} setFormFields={fields => setCampaign((prev: any) => ({
           ...prev,
           formFields: fields
         }))} /> : activeTab === 'participations' ? <ParticipationsViewer campaignId={campaign.id || ''} campaignName={campaign.name} /> : <CampaignEditorContent activeTab={activeTab} campaign={campaign} setCampaign={setCampaign} />}

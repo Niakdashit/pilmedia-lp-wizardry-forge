@@ -28,7 +28,6 @@ import AdminSettings from './pages/AdminSettings';
 import AdminTeam from './pages/AdminTeam';
 import AdminAlerts from './pages/AdminAlerts';
 import GameEditor from './pages/GameEditor';
-import FontTest from './pages/FontTest';
 import DesignEditor from './pages/DesignEditor';
 import LivePreview from './pages/LivePreview';
 import Auth from './pages/Auth';
@@ -86,7 +85,6 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/pagebeta" element={<PageBeta />} />
             <Route path="/testpage" element={<TestPage />} />
-            <Route path="/font-test" element={<FontTest />} />
             <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>

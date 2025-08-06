@@ -5,7 +5,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { toast } from 'react-toastify';
 import GameSidebar from './GameSidebar';
 import GameContentPanel from './GameContentPanel';
-import GamePreview from './GamePreview';
+// import GamePreview from './GamePreview';
 import DeviceSelector from './DeviceSelector';
 import { useDeviceChangeSync } from './hooks/useDeviceChangeSync';
 import { useAutoSync } from './hooks/useAutoSync';
@@ -593,13 +593,10 @@ const GameEditorLayout: React.FC = () => {
             </div>
             
             {/* Preview */}
-            <div className="h-full p-6">
-              <GamePreview
-                device={selectedDevice}
-                config={memoizedConfig}
-                onConfigUpdate={updateConfig}
-                triggerAutoSync={() => triggerAutoSync(memoizedCustomTexts)}
-              />
+            <div className="h-full p-6 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                Aperçu temporairement indisponible
+              </div>
             </div>
           </div>
         </div>

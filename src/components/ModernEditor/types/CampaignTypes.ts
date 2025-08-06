@@ -190,18 +190,12 @@ export interface MobileConfig {
   hideLaunchButton?: boolean;
   
   // Visual properties
-  backgroundImage?: string;
+  backgroundImage?: string | { enabled?: boolean; src?: string; };
   backgroundMode?: string;
   backgroundColor?: string;
-  logoOverlay?: {
-    enabled?: boolean;
-    src?: string;
-  };
+  logoOverlay?: string | { enabled?: boolean; src?: string; };
   logoPosition?: string;
-  decorativeOverlay?: {
-    enabled?: boolean;
-    type?: string;
-  };
+  decorativeOverlay?: string | { enabled?: boolean; type?: string; };
   
   // Game placement properties
   gameVerticalAlign?: string;
@@ -234,6 +228,10 @@ export interface MobileConfig {
   descriptionAlignment?: string;
   
   // Button properties
+  buttonActionType?: string;
+  buttonLink?: string;
+  buttonMargin?: number;
+  buttonHoverEffect?: string;
   buttonPlacement?: string;
   horizontalPadding?: number;
   buttonSize?: 'small' | 'medium' | 'large';
@@ -241,7 +239,7 @@ export interface MobileConfig {
   buttonColor?: string;
   buttonTextColor?: string;
   buttonShape?: string;
-  buttonShadow?: boolean;
+  buttonShadow?: string | boolean;
   buttonText?: string;
   
   // Layout properties

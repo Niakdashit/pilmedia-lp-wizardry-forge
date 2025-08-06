@@ -16,9 +16,9 @@ export const createWheelGradients = (
 
   // Validate and provide fallback colors
   const safeCustomColors = customColors && customColors.primary && customColors.secondary ? {
-    primary: customColors.primary || '#841b60',
-    secondary: customColors.secondary || '#1e40af',
-    accent: customColors.accent || customColors.secondary || '#1e40af'
+    primary: customColors.primary || 'hsl(328 75% 31%)',
+    secondary: customColors.secondary || 'hsl(328 75% 40%)',
+    accent: customColors.accent || customColors.secondary || 'hsl(328 75% 40%)'
   } : null;
 
   console.log('Safe custom colors:', safeCustomColors);
@@ -87,7 +87,7 @@ export const createSegmentGradient = (
   theme: string
 ) => {
   // Validate color parameter
-  const safeColor = color && typeof color === 'string' && color.startsWith('#') ? color : '#841b60';
+  const safeColor = color && typeof color === 'string' && color.startsWith('#') ? color : 'hsl(328 75% 31%)';
   console.log('Creating segment gradient with color:', { original: color, safe: safeColor });
   
   const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
@@ -125,13 +125,13 @@ const lightenColor = (color: string, percent: number): string => {
   try {
     if (!color || !color.startsWith('#')) {
       console.warn('Invalid color for lightening:', color);
-      return '#841b60'; // Default brand color
+      return 'hsl(328 75% 31%)'; // Default brand color
     }
     
     const num = parseInt(color.replace("#", ""), 16);
     if (isNaN(num)) {
       console.warn('Invalid hex color:', color);
-      return '#3b82f6';
+      return 'hsl(328 75% 40%)';
     }
     
     const amt = Math.round(2.55 * percent);
@@ -143,7 +143,7 @@ const lightenColor = (color: string, percent: number): string => {
       (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
   } catch (error) {
     console.error('Error lightening color:', error);
-    return color || '#841b60';
+    return color || 'hsl(328 75% 31%)';
   }
 };
 
@@ -151,13 +151,13 @@ const darkenColor = (color: string, percent: number): string => {
   try {
     if (!color || !color.startsWith('#')) {
       console.warn('Invalid color for darkening:', color);
-      return '#6b1f47'; // Default dark brand color
+      return 'hsl(328 75% 25%)'; // Default dark brand color
     }
     
     const num = parseInt(color.replace("#", ""), 16);
     if (isNaN(num)) {
       console.warn('Invalid hex color:', color);
-      return '#1e40af';
+      return 'hsl(328 75% 25%)';
     }
     
     const amt = Math.round(2.55 * percent);
@@ -169,6 +169,6 @@ const darkenColor = (color: string, percent: number): string => {
       (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
   } catch (error) {
     console.error('Error darkening color:', error);
-    return color || '#1e40af';
+    return color || 'hsl(328 75% 25%)';
   }
 };

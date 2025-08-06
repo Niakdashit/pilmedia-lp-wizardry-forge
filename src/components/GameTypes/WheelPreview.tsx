@@ -2,7 +2,6 @@
 import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
-import { WheelConfigService } from '../../services/WheelConfigService';
 
 interface WheelPreviewProps {
   campaign: any;
@@ -18,7 +17,6 @@ interface WheelPreviewProps {
   gamePosition?: string;
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
   disabled?: boolean;
-  wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   disableForm?: boolean;
   borderStyle?: string;
 }
@@ -31,7 +29,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'medium',
   previewDevice = 'desktop',
   disabled = false,
-  wheelModalConfig = {},
   borderStyle = 'classic'
 }) => {
   const { getResponsiveDimensions } = useGameSize(gameSize);
@@ -40,10 +37,10 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   // Récupérer les segments depuis la configuration de la campagne avec priorité aux couleurs extraites
   const segments = campaign.gameConfig?.wheel?.segments || 
                   campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: campaign.design?.customColors?.primary || '#ff6b6b' },
-    { id: '2', label: 'Prix 2', color: campaign.design?.customColors?.secondary || '#4ecdc4' },
-    { id: '3', label: 'Prix 3', color: campaign.design?.customColors?.primary || '#45b7d1' },
-    { id: '4', label: 'Dommage', color: campaign.design?.customColors?.secondary || '#feca57' }
+    { id: '1', label: 'Prix 1', color: campaign.design?.customColors?.primary || 'hsl(328 75% 31%)' },
+    { id: '2', label: 'Prix 2', color: campaign.design?.customColors?.secondary || 'hsl(328 75% 40%)' },
+    { id: '3', label: 'Prix 3', color: campaign.design?.customColors?.primary || 'hsl(328 75% 31%)' },
+    { id: '4', label: 'Dommage', color: campaign.design?.customColors?.secondary || 'hsl(328 75% 40%)' }
   ];
 
 
@@ -72,8 +69,8 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   // Couleurs de marque unifiées - priorité aux customColors de la campagne
   const brandColors = {
-    primary: campaign.design?.customColors?.primary || extractedColors[0] || '#841b60',
-    secondary: campaign.design?.customColors?.secondary || extractedColors[1] || '#4ecdc4',
+    primary: campaign.design?.customColors?.primary || extractedColors[0] || 'hsl(328 75% 31%)',
+    secondary: campaign.design?.customColors?.secondary || extractedColors[1] || 'hsl(328 75% 40%)',
     accent: campaign.design?.customColors?.accent || extractedColors[2] || '#45b7d1'
   };
 
@@ -91,29 +88,11 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Utiliser la même logique de calcul que StandardizedWheel pour la cohérence
-  // Passer wheelModalConfig pour synchroniser les modifications en temps réel
-  const wheelConfig = WheelConfigService.getCanonicalWheelConfig(
-    campaign,
-    campaign?.design?.extractedColors || [],
-    wheelModalConfig,
-    { device: previewDevice, shouldCropWheel: false }
-  );
-  
-  console.log('🎡 WheelPreview - Configuration unifiée:', {
-    wheelConfigSize: wheelConfig.size,
-    campaignScale: campaign?.design?.wheelConfig?.scale,
-    previewDevice,
-    gameDimensions
-  });
-  
-  const wheelSize = wheelConfig.size || 200;
-  
-  console.log('🎡 WheelPreview - Taille finale:', {
-    wheelSize,
-    wheelConfigSize: wheelConfig.size,
-    scale: wheelConfig.scale
-  });
+  // Calculer une taille de roue adaptée avec l'échelle de la campagne
+  const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
+  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
+  const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
+  const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
 
   return (
     <div 
@@ -133,6 +112,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         segments={smartWheelSegments}
         theme="modern"
         size={wheelSize}
+        maxSize={maxWheelSize}
         brandColors={brandColors}
         onResult={handleResult}
         onSpin={handleSpin}

@@ -9,17 +9,14 @@ import { FieldConfig } from '../forms/DynamicContactForm';
 
 interface FunnelUnlockedGameProps {
   campaign: any;
-  previewMode: 'mobile' | 'tablet' | 'desktop';
+  previewMode?: 'mobile' | 'tablet' | 'desktop';
   mobileConfig?: any;
-  wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
-  onReset?: () => void;
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   campaign,
   previewMode = 'desktop',
-  mobileConfig,
-  wheelModalConfig
+  mobileConfig
 }) => {
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
@@ -134,7 +131,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         showValidationMessage={showValidationMessage} 
         previewMode={previewMode} 
         mobileConfig={mobileConfig} 
-        wheelModalConfig={wheelModalConfig}
         onGameFinish={handleGameFinish} 
         onGameStart={handleGameStart} 
         onGameButtonClick={handleGameButtonClick} 

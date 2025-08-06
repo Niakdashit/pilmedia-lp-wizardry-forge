@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import GamePreview from '../components/GameEditor/GamePreview';
-import type { DeviceType, EditorConfig } from '../components/GameEditor/GameEditorLayout';
+// import GamePreview from '../components/GameEditor/GamePreview';
+import type { EditorConfig } from '../components/GameEditor/GameEditorLayout';
 
 const LivePreview: React.FC = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const device = (query.get('device') as DeviceType) || 'desktop';
+  // const device = (query.get('device') as DeviceType) || 'desktop';
   const [config, setConfig] = useState<EditorConfig | null>(null);
   const [loadingError, setLoadingError] = useState(false);
 
@@ -45,7 +45,9 @@ const LivePreview: React.FC = () => {
 
   return (
     <div className={isMode2 ? "w-screen h-screen overflow-hidden" : "bg-gray-100 min-h-screen"}>
-      <GamePreview device={device} config={config} isLivePreview={true} />
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Aperçu temporairement indisponible
+      </div>
     </div>
   );
 };
