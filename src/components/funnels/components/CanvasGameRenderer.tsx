@@ -99,17 +99,23 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const getCanvasSize = () => {
     switch (previewMode) {
       case 'desktop':
-        return { width: '100%', height: '100%' };
+        return { width: 1024, height: 768 };
       case 'tablet':
         return { width: 768, height: 1024 };
       case 'mobile':
-        return { width: 360, height: 640 };
       default:
         return { width: 360, height: 640 };
     }
   };
 
   const canvasSize = getCanvasSize();
+
+  const containerStyle = useMemo(() => ({
+    width: '100%',
+    maxWidth: `${canvasSize.width}px`,
+    aspectRatio: `${canvasSize.width} / ${canvasSize.height}`,
+    margin: '0 auto'
+  }), [canvasSize]);
   
 
   const handleGameComplete = (result: 'win' | 'lose') => {
@@ -191,29 +197,16 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   return (
-    <div className="w-full h-full">
-      <div 
-        className="canvas-container relative bg-white overflow-hidden w-full h-full"
-        style={previewMode === 'desktop' ? {
-          width: '100%',
-          height: '100vh',
-        } : previewMode === 'mobile' ? {
-          width: '100%',
-          height: '100vh',
-        } : {
-          width: `${canvasSize.width}px`,
-          height: `${canvasSize.height}px`,
-          margin: '0 auto',
-          // Utiliser la même logique de transformation que l'éditeur pour cohérence
-          transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
-          transformOrigin: 'top center'
-        }}
+    <div className="w-full">
+      <div
+        className="canvas-container relative bg-white overflow-hidden w-full"
+        style={containerStyle}
       >
         {/* Canvas Background */}
-        <div 
-          className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{
-            background: campaign.design?.background?.type === 'image' 
+            background: campaign.design?.background?.type === 'image'
               ? `url(${campaign.design.background.value}) center/cover no-repeat` 
               : campaign.design?.background?.value || canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
           }}
