@@ -18,7 +18,7 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
-import { useMobileOptimization } from './hooks/useMobileOptimization';
+
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
@@ -71,21 +71,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   
   // État pour le menu contextuel global du canvas
-  const [copiedStyle, setCopiedStyle] = useState<any>(null);
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
-  // Optimisation mobile pour une expérience tactile parfaite
-  const {
-    isMobile,
-    isTablet,
-    deviceType
-  } = useMobileOptimization(activeCanvasRef, {
-    preventScrollBounce: true,
-    stabilizeViewport: true,
-    optimizeTouchEvents: true,
-    preventZoomGestures: true
-  });
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -201,52 +189,28 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
   const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
-    containerRef: activeCanvasRef,
+    containerRef: { current: null },
     regionSize: 200,
     maxRegions: 50,
-    updateThreshold: 16 // 60fps
+    updateThreshold: 16
   });
 
   // 🚀 Drag & drop ultra-fluide pour une expérience premium
   useUltraFluidDragDrop({
-    containerRef: activeCanvasRef,
+    containerRef: { current: null },
     snapToGrid: showGridLines,
     gridSize: 20,
     enableInertia: true,
-    onDragStart: (elementId, position) => {
-      // Enregistrer l'activité de début de drag
-      recordActivity('drag', 0.9);
-      // Marquer les éléments affectés pour le rendu optimisé
-      const element = elements.find(el => el.id === elementId);
-      if (element) {
-        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
-      }
-      elementCache.set(`drag-start-${elementId}`, { position, timestamp: Date.now() });
-    },
-    onDragMove: (elementId, position, velocity) => {
-      // Optimiser le rendu en marquant seulement les éléments nécessaires
-      const element = elements.find(el => el.id === elementId);
-      if (element) {
-        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
-      }
-      const moveKey = `drag-move-${elementId}-${Math.floor(position.x/2)}-${Math.floor(position.y/2)}`;
-      elementCache.set(moveKey, { position, velocity, timestamp: Date.now() });
-    },
-    onDragEnd: (elementId, position) => {
-      // Finaliser le drag avec mise à jour des données
-      const element = elements.find(el => el.id === elementId);
-      if (element) {
-        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
-      }
-      handleElementUpdate(elementId, { x: position.x, y: position.y });
-    }
+    onDragStart: () => {},
+    onDragMove: () => {},
+    onDragEnd: () => {}
   });
 
   // Hooks optimisés pour snapping (gardé pour compatibilité)
   const { applySnapping } = useSmartSnapping({
-    containerRef: activeCanvasRef,
+    containerRef: { current: null },
     gridSize: 20,
-    snapTolerance: 3 // Réduit pour plus de précision
+    snapTolerance: 3
   });
 
   // Configuration canonique de la roue
@@ -356,7 +320,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           backgroundColor: element.backgroundColor,
           borderRadius: element.borderRadius
         };
-        setCopiedStyle(style);
         console.log('Style copié depuis le canvas:', style);
       }
     }
@@ -407,7 +370,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowEffectsPanel={onShowEffectsPanel}
         onShowAnimationsPanel={onShowAnimationsPanel}
         onShowPositionPanel={onShowPositionPanel}
-        canvasRef={activeCanvasRef}
+        canvasRef={{ current: null }}
         zoom={zoom}
         className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
       >
@@ -425,7 +388,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
               onOpenElementsTab={onOpenElementsTab}
-              canvasRef={activeCanvasRef}
+              canvasRef={{ current: null }}
             />
           </div>
         )}
@@ -563,7 +526,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={activeCanvasRef}
+                  containerRef={{ current: null }}
                   zoom={zoom}
                   onAddElement={(newElement) => {
                     const updatedElements = [...elements, newElement];

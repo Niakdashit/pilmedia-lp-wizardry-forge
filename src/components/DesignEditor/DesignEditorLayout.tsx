@@ -287,7 +287,9 @@ const DesignEditorLayout: React.FC = () => {
 
   // Synchronisation avec le store
   useEffect(() => {
-    setCampaign(campaignData);
+    if (campaignData?.name) {
+      setCampaign({ ...campaignData, name: campaignData.name || 'Campaign' });
+    }
   }, [campaignData, setCampaign]);
 
   // Actions optimisées
