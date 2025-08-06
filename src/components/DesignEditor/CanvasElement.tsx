@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
@@ -72,6 +72,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
   const setClipboard = useEditorStore(state => state.setClipboard);
+  const clearClipboard = useEditorStore(state => state.clearClipboard);
   const canPaste = useEditorStore(state => state.canPaste);
 
   // Optimized drag handlers with useCallback - Enhanced for mobile/tablet

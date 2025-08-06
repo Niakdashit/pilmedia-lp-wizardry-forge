@@ -193,12 +193,12 @@ export interface MobileConfig {
   backgroundImage?: string;
   backgroundMode?: string;
   backgroundColor?: string;
-  logoOverlay?: string | {
+  logoOverlay?: {
     enabled?: boolean;
     src?: string;
   };
   logoPosition?: string;
-  decorativeOverlay?: string | {
+  decorativeOverlay?: {
     enabled?: boolean;
     type?: string;
   };
@@ -235,17 +235,13 @@ export interface MobileConfig {
   
   // Button properties
   buttonPlacement?: string;
-  buttonActionType?: 'submit' | 'link';
-  buttonLink?: string;
-  buttonMargin?: number;
-  buttonHoverEffect?: boolean;
   horizontalPadding?: number;
   buttonSize?: 'small' | 'medium' | 'large';
   buttonWidth?: number;
   buttonColor?: string;
   buttonTextColor?: string;
   buttonShape?: string;
-  buttonShadow?: string | boolean;
+  buttonShadow?: boolean;
   buttonText?: string;
   
   // Layout properties

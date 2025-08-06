@@ -157,7 +157,9 @@ const DesignEditorLayout: React.FC = () => {
     undo,
     redo,
     canUndo,
-    canRedo
+    canRedo,
+    historySize,
+    lastAction
   } = useUndoRedo({
     maxHistorySize: 50,
     onUndo: (restoredSnapshot) => {
@@ -285,20 +287,7 @@ const DesignEditorLayout: React.FC = () => {
 
   // Synchronisation avec le store
   useEffect(() => {
-    if (campaignData) {
-      const transformedCampaign = {
-        ...campaignData,
-        name: 'Ma Campagne',
-        type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
-        design: {
-          ...campaignData.design,
-          background: typeof campaignData.design?.background === 'object' 
-            ? campaignData.design.background.value || '#ffffff'
-            : campaignData.design?.background || '#ffffff'
-        }
-      };
-      setCampaign(transformedCampaign);
-    }
+    setCampaign(campaignData);
   }, [campaignData, setCampaign]);
 
   // Actions optimisées

@@ -10,7 +10,7 @@ const MobileOverlays: React.FC<MobileOverlaysProps> = ({ mobileConfig, previewMo
   return (
     <>
       {/* Logo Overlay */}
-      {(typeof mobileConfig.logoOverlay === 'string' ? mobileConfig.logoOverlay : mobileConfig.logoOverlay?.src) && (
+      {mobileConfig.logoOverlay && (
         <div
           className={`absolute ${mobileConfig.logoPosition === 'top-left' ? 'top-4 left-4' :
             mobileConfig.logoPosition === 'top-center' ? 'top-4 left-1/2 transform -translate-x-1/2' :
@@ -21,7 +21,7 @@ const MobileOverlays: React.FC<MobileOverlaysProps> = ({ mobileConfig, previewMo
           style={{ zIndex: 20 }}
         >
           <img
-            src={typeof mobileConfig.logoOverlay === 'string' ? mobileConfig.logoOverlay : mobileConfig.logoOverlay?.src}
+            src={mobileConfig.logoOverlay}
             alt="Logo"
             className="object-contain"
             style={{
@@ -33,10 +33,10 @@ const MobileOverlays: React.FC<MobileOverlaysProps> = ({ mobileConfig, previewMo
       )}
 
       {/* Decorative Overlay */}
-      {(typeof mobileConfig.decorativeOverlay === 'string' ? mobileConfig.decorativeOverlay : mobileConfig.decorativeOverlay?.type) && (
+      {mobileConfig.decorativeOverlay && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
           <img
-            src={typeof mobileConfig.decorativeOverlay === 'string' ? mobileConfig.decorativeOverlay : mobileConfig.decorativeOverlay?.type}
+            src={mobileConfig.decorativeOverlay}
             alt="Decorative overlay"
             className="w-full h-full object-contain"
           />

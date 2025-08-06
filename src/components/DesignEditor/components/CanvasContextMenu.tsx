@@ -20,6 +20,7 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
   onCopyStyle,
   onPaste,
   onRemoveBackground,
+  canPaste: canPasteProp = false,
   hasStyleToCopy = false
 }) => {
   // Use global clipboard state
