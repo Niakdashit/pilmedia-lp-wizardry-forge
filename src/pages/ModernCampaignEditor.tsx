@@ -1,14 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useModernCampaignEditor } from '../hooks/useModernCampaignEditor';
 import { gameTypeLabels } from '../components/ModernEditor/constants/gameTypeLabels';
 import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
-import MobileModernEditor from '../components/ModernEditor/MobileModernEditor';
 import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
 
 const ModernCampaignEditor: React.FC = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  
   const {
     campaign,
     setCampaign,
@@ -26,16 +23,6 @@ const ModernCampaignEditor: React.FC = () => {
     isPreviewLoading
   } = useModernCampaignEditor();
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
     if (!campaign) {
       return (
         <div className="w-full h-screen flex items-center justify-center bg-gray-50">
@@ -44,24 +31,6 @@ const ModernCampaignEditor: React.FC = () => {
             <p className="text-muted-foreground">Chargement de la campagne...</p>
           </div>
         </div>
-      );
-    }
-
-    if (isMobile) {
-      return (
-        <>
-          <MobileModernEditor
-            campaign={campaign}
-            setCampaign={setCampaign}
-          />
-          {showPreviewModal && (
-            <ModernPreviewModal
-              isOpen={showPreviewModal}
-              onClose={() => setShowPreviewModal(false)}
-              campaign={campaign}
-            />
-          )}
-        </>
       );
     }
 
