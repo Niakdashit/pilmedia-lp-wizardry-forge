@@ -10,6 +10,7 @@ interface CanvasGameRendererProps {
   showValidationMessage: boolean;
   previewMode: 'mobile' | 'tablet' | 'desktop';
   mobileConfig?: any;
+  wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   onGameFinish: (result: 'win' | 'lose') => void;
   onGameStart: () => void;
   onGameButtonClick: () => void;
@@ -20,6 +21,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   formValidated,
   showValidationMessage,
   previewMode,
+  wheelModalConfig,
   onGameFinish,
   onGameStart,
   onGameButtonClick
@@ -178,6 +180,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             gameSize={'medium'}
             gamePosition={'center'}
             previewDevice={previewMode}
+            wheelModalConfig={wheelModalConfig}
             disabled={!formValidated}
             disableForm={false}
           />

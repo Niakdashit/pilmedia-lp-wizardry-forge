@@ -60,6 +60,12 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     shouldCropWheel,
     device
   });
+  
+  console.log('🎡 StandardizedWheel - Taille finale:', {
+    wheelSize: wheelConfig.size,
+    wheelConfigSize: wheelConfig.size,
+    scale: wheelConfig.scale
+  });
 
   return (
     <div 

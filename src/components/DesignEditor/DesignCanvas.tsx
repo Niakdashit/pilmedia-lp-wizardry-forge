@@ -15,6 +15,7 @@ import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDr
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
+import CanvasContextMenu from './components/CanvasContextMenu';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import { useMobileOptimization } from './hooks/useMobileOptimization';
@@ -68,6 +69,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  
+  // État pour le menu contextuel global du canvas
+  const [copiedStyle, setCopiedStyle] = useState<any>(null);
+  // Use global clipboard from Zustand
+  const clipboard = useEditorStore(state => state.clipboard);
 
   // Optimisation mobile pour une expérience tactile parfaite
   const {
@@ -335,6 +341,57 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       setSelectedElement(null);
     }
   }, [elements, onElementsChange, updateAutoSaveData, campaign, selectedElement]);
+
+  // Handlers pour le menu contextuel global du canvas
+  const handleCanvasCopyStyle = useCallback(() => {
+    if (selectedElement) {
+      const element = elements.find(el => el.id === selectedElement);
+      if (element) {
+        const style = {
+          fontFamily: element.fontFamily,
+          fontSize: element.fontSize,
+          color: element.color,
+          fontWeight: element.fontWeight,
+          textAlign: element.textAlign,
+          backgroundColor: element.backgroundColor,
+          borderRadius: element.borderRadius
+        };
+        setCopiedStyle(style);
+        console.log('Style copié depuis le canvas:', style);
+      }
+    }
+  }, [selectedElement, elements]);
+
+  const handleCanvasPaste = useCallback(() => {
+    if (clipboard && clipboard.type === 'element' && onElementsChange) {
+      const elementToPaste = clipboard.payload;
+      const deviceProps = getPropertiesForDevice(elementToPaste, selectedDevice);
+      const newElement = {
+        ...elementToPaste,
+        id: `text-${Date.now()}`,
+        x: (deviceProps.x || 0) + 30,
+        y: (deviceProps.y || 0) + 30
+      };
+      const updatedElements = [...elements, newElement];
+      onElementsChange(updatedElements);
+      handleElementSelect(newElement.id);
+      console.log('Élément collé depuis le canvas (global clipboard):', newElement);
+    }
+  }, [clipboard, elements, onElementsChange, getPropertiesForDevice, selectedDevice, handleElementSelect]);
+
+  const handleRemoveBackground = useCallback(() => {
+    if (background && background.type !== 'color') {
+      // Remettre le background par défaut
+      const defaultBackground = {
+        type: 'color' as const,
+        value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+      };
+      // Déclencher un événement personnalisé pour notifier le changement de background
+      const event = new CustomEvent('backgroundChange', { detail: defaultBackground });
+      window.dispatchEvent(event);
+      console.log('Arrière-plan supprimé');
+    }
+  }, [background]);
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
@@ -421,6 +478,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 setSelectedElement(null);
               }}
             >
+              {/* Menu contextuel global du canvas */}
+              <CanvasContextMenu
+                onCopyStyle={handleCanvasCopyStyle}
+                onPaste={handleCanvasPaste}
+                onRemoveBackground={handleRemoveBackground}
+                canPaste={!!clipboard && clipboard.type === 'element'}
+                hasStyleToCopy={selectedElement !== null}
+              />
               {/* Grid Overlay Optimisé */}
               <GridOverlay 
                 canvasSize={canvasSize}
@@ -446,7 +511,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 campaign={campaign}
                 device={selectedDevice}
                 shouldCropWheel={true}
-                disabled={true}
                 onClick={() => setShowBorderModal(true)}
               />
             </div>
@@ -501,6 +565,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onDelete={handleElementDelete}
                   containerRef={activeCanvasRef}
                   zoom={zoom}
+                  onAddElement={(newElement) => {
+                    const updatedElements = [...elements, newElement];
+                    onElementsChange(updatedElements);
+                    handleElementSelect(newElement.id);
+                  }}
+                  elements={elements}
                 />
               );
             })}

@@ -5,7 +5,7 @@ import ModernEditorPanel from './ModernEditorPanel';
 import AIAssistantSidebar from './AIAssistantSidebar';
 import EditorHeader from './components/EditorHeader';
 import OptimizedGameCanvasPreview from './components/OptimizedGameCanvasPreview';
-import PerformanceMonitor from './components/PerformanceMonitor';
+
 import { useEditorStore } from '@/stores/editorStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useHistoryManager } from './hooks/useHistoryManager';
@@ -208,7 +208,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
       </div>
       
       {/* Performance Monitor */}
-      <PerformanceMonitor />
+
     </div>
   );
 });

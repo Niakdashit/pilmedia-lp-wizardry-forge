@@ -3,14 +3,14 @@ import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
-import { useAutoResponsive } from '../../hooks/useAutoResponsive';
-import AutoResponsiveIndicator from './components/AutoResponsiveIndicator';
+
+
 import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
-import PerformanceMonitor from '../ModernEditor/components/PerformanceMonitor';
+
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
 
@@ -199,7 +199,7 @@ const DesignEditorLayout: React.FC = () => {
   }, [selectedDevice, setPreviewDevice]);
 
 
-  // Configuration de campagne dynamique optimisée
+  // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
     // Extraire les éléments du canvas selon leur type et rôle
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
@@ -211,6 +211,20 @@ const DesignEditorLayout: React.FC = () => {
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
+
+    // Configuration de la roue avec priorité absolue aux modifications en cours
+    const currentWheelConfig = {
+      borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
+      borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig?.wheelConfig?.borderColor || campaignConfig?.design?.wheelConfig?.borderColor || '#841b60',
+      scale: wheelModalConfig?.wheelScale !== undefined ? wheelModalConfig.wheelScale : (campaignConfig?.wheelConfig?.scale !== undefined ? campaignConfig.wheelConfig.scale : (campaignConfig?.design?.wheelConfig?.scale || 1))
+    };
+
+    console.log('🔄 CampaignData wheel config sync:', {
+      wheelModalConfigScale: wheelModalConfig?.wheelScale,
+      campaignConfigScale: campaignConfig?.wheelConfig?.scale,
+      finalScale: currentWheelConfig.scale,
+      showFunnel
+    });
 
     return {
       id: 'wheel-design-preview',
@@ -225,12 +239,8 @@ const DesignEditorLayout: React.FC = () => {
           secondary: extractedColors[1] || '#4ecdc4',
           accent: extractedColors[2] || '#45b7d1'
         },
-        wheelConfig: {
-          borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic',
-          borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig.wheelConfig?.borderColor || '#841b60',
-          scale: wheelModalConfig?.wheelScale || campaignConfig.wheelConfig?.scale || 1
-        },
-        wheelBorderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig.wheelConfig?.borderStyle || 'classic'
+        wheelConfig: currentWheelConfig,
+        wheelBorderStyle: currentWheelConfig.borderStyle
       },
       gameConfig: {
         wheel: {
@@ -362,11 +372,7 @@ const DesignEditorLayout: React.FC = () => {
   });
 
   // Auto-responsive logic
-  const { getAdaptationSuggestions } = useAutoResponsive('desktop');
-  
-  const adaptationSuggestions = useMemo(() => {
-    return getAdaptationSuggestions(canvasElements);
-  }, [canvasElements, getAdaptationSuggestions]);
+
 
 
   return (
@@ -409,6 +415,7 @@ const DesignEditorLayout: React.FC = () => {
             <FunnelUnlockedGame
               campaign={campaignData}
               previewMode={selectedDevice}
+              wheelModalConfig={wheelModalConfig}
             />
           </div>
         ) : (
@@ -464,7 +471,7 @@ const DesignEditorLayout: React.FC = () => {
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
-            <AutoResponsiveIndicator adaptationSuggestions={adaptationSuggestions} />
+
             
             {/* Zoom Slider - Always visible in bottom center */}
             <ZoomSlider 
@@ -479,7 +486,7 @@ const DesignEditorLayout: React.FC = () => {
       </div>
       
       {/* Performance Monitor */}
-      <PerformanceMonitor />
+
     </MobileStableEditor>
   );
 };

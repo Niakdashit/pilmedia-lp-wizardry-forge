@@ -2,6 +2,7 @@
 import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
+import { WheelConfigService } from '../../services/WheelConfigService';
 
 interface WheelPreviewProps {
   campaign: any;
@@ -17,6 +18,7 @@ interface WheelPreviewProps {
   gamePosition?: string;
   previewDevice?: 'desktop' | 'tablet' | 'mobile';
   disabled?: boolean;
+  wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   disableForm?: boolean;
   borderStyle?: string;
 }
@@ -29,6 +31,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'medium',
   previewDevice = 'desktop',
   disabled = false,
+  wheelModalConfig = {},
   borderStyle = 'classic'
 }) => {
   const { getResponsiveDimensions } = useGameSize(gameSize);
@@ -88,11 +91,29 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     }
   };
 
-  // Calculer une taille de roue adaptée avec l'échelle de la campagne
-  const baseSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;
-  const campaignScale = campaign?.design?.wheelConfig?.scale || 1;
-  const wheelSize = Math.min(baseSize * 1.5 * campaignScale, Math.min(gameDimensions.width, gameDimensions.height) - 20);
-  const maxWheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 20;
+  // Utiliser la même logique de calcul que StandardizedWheel pour la cohérence
+  // Passer wheelModalConfig pour synchroniser les modifications en temps réel
+  const wheelConfig = WheelConfigService.getCanonicalWheelConfig(
+    campaign,
+    campaign?.design?.extractedColors || [],
+    wheelModalConfig,
+    { device: previewDevice, shouldCropWheel: false }
+  );
+  
+  console.log('🎡 WheelPreview - Configuration unifiée:', {
+    wheelConfigSize: wheelConfig.size,
+    campaignScale: campaign?.design?.wheelConfig?.scale,
+    previewDevice,
+    gameDimensions
+  });
+  
+  const wheelSize = wheelConfig.size || 200;
+  
+  console.log('🎡 WheelPreview - Taille finale:', {
+    wheelSize,
+    wheelConfigSize: wheelConfig.size,
+    scale: wheelConfig.scale
+  });
 
   return (
     <div 
@@ -112,7 +133,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         segments={smartWheelSegments}
         theme="modern"
         size={wheelSize}
-        maxSize={maxWheelSize}
         brandColors={brandColors}
         onResult={handleResult}
         onSpin={handleSpin}

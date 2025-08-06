@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { OptimizedCampaign } from '../components/ModernEditor/types/CampaignTypes';
 
+interface ClipboardData {
+  type: string; // e.g. 'element', 'style', etc.
+  payload: any;
+}
+
 interface EditorState {
   // Core state
   campaign: OptimizedCampaign | null;
@@ -31,9 +36,17 @@ interface EditorState {
   batchedUpdates: Array<Partial<OptimizedCampaign> | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)>;
   updateCounter: number;
   lastUpdateTime: number;
+
+  // Global clipboard state
+  clipboard: ClipboardData | null;
 }
 
 interface EditorActions {
+  // Clipboard actions
+  setClipboard: (clipboard: ClipboardData) => void;
+  clearClipboard: () => void;
+  canPaste: () => boolean;
+
   // Campaign actions
   setCampaign: (updater: OptimizedCampaign | null | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)) => void;
   updateCampaignField: (field: keyof OptimizedCampaign, value: OptimizedCampaign[keyof OptimizedCampaign]) => void;
@@ -89,6 +102,9 @@ export const useEditorStore = create<EditorStore>()(
     batchedUpdates: [],
     updateCounter: 0,
     lastUpdateTime: Date.now(),
+
+    // Clipboard state
+    clipboard: null,
 
     // Campaign actions with batching
     setCampaign: (updater) => {
@@ -176,19 +192,22 @@ export const useEditorStore = create<EditorStore>()(
     flushBatchedUpdates: () => {
       const state = get();
       if (state.batchedUpdates.length === 0) return;
-      
       // Apply all batched updates at once
       const finalCampaign = state.batchedUpdates.reduce((acc, update) => {
         if (!acc) return null;
         return typeof update === 'function' ? update(acc) : { ...acc, ...update };
       }, state.campaign);
-      
       set({
         campaign: finalCampaign,
         batchedUpdates: [],
         lastUpdateTime: Date.now()
       });
-    }
+    },
+
+    // Clipboard actions
+    setClipboard: (clipboard) => set({ clipboard }),
+    clearClipboard: () => set({ clipboard: null }),
+    canPaste: () => !!get().clipboard,
   }))
 );
 
