@@ -1,23 +1,154 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Palette, Grid3X3, Type, Image, Crown, Upload, Settings, X, 
-  Smartphone, Tablet, Monitor 
+  Layers, Type, Image, Settings, Gamepad2, Download, 
+  Smartphone, Tablet, Monitor, Undo2, Redo2, Save,
+  Play, Pause, ChevronUp, ChevronDown, Palette,
+  Move, RotateCcw, Copy, Trash2, Eye, EyeOff,
+  AlignLeft, AlignCenter, AlignRight, Bold, Italic,
+  Plus, Minus, ZoomIn, ZoomOut, Grid, MousePointer,
+  PaintBucket, Sparkles, MoreHorizontal, X, Check
 } from 'lucide-react';
 
-// Interface mobile style Canva simplifiée pour test
-const MobileCanvaDesignEditor: React.FC = () => {
-  const [activePanel, setActivePanel] = useState<string | null>(null);
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
-  const [panelHeight, setPanelHeight] = useState(0);
+import DesignCanvas from './DesignCanvas';
+import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+import ZoomSlider from './components/ZoomSlider';
+import { useEditorStore } from '../../stores/editorStore';
+import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
+import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
+import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 
-  const bottomTabs = [
+interface MobileCanvaDesignEditorProps {
+  className?: string;
+}
+
+const MobileCanvaDesignEditor: React.FC<MobileCanvaDesignEditorProps> = ({ className = '' }) => {
+  // Store centralisé
+  const { 
+    setCampaign,
+    setPreviewDevice,
+    setIsLoading,
+    setIsModified
+  } = useEditorStore();
+
+  // États principaux avec toutes les fonctionnalités
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
+  const [canvasElements, setCanvasElements] = useState<any[]>([]);
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
+    type: 'color',
+    value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+  });
+  const [canvasZoom, setCanvasZoom] = useState(0.95);
+  const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
+  const [showFunnel, setShowFunnel] = useState(false);
+  const [campaignConfig, setCampaignConfig] = useState<any>({
+    design: { wheelConfig: { scale: 2 } }
+  });
+
+  // États pour l'interface mobile
+  const [activeTab, setActiveTab] = useState<'elements' | 'design' | 'layers' | 'text' | 'images' | 'settings' | 'game' | 'export'>('elements');
+  const [isBottomPanelExpanded, setIsBottomPanelExpanded] = useState(false);
+
+  // Gestion des éléments avec historique
+  const handleAddElement = useCallback((element: any) => {
+    setCanvasElements(prev => [...prev, element]);
+    setSelectedElement(element);
+  }, []);
+
+  const handleElementUpdate = useCallback((updates: any) => {
+    if (selectedElement) {
+      const updatedElement = { ...selectedElement, ...updates };
+      setCanvasElements(prev => prev.map(el => el.id === selectedElement.id ? updatedElement : el));
+      setSelectedElement(updatedElement);
+    }
+  }, [selectedElement]);
+
+  const handleBackgroundChange = useCallback((bg: any) => {
+    setCanvasBackground(bg);
+  }, []);
+
+  // Système d'historique
+  const {
+    addToHistory,
+    undo,
+    redo,
+    canUndo,
+    canRedo
+  } = useUndoRedo({
+    maxHistorySize: 50,
+    onUndo: (restoredSnapshot) => {
+      if (restoredSnapshot) {
+        setCampaignConfig(restoredSnapshot.campaignConfig || {});
+        setCanvasElements(restoredSnapshot.canvasElements || []);
+        setCanvasBackground(restoredSnapshot.canvasBackground || { type: 'color', value: '#ffffff' });
+        setSelectedElement(null);
+      }
+    },
+    onRedo: (restoredSnapshot) => {
+      if (restoredSnapshot) {
+        setCampaignConfig(restoredSnapshot.campaignConfig || {});
+        setCanvasElements(restoredSnapshot.canvasElements || []);
+        setCanvasBackground(restoredSnapshot.canvasBackground || { type: 'color', value: '#ffffff' });
+        setSelectedElement(null);
+      }
+    },
+    onStateChange: () => {
+      setIsModified(true);
+    }
+  });
+
+  // Configuration campagne
+  const campaignData = useMemo(() => ({
+    id: 'wheel-design-preview',
+    type: 'wheel',
+    design: {
+      background: canvasBackground,
+      customTexts: canvasElements.filter(el => el.type === 'text'),
+      customImages: canvasElements.filter(el => el.type === 'image'),
+      extractedColors: extractedColors,
+      customColors: {
+        primary: extractedColors[0] || '#841b60',
+        secondary: extractedColors[1] || '#4ecdc4',
+        accent: extractedColors[2] || '#45b7d1'
+      }
+    },
+    canvasConfig: {
+      elements: canvasElements,
+      background: canvasBackground,
+      device: selectedDevice
+    }
+  }), [canvasElements, canvasBackground, extractedColors, selectedDevice]);
+
+  // Synchronisation avec le store
+  useEffect(() => {
+    if (campaignData) {
+      setCampaign(campaignData);
+    }
+  }, [campaignData, setCampaign]);
+
+  // Actions
+  const handleSave = async () => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsModified(false);
+    setIsLoading(false);
+  };
+
+  const handlePreview = () => {
+    setShowFunnel(!showFunnel);
+  };
+
+  // Configuration des onglets
+  const tabs = [
+    { id: 'elements', label: 'Éléments', icon: Layers },
     { id: 'design', label: 'Design', icon: Palette },
-    { id: 'elements', label: 'Éléments', icon: Grid3X3 },
-    { id: 'texte', label: 'Texte', icon: Type },
-    { id: 'galerie', label: 'Galerie', icon: Image },
-    { id: 'marque', label: 'Marque', icon: Crown },
-    { id: 'importer', label: 'Importer', icon: Upload },
-    { id: 'outils', label: 'Outils', icon: Settings }
+    { id: 'layers', label: 'Calques', icon: Layers },
+    { id: 'text', label: 'Texte', icon: Type },
+    { id: 'images', label: 'Images', icon: Image },
+    { id: 'settings', label: 'Réglages', icon: Settings },
+    { id: 'game', label: 'Jeu', icon: Gamepad2 },
+    { id: 'export', label: 'Export', icon: Download }
   ];
 
   const deviceButtons = [
@@ -26,220 +157,289 @@ const MobileCanvaDesignEditor: React.FC = () => {
     { id: 'desktop', icon: Monitor, label: 'Desktop' }
   ];
 
-  useEffect(() => {
-    const updatePanelHeight = () => {
-      if (activePanel) {
-        const maxHeight = window.innerHeight * 0.6; // 60% de la hauteur d'écran
-        setPanelHeight(maxHeight);
-      }
-    };
-
-    updatePanelHeight();
-    window.addEventListener('resize', updatePanelHeight);
-    return () => window.removeEventListener('resize', updatePanelHeight);
-  }, [activePanel]);
-
-  const handleTabClick = (tabId: string) => {
-    if (activePanel === tabId) {
-      setActivePanel(null);
-    } else {
-      setActivePanel(tabId);
-    }
-  };
-
-  const renderPanelContent = () => {
-    switch (activePanel) {
-      case 'design':
-        return (
-          <div className="p-6">
-            <h3 className="text-lg font-medium mb-4">Design</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Couleur de fond
-                </label>
-                <div className="flex space-x-2">
-                  <button className="w-8 h-8 rounded bg-blue-500 border-2 border-gray-300"></button>
-                  <button className="w-8 h-8 rounded bg-red-500 border-2 border-gray-300"></button>
-                  <button className="w-8 h-8 rounded bg-green-500 border-2 border-gray-300"></button>
-                  <button className="w-8 h-8 rounded bg-purple-500 border-2 border-gray-300"></button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'elements':
-        return (
-          <div className="p-6">
-            <h3 className="text-lg font-medium mb-4">Éléments</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <button className="p-4 border border-gray-200 rounded-lg text-center hover:bg-gray-50">
-                <div className="text-2xl mb-2">📝</div>
-                <span className="text-xs">Texte</span>
-              </button>
-              <button className="p-4 border border-gray-200 rounded-lg text-center hover:bg-gray-50">
-                <div className="text-2xl mb-2">🖼️</div>
-                <span className="text-xs">Image</span>
-              </button>
-              <button className="p-4 border border-gray-200 rounded-lg text-center hover:bg-gray-50">
-                <div className="text-2xl mb-2">⭕</div>
-                <span className="text-xs">Forme</span>
-              </button>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className="p-6 text-center text-gray-500">
-            <p>Contenu de l'onglet "{activePanel}" à implémenter</p>
-          </div>
-        );
-    }
-  };
-
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      {/* Top Header - Prosplay Style */}
-      <div className="flex-shrink-0 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white p-4">
+    <div className={`h-screen bg-white flex flex-col overflow-hidden ${className}`}>
+      {/* Header Prosplay */}
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded"></div>
+              <Gamepad2 className="w-5 h-5" />
             </div>
-            <h1 className="text-lg font-bold">Prosplay Design Editor</h1>
+            <div>
+              <h1 className="text-lg font-bold">Prosplay Design</h1>
+              <p className="text-xs text-white/80">Studio de création mobile</p>
+            </div>
           </div>
           
+          {/* Actions header */}
           <div className="flex items-center space-x-2">
-            <button className="px-4 py-2 bg-white/20 rounded-lg text-sm font-medium hover:bg-white/30 transition-colors">
-              Sauvegarder
+            {!showFunnel && (
+              <>
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  className="p-2 bg-white/10 rounded-lg disabled:opacity-50"
+                  title="Annuler"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  className="p-2 bg-white/10 rounded-lg disabled:opacity-50"
+                  title="Rétablir"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="p-2 bg-white/10 rounded-lg"
+                  title="Sauvegarder"
+                >
+                  <Save className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            <button
+              onClick={handlePreview}
+              className="p-2 bg-white/20 rounded-lg"
+              title={showFunnel ? "Mode édition" : "Prévisualiser"}
+            >
+              {showFunnel ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Device Selection Bar */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-center space-x-1">
-          {deviceButtons.map((device) => {
-            const Icon = device.icon;
-            return (
+        {/* Sélection d'appareil */}
+        {!showFunnel && (
+          <div className="flex items-center justify-center mt-3 space-x-1 bg-white/10 rounded-xl p-1">
+            {deviceButtons.map(device => (
               <button
                 key={device.id}
-                onClick={() => setPreviewDevice(device.id as any)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  previewDevice === device.id
-                    ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                onClick={() => setSelectedDevice(device.id as any)}
+                className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedDevice === device.id 
+                    ? 'bg-white/20 text-white' 
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <device.icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{device.label}</span>
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Main Content - Preview Area */}
-      <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="w-full h-full flex items-center justify-center">
-          {/* Device Frame */}
-          <div 
-            className={`relative border-4 border-gray-300 rounded-2xl shadow-xl bg-white overflow-hidden transition-all duration-300 ${
-              previewDevice === 'mobile' ? 'w-80 h-[640px]' :
-              previewDevice === 'tablet' ? 'w-[640px] h-80' :
-              'w-[900px] h-[600px]'
-            }`}
-          >
-            {/* Preview Content - Demo */}
-            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🎯</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Tentez votre chance !
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  Tournez la roue et gagnez des prix
-                </p>
-                <button className="px-8 py-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg font-medium hover:shadow-lg transition-all">
-                  Jouer maintenant
-                </button>
-              </div>
+      {/* Zone principale */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {showFunnel ? (
+          /* Mode prévisualisation */
+          <div className="flex-1 flex items-center justify-center bg-gray-100">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <FunnelUnlockedGame
+                campaign={campaignData}
+                previewMode={selectedDevice}
+              />
             </div>
           </div>
-        </div>
+        ) : (
+          /* Mode édition */
+          <>
+            {/* Zone canvas principale */}
+            <div className="flex-1 flex overflow-hidden bg-gray-50">
+              <div className="flex-1 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-full max-w-4xl mx-auto">
+                  <DesignCanvas 
+                    selectedDevice={selectedDevice}
+                    elements={canvasElements}
+                    onElementsChange={setCanvasElements}
+                    background={canvasBackground}
+                    campaign={campaignConfig}
+                    onCampaignChange={setCampaignConfig}
+                    zoom={canvasZoom}
+                    selectedElement={selectedElement}
+                    onSelectedElementChange={setSelectedElement}
+                    onElementUpdate={handleElementUpdate}
+                    onShowEffectsPanel={() => {}}
+                    onShowAnimationsPanel={() => {}}
+                    onShowPositionPanel={() => {}}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Zoom slider fixe en bas */}
+            <div className="absolute bottom-20 right-4 z-20">
+              <ZoomSlider 
+                zoom={canvasZoom}
+                onZoomChange={setCanvasZoom}
+                minZoom={0.25}
+                maxZoom={3}
+                step={0.05}
+              />
+            </div>
+
+            {/* Barre d'onglets en bas */}
+            <div className="bg-white border-t border-gray-200 flex-shrink-0">
+              {/* Bouton pour agrandir/réduire le panneau */}
+              <div className="flex items-center justify-center py-2 border-b border-gray-100">
+                <button
+                  onClick={() => setIsBottomPanelExpanded(!isBottomPanelExpanded)}
+                  className="flex items-center space-x-2 px-4 py-1 text-sm text-gray-600 hover:text-gray-800"
+                >
+                  {isBottomPanelExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                  <span>{isBottomPanelExpanded ? 'Réduire' : 'Agrandir'}</span>
+                </button>
+              </div>
+
+              {/* Onglets */}
+              <div className="flex overflow-x-auto scrollbar-hide">
+                {tabs.map(tab => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as any)}
+                      className={`flex-shrink-0 flex flex-col items-center space-y-1 px-4 py-3 min-w-[80px] text-xs transition-all ${
+                        activeTab === tab.id
+                          ? 'text-purple-600 bg-purple-50 border-t-2 border-purple-600'
+                          : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Panneau coulissant avec toutes les fonctionnalités */}
+              <AnimatePresence>
+                {isBottomPanelExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="bg-white border-t border-gray-200 overflow-hidden"
+                  >
+                    <div className="max-h-80 overflow-y-auto">
+                      <div className="p-4">
+                        {/* Contenu complet selon l'onglet actif */}
+                        {activeTab === 'elements' && (
+                          <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-800 mb-3">Ajouter des éléments</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => handleAddElement({
+                                  id: `text-${Date.now()}`,
+                                  type: 'text',
+                                  content: 'Nouveau texte',
+                                  style: { fontSize: '16px', color: '#000000' },
+                                  position: { x: 100, y: 100 }
+                                })}
+                                className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <Type className="w-5 h-5 text-gray-600" />
+                                <span className="text-sm font-medium">Texte</span>
+                              </button>
+                              <button
+                                onClick={() => handleAddElement({
+                                  id: `image-${Date.now()}`,
+                                  type: 'image',
+                                  src: 'https://via.placeholder.com/150x150/cccccc/666666?text=Image',
+                                  position: { x: 150, y: 150 },
+                                  size: { width: 150, height: 150 }
+                                })}
+                                className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <Image className="w-5 h-5 text-gray-600" />
+                                <span className="text-sm font-medium">Image</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {activeTab === 'design' && (
+                          <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-800 mb-3">Design et couleurs</h3>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Arrière-plan
+                                </label>
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => handleBackgroundChange({
+                                      type: 'color',
+                                      value: '#ffffff'
+                                    })}
+                                    className="w-8 h-8 bg-white border-2 border-gray-300 rounded"
+                                  />
+                                  <button
+                                    onClick={() => handleBackgroundChange({
+                                      type: 'color',
+                                      value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                    })}
+                                    className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {activeTab === 'text' && selectedElement?.type === 'text' && (
+                          <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-800 mb-3">Propriétés du texte</h3>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Contenu
+                                </label>
+                                <input
+                                  type="text"
+                                  value={selectedElement.content || ''}
+                                  onChange={(e) => handleElementUpdate({ content: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {activeTab === 'export' && (
+                          <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-800 mb-3">Exporter le projet</h3>
+                            <div className="space-y-3">
+                              <button
+                                onClick={handleSave}
+                                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                              >
+                                <Save className="w-5 h-5" />
+                                <span>Sauvegarder</span>
+                              </button>
+                              <button 
+                                onClick={handlePreview}
+                                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                              >
+                                <Play className="w-5 h-5" />
+                                <span>Prévisualiser</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
       </div>
-
-      {/* Bottom Panel - Style Canva */}
-      {activePanel && (
-        <div 
-          className="fixed bottom-20 left-0 right-0 bg-white border-t border-gray-200 shadow-xl z-40 animate-slide-up"
-          style={{ 
-            height: `${panelHeight}px`,
-            maxHeight: '60vh'
-          }}
-        >
-          {/* Panel Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-lg font-medium text-gray-900 capitalize">
-              {bottomTabs.find(tab => tab.id === activePanel)?.label}
-            </h3>
-            <button
-              onClick={() => setActivePanel(null)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {/* Panel Content */}
-          <div className="h-full overflow-y-auto pb-4">
-            {renderPanelContent()}
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Tab Bar - Canva Style */}
-      <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
-        <div className="flex items-center justify-around">
-          {bottomTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activePanel === tab.id;
-            
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors min-w-0 ${
-                  isActive
-                    ? 'text-[#841b60] bg-[#f9f0f5]'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <Icon className="w-6 h-6 flex-shrink-0" />
-                <span className="text-xs font-medium truncate max-w-16">
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

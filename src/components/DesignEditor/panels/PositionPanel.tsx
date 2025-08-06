@@ -11,8 +11,7 @@ interface PositionPanelProps {
 const PositionPanel: React.FC<PositionPanelProps> = ({
   onBack,
   selectedElement,
-  onElementUpdate,
-  canvasRef
+  onElementUpdate
 }) => {
   const [activeTab, setActiveTab] = useState<'organiser' | 'calques'>('organiser');
   const [isRatioLocked, setIsRatioLocked] = useState(true);
