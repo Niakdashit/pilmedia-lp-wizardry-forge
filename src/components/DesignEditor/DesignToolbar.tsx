@@ -1,5 +1,6 @@
 import React from 'react';
-import { Monitor, Tablet, Smartphone, Download, Eye, Share2, Undo, Redo } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Monitor, Tablet, Smartphone, Save, Eye, X, Undo, Redo } from 'lucide-react';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -23,6 +24,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   canUndo = false,
   canRedo = false
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
       {/* Left Section - Logo/Title */}
@@ -106,13 +108,16 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <Eye className="w-4 h-4 mr-2" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
-        <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-          <Share2 className="w-4 h-4 mr-2" />
-          Partager
+        <button 
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <X className="w-4 h-4 mr-2" />
+          Fermer
         </button>
         <button className="flex items-center px-4 py-2 text-sm bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[#6b1549] transition-colors">
-          <Download className="w-4 h-4 mr-2" />
-          Télécharger
+          <Save className="w-4 h-4 mr-2" />
+          Sauvegarder et continuer
         </button>
       </div>
     </div>

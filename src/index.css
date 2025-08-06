@@ -6,29 +6,28 @@
 
 /* Variables CSS pour les couleurs de marque - Format HSL */
 :root {
-  --brand-primary: 328 75% 31%;      /* #841b60 en HSL */
-  --brand-secondary: 328 75% 40%;    /* #b41b60 en HSL - dégradé */
+  --brand-primary: 309 78% 31%;      /* #841b60 en HSL */
+  --brand-secondary: 0 0% 100%;      /* #ffffff en HSL */
   --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
   --brand-text: 0 0% 100%;           /* #ffffff en HSL */
-  --brand-gradient: linear-gradient(135deg, hsl(328 75% 31%), hsl(328 75% 40%));
   
   /* Premium Sidebar Design System - Thème blanc avec accents violets */
   --sidebar-bg: 0 0% 100%;           /* Fond blanc pur */
   --sidebar-surface: 0 0% 98%;       /* Surface légèrement grisée */
-  --sidebar-hover: 328 75% 97%;      /* Hover très subtil avec teinte violette */
-  --sidebar-active: 328 75% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
-  --sidebar-active-bg: 328 75% 97%;  /* Background actif très subtil */
+  --sidebar-hover: 309 78% 97%;      /* Hover très subtil avec teinte violette */
+  --sidebar-active: 309 78% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
+  --sidebar-active-bg: 309 78% 97%;  /* Background actif très subtil */
   --sidebar-border: 0 0% 92%;        /* Bordures grises claires */
   --sidebar-text: 0 0% 15%;          /* Texte sombre pour contraste */
   --sidebar-text-primary: 0 0% 10%;  /* Texte principal très sombre */
   --sidebar-text-muted: 0 0% 45%;    /* Texte atténué gris */
   --sidebar-icon: 0 0% 35%;          /* Icônes grises */
-  --sidebar-icon-active: 328 75% 31%; /* Icônes actives - couleur principale */
+  --sidebar-icon-active: 309 78% 31%; /* Icônes actives - couleur principale */
   --sidebar-shadow: 0 0% 0% / 0.08;  /* Ombres douces */
-  --sidebar-glow: 328 75% 31% / 0.15; /* Lueur violette subtile */
+  --sidebar-glow: 309 78% 31% / 0.15; /* Lueur violette subtile */
   
   /* Variables complémentaires pour cohérence */
-  --primary: 328 75% 31%;            /* #841b60 */
+  --primary: 309 78% 31%;            /* #841b60 */
   --secondary: 0 0% 100%;            /* #ffffff */
   --accent: 202 45% 91%;             /* #ebf4f7 pour les éléments atténués */
   --background: 0 0% 100%;
@@ -41,7 +40,7 @@
   --card-foreground: 222.2 84% 4.9%;
   --border: 202 35% 85%;             /* Bordures plus subtiles avec accent */
   --input: 202 35% 85%;
-  --ring: 328 75% 31%;               /* Focus ring avec couleur principale */
+  --ring: 309 78% 31%;               /* Focus ring avec couleur principale */
   --radius: 0.25rem;
 }
 
@@ -73,7 +72,7 @@
   --card-foreground: 210 40% 98%;
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 328 75% 31%;
+  --primary: 309 78% 31%;
   --primary-foreground: 210 40% 98%;
   --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
@@ -83,7 +82,7 @@
   --accent-foreground: 210 40% 98%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 328 75% 31%;
+  --ring: 309 78% 31%;
 }
 
 /* Animations pour les effets de texte */
@@ -107,10 +106,6 @@
   
   .bg-brand-secondary {
     background-color: hsl(var(--brand-secondary));
-  }
-  
-  .bg-brand-gradient {
-    background: var(--brand-gradient);
   }
   
   .bg-brand-accent {
@@ -139,19 +134,6 @@
   
   .ring-brand-primary {
     --tw-ring-color: hsl(var(--brand-primary));
-  }
-
-  /* Harmonisation des border-radius - forcer les valeurs réduites */
-  .rounded-xl {
-    border-radius: 0.5rem !important; /* 8px au lieu de 12px */
-  }
-  
-  .rounded-2xl {
-    border-radius: 0.75rem !important; /* 12px au lieu de 16px */
-  }
-  
-  .rounded-3xl {
-    border-radius: 1rem !important; /* 16px au lieu de 24px */
   }
 }
 
@@ -202,7 +184,7 @@ html, body {
   
   /* Ensure dropdowns have proper z-index and background */
   .dropdown-menu {
-    @apply z-50 bg-white border border-gray-200 rounded shadow-lg;
+    @apply z-50 bg-white border border-gray-200 rounded-md shadow-lg;
   }
   
   /* Button avec couleurs de marque */
@@ -405,7 +387,7 @@ html, body {
     @apply relative transition-all duration-300 ease-out;
     background: transparent;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     margin: 2px 16px;
     padding: 16px 20px;
     color: hsl(var(--sidebar-text));
@@ -446,7 +428,7 @@ html, body {
     @apply relative transition-all duration-300 ease-out w-full text-left;
     background: hsl(var(--sidebar-surface));
     border: 1px solid hsl(var(--sidebar-border));
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 12px 16px;
     color: hsl(var(--sidebar-text));
     display: flex;
@@ -507,8 +489,8 @@ html, body {
       letter-spacing: 0.025em;
     }
     
-      input, select, textarea {
-        @apply w-full px-4 py-3 rounded border transition-all duration-200;
+    input, select, textarea {
+      @apply w-full px-4 py-3 rounded-lg border transition-all duration-200;
       background: hsl(var(--sidebar-bg));
       border: 1px solid hsl(var(--sidebar-border));
       color: hsl(var(--sidebar-text-primary));

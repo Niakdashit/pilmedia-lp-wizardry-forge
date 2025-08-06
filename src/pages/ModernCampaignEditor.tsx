@@ -1,27 +1,40 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useModernCampaignEditor } from '../hooks/useModernCampaignEditor';
-// import { gameTypeLabels } from '../components/ModernEditor/constants/gameTypeLabels';
-// import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
+import { gameTypeLabels } from '../components/ModernEditor/constants/gameTypeLabels';
+import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
+import MobileCanvaEditor from '../components/ModernEditor/MobileCanvaEditor';
 import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
 
 const ModernCampaignEditor: React.FC = () => {
   const {
     campaign,
-    // setCampaign,
-    // activeTab,
-    // setActiveTab,
+    setCampaign,
+    activeTab,
+    setActiveTab,
     showPreviewModal,
     setShowPreviewModal,
-    // previewDevice,
-    // setPreviewDevice,
-    // isLoading,
-    // campaignType,
-    // isNewCampaign,
-    // handleSave,
-    // previewKey,
-    // isPreviewLoading
+    previewDevice,
+    setPreviewDevice,
+    isLoading,
+    campaignType,
+    isNewCampaign,
+    handleSave,
+    previewKey,
+    isPreviewLoading
   } = useModernCampaignEditor();
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
     if (!campaign) {
       return (
@@ -35,12 +48,38 @@ const ModernCampaignEditor: React.FC = () => {
     }
 
     return (
-      <>
-        <div className="w-full h-screen overflow-hidden bg-gray-50 flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            Éditeur moderne temporairement indisponible
-          </div>
-        </div>
+      <div className="w-full h-screen overflow-hidden bg-gray-50">
+        {isMobile ? (
+          <MobileCanvaEditor
+            campaign={campaign}
+            setCampaign={setCampaign}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            previewDevice={previewDevice}
+            onDeviceChange={setPreviewDevice}
+            onSave={() => handleSave(true)}
+            onPreview={() => setShowPreviewModal(true)}
+            isLoading={isLoading}
+            previewKey={previewKey}
+          />
+        ) : (
+          <ModernEditorLayout
+            campaign={campaign}
+            setCampaign={setCampaign}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            previewDevice={previewDevice}
+            onDeviceChange={setPreviewDevice}
+            onSave={() => handleSave(true)}
+            onPreview={() => setShowPreviewModal(true)}
+            isLoading={isLoading}
+            campaignType={campaignType}
+            isNewCampaign={isNewCampaign}
+            gameTypeLabels={gameTypeLabels}
+            previewKey={previewKey}
+            isPreviewLoading={isPreviewLoading}
+          />
+        )}
 
         {/* Preview Modal */}
         {showPreviewModal && (
@@ -50,7 +89,7 @@ const ModernCampaignEditor: React.FC = () => {
             campaign={campaign}
           />
         )}
-      </>
+      </div>
     );
 };
 

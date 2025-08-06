@@ -4,6 +4,8 @@ import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';
 import { useEnhancedDragCalibration } from './hooks/useEnhancedDragCalibration';
+import TextContextMenu from './components/TextContextMenu';
+import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
 // Force cache invalidation - React DnD v14+ compliant
@@ -17,6 +19,8 @@ export interface CanvasElementProps {
   selectedDevice: DeviceType;
   containerRef?: React.RefObject<HTMLDivElement>;
   zoom?: number;
+  onAddElement?: (element: any) => void;
+  elements?: any[];
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -27,7 +31,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   onUpdate,
   onDelete,
   containerRef,
-  zoom = 1
+  zoom = 1,
+  onAddElement
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -63,6 +68,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   }));
 
   const [isEditing, setIsEditing] = React.useState(false);
+
+  // Global clipboard from store
+  const clipboard = useEditorStore(state => state.clipboard);
+  const setClipboard = useEditorStore(state => state.setClipboard);
+  const canPaste = useEditorStore(state => state.canPaste);
 
   // Optimized drag handlers with useCallback - Enhanced for mobile/tablet
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -248,6 +258,31 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setIsEditing(false);
   }, []);
 
+
+
+  const handleAlign = useCallback((alignment: string) => {
+    // Logique d'alignement basée sur le conteneur
+    if (!containerRef?.current) return;
+    
+    const containerWidth = containerRef.current.offsetWidth;
+    let newX = deviceProps.x;
+    
+    switch (alignment) {
+      case 'left':
+        newX = 20;
+        break;
+      case 'center':
+        newX = (containerWidth - (element.width || 200)) / 2;
+        break;
+      case 'right':
+        newX = containerWidth - (element.width || 200) - 20;
+        break;
+    }
+    
+    onUpdate(element.id, { x: newX });
+    console.log('Element aligned:', alignment, newX);
+  }, [element, deviceProps, containerRef, onUpdate]);
+
   // Optimized resize handler with useCallback - Enhanced for mobile/tablet
   const handleResizePointerDown = useCallback((e: React.PointerEvent, direction: string) => {
     e.preventDefault();
@@ -378,6 +413,42 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     document.addEventListener('pointermove', handleResizePointerMove);
     document.addEventListener('pointerup', handleResizePointerUp);
   }, [element.id, onUpdate]);
+
+  // Clipboard Handlers
+  const handleCopy = useCallback((elementToCopy: any) => {
+    setClipboard({ type: 'element', payload: elementToCopy });
+  }, [setClipboard]);
+
+  const handlePaste = useCallback(() => {
+    if (clipboard && clipboard.type === 'element' && onAddElement) {
+      // Deep clone to avoid reference bugs
+      const newElement = {
+        ...clipboard.payload,
+        id: `text-${Date.now()}`,
+        x: (deviceProps.x || 0) + 20,
+        y: (deviceProps.y || 0) + 20
+      };
+      onAddElement(newElement);
+      // Optionally clear clipboard or keep for multi-paste
+      // clearClipboard();
+    }
+  }, [clipboard, onAddElement, deviceProps]);
+
+  const handleDuplicate = useCallback((elementToDuplicate: any) => {
+    if (onAddElement) {
+      const deviceProps = getPropertiesForDevice(elementToDuplicate, selectedDevice);
+      const duplicatedElement = {
+        ...elementToDuplicate,
+        id: `text-${Date.now()}`,
+        x: (deviceProps.x || 0) + 20,
+        y: (deviceProps.y || 0) + 20
+      };
+      onAddElement(duplicatedElement);
+    }
+  }, [onAddElement, getPropertiesForDevice, selectedDevice]);
+
+// --- Remove any previous/old handleCopy, handlePaste, handleDuplicate below this line ---
+
 
   // Memoized element rendering for performance
   const renderElement = useMemo(() => {
@@ -579,6 +650,19 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           >
             ×
           </button>
+          
+          {/* Context Menu for Text Elements */}
+          {element.type === 'text' && (
+            <TextContextMenu
+              element={element}
+              onCopy={handleCopy}
+              onPaste={handlePaste}
+              onDuplicate={handleDuplicate}
+              onDelete={onDelete}
+              onAlign={handleAlign}
+              canPaste={canPaste()}
+            />
+          )}
         </div>
       )}
     </div>

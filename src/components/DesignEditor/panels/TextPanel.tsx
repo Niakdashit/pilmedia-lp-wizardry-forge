@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Type, Wand2 } from 'lucide-react';
+import { Type } from 'lucide-react';
 import TextEffectsPanel from './TextEffectsPanel';
 
 interface TextPanelProps {
@@ -8,25 +8,55 @@ interface TextPanelProps {
   onElementUpdate?: (updates: any) => void;
 }
 
-// Polices organisées par catégories (identique à TestPage)
+// Polices organisées par catégories - Enrichies avec de nouvelles Google Fonts
 const fontCategories = [{
   name: "Business",
-  fonts: ['Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Nunito Sans', 'Inter', 'Poppins', 'Work Sans', 'IBM Plex Sans']
+  fonts: [
+    'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Nunito Sans', 'Inter', 'Poppins', 'Work Sans', 'IBM Plex Sans',
+    // Nouvelles polices business modernes
+    'DM Sans', 'Plus Jakarta Sans', 'Manrope', 'Space Grotesk', 'Outfit', 'Lexend', 'Sora', 'Red Hat Display', 'Figtree', 'Onest',
+    'Geist Sans', 'Albert Sans', 'Be Vietnam Pro', 'Epilogue', 'Satoshi', 'Urbanist', 'Cabinet Grotesk', 'General Sans'
+  ]
 }, {
   name: "Calm",
-  fonts: ['Libre Baskerville', 'Crimson Text', 'EB Garamond', 'Lora', 'Merriweather', 'Playfair Display', 'Cormorant Garamond', 'Spectral', 'Source Serif Pro', 'Vollkorn']
+  fonts: [
+    'Libre Baskerville', 'Crimson Text', 'EB Garamond', 'Lora', 'Merriweather', 'Playfair Display', 'Cormorant Garamond', 'Spectral', 'Source Serif Pro', 'Vollkorn',
+    // Nouvelles polices calmes et sereines
+    'Fraunces', 'Newsreader', 'Literata', 'Crimson Pro', 'Libre Caslon Text', 'Zilla Slab', 'Bitter', 'Alegreya', 'Neuton', 'Gentium Plus',
+    'Cardo', 'Domine', 'Arvo', 'Rokkitt', 'Slabo 27px', 'PT Serif', 'Droid Serif', 'Noto Serif'
+  ]
 }, {
   name: "Cute",
-  fonts: ['Caveat', 'Indie Flower', 'Architects Daughter', 'Shadows Into Light', 'Covered By Your Grace', 'Handlee', 'Kalam', 'Coming Soon', 'Sue Ellen Francisco', 'Schoolbell']
+  fonts: [
+    'Caveat', 'Indie Flower', 'Architects Daughter', 'Shadows Into Light', 'Covered By Your Grace', 'Handlee', 'Kalam', 'Coming Soon', 'Sue Ellen Francisco', 'Schoolbell',
+    // Nouvelles polices mignonnes et amicales
+    'Quicksand', 'Comfortaa', 'Nunito', 'Rubik', 'Varela Round', 'Fredoka', 'Baloo 2', 'Dosis', 'Livvic', 'Hind',
+    'Karla', 'Assistant', 'Mukti', 'Catamaran', 'Muli', 'Oxygen', 'Ubuntu', 'Cabin', 'Lato', 'Raleway'
+  ]
 }, {
   name: "Fancy",
-  fonts: ['Cinzel', 'Cormorant', 'Abril Fatface', 'Yeseva One', 'Fredericka the Great', 'Almendra', 'UnifrakturMaguntia', 'Cardo', 'Old Standard TT', 'Libre Caslon Text']
+  fonts: [
+    'Cinzel', 'Cormorant', 'Abril Fatface', 'Yeseva One', 'Fredericka the Great', 'Almendra', 'UnifrakturMaguntia', 'Cardo', 'Old Standard TT', 'Libre Caslon Text',
+    // Nouvelles polices élégantes et sophistiquées
+    'Bodoni Moda', 'Italiana', 'Tenor Sans', 'Marcellus', 'Forum', 'Philosopher', 'Sorts Mill Goudy', 'Bentham', 'Caudex', 'Fanwood Text',
+    'Gilda Display', 'Judson', 'Linden Hill', 'Radley', 'Rufina', 'Vidaloka', 'Amiri', 'Cormorant Upright', 'Enriqueta', 'Trajan Pro'
+  ]
 }, {
   name: "Playful",
-  fonts: ['Lobster', 'Pacifico', 'Fredoka One', 'Righteous', 'Bungee', 'Chewy', 'Leckerli One', 'Creepster', 'Sigmar One', 'Shrikhand']
+  fonts: [
+    'Lobster', 'Pacifico', 'Fredoka One', 'Righteous', 'Bungee', 'Chewy', 'Leckerli One', 'Creepster', 'Sigmar One', 'Shrikhand',
+    // Nouvelles polices ludiques et amusantes
+    'Bowlby One', 'Titan One', 'Bungee Shade', 'Modak', 'Orbitron', 'Press Start 2P', 'Bangers', 'Kalam', 'Griffy', 'Luckiest Guy',
+    'Lilita One', 'Bree Serif', 'Bungee Inline', 'Faster One', 'Fascinate', 'Fontdiner Swanky', 'Jolly Lodger', 'Nosifer', 'Rye', 'Special Elite'
+  ]
 }, {
   name: "Artistic",
-  fonts: ['Dancing Script', 'Great Vibes', 'Allura', 'Satisfy', 'Kaushan Script', 'Tangerine', 'Sacramento', 'Yellowtail', 'Pinyon Script', 'Marck Script', 'Amatic SC', 'Permanent Marker', 'Homemade Apple', 'Rock Salt']
+  fonts: [
+    'Dancing Script', 'Great Vibes', 'Allura', 'Satisfy', 'Kaushan Script', 'Tangerine', 'Sacramento', 'Yellowtail', 'Pinyon Script', 'Marck Script', 'Amatic SC', 'Permanent Marker', 'Homemade Apple', 'Rock Salt',
+    // Nouvelles polices artistiques et créatives
+    'Parisienne', 'Alex Brush', 'Courgette', 'Grand Hotel', 'Kalam', 'Lobster Two', 'Marmelad', 'Neucha', 'Pangolin', 'Patrick Hand',
+    'Reenie Beanie', 'Shadows Into Light Two', 'Short Stack', 'Walter Turncoat', 'Zeyada', 'Bad Script', 'Caveat Brush', 'Dawning of a New Day', 'Delius', 'Gloria Hallelujah'
+  ]
 }];
 const TextPanel: React.FC<TextPanelProps> = ({
   onAddElement,
@@ -100,7 +130,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
           {/* Polices de la catégorie sélectionnée */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-gray-700">{selectedCategory.name}</h4>
-            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
               {selectedCategory.fonts.map(font => <button key={font} onClick={() => addText({
             text: 'Texte stylé',
             fontFamily: font,
@@ -116,16 +146,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
             </div>
           </div>
 
-          {/* Bouton Effets */}
-          <div>
-            <button 
-              onClick={() => setShowEffects(true)} 
-              className="w-full p-4 border-2 border-dashed border-purple-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors flex items-center justify-center"
-            >
-              <Wand2 className="w-5 h-5 mr-2 text-purple-600" />
-              <span className="text-sm text-purple-600">Effets de texte</span>
-            </button>
-          </div>
+
         </div>
       </div>;
 };

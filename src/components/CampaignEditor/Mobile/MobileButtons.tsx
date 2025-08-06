@@ -106,7 +106,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
           <input
             type="checkbox"
             id="button-hover"
-            checked={typeof mobileConfig.buttonHoverEffect === 'boolean' ? mobileConfig.buttonHoverEffect : true}
+            checked={mobileConfig.buttonHoverEffect !== false}
             onChange={(e) => updateMobileConfig('buttonHoverEffect', e.target.checked)}
             className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
           />
