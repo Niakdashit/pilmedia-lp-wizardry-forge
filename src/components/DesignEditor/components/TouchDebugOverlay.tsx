@@ -14,6 +14,7 @@ interface TouchDebugOverlayProps {
  */
 export const TouchDebugOverlay: React.FC<TouchDebugOverlayProps> = ({
   selectedDevice,
+  containerRef,
   isVisible,
   onToggle
 }) => {

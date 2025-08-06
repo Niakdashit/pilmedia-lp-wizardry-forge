@@ -221,7 +221,7 @@ const TestEffectsAndAnimations: React.FC<TestEffectsAndAnimationsProps> = ({ onC
           </div>
         </div>
 
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style jsx>{`
           @keyframes bounce {
             0%, 20%, 50%, 80%, 100% {
               transform: translateY(0);
@@ -254,7 +254,7 @@ const TestEffectsAndAnimations: React.FC<TestEffectsAndAnimationsProps> = ({ onC
               opacity: 1;
             }
           }
-        ` }} />
+        `}</style>
       </div>
     </div>
   );
