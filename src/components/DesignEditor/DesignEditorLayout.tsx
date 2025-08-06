@@ -287,8 +287,12 @@ const DesignEditorLayout: React.FC = () => {
 
   // Synchronisation avec le store
   useEffect(() => {
-    if (campaignData?.name) {
-      setCampaign({ ...campaignData, name: campaignData.name || 'Campaign' });
+    if (campaignData) {
+      setCampaign({ 
+        ...campaignData, 
+        name: campaignData.name || 'Ma Campagne',
+        type: 'wheel' as any
+      });
     }
   }, [campaignData, setCampaign]);
 

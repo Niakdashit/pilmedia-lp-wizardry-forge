@@ -162,7 +162,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   });
 
   // 🚀 Auto-save adaptatif pour une sauvegarde intelligente
-  const { updateData: updateAutoSaveData, recordActivity } = useAdaptiveAutoSave({
+  const { updateData: updateAutoSaveData } = useAdaptiveAutoSave({
     onSave: async (data) => {
       if (onCampaignChange) {
         onCampaignChange(data);
@@ -188,7 +188,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
-  const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
+  const { isElementVisible } = useVirtualizedCanvas({
     containerRef: { current: null },
     regionSize: 200,
     maxRegions: 50,
