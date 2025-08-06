@@ -48,8 +48,8 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
       </div>
 
       <ButtonAction
-        actionType={mobileConfig.buttonActionType || 'submit'}
-        actionLink={mobileConfig.buttonLink || ''}
+        actionType={(mobileConfig.buttonActionType as string) || 'submit'}
+        actionLink={(mobileConfig.buttonLink as string) || ''}
         onActionTypeChange={(type) => updateMobileConfig('buttonActionType', type)}
         onActionLinkChange={(link) => updateMobileConfig('buttonLink', link)}
       />
@@ -59,7 +59,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
         buttonTextColor={mobileConfig.buttonTextColor || '#ffffff'}
         buttonShape={mobileConfig.buttonShape || 'rounded-lg'}
         buttonSize={mobileConfig.buttonSize || 'medium'}
-        buttonShadow={mobileConfig.buttonShadow || 'shadow-md'}
+        buttonShadow={(mobileConfig.buttonShadow as string) || 'shadow-md'}
         onButtonColorChange={(color) => updateMobileConfig('buttonColor', color)}
         onButtonTextColorChange={(color) => updateMobileConfig('buttonTextColor', color)}
         onButtonShapeChange={(shape) => updateMobileConfig('buttonShape', shape)}
@@ -83,7 +83,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
               onChange={(e) => updateMobileConfig('buttonMargin', Number(e.target.value))}
               className="w-full"
             />
-            <div className="text-xs text-gray-500 mt-1">{mobileConfig.buttonMargin || 16}px</div>
+            <div className="text-xs text-gray-500 mt-1">{(mobileConfig.buttonMargin as number) || 16}px</div>
           </div>
           <div>
             <label className="block text-xs text-gray-600 mb-1">Largeur (%)</label>
@@ -106,7 +106,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
           <input
             type="checkbox"
             id="button-hover"
-            checked={mobileConfig.buttonHoverEffect !== false}
+            checked={(mobileConfig.buttonHoverEffect as boolean) !== false}
             onChange={(e) => updateMobileConfig('buttonHoverEffect', e.target.checked)}
             className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
           />

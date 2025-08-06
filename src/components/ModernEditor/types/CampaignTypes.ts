@@ -189,16 +189,22 @@ export interface MobileConfig {
   buttonPosition?: string;
   hideLaunchButton?: boolean;
   
+  // Button properties
+  buttonActionType?: string;
+  buttonLink?: string;
+  buttonMargin?: number;
+  buttonHoverEffect?: boolean;
+  
   // Visual properties
   backgroundImage?: string;
   backgroundMode?: string;
   backgroundColor?: string;
-  logoOverlay?: {
+  logoOverlay?: string | {
     enabled?: boolean;
     src?: string;
   };
   logoPosition?: string;
-  decorativeOverlay?: {
+  decorativeOverlay?: string | {
     enabled?: boolean;
     type?: string;
   };
@@ -241,7 +247,7 @@ export interface MobileConfig {
   buttonColor?: string;
   buttonTextColor?: string;
   buttonShape?: string;
-  buttonShadow?: boolean;
+  buttonShadow?: boolean | string;
   buttonText?: string;
   
   // Layout properties
