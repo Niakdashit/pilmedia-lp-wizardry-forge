@@ -59,7 +59,7 @@ const MobileButtons: React.FC<MobileButtonsProps> = ({ campaign, setCampaign }) 
         buttonTextColor={mobileConfig.buttonTextColor || '#ffffff'}
         buttonShape={mobileConfig.buttonShape || 'rounded-lg'}
         buttonSize={mobileConfig.buttonSize || 'medium'}
-        buttonShadow={mobileConfig.buttonShadow || 'shadow-md'}
+        buttonShadow={(mobileConfig.buttonShadow as string) || 'shadow-md'}
         onButtonColorChange={(color) => updateMobileConfig('buttonColor', color)}
         onButtonTextColorChange={(color) => updateMobileConfig('buttonTextColor', color)}
         onButtonShapeChange={(shape) => updateMobileConfig('buttonShape', shape)}

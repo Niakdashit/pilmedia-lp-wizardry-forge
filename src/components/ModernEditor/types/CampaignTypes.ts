@@ -241,8 +241,12 @@ export interface MobileConfig {
   buttonColor?: string;
   buttonTextColor?: string;
   buttonShape?: string;
-  buttonShadow?: boolean;
+  buttonShadow?: boolean | string;
   buttonText?: string;
+  buttonActionType?: string;
+  buttonLink?: string;
+  buttonMargin?: number;
+  buttonHoverEffect?: boolean;
   
   // Layout properties
   textPosition?: string;

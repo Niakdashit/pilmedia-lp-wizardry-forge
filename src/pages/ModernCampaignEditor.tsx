@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useModernCampaignEditor } from '../hooks/useModernCampaignEditor';
 import { gameTypeLabels } from '../components/ModernEditor/constants/gameTypeLabels';
 import ModernEditorLayout from '../components/ModernEditor/ModernEditorLayout';
 import ModernPreviewModal from '../components/ModernEditor/ModernPreviewModal';
+import CanvaMobileEditor from '../components/ModernEditor/CanvaMobileEditor';
+import CampaignPreview from '../components/CampaignEditor/CampaignPreview';
 
 const ModernCampaignEditor: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(false);
   const {
     campaign,
     setCampaign,
@@ -23,6 +26,16 @@ const ModernCampaignEditor: React.FC = () => {
     isPreviewLoading
   } = useModernCampaignEditor();
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
     if (!campaign) {
       return (
         <div className="w-full h-screen flex items-center justify-center bg-gray-50">
@@ -31,6 +44,25 @@ const ModernCampaignEditor: React.FC = () => {
             <p className="text-muted-foreground">Chargement de la campagne...</p>
           </div>
         </div>
+      );
+    }
+
+    // Sur mobile, utiliser la layout Canva-style
+    if (isMobile) {
+      return (
+        <CanvaMobileEditor
+          campaign={campaign}
+          setCampaign={setCampaign}
+          campaignType={campaignType}
+          previewDevice={previewDevice}
+          onDeviceChange={setPreviewDevice}
+        >
+          <CampaignPreview
+            campaign={campaign}
+            device={previewDevice}
+            previewKey={previewKey}
+          />
+        </CanvaMobileEditor>
       );
     }
 
