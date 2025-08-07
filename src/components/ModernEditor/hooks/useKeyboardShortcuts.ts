@@ -18,8 +18,12 @@ interface UseKeyboardShortcutsProps {
   onElementDelete?: (id: string) => void;
   onElementUpdate?: (id: string, updates: any) => void;
   onElementCopy?: (element: any) => void;
+  onElementCut?: () => void;
   onElementPaste?: () => void;
   onDeselectAll?: () => void;
+  // Fonctions pour les groupes niveau Canva
+  onGroup?: () => void;
+  onUngroup?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
@@ -39,8 +43,12 @@ export const useKeyboardShortcuts = ({
   onElementDelete,
   onElementUpdate,
   onElementCopy,
+  onElementCut,
   onElementPaste,
-  onDeselectAll
+  onDeselectAll,
+  // Fonctions pour les groupes niveau Canva
+  onGroup,
+  onUngroup
 }: UseKeyboardShortcutsProps = {}) => {
   const {
     selectedElementId,
@@ -207,6 +215,48 @@ export const useKeyboardShortcuts = ({
         }
         break;
 
+      // Cut with Ctrl+X
+      case 'x':
+        if (isModifierPressed && selectedElement?.id) {
+          console.log('🎹 Cut shortcut triggered for element:', selectedElement.id);
+          event.preventDefault();
+          onElementCut?.();
+        } else if (isModifierPressed && selectedElementId) {
+          // Fallback to old system
+          event.preventDefault();
+          setCampaign((prev: any) => {
+            const customTexts = { ...prev.design?.customTexts };
+            const customImages = { ...prev.design?.customImages };
+            
+            // Copy to clipboard first
+            const element = customTexts[selectedElementId] || customImages[selectedElementId];
+            if (element) {
+              localStorage.setItem('clipboard-element', JSON.stringify({
+                type: customTexts[selectedElementId] ? 'text' : 'image',
+                data: element
+              }));
+              
+              // Then delete
+              if (customTexts[selectedElementId]) {
+                delete customTexts[selectedElementId];
+              }
+              if (customImages[selectedElementId]) {
+                delete customImages[selectedElementId];
+              }
+            }
+            
+            return {
+              ...prev,
+              design: {
+                ...prev.design,
+                customTexts,
+                customImages
+              }
+            };
+          });
+        }
+        break;
+
       // Paste with Ctrl+V
       case 'v':
         if (isModifierPressed) {
@@ -228,18 +278,27 @@ export const useKeyboardShortcuts = ({
       // Select all with Ctrl+A
       case 'a':
         if (isModifierPressed) {
-          event.preventDefault();
-          // Could implement multi-selection here
+          // Vérifier si on est en train d'éditer du texte
+          const activeElement = document.activeElement;
+          const isEditingText = activeElement && (
+            activeElement.tagName === 'INPUT' || 
+            activeElement.tagName === 'TEXTAREA' || 
+            (activeElement as HTMLElement).contentEditable === 'true'
+          );
+          
+          if (isEditingText) {
+            // Laisser le comportement par défaut (sélectionner tout le texte)
+            console.log('🎹 Ctrl+A: Selecting all text in input');
+          } else {
+            // Sélectionner tous les éléments du canvas
+            console.log('🎹 Ctrl+A: Selecting all canvas elements');
+            event.preventDefault();
+            onSelectAll?.();
+          }
         }
         break;
 
-      // Duplicate with Ctrl+D
-      case 'd':
-        if (isModifierPressed && selectedElementId) {
-          event.preventDefault();
-          onDuplicate?.();
-        }
-        break;
+      // Duplicate case removed - handled by the first case 'd' above
 
       // Zoom controls
       case '=':
@@ -270,6 +329,7 @@ export const useKeyboardShortcuts = ({
           onZoomFit?.();
         }
         break;
+        break;
 
       // Toggle fullscreen with F11
       case 'f11':
@@ -287,6 +347,22 @@ export const useKeyboardShortcuts = ({
         if (isModifierPressed && shiftKey) {
           event.preventDefault();
           // Could trigger help modal
+        }
+        break;
+        
+      // Raccourcis pour les groupes niveau Canva
+      case 'g':
+        if (isModifierPressed) {
+          event.preventDefault();
+          if (shiftKey) {
+            // Ctrl+Shift+G : Dissocier le groupe
+            console.log('🎯 Ungroup shortcut triggered (Ctrl+Shift+G)');
+            onUngroup?.();
+          } else {
+            // Ctrl+G : Grouper les éléments sélectionnés
+            console.log('🎯 Group shortcut triggered (Ctrl+G)');
+            onGroup?.();
+          }
         }
         break;
     }

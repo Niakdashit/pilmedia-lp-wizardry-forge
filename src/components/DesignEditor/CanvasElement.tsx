@@ -13,7 +13,7 @@ import type { DeviceType } from '../../utils/deviceDimensions';
 export interface CanvasElementProps {
   element: any;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, isMultiSelect?: boolean) => void;
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
@@ -77,9 +77,25 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   // Optimized drag handlers with useCallback - Enhanced for mobile/tablet
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Détecter si Ctrl/Cmd est pressé pour la sélection multiple AVANT preventDefault
+    const isMultiSelect = e.ctrlKey || e.metaKey;
+    
+    console.log('🎯 Element PointerDown Event:', {
+      elementId: element.id,
+      isMultiSelect,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+      eventType: e.type,
+      pointerType: e.pointerType,
+      button: e.button
+    });
+    
+    // Appeler onSelect avec l'information de sélection multiple AVANT preventDefault
+    console.log('🎯 Calling onSelect with:', { elementId: element.id, isMultiSelect });
+    onSelect(element.id, isMultiSelect);
+    
     e.preventDefault();
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    onSelect(element.id);
 
     const currentProps = deviceProps;
     

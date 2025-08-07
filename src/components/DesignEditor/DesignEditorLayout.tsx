@@ -10,6 +10,7 @@ import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
+import { useGroupManager } from '../../hooks/useGroupManager';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
@@ -82,12 +83,25 @@ const DesignEditorLayout: React.FC = () => {
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
   
-  // Fonction pour sélectionner tous les éléments
+  // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
-    if (canvasElements.length > 0) {
-      setSelectedElements([...canvasElements]);
+    // Filtrer tous les éléments visibles sur le canvas (textes, images, formes, etc.)
+    const selectableElements = canvasElements.filter(element => 
+      element && element.id && (element.type === 'text' || element.type === 'image' || element.type === 'shape' || element.type)
+    );
+    
+    if (selectableElements.length > 0) {
+      setSelectedElements([...selectableElements]);
       setSelectedElement(null); // Désélectionner l'élément unique
-      console.log('🎯 Selected all elements:', canvasElements.length);
+      console.log('🎯 Selected all canvas elements:', {
+        total: selectableElements.length,
+        types: selectableElements.reduce((acc, el) => {
+          acc[el.type] = (acc[el.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      });
+    } else {
+      console.log('🎯 No selectable elements found on canvas');
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
@@ -201,6 +215,24 @@ const DesignEditorLayout: React.FC = () => {
     preventDefault: true
   });
   
+  // Hook de gestion des groupes (après addToHistory)
+  const groupManager = useGroupManager({
+    elements: canvasElements,
+    onElementsChange: setCanvasElements,
+    onAddToHistory: addToHistory
+  });
+  
+  const {
+    createGroup,
+    ungroupElements,
+    selectedGroupId,
+    setSelectedGroupId,
+    moveGroup,
+    resizeGroup,
+    getGroupElements,
+    isElementInGroup
+  } = groupManager;
+  
   // Fonctions pour les raccourcis clavier d'éléments
   const handleDeselectAll = useCallback(() => {
     setSelectedElement(null);
@@ -208,10 +240,11 @@ const DesignEditorLayout: React.FC = () => {
     console.log('🎯 Deselected all elements');
   }, []);
   
-  const handleElementDelete = useCallback(() => {
-    if (selectedElement?.id) {
+  const handleElementDelete = useCallback((elementId?: string) => {
+    const targetElementId = elementId || selectedElement?.id;
+    if (targetElementId) {
       setCanvasElements(prev => {
-        const newElements = prev.filter(el => el.id !== selectedElement.id);
+        const newElements = prev.filter(el => el.id !== targetElementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -222,7 +255,9 @@ const DesignEditorLayout: React.FC = () => {
         return newElements;
       });
       setSelectedElement(null);
-      console.log('🗑️ Deleted element:', selectedElement.id);
+      console.log('🗑️ Deleted element:', targetElementId);
+    } else {
+      console.log('🗑️ No element to delete - selectedElement:', selectedElement);
     }
   }, [selectedElement, campaignConfig, canvasBackground, addToHistory]);
   
@@ -232,6 +267,32 @@ const DesignEditorLayout: React.FC = () => {
       console.log('📋 Copied element:', selectedElement.id);
     }
   }, [selectedElement]);
+  
+  const handleElementCut = useCallback(() => {
+    if (selectedElement) {
+      // D'abord copier l'élément
+      localStorage.setItem('clipboard-element', JSON.stringify(selectedElement));
+      console.log('✂️ Cut element (copied):', selectedElement.id);
+      
+      // Puis le supprimer
+      const elementId = selectedElement.id;
+      setCanvasElements(prev => {
+        const newElements = prev.filter(el => el.id !== elementId);
+        setTimeout(() => {
+          addToHistory({
+            campaignConfig: { ...campaignConfig },
+            canvasElements: JSON.parse(JSON.stringify(newElements)),
+            canvasBackground: { ...canvasBackground }
+          }, 'element_cut');
+        }, 0);
+        return newElements;
+      });
+      setSelectedElement(null);
+      console.log('✂️ Cut element (deleted):', elementId);
+    } else {
+      console.log('✂️ No element to cut - selectedElement:', selectedElement);
+    }
+  }, [selectedElement, campaignConfig, canvasBackground, addToHistory]);
   
   const handleElementPaste = useCallback(() => {
     try {
@@ -265,17 +326,7 @@ const DesignEditorLayout: React.FC = () => {
     }
   }, [selectedElement, handleAddElement]);
   
-  // Raccourcis clavier pour les éléments
-  useKeyboardShortcuts({
-    selectedElement,
-    elements: canvasElements,
-    onSelectAll: handleSelectAll,
-    onDeselectAll: handleDeselectAll,
-    onElementDelete: handleElementDelete,
-    onElementCopy: handleElementCopy,
-    onElementPaste: handleElementPaste,
-    onDuplicate: handleElementDuplicate
-  });
+  // Raccourcis clavier pour les éléments (supprimé - utilise le hook plus complet ci-dessous)
 
   // Synchronisation avec le store
   useEffect(() => {
@@ -442,6 +493,8 @@ const DesignEditorLayout: React.FC = () => {
 
   // Raccourcis clavier professionnels
   const { shortcuts } = useKeyboardShortcuts({
+    selectedElement,
+    elements: canvasElements,
     onSave: () => {
       handleSave();
     },
@@ -467,7 +520,47 @@ const DesignEditorLayout: React.FC = () => {
       setCanvasZoom(1);
     },
     onSelectAll: handleSelectAll,
-    elements: canvasElements
+    onDeselectAll: handleDeselectAll,
+    onElementDelete: handleElementDelete,
+    onElementCopy: handleElementCopy,
+    onElementCut: handleElementCut,
+    onElementPaste: handleElementPaste,
+    onDuplicate: handleElementDuplicate,
+    // Raccourcis pour les groupes niveau Canva
+    onGroup: () => {
+      console.log('🎯 Creating group from selected elements:', selectedElements);
+      if (selectedElements && selectedElements.length > 1) {
+        const groupId = createGroup(selectedElements.map(el => el.id));
+        if (groupId) {
+          addToHistory({
+            canvasElements,
+            canvasBackground,
+            campaignConfig,
+            selectedElements: [],
+            selectedGroupId: groupId
+          });
+          setSelectedElements([]);
+          setSelectedGroupId(groupId);
+        }
+      }
+    },
+    onUngroup: () => {
+      console.log('🎯 Ungrouping selected group:', selectedGroupId);
+      if (selectedGroupId) {
+        ungroupElements(selectedGroupId);
+        // Récupérer les éléments du groupe avant de le dissocier
+        const groupElements = getGroupElements(selectedGroupId);
+        addToHistory({
+          canvasElements,
+          canvasBackground,
+          campaignConfig,
+          selectedElements: groupElements,
+          selectedGroupId: null
+        });
+        setSelectedElements(groupElements);
+        setSelectedGroupId(null);
+      }
+    }
   });
 
   // Auto-responsive logic
@@ -538,6 +631,9 @@ const DesignEditorLayout: React.FC = () => {
               showPositionPanel={showPositionInSidebar}
               onPositionPanelChange={setShowPositionInSidebar}
               canvasRef={canvasRef}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
+              onAddToHistory={addToHistory}
             />
             
             {/* Main Canvas Area */}
@@ -552,7 +648,15 @@ const DesignEditorLayout: React.FC = () => {
               onZoomChange={setCanvasZoom}
               selectedElement={selectedElement}
               onSelectedElementChange={setSelectedElement}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
               onElementUpdate={handleElementUpdate}
+              // Props pour le système de groupes niveau Canva
+              selectedGroupId={selectedGroupId || undefined}
+              onSelectedGroupChange={setSelectedGroupId}
+              groups={groupManager.groups}
+              onGroupMove={moveGroup}
+              onGroupResize={resizeGroup}
 
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);

@@ -7,6 +7,8 @@ import StandardizedWheel from '../shared/StandardizedWheel';
 import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
+import WheelSettingsButton from './components/WheelSettingsButton';
+import GroupSelectionFrame from './components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
@@ -18,7 +20,6 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
-import WheelSettingsButton from './WheelSettingsButton';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -37,7 +38,15 @@ export interface DesignCanvasProps {
   onZoomChange?: (zoom: number) => void;
   selectedElement?: any;
   onSelectedElementChange?: (element: any) => void;
+  selectedElements?: any[];
+  onSelectedElementsChange?: (elements: any[]) => void;
   onElementUpdate?: (updates: any) => void;
+  // Props pour la gestion des groupes
+  selectedGroupId?: string;
+  onSelectedGroupChange?: (groupId: string | null) => void;
+  groups?: any[];
+  onGroupMove?: (groupId: string, deltaX: number, deltaY: number) => void;
+  onGroupResize?: (groupId: string, bounds: any) => void;
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
@@ -64,7 +73,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onZoomChange,
   selectedElement: externalSelectedElement,
   onSelectedElementChange,
+  selectedElements,
+  onSelectedElementsChange,
   onElementUpdate: externalOnElementUpdate,
+  // Props pour la gestion des groupes
+  selectedGroupId,
+  onSelectedGroupChange,
+  groups,
+  onGroupMove,
+  onGroupResize,
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
@@ -142,13 +159,66 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [localZoom, activeCanvasRef]);
 
   // Fonction de sélection qui notifie l'état externe
-  const handleElementSelect = useCallback((elementId: string | null) => {
-    setSelectedElement(elementId);
-    if (onSelectedElementChange) {
-      const element = elementId ? elements.find(el => el.id === elementId) : null;
-      onSelectedElementChange(element);
+  const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
+    console.log('🔥 handleElementSelect called with:', {
+      elementId,
+      isMultiSelect,
+      currentSelectedElements: selectedElements?.length || 0,
+      hasOnSelectedElementsChange: !!onSelectedElementsChange
+    });
+    
+    if (isMultiSelect && elementId) {
+      // Sélection multiple avec Ctrl/Cmd + clic
+      const currentSelectedElements = selectedElements || [];
+      const isAlreadySelected = currentSelectedElements.some((el: any) => el.id === elementId);
+      
+      console.log('🔥 Multi-select logic:', {
+        currentCount: currentSelectedElements.length,
+        isAlreadySelected,
+        targetElementId: elementId
+      });
+      
+      if (isAlreadySelected) {
+        // Désélectionner l'élément s'il est déjà sélectionné
+        const newSelectedElements = currentSelectedElements.filter((el: any) => el.id !== elementId);
+        console.log('🔥 Removing element from selection:', {
+          removed: elementId,
+          newCount: newSelectedElements.length,
+          newSelection: newSelectedElements.map(el => el.id)
+        });
+        onSelectedElementsChange?.(newSelectedElements);
+      } else {
+        // Ajouter l'élément à la sélection
+        const elementToAdd = elements.find(el => el.id === elementId);
+        if (elementToAdd) {
+          const newSelectedElements = [...currentSelectedElements, elementToAdd];
+          console.log('🔥 Adding element to selection:', {
+            added: elementId,
+            newCount: newSelectedElements.length,
+            newSelection: newSelectedElements.map(el => el.id)
+          });
+          onSelectedElementsChange?.(newSelectedElements);
+        } else {
+          console.error('🔥 Element not found in elements array:', elementId);
+        }
+      }
+      // En mode multi-sélection, on ne change pas l'élément unique sélectionné
+      setSelectedElement(null);
+      if (onSelectedElementChange) {
+        onSelectedElementChange(null);
+      }
+    } else {
+      // Sélection simple (comportement normal)
+      console.log('🔥 Single select mode:', { elementId, clearingMultiSelection: true });
+      setSelectedElement(elementId);
+      if (onSelectedElementChange) {
+        const element = elementId ? elements.find(el => el.id === elementId) : null;
+        onSelectedElementChange(element);
+      }
+      // Réinitialiser la sélection multiple
+      onSelectedElementsChange?.([]);
     }
-  }, [elements, onSelectedElementChange]);
+  }, [elements, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
@@ -630,7 +700,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   key={element.id} 
                   element={elementWithResponsive} 
                   selectedDevice={selectedDevice}
-                  isSelected={selectedElement === element.id} 
+                  isSelected={
+                    selectedElement === element.id || 
+                    Boolean(selectedElements && selectedElements.some((sel: any) => sel.id === element.id))
+                  } 
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
@@ -689,6 +762,65 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           )}
         </div>
 
+        {/* Multi-Selection Debug Display */}
+        {selectedElements && selectedElements.length > 0 && (
+          <div className="absolute top-2 left-2 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">
+            🎯 Multi-Selection: {selectedElements.length} elements
+            <div className="text-xs mt-1">
+              {selectedElements.map((el: any, i: number) => (
+                <div key={el.id}>{i + 1}. {el.id}</div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Cadre de sélection pour les groupes */}
+        {selectedGroupId && groups && (
+          (() => {
+            const selectedGroup = groups.find(g => g.id === selectedGroupId);
+            if (selectedGroup && selectedGroup.groupChildren) {
+              // Calculer les bounds du groupe à partir de ses éléments
+              const groupElements = elements.filter(el => selectedGroup.groupChildren?.includes(el.id));
+              if (groupElements.length > 0) {
+                const minX = Math.min(...groupElements.map(el => el.x));
+                const minY = Math.min(...groupElements.map(el => el.y));
+                const maxX = Math.max(...groupElements.map(el => el.x + (el.width || 0)));
+                const maxY = Math.max(...groupElements.map(el => el.y + (el.height || 0)));
+                
+                const groupBounds = {
+                  x: minX,
+                  y: minY,
+                  width: maxX - minX,
+                  height: maxY - minY
+                };
+                
+                return (
+                  <GroupSelectionFrame
+                    key={selectedGroup.id}
+                    groupId={selectedGroup.id}
+                    bounds={groupBounds}
+                    zoom={zoom}
+                    onMove={(deltaX, deltaY) => {
+                      console.log('🎯 Moving group:', selectedGroup.id, { deltaX, deltaY });
+                      onGroupMove?.(selectedGroup.id, deltaX, deltaY);
+                    }}
+                    onResize={(newBounds) => {
+                      console.log('🎯 Resizing group:', selectedGroup.id, newBounds);
+                      onGroupResize?.(selectedGroup.id, newBounds);
+                    }}
+                    onDoubleClick={() => {
+                      console.log('🎯 Double-click on group - entering edit mode:', selectedGroup.id);
+                      // Passer en mode édition individuelle des éléments du groupe
+                      onSelectedGroupChange?.(null);
+                    }}
+                  />
+                );
+              }
+            }
+            return null;
+          })()
+        )}
+        
         {/* Bouton roue fortune ABSOLU dans la zone d'aperçu (canvas) */}
         <div className="absolute bottom-2 right-2 z-50">
           <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
