@@ -605,8 +605,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-center h-full" style={{
-          padding: selectedDevice === 'tablet' 
+        <div className="flex justify-center items-center h-full relative" style={{
+          padding: selectedDevice === 'tablet'
             ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
             : selectedDevice === 'mobile'
             ? (zoom <= 0.7 ? '24px 16px' : '40px 24px')
@@ -614,27 +614,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           transition: 'padding 0.2s ease-in-out',
           minHeight: '100%'
         }}>
-          {/* Canvas wrapper pour maintenir le centrage avec zoom */}
-          <div 
-            className="flex justify-center items-center"
+          {/* Canvas centré indépendamment du zoom */}
+          <div
+            ref={activeCanvasRef}
+            className="absolute bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]"
             style={{
-              width: 'fit-content',
-              height: 'fit-content',
-              minHeight: 'auto'
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              minWidth: `${canvasSize.width}px`,
+              minHeight: `${canvasSize.height}px`,
+              top: '50%',
+              left: '50%',
+              transform: `translate(-50%, -50%) scale(${localZoom})`,
+              transformOrigin: 'center center'
             }}
-          >
-            <div 
-              ref={activeCanvasRef}
-              className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
-              style={{
-                width: `${canvasSize.width}px`,
-                height: `${canvasSize.height}px`,
-                minWidth: `${canvasSize.width}px`,
-                minHeight: `${canvasSize.height}px`,
-                flexShrink: 0,
-                transform: `scale(${localZoom})`,
-                transformOrigin: 'center center'
-              }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
