@@ -30,9 +30,9 @@ const DesignEditorLayout: React.FC = () => {
       case 'desktop':
         return 0.7; // 70%
       case 'tablet':
-        return 0.65; // 65%
+        return 0.6; // 60%
       case 'mobile':
-        return 0.95; // 95%
+        return 0.45; // 45% - canvas visible entier
       default:
         return 0.7;
     }

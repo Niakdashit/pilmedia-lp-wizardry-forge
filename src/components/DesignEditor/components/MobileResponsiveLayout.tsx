@@ -158,7 +158,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           
           /* Safe areas iOS */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: env(safe-area-inset-bottom);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
         }
@@ -292,8 +292,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
         /* Ajustements pour la toolbar visible */
         .mobile-layout.toolbar-visible .design-canvas-container {
-          /* Réduire légèrement le padding pour laisser place à la toolbar */
-          padding-top: 60px;
+          /* Optimiser l'espace vertical sur mobile */
+          padding-top: 10px;
+          padding-bottom: 80px; /* Place pour la toolbar en bas */
         }
 
         /* Empêcher le zoom accidentel sur iOS */
@@ -391,19 +392,22 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
         /* Masquer les éléments non essentiels sur mobile */
         @media (max-width: 767px) {
-          .mobile-layout .zoom-slider {
-            /* Masquer le zoom slider sur mobile */
+          .mobile-layout .zoom-slider,
+          .mobile-layout .auto-responsive-indicator,
+          .mobile-layout .performance-monitor,
+          .mobile-layout .canvas-toolbar {
             display: none !important;
           }
           
-          .mobile-layout .auto-responsive-indicator {
-            /* Masquer l'indicateur responsive sur mobile */
-            display: none !important;
+          /* Optimiser l'espace vertical disponible */
+          .mobile-layout .design-canvas-container {
+            padding: 0.5rem !important;
           }
           
-          .mobile-layout .performance-monitor {
-            /* Masquer le moniteur de performance sur mobile */
-            display: none !important;
+          /* Améliorer la lisibilité des boutons */
+          .mobile-layout button {
+            min-height: 44px;
+            min-width: 44px;
           }
         }
       `}</style>
