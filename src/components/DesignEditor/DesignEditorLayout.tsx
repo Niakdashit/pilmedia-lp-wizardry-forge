@@ -200,6 +200,82 @@ const DesignEditorLayout: React.FC = () => {
     enabled: true,
     preventDefault: true
   });
+  
+  // Fonctions pour les raccourcis clavier d'éléments
+  const handleDeselectAll = useCallback(() => {
+    setSelectedElement(null);
+    setSelectedElements([]);
+    console.log('🎯 Deselected all elements');
+  }, []);
+  
+  const handleElementDelete = useCallback(() => {
+    if (selectedElement?.id) {
+      setCanvasElements(prev => {
+        const newElements = prev.filter(el => el.id !== selectedElement.id);
+        setTimeout(() => {
+          addToHistory({
+            campaignConfig: { ...campaignConfig },
+            canvasElements: JSON.parse(JSON.stringify(newElements)),
+            canvasBackground: { ...canvasBackground }
+          }, 'element_delete');
+        }, 0);
+        return newElements;
+      });
+      setSelectedElement(null);
+      console.log('🗑️ Deleted element:', selectedElement.id);
+    }
+  }, [selectedElement, campaignConfig, canvasBackground, addToHistory]);
+  
+  const handleElementCopy = useCallback(() => {
+    if (selectedElement) {
+      localStorage.setItem('clipboard-element', JSON.stringify(selectedElement));
+      console.log('📋 Copied element:', selectedElement.id);
+    }
+  }, [selectedElement]);
+  
+  const handleElementPaste = useCallback(() => {
+    try {
+      const clipboardData = localStorage.getItem('clipboard-element');
+      if (clipboardData) {
+        const element = JSON.parse(clipboardData);
+        const newElement = {
+          ...element,
+          id: `${element.type}-${Date.now()}`,
+          x: (element.x || 0) + 20,
+          y: (element.y || 0) + 20
+        };
+        handleAddElement(newElement);
+        console.log('📋 Pasted element:', newElement.id);
+      }
+    } catch (error) {
+      console.error('Error pasting element:', error);
+    }
+  }, [handleAddElement]);
+  
+  const handleElementDuplicate = useCallback(() => {
+    if (selectedElement) {
+      const newElement = {
+        ...selectedElement,
+        id: `${selectedElement.type}-${Date.now()}`,
+        x: (selectedElement.x || 0) + 20,
+        y: (selectedElement.y || 0) + 20
+      };
+      handleAddElement(newElement);
+      console.log('🔄 Duplicated element:', newElement.id);
+    }
+  }, [selectedElement, handleAddElement]);
+  
+  // Raccourcis clavier pour les éléments
+  useKeyboardShortcuts({
+    selectedElement,
+    elements: canvasElements,
+    onSelectAll: handleSelectAll,
+    onDeselectAll: handleDeselectAll,
+    onElementDelete: handleElementDelete,
+    onElementCopy: handleElementCopy,
+    onElementPaste: handleElementPaste,
+    onDuplicate: handleElementDuplicate
+  });
 
   // Synchronisation avec le store
   useEffect(() => {

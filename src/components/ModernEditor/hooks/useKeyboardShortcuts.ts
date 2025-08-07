@@ -14,6 +14,12 @@ interface UseKeyboardShortcutsProps {
   onToggleFullscreen?: () => void;
   onSelectAll?: () => void;
   elements?: any[];
+  selectedElement?: any;
+  onElementDelete?: (id: string) => void;
+  onElementUpdate?: (id: string, updates: any) => void;
+  onElementCopy?: (element: any) => void;
+  onElementPaste?: () => void;
+  onDeselectAll?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
@@ -28,7 +34,13 @@ export const useKeyboardShortcuts = ({
   onZoomFit,
   onToggleFullscreen,
   onSelectAll,
-  elements
+  elements,
+  selectedElement,
+  onElementDelete,
+  onElementUpdate,
+  onElementCopy,
+  onElementPaste,
+  onDeselectAll
 }: UseKeyboardShortcutsProps = {}) => {
   const {
     selectedElementId,
@@ -127,13 +139,18 @@ export const useKeyboardShortcuts = ({
       case 'escape':
         console.log('🎹 Escape shortcut triggered!');
         event.preventDefault();
-        handleDeselectAll();
+        onDeselectAll?.() || handleDeselectAll();
         break;
 
       // Delete selected element
       case 'delete':
       case 'backspace':
-        if (selectedElementId) {
+        if (selectedElement?.id) {
+          console.log('🎹 Delete shortcut triggered for element:', selectedElement.id);
+          event.preventDefault();
+          onElementDelete?.(selectedElement.id);
+        } else if (selectedElementId) {
+          // Fallback to old system
           event.preventDefault();
           setCampaign((prev: any) => {
             const customTexts = { ...prev.design?.customTexts };
@@ -169,9 +186,13 @@ export const useKeyboardShortcuts = ({
 
       // Copy with Ctrl+C
       case 'c':
-        if (isModifierPressed && selectedElementId) {
+        if (isModifierPressed && selectedElement?.id) {
+          console.log('🎹 Copy shortcut triggered for element:', selectedElement.id);
           event.preventDefault();
-          // Store in localStorage for now
+          onElementCopy?.(selectedElement);
+        } else if (isModifierPressed && selectedElementId) {
+          // Fallback to old system
+          event.preventDefault();
           setCampaign((prev: any) => {
             const element = prev.design?.customTexts?.[selectedElementId] || 
                           prev.design?.customImages?.[selectedElementId];
@@ -189,51 +210,18 @@ export const useKeyboardShortcuts = ({
       // Paste with Ctrl+V
       case 'v':
         if (isModifierPressed) {
+          console.log('🎹 Paste shortcut triggered');
           event.preventDefault();
-          try {
-            const clipboardData = localStorage.getItem('clipboard-element');
-            if (clipboardData) {
-              const { type, data } = JSON.parse(clipboardData);
-              const newId = `element-${Date.now()}`;
-              
-              setCampaign((prev: any) => {
-                const updatedData = {
-                  ...data,
-                  desktop: {
-                    ...data.desktop,
-                    x: (data.desktop?.x || 0) + 20,
-                    y: (data.desktop?.y || 0) + 20
-                  }
-                };
-
-                if (type === 'text') {
-                  return {
-                    ...prev,
-                    design: {
-                      ...prev.design,
-                      customTexts: {
-                        ...prev.design?.customTexts,
-                        [newId]: updatedData
-                      }
-                    }
-                  };
-                } else {
-                  return {
-                    ...prev,
-                    design: {
-                      ...prev.design,
-                      customImages: {
-                        ...prev.design?.customImages,
-                        [newId]: updatedData
-                      }
-                    }
-                  };
-                }
-              });
-            }
-          } catch (error) {
-            console.error('Error pasting element:', error);
-          }
+          onElementPaste?.();
+        }
+        break;
+        
+      // Duplicate with Ctrl+D
+      case 'd':
+        if (isModifierPressed && selectedElement?.id) {
+          console.log('🎹 Duplicate shortcut triggered for element:', selectedElement.id);
+          event.preventDefault();
+          onDuplicate?.();
         }
         break;
 
