@@ -60,14 +60,12 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   canvasRef
 }) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   // Détecter la taille d'écran de manière sécurisée
   React.useEffect(() => {
     const checkIsMobile = () => {
       const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
       if (mobile && !isCollapsed) {
         setIsCollapsed(true);
       }

@@ -16,7 +16,7 @@ import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas
 import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
-import TouchDebugOverlay from './components/TouchDebugOverlay';
+
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import WheelSettingsButton from './WheelSettingsButton';
 import { useMobileOptimization } from './hooks/useMobileOptimization';
@@ -69,27 +69,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [localZoom, setLocalZoom] = useState(zoom);
   const [showBorderModal, setShowBorderModal] = useState(false);
-  const [showTouchDebug, setShowTouchDebug] = useState(false);
+  
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   
   // État pour le menu contextuel global du canvas
-  const [copiedStyle, setCopiedStyle] = useState<any>(null);
+  
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
   // Optimisation mobile pour une expérience tactile parfaite
-  const {
-    isMobile,
-    isTablet,
-    deviceType
-  } = useMobileOptimization(activeCanvasRef, {
-    preventScrollBounce: true,
-    stabilizeViewport: true,
-    optimizeTouchEvents: true,
-    preventZoomGestures: true
-  });
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -395,7 +385,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           backgroundColor: element.backgroundColor,
           borderRadius: element.borderRadius
         };
-        setCopiedStyle(style);
+        // Style copié depuis le canvas
         console.log('Style copié depuis le canvas:', style);
       }
     }
