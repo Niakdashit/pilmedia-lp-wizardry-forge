@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { useMobileCanvasLock } from '../hooks/useMobileCanvasLock';
 import MobileToolbarOverlay from './MobileToolbarOverlay';
+import MobileSidebarDrawer from './MobileSidebarDrawer';
+import MobileFloatingToolbar from './MobileFloatingToolbar';
 
 interface MobileResponsiveLayoutProps {
   children: React.ReactNode;
@@ -14,6 +16,19 @@ interface MobileResponsiveLayoutProps {
   zoom: number;
   onZoomChange?: (zoom: number) => void;
   className?: string;
+  // Props pour la sidebar mobile
+  onAddElement?: (element: any) => void;
+  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
+  campaignConfig?: any;
+  onCampaignConfigChange?: (config: any) => void;
+  elements?: any[];
+  onElementsChange?: (elements: any[]) => void;
+  // Props pour la toolbar mobile
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -26,7 +41,20 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   canvasRef,
   zoom,
   onZoomChange,
-  className = ''
+  className = '',
+  // Props pour la sidebar mobile
+  onAddElement,
+  onBackgroundChange,
+  onExtractedColorsChange,
+  campaignConfig,
+  onCampaignConfigChange,
+  elements,
+  onElementsChange,
+  // Props pour la toolbar mobile
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -120,6 +148,36 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         />
       )}
 
+      {/* Sidebar mobile drawer - seulement sur mobile */}
+      {isMobile && onAddElement && (
+        <MobileSidebarDrawer
+          onAddElement={onAddElement}
+          onBackgroundChange={onBackgroundChange}
+          onExtractedColorsChange={onExtractedColorsChange}
+          campaignConfig={campaignConfig}
+          onCampaignConfigChange={onCampaignConfigChange}
+          elements={elements}
+          onElementsChange={onElementsChange}
+          selectedElement={selectedElement}
+          onElementUpdate={onElementUpdate}
+        />
+      )}
+
+      {/* Floating toolbar mobile */}
+      {isMobile && (
+        <MobileFloatingToolbar
+          selectedElement={selectedElement}
+          onShowEffectsPanel={onShowEffectsPanel}
+          onShowPositionPanel={onShowPositionPanel}
+          zoom={zoom}
+          onZoomChange={onZoomChange}
+          onUndo={onUndo}
+          onRedo={onRedo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+        />
+      )}
+
       {/* Indicateur de statut mobile (dev only) */}
       {process.env.NODE_ENV === 'development' && (isMobile || isTablet) && (
         <div className="fixed bottom-4 left-4 z-50 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs shadow-lg">
@@ -156,9 +214,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           -webkit-touch-callout: none;
           -webkit-tap-highlight-color: transparent;
           
-          /* Safe areas iOS */
+          /* Safe areas iOS avec espace pour la toolbar */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: env(safe-area-inset-bottom);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
         }
@@ -171,8 +229,13 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           position: relative;
         }
 
-        /* Masquer la sidebar sur mobile */
+        /* Masquer la sidebar sur mobile - affichée via drawer */
         .mobile-layout .hybrid-sidebar {
+          display: none !important;
+        }
+
+        /* Masquer la toolbar canvas sur mobile */
+        .mobile-layout .z-10 {
           display: none !important;
         }
 
@@ -182,8 +245,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 10px;
+          padding: 10px 10px 90px 10px; /* Espace en bas pour la toolbar */
           overflow: hidden;
+          position: relative;
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */
