@@ -215,6 +215,18 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           pointer-events: auto;
         }
 
+        /* IMPORTANT: Autoriser les interactions avec la sidebar et ses onglets */
+        .mobile-layout.is-dragging .w-20,
+        .mobile-layout.is-dragging .w-80,
+        .mobile-layout.is-dragging [class*="sidebar"] {
+          pointer-events: auto !important;
+        }
+
+        .mobile-layout.is-dragging .w-20 button,
+        .mobile-layout.is-dragging .w-80 button {
+          pointer-events: auto !important;
+        }
+
         /* Toolbar mobile */
         .mobile-layout .mobile-toolbar-overlay {
           /* Toujours au-dessus */
@@ -332,6 +344,15 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
         /* Autoriser les interactions avec les éléments interactifs */
         .mobile-layout [class*="z-[7"]:has(button) {
+          pointer-events: auto !important;
+        }
+
+        /* IMPORTANT: Autoriser TOUJOURS les interactions avec la sidebar */
+        .mobile-layout .w-20,
+        .mobile-layout .w-80,
+        .mobile-layout [class*="sidebar"],
+        .mobile-layout .w-20 *,
+        .mobile-layout .w-80 * {
           pointer-events: auto !important;
         }
 

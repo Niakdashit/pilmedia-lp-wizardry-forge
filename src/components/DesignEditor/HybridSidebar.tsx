@@ -143,20 +143,27 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   ];
 
   const handleTabClick = (tabId: string) => {
+    console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
+    
     // Si on clique sur un onglet différent, fermer les panneaux spéciaux
     if (showEffectsPanel && tabId !== 'effects') {
+      console.log('🗂️ Fermeture du panneau effects');
       onEffectsPanelChange?.(false);
     }
     if (showAnimationsPanel && tabId !== 'animations') {
+      console.log('🗂️ Fermeture du panneau animations');
       onAnimationsPanelChange?.(false);
     }
     if (showPositionPanel && tabId !== 'position') {
+      console.log('🗂️ Fermeture du panneau position');
       onPositionPanelChange?.(false);
     }
     
     if (activeTab === tabId) {
+      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
       setActiveTab(null); // Close if clicking on active tab
     } else {
+      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
       setActiveTab(tabId);
     }
   };
@@ -243,18 +250,30 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             return (
               <button
                 key={tab.id}
-                onClick={() => {
+                onClick={(e) => {
+                  console.log('🗂️ Clic sur onglet réduit:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
                   setIsCollapsed(false);
                   setActiveTab(tab.id);
                 }}
-                className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+                onMouseDown={(e) => {
+                  console.log('🗂️ MouseDown sur onglet réduit:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 title={tab.label}
+                style={{ 
+                  pointerEvents: 'auto',
+                  userSelect: 'none'
+                }}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-5 h-5" style={{ pointerEvents: 'none' }} />
               </button>
             );
           })}
@@ -285,16 +304,35 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             return (
               <button
                 key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 ${
+                onClick={(e) => {
+                  console.log('🗂️ Événement clic sur bouton onglet:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTabClick(tab.id);
+                }}
+                onMouseDown={(e) => {
+                  console.log('🗂️ Événement mouseDown sur bouton onglet:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onTouchStart={(e) => {
+                  console.log('🗂️ Événement touchStart sur bouton onglet:', tab.id);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 cursor-pointer ${
                   isActive 
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
+                style={{ 
+                  pointerEvents: 'auto',
+                  userSelect: 'none'
+                }}
               >
-                <Icon className="w-6 h-6 mb-1" />
-                <span className="text-xs font-medium">{tab.label}</span>
+                <Icon className="w-6 h-6 mb-1" style={{ pointerEvents: 'none' }} />
+                <span className="text-xs font-medium" style={{ pointerEvents: 'none' }}>{tab.label}</span>
               </button>
             );
           })}
