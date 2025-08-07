@@ -75,6 +75,11 @@ export const useKeyboardShortcuts = ({
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const isModifierPressed = isMac ? metaKey : ctrlKey;
     
+    // Test spécifique pour la touche 'g'
+    if (key.toLowerCase() === 'g') {
+      console.log('🔥 TOUCHE G DÉTECTÉE!', { isModifierPressed, ctrlKey, metaKey });
+    }
+    
     console.log('🎹 Platform detection:', { isMac, isModifierPressed });
     
     // Special handling for Ctrl+A - allow in text inputs for select all text
@@ -184,9 +189,24 @@ export const useKeyboardShortcuts = ({
         }
         break;
 
-      // Toggle grid with G
+      // Toggle grid with G (sans modificateur) OU Groupage (avec modificateur)
       case 'g':
-        if (!isModifierPressed) {
+        console.log('🎯 G key detected!', { isModifierPressed, shiftKey, onGroup: !!onGroup, onUngroup: !!onUngroup });
+        if (isModifierPressed) {
+          // Raccourcis pour les groupes niveau Canva
+          event.preventDefault();
+          if (shiftKey) {
+            // Ctrl+Shift+G : Dissocier le groupe
+            console.log('🎯 Ungroup shortcut triggered (Ctrl+Shift+G)');
+            onUngroup?.();
+          } else {
+            // Ctrl+G : Grouper les éléments sélectionnés
+            console.log('🎯 Group shortcut triggered (Ctrl+G)');
+            onGroup?.();
+          }
+        } else {
+          // G seul : basculer la grille
+          console.log('🎯 G key pressed - toggling grid');
           event.preventDefault();
           setShowGridLines(!showGridLines);
         }
@@ -349,22 +369,7 @@ export const useKeyboardShortcuts = ({
           // Could trigger help modal
         }
         break;
-        
-      // Raccourcis pour les groupes niveau Canva
-      case 'g':
-        if (isModifierPressed) {
-          event.preventDefault();
-          if (shiftKey) {
-            // Ctrl+Shift+G : Dissocier le groupe
-            console.log('🎯 Ungroup shortcut triggered (Ctrl+Shift+G)');
-            onUngroup?.();
-          } else {
-            // Ctrl+G : Grouper les éléments sélectionnés
-            console.log('🎯 Group shortcut triggered (Ctrl+G)');
-            onGroup?.();
-          }
-        }
-        break;
+
     }
   }, [
     selectedElementId,
@@ -381,7 +386,10 @@ export const useKeyboardShortcuts = ({
     onZoomOut,
     onZoomReset,
     onZoomFit,
-    onToggleFullscreen
+    onToggleFullscreen,
+    // Ajouter les fonctions de groupe dans les dépendances
+    onGroup,
+    onUngroup
   ]);
 
   useEffect(() => {

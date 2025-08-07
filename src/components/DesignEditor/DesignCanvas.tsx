@@ -223,6 +223,34 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
 
+  // Fonction utilitaire pour calculer les positions absolues des éléments groupés
+  const calculateAbsolutePosition = useCallback((element: any) => {
+    if (!element.parentGroupId) {
+      // Élément non groupé : position absolue normale
+      return { x: element.x, y: element.y };
+    }
+    
+    // Élément groupé : calculer position absolue = position du groupe + position relative
+    const parentGroup = elements.find(el => el.id === element.parentGroupId && el.isGroup);
+    if (!parentGroup) {
+      console.warn('🎯 Parent group not found for element:', element.id, 'parentGroupId:', element.parentGroupId);
+      return { x: element.x, y: element.y };
+    }
+    
+    const absoluteX = parentGroup.x + element.x; // element.x est relatif au groupe
+    const absoluteY = parentGroup.y + element.y; // element.y est relatif au groupe
+    
+    console.log('🎯 Calculating absolute position:', {
+      elementId: element.id,
+      parentGroupId: element.parentGroupId,
+      groupPosition: { x: parentGroup.x, y: parentGroup.y },
+      relativePosition: { x: element.x, y: element.y },
+      absolutePosition: { x: absoluteX, y: absoluteY }
+    });
+    
+    return { x: absoluteX, y: absoluteY };
+  }, [elements]);
+
   // Hook de synchronisation unifié pour la roue
   const { updateWheelConfig, getCanonicalConfig } = useWheelConfigSync({
     campaign,
@@ -683,11 +711,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               // Obtenir les propriétés pour l'appareil actuel
               const responsiveProps = getPropertiesForDevice(element, selectedDevice);
               
-              // Fusionner les propriétés responsive avec l'élément original
+              // Calculer la position absolue pour les éléments groupés
+              const absolutePosition = calculateAbsolutePosition(element);
+              
+              // Fusionner les propriétés responsive avec l'élément original et les positions absolues
               const elementWithResponsive = {
                 ...element,
-                x: responsiveProps.x,
-                y: responsiveProps.y,
+                // Utiliser les positions absolues calculées pour les éléments groupés
+                x: absolutePosition.x,
+                y: absolutePosition.y,
+                // Garder les autres propriétés responsive
                 width: responsiveProps.width,
                 height: responsiveProps.height,
                 fontSize: responsiveProps.fontSize,
@@ -779,13 +812,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           (() => {
             const selectedGroup = groups.find(g => g.id === selectedGroupId);
             if (selectedGroup && selectedGroup.groupChildren) {
-              // Calculer les bounds du groupe à partir de ses éléments
+              // Calculer les bounds du groupe à partir des positions absolues de ses éléments
               const groupElements = elements.filter(el => selectedGroup.groupChildren?.includes(el.id));
               if (groupElements.length > 0) {
-                const minX = Math.min(...groupElements.map(el => el.x));
-                const minY = Math.min(...groupElements.map(el => el.y));
-                const maxX = Math.max(...groupElements.map(el => el.x + (el.width || 0)));
-                const maxY = Math.max(...groupElements.map(el => el.y + (el.height || 0)));
+                // Utiliser les positions absolues pour calculer les bounds du groupe
+                const elementsWithAbsolutePos = groupElements.map(el => {
+                  const absPos = calculateAbsolutePosition(el);
+                  return { ...el, x: absPos.x, y: absPos.y };
+                });
+                
+                const minX = Math.min(...elementsWithAbsolutePos.map(el => el.x));
+                const minY = Math.min(...elementsWithAbsolutePos.map(el => el.y));
+                const maxX = Math.max(...elementsWithAbsolutePos.map(el => el.x + (el.width || 0)));
+                const maxY = Math.max(...elementsWithAbsolutePos.map(el => el.y + (el.height || 0)));
                 
                 const groupBounds = {
                   x: minX,
@@ -793,6 +832,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   width: maxX - minX,
                   height: maxY - minY
                 };
+                
+                console.log('🎯 Group bounds calculated:', {
+                  groupId: selectedGroup.id,
+                  groupElements: groupElements.length,
+                  bounds: groupBounds,
+                  elementsPositions: elementsWithAbsolutePos.map(el => ({ id: el.id, x: el.x, y: el.y }))
+                });
                 
                 return (
                   <GroupSelectionFrame

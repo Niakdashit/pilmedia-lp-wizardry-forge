@@ -526,39 +526,85 @@ const DesignEditorLayout: React.FC = () => {
     onElementCut: handleElementCut,
     onElementPaste: handleElementPaste,
     onDuplicate: handleElementDuplicate,
-    // Raccourcis pour les groupes niveau Canva
+    // Raccourcis pour les groupes niveau Canva (inspiré de TestPage2)
     onGroup: () => {
-      console.log('🎯 Creating group from selected elements:', selectedElements);
-      if (selectedElements && selectedElements.length > 1) {
-        const groupId = createGroup(selectedElements.map(el => el.id));
+      console.log('🎯 🔥 GROUP FUNCTION CALLED!');
+      console.log('🎯 Selected elements:', selectedElements);
+      console.log('🎯 Selected elements length:', selectedElements?.length);
+      
+      // Filtrer uniquement les éléments (pas les groupes) pour le groupement
+      const validElements = selectedElements.filter(el => el && !el.isGroup && el.type !== 'group');
+      
+      if (validElements.length >= 2) {
+        console.log('🎯 ✅ Conditions met, creating group with', validElements.length, 'elements');
+        const elementIds = validElements.map(el => el.id);
+        console.log('🎯 Element IDs to group:', elementIds);
+        
+        const groupId = createGroup(elementIds, `Groupe ${Date.now()}`);
+        console.log('🎯 Group created with ID:', groupId);
+        
         if (groupId) {
+          // Ajouter à l'historique avec le nouvel état
           addToHistory({
-            canvasElements,
-            canvasBackground,
-            campaignConfig,
+            canvasElements: [...canvasElements],
+            canvasBackground: { ...canvasBackground },
+            campaignConfig: { ...campaignConfig },
             selectedElements: [],
             selectedGroupId: groupId
           });
+          
+          // Mettre à jour la sélection
           setSelectedElements([]);
+          setSelectedElement(null);
           setSelectedGroupId(groupId);
+          
+          console.log('🎯 ✅ Group created successfully!');
         }
+      } else {
+        console.log('🎯 ❌ Need at least 2 elements to create a group. Found:', validElements.length);
       }
     },
     onUngroup: () => {
       console.log('🎯 Ungrouping selected group:', selectedGroupId);
-      if (selectedGroupId) {
-        ungroupElements(selectedGroupId);
+      
+      // Vérifier s'il y a un groupe sélectionné ou des groupes dans la sélection
+      let targetGroupId = selectedGroupId;
+      
+      if (!targetGroupId && selectedElements.length > 0) {
+        // Chercher un groupe dans les éléments sélectionnés
+        const selectedGroup = selectedElements.find(el => el.isGroup || el.type === 'group');
+        if (selectedGroup) {
+          targetGroupId = selectedGroup.id;
+        }
+      }
+      
+      if (targetGroupId) {
+        console.log('🎯 Dissociating group:', targetGroupId);
+        
         // Récupérer les éléments du groupe avant de le dissocier
-        const groupElements = getGroupElements(selectedGroupId);
+        const groupElements = getGroupElements(targetGroupId);
+        console.log('🎯 Group elements to liberate:', groupElements.map(el => el.id));
+        
+        // Dissocier le groupe
+        ungroupElements(targetGroupId);
+        
+        // Ajouter à l'historique
         addToHistory({
-          canvasElements,
-          canvasBackground,
-          campaignConfig,
+          canvasElements: [...canvasElements],
+          canvasBackground: { ...canvasBackground },
+          campaignConfig: { ...campaignConfig },
           selectedElements: groupElements,
           selectedGroupId: null
         });
+        
+        // Sélectionner les éléments libérés
         setSelectedElements(groupElements);
+        setSelectedElement(null);
         setSelectedGroupId(null);
+        
+        console.log('🎯 ✅ Group ungrouped successfully!');
+      } else {
+        console.log('🎯 ❌ No group selected to ungroup');
       }
     }
   });

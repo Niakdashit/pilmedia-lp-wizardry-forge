@@ -59,12 +59,22 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
       zIndex: Math.max(...elements.map(el => el.zIndex || 0)) + 1
     };
 
-    // Mettre à jour les éléments pour les associer au groupe
+    // Mettre à jour les éléments pour les associer au groupe ET convertir en positions relatives
     const updatedElements = elements.map(element => {
       if (elementIds.includes(element.id)) {
+        // Convertir la position absolue en position relative au groupe
+        const relativeX = element.x - bounds.x;
+        const relativeY = element.y - bounds.y;
+        
         return {
           ...element,
-          parentGroupId: groupId
+          parentGroupId: groupId,
+          // Stocker les positions relatives au groupe
+          x: relativeX,
+          y: relativeY,
+          // Sauvegarder les positions absolues originales pour debug
+          originalX: element.x,
+          originalY: element.y
         };
       }
       return element;
@@ -99,13 +109,31 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
       return;
     }
 
-    // Retirer l'association parentGroupId des éléments du groupe
+    // Restaurer les positions absolues des éléments avant de dissocier le groupe
     const updatedElements = elements
       .filter(el => el.id !== groupId) // Supprimer le groupe
       .map(element => {
         if (group.groupChildren?.includes(element.id)) {
-          const { parentGroupId, ...elementWithoutParent } = element;
-          return elementWithoutParent;
+          // Calculer la position absolue finale : position du groupe + position relative
+          const finalAbsoluteX = group.x + element.x; // element.x est relatif au groupe
+          const finalAbsoluteY = group.y + element.y; // element.y est relatif au groupe
+          
+          console.log('🎯 Restoring absolute position for element:', {
+            elementId: element.id,
+            groupPosition: { x: group.x, y: group.y },
+            relativePosition: { x: element.x, y: element.y },
+            finalAbsolutePosition: { x: finalAbsoluteX, y: finalAbsoluteY },
+            originalPosition: { x: element.originalX, y: element.originalY }
+          });
+          
+          // Supprimer parentGroupId et restaurer les positions absolues
+          const { parentGroupId, originalX, originalY, ...elementWithoutParent } = element;
+          return {
+            ...elementWithoutParent,
+            // Restaurer les positions absolues calculées
+            x: finalAbsoluteX,
+            y: finalAbsoluteY
+          };
         }
         return element;
       });
@@ -128,25 +156,43 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
     }
   }, [elements, selectedGroupId, onElementsChange, onAddToHistory]);
 
-  // Déplacer un groupe entier
+  // Déplacer un groupe entier (système Canva-style avec positions relatives)
   const moveGroup = useCallback((groupId: string, deltaX: number, deltaY: number) => {
     const group = elements.find(el => el.id === groupId && el.isGroup);
     if (!group || !group.groupChildren) return;
 
+    console.log('🎯 Moving group:', { groupId, deltaX, deltaY, groupPosition: { x: group.x, y: group.y } });
+
     const updatedElements = elements.map(element => {
       if (element.id === groupId) {
         // Déplacer le groupe lui-même
+        const newGroupX = element.x + deltaX;
+        const newGroupY = element.y + deltaY;
+        console.log('🎯 New group position:', { newGroupX, newGroupY });
         return {
           ...element,
-          x: element.x + deltaX,
-          y: element.y + deltaY
+          x: newGroupX,
+          y: newGroupY
         };
       } else if (group.groupChildren.includes(element.id)) {
-        // Déplacer tous les éléments du groupe
+        // Recalculer la position absolue des éléments enfants
+        // Position absolue = Position du groupe + Position relative de l'élément
+        const newGroupX = group.x + deltaX;
+        const newGroupY = group.y + deltaY;
+        const newAbsoluteX = newGroupX + element.x; // element.x est déjà relatif au groupe
+        const newAbsoluteY = newGroupY + element.y; // element.y est déjà relatif au groupe
+        
+        console.log('🎯 Moving child element:', {
+          elementId: element.id,
+          relativePos: { x: element.x, y: element.y },
+          newGroupPos: { x: newGroupX, y: newGroupY },
+          newAbsolutePos: { x: newAbsoluteX, y: newAbsoluteY }
+        });
+        
         return {
           ...element,
-          x: element.x + deltaX,
-          y: element.y + deltaY
+          // Les positions restent relatives au groupe (pas de changement)
+          // Le rendu se chargera de calculer la position absolue
         };
       }
       return element;
