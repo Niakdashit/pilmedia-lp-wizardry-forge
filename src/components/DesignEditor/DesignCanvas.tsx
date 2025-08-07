@@ -85,6 +85,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [localZoom, setLocalZoom] = useState(zoom);
+  const zoomRef = useRef(localZoom);
   const [showBorderModal, setShowBorderModal] = useState(false);
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
@@ -108,6 +109,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Synchroniser le zoom local avec le prop
   useEffect(() => {
     setLocalZoom(zoom);
+    zoomRef.current = zoom;
   }, [zoom]);
 
   // Support du zoom via trackpad et molette souris + Ctrl/Cmd
@@ -123,6 +125,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
         
         setLocalZoom(newZoom);
+        zoomRef.current = newZoom;
         
         // Synchroniser avec la barre de zoom externe si disponible
         if (onZoomChange) {
@@ -139,6 +142,51 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       };
     }
   }, [localZoom, activeCanvasRef]);
+
+  // Support du zoom par pincement sur mobile avec une sensibilité réduite
+  useEffect(() => {
+    const canvasElement = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
+    if (!canvasElement) return;
+
+    let initialDistance = 0;
+    let initialZoom = zoomRef.current;
+
+    const getDistance = (touch1: Touch, touch2: Touch) => {
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        initialDistance = getDistance(e.touches[0], e.touches[1]);
+        initialZoom = zoomRef.current;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const distance = getDistance(e.touches[0], e.touches[1]);
+        const delta = distance - initialDistance;
+        const newZoom = Math.max(0.1, Math.min(5, initialZoom + delta * 0.002));
+        setLocalZoom(newZoom);
+        zoomRef.current = newZoom;
+        if (onZoomChange) {
+          onZoomChange(newZoom);
+        }
+      }
+    };
+
+    canvasElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvasElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      canvasElement.removeEventListener('touchstart', handleTouchStart);
+      canvasElement.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [activeCanvasRef, onZoomChange]);
 
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
