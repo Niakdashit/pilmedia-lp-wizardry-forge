@@ -49,10 +49,10 @@ const Mode2Preview: React.FC<Mode2PreviewProps> = ({
   // Synchroniser la configuration avec les couleurs extraites
   useEffect(() => {
     if (brandStyleExtracted && finalColors) {
-      const updatedConfig = synchronizeCampaignWithColors(
-        config,
-        finalColors
-      );
+      const updatedConfig = {
+        ...config,
+        ...synchronizeCampaignWithColors(config, finalColors)
+      };
       setSynchronizedConfig(updatedConfig);
     } else {
       setSynchronizedConfig(config);

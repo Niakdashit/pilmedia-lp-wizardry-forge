@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { throttle } from 'lodash-es';
 
 interface CanvasRegion {
@@ -11,7 +11,7 @@ interface CanvasRegion {
 }
 
 interface VirtualizedCanvasOptions {
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement> | React.RefObject<HTMLDivElement> | ((instance: HTMLDivElement | null) => void);
   regionSize?: number;
   maxRegions?: number;
   updateThreshold?: number;
@@ -87,7 +87,7 @@ export const useVirtualizedCanvas = ({
 
   // Calculer les régions visibles dans le viewport
   const updateVisibleRegions = useCallback(() => {
-    if (!containerRef.current) return;
+    if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return;
 
     const container = containerRef.current;
     const rect = container.getBoundingClientRect();
@@ -174,6 +174,7 @@ export const useVirtualizedCanvas = ({
 
   // Effet pour le scroll et resize
   useEffect(() => {
+    if (!containerRef || typeof containerRef === 'function') return;
     const container = containerRef.current;
     if (!container) return;
 

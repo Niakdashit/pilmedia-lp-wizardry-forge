@@ -30,9 +30,9 @@ const DesignEditorLayout: React.FC = () => {
       case 'desktop':
         return 0.7; // 70%
       case 'tablet':
-        return 0.65; // 65%
+        return 0.55; // 55%
       case 'mobile':
-        return 0.95; // 95%
+        return 0.45; // 45% pour une meilleure visibilité sur mobile
       default:
         return 0.7;
     }
@@ -492,6 +492,15 @@ const DesignEditorLayout: React.FC = () => {
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
               }}
+              // Props pour la sidebar mobile
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              // Props pour la toolbar mobile
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}

@@ -9,7 +9,7 @@ interface SnapGuide {
 }
 
 interface UseSmartSnappingProps {
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement> | React.RefObject<HTMLDivElement> | ((instance: HTMLDivElement | null) => void);
   gridSize?: number;
   snapTolerance?: number;
 }
@@ -61,7 +61,7 @@ export const useSmartSnapping = ({
   ): SnapGuide[] => {
     const guides: SnapGuide[] = [];
     
-    if (!containerRef.current) return guides;
+    if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return guides;
     
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerWidth = containerRect.width;

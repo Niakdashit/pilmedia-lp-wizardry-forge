@@ -16,10 +16,10 @@ import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas
 import { useEditorStore } from '../../stores/editorStore';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
-import TouchDebugOverlay from './components/TouchDebugOverlay';
+
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import WheelSettingsButton from './WheelSettingsButton';
-import { useMobileOptimization } from './hooks/useMobileOptimization';
+
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 
@@ -42,6 +42,15 @@ export interface DesignCanvasProps {
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
   onOpenElementsTab?: () => void;
+  // Props pour la sidebar mobile
+  onAddElement?: (element: any) => void;
+  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
+  // Props pour la toolbar mobile
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
@@ -59,7 +68,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
-  onOpenElementsTab
+  onOpenElementsTab,
+  // Props pour la sidebar mobile
+  onAddElement,
+  onBackgroundChange,
+  onExtractedColorsChange,
+  // Props pour la toolbar mobile
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -69,27 +87,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [localZoom, setLocalZoom] = useState(zoom);
   const [showBorderModal, setShowBorderModal] = useState(false);
-  const [showTouchDebug, setShowTouchDebug] = useState(false);
+  
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   
   // État pour le menu contextuel global du canvas
-  const [copiedStyle, setCopiedStyle] = useState<any>(null);
+  
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
   // Optimisation mobile pour une expérience tactile parfaite
-  const {
-    isMobile,
-    isTablet,
-    deviceType
-  } = useMobileOptimization(activeCanvasRef, {
-    preventScrollBounce: true,
-    stabilizeViewport: true,
-    optimizeTouchEvents: true,
-    preventZoomGestures: true
-  });
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -395,7 +403,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           backgroundColor: element.backgroundColor,
           borderRadius: element.borderRadius
         };
-        setCopiedStyle(style);
+        // Style copié depuis le canvas
         console.log('Style copié depuis le canvas:', style);
       }
     }
@@ -446,9 +454,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowEffectsPanel={onShowEffectsPanel}
         onShowAnimationsPanel={onShowAnimationsPanel}
         onShowPositionPanel={onShowPositionPanel}
-        canvasRef={activeCanvasRef}
+        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
         className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
+        // Props pour la sidebar mobile
+        onAddElement={onAddElement}
+        onBackgroundChange={onBackgroundChange}
+        onExtractedColorsChange={onExtractedColorsChange}
+        campaignConfig={campaign}
+        onCampaignConfigChange={onCampaignChange}
+        elements={elements}
+        onElementsChange={onElementsChange}
+        // Props pour la toolbar mobile
+        onUndo={onUndo}
+        onRedo={onRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (
@@ -464,7 +485,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
               onOpenElementsTab={onOpenElementsTab}
-              canvasRef={activeCanvasRef}
+              canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
             />
           </div>
         )}
@@ -512,6 +533,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
               onMouseDown={(e) => {
+                console.log('🔘 Clic sur le background détecté');
                 // Désélectionner l'élément quand on clique sur le background
                 e.stopPropagation();
                 setSelectedElement(null);
@@ -550,11 +572,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 campaign={campaign}
                 device={selectedDevice}
                 shouldCropWheel={true}
-                onClick={() => setShowBorderModal(true)}
+                onClick={() => {
+                  console.log('🔘 Clic sur la roue détecté');
+                  setShowBorderModal(true);
+                }}
               />
               {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
               <div className="absolute bottom-2 right-2 z-50">
-                <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
+                <WheelSettingsButton onClick={() => {
+                  console.log('🔘 Clic sur WheelSettingsButton détecté');
+                  setShowBorderModal(true);
+                }} />
               </div>
             </div>
 
@@ -606,7 +634,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={activeCanvasRef}
+                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
                   zoom={zoom}
                   onAddElement={(newElement) => {
                     const updatedElements = [...elements, newElement];

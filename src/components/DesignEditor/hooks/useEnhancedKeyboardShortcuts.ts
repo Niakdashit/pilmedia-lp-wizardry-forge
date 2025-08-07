@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useEditorStore } from '../../../stores/editorStore';
 
 interface EnhancedKeyboardShortcutsProps {
@@ -38,8 +38,7 @@ export const useEnhancedKeyboardShortcuts = ({
     setCampaign
   } = useEditorStore();
 
-  const lastClickTime = useRef<number>(0);
-  const clickCount = useRef<number>(0);
+  // Removed unused variables lastClickTime and clickCount
 
   // Détection de plateforme améliorée
   const isMac = useCallback(() => {

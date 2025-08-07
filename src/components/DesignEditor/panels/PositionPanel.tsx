@@ -12,7 +12,7 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
   onBack,
   selectedElement,
   onElementUpdate,
-  canvasRef
+  // canvasRef removed as unused
 }) => {
   const [activeTab, setActiveTab] = useState<'organiser' | 'calques'>('organiser');
   const [isRatioLocked, setIsRatioLocked] = useState(true);
