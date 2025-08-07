@@ -502,6 +502,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
               onMouseDown={(e) => {
+                console.log('🔘 Clic sur le background détecté');
                 // Désélectionner l'élément quand on clique sur le background
                 e.stopPropagation();
                 setSelectedElement(null);
@@ -540,11 +541,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 campaign={campaign}
                 device={selectedDevice}
                 shouldCropWheel={true}
-                onClick={() => setShowBorderModal(true)}
+                onClick={() => {
+                  console.log('🔘 Clic sur la roue détecté');
+                  setShowBorderModal(true);
+                }}
               />
               {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
               <div className="absolute bottom-2 right-2 z-50">
-                <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
+                <WheelSettingsButton onClick={() => {
+                  console.log('🔘 Clic sur WheelSettingsButton détecté');
+                  setShowBorderModal(true);
+                }} />
               </div>
             </div>
 

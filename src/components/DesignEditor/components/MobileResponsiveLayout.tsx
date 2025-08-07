@@ -205,6 +205,16 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           pointer-events: auto;
         }
 
+        /* Autoriser les interactions avec les boutons pendant le drag */
+        .mobile-layout.is-dragging button {
+          pointer-events: auto;
+        }
+
+        /* Autoriser les interactions avec les éléments de contrôle */
+        .mobile-layout.is-dragging [class*="z-[7"]:has(button) {
+          pointer-events: auto;
+        }
+
         /* Toolbar mobile */
         .mobile-layout .mobile-toolbar-overlay {
           /* Toujours au-dessus */
@@ -309,10 +319,20 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
         /* Zone de canvas non-interactive sur mobile */
         .mobile-layout .canvas-background {
-          /* Empêcher les interactions sur le fond */
+          /* Empêcher les interactions sur le fond mais pas sur les boutons */
           pointer-events: none;
           user-select: none;
           -webkit-user-select: none;
+        }
+
+        /* Autoriser les interactions avec tous les boutons */
+        .mobile-layout button {
+          pointer-events: auto !important;
+        }
+
+        /* Autoriser les interactions avec les éléments interactifs */
+        .mobile-layout [class*="z-[7"]:has(button) {
+          pointer-events: auto !important;
         }
 
         /* Optimisations de performance pour mobile */
