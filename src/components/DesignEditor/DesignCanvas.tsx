@@ -19,7 +19,7 @@ import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import WheelSettingsButton from './WheelSettingsButton';
-import { useMobileOptimization } from './hooks/useMobileOptimization';
+
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 

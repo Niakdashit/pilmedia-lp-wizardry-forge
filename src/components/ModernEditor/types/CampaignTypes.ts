@@ -193,15 +193,9 @@ export interface MobileConfig {
   backgroundImage?: string;
   backgroundMode?: string;
   backgroundColor?: string;
-  logoOverlay?: {
-    enabled?: boolean;
-    src?: string;
-  };
+  logoOverlay?: string;
   logoPosition?: string;
-  decorativeOverlay?: {
-    enabled?: boolean;
-    type?: string;
-  };
+  decorativeOverlay?: string;
   
   // Game placement properties
   gameVerticalAlign?: string;
@@ -241,8 +235,12 @@ export interface MobileConfig {
   buttonColor?: string;
   buttonTextColor?: string;
   buttonShape?: string;
-  buttonShadow?: boolean;
+  buttonShadow?: string;
   buttonText?: string;
+  buttonActionType?: string;
+  buttonLink?: string;
+  buttonMargin?: number;
+  buttonHoverEffect?: boolean;
   
   // Layout properties
   textPosition?: string;

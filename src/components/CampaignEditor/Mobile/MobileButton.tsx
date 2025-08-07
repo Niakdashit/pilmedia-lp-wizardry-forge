@@ -131,6 +131,7 @@ const getButtonStyle = (mobileConfig: MobileConfig, isLateralPosition = false) =
     fontSize: sizeConfig[buttonSize as keyof typeof sizeConfig]?.fontSize || sizeConfig.medium.fontSize,
     boxShadow: mobileConfig.buttonShadow === 'none' ? 'none' :
               mobileConfig.buttonShadow === 'shadow-lg' ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' :
+              mobileConfig.buttonShadow === 'shadow-md' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' :
               '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     // Pour les positions latérales, utiliser une largeur fixe au lieu d'un pourcentage
     width: isLateralPosition ? 'auto' : `${buttonWidth}%`,
