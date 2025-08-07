@@ -12,6 +12,8 @@ interface UseKeyboardShortcutsProps {
   onZoomReset?: () => void;
   onZoomFit?: () => void;
   onToggleFullscreen?: () => void;
+  onSelectAll?: () => void;
+  elements?: any[];
 }
 
 export const useKeyboardShortcuts = ({
@@ -24,7 +26,9 @@ export const useKeyboardShortcuts = ({
   onZoomOut,
   onZoomReset,
   onZoomFit,
-  onToggleFullscreen
+  onToggleFullscreen,
+  onSelectAll,
+  elements
 }: UseKeyboardShortcutsProps = {}) => {
   const {
     selectedElementId,
@@ -53,10 +57,28 @@ export const useKeyboardShortcuts = ({
     
     console.log('🎹 Platform detection:', { isMac, isModifierPressed });
     
-    // Don't trigger shortcuts when typing in inputs
-    if ((target as Element)?.tagName === 'INPUT' || 
-        (target as Element)?.tagName === 'TEXTAREA' ||
-        (target as HTMLElement)?.contentEditable === 'true') {
+    // Special handling for Ctrl+A - allow in text inputs for select all text
+    const isTextInput = (target as Element)?.tagName === 'INPUT' || 
+                       (target as Element)?.tagName === 'TEXTAREA' ||
+                       (target as HTMLElement)?.contentEditable === 'true';
+    
+    // For Ctrl+A, handle both text input selection and canvas element selection
+    if (key.toLowerCase() === 'a' && isModifierPressed) {
+      if (isTextInput) {
+        // Let browser handle text selection in inputs
+        console.log('🎹 Ctrl+A in text input - allowing browser default');
+        return;
+      } else {
+        // Select all canvas elements
+        console.log('🎹 Ctrl+A for canvas elements');
+        event.preventDefault();
+        onSelectAll?.();
+        return;
+      }
+    }
+    
+    // Don't trigger other shortcuts when typing in inputs
+    if (isTextInput) {
       console.log('🎹 Ignoring keyboard event - typing in input field');
       return;
     }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
@@ -80,6 +80,16 @@ const DesignEditorLayout: React.FC = () => {
 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [selectedElements, setSelectedElements] = useState<any[]>([]);
+  
+  // Fonction pour sélectionner tous les éléments
+  const handleSelectAll = useCallback(() => {
+    if (canvasElements.length > 0) {
+      setSelectedElements([...canvasElements]);
+      setSelectedElement(null); // Désélectionner l'élément unique
+      console.log('🎯 Selected all elements:', canvasElements.length);
+    }
+  }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
 
@@ -379,7 +389,9 @@ const DesignEditorLayout: React.FC = () => {
     },
     onZoomFit: () => {
       setCanvasZoom(1);
-    }
+    },
+    onSelectAll: handleSelectAll,
+    elements: canvasElements
   });
 
   // Auto-responsive logic

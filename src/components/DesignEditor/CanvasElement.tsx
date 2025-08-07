@@ -69,25 +69,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   const [isEditing, setIsEditing] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
-  const [inputWidth, setInputWidth] = React.useState<number | null>(null);
-  
-  // Fonction pour calculer la largeur nécessaire pour le texte
-  const calculateTextWidth = React.useCallback((text: string) => {
-    if (!textRef.current) return null;
-    
-    // Créer un élément temporaire pour mesurer le texte
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) return null;
-    
-    // Appliquer les mêmes styles que le texte
-    const computedStyle = window.getComputedStyle(textRef.current);
-    context.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
-    
-    // Mesurer la largeur du texte
-    const metrics = context.measureText(text || 'A');
-    return Math.ceil(metrics.width) + 4; // +4px pour un peu de marge
-  }, []);
 
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
@@ -261,24 +242,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const handleDoubleClick = useCallback(() => {
     if (element.type === 'text') {
       setIsEditing(true);
-      // Initialiser la largeur de l'input avec le contenu actuel
-      const initialWidth = calculateTextWidth(element.content || 'Texte');
-      if (initialWidth) {
-        setInputWidth(initialWidth);
-      }
     }
-  }, [element.type, element.content, calculateTextWidth]);
+  }, [element.type]);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newContent = e.target.value;
     onUpdate(element.id, { content: newContent });
-    
-    // Calculer et mettre à jour la largeur dynamiquement
-    const newWidth = calculateTextWidth(newContent);
-    if (newWidth) {
-      setInputWidth(newWidth);
-    }
-  }, [element.id, onUpdate, calculateTextWidth]);
+  }, [element.id, onUpdate]);
 
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -557,13 +527,14 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             className="bg-transparent border-none outline-none"
             style={{
               ...getTextStyle(),
-              width: inputWidth ? `${inputWidth}px` : (textRef.current ? `${textRef.current.offsetWidth}px` : 'auto'),
-              height: textRef.current ? `${textRef.current.offsetHeight}px` : 'auto',
+              width: `${Math.max((element.content || 'Texte').length * 0.5 + 0.5, 2)}em`,
+              height: 'auto',
               boxSizing: 'border-box',
               display: 'inline-block',
               padding: '0',
               margin: '0',
-              border: 'none'
+              border: 'none',
+              minWidth: '2em'
             }}
             autoFocus
             data-element-type="text"
