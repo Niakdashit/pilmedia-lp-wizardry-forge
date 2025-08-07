@@ -61,7 +61,7 @@ export const useSmartSnapping = ({
   ): SnapGuide[] => {
     const guides: SnapGuide[] = [];
     
-    if (!containerRef.current) return guides;
+    if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return guides;
     
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerWidth = containerRect.width;

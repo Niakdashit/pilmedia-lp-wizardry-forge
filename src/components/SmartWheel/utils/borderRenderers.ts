@@ -27,7 +27,7 @@ export const renderWheelBorder = (
   // Renderer générique basé sur le matériau et le style
   switch (config.material) {
     case 'metal':
-      renderMetalBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth, scaleFactor, animationTime);
+      renderMetalBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth, scaleFactor);
       break;
     case 'neon':
       renderNeonBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth, scaleFactor, animationTime);
@@ -39,7 +39,7 @@ export const renderWheelBorder = (
       renderPlasticBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth, scaleFactor);
       break;
     case 'glass':
-      renderGlassBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth, scaleFactor);
+      renderGlassBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth);
       break;
     case 'ceramic':
       renderCeramicBorder(ctx, centerX, centerY, radius, config, scaledBorderWidth, scaleFactor);
@@ -61,7 +61,7 @@ const renderMetalBorder = (
   config: WheelBorderConfig,
   borderWidth: number,
   scaleFactor: number,
-  animationTime: number = 0
+  // animationTime unused parameter
 ) => {
   ctx.save();
 
@@ -312,7 +312,7 @@ const renderGlassBorder = (
   radius: number,
   config: WheelBorderConfig,
   borderWidth: number,
-  scaleFactor: number
+  // scaleFactor unused in this function
 ) => {
   ctx.save();
 

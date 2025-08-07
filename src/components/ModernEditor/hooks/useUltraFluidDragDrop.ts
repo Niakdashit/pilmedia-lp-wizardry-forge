@@ -138,7 +138,7 @@ export const useUltraFluidDragDrop = ({
     clientY: number,
     elementRect: { x: number; y: number; width: number; height: number }
   ) => {
-    if (!containerRef.current) return;
+    if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerStyle = getComputedStyle(containerRef.current);
@@ -195,7 +195,7 @@ export const useUltraFluidDragDrop = ({
   // Mettre à jour la position pendant le drag
   const updateDrag = useCallback((clientX: number, clientY: number) => {
     const dragState = dragStateRef.current;
-    if (!dragState.isDragging || !containerRef.current) return;
+    if (!dragState.isDragging || !containerRef || typeof containerRef === 'function' || !containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerStyle = getComputedStyle(containerRef.current);

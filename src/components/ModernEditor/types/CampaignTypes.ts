@@ -10,6 +10,7 @@ export interface CampaignDesign {
     borderColor?: string;
     scale?: number;
     borderStyle?: string;
+    borderWidth?: number;
   };
   
   // Brand colors
