@@ -18,6 +18,7 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
 import TouchDebugOverlay from './components/TouchDebugOverlay';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
+import WheelSettingsButton from './WheelSettingsButton';
 import { useMobileOptimization } from './hooks/useMobileOptimization';
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -33,6 +34,7 @@ export interface DesignCanvasProps {
   campaign?: any;
   onCampaignChange?: (campaign: any) => void;
   zoom?: number;
+  onZoomChange?: (zoom: number) => void;
   selectedElement?: any;
   onSelectedElementChange?: (element: any) => void;
   onElementUpdate?: (updates: any) => void;
@@ -50,6 +52,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   campaign,
   onCampaignChange,
   zoom = 1,
+  onZoomChange,
   selectedElement: externalSelectedElement,
   onSelectedElementChange,
   onElementUpdate: externalOnElementUpdate,
@@ -64,6 +67,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [localZoom, setLocalZoom] = useState(zoom);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showTouchDebug, setShowTouchDebug] = useState(false);
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
@@ -93,6 +97,41 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       setSelectedElement(externalSelectedElement.id);
     }
   }, [externalSelectedElement]);
+
+  // Synchroniser le zoom local avec le prop
+  useEffect(() => {
+    setLocalZoom(zoom);
+  }, [zoom]);
+
+  // Support du zoom via trackpad et molette souris + Ctrl/Cmd
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Vérifier si Ctrl (Windows/Linux) ou Cmd (Mac) est pressé
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Calculer le facteur de zoom basé sur le delta (plus lent)
+        const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
+        const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
+        
+        setLocalZoom(newZoom);
+        
+        // Synchroniser avec la barre de zoom externe si disponible
+        if (onZoomChange) {
+          onZoomChange(newZoom);
+        }
+      }
+    };
+
+    const canvasElement = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
+    if (canvasElement) {
+      canvasElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        canvasElement.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, [localZoom, activeCanvasRef]);
 
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null) => {
@@ -457,7 +496,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minWidth: `${canvasSize.width}px`,
                 minHeight: `${canvasSize.height}px`,
                 flexShrink: 0,
-                transform: `scale(${zoom})`,
+                transform: `scale(${localZoom})`,
                 transformOrigin: 'center center'
               }}
             onMouseDown={(e) => {
@@ -513,6 +552,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 shouldCropWheel={true}
                 onClick={() => setShowBorderModal(true)}
               />
+              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+              <div className="absolute bottom-2 right-2 z-50">
+                <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
+              </div>
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
@@ -589,20 +632,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 📐
               </button>
               
-              {/* Touch Debug Toggle - Only show on mobile/tablet */}
-              {selectedDevice !== 'desktop' && (
-                <button
-                  onClick={() => setShowTouchDebug(!showTouchDebug)}
-                  className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
-                    showTouchDebug 
-                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                      : 'bg-white/80 hover:bg-white text-gray-700'
-                  }`}
-                  title="Debug tactile (mobile/tablette)"
-                >
-                  🔧
-                </button>
-              )}
+
             </div>
 
             {/* Device Frame for mobile/tablet */}
@@ -631,6 +661,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           )}
         </div>
 
+        {/* Bouton roue fortune ABSOLU dans la zone d'aperçu (canvas) */}
+        <div className="absolute bottom-2 right-2 z-50">
+          <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
+        </div>
+
         {/* Modal pour la configuration de la roue */}
         <WheelConfigModal
           isOpen={showBorderModal}
@@ -646,13 +681,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           selectedDevice={selectedDevice}
         />
         
-        {/* Touch Debug Overlay */}
-        <TouchDebugOverlay
-          selectedDevice={selectedDevice}
-          containerRef={canvasRef}
-          isVisible={showTouchDebug}
-          onToggle={() => setShowTouchDebug(!showTouchDebug)}
-        />
+
         
         {/* Popup contextuel d'animation */}
         {showAnimationPopup && selectedAnimation && (

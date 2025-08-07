@@ -66,8 +66,38 @@ const TextPanel: React.FC<TextPanelProps> = ({
   const [selectedCategory, setSelectedCategory] = useState(fontCategories[0]);
   const [showEffects, setShowEffects] = useState(false);
 
-  // Ajouter un texte avec préréglages optionnels
+  // Ajouter un texte avec préréglages optionnels ou modifier le texte sélectionné
   const addText = (preset?: any, stylePreset?: any) => {
+    // Si un texte est sélectionné, modifier ses propriétés au lieu de créer un nouveau texte
+    if (selectedElement && selectedElement.type === 'text' && onElementUpdate) {
+      const updates: any = {};
+      
+      // Appliquer la police si spécifiée
+      if (preset?.fontFamily) {
+        updates.fontFamily = preset.fontFamily;
+      }
+      
+      // Appliquer d'autres propriétés du preset (mais PAS la taille pour préserver celle existante)
+      // if (preset?.fontSize) updates.fontSize = preset.fontSize; // Commenté pour garder la taille existante
+      if (preset?.color) updates.color = preset.color;
+      if (preset?.fontWeight) updates.fontWeight = preset.fontWeight;
+      
+      // Appliquer les styles avancés si présents
+      if (stylePreset) {
+        updates.customCSS = stylePreset.style;
+        updates.advancedStyle = {
+          id: stylePreset.id,
+          name: stylePreset.name,
+          category: 'preset',
+          css: stylePreset.style
+        };
+      }
+      
+      onElementUpdate(updates);
+      return;
+    }
+    
+    // Sinon, créer un nouveau texte comme avant
     const newElement = {
       id: `text-${Date.now()}`,
       type: 'text',
