@@ -48,6 +48,14 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
         displayPart = 'Suppr';
       } else if (part === 'Espace' || part === 'Space') {
         displayPart = 'Espace';
+      } else if (['ArrowLeft', 'Left', '←'].includes(part)) {
+        displayPart = '←';
+      } else if (['ArrowRight', 'Right', '→'].includes(part)) {
+        displayPart = '→';
+      } else if (['ArrowUp', 'Up', '↑'].includes(part)) {
+        displayPart = '↑';
+      } else if (['ArrowDown', 'Down', '↓'].includes(part)) {
+        displayPart = '↓';
       }
       
       return (
@@ -80,6 +88,69 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
       ['-', 'Dézoomer'],
       ['0', 'Zoom 100%'],
       ['1', 'Ajuster à l\'écran']
+    ],
+    'Éléments': [
+      [`${modifierKey}+G`, 'Grouper des éléments'],
+      [`${modifierKey}+Shift+G`, 'Dégrouper des éléments'],
+      ['Alt+Shift+L', 'Verrouiller un élément'],
+      [`${modifierKey}+Shift+J`, 'Justifier au niveau des éléments'],
+      [`${modifierKey}+]`, 'Faire avancer les éléments d\'un niveau'],
+      [`${modifierKey}+[`, 'Faire reculer les éléments d\'un niveau'],
+      [`Alt+${modifierKey}+]`, 'Mettre les éléments au premier plan'],
+      [`Alt+${modifierKey}+[`, 'Mettre les éléments à l\'arrière-plan'],
+      [`Shift+${modifierKey}+T`, 'Ranger les éléments'],
+      ['Tab', 'Sélectionner l\'élément suivant'],
+      ['Shift+Tab', 'Sélectionner l\'élément précédent']
+    ],
+    'Déplacement': [
+      ['←', 'Aller à gauche (petit)'],
+      ['→', 'Aller à droite (petit)'],
+      ['↑', 'Déplacer vers le haut (petit)'],
+      ['↓', 'Déplacer vers le bas (petit)'],
+      ['Shift+←', 'Aller à gauche (grand)'],
+      ['Shift+→', 'Déplacer vers la droite (grand)'],
+      ['Shift+↑', 'Déplacer vers le haut (grand)'],
+      ['Shift+↓', 'Déplacer vers le bas (grand)']
+    ],
+    'Rotation': [
+      [',', 'Tourner à gauche (petit)'],
+      ['.', 'Tourner à droite (petit)'],
+      ['Shift+,', 'Tourner à gauche (grand)'],
+      ['Shift+.', 'Tourner à droite (grand)']
+    ],
+    'Redimensionnement': [
+      [`${modifierKey}+←`, 'Redimensionner à gauche (petit)'],
+      [`${modifierKey}+→`, 'Redimensionner à droite (petit)'],
+      [`${modifierKey}+↑`, 'Redimensionner vers le haut (petit)'],
+      [`${modifierKey}+↓`, 'Redimensionner vers le bas (petit)'],
+      [`Shift+${modifierKey}+←`, 'Redimensionner à gauche (grand)'],
+      [`Shift+${modifierKey}+→`, 'Redimensionner à droite (grand)'],
+      [`Shift+${modifierKey}+↑`, 'Redimensionner vers le haut (grand)'],
+      [`Shift+${modifierKey}+↓`, 'Redimensionner vers le bas (grand)']
+    ],
+    'Texte': [
+      [`Shift+${modifierKey}+F`, 'Ouvrir le menu des polices'],
+      [`${modifierKey}+F`, 'Chercher et remplacer'],
+      [`${modifierKey}+B`, 'Mettre le texte en gras'],
+      [`${modifierKey}+I`, 'Mettre le texte en italique'],
+      [`${modifierKey}+U`, 'Souligner'],
+      [`Shift+${modifierKey}+K`, 'Majuscules'],
+      [`Shift+${modifierKey}+L`, 'Aligner à gauche'],
+      [`Shift+${modifierKey}+C`, 'Centrer'],
+      [`Shift+${modifierKey}+R`, 'Aligner à droite'],
+      [`Shift+${modifierKey}+,`, 'Diminuer la taille de police d\'un point'],
+      [`Shift+${modifierKey}+.`, 'Augmenter la taille de police d\'un point'],
+      [`Alt+${modifierKey}+↓`, 'Diminuer l\'interligne'],
+      [`Alt+${modifierKey}+↑`, 'Augmenter l\'interligne'],
+      [`Alt+${modifierKey}+,`, 'Diminuer l\'espacement des lettres'],
+      [`Alt+${modifierKey}+.`, 'Augmenter l\'espacement des lettres'],
+      [`${modifierKey}+Shift+H`, 'Ancrer le texte en haut'],
+      [`${modifierKey}+Shift+M`, 'Ancrer le texte au milieu'],
+      [`${modifierKey}+Shift+B`, 'Ancrer le texte en bas'],
+      [`${modifierKey}+Shift+7`, 'Liste numérotée'],
+      [`${modifierKey}+Shift+8`, 'Liste à puces'],
+      [`Alt+${modifierKey}+C`, 'Copier le style de texte'],
+      [`Alt+${modifierKey}+V`, 'Coller le style de texte']
     ],
     'Outils (Futur)': [
       ['Espace', 'Mode main'],
