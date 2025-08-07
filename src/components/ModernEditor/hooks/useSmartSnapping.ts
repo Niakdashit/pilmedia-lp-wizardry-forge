@@ -9,7 +9,7 @@ interface SnapGuide {
 }
 
 interface UseSmartSnappingProps {
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement> | React.RefObject<HTMLDivElement> | ((instance: HTMLDivElement | null) => void);
   gridSize?: number;
   snapTolerance?: number;
 }

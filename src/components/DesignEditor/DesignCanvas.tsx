@@ -436,7 +436,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowEffectsPanel={onShowEffectsPanel}
         onShowAnimationsPanel={onShowAnimationsPanel}
         onShowPositionPanel={onShowPositionPanel}
-        canvasRef={activeCanvasRef}
+        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
         className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
       >
@@ -454,7 +454,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
               onOpenElementsTab={onOpenElementsTab}
-              canvasRef={activeCanvasRef}
+              canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
             />
           </div>
         )}
@@ -596,7 +596,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={activeCanvasRef}
+                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
                   zoom={zoom}
                   onAddElement={(newElement) => {
                     const updatedElements = [...elements, newElement];

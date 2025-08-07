@@ -11,7 +11,7 @@ interface DragState {
 }
 
 interface UltraFluidDragDropOptions {
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement> | React.RefObject<HTMLDivElement> | ((instance: HTMLDivElement | null) => void);
   onDragStart?: (elementId: string, position: { x: number; y: number }) => void;
   onDragMove?: (elementId: string, position: { x: number; y: number }, velocity: { x: number; y: number }) => void;
   onDragEnd?: (elementId: string, position: { x: number; y: number }) => void;

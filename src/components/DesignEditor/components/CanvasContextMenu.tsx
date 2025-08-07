@@ -20,7 +20,6 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
   onCopyStyle,
   onPaste,
   onRemoveBackground,
-  canPaste: canPasteProp = false,
   hasStyleToCopy = false
 }) => {
   // Use global clipboard state
@@ -102,7 +101,7 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
       label: 'Coller',
       shortcut: '⌘V',
       action: handlePaste,
-      disabled: !canPaste()
+      disabled: !canPaste
     },
     {
       icon: Trash2,
