@@ -55,11 +55,6 @@ export interface DesignCanvasProps {
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
-  // Props pour la toolbar mobile
-  onUndo?: () => void;
-  onRedo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
@@ -89,12 +84,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Props pour la sidebar mobile
   onAddElement,
   onBackgroundChange,
-  onExtractedColorsChange,
-  // Props pour la toolbar mobile
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo
+  onExtractedColorsChange
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -563,11 +553,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onCampaignConfigChange={onCampaignChange}
         elements={elements}
         onElementsChange={onElementsChange}
-        // Props pour la toolbar mobile
-        onUndo={onUndo}
-        onRedo={onRedo}
-        canUndo={canUndo}
-        canRedo={canRedo}
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (

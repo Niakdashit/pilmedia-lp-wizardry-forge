@@ -720,11 +720,6 @@ const DesignEditorLayout: React.FC = () => {
               onAddElement={handleAddElement}
               onBackgroundChange={handleBackgroundChange}
               onExtractedColorsChange={handleExtractedColorsChange}
-              // Props pour la toolbar mobile
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}

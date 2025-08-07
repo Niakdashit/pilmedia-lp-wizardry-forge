@@ -3,7 +3,7 @@ import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { useMobileCanvasLock } from '../hooks/useMobileCanvasLock';
 import MobileToolbarOverlay from './MobileToolbarOverlay';
 import MobileSidebarDrawer from './MobileSidebarDrawer';
-import MobileFloatingToolbar from './MobileFloatingToolbar';
+
 
 interface MobileResponsiveLayoutProps {
   children: React.ReactNode;
@@ -24,11 +24,6 @@ interface MobileResponsiveLayoutProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
-  // Props pour la toolbar mobile
-  onUndo?: () => void;
-  onRedo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -49,12 +44,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   campaignConfig,
   onCampaignConfigChange,
   elements,
-  onElementsChange,
-  // Props pour la toolbar mobile
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo
+  onElementsChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -163,29 +153,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         />
       )}
 
-      {/* Floating toolbar mobile */}
-      {isMobile && (
-        <MobileFloatingToolbar
-          selectedElement={selectedElement}
-          onShowEffectsPanel={onShowEffectsPanel}
-          onShowPositionPanel={onShowPositionPanel}
-          zoom={zoom}
-          onZoomChange={onZoomChange}
-          onUndo={onUndo}
-          onRedo={onRedo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-        />
-      )}
-
-      {/* Indicateur de statut mobile (dev only) */}
-      {process.env.NODE_ENV === 'development' && (isMobile || isTablet) && (
-        <div className="fixed bottom-4 left-4 z-50 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs shadow-lg">
-          📱 {deviceType.toUpperCase()} • Zoom: {Math.round(zoom * 100)}%
-          {isDragging && ' • DRAG'}
-          {isToolbarVisible && ' • TOOLBAR'}
-        </div>
-      )}
 
       {/* Styles CSS intégrés pour la responsivité mobile */}
       <style>{`
@@ -214,9 +181,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           -webkit-touch-callout: none;
           -webkit-tap-highlight-color: transparent;
           
-          /* Safe areas iOS avec espace pour la toolbar */
+          /* Safe areas iOS */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+          padding-bottom: env(safe-area-inset-bottom);
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
         }
@@ -245,7 +212,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 10px 10px 90px 10px; /* Espace en bas pour la toolbar */
+          padding: 10px;
           overflow: hidden;
           position: relative;
         }
