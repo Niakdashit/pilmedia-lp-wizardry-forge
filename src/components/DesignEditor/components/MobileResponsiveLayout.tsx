@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { useMobileCanvasLock } from '../hooks/useMobileCanvasLock';
 import MobileToolbarOverlay from './MobileToolbarOverlay';
-import MobileSidebarDrawer from './MobileSidebarDrawer';
 
 
 interface MobileResponsiveLayoutProps {
@@ -16,14 +15,6 @@ interface MobileResponsiveLayoutProps {
   zoom: number;
   onZoomChange?: (zoom: number) => void;
   className?: string;
-  // Props pour la sidebar mobile
-  onAddElement?: (element: any) => void;
-  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
-  onExtractedColorsChange?: (colors: string[]) => void;
-  campaignConfig?: any;
-  onCampaignConfigChange?: (config: any) => void;
-  elements?: any[];
-  onElementsChange?: (elements: any[]) => void;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -36,15 +27,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   canvasRef,
   zoom,
   onZoomChange,
-  className = '',
-  // Props pour la sidebar mobile
-  onAddElement,
-  onBackgroundChange,
-  onExtractedColorsChange,
-  campaignConfig,
-  onCampaignConfigChange,
-  elements,
-  onElementsChange
+  className = ''
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -138,20 +121,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         />
       )}
 
-      {/* Sidebar mobile drawer - seulement sur mobile */}
-      {isMobile && onAddElement && (
-        <MobileSidebarDrawer
-          onAddElement={onAddElement}
-          onBackgroundChange={onBackgroundChange}
-          onExtractedColorsChange={onExtractedColorsChange}
-          campaignConfig={campaignConfig}
-          onCampaignConfigChange={onCampaignConfigChange}
-          elements={elements}
-          onElementsChange={onElementsChange}
-          selectedElement={selectedElement}
-          onElementUpdate={onElementUpdate}
-        />
-      )}
 
 
       {/* Styles CSS intégrés pour la responsivité mobile */}
