@@ -122,12 +122,11 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
             elementId: element.id,
             groupPosition: { x: group.x, y: group.y },
             relativePosition: { x: element.x, y: element.y },
-            finalAbsolutePosition: { x: finalAbsoluteX, y: finalAbsoluteY },
-            originalPosition: { x: element.originalX, y: element.originalY }
+            finalAbsolutePosition: { x: finalAbsoluteX, y: finalAbsoluteY }
           });
           
           // Supprimer parentGroupId et restaurer les positions absolues
-          const { parentGroupId, originalX, originalY, ...elementWithoutParent } = element;
+          const { parentGroupId, ...elementWithoutParent } = element;
           return {
             ...elementWithoutParent,
             // Restaurer les positions absolues calculées
@@ -174,7 +173,7 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
           x: newGroupX,
           y: newGroupY
         };
-      } else if (group.groupChildren.includes(element.id)) {
+      } else if (group.groupChildren?.includes(element.id)) {
         // Recalculer la position absolue des éléments enfants
         // Position absolue = Position du groupe + Position relative de l'élément
         const newGroupX = group.x + deltaX;
@@ -220,7 +219,7 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
           width: newBounds.width,
           height: newBounds.height
         };
-      } else if (group.groupChildren.includes(element.id)) {
+      } else if (group.groupChildren?.includes(element.id)) {
         // Redimensionner et repositionner les éléments du groupe
         const relativeX = element.x - currentBounds.x;
         const relativeY = element.y - currentBounds.y;

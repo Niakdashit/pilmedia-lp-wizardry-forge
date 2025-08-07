@@ -13,10 +13,8 @@ interface UseKeyboardShortcutsProps {
   onZoomFit?: () => void;
   onToggleFullscreen?: () => void;
   onSelectAll?: () => void;
-  elements?: any[];
   selectedElement?: any;
   onElementDelete?: (id: string) => void;
-  onElementUpdate?: (id: string, updates: any) => void;
   onElementCopy?: (element: any) => void;
   onElementCut?: () => void;
   onElementPaste?: () => void;
@@ -38,10 +36,8 @@ export const useKeyboardShortcuts = ({
   onZoomFit,
   onToggleFullscreen,
   onSelectAll,
-  elements,
   selectedElement,
   onElementDelete,
-  onElementUpdate,
   onElementCopy,
   onElementCut,
   onElementPaste,

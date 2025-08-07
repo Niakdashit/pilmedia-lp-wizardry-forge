@@ -229,8 +229,7 @@ const DesignEditorLayout: React.FC = () => {
     setSelectedGroupId,
     moveGroup,
     resizeGroup,
-    getGroupElements,
-    isElementInGroup
+    getGroupElements
   } = groupManager;
   
   // Fonctions pour les raccourcis clavier d'éléments
@@ -494,7 +493,6 @@ const DesignEditorLayout: React.FC = () => {
   // Raccourcis clavier professionnels
   const { shortcuts } = useKeyboardShortcuts({
     selectedElement,
-    elements: canvasElements,
     onSave: () => {
       handleSave();
     },

@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef } from 'react';
-import { Move, RotateCcw } from 'lucide-react';
+import { Move } from 'lucide-react';
 
 interface GroupBounds {
   x: number;

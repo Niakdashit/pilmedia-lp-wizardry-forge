@@ -6,9 +6,6 @@ import {
   Unlock, 
   Trash2, 
   Copy,
-  ArrowUp,
-  ArrowDown,
-  MoreVertical,
   Type,
   Image,
   Shapes,
@@ -52,8 +49,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     ungroupElements,
     getLayersHierarchy,
     selectedGroupId,
-    setSelectedGroupId,
-    groups
+    setSelectedGroupId
   } = groupManager;
 
   // Obtenir la hiérarchie des calques
@@ -75,21 +71,6 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
     }
   };
 
-  const getElementLabel = (element: any) => {
-    if (element.isGroup) {
-      return element.name || 'Groupe';
-    }
-    switch (element.type) {
-      case 'text':
-        return element.content || 'Texte';
-      case 'image':
-        return 'Image';
-      case 'shape':
-        return `Forme ${element.shapeType || ''}`;
-      default:
-        return 'Élément';
-    }
-  };
 
   const toggleVisibility = (id: string) => {
     onElementsChange(

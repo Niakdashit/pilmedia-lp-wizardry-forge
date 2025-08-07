@@ -35,7 +35,7 @@ import Auth from './pages/Auth';
 import PublicCampaign from './pages/PublicCampaign';
 import PageBeta from './pages/PageBeta';
 import TestPage from './pages/TestPage';
-import TestPage2 from './pages/TestPage2';
+
 
 function App() {
   return (
@@ -88,7 +88,7 @@ function App() {
             <Route path="/pagebeta" element={<PageBeta />} />
             <Route path="/testpage" element={<TestPage />} />
             <Route path="/font-test" element={<FontTest />} />
-<Route path="/testpage2" element={<TestPage2 />} />
+
             <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
