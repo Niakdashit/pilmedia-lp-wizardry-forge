@@ -161,21 +161,6 @@ export const advancedTextStyles: TextStyleEffect[] = [
     }
   },
   {
-    id: 'copper',
-    name: 'Cuivre',
-    category: 'metallic',
-    css: {
-      background: 'linear-gradient(45deg, #b87333, #cd7f32, #ff7f50, #cd7f32, #b87333)',
-      backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
-      textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-      fontWeight: 'bold'
-    }
-  },
-
-  // OUTLINE EFFECTS
-  {
     id: 'outline-thick',
     name: 'Contour Épais',
     category: 'outline',
@@ -184,6 +169,7 @@ export const advancedTextStyles: TextStyleEffect[] = [
       fontWeight: 'bold'
     }
   },
+
   {
     id: 'outline-colorful',
     name: 'Contour Coloré',

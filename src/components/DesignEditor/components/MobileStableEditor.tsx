@@ -21,7 +21,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
-    preventZoomGestures: true
+    preventZoomGestures: false
   });
 
   useEffect(() => {

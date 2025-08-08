@@ -113,6 +113,7 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
       onResult={handleResult}
       onSpin={handleSpin}
       disabled={disabled}
+      showBulbs={!!campaign?.design?.wheelConfig?.showBulbs}
       customButton={{
         text: buttonLabel || 
               campaign?.gameConfig?.wheel?.buttonLabel || 

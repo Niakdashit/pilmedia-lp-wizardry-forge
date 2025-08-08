@@ -163,7 +163,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
               onClick={handleBold}
               className={`p-1.5 rounded transition-colors ${
                 selectedElement.fontWeight === 'bold'
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
               title="Gras"
@@ -175,7 +175,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
               onClick={handleItalic}
               className={`p-1.5 rounded transition-colors ${
                 selectedElement.fontStyle === 'italic'
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
               title="Italique"
@@ -187,7 +187,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
               onClick={handleUnderline}
               className={`p-1.5 rounded transition-colors ${
                 selectedElement.textDecoration === 'underline'
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
               title="Souligné"
@@ -203,7 +203,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
               onClick={() => handleAlignment('left')}
               className={`p-1.5 rounded transition-colors ${
                 selectedElement.textAlign === 'left'
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
               title="Aligner à gauche"
@@ -215,7 +215,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
               onClick={() => handleAlignment('center')}
               className={`p-1.5 rounded transition-colors ${
                 selectedElement.textAlign === 'center'
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
               title="Centrer"
@@ -227,7 +227,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
               onClick={() => handleAlignment('right')}
               className={`p-1.5 rounded transition-colors ${
                 selectedElement.textAlign === 'right'
-                  ? 'bg-[#841b60] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
               title="Aligner à droite"

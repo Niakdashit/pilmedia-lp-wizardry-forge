@@ -89,6 +89,7 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         isMode1={isMode1}
         formFields={config.formFields}
         brandColors={brandColors}
+        showBulbs={true}
         buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : 'bottom'}
         onShowParticipationModal={onShowParticipationModal}
         customButton={{

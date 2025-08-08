@@ -124,7 +124,7 @@ export const WHEEL_BORDER_CONFIGS: Record<string, WheelBorderConfig> = {
       accent: '#B8860B'
     },
     dimensions: {
-      width: 12,
+      width: 16,
       innerWidth: 2
     },
     effects: {
@@ -311,18 +311,6 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
       shadow: true
     }
   },
-  
-  copper: {
-    name: 'Cuivre',
-    type: 'metallic',
-    colors: ['#B87333', '#A0522D', '#8B4513'],
-    width: 12,
-    effects: {
-      metallic: true,
-      shadow: true
-    }
-  },
-  
   neonBlue: {
     name: 'Néon Bleu',
     type: 'neon',
@@ -353,17 +341,6 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     effects: {
       animated: true,
       glow: true
-    }
-  },
-  
-  fire: {
-    name: 'Feu',
-    type: 'gradient',
-    colors: ['#FF4500', '#FF6347', '#FFD700'],
-    width: 10,
-    effects: {
-      glow: true,
-      animated: true
     }
   },
   
@@ -454,35 +431,39 @@ export const createNeonEffect = (
   intensity: number = 1
 ) => {
   ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 20 * intensity;
-  ctx.globalAlpha = 0.8 * intensity;
   
-  // Effet de lueur multiple
-  for (let i = 0; i < 3; i++) {
+  // Créer plusieurs couches de lueur avec des intensités différentes
+  const layers = [
+    { blur: 20, alpha: 0.3 * intensity },
+    { blur: 15, alpha: 0.4 * intensity },
+    { blur: 10, alpha: 0.5 * intensity },
+    { blur: 5, alpha: 0.6 * intensity }
+  ];
+  
+  layers.forEach(layer => {
+    ctx.shadowColor = color;
+    ctx.shadowBlur = layer.blur;
+    ctx.globalAlpha = layer.alpha;
+    
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + (i * 2), 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.stroke();
-  }
+  });
   
   ctx.restore();
 };
 
-// === GOLD BORDER WITH MARQUEE BULBS (Burger King-like) ===
+// === GOLD BORDER (Clean Style) ===
 export const renderGoldBorder = (
   ctx: CanvasRenderingContext2D,
   centerX: number,
   centerY: number,
   radius: number,
-  animationTime: number = 0,
-  wheelSize: number = 200,
-  showBulbs: boolean = true
+  wheelSize: number = 200
 ) => {
   ctx.save();
-  // Prevent unused parameter lint when bulbs/animation are disabled
-  void animationTime;
 
   // Scale factors
   const scaleFactor = wheelSize / 200;
@@ -549,50 +530,6 @@ export const renderGoldBorder = (
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   ctx.stroke();
-
-  // Marquee bulbs (optional)
-  if (showBulbs) {
-    const bulbCount = 15;
-    const bulbRadius = 5 * scaleFactor;
-    const ringRadius = radius + borderWidth * 0.15; // Slightly outside the main ring
-    for (let i = 0; i < bulbCount; i++) {
-      const angle = (i / bulbCount) * Math.PI * 2;
-      const bx = centerX + Math.cos(angle) * ringRadius;
-      const by = centerY + Math.sin(angle) * ringRadius;
-
-      // Subtle animation pulse
-      const pulse = 0.7 + 0.3 * Math.abs(Math.sin(animationTime * 0.004 + i));
-
-      // Glow
-      ctx.save();
-      ctx.shadowColor = 'rgba(255,255,255,0.9)';
-      ctx.shadowBlur = 12 * scaleFactor * pulse;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-
-      // Bulb body
-      ctx.beginPath();
-      ctx.arc(bx, by, bulbRadius, 0, 2 * Math.PI);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-
-      // Small golden rim for premium look
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = 1.5 * scaleFactor;
-      ctx.strokeStyle = '#D4AF37';
-      ctx.stroke();
-
-      // Highlight
-      const highlight = ctx.createRadialGradient(bx - bulbRadius * 0.3, by - bulbRadius * 0.3, 0, bx, by, bulbRadius);
-      highlight.addColorStop(0, 'rgba(255,255,255,0.9)');
-      highlight.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = highlight;
-      ctx.beginPath();
-      ctx.arc(bx, by, bulbRadius, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
 
   ctx.restore();
 };

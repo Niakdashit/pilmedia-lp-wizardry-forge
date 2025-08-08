@@ -18,7 +18,8 @@ interface WheelModalConfig {
   wheelBorderColor?: string;
   wheelBorderWidth?: number;
   wheelScale?: number;
-  wheelShowGoldBulbs?: boolean;
+  wheelShowBulbs?: boolean;
+
 }
 
 export interface WheelConfig {
@@ -26,7 +27,8 @@ export interface WheelConfig {
   borderColor: string;
   borderWidth: number;
   scale: number;
-  showGoldBulbs?: boolean;
+  showBulbs?: boolean;
+
   customColors?: {
     primary?: string;
     secondary?: string;
@@ -59,25 +61,27 @@ export class WheelConfigService {
       borderWidth: 12,
       scale: 1,
       size: 200,
-      showGoldBulbs: true
+      showBulbs: false,
+
     };
 
     // Priorité 1: Configuration de la modal roue (modifications en cours)
-    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showGoldBulbs: boolean }> = {
+    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean }> = {
       borderStyle: wheelModalConfig?.wheelBorderStyle,
       borderColor: wheelModalConfig?.wheelBorderColor,
       borderWidth: wheelModalConfig?.wheelBorderWidth,
       scale: wheelModalConfig?.wheelScale,
-      showGoldBulbs: wheelModalConfig?.wheelShowGoldBulbs
+      showBulbs: wheelModalConfig?.wheelShowBulbs
     };
 
     // Priorité 2: Configuration de design existante
-    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showGoldBulbs: boolean }> = {
+    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean }> = {
       borderStyle: campaign?.design?.wheelBorderStyle || campaign?.design?.wheelConfig?.borderStyle,
       borderColor: campaign?.design?.wheelConfig?.borderColor,
       borderWidth: campaign?.design?.wheelConfig?.borderWidth,
       scale: campaign?.design?.wheelConfig?.scale,
-      showGoldBulbs: campaign?.design?.wheelConfig?.showGoldBulbs
+      showBulbs: campaign?.design?.wheelConfig?.showBulbs,
+
     };
 
     // Priorité 3: Couleurs extraites (uniquement si style classic et pas de couleur manuelle)
@@ -91,7 +95,8 @@ export class WheelConfigService {
       borderColor: modalConfig.borderColor || designConfig.borderColor || extractedConfig.borderColor || defaults.borderColor,
       borderWidth: modalConfig.borderWidth !== undefined ? modalConfig.borderWidth : (designConfig.borderWidth || defaults.borderWidth),
       scale: modalConfig.scale !== undefined ? modalConfig.scale : (designConfig.scale || defaults.scale),
-      showGoldBulbs: modalConfig.showGoldBulbs !== undefined ? modalConfig.showGoldBulbs : (designConfig.showGoldBulbs !== undefined ? designConfig.showGoldBulbs : defaults.showGoldBulbs),
+      showBulbs: modalConfig.showBulbs !== undefined ? modalConfig.showBulbs : (designConfig.showBulbs ?? defaults.showBulbs),
+
       shouldCropWheel: options.shouldCropWheel ?? true,
       
       // Configuration des couleurs avec priorités
@@ -199,9 +204,10 @@ export class WheelConfigService {
         if (updates.scale !== undefined) {
           newConfig.wheelScale = updates.scale;
         }
-        if (updates.showGoldBulbs !== undefined) {
-          newConfig.wheelShowGoldBulbs = updates.showGoldBulbs;
+        if (updates.showBulbs !== undefined) {
+          newConfig.wheelShowBulbs = updates.showBulbs;
         }
+
         
         return newConfig;
       });
@@ -217,7 +223,8 @@ export class WheelConfigService {
             borderColor: updates.borderColor !== undefined ? updates.borderColor : prevCampaign.design?.wheelConfig?.borderColor,
             borderWidth: updates.borderWidth !== undefined ? updates.borderWidth : prevCampaign.design?.wheelConfig?.borderWidth,
             scale: updates.scale !== undefined ? updates.scale : prevCampaign.design?.wheelConfig?.scale,
-            showGoldBulbs: updates.showGoldBulbs !== undefined ? updates.showGoldBulbs : prevCampaign.design?.wheelConfig?.showGoldBulbs
+            showBulbs: updates.showBulbs !== undefined ? updates.showBulbs : prevCampaign.design?.wheelConfig?.showBulbs,
+
           }
         }
       }) : null);

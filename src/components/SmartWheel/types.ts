@@ -53,7 +53,8 @@ export interface SmartWheelProps {
   borderStyle?: string; // Nouveau prop pour le style de bordure
   customBorderColor?: string; // Couleur personnalisée pour le style de bordure classic
   customBorderWidth?: number; // Largeur personnalisée pour la bordure
-  showGoldBulbs?: boolean; // Afficher les ampoules autour de la bordure dorée
+  showBulbs?: boolean; // Afficher 15 petites ampoules blanches sur la bordure
+
   className?: string;
   maxSize?: number; // Limite la taille maximum de la roue
   buttonPosition?: 'top' | 'bottom' | 'left' | 'right' | 'center'; // Position du bouton

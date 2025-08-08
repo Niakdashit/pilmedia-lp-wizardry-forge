@@ -1,7 +1,6 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { WheelSegment, WheelTheme, WheelState } from '../types';
-import { getBorderStyle, createMetallicGradient, createNeonEffect, createRainbowGradient, createRoyalRouletteEffect, renderGoldBorder } from '../utils/borderStyles';
+import { getBorderStyle, createMetallicGradient, createNeonEffect, renderGoldBorder, createRoyalRouletteEffect, createRainbowGradient } from '../utils/borderStyles';
 
 interface UseSmartWheelRendererProps {
   segments: WheelSegment[];
@@ -11,7 +10,7 @@ interface UseSmartWheelRendererProps {
   borderStyle?: string;
   customBorderColor?: string;
   customBorderWidth?: number;
-  showGoldBulbs?: boolean;
+  showBulbs?: boolean;
 }
 
 export const useSmartWheelRenderer = ({
@@ -22,7 +21,8 @@ export const useSmartWheelRenderer = ({
   borderStyle = 'classic',
   customBorderColor,
   customBorderWidth,
-  showGoldBulbs = true
+  showBulbs,
+
 }: UseSmartWheelRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -47,6 +47,57 @@ export const useSmartWheelRenderer = ({
       }
     };
   }, [borderStyle]);
+
+  // Dessiner 15 petites ampoules blanches sur la bordure externe
+  const drawBulbs = (
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    borderRadius: number,
+    borderStyleName: string,
+    customWidth?: number
+  ) => {
+    const style = getBorderStyle(borderStyleName);
+    const scaleFactor = size / 200;
+    const baseW = customWidth !== undefined ? customWidth : style.width;
+    const borderW = baseW * scaleFactor;
+
+    // Rayon de l'anneau où placer les ampoules (au centre de la bordure visuelle)
+    const ringRadius = borderRadius;
+
+    const count = 15;
+    // Réduire la taille des ampoules pour un rendu plus fin
+    const bulbRadius = Math.max(1.5 * scaleFactor, Math.min(5 * scaleFactor, borderW * 0.18));
+    const startAngle = -Math.PI / 2; // aligné sur le pointeur en haut
+
+    for (let i = 0; i < count; i++) {
+      const angle = startAngle + (i * 2 * Math.PI) / count;
+      const x = centerX + ringRadius * Math.cos(angle);
+      const y = centerY + ringRadius * Math.sin(angle);
+
+      // halo léger
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,255,255,0.85)';
+      ctx.shadowBlur = 4 * scaleFactor;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x, y, bulbRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore();
+
+      // petit highlight
+      const highlightR = bulbRadius * 0.5;
+      ctx.save();
+      const grad = ctx.createRadialGradient(x - bulbRadius * 0.3, y - bulbRadius * 0.3, 0, x, y, bulbRadius);
+      grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x - bulbRadius * 0.25, y - bulbRadius * 0.25, highlightR, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,8 +135,13 @@ export const useSmartWheelRenderer = ({
     // Dessiner les bordures stylisées
     drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime, customBorderWidth);
 
-    // Dessiner l'ombre intérieure
+    // Dessiner l'ombre intérieure AVANT les ampoules pour ne pas les assombrir
     drawInnerShadow(ctx, centerX, centerY, maxRadius);
+
+    // Dessiner les ampoules blanches sur la bordure (alignées avec le pointeur) AU-DESSUS de l'ombre
+    if (showBulbs) {
+      drawBulbs(ctx, centerX, centerY, borderRadius, borderStyle, customBorderWidth);
+    }
 
     // Dessiner le centre
     drawCenter(ctx, centerX, centerY, size, theme);
@@ -93,7 +149,7 @@ export const useSmartWheelRenderer = ({
     // Dessiner le pointeur
     drawPointer(ctx, centerX, centerY, maxRadius);
 
-  }, [segments, theme, wheelState, size, borderStyle, animationTime, showGoldBulbs]);
+  }, [segments, theme, wheelState, size, borderStyle, animationTime, showBulbs, customBorderWidth]);
 
 
 
@@ -179,8 +235,7 @@ export const useSmartWheelRenderer = ({
     } 
     // Gestion spéciale pour le style Or avec effets métalliques
     else if (borderStyleName === 'gold') {
-      // Utiliser le rendu personnalisé Burger King-like avec ampoules contrôlées par showGoldBulbs
-      renderGoldBorder(ctx, centerX, centerY, radius, animationTime, size, showGoldBulbs);
+      renderGoldBorder(ctx, centerX, centerY, radius, size);
     }
     // Gestion spéciale pour le style Argent avec effets métalliques
     else if (borderStyleName === 'silver') {

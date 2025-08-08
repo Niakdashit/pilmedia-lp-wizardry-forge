@@ -8,12 +8,14 @@ interface WheelConfigModalProps {
   wheelBorderColor: string;
   wheelBorderWidth: number;
   wheelScale: number;
-  showGoldBulbs: boolean;
+  wheelShowBulbs?: boolean;
+
   onBorderStyleChange: (style: string) => void;
   onBorderColorChange: (color: string) => void;
   onBorderWidthChange: (width: number) => void;
   onScaleChange: (scale: number) => void;
-  onShowGoldBulbsChange: (value: boolean) => void;
+  onShowBulbsChange?: (show: boolean) => void;
+
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
@@ -24,12 +26,14 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
   wheelBorderColor,
   wheelBorderWidth,
   wheelScale,
-  showGoldBulbs,
+  wheelShowBulbs = false,
+
   onBorderStyleChange,
   onBorderColorChange,
   onBorderWidthChange,
   onScaleChange,
-  onShowGoldBulbsChange,
+  onShowBulbsChange,
+
   selectedDevice
 }) => {
   if (!isOpen) return null;
@@ -169,23 +173,23 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
               />
             </div>
 
-            {/* Ampoules bordure dorée */}
-            {wheelBorderStyle === 'gold' && (
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700">
-                  Afficher les ampoules dorées
-                </label>
-                <label className="inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={!!showGoldBulbs}
-                    onChange={(e) => onShowGoldBulbsChange(e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[hsl(var(--primary))] rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[hsl(var(--primary))] relative" />
-                </label>
-              </div>
-            )}
+            {/* Ampoules blanches sur la bordure */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                Afficher les ampoules blanches (x15)
+              </label>
+              <button
+                type="button"
+                onClick={() => onShowBulbsChange?.(!wheelShowBulbs)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${wheelShowBulbs ? 'bg-[hsl(var(--primary))]' : 'bg-gray-300'}`}
+                aria-pressed={wheelShowBulbs}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${wheelShowBulbs ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </div>
+
           </div>
         </div>
       </div>

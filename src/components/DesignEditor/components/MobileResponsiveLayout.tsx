@@ -58,7 +58,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
-    preventZoomGestures: true
+    preventZoomGestures: false
   });
 
   // Système de verrouillage du canvas pour mobile

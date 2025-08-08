@@ -84,6 +84,9 @@ const Wheel: React.FC<WheelProps> = ({
                       config?.wheel?.borderStyle || 
                       'classic';
 
+  // Propagation de l'option d'ampoules depuis la campagne ou la config
+  const showBulbs = (campaign?.design?.wheelConfig?.showBulbs ?? config?.wheel?.showBulbs) ?? false;
+
   if (!isPreview) {
     return (
       <div className="space-y-6">
@@ -111,6 +114,7 @@ const Wheel: React.FC<WheelProps> = ({
         onSpin={handleSpin}
         disabled={disabled}
         borderStyle={borderStyle}
+        showBulbs={showBulbs}
         customButton={{
           text: config?.buttonLabel || 'Faire tourner',
           color: brandColors.primary,

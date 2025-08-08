@@ -642,17 +642,17 @@ const DesignEditorLayout: React.FC = () => {
             selectedDevice === 'tablet' ? 'fixed inset-0 z-40' : ''
           }`}>
             {/* Floating Edit Mode Button */}
-            <button
-              onClick={() => setShowFunnel(false)}
-              className="absolute top-4 right-4 z-50 px-4 py-2 bg-[#841b60] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
-            >
-              Mode édition
-            </button>
+          <button
+            onClick={() => setShowFunnel(false)}
+            className="absolute top-4 right-4 z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#6b1549]"
+          >
+            Mode édition
+          </button>
             <FunnelUnlockedGame
               campaign={campaignData}
               previewMode={selectedDevice}
               wheelModalConfig={wheelModalConfig}
-            />
+          />
           </div>
         ) : (
           /* Design Editor Mode */

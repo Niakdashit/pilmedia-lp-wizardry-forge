@@ -93,14 +93,6 @@ const colorPalettes: Record<string, ColorPalette[]> = {
       background: '#FFD700'
     }
   }, {
-    name: 'Cuivre',
-    colors: {
-      primary: '#ea580c',
-      secondary: '#fed7aa',
-      accent: '#c2410c',
-      background: '#B87333'
-    }
-  }, {
     name: 'Platine',
     colors: {
       primary: '#64748b',
