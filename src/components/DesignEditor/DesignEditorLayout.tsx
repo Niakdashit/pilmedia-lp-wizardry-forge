@@ -5,7 +5,7 @@ import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 
 
-
+import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -716,11 +716,23 @@ const DesignEditorLayout: React.FC = () => {
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
               }}
+              // Props pour la sidebar mobile
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
             />
             
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
 
             
+            {/* Zoom Slider - Always visible in bottom center */}
+            <ZoomSlider 
+              zoom={canvasZoom}
+              onZoomChange={setCanvasZoom}
+              minZoom={0.25}
+              maxZoom={3}
+              step={0.05}
+            />
           </>
         )}
       </div>

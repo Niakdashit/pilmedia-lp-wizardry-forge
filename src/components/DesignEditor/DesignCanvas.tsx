@@ -51,6 +51,10 @@ export interface DesignCanvasProps {
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
   onOpenElementsTab?: () => void;
+  // Props pour la sidebar mobile
+  onAddElement?: (element: any) => void;
+  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
@@ -76,7 +80,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
-  onOpenElementsTab
+  onOpenElementsTab,
+  // Props pour la sidebar mobile
+  onAddElement,
+  onBackgroundChange,
+  onExtractedColorsChange
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -85,7 +93,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [localZoom, setLocalZoom] = useState(zoom);
-  const zoomRef = useRef(localZoom);
   const [showBorderModal, setShowBorderModal] = useState(false);
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
@@ -109,7 +116,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Synchroniser le zoom local avec le prop
   useEffect(() => {
     setLocalZoom(zoom);
-    zoomRef.current = zoom;
   }, [zoom]);
 
   // Support du zoom via trackpad et molette souris + Ctrl/Cmd
@@ -125,7 +131,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
         
         setLocalZoom(newZoom);
-        zoomRef.current = newZoom;
         
         // Synchroniser avec la barre de zoom externe si disponible
         if (onZoomChange) {
@@ -142,51 +147,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       };
     }
   }, [localZoom, activeCanvasRef]);
-
-  // Support du zoom par pincement sur mobile avec une sensibilité réduite
-  useEffect(() => {
-    const canvasElement = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
-    if (!canvasElement) return;
-
-    let initialDistance = 0;
-    let initialZoom = zoomRef.current;
-
-    const getDistance = (touch1: Touch, touch2: Touch) => {
-      const dx = touch1.clientX - touch2.clientX;
-      const dy = touch1.clientY - touch2.clientY;
-      return Math.hypot(dx, dy);
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        initialDistance = getDistance(e.touches[0], e.touches[1]);
-        initialZoom = zoomRef.current;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const distance = getDistance(e.touches[0], e.touches[1]);
-        const delta = distance - initialDistance;
-        const newZoom = Math.max(0.1, Math.min(5, initialZoom + delta * 0.002));
-        setLocalZoom(newZoom);
-        zoomRef.current = newZoom;
-        if (onZoomChange) {
-          onZoomChange(newZoom);
-        }
-      }
-    };
-
-    canvasElement.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvasElement.addEventListener('touchmove', handleTouchMove, { passive: false });
-
-    return () => {
-      canvasElement.removeEventListener('touchstart', handleTouchStart);
-      canvasElement.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, [activeCanvasRef, onZoomChange]);
 
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
@@ -585,6 +545,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
         className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
+        // Props pour la sidebar mobile
+        onAddElement={onAddElement}
+        onBackgroundChange={onBackgroundChange}
+        onExtractedColorsChange={onExtractedColorsChange}
+        campaignConfig={campaign}
+        onCampaignConfigChange={onCampaignChange}
+        elements={elements}
+        onElementsChange={onElementsChange}
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (
@@ -605,8 +573,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-center h-full relative" style={{
-          padding: selectedDevice === 'tablet'
+        <div className="flex justify-center items-center h-full" style={{
+          padding: selectedDevice === 'tablet' 
             ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
             : selectedDevice === 'mobile'
             ? (zoom <= 0.7 ? '24px 16px' : '40px 24px')
@@ -614,20 +582,27 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           transition: 'padding 0.2s ease-in-out',
           minHeight: '100%'
         }}>
-          {/* Canvas centré indépendamment du zoom */}
-          <div
-            ref={activeCanvasRef}
-            className="absolute bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]"
+          {/* Canvas wrapper pour maintenir le centrage avec zoom */}
+          <div 
+            className="flex justify-center items-center"
             style={{
-              width: `${canvasSize.width}px`,
-              height: `${canvasSize.height}px`,
-              minWidth: `${canvasSize.width}px`,
-              minHeight: `${canvasSize.height}px`,
-              top: '50%',
-              left: '50%',
-              transform: `translate(-50%, -50%) scale(${localZoom})`,
-              transformOrigin: 'center center'
+              width: 'fit-content',
+              height: 'fit-content',
+              minHeight: 'auto'
             }}
+          >
+            <div 
+              ref={activeCanvasRef}
+              className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
+              style={{
+                width: `${canvasSize.width}px`,
+                height: `${canvasSize.height}px`,
+                minWidth: `${canvasSize.width}px`,
+                minHeight: `${canvasSize.height}px`,
+                flexShrink: 0,
+                transform: `scale(${localZoom})`,
+                transformOrigin: 'center center'
+              }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
