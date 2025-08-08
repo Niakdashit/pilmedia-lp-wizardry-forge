@@ -335,10 +335,11 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                   console.log('🗂️ Événement touchStart sur bouton onglet:', tab.id);
                   e.preventDefault();
                   e.stopPropagation();
+                  handleTabClick(tab.id);
                 }}
                 className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 cursor-pointer ${
-                  isActive 
-                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
+                  isActive
+                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm'
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
