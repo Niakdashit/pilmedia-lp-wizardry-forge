@@ -251,7 +251,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [elements, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
 
   // Store centralisé pour la grille
-  const { showGridLines, setShowGridLines } = useEditorStore();
+  const { showGridLines } = useEditorStore();
 
   // Fonction utilitaire pour calculer les positions absolues des éléments groupés
   const calculateAbsolutePosition = useCallback((element: any) => {
