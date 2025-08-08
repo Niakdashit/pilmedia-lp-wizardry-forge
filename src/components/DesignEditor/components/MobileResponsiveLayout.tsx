@@ -110,7 +110,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       selectedElement ? 'has-selection' : ''
     ].filter(Boolean).join(' ');
 
-    return `${baseClasses} ${deviceClasses[deviceType] || 'desktop-layout'} ${stateClasses} ${className}`;
+    return `${baseClasses} ${deviceClasses[deviceType] || 'desktop-layout'} ${stateClasses}`;
   };
 
   return (
@@ -121,7 +121,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       data-mobile-optimized={(isMobile || isTablet).toString()}
     >
       {/* Contenu principal */}
-      <div className="layout-content">
+      <div className={`layout-content ${className}`}>
         {children}
       </div>
 
