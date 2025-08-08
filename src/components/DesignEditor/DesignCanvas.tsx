@@ -148,6 +148,60 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [localZoom, activeCanvasRef]);
 
+  // Zoom au pincement (pinch) sur écrans tactiles
+  useEffect(() => {
+    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current) as HTMLElement | null;
+    if (!el) return;
+
+    let isPinching = false;
+    let startDist = 0;
+    let startZoom = 1;
+
+    const getDist = (touches: TouchList) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        startDist = getDist(e.touches);
+        startZoom = localZoom;
+        e.preventDefault();
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (isPinching && e.touches.length === 2) {
+        const newDist = getDist(e.touches);
+        const scale = newDist / startDist;
+        const newZoom = Math.max(0.1, Math.min(5, startZoom * scale));
+        setLocalZoom(newZoom);
+        onZoomChange?.(newZoom);
+        e.preventDefault();
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (isPinching) {
+        isPinching = false;
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchEnd);
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart as EventListener);
+      el.removeEventListener('touchmove', onTouchMove as EventListener);
+      el.removeEventListener('touchend', onTouchEnd as EventListener);
+      el.removeEventListener('touchcancel', onTouchEnd as EventListener);
+    };
+  }, [activeCanvasRef, localZoom, onZoomChange]);
+
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
     console.log('🔥 handleElementSelect called with:', {
@@ -604,7 +658,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minHeight: `${canvasSize.height}px`,
                 flexShrink: 0,
                 transform: `scale(${localZoom})`,
-                transformOrigin: 'top center'
+                transformOrigin: 'top center',
+                touchAction: 'none'
               }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {

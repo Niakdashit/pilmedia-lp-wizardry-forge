@@ -63,7 +63,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
-    preventZoomGestures: true
+    preventZoomGestures: false
   });
 
   // Déterminer l'appareil effectif et le mode UI à utiliser
@@ -236,6 +236,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         .mobile-layout.is-dragging * {
           pointer-events: none;
         }
+        
 
         .mobile-layout.is-dragging [data-element-id] {
           pointer-events: auto;
@@ -287,7 +288,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           }
         }
 
-        /* Layout tablette */
+        
         .tablet-layout {
           /* Comportement hybride entre mobile et desktop */
           display: flex;
@@ -335,6 +336,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           /* Réduire légèrement le padding pour laisser place à la toolbar */
           padding-top: 60px;
         }
+
+        
 
         /* Empêcher le zoom accidentel sur iOS */
         .mobile-layout input,

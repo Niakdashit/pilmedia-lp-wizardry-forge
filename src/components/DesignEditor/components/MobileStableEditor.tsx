@@ -21,7 +21,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
-    preventZoomGestures: true
+    preventZoomGestures: false
   });
 
   useEffect(() => {
@@ -65,14 +65,8 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           container.style.paddingBottom = 'env(safe-area-inset-bottom)';
         }
         
-        // Empêcher le zoom double-tap
-        container.addEventListener('touchstart', (e) => {
-          if (e.touches.length > 1) {
-            e.preventDefault();
-          }
-        }, { passive: false });
-        
-        // Empêcher le menu contextuel long press
+        // Autoriser le pincement (multi-touch) pour le zoom; ne pas bloquer touchstart
+        // Note: Le double‑tap navigateur est déjà géré par la meta viewport et les styles.
         container.addEventListener('contextmenu', (e) => {
           e.preventDefault();
         });
