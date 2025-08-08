@@ -7,7 +7,7 @@ import StandardizedWheel from '../shared/StandardizedWheel';
 import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
-import WheelSettingsButton from './components/WheelSettingsButton';
+
 import GroupSelectionFrame from './components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
@@ -686,12 +686,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 }}
               />
               {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-              <div className="absolute bottom-2 right-2 z-50">
-                <WheelSettingsButton onClick={() => {
-                  console.log('🔘 Clic sur WheelSettingsButton détecté');
-                  setShowBorderModal(true);
-                }} />
-              </div>
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
@@ -762,48 +756,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })}
 
-            {/* Grid and Guides Toggle */}
-            <div className="absolute top-2 right-2 flex gap-2">
-              <button
-                onClick={() => setShowGridLines(!showGridLines)}
-                className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
-                  showGridLines 
-                    ? 'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]' 
-                    : 'bg-white/80 hover:bg-white text-gray-700'
-                }`}
-                title="Afficher/masquer la grille (G)"
-              >
-                📐
-              </button>
-              
 
-            </div>
-
-            {/* Device Frame for mobile/tablet */}
-            {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
-                {selectedDevice === 'mobile' && <>
-                    {/* iPhone-like frame */}
-                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-6 bg-black rounded-full"></div>
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full"></div>
-                  </>}
-                {selectedDevice === 'tablet' && <>
-                    {/* Tablet-like frame */}
-                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-gray-300 rounded-full"></div>
-                  </>}
-              </div>}
             </div>
           </div>
-        </div>
 
-        {/* Canvas Info */}
-        <div className="text-center mt-4 text-sm text-gray-500">
-          {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
-          {selectedDevice !== 'desktop' && (
-            <span className="block text-xs text-orange-600 mt-1">
-              💡 Mode tactile optimisé - Utilisez le bouton 🔧 pour le debug
-            </span>
-          )}
-        </div>
 
         {/* Multi-Selection Debug Display */}
         {selectedElements && selectedElements.length > 0 && (
@@ -877,10 +833,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           })()
         )}
         
-        {/* Bouton roue fortune ABSOLU dans la zone d'aperçu (canvas) */}
-        <div className="absolute bottom-2 right-2 z-50">
-          <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
-        </div>
 
         {/* Modal pour la configuration de la roue */}
         <WheelConfigModal
