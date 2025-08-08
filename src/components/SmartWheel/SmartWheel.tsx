@@ -20,6 +20,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   borderStyle = 'classic',
   customBorderColor,
   customBorderWidth,
+  showGoldBulbs = true,
   className = '',
   maxSize,
   buttonPosition,
@@ -78,7 +79,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     size: actualSize,
     borderStyle: currentBorderStyle,
     customBorderColor: customBorderColor || brandColors?.primary,
-    customBorderWidth
+    customBorderWidth,
+    showGoldBulbs
   });
   
   const handleSpin = () => {

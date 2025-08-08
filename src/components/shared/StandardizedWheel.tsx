@@ -85,6 +85,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           size={wheelConfig.size}
           borderStyle={wheelConfig.borderStyle}
           customBorderWidth={wheelConfig.borderWidth}
+          showGoldBulbs={wheelConfig.showGoldBulbs}
           brandColors={{
             primary: wheelConfig.brandColors?.primary || '#841b60',
             secondary: wheelConfig.brandColors?.secondary || '#4ecdc4',

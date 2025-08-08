@@ -34,7 +34,8 @@ export const useWheelConfigSync = ({
         wheelBorderStyle: campaign.design.wheelBorderStyle,
         wheelBorderColor: campaign.design.wheelConfig.borderColor,
         wheelBorderWidth: campaign.design.wheelConfig.borderWidth,
-        wheelScale: campaign.design.wheelConfig.scale
+        wheelScale: campaign.design.wheelConfig.scale,
+        showGoldBulbs: campaign.design.wheelConfig.showGoldBulbs
       });
     }
   }, [campaign?.design?.wheelConfig, campaign?.design?.wheelBorderStyle]);
@@ -58,6 +59,7 @@ export const useWheelConfigSync = ({
     setWheelBorderStyle: (style: string) => updateWheelConfig({ borderStyle: style }),
     setWheelBorderColor: (color: string) => updateWheelConfig({ borderColor: color }),
     setWheelBorderWidth: (width: number) => updateWheelConfig({ borderWidth: width }),
-    setWheelScale: (scale: number) => updateWheelConfig({ scale })
+    setWheelScale: (scale: number) => updateWheelConfig({ scale }),
+    setWheelShowGoldBulbs: (value: boolean) => updateWheelConfig({ showGoldBulbs: value })
   };
 };

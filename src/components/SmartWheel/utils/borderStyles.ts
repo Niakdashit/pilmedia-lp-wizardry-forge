@@ -124,7 +124,7 @@ export const WHEEL_BORDER_CONFIGS: Record<string, WheelBorderConfig> = {
       accent: '#B8860B'
     },
     dimensions: {
-      width: 16,
+      width: 12,
       innerWidth: 2
     },
     effects: {
@@ -467,6 +467,133 @@ export const createNeonEffect = (
     ctx.stroke();
   }
   
+  ctx.restore();
+};
+
+// === GOLD BORDER WITH MARQUEE BULBS (Burger King-like) ===
+export const renderGoldBorder = (
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  animationTime: number = 0,
+  wheelSize: number = 200,
+  showBulbs: boolean = true
+) => {
+  ctx.save();
+  // Prevent unused parameter lint when bulbs/animation are disabled
+  void animationTime;
+
+  // Scale factors
+  const scaleFactor = wheelSize / 200;
+  const borderWidth = 12 * scaleFactor; // match goldClassic config width
+
+  // Outer gold gradient (pale gold to rich gold)
+  const outerGradient = ctx.createRadialGradient(
+    centerX, centerY, radius * 0.65,
+    centerX, centerY, radius * 1.15
+  );
+  outerGradient.addColorStop(0, '#F8E6B0'); // pale gold
+  outerGradient.addColorStop(0.35, '#F3D37A');
+  outerGradient.addColorStop(0.7, '#E7B94E');
+  outerGradient.addColorStop(1, '#C9972F'); // richer gold
+
+  // Soft golden glow
+  ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+  ctx.shadowBlur = 18 * scaleFactor;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Outer stroke
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+  ctx.strokeStyle = outerGradient;
+  ctx.lineWidth = borderWidth;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Top glossy highlight
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.85;
+  const topGloss = ctx.createLinearGradient(
+    centerX, centerY - radius - (borderWidth / 2),
+    centerX, centerY - radius + (borderWidth / 2)
+  );
+  topGloss.addColorStop(0, 'rgba(255,255,255,0.95)');
+  topGloss.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+  topGloss.addColorStop(1, 'rgba(255,255,255,0)');
+
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.strokeStyle = topGloss;
+  ctx.lineWidth = borderWidth * 0.7;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Inner ring to add depth
+  ctx.globalAlpha = 0.9;
+  const innerGradient = ctx.createRadialGradient(
+    centerX, centerY, radius - (borderWidth * 0.8),
+    centerX, centerY, radius - (borderWidth * 0.2)
+  );
+  innerGradient.addColorStop(0, '#9E6E1F');
+  innerGradient.addColorStop(0.5, '#C08A2A');
+  innerGradient.addColorStop(1, '#F0C25A');
+
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius - (borderWidth * 0.55), 0, 2 * Math.PI);
+  ctx.strokeStyle = innerGradient;
+  ctx.lineWidth = 3 * scaleFactor;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Marquee bulbs (optional)
+  if (showBulbs) {
+    const bulbCount = 15;
+    const bulbRadius = 5 * scaleFactor;
+    const ringRadius = radius + borderWidth * 0.15; // Slightly outside the main ring
+    for (let i = 0; i < bulbCount; i++) {
+      const angle = (i / bulbCount) * Math.PI * 2;
+      const bx = centerX + Math.cos(angle) * ringRadius;
+      const by = centerY + Math.sin(angle) * ringRadius;
+
+      // Subtle animation pulse
+      const pulse = 0.7 + 0.3 * Math.abs(Math.sin(animationTime * 0.004 + i));
+
+      // Glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,255,255,0.9)';
+      ctx.shadowBlur = 12 * scaleFactor * pulse;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Bulb body
+      ctx.beginPath();
+      ctx.arc(bx, by, bulbRadius, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+
+      // Small golden rim for premium look
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 1.5 * scaleFactor;
+      ctx.strokeStyle = '#D4AF37';
+      ctx.stroke();
+
+      // Highlight
+      const highlight = ctx.createRadialGradient(bx - bulbRadius * 0.3, by - bulbRadius * 0.3, 0, bx, by, bulbRadius);
+      highlight.addColorStop(0, 'rgba(255,255,255,0.9)');
+      highlight.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = highlight;
+      ctx.beginPath();
+      ctx.arc(bx, by, bulbRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   ctx.restore();
 };
 

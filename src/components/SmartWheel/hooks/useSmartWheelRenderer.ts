@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { WheelSegment, WheelTheme, WheelState } from '../types';
-import { getBorderStyle, createMetallicGradient, createNeonEffect, createRainbowGradient, createRoyalRouletteEffect } from '../utils/borderStyles';
+import { getBorderStyle, createMetallicGradient, createNeonEffect, createRainbowGradient, createRoyalRouletteEffect, renderGoldBorder } from '../utils/borderStyles';
 
 interface UseSmartWheelRendererProps {
   segments: WheelSegment[];
@@ -11,6 +11,7 @@ interface UseSmartWheelRendererProps {
   borderStyle?: string;
   customBorderColor?: string;
   customBorderWidth?: number;
+  showGoldBulbs?: boolean;
 }
 
 export const useSmartWheelRenderer = ({
@@ -20,7 +21,8 @@ export const useSmartWheelRenderer = ({
   size,
   borderStyle = 'classic',
   customBorderColor,
-  customBorderWidth
+  customBorderWidth,
+  showGoldBulbs = true
 }: UseSmartWheelRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
@@ -91,7 +93,7 @@ export const useSmartWheelRenderer = ({
     // Dessiner le pointeur
     drawPointer(ctx, centerX, centerY, maxRadius);
 
-  }, [segments, theme, wheelState, size, borderStyle, animationTime]);
+  }, [segments, theme, wheelState, size, borderStyle, animationTime, showGoldBulbs]);
 
 
 
@@ -174,6 +176,27 @@ export const useSmartWheelRenderer = ({
     // Gestion spéciale pour Royal Roulette
     if (borderStyleName === 'royalRoulette') {
       createRoyalRouletteEffect(ctx, centerX, centerY, radius, animationTime, size);
+    } 
+    // Gestion spéciale pour le style Or avec effets métalliques
+    else if (borderStyleName === 'gold') {
+      // Utiliser le rendu personnalisé Burger King-like avec ampoules contrôlées par showGoldBulbs
+      renderGoldBorder(ctx, centerX, centerY, radius, animationTime, size, showGoldBulbs);
+    }
+    // Gestion spéciale pour le style Argent avec effets métalliques
+    else if (borderStyleName === 'silver') {
+      const silverGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = silverGradient;
+      ctx.lineWidth = borderWidth;
+      ctx.lineJoin = 'miter';
+      ctx.lineCap = 'square';
+      ctx.stroke();
+      
+      if (borderStyleConfig.effects.metallic) {
+        // Effet métallique brillant pour l'argent
+        createNeonEffect(ctx, centerX, centerY, radius, '#C0C0C0', 0.6);
+      }
     } else {
       switch (borderStyleConfig.type) {
         case 'solid':

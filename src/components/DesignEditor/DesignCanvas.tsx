@@ -8,6 +8,7 @@ import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
 import WheelSettingsButton from './components/WheelSettingsButton';
+import ZoomSlider from './components/ZoomSlider';
 import GroupSelectionFrame from './components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
@@ -55,6 +56,11 @@ export interface DesignCanvasProps {
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
+  // Props pour la toolbar mobile
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
@@ -84,7 +90,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Props pour la sidebar mobile
   onAddElement,
   onBackgroundChange,
-  onExtractedColorsChange
+  onExtractedColorsChange,
+  // Props pour la toolbar mobile
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -115,8 +126,41 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Synchroniser le zoom local avec le prop
   useEffect(() => {
-    setLocalZoom(zoom);
+    // Clamp le zoom entre 0.1 et 1.0 (100%)
+    const clamped = Math.max(0.1, Math.min(1, zoom));
+    setLocalZoom(clamped);
   }, [zoom]);
+
+  // Définir le zoom par défaut selon l'appareil
+  // - Mobile: 85%
+  // - Tablette: 60%
+  // - Desktop: 70%
+  useEffect(() => {
+    const defaultZoom =
+      selectedDevice === 'mobile' ? 0.85 :
+      selectedDevice === 'tablet' ? 0.6 : 0.7;
+
+    setLocalZoom(defaultZoom);
+    if (onZoomChange) {
+      onZoomChange(defaultZoom);
+    }
+  }, [selectedDevice]);
+
+  // Calculer le zoom par défaut selon l'appareil (pour le bouton reset)
+  const deviceDefaultZoom = useMemo(() => {
+    return selectedDevice === 'mobile' ? 0.85 :
+           selectedDevice === 'tablet' ? 0.6 : 0.7;
+  }, [selectedDevice]);
+
+  // Handler centralisé pour changer le zoom depuis la barre d'échelle
+  const handleZoomChange = useCallback((value: number) => {
+    // Clamp le zoom entre 0.1 et 1.0 (100%)
+    const clamped = Math.max(0.1, Math.min(1, value));
+    setLocalZoom(clamped);
+    if (onZoomChange) {
+      onZoomChange(clamped);
+    }
+  }, [onZoomChange]);
 
   // Support du zoom via trackpad et molette souris + Ctrl/Cmd
   useEffect(() => {
@@ -128,7 +172,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         
         // Calculer le facteur de zoom basé sur le delta (plus lent)
         const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
-        const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
+        const newZoom = Math.max(0.1, Math.min(1, localZoom * zoomFactor));
         
         setLocalZoom(newZoom);
         
@@ -553,10 +597,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onCampaignConfigChange={onCampaignChange}
         elements={elements}
         onElementsChange={onElementsChange}
+        // Props pour la toolbar mobile
+        onUndo={onUndo}
+        onRedo={onRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (
-          <div className={`z-10 canvas-toolbar ${
+          <div className={`z-10 ${
             selectedDevice === 'desktop' 
               ? 'absolute top-4 left-1/2 transform -translate-x-1/2' 
               : 'flex justify-center py-2 px-4'
@@ -573,12 +622,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-center h-full" style={{
+        <div className="flex justify-center items-center h-full w-full" style={{
+          // Padding fixe (indépendant du zoom) pour garantir un centrage stable
           padding: selectedDevice === 'tablet' 
-            ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
+            ? '48px 32px'
             : selectedDevice === 'mobile'
-            ? (zoom <= 0.7 ? '24px 16px' : '40px 24px')
-            : (zoom <= 0.7 ? '8px' : '32px'),
+            ? '32px 20px'
+            : '32px',
           transition: 'padding 0.2s ease-in-out',
           minHeight: '100%'
         }}>
@@ -606,6 +656,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
+                // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
+                if (onSelectedElementChange) {
+                  console.log('🎯 Canvas container click - clearing selection via onSelectedElementChange');
+                  onSelectedElementChange(null);
+                }
               }
             }}
           >
@@ -620,6 +675,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 // Désélectionner l'élément quand on clique sur le background
                 e.stopPropagation();
                 setSelectedElement(null);
+                // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
+                if (onSelectedElementChange) {
+                  console.log('🎯 Background click - clearing selection via onSelectedElementChange');
+                  onSelectedElementChange(null);
+                }
               }}
             >
               {/* Menu contextuel global du canvas */}
@@ -770,15 +830,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         </div>
 
-        {/* Canvas Info */}
-        <div className="text-center mt-4 text-sm text-gray-500">
-          {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
-          {selectedDevice !== 'desktop' && (
-            <span className="block text-xs text-orange-600 mt-1">
-              💡 Mode tactile optimisé - Utilisez le bouton 🔧 pour le debug
-            </span>
-          )}
-        </div>
+        {/* Canvas Info - desktop only */}
+        {selectedDevice === 'desktop' && (
+          <div className="text-center mt-4 text-sm text-gray-500">
+            {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
+          </div>
+        )}
 
         {/* Multi-Selection Debug Display */}
         {selectedElements && selectedElements.length > 0 && (
@@ -865,11 +922,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           wheelBorderColor={wheelConfig.borderColor}
           wheelBorderWidth={wheelConfig.borderWidth}
           wheelScale={wheelConfig.scale}
+          showGoldBulbs={!!wheelConfig.showGoldBulbs}
           onBorderStyleChange={(style) => updateWheelConfig({ borderStyle: style })}
           onBorderColorChange={(color) => updateWheelConfig({ borderColor: color })}
           onBorderWidthChange={(width) => updateWheelConfig({ borderWidth: width })}
           onScaleChange={(scale) => updateWheelConfig({ scale })}
+          onShowGoldBulbsChange={(value) => updateWheelConfig({ showGoldBulbs: value })}
           selectedDevice={selectedDevice}
+        />
+        
+        {/* Barre d'échelle de zoom (overlay bas-centre) */}
+        <ZoomSlider
+          zoom={localZoom}
+          onZoomChange={handleZoomChange}
+          minZoom={0.1}
+          maxZoom={1}
+          step={0.05}
+          defaultZoom={deviceDefaultZoom}
         />
         
 

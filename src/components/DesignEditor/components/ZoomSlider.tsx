@@ -7,6 +7,7 @@ interface ZoomSliderProps {
   minZoom?: number;
   maxZoom?: number;
   step?: number;
+  defaultZoom?: number;
 }
 
 const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
@@ -14,7 +15,8 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
   onZoomChange,
   minZoom = 0.25,
   maxZoom = 2,
-  step = 0.05
+  step = 0.05,
+  defaultZoom = 1
 }) => {
   const zoomPercent = Math.round(zoom * 100);
 
@@ -34,7 +36,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
   };
 
   const handleResetZoom = () => {
-    onZoomChange(1);
+    onZoomChange(defaultZoom);
   };
 
   return (
