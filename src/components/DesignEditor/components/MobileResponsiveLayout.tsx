@@ -201,8 +201,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: none !important;
         }
 
-        /* Masquer la toolbar canvas sur mobile */
-        .mobile-layout .z-10 {
+        /* Masquer la toolbar canvas sur mobile (sauf overlays utiles) */
+        .mobile-layout .z-10.canvas-toolbar {
           display: none !important;
         }
 

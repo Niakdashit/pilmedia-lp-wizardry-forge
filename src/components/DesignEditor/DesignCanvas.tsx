@@ -556,7 +556,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (
-          <div className={`z-10 ${
+          <div className={`z-10 canvas-toolbar ${
             selectedDevice === 'desktop' 
               ? 'absolute top-4 left-1/2 transform -translate-x-1/2' 
               : 'flex justify-center py-2 px-4'
