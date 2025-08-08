@@ -38,6 +38,10 @@ interface HybridSidebarProps {
   onPositionPanelChange?: (show: boolean) => void;
   onForceElementsTab?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
+  // Props pour le système de groupes
+  selectedElements?: any[];
+  onSelectedElementsChange?: (elements: any[]) => void;
+  onAddToHistory?: (snapshot: any) => void;
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
@@ -57,7 +61,11 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   showPositionPanel = false,
   onPositionPanelChange,
   onForceElementsTab,
-  canvasRef
+  canvasRef,
+  // Props pour le système de groupes
+  selectedElements,
+  onSelectedElementsChange,
+  onAddToHistory
 }) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -214,7 +222,15 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
           />
         );
       case 'layers':
-        return <LayersPanel elements={elements} onElementsChange={onElementsChange || (() => {})} />;
+        return (
+          <LayersPanel 
+            elements={elements} 
+            onElementsChange={onElementsChange || (() => {})} 
+            selectedElements={selectedElements}
+            onSelectedElementsChange={onSelectedElementsChange}
+            onAddToHistory={onAddToHistory}
+          />
+        );
       case 'campaign':
         return (
           <CampaignConfigPanel 

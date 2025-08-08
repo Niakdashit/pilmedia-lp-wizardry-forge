@@ -7,6 +7,8 @@ import StandardizedWheel from '../shared/StandardizedWheel';
 import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
+import WheelSettingsButton from './components/WheelSettingsButton';
+import GroupSelectionFrame from './components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
@@ -18,7 +20,6 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
-import WheelSettingsButton from './WheelSettingsButton';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -37,7 +38,15 @@ export interface DesignCanvasProps {
   onZoomChange?: (zoom: number) => void;
   selectedElement?: any;
   onSelectedElementChange?: (element: any) => void;
+  selectedElements?: any[];
+  onSelectedElementsChange?: (elements: any[]) => void;
   onElementUpdate?: (updates: any) => void;
+  // Props pour la gestion des groupes
+  selectedGroupId?: string;
+  onSelectedGroupChange?: (groupId: string | null) => void;
+  groups?: any[];
+  onGroupMove?: (groupId: string, deltaX: number, deltaY: number) => void;
+  onGroupResize?: (groupId: string, bounds: any) => void;
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
@@ -55,7 +64,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onZoomChange,
   selectedElement: externalSelectedElement,
   onSelectedElementChange,
+  selectedElements,
+  onSelectedElementsChange,
   onElementUpdate: externalOnElementUpdate,
+  // Props pour la gestion des groupes
+  selectedGroupId,
+  onSelectedGroupChange,
+  groups,
+  onGroupMove,
+  onGroupResize,
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
@@ -68,6 +85,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [localZoom, setLocalZoom] = useState(zoom);
+  const zoomRef = useRef(localZoom);
   const [showBorderModal, setShowBorderModal] = useState(false);
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
@@ -91,6 +109,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Synchroniser le zoom local avec le prop
   useEffect(() => {
     setLocalZoom(zoom);
+    zoomRef.current = zoom;
   }, [zoom]);
 
   // Support du zoom via trackpad et molette souris + Ctrl/Cmd
@@ -106,6 +125,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
         
         setLocalZoom(newZoom);
+        zoomRef.current = newZoom;
         
         // Synchroniser avec la barre de zoom externe si disponible
         if (onZoomChange) {
@@ -123,17 +143,143 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [localZoom, activeCanvasRef]);
 
+  // Support du zoom par pincement sur mobile avec une sensibilité réduite
+  useEffect(() => {
+    const canvasElement = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
+    if (!canvasElement) return;
+
+    let initialDistance = 0;
+    let initialZoom = zoomRef.current;
+
+    const getDistance = (touch1: Touch, touch2: Touch) => {
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        initialDistance = getDistance(e.touches[0], e.touches[1]);
+        initialZoom = zoomRef.current;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const distance = getDistance(e.touches[0], e.touches[1]);
+        const delta = distance - initialDistance;
+        const newZoom = Math.max(0.1, Math.min(5, initialZoom + delta * 0.002));
+        setLocalZoom(newZoom);
+        zoomRef.current = newZoom;
+        if (onZoomChange) {
+          onZoomChange(newZoom);
+        }
+      }
+    };
+
+    canvasElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvasElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      canvasElement.removeEventListener('touchstart', handleTouchStart);
+      canvasElement.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [activeCanvasRef, onZoomChange]);
+
   // Fonction de sélection qui notifie l'état externe
-  const handleElementSelect = useCallback((elementId: string | null) => {
-    setSelectedElement(elementId);
-    if (onSelectedElementChange) {
-      const element = elementId ? elements.find(el => el.id === elementId) : null;
-      onSelectedElementChange(element);
+  const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
+    console.log('🔥 handleElementSelect called with:', {
+      elementId,
+      isMultiSelect,
+      currentSelectedElements: selectedElements?.length || 0,
+      hasOnSelectedElementsChange: !!onSelectedElementsChange
+    });
+    
+    if (isMultiSelect && elementId) {
+      // Sélection multiple avec Ctrl/Cmd + clic
+      const currentSelectedElements = selectedElements || [];
+      const isAlreadySelected = currentSelectedElements.some((el: any) => el.id === elementId);
+      
+      console.log('🔥 Multi-select logic:', {
+        currentCount: currentSelectedElements.length,
+        isAlreadySelected,
+        targetElementId: elementId
+      });
+      
+      if (isAlreadySelected) {
+        // Désélectionner l'élément s'il est déjà sélectionné
+        const newSelectedElements = currentSelectedElements.filter((el: any) => el.id !== elementId);
+        console.log('🔥 Removing element from selection:', {
+          removed: elementId,
+          newCount: newSelectedElements.length,
+          newSelection: newSelectedElements.map(el => el.id)
+        });
+        onSelectedElementsChange?.(newSelectedElements);
+      } else {
+        // Ajouter l'élément à la sélection
+        const elementToAdd = elements.find(el => el.id === elementId);
+        if (elementToAdd) {
+          const newSelectedElements = [...currentSelectedElements, elementToAdd];
+          console.log('🔥 Adding element to selection:', {
+            added: elementId,
+            newCount: newSelectedElements.length,
+            newSelection: newSelectedElements.map(el => el.id)
+          });
+          onSelectedElementsChange?.(newSelectedElements);
+        } else {
+          console.error('🔥 Element not found in elements array:', elementId);
+        }
+      }
+      // En mode multi-sélection, on ne change pas l'élément unique sélectionné
+      setSelectedElement(null);
+      if (onSelectedElementChange) {
+        onSelectedElementChange(null);
+      }
+    } else {
+      // Sélection simple (comportement normal)
+      console.log('🔥 Single select mode:', { elementId, clearingMultiSelection: true });
+      setSelectedElement(elementId);
+      if (onSelectedElementChange) {
+        const element = elementId ? elements.find(el => el.id === elementId) : null;
+        onSelectedElementChange(element);
+      }
+      // Réinitialiser la sélection multiple
+      onSelectedElementsChange?.([]);
     }
-  }, [elements, onSelectedElementChange]);
+  }, [elements, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
+
+  // Fonction utilitaire pour calculer les positions absolues des éléments groupés
+  const calculateAbsolutePosition = useCallback((element: any) => {
+    if (!element.parentGroupId) {
+      // Élément non groupé : position absolue normale
+      return { x: element.x, y: element.y };
+    }
+    
+    // Élément groupé : calculer position absolue = position du groupe + position relative
+    const parentGroup = elements.find(el => el.id === element.parentGroupId && el.isGroup);
+    if (!parentGroup) {
+      console.warn('🎯 Parent group not found for element:', element.id, 'parentGroupId:', element.parentGroupId);
+      return { x: element.x, y: element.y };
+    }
+    
+    const absoluteX = parentGroup.x + element.x; // element.x est relatif au groupe
+    const absoluteY = parentGroup.y + element.y; // element.y est relatif au groupe
+    
+    console.log('🎯 Calculating absolute position:', {
+      elementId: element.id,
+      parentGroupId: element.parentGroupId,
+      groupPosition: { x: parentGroup.x, y: parentGroup.y },
+      relativePosition: { x: element.x, y: element.y },
+      absolutePosition: { x: absoluteX, y: absoluteY }
+    });
+    
+    return { x: absoluteX, y: absoluteY };
+  }, [elements]);
 
   // Hook de synchronisation unifié pour la roue
   const { updateWheelConfig, getCanonicalConfig } = useWheelConfigSync({
@@ -459,8 +605,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-center h-full" style={{
-          padding: selectedDevice === 'tablet' 
+        <div className="flex justify-center items-center h-full relative" style={{
+          padding: selectedDevice === 'tablet'
             ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
             : selectedDevice === 'mobile'
             ? (zoom <= 0.7 ? '24px 16px' : '40px 24px')
@@ -468,27 +614,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           transition: 'padding 0.2s ease-in-out',
           minHeight: '100%'
         }}>
-          {/* Canvas wrapper pour maintenir le centrage avec zoom */}
-          <div 
-            className="flex justify-center items-center"
+          {/* Canvas centré indépendamment du zoom */}
+          <div
+            ref={activeCanvasRef}
+            className="absolute bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]"
             style={{
-              width: 'fit-content',
-              height: 'fit-content',
-              minHeight: 'auto'
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              minWidth: `${canvasSize.width}px`,
+              minHeight: `${canvasSize.height}px`,
+              top: '50%',
+              left: '50%',
+              transform: `translate(-50%, -50%) scale(${localZoom})`,
+              transformOrigin: 'center center'
             }}
-          >
-            <div 
-              ref={activeCanvasRef}
-              className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
-              style={{
-                width: `${canvasSize.width}px`,
-                height: `${canvasSize.height}px`,
-                minWidth: `${canvasSize.width}px`,
-                minHeight: `${canvasSize.height}px`,
-                flexShrink: 0,
-                transform: `scale(${localZoom})`,
-                transformOrigin: 'center center'
-              }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
@@ -582,11 +721,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               // Obtenir les propriétés pour l'appareil actuel
               const responsiveProps = getPropertiesForDevice(element, selectedDevice);
               
-              // Fusionner les propriétés responsive avec l'élément original
+              // Calculer la position absolue pour les éléments groupés
+              const absolutePosition = calculateAbsolutePosition(element);
+              
+              // Fusionner les propriétés responsive avec l'élément original et les positions absolues
               const elementWithResponsive = {
                 ...element,
-                x: responsiveProps.x,
-                y: responsiveProps.y,
+                // Utiliser les positions absolues calculées pour les éléments groupés
+                x: absolutePosition.x,
+                y: absolutePosition.y,
+                // Garder les autres propriétés responsive
                 width: responsiveProps.width,
                 height: responsiveProps.height,
                 fontSize: responsiveProps.fontSize,
@@ -599,7 +743,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   key={element.id} 
                   element={elementWithResponsive} 
                   selectedDevice={selectedDevice}
-                  isSelected={selectedElement === element.id} 
+                  isSelected={
+                    selectedElement === element.id || 
+                    Boolean(selectedElements && selectedElements.some((sel: any) => sel.id === element.id))
+                  } 
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
@@ -658,6 +805,78 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           )}
         </div>
 
+        {/* Multi-Selection Debug Display */}
+        {selectedElements && selectedElements.length > 0 && (
+          <div className="absolute top-2 left-2 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">
+            🎯 Multi-Selection: {selectedElements.length} elements
+            <div className="text-xs mt-1">
+              {selectedElements.map((el: any, i: number) => (
+                <div key={el.id}>{i + 1}. {el.id}</div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Cadre de sélection pour les groupes */}
+        {selectedGroupId && groups && (
+          (() => {
+            const selectedGroup = groups.find(g => g.id === selectedGroupId);
+            if (selectedGroup && selectedGroup.groupChildren) {
+              // Calculer les bounds du groupe à partir des positions absolues de ses éléments
+              const groupElements = elements.filter(el => selectedGroup.groupChildren?.includes(el.id));
+              if (groupElements.length > 0) {
+                // Utiliser les positions absolues pour calculer les bounds du groupe
+                const elementsWithAbsolutePos = groupElements.map(el => {
+                  const absPos = calculateAbsolutePosition(el);
+                  return { ...el, x: absPos.x, y: absPos.y };
+                });
+                
+                const minX = Math.min(...elementsWithAbsolutePos.map(el => el.x));
+                const minY = Math.min(...elementsWithAbsolutePos.map(el => el.y));
+                const maxX = Math.max(...elementsWithAbsolutePos.map(el => el.x + (el.width || 0)));
+                const maxY = Math.max(...elementsWithAbsolutePos.map(el => el.y + (el.height || 0)));
+                
+                const groupBounds = {
+                  x: minX,
+                  y: minY,
+                  width: maxX - minX,
+                  height: maxY - minY
+                };
+                
+                console.log('🎯 Group bounds calculated:', {
+                  groupId: selectedGroup.id,
+                  groupElements: groupElements.length,
+                  bounds: groupBounds,
+                  elementsPositions: elementsWithAbsolutePos.map(el => ({ id: el.id, x: el.x, y: el.y }))
+                });
+                
+                return (
+                  <GroupSelectionFrame
+                    key={selectedGroup.id}
+                    groupId={selectedGroup.id}
+                    bounds={groupBounds}
+                    zoom={zoom}
+                    onMove={(deltaX, deltaY) => {
+                      console.log('🎯 Moving group:', selectedGroup.id, { deltaX, deltaY });
+                      onGroupMove?.(selectedGroup.id, deltaX, deltaY);
+                    }}
+                    onResize={(newBounds) => {
+                      console.log('🎯 Resizing group:', selectedGroup.id, newBounds);
+                      onGroupResize?.(selectedGroup.id, newBounds);
+                    }}
+                    onDoubleClick={() => {
+                      console.log('🎯 Double-click on group - entering edit mode:', selectedGroup.id);
+                      // Passer en mode édition individuelle des éléments du groupe
+                      onSelectedGroupChange?.(null);
+                    }}
+                  />
+                );
+              }
+            }
+            return null;
+          })()
+        )}
+        
         {/* Bouton roue fortune ABSOLU dans la zone d'aperçu (canvas) */}
         <div className="absolute bottom-2 right-2 z-50">
           <WheelSettingsButton onClick={() => setShowBorderModal(true)} />

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Canva Code — Groupes & Calques style Canva</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Sélections visuelles */
+    .selection-box {
+      position: absolute;
+      pointer-events: auto;
+      box-sizing: border-box;
+    }
+    .handle {
+      width: 12px;
+      height: 12px;
+      border: 2px solid white;
+      background: #7c3aed; /* violet */
+      border-radius: 9999px;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: nwse-resize;
+    }
+    /* Désactive la sélection de texte hors édition */
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+    /* État d'édition */
+    .editing {
+      outline: 2px solid #38bdf8; /* bleu clair */
+      outline-offset: 2px;
+      background: rgba(56,189,248,0.05);
+    }
+    /* Indicateur drop dans la liste de calques */
+    .drop-target {
+      background: rgba(124,58,237,0.12);
+      border-radius: 8px;
+    }
+    .drop-between::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      background: #7c3aed;
+      border-radius: 2px;
+    }
+    /* Curseur main pour les éléments déplaçables */
+    .draggable {
+      cursor: move;
+    }
+    /* Masquer la sélection native pendant les drags */
+    *[draggable="true"] {
+      -webkit-user-drag: element;
+    }
+    /* Scroll doux sidebar */
+    .smooth-scroll {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white font-sans">
+  <div class="max-w-[1200px] mx-auto py-6 px-4">
+    <!-- Barre d'actions -->
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Éditeur — Groupes & Calques</h1>
+        <p class="text-sm text-slate-300">Plan de travail blanc. Cmd+clic (ou Ctrl+clic) pour multi‑sélection, Cmd+G pour grouper, Cmd+Shift+G pour dissocier, double‑clic pour éditer.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="addTextBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg shadow transition">Ajouter un texte</button>
+        <button id="groupBtn" class="bg-violet-500/60 hover:bg-violet-500 text-white px-4 py-2 rounded-lg shadow transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>Grouper ⌘G</button>
+        <button id="ungroupBtn" class="bg-rose-500/60 hover:bg-rose-500 text-white px-4 py-2 rounded-lg shadow transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>Dissocier ⇧⌘G</button>
+        <button id="exitIsolateBtn" class="bg-sky-500/60 hover:bg-sky-500 text-white px-4 py-2 rounded-lg shadow transition hidden">Quitter l'édition (Esc)</button>
+        <button id="clearBtn" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg shadow transition">Tout effacer</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Sidebar Calques -->
+      <aside class="col-span-4 lg:col-span-3 bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-4 max-h-[78vh] overflow-auto smooth-scroll">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold">Calques</h2>
+          <div class="text-xs text-slate-300">Glisser pour réordonner</div>
+        </div>
+        <ul id="layersList" class="space-y-1 text-sm"></ul>
+      </aside>
+
+      <!-- Plan de travail -->
+      <main class="col-span-8 lg:col-span-9">
+        <div class="bg-white/10 border border-white/10 rounded-2xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-slate-200 text-sm">Plan de travail</div>
+            <div class="text-xs text-slate-400">Double‑clic sur un élément pour l'éditer</div>
+          </div>
+          <div id="canvasWrapper" class="relative w-full h-[70vh] bg-white rounded-xl shadow-inner overflow-hidden">
+            <!-- Aides visuelles -->
+            <div class="absolute left-3 top-3 z-[5] text-[12px] bg-slate-900/70 text-white px-3 py-2 rounded-lg shadow">
+              <div class="font-medium">Raccourcis</div>
+              <ul class="list-disc ml-4 space-y-0.5">
+                <li>Cmd/Ctrl + clic: multi‑sélection</li>
+                <li>Cmd + G: grouper</li>
+                <li>Cmd + Shift + G: dissocier</li>
+                <li>Double‑clic: éditer le texte</li>
+                <li>Esc: sortir de l'édition</li>
+              </ul>
+            </div>
+            <!-- Contenu dessiné ici -->
+            <div id="canvas" class="absolute inset-0"></div>
+            <!-- Sélections et poignées -->
+            <div id="overlays" class="absolute inset-0 pointer-events-none"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/testpage2.js"></script>
+</body>
+</html>

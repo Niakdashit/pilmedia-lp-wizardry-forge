@@ -36,6 +36,7 @@ import PublicCampaign from './pages/PublicCampaign';
 import PageBeta from './pages/PageBeta';
 import TestPage from './pages/TestPage';
 
+
 function App() {
   return (
     <AppProvider>
@@ -87,6 +88,7 @@ function App() {
             <Route path="/pagebeta" element={<PageBeta />} />
             <Route path="/testpage" element={<TestPage />} />
             <Route path="/font-test" element={<FontTest />} />
+
             <Route path="/c/:slug" element={<PublicCampaign />} />
           </Routes>
         </Router>
