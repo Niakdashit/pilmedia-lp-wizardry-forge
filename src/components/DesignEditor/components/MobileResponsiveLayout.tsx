@@ -259,7 +259,10 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         /* IMPORTANT: Autoriser les interactions avec la sidebar et ses onglets */
         .mobile-layout.is-dragging .w-20,
         .mobile-layout.is-dragging .w-80,
-        .mobile-layout.is-dragging [class*="sidebar"] {
+        .mobile-layout.is-dragging [class*="sidebar"],
+        .mobile-layout.is-dragging .mobile-sidebar-drawer,
+        .mobile-layout.is-dragging .mobile-sidebar-drawer *,
+        .mobile-layout.is-dragging .mobile-sidebar-overlay {
           pointer-events: auto !important;
         }
 
