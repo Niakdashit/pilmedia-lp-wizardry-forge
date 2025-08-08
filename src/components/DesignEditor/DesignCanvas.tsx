@@ -127,7 +127,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         e.stopPropagation();
         
         // Calculer le facteur de zoom basé sur le delta (plus lent)
-        const zoomFactor = e.deltaY > 0 ? 0.98 : 1.02;
+        const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
         const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
         
         setLocalZoom(newZoom);
@@ -147,60 +147,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       };
     }
   }, [localZoom, activeCanvasRef]);
-
-  // Zoom au pincement (pinch) sur écrans tactiles
-  useEffect(() => {
-    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current) as HTMLElement | null;
-    if (!el) return;
-
-    let isPinching = false;
-    let startDist = 0;
-    let startZoom = 1;
-
-    const getDist = (touches: TouchList) => {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.hypot(dx, dy);
-    };
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        isPinching = true;
-        startDist = getDist(e.touches);
-        startZoom = localZoom;
-        e.preventDefault();
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (isPinching && e.touches.length === 2) {
-        const newDist = getDist(e.touches);
-        const scale = newDist / startDist;
-        const newZoom = Math.max(0.1, Math.min(5, startZoom * scale));
-        setLocalZoom(newZoom);
-        onZoomChange?.(newZoom);
-        e.preventDefault();
-      }
-    };
-
-    const onTouchEnd = () => {
-      if (isPinching) {
-        isPinching = false;
-      }
-    };
-
-    el.addEventListener('touchstart', onTouchStart, { passive: false });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('touchend', onTouchEnd);
-    el.addEventListener('touchcancel', onTouchEnd);
-
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart as EventListener);
-      el.removeEventListener('touchmove', onTouchMove as EventListener);
-      el.removeEventListener('touchend', onTouchEnd as EventListener);
-      el.removeEventListener('touchcancel', onTouchEnd as EventListener);
-    };
-  }, [activeCanvasRef, localZoom, onZoomChange]);
 
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
@@ -598,10 +544,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowPositionPanel={onShowPositionPanel}
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
-        className="design-canvas-container flex-1 flex flex-col items-center justify-start p-4 bg-gray-100 relative overflow-hidden"
-        // Forcer l'UI mobile quand l'appareil sélectionné est mobile
-        forcedDevice={selectedDevice}
-        forceMobileUI={selectedDevice === 'mobile'}
+        className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
         // Props pour la sidebar mobile
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
@@ -630,7 +573,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-start h-full" style={{
+        <div className="flex justify-center items-center h-full" style={{
           padding: selectedDevice === 'tablet' 
             ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
             : selectedDevice === 'mobile'
@@ -641,7 +584,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         }}>
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
-            className="flex justify-center items-start"
+            className="flex justify-center items-center"
             style={{
               width: 'fit-content',
               height: 'fit-content',
@@ -658,8 +601,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minHeight: `${canvasSize.height}px`,
                 flexShrink: 0,
                 transform: `scale(${localZoom})`,
-                transformOrigin: 'top center',
-                touchAction: 'none'
+                transformOrigin: 'center center'
               }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {

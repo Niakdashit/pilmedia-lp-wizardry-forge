@@ -16,9 +16,6 @@ interface MobileResponsiveLayoutProps {
   zoom: number;
   onZoomChange?: (zoom: number) => void;
   className?: string;
-  // Forcer l'UI mobile/tablette selon l'appareil sélectionné dans l'éditeur
-  forcedDevice?: 'desktop' | 'tablet' | 'mobile';
-  forceMobileUI?: boolean;
   // Props pour la sidebar mobile
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
@@ -40,8 +37,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   zoom,
   onZoomChange,
   className = '',
-  forcedDevice,
-  forceMobileUI,
   // Props pour la sidebar mobile
   onAddElement,
   onBackgroundChange,
@@ -63,12 +58,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
-    preventZoomGestures: false
+    preventZoomGestures: true
   });
-
-  // Déterminer l'appareil effectif et le mode UI à utiliser
-  const resolvedDevice = (forcedDevice ?? deviceType) as 'desktop' | 'tablet' | 'mobile';
-  const isMobileUI = Boolean(forceMobileUI || isMobile || isTablet || resolvedDevice !== 'desktop');
 
   // Système de verrouillage du canvas pour mobile
   const {
@@ -83,17 +74,17 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
   // Gestion de la visibilité de la toolbar mobile
   useEffect(() => {
-    if (selectedElement && isMobileUI) {
+    if (selectedElement && (isMobile || isTablet)) {
       setIsToolbarVisible(true);
     } else {
       setIsToolbarVisible(false);
     }
-  }, [selectedElement, isMobileUI]);
+  }, [selectedElement, isMobile, isTablet]);
 
   // Écouteur pour l'ajustement automatique du zoom
   useEffect(() => {
     const handleZoomAdjust = (event: CustomEvent) => {
-      if (onZoomChange && isMobileUI) {
+      if (onZoomChange && (isMobile || isTablet)) {
         onZoomChange(event.detail.zoom);
       }
     };
@@ -102,7 +93,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     return () => {
       window.removeEventListener('adjustCanvasZoom', handleZoomAdjust as EventListener);
     };
-  }, [onZoomChange, isMobileUI]);
+  }, [onZoomChange, isMobile, isTablet]);
 
   // Classes CSS dynamiques selon l'appareil
   const getLayoutClasses = () => {
@@ -119,15 +110,15 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       selectedElement ? 'has-selection' : ''
     ].filter(Boolean).join(' ');
 
-    return `${baseClasses} ${deviceClasses[resolvedDevice] || 'desktop-layout'} ${stateClasses}`;
+    return `${baseClasses} ${deviceClasses[deviceType] || 'desktop-layout'} ${stateClasses}`;
   };
 
   return (
     <div 
       ref={containerRef}
       className={getLayoutClasses()}
-      data-device={resolvedDevice}
-      data-mobile-optimized={isMobileUI.toString()}
+      data-device={deviceType}
+      data-mobile-optimized={(isMobile || isTablet).toString()}
     >
       {/* Contenu principal */}
       <div className={`layout-content ${className}`}>
@@ -135,7 +126,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       </div>
 
       {/* Toolbar mobile overlay - s'affiche au-dessus de l'élément sélectionné */}
-      {isToolbarVisible && isMobileUI && selectedElement && onElementUpdate && (
+      {isToolbarVisible && (isMobile || isTablet) && selectedElement && onElementUpdate && (
         <MobileToolbarOverlay
           selectedElement={selectedElement}
           onElementUpdate={onElementUpdate}
@@ -148,7 +139,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       )}
 
       {/* Sidebar mobile drawer - seulement sur mobile */}
-      {isMobileUI && onAddElement && (
+      {isMobile && onAddElement && (
         <MobileSidebarDrawer
           onAddElement={onAddElement}
           onBackgroundChange={onBackgroundChange}
@@ -219,7 +210,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         .mobile-layout .design-canvas-container {
           flex: 1;
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           justify-content: center;
           padding: 10px;
           overflow: hidden;
@@ -236,7 +227,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         .mobile-layout.is-dragging * {
           pointer-events: none;
         }
-        
 
         .mobile-layout.is-dragging [data-element-id] {
           pointer-events: auto;
@@ -259,10 +249,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         /* IMPORTANT: Autoriser les interactions avec la sidebar et ses onglets */
         .mobile-layout.is-dragging .w-20,
         .mobile-layout.is-dragging .w-80,
-        .mobile-layout.is-dragging [class*="sidebar"],
-        .mobile-layout.is-dragging .mobile-sidebar-drawer,
-        .mobile-layout.is-dragging .mobile-sidebar-drawer *,
-        .mobile-layout.is-dragging .mobile-sidebar-overlay {
+        .mobile-layout.is-dragging [class*="sidebar"] {
           pointer-events: auto !important;
         }
 
@@ -291,7 +278,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           }
         }
 
-        
+        /* Layout tablette */
         .tablet-layout {
           /* Comportement hybride entre mobile et desktop */
           display: flex;
@@ -339,8 +326,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           /* Réduire légèrement le padding pour laisser place à la toolbar */
           padding-top: 60px;
         }
-
-        
 
         /* Empêcher le zoom accidentel sur iOS */
         .mobile-layout input,
@@ -451,13 +436,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
             /* Masquer le moniteur de performance sur mobile */
             display: none !important;
           }
-        }
-
-        /* Forcer l'interactivité de la sidebar mobile (même avec des verrous tactiles) */
-        .mobile-sidebar-drawer,
-        .mobile-sidebar-drawer *,
-        .mobile-sidebar-overlay {
-          pointer-events: auto !important;
         }
       `}</style>
     </div>

@@ -506,10 +506,10 @@ const DesignEditorLayout: React.FC = () => {
       redo();
     },
     onZoomIn: () => {
-      setCanvasZoom(prev => Math.min(prev + 0.05, 3));
+      setCanvasZoom(prev => Math.min(prev + 0.1, 3));
     },
     onZoomOut: () => {
-      setCanvasZoom(prev => Math.max(prev - 0.05, 0.25));
+      setCanvasZoom(prev => Math.max(prev - 0.1, 0.25));
     },
     onZoomReset: () => {
       setCanvasZoom(1);
@@ -658,29 +658,27 @@ const DesignEditorLayout: React.FC = () => {
           /* Design Editor Mode */
           <>
             {/* Hybrid Sidebar - Design & Technical */}
-            {selectedDevice !== 'mobile' && (
-              <HybridSidebar 
-                onAddElement={handleAddElement}
-                onBackgroundChange={handleBackgroundChange}
-                onExtractedColorsChange={handleExtractedColorsChange}
-                campaignConfig={campaignConfig}
-                onCampaignConfigChange={handleCampaignConfigChange}
-                elements={canvasElements}
-                onElementsChange={setCanvasElements}
-                selectedElement={selectedElement}
-                onElementUpdate={handleElementUpdate}
-                showEffectsPanel={showEffectsInSidebar}
-                onEffectsPanelChange={setShowEffectsInSidebar}
-                showAnimationsPanel={showAnimationsInSidebar}
-                onAnimationsPanelChange={setShowAnimationsInSidebar}
-                showPositionPanel={showPositionInSidebar}
-                onPositionPanelChange={setShowPositionInSidebar}
-                canvasRef={canvasRef}
-                selectedElements={selectedElements}
-                onSelectedElementsChange={setSelectedElements}
-                onAddToHistory={addToHistory}
-              />
-            )}
+            <HybridSidebar 
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              campaignConfig={campaignConfig}
+              onCampaignConfigChange={handleCampaignConfigChange}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              selectedElement={selectedElement}
+              onElementUpdate={handleElementUpdate}
+              showEffectsPanel={showEffectsInSidebar}
+              onEffectsPanelChange={setShowEffectsInSidebar}
+              showAnimationsPanel={showAnimationsInSidebar}
+              onAnimationsPanelChange={setShowAnimationsInSidebar}
+              showPositionPanel={showPositionInSidebar}
+              onPositionPanelChange={setShowPositionInSidebar}
+              canvasRef={canvasRef}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
+              onAddToHistory={addToHistory}
+            />
             
             {/* Main Canvas Area */}
             <DesignCanvas 
@@ -727,16 +725,14 @@ const DesignEditorLayout: React.FC = () => {
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
 
             
-            {/* Zoom Slider hidden by request */}
-            {false && (
-              <ZoomSlider 
-                zoom={canvasZoom}
-                onZoomChange={setCanvasZoom}
-                minZoom={0.25}
-                maxZoom={3}
-                step={0.05}
-              />
-            )}
+            {/* Zoom Slider - Always visible in bottom center */}
+            <ZoomSlider 
+              zoom={canvasZoom}
+              onZoomChange={setCanvasZoom}
+              minZoom={0.25}
+              maxZoom={3}
+              step={0.05}
+            />
           </>
         )}
       </div>
