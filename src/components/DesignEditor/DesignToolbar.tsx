@@ -26,15 +26,15 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
 }) => {
   const navigate = useNavigate();
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
       {/* Left Section - Logo/Title */}
-      <div className="flex items-center space-x-6">
-        <h1 className="text-xl font-bold text-gray-900 font-inter">Design Editor</h1>
+      <div className="flex items-center space-x-3">
+        <h1 className="text-lg font-bold text-gray-900 font-inter">Design Editor</h1>
         <div className="flex items-center space-x-1">
           <button 
             onClick={onUndo}
             disabled={!canUndo}
-            className={`p-2 rounded-lg transition-all duration-200 ${
+            className={`p-1.5 rounded-lg transition-all duration-200 ${
               canUndo 
                 ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
                 : 'text-gray-400 cursor-not-allowed'
@@ -46,7 +46,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <button 
             onClick={onRedo}
             disabled={!canRedo}
-            className={`p-2 rounded-lg transition-all duration-200 ${
+            className={`p-1.5 rounded-lg transition-all duration-200 ${
               canRedo 
                 ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
                 : 'text-gray-400 cursor-not-allowed'
@@ -62,7 +62,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-1 border border-[hsl(var(--sidebar-border))]">
         <button
           onClick={() => onDeviceChange('desktop')}
-          className={`p-3 rounded-md transition-all duration-200 ${
+          className={`p-2 rounded-md transition-all duration-200 ${
             selectedDevice === 'desktop' 
               ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
               : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
@@ -73,7 +73,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </button>
         <button
           onClick={() => onDeviceChange('tablet')}
-          className={`p-3 rounded-md transition-all duration-200 ${
+          className={`p-2 rounded-md transition-all duration-200 ${
             selectedDevice === 'tablet' 
               ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
               : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
@@ -84,7 +84,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </button>
         <button
           onClick={() => onDeviceChange('mobile')}
-          className={`p-3 rounded-md transition-all duration-200 ${
+          className={`p-2 rounded-md transition-all duration-200 ${
             selectedDevice === 'mobile' 
               ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
               : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
@@ -96,29 +96,30 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       </div>
 
       {/* Right Section - Actions */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
         <button 
           onClick={onPreviewToggle}
-          className={`flex items-center px-3 py-2 text-sm border rounded-lg transition-colors ${
+          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${
             isPreviewMode 
               ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white border-[#841b60]' 
               : 'border-gray-300 hover:bg-gray-50'
           }`}
         >
-          <Eye className="w-4 h-4 mr-2" />
+          <Eye className="w-4 h-4 mr-1" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
         <button 
           onClick={() => navigate('/dashboard')}
-          className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <X className="w-4 h-4 mr-2" />
+          <X className="w-4 h-4 mr-1" />
           Fermer
         </button>
-        <button className="flex items-center px-4 py-2 text-sm bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[#6b1549] transition-colors">
-          <Save className="w-4 h-4 mr-2" />
-          Sauvegarder et continuer
-        </button>
+          <button className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[#6b1549] transition-colors">
+            <Save className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Sauvegarder et continuer</span>
+            <span className="sm:hidden">Sauvegarder</span>
+          </button>
       </div>
     </div>
   );
