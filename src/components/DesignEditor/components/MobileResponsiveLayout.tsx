@@ -16,6 +16,9 @@ interface MobileResponsiveLayoutProps {
   zoom: number;
   onZoomChange?: (zoom: number) => void;
   className?: string;
+  // Forcer l'UI mobile/tablette selon l'appareil sélectionné dans l'éditeur
+  forcedDevice?: 'desktop' | 'tablet' | 'mobile';
+  forceMobileUI?: boolean;
   // Props pour la sidebar mobile
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
@@ -37,6 +40,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   zoom,
   onZoomChange,
   className = '',
+  forcedDevice,
+  forceMobileUI,
   // Props pour la sidebar mobile
   onAddElement,
   onBackgroundChange,
@@ -61,6 +66,10 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     preventZoomGestures: true
   });
 
+  // Déterminer l'appareil effectif et le mode UI à utiliser
+  const resolvedDevice = (forcedDevice ?? deviceType) as 'desktop' | 'tablet' | 'mobile';
+  const isMobileUI = Boolean(forceMobileUI || isMobile || isTablet || resolvedDevice !== 'desktop');
+
   // Système de verrouillage du canvas pour mobile
   const {
     isDragging
@@ -74,17 +83,17 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
   // Gestion de la visibilité de la toolbar mobile
   useEffect(() => {
-    if (selectedElement && (isMobile || isTablet)) {
+    if (selectedElement && isMobileUI) {
       setIsToolbarVisible(true);
     } else {
       setIsToolbarVisible(false);
     }
-  }, [selectedElement, isMobile, isTablet]);
+  }, [selectedElement, isMobileUI]);
 
   // Écouteur pour l'ajustement automatique du zoom
   useEffect(() => {
     const handleZoomAdjust = (event: CustomEvent) => {
-      if (onZoomChange && (isMobile || isTablet)) {
+      if (onZoomChange && isMobileUI) {
         onZoomChange(event.detail.zoom);
       }
     };
@@ -93,7 +102,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     return () => {
       window.removeEventListener('adjustCanvasZoom', handleZoomAdjust as EventListener);
     };
-  }, [onZoomChange, isMobile, isTablet]);
+  }, [onZoomChange, isMobileUI]);
 
   // Classes CSS dynamiques selon l'appareil
   const getLayoutClasses = () => {
@@ -110,15 +119,15 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       selectedElement ? 'has-selection' : ''
     ].filter(Boolean).join(' ');
 
-    return `${baseClasses} ${deviceClasses[deviceType] || 'desktop-layout'} ${stateClasses}`;
+    return `${baseClasses} ${deviceClasses[resolvedDevice] || 'desktop-layout'} ${stateClasses}`;
   };
 
   return (
     <div 
       ref={containerRef}
       className={getLayoutClasses()}
-      data-device={deviceType}
-      data-mobile-optimized={(isMobile || isTablet).toString()}
+      data-device={resolvedDevice}
+      data-mobile-optimized={isMobileUI.toString()}
     >
       {/* Contenu principal */}
       <div className={`layout-content ${className}`}>
@@ -126,7 +135,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       </div>
 
       {/* Toolbar mobile overlay - s'affiche au-dessus de l'élément sélectionné */}
-      {isToolbarVisible && (isMobile || isTablet) && selectedElement && onElementUpdate && (
+      {isToolbarVisible && isMobileUI && selectedElement && onElementUpdate && (
         <MobileToolbarOverlay
           selectedElement={selectedElement}
           onElementUpdate={onElementUpdate}
@@ -139,7 +148,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       )}
 
       {/* Sidebar mobile drawer - seulement sur mobile */}
-      {isMobile && onAddElement && (
+      {isMobileUI && onAddElement && (
         <MobileSidebarDrawer
           onAddElement={onAddElement}
           onBackgroundChange={onBackgroundChange}
