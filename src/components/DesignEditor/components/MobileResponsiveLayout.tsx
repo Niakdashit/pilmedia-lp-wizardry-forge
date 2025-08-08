@@ -3,7 +3,6 @@ import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import { useMobileCanvasLock } from '../hooks/useMobileCanvasLock';
 import MobileToolbarOverlay from './MobileToolbarOverlay';
 
-
 interface MobileResponsiveLayoutProps {
   children: React.ReactNode;
   selectedElement?: any;
@@ -121,7 +120,14 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         />
       )}
 
-
+      {/* Indicateur de statut mobile (dev only) */}
+      {process.env.NODE_ENV === 'development' && (isMobile || isTablet) && (
+        <div className="fixed bottom-4 left-4 z-50 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs shadow-lg">
+          📱 {deviceType.toUpperCase()} • Zoom: {Math.round(zoom * 100)}%
+          {isDragging && ' • DRAG'}
+          {isToolbarVisible && ' • TOOLBAR'}
+        </div>
+      )}
 
       {/* Styles CSS intégrés pour la responsivité mobile */}
       <style>{`
@@ -165,13 +171,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           position: relative;
         }
 
-        /* Masquer la sidebar sur mobile - affichée via drawer */
+        /* Masquer la sidebar sur mobile */
         .mobile-layout .hybrid-sidebar {
-          display: none !important;
-        }
-
-        /* Masquer la toolbar canvas sur mobile */
-        .mobile-layout .z-10 {
           display: none !important;
         }
 
@@ -183,7 +184,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           justify-content: center;
           padding: 10px;
           overflow: hidden;
-          position: relative;
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */
