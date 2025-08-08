@@ -219,7 +219,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         .mobile-layout .design-canvas-container {
           flex: 1;
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
           padding: 10px;
           overflow: hidden;

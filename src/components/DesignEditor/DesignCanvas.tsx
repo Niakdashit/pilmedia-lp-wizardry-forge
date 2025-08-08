@@ -544,7 +544,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowPositionPanel={onShowPositionPanel}
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
-        className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
+        className="design-canvas-container flex-1 flex flex-col items-center justify-start p-4 bg-gray-100 relative overflow-hidden"
         // Forcer l'UI mobile quand l'appareil sélectionné est mobile
         forcedDevice={selectedDevice}
         forceMobileUI={selectedDevice === 'mobile'}
@@ -576,7 +576,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-center h-full" style={{
+        <div className="flex justify-center items-start h-full" style={{
           padding: selectedDevice === 'tablet' 
             ? (zoom <= 0.7 ? '40px 20px' : '60px 32px')
             : selectedDevice === 'mobile'
@@ -587,7 +587,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         }}>
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
-            className="flex justify-center items-center"
+            className="flex justify-center items-start"
             style={{
               width: 'fit-content',
               height: 'fit-content',
@@ -604,7 +604,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minHeight: `${canvasSize.height}px`,
                 flexShrink: 0,
                 transform: `scale(${localZoom})`,
-                transformOrigin: 'center center'
+                transformOrigin: 'top center'
               }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
