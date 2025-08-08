@@ -127,7 +127,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         e.stopPropagation();
         
         // Calculer le facteur de zoom basé sur le delta (plus lent)
-        const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
+        const zoomFactor = e.deltaY > 0 ? 0.98 : 1.02;
         const newZoom = Math.max(0.1, Math.min(5, localZoom * zoomFactor));
         
         setLocalZoom(newZoom);

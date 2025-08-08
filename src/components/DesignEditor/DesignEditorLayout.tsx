@@ -506,10 +506,10 @@ const DesignEditorLayout: React.FC = () => {
       redo();
     },
     onZoomIn: () => {
-      setCanvasZoom(prev => Math.min(prev + 0.1, 3));
+      setCanvasZoom(prev => Math.min(prev + 0.05, 3));
     },
     onZoomOut: () => {
-      setCanvasZoom(prev => Math.max(prev - 0.1, 0.25));
+      setCanvasZoom(prev => Math.max(prev - 0.05, 0.25));
     },
     onZoomReset: () => {
       setCanvasZoom(1);
@@ -727,14 +727,16 @@ const DesignEditorLayout: React.FC = () => {
             {/* Auto-Responsive Indicator - Always visible in bottom right */}
 
             
-            {/* Zoom Slider - Always visible in bottom center */}
-            <ZoomSlider 
-              zoom={canvasZoom}
-              onZoomChange={setCanvasZoom}
-              minZoom={0.25}
-              maxZoom={3}
-              step={0.05}
-            />
+            {/* Zoom Slider hidden by request */}
+            {false && (
+              <ZoomSlider 
+                zoom={canvasZoom}
+                onZoomChange={setCanvasZoom}
+                minZoom={0.25}
+                maxZoom={3}
+                step={0.05}
+              />
+            )}
           </>
         )}
       </div>
