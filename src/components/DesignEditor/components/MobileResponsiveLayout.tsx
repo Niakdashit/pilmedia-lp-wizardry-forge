@@ -452,6 +452,13 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
             display: none !important;
           }
         }
+
+        /* Forcer l'interactivité de la sidebar mobile (même avec des verrous tactiles) */
+        .mobile-sidebar-drawer,
+        .mobile-sidebar-drawer *,
+        .mobile-sidebar-overlay {
+          pointer-events: auto !important;
+        }
       `}</style>
     </div>
   );

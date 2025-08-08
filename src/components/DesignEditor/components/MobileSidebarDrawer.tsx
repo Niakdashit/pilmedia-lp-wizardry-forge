@@ -159,8 +159,9 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="mobile-sidebar-overlay fixed inset-0 bg-black/20 z-[900]"
+            className="mobile-sidebar-overlay fixed inset-0 bg-black/20 z-[1900]"
             onClick={() => setIsMinimized(true)}
+            style={{ pointerEvents: 'auto' }}
           />
         )}
       </AnimatePresence>
@@ -176,11 +177,12 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           stiffness: 300,
           damping: 30
         }}
-        className="mobile-sidebar-drawer fixed bottom-0 left-0 right-0 z-[1000] bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
+        className="mobile-sidebar-drawer fixed bottom-0 left-0 right-0 z-[2000] bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
         style={{
           height: '85vh',
           transform: 'translateZ(0)', // Force hardware acceleration
-          willChange: 'transform'
+          willChange: 'transform',
+          pointerEvents: 'auto'
         }}
       >
         {/* Handle */}
