@@ -89,32 +89,35 @@ export class WheelConfigService {
  
     };
 
-    // Priorité 3: Couleurs extraites (uniquement si style classic et pas de couleur manuelle)
-    const extractedConfig: Partial<{ borderColor: string; borderWidth: number }> = extractedColors.length > 0 && designConfig.borderStyle === 'classic' ? {
-      borderColor: modalConfig.borderColor || designConfig.borderColor || extractedColors[0]
-    } : {};
+    // Déterminer si une image de fond est utilisée
+    const hasImageBackground = campaign?.design?.background?.type === 'image';
+
+    // Couleur primaire : extraite de l'image si disponible, sinon couleur de la bordure
+    const primaryColor = hasImageBackground && extractedColors[0]
+      ? extractedColors[0]
+      : (modalConfig.borderColor || designConfig.borderColor || defaults.borderColor);
 
     // Fusion avec priorités
     const finalConfig: WheelConfig = {
       borderStyle: modalConfig.borderStyle || designConfig.borderStyle || defaults.borderStyle,
-      borderColor: modalConfig.borderColor || designConfig.borderColor || extractedConfig.borderColor || defaults.borderColor,
+      borderColor: primaryColor,
       borderWidth: modalConfig.borderWidth !== undefined ? modalConfig.borderWidth : (designConfig.borderWidth || defaults.borderWidth),
       scale: modalConfig.scale !== undefined ? modalConfig.scale : (designConfig.scale || defaults.scale),
       showBulbs: modalConfig.showBulbs !== undefined ? modalConfig.showBulbs : (designConfig.showBulbs ?? defaults.showBulbs),
       position: modalConfig.position !== undefined ? modalConfig.position : (designConfig.position ?? defaults.position),
 
       shouldCropWheel: options.shouldCropWheel ?? true,
-      
+
       // Configuration des couleurs avec priorités
       customColors: {
-        primary: modalConfig.borderColor || designConfig.borderColor || extractedColors[0] || defaults.borderColor,
-        secondary: extractedColors[1] || '#4ecdc4',
+        primary: primaryColor,
+        secondary: '#ffffff',
         accent: extractedColors[2] || '#45b7d1'
       },
-      
+
       brandColors: {
-        primary: modalConfig.borderColor || designConfig.borderColor || extractedColors[0] || defaults.borderColor,
-        secondary: campaign?.design?.brandColors?.secondary || '#4ecdc4',
+        primary: primaryColor,
+        secondary: '#ffffff',
         accent: campaign?.design?.brandColors?.accent || '#45b7d1'
       },
 

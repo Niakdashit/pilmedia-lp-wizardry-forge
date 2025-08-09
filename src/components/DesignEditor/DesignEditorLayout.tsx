@@ -363,6 +363,11 @@ const DesignEditorLayout: React.FC = () => {
       showFunnel
     });
 
+    const primaryColor = canvasBackground.type === 'image' && extractedColors[0]
+      ? extractedColors[0]
+      : currentWheelConfig.borderColor;
+    const secondaryColor = '#ffffff';
+
     return {
       id: 'wheel-design-preview',
       type: 'wheel',
@@ -372,8 +377,8 @@ const DesignEditorLayout: React.FC = () => {
         customImages: customImages,
         extractedColors: extractedColors,
         customColors: {
-          primary: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
-          secondary: extractedColors[1] || '#4ecdc4',
+          primary: primaryColor,
+          secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
         wheelConfig: currentWheelConfig,
@@ -382,10 +387,10 @@ const DesignEditorLayout: React.FC = () => {
       gameConfig: {
         wheel: {
           segments: [
-            { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
-            { id: '2', label: 'Prix 2', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: true },
-            { id: '3', label: 'Prix 3', color: extractedColors[0] || '#841b60', probability: 0.25, isWinning: true },
-            { id: '4', label: 'Dommage', color: extractedColors[1] || '#4ecdc4', probability: 0.25, isWinning: false }
+            { id: '1', label: 'Prix 1', color: primaryColor, textColor: secondaryColor, probability: 0.25, isWinning: true },
+            { id: '2', label: 'Prix 2', color: secondaryColor, textColor: primaryColor, probability: 0.25, isWinning: true },
+            { id: '3', label: 'Prix 3', color: primaryColor, textColor: secondaryColor, probability: 0.25, isWinning: true },
+            { id: '4', label: 'Dommage', color: secondaryColor, textColor: primaryColor, probability: 0.25, isWinning: false }
           ],
           winProbability: 0.75,
           maxWinners: 100,
@@ -394,7 +399,7 @@ const DesignEditorLayout: React.FC = () => {
       },
       buttonConfig: {
         text: buttonElement?.content || 'Faire tourner',
-        color: extractedColors[0] || campaignConfig.buttonColor || '#841b60',
+        color: primaryColor,
         textColor: buttonElement?.style?.color || '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
