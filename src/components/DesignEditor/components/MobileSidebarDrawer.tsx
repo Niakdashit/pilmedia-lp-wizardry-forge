@@ -323,7 +323,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
       {/* Persistent Bottom Tab Bar (mobile only) */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200 md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-center justify-around px-2 py-2">

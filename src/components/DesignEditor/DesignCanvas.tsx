@@ -656,6 +656,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onRedo={onRedo}
         canUndo={canUndo}
         canRedo={canRedo}
+        // Forcer l'UI mobile quand l'utilisateur sélectionne l'appareil mobile
+        deviceOverride={selectedDevice}
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
         {selectedElementData && selectedElementData.type === 'text' && (
