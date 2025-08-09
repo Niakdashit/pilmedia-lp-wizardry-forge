@@ -81,7 +81,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         type="file"
         accept="image/*"
         onChange={handleFileUpload}
-        className="hidden"
+        className="sr-only"
       />
 
       {/* Upload Background Image */}

@@ -106,7 +106,7 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
         type="file"
         onChange={handleFileUpload}
         accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
-        className="hidden"
+        className="sr-only"
         multiple
       />
 
