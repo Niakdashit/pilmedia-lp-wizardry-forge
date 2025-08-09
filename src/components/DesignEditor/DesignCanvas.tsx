@@ -17,7 +17,6 @@ import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
-import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
@@ -62,9 +61,11 @@ export interface DesignCanvasProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  updateWheelConfig?: (updates: any) => void;
+  getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
 }
 
-const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
+const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
   selectedDevice,
   elements,
   onElementsChange,
@@ -96,7 +97,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onUndo,
   onRedo,
   canUndo,
-  canRedo
+  canRedo,
+  updateWheelConfig,
+  getCanonicalConfig
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -342,12 +345,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return { x: absoluteX, y: absoluteY };
   }, [elements]);
 
-  // Hook de synchronisation unifié pour la roue
-  const { updateWheelConfig, getCanonicalConfig } = useWheelConfigSync({
-    campaign,
-    extractedColors: campaign?.design?.brandColors ? Object.values(campaign.design.brandColors) : [],
-    onCampaignChange
-  });
+  // Les fonctions de configuration de la roue sont maintenant fournies par le composant parent
 
   // Écouteur d'événement pour l'application des effets de texte depuis le panneau latéral
   useEffect(() => {
@@ -486,8 +484,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   });
 
   // Configuration canonique de la roue
-  const wheelConfig = useMemo(() => 
-    getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true }),
+  const wheelConfig = useMemo(() =>
+    getCanonicalConfig
+      ? getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true })
+      : { borderStyle: 'classic', borderColor: '#841b60', borderWidth: 12, scale: 1 },
     [getCanonicalConfig, selectedDevice]
   );
 
@@ -981,11 +981,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           wheelScale={wheelConfig.scale}
           wheelShowBulbs={!!wheelConfig.showBulbs}
 
-          onBorderStyleChange={(style) => updateWheelConfig({ borderStyle: style })}
-          onBorderColorChange={(color) => updateWheelConfig({ borderColor: color })}
-          onBorderWidthChange={(width) => updateWheelConfig({ borderWidth: width })}
-          onScaleChange={(scale) => updateWheelConfig({ scale })}
-          onShowBulbsChange={(show) => updateWheelConfig({ showBulbs: show })}
+          onBorderStyleChange={(style) => updateWheelConfig?.({ borderStyle: style })}
+          onBorderColorChange={(color) => updateWheelConfig?.({ borderColor: color })}
+          onBorderWidthChange={(width) => updateWheelConfig?.({ borderWidth: width })}
+          onScaleChange={(scale) => updateWheelConfig?.({ scale })}
+          onShowBulbsChange={(show) => updateWheelConfig?.({ showBulbs: show })}
 
           selectedDevice={selectedDevice}
         />
