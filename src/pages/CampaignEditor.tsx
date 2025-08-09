@@ -216,7 +216,7 @@ const CampaignEditor: React.FC = () => {
       }));
     }
   };
-  return <div className="h-[calc(150vh-3rem)] flex flex-col mx-0">
+  return <div className="h-[calc(100vh-3rem)] flex flex-col mx-0">
       <CampaignEditorHeader isNewCampaign={isNewCampaign} campaignName={campaign.name} onPreview={() => setShowPreviewModal(true)} onSave={handleSave} />
 
       <div className="flex flex-1 overflow-hidden bg-white rounded-xl shadow-sm">

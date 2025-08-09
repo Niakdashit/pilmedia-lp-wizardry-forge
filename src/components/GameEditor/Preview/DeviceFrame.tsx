@@ -37,19 +37,15 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       default:
         if (fitContentDesktop) {
           return {
-            width: '1020px',
-            margin: '20px auto',
-            border: '2px solid #ddd',
-            borderRadius: '8px',
+            width: '100%',
+            margin: '0 auto',
             overflowY: 'visible' as const
           };
         }
         return {
-          width: '1020px',
-          height: '680px',
-          margin: '20px auto',
-          border: '2px solid #ddd',
-          borderRadius: '8px',
+          width: '100%',
+          height: 'auto',
+          margin: '0 auto',
           overflowY: 'auto' as const
         };
     }
