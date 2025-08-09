@@ -63,7 +63,7 @@ const ExportPanel: React.FC = () => {
         </div>
       </div>
 
-      <button className="w-full flex items-center justify-center space-x-2 py-3 bg-[hsl(var(--primary))] text-white rounded-lg hover:bg-[hsl(var(--primary))] transition-colors">
+      <button className="w-full flex items-center justify-center space-x-2 py-3 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors">
         <Eye className="w-4 h-4" />
         <span>Aperçu en plein écran</span>
       </button>
@@ -96,12 +96,12 @@ const ExportPanel: React.FC = () => {
 
       {/* Options de partage */}
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors">
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
           <Link className="w-4 h-4 text-[hsl(var(--primary))]" />
           <span className="text-sm">Copier lien</span>
         </button>
         
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors">
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
           <Mail className="w-4 h-4 text-[hsl(var(--primary))]" />
           <span className="text-sm">Par email</span>
         </button>
@@ -141,7 +141,7 @@ const ExportPanel: React.FC = () => {
           {exportFormats.map((format) => (
             <button
               key={format.id}
-              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors"
             >
               <div className="text-left">
                 <div className="font-medium text-gray-800">{format.label}</div>

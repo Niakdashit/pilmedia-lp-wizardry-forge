@@ -89,7 +89,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
         <button
           onClick={triggerFileUpload}
-          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors flex flex-col items-center"
+          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center"
         >
           <Upload className="w-6 h-6 text-gray-600 mb-2" />
           <span className="text-sm text-gray-600">Télécharger une image</span>
@@ -142,7 +142,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               type: 'color', 
               value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' 
             })}
-            className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] hover:text-white transition-colors text-left"
+            className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left"
           >
             <div className="flex items-center">
               <div 
