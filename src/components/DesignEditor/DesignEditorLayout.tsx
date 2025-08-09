@@ -15,12 +15,12 @@ import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
 
 const DesignEditorLayout: React.FC = () => {
-  // Détection automatique de l'appareil
+  // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
-    const width = window.innerWidth;
-    if (width >= 1024) return 'desktop';
-    if (width >= 768) return 'tablet';
-    return 'mobile';
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    if (/Mobi|Android/i.test(ua)) return 'mobile';
+    if (/Tablet|iPad/i.test(ua)) return 'tablet';
+    return 'desktop';
   };
 
   // Zoom par défaut selon l'appareil
