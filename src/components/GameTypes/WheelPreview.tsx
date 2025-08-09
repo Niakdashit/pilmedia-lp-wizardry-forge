@@ -36,12 +36,13 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   const gameDimensions = getResponsiveDimensions(previewDevice);
 
   // Récupérer les segments depuis la configuration de la campagne (brut)
+  const primaryFallback = campaign.design?.customColors?.primary || '#ff6b6b';
   const segments = campaign.gameConfig?.wheel?.segments ||
                    campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: campaign.design?.customColors?.primary || '#ff6b6b' },
-    { id: '2', label: 'Prix 2', color: campaign.design?.customColors?.secondary || '#4ecdc4' },
-    { id: '3', label: 'Prix 3', color: campaign.design?.customColors?.primary || '#45b7d1' },
-    { id: '4', label: 'Dommage',  color: campaign.design?.customColors?.secondary || '#feca57' }
+    { id: '1', label: 'Prix 1', color: primaryFallback },
+    { id: '2', label: 'Prix 2', color: '#ffffff' },
+    { id: '3', label: 'Prix 3', color: primaryFallback },
+    { id: '4', label: 'Dommage',  color: '#ffffff' }
   ];
 
 
@@ -56,17 +57,15 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
       || campaign.design?.customColors?.primary
       || extractedColors[0]
       || '#841b60';
-    const secondaryRef = campaign.design?.customColors?.secondary || extractedColors[1] || '#ffffff';
+    const secondaryRef = '#ffffff';
 
     return segments.map((segment: any, index: number) => {
-      // Alterner primaire / blanc (ou secondaire) pour un rendu net et lisible
-      const color = index % 2 === 0 ? (segment.color || primaryRef) : secondaryRef;
-      const textColor = index % 2 === 0 ? '#ffffff' : (primaryRef || '#000000');
+      const color = index % 2 === 0 ? primaryRef : secondaryRef;
       return {
         id: segment.id || index.toString(),
         label: segment.label,
         color,
-        textColor
+        textColor: index % 2 === 0 ? secondaryRef : primaryRef
       };
     });
   }, [segments, wheelModalConfig?.wheelBorderColor, campaign.design?.customColors, extractedColors]);
@@ -74,7 +73,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   // Couleurs de marque unifiées - priorité aux customColors de la campagne
   const brandColors = {
     primary: campaign.design?.customColors?.primary || extractedColors[0] || '#841b60',
-    secondary: campaign.design?.customColors?.secondary || extractedColors[1] || '#4ecdc4',
+    secondary: '#ffffff',
     accent: campaign.design?.customColors?.accent || extractedColors[2] || '#45b7d1'
   };
 

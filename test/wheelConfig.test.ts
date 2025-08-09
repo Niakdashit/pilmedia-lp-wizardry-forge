@@ -10,11 +10,16 @@ test('getWheelSegments fills missing colors', () => {
         segmentColor1: '#111111',
         segmentColor2: '#222222'
       }
+    },
+    design: {
+      background: { type: 'color', value: '#000000' }
     }
   };
   const segments = getWheelSegments(campaign);
   assert.equal(segments[0].color, '#111111');
-  assert.equal(segments[1].color, '#222222');
+  assert.equal(segments[1].color, '#ffffff');
+  assert.equal(segments[0].textColor, '#ffffff');
+  assert.equal(segments[1].textColor, '#111111');
 });
 
 test('getWheelDimensions returns expected pointer size', () => {

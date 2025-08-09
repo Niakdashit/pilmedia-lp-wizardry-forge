@@ -70,20 +70,13 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // Détecter la taille d'écran de manière sécurisée
+  // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
-    const checkIsMobile = () => {
-      const mobile = window.innerWidth < 768;
-      if (mobile && !isCollapsed) {
-        setIsCollapsed(true);
-      }
-    };
-    
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-    
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, [isCollapsed]);
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    if (/Mobi|Android/i.test(ua)) {
+      setIsCollapsed(true);
+    }
+  }, []);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
   
   // Gérer l'affichage des panneaux spéciaux
