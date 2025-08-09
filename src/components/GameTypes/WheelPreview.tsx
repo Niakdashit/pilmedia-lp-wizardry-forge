@@ -136,7 +136,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onSpin={handleSpin}
         disabled={disabled}
         borderStyle={wheelConfig.borderStyle}
-        customBorderColor={wheelConfig.borderStyle === 'classic' ? wheelConfig.borderColor : undefined}
+        customBorderColor={wheelConfig.borderColor}
         customBorderWidth={wheelConfig.borderWidth}
         showBulbs={wheelConfig.showBulbs}
         buttonPosition="center"

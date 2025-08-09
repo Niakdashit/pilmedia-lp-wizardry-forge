@@ -217,14 +217,10 @@ export const useSmartWheelRenderer = ({
     // Ajuster la largeur de bordure proportionnellement à l'échelle
     const borderWidth = baseBorderWidth * scaleFactor;
 
-    // Utiliser la couleur personnalisée seulement pour le style "classique"
+    // Utiliser la couleur personnalisée si fournie, quel que soit le style
     const getBorderColor = (index: number = 0) => {
-      // Pour tous les styles prédéfinis sauf "classic", toujours utiliser leurs couleurs définies
-      if (borderStyleName !== 'classic') {
-        return borderStyleConfig.colors[index];
-      }
-      // Pour "classic", utiliser la couleur personnalisée ou la couleur par défaut
-      return customBorderColor || borderStyleConfig.colors[index];
+      if (customBorderColor) return customBorderColor;
+      return borderStyleConfig.colors[index];
     };
 
     ctx.save();
