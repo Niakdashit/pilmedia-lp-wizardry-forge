@@ -148,7 +148,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       <motion.div
         initial={false}
         animate={{
-          y: isMinimized ? '80%' : '20%'
+          y: isMinimized ? '100%' : '20%'
         }}
         transition={{
           type: "spring",
@@ -158,7 +158,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         className="fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
         style={{
           height: '85vh',
-          bottom: '64px', // leave space for bottom tab bar
+          bottom: '80px', // leave space for elevated bottom tab bar
           transform: 'translateZ(0)', // Force hardware acceleration
           willChange: 'transform'
         }}
@@ -191,58 +191,12 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Quick Actions When Minimized */}
-        <AnimatePresence>
-          {isMinimized && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-4"
-            >
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">Actions rapides</p>
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => {
-                      setActiveTab('assets');
-                      setIsMinimized(false);
-                    }}
-                    className="flex flex-col items-center p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
-                  >
-                    <Plus className="w-5 h-5 text-blue-600" />
-                    <span className="text-xs mt-1 text-blue-600 font-medium">Ajouter</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('background');
-                      setIsMinimized(false);
-                    }}
-                    className="flex flex-col items-center p-3 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors"
-                  >
-                    <Palette className="w-5 h-5 text-pink-600" />
-                    <span className="text-xs mt-1 text-pink-600 font-medium">Couleurs</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('layers');
-                      setIsMinimized(false);
-                    }}
-                    className="flex flex-col items-center p-3 bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
-                  >
-                    <Layers className="w-5 h-5 text-green-600" />
-                    <span className="text-xs mt-1 text-green-600 font-medium">Calques</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Quick actions removed for cleaner minimized state */}
       </motion.div>
 
       {/* Persistent Bottom Tab Bar (mobile only) */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
+      <div
+        className="fixed bottom-4 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-center justify-around px-2 py-2">
