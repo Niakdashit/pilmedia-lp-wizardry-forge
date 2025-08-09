@@ -42,42 +42,12 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   const [isMinimized, setIsMinimized] = useState(true);
 
   const tabs = [
-    { 
-      id: 'assets', 
-      label: 'Éléments', 
-      icon: Plus,
-      color: '#3B82F6'
-    },
-    { 
-      id: 'background', 
-      label: 'Design', 
-      icon: Palette,
-      color: '#EC4899'
-    },
-    { 
-      id: 'layers', 
-      label: 'Calques', 
-      icon: Layers,
-      color: '#10B981'
-    },
-    { 
-      id: 'campaign', 
-      label: 'Réglages', 
-      icon: Settings,
-      color: '#F59E0B'
-    },
-    { 
-      id: 'gamelogic', 
-      label: 'Jeu', 
-      icon: Gamepad2,
-      color: '#8B5CF6'
-    },
-    { 
-      id: 'export', 
-      label: 'Export', 
-      icon: Share,
-      color: '#06B6D4'
-    }
+    { id: 'assets', label: 'Éléments', icon: Plus, color: '#3B82F6' },
+    { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
+    { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
+    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' },
+    { id: 'gamelogic', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' },
+    { id: 'export', label: 'Export', icon: Share, color: '#06B6D4' }
   ];
 
   // Auto-ouverture si un élément est sélectionné
@@ -87,7 +57,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       setIsMinimized(false);
     }
   }, [selectedElement]);
-
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
@@ -150,16 +119,13 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         animate={{
           y: isMinimized ? '100%' : '20%'
         }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 30
-        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
         style={{
           height: '85vh',
-          bottom: 'calc(80px + env(safe-area-inset-bottom))', // leave space for tab bar and device safe area
-          transform: 'translateZ(0)', // Force hardware acceleration
+          // Leave space for the persistent tab bar AND device safe area
+          bottom: 'calc(80px + env(safe-area-inset-bottom))',
+          transform: 'translateZ(0)',
           willChange: 'transform'
         }}
       >
@@ -190,16 +156,15 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Quick actions removed for cleaner minimized state */}
       </motion.div>
 
       {/* Persistent Bottom Tab Bar (mobile only) */}
       <div
         className="fixed left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
         style={{
+          // Sit above the iOS/Android gesture area
           bottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingBottom: 'env(safe-area-inset-bottom)'
         }}
       >
         <div className="flex items-center justify-around px-2 py-2">

@@ -4,7 +4,6 @@ import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 
-
 import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
@@ -114,8 +113,6 @@ const DesignEditorLayout: React.FC = () => {
       localStorage.setItem('previewButtonSide', previewButtonSide);
     } catch {}
   }, [previewButtonSide]);
-
-
 
   // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
   const handleAddElement = (element: any) => {
@@ -337,28 +334,22 @@ const DesignEditorLayout: React.FC = () => {
     }
   }, [selectedElement, handleAddElement]);
   
-  // Raccourcis clavier pour les éléments (supprimé - utilise le hook plus complet ci-dessous)
-
   // Synchronisation avec le store
   useEffect(() => {
     setPreviewDevice(selectedDevice);
   }, [selectedDevice, setPreviewDevice]);
 
-
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
-    // Extraire les éléments du canvas selon leur type et rôle
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
     
-    // Séparer les textes et images personnalisés des éléments UI
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
 
-    // Configuration de la roue avec priorité absolue aux modifications en cours
     const currentWheelConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
       borderColor: wheelModalConfig?.wheelBorderColor || campaignConfig?.wheelConfig?.borderColor || campaignConfig?.design?.wheelConfig?.borderColor || '#841b60',
@@ -428,9 +419,6 @@ const DesignEditorLayout: React.FC = () => {
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig]);
 
-
-
-
   // Synchronisation avec le store
   useEffect(() => {
     if (campaignData) {
@@ -469,37 +457,30 @@ const DesignEditorLayout: React.FC = () => {
   const handleExtractedColorsChange = (colors: string[]) => {
     setExtractedColors(colors);
     
-    // Appliquer automatiquement la couleur extraite (dominante) et le blanc comme seconde couleur
-    if (colors.length >= 1) {
-      setCampaignConfig((prev: any) => {
-        const currentWheelConfig = prev?.design?.wheelConfig;
-        const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
-        
-        // Ne mettre à jour la couleur de bordure que si :
-        // 1. Le style est "classic" ET
-        // 2. L'utilisateur n'a pas déjà configuré manuellement une couleur personnalisée différente de la couleur par défaut
-        const shouldUpdateBorderColor = isClassicBorder && 
-          (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
-        
-        return {
-          ...prev,
-          design: {
-            ...prev?.design,
-            wheelConfig: {
-              ...currentWheelConfig,
-              ...(shouldUpdateBorderColor && {
-                borderColor: colors[0] || '#841b60'
-              })
-            },
-            brandColors: {
-              primary: colors[0] || '#841b60',
-              secondary: '#ffffff', // Blanc par défaut pour la seconde couleur
-              accent: colors[0] || '#45b7d1'
-            }
+    setCampaignConfig((prev: any) => {
+      const currentWheelConfig = prev?.design?.wheelConfig;
+      const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
+      const shouldUpdateBorderColor = isClassicBorder && 
+        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
+      
+      return {
+        ...prev,
+        design: {
+          ...prev?.design,
+          wheelConfig: {
+            ...currentWheelConfig,
+            ...(shouldUpdateBorderColor && {
+              borderColor: colors[0] || '#841b60'
+            })
+          },
+          brandColors: {
+            primary: colors[0] || '#841b60',
+            secondary: '#ffffff',
+            accent: colors[0] || '#45b7d1'
           }
-        };
-      });
-    }
+        }
+      };
+    });
   };
 
   // Raccourcis clavier professionnels
@@ -536,13 +517,11 @@ const DesignEditorLayout: React.FC = () => {
     onElementCut: handleElementCut,
     onElementPaste: handleElementPaste,
     onDuplicate: handleElementDuplicate,
-    // Raccourcis pour les groupes niveau Canva (inspiré de TestPage2)
     onGroup: () => {
       console.log('🎯 🔥 GROUP FUNCTION CALLED!');
       console.log('🎯 Selected elements:', selectedElements);
       console.log('🎯 Selected elements length:', selectedElements?.length);
       
-      // Filtrer uniquement les éléments (pas les groupes) pour le groupement
       const validElements = selectedElements.filter(el => el && !el.isGroup && el.type !== 'group');
       
       if (validElements.length >= 2) {
@@ -554,7 +533,6 @@ const DesignEditorLayout: React.FC = () => {
         console.log('🎯 Group created with ID:', groupId);
         
         if (groupId) {
-          // Ajouter à l'historique avec le nouvel état
           addToHistory({
             canvasElements: [...canvasElements],
             canvasBackground: { ...canvasBackground },
@@ -563,7 +541,6 @@ const DesignEditorLayout: React.FC = () => {
             selectedGroupId: groupId
           });
           
-          // Mettre à jour la sélection
           setSelectedElements([]);
           setSelectedElement(null);
           setSelectedGroupId(groupId);
@@ -577,11 +554,9 @@ const DesignEditorLayout: React.FC = () => {
     onUngroup: () => {
       console.log('🎯 Ungrouping selected group:', selectedGroupId);
       
-      // Vérifier s'il y a un groupe sélectionné ou des groupes dans la sélection
       let targetGroupId = selectedGroupId;
       
       if (!targetGroupId && selectedElements.length > 0) {
-        // Chercher un groupe dans les éléments sélectionnés
         const selectedGroup = selectedElements.find(el => el.isGroup || el.type === 'group');
         if (selectedGroup) {
           targetGroupId = selectedGroup.id;
@@ -591,14 +566,11 @@ const DesignEditorLayout: React.FC = () => {
       if (targetGroupId) {
         console.log('🎯 Dissociating group:', targetGroupId);
         
-        // Récupérer les éléments du groupe avant de le dissocier
         const groupElements = getGroupElements(targetGroupId);
         console.log('🎯 Group elements to liberate:', groupElements.map(el => el.id));
         
-        // Dissocier le groupe
         ungroupElements(targetGroupId);
         
-        // Ajouter à l'historique
         addToHistory({
           canvasElements: [...canvasElements],
           canvasBackground: { ...canvasBackground },
@@ -607,7 +579,6 @@ const DesignEditorLayout: React.FC = () => {
           selectedGroupId: null
         });
         
-        // Sélectionner les éléments libérés
         setSelectedElements(groupElements);
         setSelectedElement(null);
         setSelectedGroupId(null);
@@ -618,10 +589,6 @@ const DesignEditorLayout: React.FC = () => {
       }
     }
   });
-
-  // Auto-responsive logic
-
-
 
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden">
@@ -654,17 +621,17 @@ const DesignEditorLayout: React.FC = () => {
           /* Funnel Preview Mode */
           <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
             {/* Floating Edit Mode Button */}
-          <button
-            onClick={() => setShowFunnel(false)}
-            className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]`}
-          >
-            Mode édition
-          </button>
+            <button
+              onClick={() => setShowFunnel(false)}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]`}
+            >
+              Mode édition
+            </button>
             <FunnelUnlockedGame
               campaign={campaignData}
               previewMode={selectedDevice}
               wheelModalConfig={wheelModalConfig}
-          />
+            />
           </div>
         ) : (
           /* Design Editor Mode */
@@ -711,13 +678,11 @@ const DesignEditorLayout: React.FC = () => {
               onElementUpdate={handleElementUpdate}
               updateWheelConfig={updateWheelConfig}
               getCanonicalConfig={getCanonicalConfig}
-              // Props pour le système de groupes niveau Canva
               selectedGroupId={selectedGroupId || undefined}
               onSelectedGroupChange={setSelectedGroupId}
               groups={groupManager.groups}
               onGroupMove={moveGroup}
               onGroupResize={resizeGroup}
-
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
                 setShowAnimationsInSidebar(false);
@@ -732,14 +697,10 @@ const DesignEditorLayout: React.FC = () => {
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
               }}
-              // Props pour la sidebar mobile
               onAddElement={handleAddElement}
               onBackgroundChange={handleBackgroundChange}
               onExtractedColorsChange={handleExtractedColorsChange}
             />
-            
-            {/* Auto-Responsive Indicator - Always visible in bottom right */}
-
             
             {/* Zoom Slider - Always visible in bottom center */}
             <ZoomSlider 
@@ -752,9 +713,6 @@ const DesignEditorLayout: React.FC = () => {
           </>
         )}
       </div>
-      
-      {/* Performance Monitor */}
-
     </MobileStableEditor>
   );
 };
