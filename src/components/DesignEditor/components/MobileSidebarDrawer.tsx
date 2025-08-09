@@ -176,9 +176,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           stiffness: 300,
           damping: 30
         }}
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
+        className="fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
         style={{
           height: '85vh',
+          bottom: '64px', // leave space for bottom tab bar
           transform: 'translateZ(0)', // Force hardware acceleration
           willChange: 'transform'
         }}
@@ -319,6 +320,35 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Persistent Bottom Tab Bar (mobile only) */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200 md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="flex items-center justify-around px-2 py-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={`bottom-${tab.id}`}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsMinimized(false);
+                }}
+                className={`flex flex-col items-center justify-center px-2 py-1 rounded-md transition-colors ${
+                  isActive ? 'text-gray-900' : 'text-gray-600'
+                }`}
+                style={isActive ? { color: tab.color } : undefined}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-[10px] mt-0.5">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 };
