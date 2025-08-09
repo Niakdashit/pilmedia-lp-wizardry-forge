@@ -657,28 +657,30 @@ const DesignEditorLayout: React.FC = () => {
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical */}
-            <HybridSidebar 
-              onAddElement={handleAddElement}
-              onBackgroundChange={handleBackgroundChange}
-              onExtractedColorsChange={handleExtractedColorsChange}
-              campaignConfig={campaignConfig}
-              onCampaignConfigChange={handleCampaignConfigChange}
-              elements={canvasElements}
-              onElementsChange={setCanvasElements}
-              selectedElement={selectedElement}
-              onElementUpdate={handleElementUpdate}
-              showEffectsPanel={showEffectsInSidebar}
-              onEffectsPanelChange={setShowEffectsInSidebar}
-              showAnimationsPanel={showAnimationsInSidebar}
-              onAnimationsPanelChange={setShowAnimationsInSidebar}
-              showPositionPanel={showPositionInSidebar}
-              onPositionPanelChange={setShowPositionInSidebar}
-              canvasRef={canvasRef}
-              selectedElements={selectedElements}
-              onSelectedElementsChange={setSelectedElements}
-              onAddToHistory={addToHistory}
-            />
+            {/* Hybrid Sidebar - Design & Technical (hidden on mobile) */}
+            {selectedDevice !== 'mobile' && (
+              <HybridSidebar 
+                onAddElement={handleAddElement}
+                onBackgroundChange={handleBackgroundChange}
+                onExtractedColorsChange={handleExtractedColorsChange}
+                campaignConfig={campaignConfig}
+                onCampaignConfigChange={handleCampaignConfigChange}
+                elements={canvasElements}
+                onElementsChange={setCanvasElements}
+                selectedElement={selectedElement}
+                onElementUpdate={handleElementUpdate}
+                showEffectsPanel={showEffectsInSidebar}
+                onEffectsPanelChange={setShowEffectsInSidebar}
+                showAnimationsPanel={showAnimationsInSidebar}
+                onAnimationsPanelChange={setShowAnimationsInSidebar}
+                showPositionPanel={showPositionInSidebar}
+                onPositionPanelChange={setShowPositionInSidebar}
+                canvasRef={canvasRef}
+                selectedElements={selectedElements}
+                onSelectedElementsChange={setSelectedElements}
+                onAddToHistory={addToHistory}
+              />
+            )}
             
             {/* Main Canvas Area */}
             <DesignCanvas 
