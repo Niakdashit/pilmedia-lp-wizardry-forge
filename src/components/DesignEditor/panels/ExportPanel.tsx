@@ -96,14 +96,14 @@ const ExportPanel: React.FC = () => {
 
       {/* Options de partage */}
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
-          <Link className="w-4 h-4 text-[hsl(var(--primary))]" />
-          <span className="text-sm">Copier lien</span>
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group">
+          <Link className="w-4 h-4 text-[hsl(var(--primary))] group-hover:text-white" />
+          <span className="text-sm group-hover:text-white">Copier lien</span>
         </button>
         
-        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
-          <Mail className="w-4 h-4 text-[hsl(var(--primary))]" />
-          <span className="text-sm">Par email</span>
+        <button className="flex items-center justify-center space-x-2 p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group">
+          <Mail className="w-4 h-4 text-[hsl(var(--primary))] group-hover:text-white" />
+          <span className="text-sm group-hover:text-white">Par email</span>
         </button>
       </div>
 
@@ -141,13 +141,13 @@ const ExportPanel: React.FC = () => {
           {exportFormats.map((format) => (
             <button
               key={format.id}
-              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors"
+              className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group"
             >
               <div className="text-left">
-                <div className="font-medium text-gray-800">{format.label}</div>
-                <div className="text-xs text-gray-500">{format.desc}</div>
+                <div className="font-medium text-gray-800 group-hover:text-white">{format.label}</div>
+                <div className="text-xs text-gray-500 group-hover:text-white">{format.desc}</div>
               </div>
-              <Download className="w-4 h-4 text-gray-400" />
+              <Download className="w-4 h-4 text-gray-400 group-hover:text-white" />
             </button>
           ))}
         </div>

@@ -141,9 +141,9 @@ const TextPanel: React.FC<TextPanelProps> = ({
       <div className="space-y-6">
           {/* Bouton d'ajout simple */}
           <div>
-            <button onClick={() => addText()} className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex items-center justify-center">
-              <Type className="w-5 h-5 mr-2 text-gray-600" />
-              <span className="text-sm text-gray-600">Ajouter du texte</span>
+            <button onClick={() => addText()} className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex items-center justify-center group">
+              <Type className="w-5 h-5 mr-2 text-gray-600 group-hover:text-white" />
+              <span className="text-sm text-gray-600 group-hover:text-white">Ajouter du texte</span>
             </button>
           </div>
 
@@ -165,13 +165,13 @@ const TextPanel: React.FC<TextPanelProps> = ({
             text: 'Texte stylé',
             fontFamily: font,
             fontSize: 24
-          })} className="p-2 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left">
+          })} className="p-2 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left group">
                   <span style={{
               fontFamily: font
-            }} className="text-xl">
+            }} className="text-xl group-hover:text-white">
                     {font}
                   </span>
-                  <p className="text-xs text-gray-500 mt-1">{selectedCategory.name}</p>
+                  <p className="text-xs text-gray-500 mt-1 group-hover:text-white">{selectedCategory.name}</p>
                 </button>)}
             </div>
           </div>

@@ -117,17 +117,17 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
       >
         <button
           onClick={triggerFileUpload}
-          className={`w-full p-6 border-2 border-dashed rounded-lg transition-colors ${
+          className={`w-full p-6 border-2 border-dashed rounded-lg transition-colors group ${
             dragOver 
               ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white' 
               : 'border-gray-300 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
           }`}
         >
-          <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-          <div className="text-sm text-gray-600 mb-1">
+          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400 group-hover:text-white" />
+          <div className="text-sm text-gray-600 group-hover:text-white mb-1">
             {dragOver ? 'Déposez vos fichiers ici' : 'Télécharger des médias'}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 group-hover:text-white">
             {dragOver ? 'Relâchez pour télécharger' : 'Glissez et déposez ou cliquez pour parcourir (max 10MB)'}
           </div>
         </button>
@@ -142,10 +142,10 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
               <button
                 key={type.type}
                 onClick={triggerFileUpload}
-                className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors"
+                className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group"
               >
-                <Icon className="w-6 h-6 mx-auto text-gray-600 mb-1" />
-                <div className="text-xs text-gray-600">{type.label}</div>
+                <Icon className="w-6 h-6 mx-auto mb-1 text-gray-600 group-hover:text-white" />
+                <div className="text-xs text-gray-600 group-hover:text-white">{type.label}</div>
               </button>
             );
           })}

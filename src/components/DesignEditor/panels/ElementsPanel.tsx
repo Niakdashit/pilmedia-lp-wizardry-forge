@@ -79,12 +79,12 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
         <h3 className="font-semibold text-sm text-gray-700 mb-3">JEU INTERACTIF</h3>
         <button
           onClick={addWheel}
-          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center"
+          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group"
         >
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-red-500 rounded-full mb-2 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white rounded-full"></div>
           </div>
-          <span className="text-sm text-gray-600">Roue de la Fortune</span>
+          <span className="text-sm text-gray-600 group-hover:text-white">Roue de la Fortune</span>
         </button>
       </div>
 
@@ -100,7 +100,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ onAddElement }) => {
                 className="p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group"
                 title={shape.name}
               >
-                <Icon className="w-6 h-6 mx-auto text-gray-600 group-hover:text-[hsl(var(--primary))]" />
+                <Icon className="w-6 h-6 mx-auto text-gray-600 group-hover:text-white" />
               </button>
             );
           })}
