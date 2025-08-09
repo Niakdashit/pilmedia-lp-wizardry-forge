@@ -20,7 +20,6 @@ interface WheelPreviewProps {
   disabled?: boolean;
   wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   disableForm?: boolean;
-  borderStyle?: string;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -31,8 +30,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'medium',
   previewDevice = 'desktop',
   disabled = false,
-  wheelModalConfig = {},
-  borderStyle = 'classic'
+  wheelModalConfig = {}
 }) => {
   const { getResponsiveDimensions } = useGameSize(gameSize);
   const gameDimensions = getResponsiveDimensions(previewDevice);
@@ -137,8 +135,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
-        borderStyle={campaign?.design?.wheelBorderStyle || borderStyle}
-        customBorderColor={campaign?.design?.wheelBorderStyle === 'classic' ? (campaign.design?.wheelConfig?.borderColor || campaign.design?.customColors?.primary || brandColors?.primary) : undefined}
+        borderStyle={wheelConfig.borderStyle}
+        customBorderColor={wheelConfig.borderStyle === 'classic' ? wheelConfig.borderColor : undefined}
+        customBorderWidth={wheelConfig.borderWidth}
         showBulbs={wheelConfig.showBulbs}
         buttonPosition="center"
         customButton={{

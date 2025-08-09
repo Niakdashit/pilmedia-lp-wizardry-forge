@@ -80,8 +80,8 @@ export class WheelConfigService {
       borderColor: campaign?.design?.wheelConfig?.borderColor,
       borderWidth: campaign?.design?.wheelConfig?.borderWidth,
       scale: campaign?.design?.wheelConfig?.scale,
-      showBulbs: campaign?.design?.wheelConfig?.showBulbs,
-
+      showBulbs: (campaign?.design?.wheelConfig as any)?.showBulbs,
+ 
     };
 
     // Priorité 3: Couleurs extraites (uniquement si style classic et pas de couleur manuelle)
@@ -223,7 +223,7 @@ export class WheelConfigService {
             borderColor: updates.borderColor !== undefined ? updates.borderColor : prevCampaign.design?.wheelConfig?.borderColor,
             borderWidth: updates.borderWidth !== undefined ? updates.borderWidth : prevCampaign.design?.wheelConfig?.borderWidth,
             scale: updates.scale !== undefined ? updates.scale : prevCampaign.design?.wheelConfig?.scale,
-            showBulbs: updates.showBulbs !== undefined ? updates.showBulbs : prevCampaign.design?.wheelConfig?.showBulbs,
+            showBulbs: updates.showBulbs !== undefined ? updates.showBulbs : (prevCampaign.design?.wheelConfig as any)?.showBulbs,
 
           }
         }

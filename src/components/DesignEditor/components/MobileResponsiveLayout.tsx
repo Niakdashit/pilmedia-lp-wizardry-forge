@@ -24,6 +24,11 @@ interface MobileResponsiveLayoutProps {
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
+  // Props toolbar mobile (optionnels)
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -44,7 +49,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   campaignConfig,
   onCampaignConfigChange,
   elements,
-  onElementsChange
+  onElementsChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
