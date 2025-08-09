@@ -626,10 +626,10 @@ const DesignEditorLayout: React.FC = () => {
 
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden">
-      {/* Top Toolbar - Hidden in preview mode */}
-      {!showFunnel && (
+      {/* Top Toolbar - Hidden in preview mode and on mobile */}
+      {!showFunnel && !isRealMobile() && (
         <>
-          <DesignToolbar 
+          <DesignToolbar
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
             onPreviewToggle={handlePreview}
@@ -641,7 +641,7 @@ const DesignEditorLayout: React.FC = () => {
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
           />
-          
+
           {/* Bouton d'aide des raccourcis clavier */}
           <div className="absolute top-4 right-4 z-10">
             <KeyboardShortcutsHelp shortcuts={shortcuts} />
