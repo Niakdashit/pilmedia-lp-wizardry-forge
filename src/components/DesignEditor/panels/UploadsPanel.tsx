@@ -170,12 +170,12 @@ const UploadsPanel: React.FC<UploadsPanelProps> = ({ onAddElement }) => {
 
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">DOSSIERS</h3>
-        <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors">
+        <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group">
           <div className="flex items-center">
             <div className="w-6 h-6 bg-[hsl(var(--primary))] text-white rounded mr-3 flex items-center justify-center">
               📁
             </div>
-            <span className="text-sm">Tous les uploads</span>
+            <span className="text-sm group-hover:text-white">Tous les uploads</span>
           </div>
         </button>
       </div>

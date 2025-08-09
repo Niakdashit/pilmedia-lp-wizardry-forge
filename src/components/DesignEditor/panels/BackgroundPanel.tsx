@@ -142,14 +142,14 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               type: 'color', 
               value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' 
             })}
-            className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left"
+            className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left group"
           >
             <div className="flex items-center">
               <div 
                 className="w-8 h-8 rounded mr-3"
                 style={{ background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }}
               ></div>
-              <span className="text-sm">Ciel avec nuages</span>
+              <span className="text-sm group-hover:text-white">Ciel avec nuages</span>
             </div>
           </button>
         </div>

@@ -108,11 +108,12 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
                 <button
                   key={shape.type}
                   onClick={() => handleAddShape(shape)}
-                  className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group"
+                  className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group group-hover:[--icon-color:#ffffff]"
+                  style={{ ['--icon-color' as any]: shape.color }}
                 >
                   <Icon 
-                    className="w-8 h-8 mb-2 group-hover:text-white" 
-                    style={{ color: shape.color }}
+                    className="w-8 h-8 mb-2" 
+                    style={{ color: 'var(--icon-color)' }}
                   />
                   <span className="text-xs font-medium text-gray-700 group-hover:text-white">{shape.label}</span>
                 </button>
