@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  Palette, 
-  Layers, 
-  Settings, 
-  Gamepad2, 
-  Share,
-  ChevronUp,
-  ChevronDown
+import {
+  Plus,
+  Palette,
+  Layers,
+  Settings,
+  Gamepad2,
+  Share
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
@@ -42,7 +40,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('assets');
   const [isMinimized, setIsMinimized] = useState(true);
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const tabs = [
     { 
@@ -91,24 +88,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     }
   }, [selectedElement]);
 
-  const handleTabClick = (tabId: string) => {
-    if (activeTab === tabId) {
-      setIsMinimized(!isMinimized);
-    } else {
-      setActiveTab(tabId);
-      setIsMinimized(false);
-    }
-  };
-
-  // S'assurer que l'onglet actif est visible (scroll into view)
-  useEffect(() => {
-    const container = tabsContainerRef.current;
-    if (!container) return;
-    const activeBtn = container.querySelector(`[data-tab-id="${activeTab}"]`);
-    if (activeBtn && 'scrollIntoView' in activeBtn) {
-      (activeBtn as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-  }, [activeTab]);
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
@@ -192,67 +171,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Tab Bar */}
-        <div className="flex items-center justify-between px-3 pb-3 border-b border-gray-200">
-          <div
-            ref={tabsContainerRef}
-            className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scroll-smooth"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              
-              return (
-                <button
-                  key={tab.id}
-                  data-tab-id={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
-                  onTouchEnd={() => handleTabClick(tab.id)}
-                  className={`shrink-0 inline-flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 hover-scale ${
-                    isActive 
-                      ? 'bg-white shadow-md' 
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
-                  style={{
-                    minWidth: '64px',
-                    ...(isActive && {
-                      borderLeft: `3px solid ${tab.color}`,
-                      transform: 'scale(1.05)'
-                    })
-                  }}
-                >
-                  <Icon 
-                    className={`w-5 h-5 ${
-                      isActive ? 'text-gray-800' : 'text-gray-600'
-                    }`}
-                    style={{
-                      color: isActive ? tab.color : undefined
-                    }}
-                  />
-                  <span className={`text-[11px] mt-1 font-medium ${
-                    isActive ? 'text-gray-800' : 'text-gray-600'
-                  }`}>
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Minimize/Expand Button */}
-          <button
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            {isMinimized ? (
-              <ChevronUp className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
-        </div>
-
         {/* Panel Content */}
         <AnimatePresence mode="wait">
           {!isMinimized && (
@@ -264,7 +182,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-y-auto p-4"
               style={{
-                height: 'calc(85vh - 140px)', // Ajuster selon la hauteur des onglets
+                height: 'calc(85vh - 100px)',
                 overscrollBehavior: 'contain'
               }}
             >
