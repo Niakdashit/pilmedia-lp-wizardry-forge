@@ -29,8 +29,6 @@ interface MobileResponsiveLayoutProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
-  // Forcer le mode d’interface (utile quand on prévisualise "mobile" sur desktop)
-  deviceOverride?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -52,15 +50,14 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   onCampaignConfigChange,
   elements,
   onElementsChange,
-  deviceOverride
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
 
   // Optimisation mobile
   const {
-    isMobile: _isMobile,
-    isTablet: _isTablet,
+    isMobile,
+    isTablet,
     deviceType
   } = useMobileOptimization(containerRef, {
     preventScrollBounce: true,
@@ -69,35 +66,30 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     preventZoomGestures: false
   });
 
-  // Forcer le type d'appareil si demandé (utile pour prévisualiser le mobile sur desktop)
-  const effectiveDevice = deviceOverride || deviceType;
-  const isMobileLike = effectiveDevice === 'mobile';
-  const isTabletLike = effectiveDevice === 'tablet';
-
   // Système de verrouillage du canvas pour mobile
   const {
     isDragging
   } = useMobileCanvasLock({
     canvasRef,
     selectedElement,
-    isMobile: isMobileLike,
-    isTablet: isTabletLike,
+    isMobile,
+    isTablet,
     zoom
   });
 
   // Gestion de la visibilité de la toolbar mobile
   useEffect(() => {
-    if (selectedElement && (isMobileLike || isTabletLike)) {
+    if (selectedElement && (isMobile || isTablet)) {
       setIsToolbarVisible(true);
     } else {
       setIsToolbarVisible(false);
     }
-  }, [selectedElement, isMobileLike, isTabletLike]);
+  }, [selectedElement, isMobile, isTablet]);
 
   // Écouteur pour l'ajustement automatique du zoom
   useEffect(() => {
     const handleZoomAdjust = (event: CustomEvent) => {
-      if (onZoomChange && (isMobileLike || isTabletLike)) {
+      if (onZoomChange && (isMobile || isTablet)) {
         onZoomChange(event.detail.zoom);
       }
     };
@@ -106,7 +98,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     return () => {
       window.removeEventListener('adjustCanvasZoom', handleZoomAdjust as EventListener);
     };
-  }, [onZoomChange, isMobileLike, isTabletLike]);
+  }, [onZoomChange, isMobile, isTablet]);
 
   // Classes CSS dynamiques selon l'appareil
   const getLayoutClasses = () => {
@@ -123,15 +115,15 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       selectedElement ? 'has-selection' : ''
     ].filter(Boolean).join(' ');
 
-    return `${baseClasses} ${deviceClasses[effectiveDevice] || 'desktop-layout'} ${stateClasses}`;
+    return `${baseClasses} ${deviceClasses[deviceType] || 'desktop-layout'} ${stateClasses}`;
   };
 
   return (
     <div 
       ref={containerRef}
       className={getLayoutClasses()}
-      data-device={effectiveDevice}
-      data-mobile-optimized={(isMobileLike || isTabletLike).toString()}
+      data-device={deviceType}
+      data-mobile-optimized={(isMobile || isTablet).toString()}
     >
       {/* Contenu principal */}
       <div className={`layout-content ${className}`}>
@@ -139,7 +131,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       </div>
 
       {/* Toolbar mobile overlay - s'affiche au-dessus de l'élément sélectionné */}
-      {isToolbarVisible && (isMobileLike || isTabletLike) && selectedElement && onElementUpdate && (
+      {isToolbarVisible && (isMobile || isTablet) && selectedElement && onElementUpdate && (
         <MobileToolbarOverlay
           selectedElement={selectedElement}
           onElementUpdate={onElementUpdate}
@@ -152,7 +144,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       )}
 
       {/* Sidebar mobile drawer - seulement sur mobile */}
-      {isMobileLike && onAddElement && (
+      {isMobile && onAddElement && (
         <MobileSidebarDrawer
           onAddElement={onAddElement}
           onBackgroundChange={onBackgroundChange}
