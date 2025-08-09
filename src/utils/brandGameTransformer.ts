@@ -95,7 +95,7 @@ export const transformBrandGameToCampaign = (concept: GeneratedGameConcept) => {
             borderColor: concept.colors.primary,
             borderOutlineColor: concept.colors.accent,
             segmentColor1: concept.colors.primary,
-            segmentColor2: concept.colors.secondary,
+            segmentColor2: '#ffffff',
             centerLogo: concept.logo,
             premiumPointer: true,
             glowEffect: concept.design.premiumEffects?.glassmorphism || false,
@@ -104,6 +104,8 @@ export const transformBrandGameToCampaign = (concept: GeneratedGameConcept) => {
               id: index,
               winProbability: segment.probability || 0.15,
               premiumStyling: true,
+              color: index % 2 === 0 ? concept.colors.primary : '#ffffff',
+              textColor: index % 2 === 0 ? '#ffffff' : concept.colors.primary,
               gradient: `linear-gradient(45deg, ${segment.color}, ${adjustColorBrightness(segment.color, 20)})`
             })) || []
           }

@@ -423,11 +423,12 @@ export interface BrandColors {
   accent?: string;
 }
 export function applyBrandStyleToWheel(campaign: CampaignData, colors: BrandColors) {
+  const secondaryColor = '#ffffff';
   const updatedSegments = (campaign?.config?.roulette?.segments || []).map(
     (segment, index: number) => ({
       ...segment,
-      color:
-        segment.color || (index % 2 === 0 ? colors.primary : colors.secondary),
+      color: segment.color || (index % 2 === 0 ? colors.primary : secondaryColor),
+      textColor: segment.textColor || (index % 2 === 0 ? secondaryColor : colors.primary),
     }),
   );
   return {
@@ -437,15 +438,15 @@ export function applyBrandStyleToWheel(campaign: CampaignData, colors: BrandColo
       roulette: {
         ...(campaign.config?.roulette || {}),
         borderColor: colors.primary,
-        borderOutlineColor: colors.accent || colors.secondary || colors.primary,
+        borderOutlineColor: colors.accent || colors.primary,
         segmentColor1: colors.primary,
-        segmentColor2: colors.secondary,
+        segmentColor2: secondaryColor,
         segments: updatedSegments,
       },
     },
     design: {
       ...(campaign.design || {}),
-      customColors: colors,
+      customColors: { ...colors, secondary: secondaryColor },
     },
     buttonConfig: {
       ...(campaign.buttonConfig || {}),

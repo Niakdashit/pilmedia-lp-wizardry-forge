@@ -21,9 +21,12 @@ export const getWheelSegments = (campaign: any) => {
   if (process.env.NODE_ENV !== 'production') {
     console.log('getWheelSegments - Campaign reçu:', campaign);
   }
-  
-  const segmentColor1 = campaign?.config?.roulette?.segmentColor1 || '#ff6b6b';
-  const segmentColor2 = campaign?.config?.roulette?.segmentColor2 || '#4ecdc4';
+
+  const hasImageBackground = campaign?.design?.background?.type === 'image';
+  const extractedPrimary = campaign?.design?.extractedColors?.[0];
+  const defaultPrimary = campaign?.config?.roulette?.segmentColor1 || campaign?.design?.wheelConfig?.borderColor || '#ff6b6b';
+  const segmentColor1 = hasImageBackground && extractedPrimary ? extractedPrimary : defaultPrimary;
+  const segmentColor2 = '#ffffff';
 
   // Vérifier plusieurs sources pour les segments
   let originalSegments = 
@@ -47,7 +50,7 @@ export const getWheelSegments = (campaign: any) => {
   const segments = originalSegments.map((segment: any, index: number) => ({
     ...segment,
     color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2),
-    textColor: segment.textColor || '#ffffff',
+    textColor: segment.textColor || (index % 2 === 0 ? segmentColor2 : segmentColor1),
     id: segment.id || `segment-${index}`
   }));
 
