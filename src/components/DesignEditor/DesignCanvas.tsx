@@ -678,7 +678,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         
         <div className="flex justify-center items-center h-full w-full" style={{
           // Padding fixe (indépendant du zoom) pour garantir un centrage stable
-          paddingTop: selectedDevice === 'tablet' ? 48 : selectedDevice === 'mobile' ? 16 : 32,
+          paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
           paddingLeft: selectedDevice === 'tablet' ? 32 : 20,
           paddingRight: selectedDevice === 'tablet' ? 32 : 20,
           paddingBottom: selectedDevice === 'mobile' ? 180 : selectedDevice === 'tablet' ? 48 : 32,

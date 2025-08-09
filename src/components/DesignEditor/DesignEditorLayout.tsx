@@ -657,8 +657,8 @@ const DesignEditorLayout: React.FC = () => {
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical (hidden on mobile) */}
-            {selectedDevice !== 'mobile' && (
+            {/* Hybrid Sidebar - Design & Technical (hidden on real mobile only) */}
+            {(typeof window === 'undefined' || window.innerWidth >= 768) && (
               <HybridSidebar 
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
