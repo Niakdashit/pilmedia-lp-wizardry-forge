@@ -14,7 +14,7 @@ import { useGroupManager } from '../../hooks/useGroupManager';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
-
+import { isRealMobile } from '../../utils/isRealMobile';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -658,7 +658,7 @@ const DesignEditorLayout: React.FC = () => {
           /* Design Editor Mode */
           <>
             {/* Hybrid Sidebar - Design & Technical (hidden on real mobile only) */}
-            {(typeof window === 'undefined' || window.innerWidth >= 768) && (
+            {!isRealMobile() && (
               <HybridSidebar 
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}

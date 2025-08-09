@@ -208,6 +208,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                   key={tab.id}
                   data-tab-id={tab.id}
                   onClick={() => handleTabClick(tab.id)}
+                  onTouchEnd={() => handleTabClick(tab.id)}
                   className={`shrink-0 inline-flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 hover-scale ${
                     isActive 
                       ? 'bg-white shadow-md' 

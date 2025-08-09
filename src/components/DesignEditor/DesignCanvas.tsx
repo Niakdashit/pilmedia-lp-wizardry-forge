@@ -24,6 +24,7 @@ import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
+import { isRealMobile } from '../../utils/isRealMobile';
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
@@ -683,7 +684,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
           paddingLeft: selectedDevice === 'tablet' ? 32 : 20,
           paddingRight: selectedDevice === 'tablet' ? 32 : 20,
-          paddingBottom: selectedDevice === 'mobile' ? 180 : selectedDevice === 'tablet' ? 48 : 32,
+          paddingBottom: (isRealMobile() ? 180 : (selectedDevice === 'tablet' ? 48 : 32)),
           transition: 'padding 0.2s ease-in-out',
           minHeight: '100%'
         }}>
