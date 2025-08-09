@@ -14,7 +14,6 @@ import { useGroupManager } from '../../hooks/useGroupManager';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
-import { isRealMobile } from '../../utils/isRealMobile';
 
 const DesignEditorLayout: React.FC = () => {
   // Détection automatique de l'appareil
@@ -626,10 +625,10 @@ const DesignEditorLayout: React.FC = () => {
 
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden">
-      {/* Top Toolbar - Hidden in preview mode */}
-      {!showFunnel && (
+      {/* Top Toolbar - Hidden in preview mode and when editing mobile layouts */}
+      {!showFunnel && selectedDevice !== 'mobile' && (
         <>
-          <DesignToolbar 
+          <DesignToolbar
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
             onPreviewToggle={handlePreview}
@@ -641,7 +640,7 @@ const DesignEditorLayout: React.FC = () => {
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
           />
-          
+
           {/* Bouton d'aide des raccourcis clavier */}
           <div className="absolute top-4 right-4 z-10">
             <KeyboardShortcutsHelp shortcuts={shortcuts} />
@@ -670,8 +669,8 @@ const DesignEditorLayout: React.FC = () => {
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical (hidden on real mobile only) */}
-            {!isRealMobile() && (
+            {/* Hybrid Sidebar - Design & Technical (hidden when editing mobile layouts) */}
+            {selectedDevice !== 'mobile' && (
               <HybridSidebar 
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}

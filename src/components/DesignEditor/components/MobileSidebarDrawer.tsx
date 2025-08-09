@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  Palette, 
-  Layers, 
-  Settings, 
-  Gamepad2, 
-  Share,
-  ChevronUp,
-  ChevronDown
+import {
+  Plus,
+  Palette,
+  Layers,
+  Settings,
+  Gamepad2,
+  Share
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
@@ -42,7 +40,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('assets');
   const [isMinimized, setIsMinimized] = useState(true);
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const tabs = [
     { 
@@ -91,24 +88,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     }
   }, [selectedElement]);
 
-  const handleTabClick = (tabId: string) => {
-    if (activeTab === tabId) {
-      setIsMinimized(!isMinimized);
-    } else {
-      setActiveTab(tabId);
-      setIsMinimized(false);
-    }
-  };
-
-  // S'assurer que l'onglet actif est visible (scroll into view)
-  useEffect(() => {
-    const container = tabsContainerRef.current;
-    if (!container) return;
-    const activeBtn = container.querySelector(`[data-tab-id="${activeTab}"]`);
-    if (activeBtn && 'scrollIntoView' in activeBtn) {
-      (activeBtn as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-  }, [activeTab]);
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
@@ -169,7 +148,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       <motion.div
         initial={false}
         animate={{
-          y: isMinimized ? '80%' : '20%'
+          y: isMinimized ? '100%' : '20%'
         }}
         transition={{
           type: "spring",
@@ -179,7 +158,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         className="fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
         style={{
           height: '85vh',
-          bottom: '64px', // leave space for bottom tab bar
+          bottom: 'calc(80px + env(safe-area-inset-bottom))', // leave space for tab bar and device safe area
           transform: 'translateZ(0)', // Force hardware acceleration
           willChange: 'transform'
         }}
@@ -190,67 +169,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           onTouchEnd={() => setIsMinimized(!isMinimized)}
         >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-        </div>
-
-        {/* Tab Bar */}
-        <div className="flex items-center justify-between px-3 pb-3 border-b border-gray-200">
-          <div
-            ref={tabsContainerRef}
-            className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scroll-smooth"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              
-              return (
-                <button
-                  key={tab.id}
-                  data-tab-id={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
-                  onTouchEnd={() => handleTabClick(tab.id)}
-                  className={`shrink-0 inline-flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 hover-scale ${
-                    isActive 
-                      ? 'bg-white shadow-md' 
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
-                  style={{
-                    minWidth: '64px',
-                    ...(isActive && {
-                      borderLeft: `3px solid ${tab.color}`,
-                      transform: 'scale(1.05)'
-                    })
-                  }}
-                >
-                  <Icon 
-                    className={`w-5 h-5 ${
-                      isActive ? 'text-gray-800' : 'text-gray-600'
-                    }`}
-                    style={{
-                      color: isActive ? tab.color : undefined
-                    }}
-                  />
-                  <span className={`text-[11px] mt-1 font-medium ${
-                    isActive ? 'text-gray-800' : 'text-gray-600'
-                  }`}>
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Minimize/Expand Button */}
-          <button
-            onClick={() => setIsMinimized(!isMinimized)}
-            className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            {isMinimized ? (
-              <ChevronUp className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
         </div>
 
         {/* Panel Content */}
@@ -264,7 +182,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               transition={{ duration: 0.2 }}
               className="flex-1 overflow-y-auto p-4"
               style={{
-                height: 'calc(85vh - 140px)', // Ajuster selon la hauteur des onglets
+                height: 'calc(85vh - 100px)',
                 overscrollBehavior: 'contain'
               }}
             >
@@ -273,59 +191,16 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Quick Actions When Minimized */}
-        <AnimatePresence>
-          {isMinimized && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="p-4"
-            >
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">Actions rapides</p>
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => {
-                      setActiveTab('assets');
-                      setIsMinimized(false);
-                    }}
-                    className="flex flex-col items-center p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
-                  >
-                    <Plus className="w-5 h-5 text-blue-600" />
-                    <span className="text-xs mt-1 text-blue-600 font-medium">Ajouter</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('background');
-                      setIsMinimized(false);
-                    }}
-                    className="flex flex-col items-center p-3 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors"
-                  >
-                    <Palette className="w-5 h-5 text-pink-600" />
-                    <span className="text-xs mt-1 text-pink-600 font-medium">Couleurs</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('layers');
-                      setIsMinimized(false);
-                    }}
-                    className="flex flex-col items-center p-3 bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
-                  >
-                    <Layers className="w-5 h-5 text-green-600" />
-                    <span className="text-xs mt-1 text-green-600 font-medium">Calques</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Quick actions removed for cleaner minimized state */}
       </motion.div>
 
       {/* Persistent Bottom Tab Bar (mobile only) */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      <div
+        className="fixed left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
+        style={{
+          bottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
       >
         <div className="flex items-center justify-around px-2 py-2">
           {tabs.map((tab) => {
