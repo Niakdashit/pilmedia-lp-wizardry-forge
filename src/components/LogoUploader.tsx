@@ -93,7 +93,7 @@ const LogoUploader: React.FC<LogoUploaderProps> = ({ className }) => {
         <p className="text-gray-600 mb-2">
           <label className="text-[#841b60] cursor-pointer hover:text-[#841b60]/80 transition-colors">
             Cliquez pour télécharger
-            <input type="file" accept="image/*" onChange={e => handleUpload(e.target.files)} className="hidden" />
+            <input type="file" accept="image/*" onChange={e => handleUpload(e.target.files)} className="sr-only" />
           </label>{' '}
           ou glissez-déposez votre logo
         </p>

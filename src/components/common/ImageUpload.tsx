@@ -84,7 +84,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           type="file"
           accept={accept}
           onChange={handleFileChange}
-          className="hidden"
+          className="sr-only"
         />
       </div>
     );
@@ -141,7 +141,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         type="file"
         accept={accept}
         onChange={handleFileChange}
-        className="hidden"
+        className="sr-only"
       />
     </div>
   );
