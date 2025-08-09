@@ -184,10 +184,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           willChange: 'transform'
         }}
       >
-        {/* Handle */}
         <div 
           className="flex items-center justify-center p-4 cursor-pointer"
           onClick={() => setIsMinimized(!isMinimized)}
+          onTouchEnd={() => setIsMinimized(!isMinimized)}
         >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
@@ -334,6 +334,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               <button
                 key={`bottom-${tab.id}`}
                 onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsMinimized(false);
+                }}
+                onTouchEnd={() => {
                   setActiveTab(tab.id);
                   setIsMinimized(false);
                 }}

@@ -189,8 +189,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const onTouchMove = (e: TouchEvent) => {
       if (isPinching && e.touches.length === 2) {
         const newDist = getDist(e.touches);
-        const scale = newDist / startDist;
-        const newZoom = Math.max(0.1, Math.min(5, startZoom * scale));
+        // Faster pinch response on real mobile: non-linear scaling
+        const ratio = newDist / startDist;
+        const accelerated = Math.pow(ratio, 1.35); // increase sensitivity
+        const newZoom = Math.max(0.25, Math.min(3, startZoom * accelerated));
         setLocalZoom(newZoom);
         onZoomChange?.(newZoom);
         e.preventDefault();
