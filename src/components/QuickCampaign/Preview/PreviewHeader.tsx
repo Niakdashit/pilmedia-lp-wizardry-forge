@@ -1,21 +1,16 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
-import DeviceSelector from './DeviceSelector';
 
 interface PreviewHeaderProps {
   campaignName: string;
   selectedGameType: string;
-  selectedDevice: 'desktop' | 'tablet' | 'mobile';
-  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onClose: () => void;
 }
 
 const PreviewHeader: React.FC<PreviewHeaderProps> = ({
   campaignName,
   selectedGameType,
-  selectedDevice,
-  onDeviceChange,
   onClose
 }) => {
   return (
@@ -26,11 +21,6 @@ const PreviewHeader: React.FC<PreviewHeaderProps> = ({
         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
           {selectedGameType || 'wheel'}
         </span>
-        
-        <DeviceSelector
-          selectedDevice={selectedDevice}
-          onDeviceChange={onDeviceChange}
-        />
       </div>
 
       <button

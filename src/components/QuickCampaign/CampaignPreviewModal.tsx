@@ -14,7 +14,7 @@ const CampaignPreviewModal: React.FC<CampaignPreviewModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [selectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   
   const { 
     generatePreviewCampaign, 
@@ -46,8 +46,6 @@ const CampaignPreviewModal: React.FC<CampaignPreviewModalProps> = ({
         <PreviewHeader
           campaignName={campaignName}
           selectedGameType={selectedGameType || 'wheel'}
-          selectedDevice={selectedDevice}
-          onDeviceChange={setSelectedDevice}
           onClose={onClose}
         />
 
