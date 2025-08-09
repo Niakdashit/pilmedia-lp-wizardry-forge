@@ -110,7 +110,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   const canvasSize = getCanvasSize();
-  
+
 
   const handleGameComplete = (result: 'win' | 'lose') => {
     console.log('Game completed with result:', result);
@@ -163,7 +163,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const renderGameComponent = () => {
     if (campaign.type === 'wheel') {
       return (
-        <div 
+        <div
           className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 opacity-100`}
           style={{ zIndex: 10 }}
         >
@@ -190,23 +190,47 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     return null;
   };
 
+  const containerStyle = useMemo<React.CSSProperties>(() => {
+    const base: React.CSSProperties = {
+      margin: '1rem auto 0',
+      touchAction: 'manipulation'
+    };
+
+    if (previewMode === 'desktop') {
+      return {
+        ...base,
+        width: '100%',
+        height: 'calc(100vh - 2rem)'
+      };
+    }
+
+    if (previewMode === 'mobile') {
+      return {
+        ...base,
+        height: 'calc(100vh - 2rem)',
+        aspectRatio: '9 / 16'
+      };
+    }
+
+    return {
+      ...base,
+      width: `${canvasSize.width}px`,
+      height: `${canvasSize.height}px`,
+      transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
+      transformOrigin: 'top center'
+    };
+  }, [previewMode, canvasSize]);
+
   return (
     <div className="w-full h-full">
-      <div 
-        className="canvas-container relative bg-white overflow-hidden w-full h-full"
-        style={previewMode === 'desktop' ? {
-          width: '100%',
-          height: '100vh',
-        } : previewMode === 'mobile' ? {
-          width: '100%',
-          height: '100vh',
-        } : {
-          width: `${canvasSize.width}px`,
-          height: `${canvasSize.height}px`,
-          margin: '0 auto',
-          // Utiliser la même logique de transformation que l'éditeur pour cohérence
-          transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
-          transformOrigin: 'top center'
+      <div
+        className="canvas-container relative bg-white overflow-hidden w-full"
+        style={containerStyle}
+        onClick={(e) => {
+          if (!formValidated && e.target === e.currentTarget) {
+            console.log('Canvas container clicked - triggering form');
+            onGameButtonClick();
+          }
         }}
       >
         {/* Canvas Background */}
@@ -238,12 +262,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
 
         {/* Overlay pour déclencher le formulaire si pas validé */}
         {!formValidated && (
-          <div 
-            onClick={() => {
-              console.log('Canvas overlay clicked - triggering form');
-              onGameButtonClick();
-            }}
-            className="absolute inset-0 flex items-center justify-center z-30 rounded-lg cursor-pointer bg-black/0" 
+          <div
+            className="absolute inset-0 z-30 rounded-lg bg-black/0 pointer-events-none"
           />
         )}
 
