@@ -169,7 +169,11 @@ const DesignEditorLayout: React.FC = () => {
   };
 
   // Utilisation du hook de synchronisation unifié
-  const { wheelModalConfig } = useWheelConfigSync({
+  const {
+    wheelModalConfig,
+    updateWheelConfig,
+    getCanonicalConfig
+  } = useWheelConfigSync({
     campaign: campaignConfig,
     extractedColors,
     onCampaignChange: setCampaignConfig
@@ -697,6 +701,8 @@ const DesignEditorLayout: React.FC = () => {
               selectedElements={selectedElements}
               onSelectedElementsChange={setSelectedElements}
               onElementUpdate={handleElementUpdate}
+              updateWheelConfig={updateWheelConfig}
+              getCanonicalConfig={getCanonicalConfig}
               // Props pour le système de groupes niveau Canva
               selectedGroupId={selectedGroupId || undefined}
               onSelectedGroupChange={setSelectedGroupId}
