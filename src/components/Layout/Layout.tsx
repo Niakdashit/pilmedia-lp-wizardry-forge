@@ -47,7 +47,7 @@ const Layout: React.FC = () => {
           <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
         </header>
         <main className="flex-1 overflow-y-auto w-full py-0 px-0">
-          <div className="p-3 sm:p-6 w-full max-w-full py-0 px-[3px]">
+          <div className="w-full max-w-full py-0 sm:py-6 px-4 sm:px-6">
             <Outlet />
           </div>
         </main>
