@@ -110,7 +110,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   };
 
   const canvasSize = getCanvasSize();
-  
+
 
   const handleGameComplete = (result: 'win' | 'lose') => {
     console.log('Game completed with result:', result);
@@ -163,7 +163,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const renderGameComponent = () => {
     if (campaign.type === 'wheel') {
       return (
-        <div 
+        <div
           className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 opacity-100`}
           style={{ zIndex: 10 }}
         >
@@ -190,24 +190,42 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     return null;
   };
 
+  const containerStyle = useMemo<React.CSSProperties>(() => {
+    const base: React.CSSProperties = {
+      margin: '1rem auto 0',
+      touchAction: 'manipulation'
+    };
+
+    if (previewMode === 'desktop') {
+      return {
+        ...base,
+        width: '100%',
+        height: 'calc(100vh - 2rem)'
+      };
+    }
+
+    if (previewMode === 'mobile') {
+      return {
+        ...base,
+        height: 'calc(100vh - 2rem)',
+        aspectRatio: '9 / 16'
+      };
+    }
+
+    return {
+      ...base,
+      width: `${canvasSize.width}px`,
+      height: `${canvasSize.height}px`,
+      transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
+      transformOrigin: 'top center'
+    };
+  }, [previewMode, canvasSize]);
+
   return (
     <div className="w-full h-full">
-      <div 
-        className="canvas-container relative bg-white overflow-hidden w-full h-full"
-        style={previewMode === 'desktop' ? {
-          width: '100%',
-          height: '100vh',
-        } : previewMode === 'mobile' ? {
-          width: '100%',
-          height: '100vh',
-        } : {
-          width: `${canvasSize.width}px`,
-          height: `${canvasSize.height}px`,
-          margin: '0 auto',
-          // Utiliser la même logique de transformation que l'éditeur pour cohérence
-          transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
-          transformOrigin: 'top center'
-        }}
+      <div
+        className="canvas-container relative bg-white overflow-hidden w-full"
+        style={containerStyle}
       >
         {/* Canvas Background */}
         <div 
