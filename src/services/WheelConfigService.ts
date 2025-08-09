@@ -19,6 +19,7 @@ interface WheelModalConfig {
   wheelBorderWidth?: number;
   wheelScale?: number;
   wheelShowBulbs?: boolean;
+  wheelPosition?: 'left' | 'right' | 'center';
 
 }
 
@@ -28,6 +29,7 @@ export interface WheelConfig {
   borderWidth: number;
   scale: number;
   showBulbs?: boolean;
+  position?: 'left' | 'right' | 'center';
 
   customColors?: {
     primary?: string;
@@ -62,25 +64,28 @@ export class WheelConfigService {
       scale: 1,
       size: 200,
       showBulbs: false,
+      position: 'center' as const,
 
     };
 
     // Priorité 1: Configuration de la modal roue (modifications en cours)
-    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean }> = {
+    const modalConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position: 'left' | 'right' | 'center' }> = {
       borderStyle: wheelModalConfig?.wheelBorderStyle,
       borderColor: wheelModalConfig?.wheelBorderColor,
       borderWidth: wheelModalConfig?.wheelBorderWidth,
       scale: wheelModalConfig?.wheelScale,
-      showBulbs: wheelModalConfig?.wheelShowBulbs
+      showBulbs: wheelModalConfig?.wheelShowBulbs,
+      position: wheelModalConfig?.wheelPosition
     };
 
     // Priorité 2: Configuration de design existante
-    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean }> = {
+    const designConfig: Partial<{ borderStyle: string; borderColor: string; borderWidth: number; scale: number; showBulbs: boolean; position?: 'left' | 'right' | 'center' }> = {
       borderStyle: campaign?.design?.wheelBorderStyle || campaign?.design?.wheelConfig?.borderStyle,
       borderColor: campaign?.design?.wheelConfig?.borderColor,
       borderWidth: campaign?.design?.wheelConfig?.borderWidth,
       scale: campaign?.design?.wheelConfig?.scale,
       showBulbs: (campaign?.design?.wheelConfig as any)?.showBulbs,
+      position: (campaign?.design?.wheelConfig as any)?.position,
  
     };
 
@@ -96,6 +101,7 @@ export class WheelConfigService {
       borderWidth: modalConfig.borderWidth !== undefined ? modalConfig.borderWidth : (designConfig.borderWidth || defaults.borderWidth),
       scale: modalConfig.scale !== undefined ? modalConfig.scale : (designConfig.scale || defaults.scale),
       showBulbs: modalConfig.showBulbs !== undefined ? modalConfig.showBulbs : (designConfig.showBulbs ?? defaults.showBulbs),
+      position: modalConfig.position !== undefined ? modalConfig.position : (designConfig.position ?? defaults.position),
 
       shouldCropWheel: options.shouldCropWheel ?? true,
       
@@ -160,7 +166,11 @@ export class WheelConfigService {
   /**
    * Récupère les styles de découpage pour la roue
    */
-  static getWheelCroppingStyles(shouldCrop: boolean = true) {
+  static getWheelCroppingStyles(
+    shouldCrop: boolean = true,
+    position: 'center' | 'left' | 'right' = 'center',
+    device: 'desktop' | 'tablet' | 'mobile' = 'desktop'
+  ) {
     if (!shouldCrop) {
       return {
         containerClass: 'flex justify-center items-center',
@@ -169,13 +179,29 @@ export class WheelConfigService {
       };
     }
 
+    // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) pour tous les devices
+    if (position === 'center' || device !== 'desktop') {
+      const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden';
+      const centerClass = 'left-1/2 -translate-x-1/2';
+      return {
+        containerClass: `${base} ${centerClass}`,
+        wheelClass: 'cursor-pointer hover:scale-105 transition-transform duration-200',
+        transform: 'translate-y-1/3',
+        styles: {
+          paddingBottom: '-30%'
+        }
+      };
+    }
+
+    // Cas 2: Desktop + (left|right) => visible entièrement et centré verticalement
+    const base = 'absolute top-1/2 transform -translate-y-1/2';
+    const positionClass = position === 'left' ? 'left-0' : 'right-0';
+    const insetStyles = position === 'left' ? { left: '50px' } : { right: '50px' };
     return {
-      containerClass: 'absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 overflow-hidden',
+      containerClass: `${base} ${positionClass}`,
       wheelClass: 'cursor-pointer hover:scale-105 transition-transform duration-200',
-      transform: 'translate-y-1/3',
-      styles: {
-        paddingBottom: '-30%'
-      }
+      transform: '-translate-y-1/2',
+      styles: insetStyles
     };
   }
 
@@ -207,6 +233,9 @@ export class WheelConfigService {
         if (updates.showBulbs !== undefined) {
           newConfig.wheelShowBulbs = updates.showBulbs;
         }
+        if (updates.position !== undefined) {
+          newConfig.wheelPosition = updates.position as 'left' | 'right' | 'center';
+        }
 
         
         return newConfig;
@@ -224,6 +253,7 @@ export class WheelConfigService {
             borderWidth: updates.borderWidth !== undefined ? updates.borderWidth : prevCampaign.design?.wheelConfig?.borderWidth,
             scale: updates.scale !== undefined ? updates.scale : prevCampaign.design?.wheelConfig?.scale,
             showBulbs: updates.showBulbs !== undefined ? updates.showBulbs : (prevCampaign.design?.wheelConfig as any)?.showBulbs,
+            position: updates.position !== undefined ? updates.position : (prevCampaign.design?.wheelConfig as any)?.position,
 
           }
         }

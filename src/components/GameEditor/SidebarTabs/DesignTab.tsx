@@ -515,9 +515,10 @@ R√©ponds UNIQUEMENT avec un JSON valide suivant cette structure exacte (en fran√
       <div className="premium-card mx-[30px]">
         <h4 className="text-sidebar-text-primary font-medium mb-4 text-base">Style de bordure</h4>
         
-        <div className="form-group-premium">
-          <label>Type de bordure</label>
+        <div className="form-group-premium hidden">
+          <label className="sr-only">Type de bordure</label>
           <select
+            className="sr-only"
             value={config.borderStyle || 'classic'}
             onChange={e => onConfigUpdate({ borderStyle: e.target.value })}
           >

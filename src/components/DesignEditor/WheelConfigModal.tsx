@@ -9,12 +9,14 @@ interface WheelConfigModalProps {
   wheelBorderWidth: number;
   wheelScale: number;
   wheelShowBulbs?: boolean;
+  wheelPosition?: 'left' | 'right' | 'center';
 
   onBorderStyleChange: (style: string) => void;
   onBorderColorChange: (color: string) => void;
   onBorderWidthChange: (width: number) => void;
   onScaleChange: (scale: number) => void;
   onShowBulbsChange?: (show: boolean) => void;
+  onPositionChange?: (position: 'left' | 'right' | 'center') => void;
 
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
 }
@@ -27,12 +29,14 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
   wheelBorderWidth,
   wheelScale,
   wheelShowBulbs = false,
+  wheelPosition = 'center',
 
   onBorderStyleChange,
   onBorderColorChange,
   onBorderWidthChange,
   onScaleChange,
   onShowBulbsChange,
+  onPositionChange,
 
   selectedDevice
 }) => {
@@ -172,6 +176,38 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
                 onStyleChange={onBorderStyleChange}
               />
             </div>
+
+            {/* Position de la roue - uniquement sur Desktop */}
+          {selectedDevice === 'desktop' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Position de la roue
+              </label>
+              <div className="inline-flex rounded-md shadow-sm overflow-hidden border">
+                <button
+                  type="button"
+                  onClick={() => onPositionChange?.('left')}
+                  className={`px-3 py-2 text-sm ${wheelPosition === 'left' ? 'bg-[hsl(var(--primary))] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} border-r`}
+                >
+                  Gauche
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onPositionChange?.('center')}
+                  className={`px-3 py-2 text-sm ${wheelPosition === 'center' ? 'bg-[hsl(var(--primary))] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} border-r`}
+                >
+                  Centre
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onPositionChange?.('right')}
+                  className={`px-3 py-2 text-sm ${wheelPosition === 'right' ? 'bg-[hsl(var(--primary))] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  Droite
+                </button>
+              </div>
+            </div>
+          )}
 
             {/* Ampoules blanches sur la bordure */}
             <div className="flex items-center justify-between">

@@ -36,6 +36,7 @@ export const useWheelConfigSync = ({
         wheelBorderWidth: campaign.design.wheelConfig.borderWidth,
         wheelScale: campaign.design.wheelConfig.scale,
         wheelShowBulbs: campaign.design.wheelConfig.showBulbs,
+        wheelPosition: (campaign.design.wheelConfig as any)?.position,
 
       });
     }
@@ -62,6 +63,7 @@ export const useWheelConfigSync = ({
     setWheelBorderWidth: (width: number) => updateWheelConfig({ borderWidth: width }),
     setWheelScale: (scale: number) => updateWheelConfig({ scale }),
     setShowBulbs: (show: boolean) => updateWheelConfig({ showBulbs: show }),
+    setWheelPosition: (position: 'left' | 'right' | 'center') => updateWheelConfig({ position }),
 
   };
 };

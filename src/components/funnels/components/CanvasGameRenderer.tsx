@@ -163,12 +163,9 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const renderGameComponent = () => {
     if (campaign.type === 'wheel') {
       return (
-        <div
-          className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 opacity-100`}
-          style={{ zIndex: 10 }}
-        >
+        <div className="absolute inset-0" style={{ zIndex: 10 }}>
           <WheelPreview
-            campaign={campaign} 
+            campaign={campaign}
             config={{
               mode: 'instant_winner' as const,
               winProbability: campaign.gameConfig?.wheel?.winProbability || 0.1,
@@ -178,7 +175,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
             gameSize={'medium'}
-            gamePosition={'center'}
             previewDevice={previewMode}
             wheelModalConfig={wheelModalConfig}
             disabled={!formValidated}
@@ -192,7 +188,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
 
   const containerStyle = useMemo<React.CSSProperties>(() => {
     const base: React.CSSProperties = {
-      margin: '1rem auto 0',
+      margin: '0 auto',
       touchAction: 'manipulation'
     };
 
@@ -200,31 +196,28 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       return {
         ...base,
         width: '100%',
-        height: 'calc(100vh - 2rem)'
+        height: '100dvh'
       };
     }
 
     if (previewMode === 'mobile') {
       return {
         ...base,
-        height: 'calc(100vh - 2rem)',
-        aspectRatio: '9 / 16'
+        height: '100dvh'
       };
     }
 
     return {
       ...base,
-      width: `${canvasSize.width}px`,
-      height: `${canvasSize.height}px`,
-      transform: previewMode === 'tablet' ? 'scale(0.9)' : 'scale(1)',
-      transformOrigin: 'top center'
+      width: '100%',
+      height: '100dvh'
     };
   }, [previewMode, canvasSize]);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-[100dvh] min-h-[100dvh]">
       <div
-        className="canvas-container relative bg-white overflow-hidden w-full"
+        className="canvas-container relative overflow-hidden w-full"
         style={containerStyle}
       >
         {/* Canvas Background */}
@@ -265,13 +258,15 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           />
         )}
 
+        {/* Message de validation en overlay pour éviter d'ajouter de la hauteur à la page */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
+          <ValidationMessage
+            show={showValidationMessage}
+            message="Formulaire validé ! Vous pouvez maintenant jouer."
+            type="success"
+          />
+        </div>
       </div>
-
-      <ValidationMessage
-        show={showValidationMessage}
-        message="Formulaire validé ! Vous pouvez maintenant jouer."
-        type="success"
-      />
     </div>
   );
 };

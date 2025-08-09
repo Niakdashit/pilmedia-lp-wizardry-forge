@@ -27,9 +27,7 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
               </div>
               
               {/* Nom du style */}
-              <span className="text-xs font-medium text-center">
-                {style.name}
-              </span>
+              <span className="text-xs font-medium text-center">{style.name}</span>
               
               {/* Indicateurs d'effets */}
               <div className="flex space-x-1">
@@ -42,14 +40,7 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
       </div>
       
       {/* Description du style sélectionné */}
-      {BORDER_STYLES[currentStyle] && <div className="p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">
-            <strong>{BORDER_STYLES[currentStyle].name}</strong>
-            {BORDER_STYLES[currentStyle].effects.metallic && ' - Effet métallique'}
-            {BORDER_STYLES[currentStyle].effects.glow && ' - Effet de lueur'}
-            {BORDER_STYLES[currentStyle].effects.animated && ' - Animation'}
-          </p>
-        </div>}
+      {/* Description supprimée */}
     </div>;
 };
 export default BorderStyleSelector;

@@ -12,6 +12,9 @@ interface DesignToolbarProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  // Contrôle de la position du bouton d'aperçu (gauche/droite)
+  previewButtonSide?: 'left' | 'right';
+  onPreviewButtonSideChange?: (side: 'left' | 'right') => void;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -22,7 +25,9 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   onUndo,
   onRedo,
   canUndo = false,
-  canRedo = false
+  canRedo = false,
+  previewButtonSide = 'right',
+  onPreviewButtonSideChange
 }) => {
   const navigate = useNavigate();
   return (
@@ -97,6 +102,31 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
 
       {/* Right Section - Actions */}
       <div className="flex items-center space-x-1">
+        {/* Position du bouton d'aperçu */}
+        <div className="hidden sm:flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-0.5 border border-[hsl(var(--sidebar-border))] mr-2">
+          <button
+            onClick={() => onPreviewButtonSideChange && onPreviewButtonSideChange('left')}
+            className={`px-2 py-1 text-xs rounded-md transition-all duration-200 ${
+              previewButtonSide === 'left'
+                ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]'
+                : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
+            }`}
+            title="Bouton Aperçu à gauche"
+          >
+            Gauche
+          </button>
+          <button
+            onClick={() => onPreviewButtonSideChange && onPreviewButtonSideChange('right')}
+            className={`px-2 py-1 text-xs rounded-md transition-all duration-200 ${
+              previewButtonSide === 'right'
+                ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]'
+                : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
+            }`}
+            title="Bouton Aperçu à droite"
+          >
+            Droite
+          </button>
+        </div>
         <button 
           onClick={onPreviewToggle}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${

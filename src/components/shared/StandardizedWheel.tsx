@@ -50,8 +50,8 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
 
   // Styles de découpage
   const croppingStyles = useMemo(() => 
-    WheelConfigService.getWheelCroppingStyles(shouldCropWheel),
-    [shouldCropWheel]
+    WheelConfigService.getWheelCroppingStyles(shouldCropWheel, wheelConfig.position || 'center', device as 'desktop' | 'tablet' | 'mobile'),
+    [shouldCropWheel, wheelConfig.position, device]
   );
 
   console.log('🎡 StandardizedWheel - Rendu:', {

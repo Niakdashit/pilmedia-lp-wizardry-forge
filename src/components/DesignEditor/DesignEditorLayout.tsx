@@ -106,6 +106,15 @@ const DesignEditorLayout: React.FC = () => {
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
+    (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('previewButtonSide', previewButtonSide);
+    } catch {}
+  }, [previewButtonSide]);
 
 
 
@@ -616,7 +625,7 @@ const DesignEditorLayout: React.FC = () => {
 
 
   return (
-    <MobileStableEditor className="h-screen bg-gray-50 flex flex-col">
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden">
       {/* Top Toolbar - Hidden in preview mode */}
       {!showFunnel && (
         <>
@@ -629,6 +638,8 @@ const DesignEditorLayout: React.FC = () => {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
+            previewButtonSide={previewButtonSide}
+            onPreviewButtonSideChange={setPreviewButtonSide}
           />
           
           {/* Bouton d'aide des raccourcis clavier */}
@@ -642,13 +653,11 @@ const DesignEditorLayout: React.FC = () => {
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className={`flex-1 flex items-center justify-center bg-gray-100 group ${
-            selectedDevice === 'tablet' ? 'fixed inset-0 z-40' : ''
-          }`}>
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
             {/* Floating Edit Mode Button */}
           <button
             onClick={() => setShowFunnel(false)}
-            className="absolute top-4 right-4 z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]"
+            className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]`}
           >
             Mode édition
           </button>

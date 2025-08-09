@@ -980,12 +980,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           wheelBorderWidth={wheelConfig.borderWidth}
           wheelScale={wheelConfig.scale}
           wheelShowBulbs={!!wheelConfig.showBulbs}
+          wheelPosition={(wheelConfig as any)?.position || 'center'}
 
           onBorderStyleChange={(style) => updateWheelConfig?.({ borderStyle: style })}
           onBorderColorChange={(color) => updateWheelConfig?.({ borderColor: color })}
           onBorderWidthChange={(width) => updateWheelConfig?.({ borderWidth: width })}
           onScaleChange={(scale) => updateWheelConfig?.({ scale })}
           onShowBulbsChange={(show) => updateWheelConfig?.({ showBulbs: show })}
+          onPositionChange={(position) => updateWheelConfig?.({ position })}
 
           selectedDevice={selectedDevice}
         />
