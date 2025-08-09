@@ -1,5 +1,6 @@
 import React from 'react';
 import { Minus, Plus, RotateCcw } from 'lucide-react';
+import { isRealMobile } from '@/utils/isRealMobile';
 
 interface ZoomSliderProps {
   zoom: number;
@@ -10,7 +11,7 @@ interface ZoomSliderProps {
   defaultZoom?: number;
 }
 
-const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
+const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({ 
   zoom,
   onZoomChange,
   minZoom = 0.25,
@@ -18,6 +19,9 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
   step = 0.05,
   defaultZoom = 1
 }) => {
+  if (isRealMobile()) {
+    return null;
+  }
   const zoomPercent = Math.round(zoom * 100);
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
