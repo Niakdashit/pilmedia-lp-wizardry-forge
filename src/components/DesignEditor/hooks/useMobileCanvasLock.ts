@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { isRealMobile } from '../../../utils/isRealMobile';
 
 interface UseMobileCanvasLockOptions {
   canvasRef: React.RefObject<HTMLDivElement>;
@@ -15,12 +16,14 @@ export const useMobileCanvasLock = ({
   isTablet,
   zoom
 }: UseMobileCanvasLockOptions) => {
+  const isRealDevice = isRealMobile();
+  const isMobileDevice = isMobile || isTablet || isRealDevice;
   const isDraggingRef = useRef(false);
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
 
   // Fonction pour bloquer les interactions non désirées sur le canvas
   const preventCanvasInterference = useCallback((event: TouchEvent | MouseEvent) => {
-    if (!canvasRef.current || (!isMobile && !isTablet)) return;
+    if (!canvasRef.current || !isMobileDevice) return;
 
     const target = event.target as HTMLElement;
     
@@ -68,11 +71,11 @@ export const useMobileCanvasLock = ({
         lastTouchRef.current = null;
       }
     }
-  }, [canvasRef, isMobile, isTablet]);
+  }, [canvasRef, isMobileDevice]);
 
   // Fonction pour empêcher le scroll du canvas pendant le drag d'éléments
   const preventScrollDuringDrag = useCallback((event: TouchEvent) => {
-    if (!canvasRef.current || (!isMobile && !isTablet)) return;
+    if (!canvasRef.current || !isMobileDevice) return;
 
     const target = event.target as HTMLElement;
     const isDraggableElement = target.closest('[data-element-id]');
@@ -83,33 +86,33 @@ export const useMobileCanvasLock = ({
         event.preventDefault();
       }
     }
-  }, [canvasRef, isMobile, isTablet]);
+  }, [canvasRef, isMobileDevice]);
 
   // Fonction pour gérer le début du drag
   const handleDragStart = useCallback(() => {
     isDraggingRef.current = true;
-    
+
     // Bloquer le scroll du body pendant le drag
-    if (isMobile || isTablet) {
+    if (isMobileDevice) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     }
-  }, [isMobile, isTablet]);
+  }, [isMobileDevice]);
 
   // Fonction pour gérer la fin du drag
   const handleDragEnd = useCallback(() => {
     isDraggingRef.current = false;
-    
+
     // Restaurer le scroll du body
-    if (isMobile || isTablet) {
+    if (isMobileDevice) {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     }
-  }, [isMobile, isTablet]);
+  }, [isMobileDevice]);
 
   // Fonction pour assurer la visibilité complète du canvas
   const ensureCanvasVisibility = useCallback(() => {
-    if (!canvasRef.current || (!isMobile && !isTablet)) return;
+    if (!canvasRef.current || !isMobileDevice) return;
 
     const canvas = canvasRef.current;
     const canvasRect = canvas.getBoundingClientRect();
@@ -135,11 +138,11 @@ export const useMobileCanvasLock = ({
       });
       window.dispatchEvent(adjustZoomEvent);
     }
-  }, [canvasRef, isMobile, isTablet]);
+  }, [canvasRef, isMobileDevice]);
 
   // Installation des écouteurs d'événements
   useEffect(() => {
-    if (!canvasRef.current || (!isMobile && !isTablet)) return;
+    if (!canvasRef.current || !isMobileDevice) return;
 
     const canvas = canvasRef.current;
 
@@ -194,7 +197,7 @@ export const useMobileCanvasLock = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [canvasRef, isMobile, isTablet, preventCanvasInterference, preventScrollDuringDrag, handleDragStart, handleDragEnd]);
+  }, [canvasRef, isMobileDevice, preventCanvasInterference, preventScrollDuringDrag, handleDragStart, handleDragEnd]);
 
   // Vérifier la visibilité du canvas lors des changements
   useEffect(() => {
@@ -203,7 +206,7 @@ export const useMobileCanvasLock = ({
 
   // Vérifier la visibilité lors du redimensionnement
   useEffect(() => {
-    if (!isMobile && !isTablet) return;
+    if (!isMobileDevice) return;
 
     const handleResize = () => {
       setTimeout(ensureCanvasVisibility, 100); // Délai pour laisser le temps au redimensionnement
@@ -220,7 +223,7 @@ export const useMobileCanvasLock = ({
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
-  }, [isMobile, isTablet, ensureCanvasVisibility]);
+  }, [isMobileDevice, ensureCanvasVisibility]);
 
   return {
     isDragging: isDraggingRef.current,
