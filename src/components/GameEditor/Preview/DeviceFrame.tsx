@@ -21,15 +21,19 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
     switch (device) {
       case 'mobile':
         return {
-          width: '350px',
-          height: '622px',
+          width: '100%',
+          maxWidth: '350px',
+          height: '100%',
+          maxHeight: '622px',
           margin: '20px auto',
           position: 'relative'
         };
       case 'tablet':
         return {
-          width: '653px',
-          height: '792px',
+          width: '100%',
+          maxWidth: '653px',
+          height: '100%',
+          maxHeight: '792px',
           margin: '20px auto',
           position: 'relative'
         };
@@ -37,7 +41,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
       default:
         if (fitContentDesktop) {
           return {
-            width: '1020px',
+            width: '100%',
+            maxWidth: '1020px',
             margin: '20px auto',
             border: '2px solid #ddd',
             borderRadius: '8px',
@@ -45,8 +50,10 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({
           };
         }
         return {
-          width: '1020px',
-          height: '680px',
+          width: '100%',
+          maxWidth: '1020px',
+          height: '100%',
+          maxHeight: '680px',
           margin: '20px auto',
           border: '2px solid #ddd',
           borderRadius: '8px',
