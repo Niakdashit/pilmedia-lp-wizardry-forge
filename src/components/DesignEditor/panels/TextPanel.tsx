@@ -151,7 +151,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-gray-700">Catégories de polices</h4>
             <div className="grid grid-cols-3 gap-2">
-              {fontCategories.map((category, index) => <button key={index} className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${selectedCategory.name === category.name ? 'bg-[hsl(var(--primary))] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`} onClick={() => setSelectedCategory(category)}>
+              {fontCategories.map((category, index) => <button key={index} className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${selectedCategory.name === category.name ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`} onClick={() => setSelectedCategory(category)}>
                   {category.name}
                 </button>)}
             </div>

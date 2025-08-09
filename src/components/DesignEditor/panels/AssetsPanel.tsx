@@ -250,7 +250,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
               onClick={() => setActiveCategory(category.id)}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
                 activeCategory === category.id
-                  ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary))] border border-[hsl(var(--primary))]'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border border-[hsl(var(--primary))]'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
