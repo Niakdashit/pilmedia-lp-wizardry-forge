@@ -175,7 +175,11 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           flex-direction: column;
           height: 100vh;
           max-height: 100vh;
-          
+          min-height: 100vh;
+          height: 100dvh;
+          max-height: 100dvh;
+          min-height: 100dvh;
+
           /* Empêcher le scroll */
           overscroll-behavior: none;
           touch-action: manipulation;
