@@ -67,6 +67,8 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     scale: wheelConfig.scale
   });
 
+  // Décalage géré via WheelConfigService.getWheelCroppingStyles (inset 150px)
+
   return (
     <div 
       className={`${croppingStyles.containerClass} ${className}`}

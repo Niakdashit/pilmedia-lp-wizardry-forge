@@ -24,22 +24,118 @@ export const useSmartWheelRenderer = ({
   showBulbs,
 
 }: UseSmartWheelRendererProps) => {
+  // Central bulb count used for visuals and pointer collisions
+  const BULB_COUNT = 15;
+  // Pointer visual scale multiplier
+  const POINTER_SCALE = 1.22825; // reduced by 15% from 1.445
+  // Invisible ratchet notches for pointer tip collisions (independent from bulbs)
+  const NOTCH_COUNT = 36; // number of invisible notches around the rim
+  const NOTCH_PHASE_DEG = 0; // phase offset if we need to align to art later
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
+  
+  // Pointer animation (wobble/deflection)
+  const pointerAngleRef = useRef(0); // radians
+  const prevTimestampRef = useRef<number>(0);
+  const prevRotationRef = useRef<number>(0); // degrees
+  const rotationRef = useRef<number>(0);
+  const spinningRef = useRef<boolean>(false);
+  const pointerVelRef = useRef(0); // rad/s
+  const prevBoundaryIndexRef = useRef<number | null>(null);
+  const segAngleDegRef = useRef<number>(360); // actually bulb step angle
+  const segCountRef = useRef<number>(1); // actually bulb count
+  // Pointer SVG sprite (from public/)
+  const POINTER_SVG_SRC = '/assets/wheel/pointer.svg';
+  const pointerImgRef = useRef<HTMLImageElement | null>(null);
+  const pointerImgReadyRef = useRef(false);
+  
+  // Keep refs in sync without retriggering RAF setup
+  useEffect(() => { rotationRef.current = wheelState.rotation; }, [wheelState.rotation]);
+  useEffect(() => { spinningRef.current = wheelState.isSpinning; }, [wheelState.isSpinning]);
+  // Physics step uses invisible notches, not bulbs
+  useEffect(() => {
+    const count = Math.max(1, NOTCH_COUNT);
+    segCountRef.current = count;
+    segAngleDegRef.current = 360 / count;
+  }, [NOTCH_COUNT]);
+
+  // Preload pointer SVG once
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      pointerImgRef.current = img;
+      pointerImgReadyRef.current = true;
+    };
+    img.onerror = () => {
+      pointerImgReadyRef.current = false;
+    };
+    img.src = POINTER_SVG_SRC;
+  }, []);
 
   // Animation frame pour les effets animés
   useEffect(() => {
     let animationId: number;
     
     const animate = (timestamp: number) => {
+      const prevTs = prevTimestampRef.current || timestamp - 16;
+      const dtMs = Math.max(1, timestamp - prevTs);
+      const dt = dtMs / 1000; // seconds
+
+      // Detect invisible ratchet notch crossings (pointer tip hits notches)
+      const stepDeg = segAngleDegRef.current;
+      const segCount = segCountRef.current;
+      const currRot = rotationRef.current; // degrees
+      const prevRot = prevRotationRef.current;
+      const phasedRot = currRot + NOTCH_PHASE_DEG; // allow aligning notches to art
+      const currIndex = Math.floor((((phasedRot % 360) + 360) % 360) / stepDeg);
+      if (prevBoundaryIndexRef.current === null) prevBoundaryIndexRef.current = currIndex;
+      const prevIndex = prevBoundaryIndexRef.current!;
+
+      if (currIndex !== prevIndex) {
+        // Direction based on rotation delta
+        const dRot = currRot - prevRot;
+        const dir = dRot >= 0 ? 1 : -1; // +1 clockwise, -1 counter
+        // Number of notches crossed (robust across large deltas)
+        const rawDiff = currIndex - prevIndex;
+        let diff = rawDiff;
+        if (diff > segCount / 2) diff -= segCount;
+        if (diff < -segCount / 2) diff += segCount;
+        const steps = Math.max(1, Math.abs(diff));
+        // Clicky impulse: stronger at higher speed, but still present when slow
+        const stepDegLocal = segAngleDegRef.current;
+        const speedRatio = Math.min(2, Math.abs(dRot) / Math.max(1e-3, stepDegLocal));
+        const speedFactor = 0.35 + 0.65 * Math.sqrt(speedRatio); // sqrt for smoother response
+        const baseImpulse = 0.22; // ~12.6° equivalent impulse
+        const impulse = (-dir) * baseImpulse * speedFactor;
+        for (let i = 0; i < steps; i++) pointerVelRef.current += impulse;
+        prevBoundaryIndexRef.current = currIndex;
+      }
+
+      // Spring-damper toward a slight downward rest angle to mimic gravity on the tip
+      const REST_ANGLE = -0.08; // radians (~-4.6°)
+      const k = 32; // spring stiffness
+      const c = 7;  // damping
+      const delta = (pointerAngleRef.current - REST_ANGLE);
+      const accel = (-k * delta) - (c * pointerVelRef.current);
+      pointerVelRef.current += accel * dt;
+      pointerAngleRef.current += pointerVelRef.current * dt;
+
+      // Clamp around rest to avoid extreme rotation
+      const maxRad = 0.5; // ~28.6° excursion around REST_ANGLE
+      if (pointerAngleRef.current > REST_ANGLE + maxRad) pointerAngleRef.current = REST_ANGLE + maxRad;
+      if (pointerAngleRef.current < REST_ANGLE - maxRad) pointerAngleRef.current = REST_ANGLE - maxRad;
+
+      prevRotationRef.current = currRot;
+      prevTimestampRef.current = timestamp;
+
+      // Trigger canvas redraw
       setAnimationTime(timestamp);
       animationId = requestAnimationFrame(animate);
     };
-    
-    const borderStyleConfig = getBorderStyle(borderStyle);
-    if (borderStyleConfig.effects.animated) {
-      animationId = requestAnimationFrame(animate);
-    }
+
+    // Always run RAF to animate the pointer (lightweight)
+    animationId = requestAnimationFrame(animate);
     
     return () => {
       if (animationId) {
@@ -65,13 +161,13 @@ export const useSmartWheelRenderer = ({
     // Rayon de l'anneau où placer les ampoules (au centre de la bordure visuelle)
     const ringRadius = borderRadius;
 
-    const count = 15;
+    const count = BULB_COUNT;
     // Réduire la taille des ampoules pour un rendu plus fin
     const bulbRadius = Math.max(1.5 * scaleFactor, Math.min(5 * scaleFactor, borderW * 0.18));
     const startAngle = -Math.PI / 2; // aligné sur le pointeur en haut
 
     for (let i = 0; i < count; i++) {
-      const angle = startAngle + (i * 2 * Math.PI) / count;
+      const angle = startAngle + (i * 2 * Math.PI) / count + (wheelState.rotation * Math.PI / 180);
       const x = centerX + ringRadius * Math.cos(angle);
       const y = centerY + ringRadius * Math.sin(angle);
 
@@ -410,113 +506,147 @@ export const useSmartWheelRenderer = ({
   };
 
   const drawPointer = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number) => {
-    ctx.save();
-    
-    // Positionner le pointeur pour qu'il touche presque les segments (style Burger King)
-    const pointerDistance = radius - 8;
-    ctx.translate(centerX, centerY - pointerDistance);
-    
-    // Taille du pointeur style Burger King (plus large et plus imposant)
-    const pointerWidth = size * 0.06; // Plus large
-    const pointerHeight = size * 0.12; // Plus haut et imposant
     const scaleFactor = size / 200;
-    
-    // === OMBRE PROFONDE STYLE BURGER KING ===
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 12 * scaleFactor;
-    ctx.shadowOffsetX = 3 * scaleFactor;
-    ctx.shadowOffsetY = 4 * scaleFactor;
-    
-    // === GRADIENT DORÉ/ORANGE PRINCIPAL ===
-    const mainGradient = ctx.createLinearGradient(
-      -pointerWidth, -pointerHeight,
-      pointerWidth, 0
-    );
-    
-    // Couleurs Burger King pour le pointeur
-    mainGradient.addColorStop(0, '#D2691E'); // Orange foncé
-    mainGradient.addColorStop(0.3, '#FF8C00'); // Orange vif
-    mainGradient.addColorStop(0.5, '#FFD700'); // Or brillant
-    mainGradient.addColorStop(0.7, '#FFA500'); // Orange doré
-    mainGradient.addColorStop(1, '#FF7F00'); // Orange moyen
-    
-    // Dessiner le pointeur principal
-    ctx.fillStyle = mainGradient;
-    ctx.beginPath();
-    ctx.moveTo(0, 0); // Pointe vers le bas
-    ctx.lineTo(-pointerWidth, -pointerHeight); // Coin gauche
-    ctx.lineTo(pointerWidth, -pointerHeight); // Coin droit
-    ctx.closePath();
-    ctx.fill();
-    
-    // Réinitialiser l'ombre pour les effets suivants
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    
-    // === BORDURE DORÉE ÉPAISSE ===
-    const borderGradient = ctx.createLinearGradient(
-      -pointerWidth, -pointerHeight,
-      pointerWidth, 0
-    );
-    borderGradient.addColorStop(0, '#B8860B'); // Or sombre
-    borderGradient.addColorStop(0.5, '#DAA520'); // Or moyen
-    borderGradient.addColorStop(1, '#FFD700'); // Or brillant
-    
-    ctx.strokeStyle = borderGradient;
-    ctx.lineWidth = 4 * scaleFactor; // Bordure plus épaisse
-    ctx.lineJoin = 'miter';
-    ctx.lineCap = 'square';
-    ctx.stroke();
-    
-    // === EFFET MÉTALLIQUE BRILLANT ===
-    const highlightGradient = ctx.createLinearGradient(
-      -pointerWidth * 0.8, -pointerHeight * 0.9,
-      pointerWidth * 0.8, -pointerHeight * 0.3
-    );
-    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-    highlightGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
-    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
-    ctx.fillStyle = highlightGradient;
-    ctx.beginPath();
-    ctx.moveTo(0, -pointerHeight * 0.1);
-    ctx.lineTo(-pointerWidth * 0.7, -pointerHeight * 0.8);
-    ctx.lineTo(pointerWidth * 0.7, -pointerHeight * 0.8);
-    ctx.closePath();
-    ctx.fill();
-    
-    // === REFLET MÉTALLIQUE SUR LE CÔTÉ GAUCHE ===
-    const sideHighlight = ctx.createLinearGradient(
-      -pointerWidth, -pointerHeight,
-      -pointerWidth * 0.5, -pointerHeight * 0.5
-    );
-    sideHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-    sideHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
-    ctx.fillStyle = sideHighlight;
-    ctx.beginPath();
-    ctx.moveTo(0, -pointerHeight * 0.2);
-    ctx.lineTo(-pointerWidth * 0.9, -pointerHeight * 0.9);
-    ctx.lineTo(-pointerWidth * 0.6, -pointerHeight * 0.7);
-    ctx.closePath();
-    ctx.fill();
-    
-    // === PETIT REFLET CENTRAL POUR L'EFFET PREMIUM ===
-    const centerSparkle = ctx.createRadialGradient(
-      0, -pointerHeight * 0.6, 0,
-      0, -pointerHeight * 0.6, pointerWidth * 0.3
-    );
-    centerSparkle.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-    centerSparkle.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
-    ctx.fillStyle = centerSparkle;
-    ctx.beginPath();
-    ctx.arc(0, -pointerHeight * 0.6, pointerWidth * 0.2, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    ctx.restore();
+    const gap = Math.max(6 * scaleFactor, 4);
+
+    // Size responsive and safe against top clipping
+    const basePointerHeight = Math.max(18, size * 0.12);
+    const desiredPointerHeight = basePointerHeight * POINTER_SCALE;
+    const tipYBase = centerY - radius + gap;
+    const maxHeightBase = tipYBase - 2; // margin from top edge
+    const overflow = Math.max(0, desiredPointerHeight - maxHeightBase);
+    const tipY = tipYBase + overflow; // push down to keep full pointer visible
+    const maxHeight = tipY - 2;
+    let pointerHeight = Math.min(desiredPointerHeight, Math.max(10, maxHeight));
+    const pointerWidth = Math.max(10, pointerHeight * 0.6);
+
+    ctx.save();
+    ctx.translate(centerX, tipY);
+    // Apply animated wobble/deflection
+    ctx.rotate(pointerAngleRef.current);
+
+    // If SVG is loaded, draw it. Otherwise fallback to the procedural pointer.
+    if (pointerImgReadyRef.current && pointerImgRef.current) {
+      // Soft drop shadow for depth
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 6 * scaleFactor;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2 * scaleFactor;
+
+      const img = pointerImgRef.current;
+      const naturalW = img.naturalWidth || 500;
+      const naturalH = img.naturalHeight || 500;
+      const aspect = naturalW / Math.max(1, naturalH);
+      const drawH = pointerHeight;
+      const drawW = Math.max(10, drawH * aspect);
+      // Anchor: horizontally centered, tip at current origin (0,0) => draw from y=-drawH
+      ctx.drawImage(img, -drawW / 2, -drawH, drawW, drawH);
+      ctx.restore();
+    } else {
+      // Fallback: existing gold pointer rendering
+      // Soft drop shadow for depth
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 6 * scaleFactor;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2 * scaleFactor;
+
+      // Main gold gradient
+      const mainGradient = ctx.createLinearGradient(
+        -pointerWidth, -pointerHeight,
+        pointerWidth, 0
+      );
+      mainGradient.addColorStop(0, '#8a6c10');
+      mainGradient.addColorStop(0.25, '#b8860b');
+      mainGradient.addColorStop(0.5, '#daa520');
+      mainGradient.addColorStop(0.75, '#ffd700');
+      mainGradient.addColorStop(1, '#ffe680');
+
+      // Pointer shape (downward tip)
+      ctx.fillStyle = mainGradient;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-pointerWidth, -pointerHeight);
+      ctx.lineTo(pointerWidth, -pointerHeight);
+      ctx.closePath();
+      ctx.fill();
+
+      // Reset shadow for borders/highlights
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Thick gold border
+      const borderGradient = ctx.createLinearGradient(
+        -pointerWidth, -pointerHeight,
+        pointerWidth, 0
+      );
+      borderGradient.addColorStop(0, '#B8860B');
+      borderGradient.addColorStop(0.5, '#DAA520');
+      borderGradient.addColorStop(1, '#FFD700');
+
+      ctx.strokeStyle = borderGradient;
+      ctx.lineWidth = 4 * scaleFactor;
+      ctx.lineJoin = 'miter';
+      ctx.lineCap = 'square';
+      ctx.stroke();
+
+      // Metallic highlight band
+      const highlightGradient = ctx.createLinearGradient(
+        -pointerWidth * 0.8, -pointerHeight * 0.9,
+        pointerWidth * 0.8, -pointerHeight * 0.3
+      );
+      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      highlightGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
+      highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = highlightGradient;
+      ctx.beginPath();
+      ctx.moveTo(0, -pointerHeight * 0.1);
+      ctx.lineTo(-pointerWidth * 0.7, -pointerHeight * 0.8);
+      ctx.lineTo(pointerWidth * 0.7, -pointerHeight * 0.8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Side sheen (left)
+      const sideHighlight = ctx.createLinearGradient(
+        -pointerWidth, -pointerHeight,
+        -pointerWidth * 0.5, -pointerHeight * 0.5
+      );
+      sideHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+      sideHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = sideHighlight;
+      ctx.beginPath();
+      ctx.moveTo(0, -pointerHeight * 0.2);
+      ctx.lineTo(-pointerWidth * 0.9, -pointerHeight * 0.9);
+      ctx.lineTo(-pointerWidth * 0.6, -pointerHeight * 0.7);
+      ctx.closePath();
+      ctx.fill();
+
+      // Central sparkle
+      const centerSparkle = ctx.createRadialGradient(
+        0, -pointerHeight * 0.6, 0,
+        0, -pointerHeight * 0.6, pointerWidth * 0.3
+      );
+      centerSparkle.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      centerSparkle.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = centerSparkle;
+      ctx.beginPath();
+      ctx.arc(0, -pointerHeight * 0.6, pointerWidth * 0.2, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Micro-bevel at tip
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1.5 * scaleFactor;
+      ctx.beginPath();
+      ctx.moveTo(0, -pointerHeight * 0.04);
+      ctx.lineTo(0, -pointerHeight * 0.16);
+      ctx.stroke();
+
+      ctx.restore();
+    }
   };
 
   return { canvasRef };

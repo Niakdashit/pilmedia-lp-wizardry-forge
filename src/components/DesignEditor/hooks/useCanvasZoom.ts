@@ -17,7 +17,7 @@ interface ZoomState {
 export const useCanvasZoom = ({
   canvasRef,
   minZoom = 0.1,
-  maxZoom = 5,
+  maxZoom = 1,
   zoomStep = 0.1,
   initialZoom = 1
 }: UseCanvasZoomProps) => {

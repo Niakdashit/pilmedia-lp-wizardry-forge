@@ -89,8 +89,9 @@ export class WheelConfigService {
  
     };
 
-    // Déterminer si une image de fond est utilisée
-    const hasImageBackground = campaign?.design?.background?.type === 'image';
+    // Déterminer si une image de fond est utilisée (le type de background peut varier)
+    const bg: any = campaign?.design?.background as any;
+    const hasImageBackground = typeof bg === 'object' && bg?.type === 'image';
 
     // Couleur primaire : extraite de l'image si disponible, sinon couleur de la bordure
     const primaryColor = hasImageBackground && extractedColors[0]
@@ -199,7 +200,7 @@ export class WheelConfigService {
     // Cas 2: Desktop + (left|right) => visible entièrement et centré verticalement
     const base = 'absolute top-1/2 transform -translate-y-1/2';
     const positionClass = position === 'left' ? 'left-0' : 'right-0';
-    const insetStyles = position === 'left' ? { left: '50px' } : { right: '50px' };
+    const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };
     return {
       containerClass: `${base} ${positionClass}`,
       wheelClass: 'cursor-pointer hover:scale-105 transition-transform duration-200',

@@ -208,6 +208,16 @@ export const animationPresets: AnimationPreset[] = [
   }
 ];
 
+// Respect system accessibility preference to reduce motion
+export const prefersReducedMotion = (): boolean => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+};
+
 export const getAnimationPreset = (type: string): AnimationPreset | undefined => {
   return animationPresets.find(preset => preset.type === type);
 };
@@ -219,6 +229,22 @@ export const getAnimationVariants = (animationConfig: any) => {
   const duration = animationConfig.duration || preset.duration;
   const delay = animationConfig.delay || preset.delay;
   const ease = animationConfig.ease || preset.ease;
+
+  // If user prefers reduced motion, avoid transforms and long durations
+  if (prefersReducedMotion()) {
+    return {
+      initial: { opacity: 0 },
+      animate: {
+        opacity: 1,
+        transition: {
+          duration: Math.min(0.2, duration || 0.2),
+          delay: 0,
+          ease: 'linear'
+        }
+      },
+      exit: { opacity: 0 }
+    };
+  }
 
   return {
     initial: preset.variants.initial,

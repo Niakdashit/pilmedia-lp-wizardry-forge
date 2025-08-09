@@ -115,7 +115,11 @@ export const AnimatedText: React.FC<AnimatedTextProps> = ({
         onMouseEnter={handleMouseEnter}
         onClick={handleClick}
         onAnimationComplete={onAnimationComplete}
+        role="status"
+        aria-live="polite"
+        aria-busy={isTypewriting}
         style={{
+          willChange: 'opacity, transform',
           overflow: 'hidden',
           whiteSpace: 'nowrap',
           borderRight: isTypewriting ? '2px solid currentColor' : 'none'
@@ -137,6 +141,7 @@ export const AnimatedText: React.FC<AnimatedTextProps> = ({
           onMouseEnter={handleMouseEnter}
           onClick={handleClick}
           onAnimationComplete={onAnimationComplete}
+          style={{ willChange: 'opacity, transform', backfaceVisibility: 'hidden' }}
         >
           {children}
         </motion.div>

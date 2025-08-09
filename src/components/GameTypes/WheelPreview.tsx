@@ -122,28 +122,46 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     scale: wheelConfig.scale
   });
 
+  // Animation: après validation du formulaire, si la roue est en position centre,
+  // remonter automatiquement la roue de 25% (une seule fois)
+  const [lifted, setLifted] = React.useState(false);
+  const prevDisabled = React.useRef(disabled);
+  React.useEffect(() => {
+    // Déclenchement quand on passe de disabled=true (form non validé) à disabled=false (form validé)
+    if (prevDisabled.current && !disabled && wheelConfig.position === 'center') {
+      setLifted(true);
+    }
+    prevDisabled.current = disabled;
+  }, [disabled, wheelConfig.position]);
+
   return (
     <div className="relative w-full h-full">
-      <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
-        <SmartWheel
-          segments={smartWheelSegments}
-          theme="modern"
-          size={wheelSize}
-          brandColors={brandColors}
-          onResult={handleResult}
-          onSpin={handleSpin}
-          disabled={disabled}
-          borderStyle={wheelConfig.borderStyle}
-          customBorderColor={wheelConfig.borderColor}
-          customBorderWidth={wheelConfig.borderWidth}
-          showBulbs={wheelConfig.showBulbs}
-          buttonPosition="center"
-          customButton={{
-            text: "GO",
-            color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
-            textColor: campaign.buttonConfig?.textColor || '#ffffff'
-          }}
-        />
+      {/* Wrapper animé pour décaler verticalement la roue après validation */}
+      <div
+        className="w-full h-full transition-transform duration-700 ease-out"
+        style={{ transform: lifted ? 'translateY(-25%)' : 'translateY(0%)' }}
+      >
+        <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
+          <SmartWheel
+            segments={smartWheelSegments}
+            theme="modern"
+            size={wheelSize}
+            brandColors={brandColors}
+            onResult={handleResult}
+            onSpin={handleSpin}
+            disabled={disabled}
+            borderStyle={wheelConfig.borderStyle}
+            customBorderColor={wheelConfig.borderColor}
+            customBorderWidth={wheelConfig.borderWidth}
+            showBulbs={wheelConfig.showBulbs}
+            buttonPosition="center"
+            customButton={{
+              text: "GO",
+              color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
+              textColor: campaign.buttonConfig?.textColor || '#ffffff'
+            }}
+          />
+        </div>
       </div>
     </div>
   );

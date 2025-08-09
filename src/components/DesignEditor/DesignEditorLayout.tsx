@@ -23,6 +23,9 @@ const DesignEditorLayout: React.FC = () => {
     return 'desktop';
   };
 
+  // Détection de l'appareil physique réel (pour l'interface)
+  const actualDevice = detectDevice();
+
   // Zoom par défaut selon l'appareil
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
     switch (device) {
@@ -504,10 +507,10 @@ const DesignEditorLayout: React.FC = () => {
       redo();
     },
     onZoomIn: () => {
-      setCanvasZoom(prev => Math.min(prev + 0.1, 3));
+      setCanvasZoom(prev => Math.min(prev + 0.1, 1));
     },
     onZoomOut: () => {
-      setCanvasZoom(prev => Math.max(prev - 0.1, 0.25));
+      setCanvasZoom(prev => Math.max(prev - 0.1, 0.1));
     },
     onZoomReset: () => {
       setCanvasZoom(1);
@@ -597,8 +600,8 @@ const DesignEditorLayout: React.FC = () => {
 
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden">
-      {/* Top Toolbar - Hidden in preview mode and when editing mobile layouts */}
-      {!showFunnel && selectedDevice !== 'mobile' && (
+      {/* Top Toolbar - Hidden only in preview mode */}
+      {!showFunnel && (
         <>
           <DesignToolbar
             selectedDevice={selectedDevice}
@@ -641,8 +644,8 @@ const DesignEditorLayout: React.FC = () => {
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical (hidden when editing mobile layouts) */}
-            {selectedDevice !== 'mobile' && (
+            {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
+            {actualDevice !== 'mobile' && (
               <HybridSidebar 
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
@@ -711,8 +714,8 @@ const DesignEditorLayout: React.FC = () => {
             <ZoomSlider 
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
-              minZoom={0.25}
-              maxZoom={3}
+              minZoom={0.1}
+              maxZoom={1}
               step={0.05}
             />
           </>

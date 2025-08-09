@@ -196,7 +196,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Faster pinch response on real mobile: non-linear scaling
         const ratio = newDist / startDist;
         const accelerated = Math.pow(ratio, 1.35); // increase sensitivity
-        const newZoom = Math.max(0.25, Math.min(3, startZoom * accelerated));
+        const newZoom = Math.max(0.1, Math.min(1.0, startZoom * accelerated));
         setLocalZoom(newZoom);
         onZoomChange?.(newZoom);
         e.preventDefault();
@@ -966,10 +966,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           })()
         )}
         
-        {/* Bouton roue fortune ABSOLU dans la zone d'aperçu (canvas) */}
-        <div className="absolute bottom-2 right-2 z-50">
-          <WheelSettingsButton onClick={() => setShowBorderModal(true)} />
-        </div>
+        
 
         {/* Modal pour la configuration de la roue */}
         <WheelConfigModal
