@@ -18,7 +18,7 @@ const Contacts: React.FC = () => {
         }
       />
 
-      <div className="px-6 space-y-6">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Liste des contacts</h2>

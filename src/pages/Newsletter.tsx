@@ -75,7 +75,7 @@ const Newsletter: React.FC = () => {
 
       {/* Navigation tabs */}
       <div className="bg-gradient-to-r from-[#ebf4f7] to-[#f0f9ff] border-b border-gray-300">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex space-x-6">
             {[
               { id: 'edit', label: 'Modifier', icon: '✏️' },
