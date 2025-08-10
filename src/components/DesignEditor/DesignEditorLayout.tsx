@@ -595,6 +595,57 @@ const DesignEditorLayout: React.FC = () => {
       } else {
         console.log('🎯 ❌ No group selected to ungroup');
       }
+    },
+    // --- Raccourcis de texte (élément texte sélectionné) ---
+    onToggleBoldText: () => {
+      if (selectedElement?.type === 'text') {
+        handleElementUpdate({
+          fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold'
+        });
+      }
+    },
+    onToggleItalicText: () => {
+      if (selectedElement?.type === 'text') {
+        handleElementUpdate({
+          fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic'
+        });
+      }
+    },
+    onToggleUnderlineText: () => {
+      if (selectedElement?.type === 'text') {
+        const current = selectedElement.textDecoration || 'none';
+        const next = current.includes('underline')
+          ? (current.replace('underline', '').replace(/\s+/g, ' ').trim() || 'none')
+          : ((current === 'none' || !current) ? 'underline' : `${current} underline`);
+        handleElementUpdate({ textDecoration: next });
+      }
+    },
+    onAlignTextLeft: () => {
+      if (selectedElement?.type === 'text') {
+        handleElementUpdate({ textAlign: 'left' });
+      }
+    },
+    onAlignTextCenter: () => {
+      if (selectedElement?.type === 'text') {
+        handleElementUpdate({ textAlign: 'center' });
+      }
+    },
+    onAlignTextRight: () => {
+      if (selectedElement?.type === 'text') {
+        handleElementUpdate({ textAlign: 'right' });
+      }
+    },
+    onIncrementFontSize: () => {
+      if (selectedElement?.type === 'text') {
+        const size = typeof selectedElement.fontSize === 'number' ? selectedElement.fontSize : 16;
+        handleElementUpdate({ fontSize: Math.min(200, (isNaN(size) ? 16 : size) + 1) });
+      }
+    },
+    onDecrementFontSize: () => {
+      if (selectedElement?.type === 'text') {
+        const size = typeof selectedElement.fontSize === 'number' ? selectedElement.fontSize : 16;
+        handleElementUpdate({ fontSize: Math.max(8, (isNaN(size) ? 16 : size) - 1) });
+      }
     }
   });
 

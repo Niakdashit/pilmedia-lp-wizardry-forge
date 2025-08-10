@@ -22,6 +22,15 @@ interface UseKeyboardShortcutsProps {
   // Fonctions pour les groupes niveau Canva
   onGroup?: () => void;
   onUngroup?: () => void;
+  // Raccourcis de mise en forme du texte lorsqu'un élément texte est sélectionné (hors édition inline)
+  onToggleBoldText?: () => void;
+  onToggleItalicText?: () => void;
+  onToggleUnderlineText?: () => void;
+  onAlignTextLeft?: () => void;
+  onAlignTextCenter?: () => void;
+  onAlignTextRight?: () => void;
+  onIncrementFontSize?: () => void;
+  onDecrementFontSize?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
@@ -44,7 +53,16 @@ export const useKeyboardShortcuts = ({
   onDeselectAll,
   // Fonctions pour les groupes niveau Canva
   onGroup,
-  onUngroup
+  onUngroup,
+  // Raccourcis de mise en forme du texte
+  onToggleBoldText,
+  onToggleItalicText,
+  onToggleUnderlineText,
+  onAlignTextLeft,
+  onAlignTextCenter,
+  onAlignTextRight,
+  onIncrementFontSize,
+  onDecrementFontSize
 }: UseKeyboardShortcutsProps = {}) => {
   const {
     selectedElementId,
@@ -185,6 +203,56 @@ export const useKeyboardShortcuts = ({
         }
         break;
 
+      // Mise en forme texte (hors édition inline) et Grille/Groupe
+      case 'b':
+        if (isModifierPressed && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onToggleBoldText?.();
+        }
+        break;
+
+      case 'i':
+        if (isModifierPressed && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onToggleItalicText?.();
+        }
+        break;
+
+      case 'u':
+        if (isModifierPressed && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onToggleUnderlineText?.();
+        }
+        break;
+
+      case 'l':
+        if (isModifierPressed && shiftKey && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onAlignTextLeft?.();
+        }
+        break;
+
+      case 'r':
+        if (isModifierPressed && shiftKey && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onAlignTextRight?.();
+        }
+        break;
+
+      case '.':
+        if (isModifierPressed && shiftKey && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onIncrementFontSize?.();
+        }
+        break;
+
+      case ',':
+        if (isModifierPressed && shiftKey && selectedElement?.type === 'text') {
+          event.preventDefault();
+          onDecrementFontSize?.();
+        }
+        break;
+
       // Toggle grid with G (sans modificateur) OU Groupage (avec modificateur)
       case 'g':
         console.log('🎯 G key detected!', { isModifierPressed, shiftKey, onGroup: !!onGroup, onUngroup: !!onUngroup });
@@ -208,9 +276,13 @@ export const useKeyboardShortcuts = ({
         }
         break;
 
-      // Copy with Ctrl+C
+      // Copy with Ctrl+C OR Align Center with Ctrl+Shift+C for text
       case 'c':
-        if (isModifierPressed && selectedElement?.id) {
+        if (isModifierPressed && shiftKey && selectedElement?.type === 'text') {
+          console.log('🎹 Align center shortcut triggered for text');
+          event.preventDefault();
+          onAlignTextCenter?.();
+        } else if (isModifierPressed && selectedElement?.id) {
           console.log('🎹 Copy shortcut triggered for element:', selectedElement.id);
           event.preventDefault();
           onElementCopy?.(selectedElement);
@@ -385,7 +457,16 @@ export const useKeyboardShortcuts = ({
     onToggleFullscreen,
     // Ajouter les fonctions de groupe dans les dépendances
     onGroup,
-    onUngroup
+    onUngroup,
+    // Ajout des callbacks de texte
+    onToggleBoldText,
+    onToggleItalicText,
+    onToggleUnderlineText,
+    onAlignTextLeft,
+    onAlignTextCenter,
+    onAlignTextRight,
+    onIncrementFontSize,
+    onDecrementFontSize
   ]);
 
   useEffect(() => {

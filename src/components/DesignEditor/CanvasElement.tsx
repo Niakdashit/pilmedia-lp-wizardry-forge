@@ -267,10 +267,77 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   }, [element.id, onUpdate]);
 
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const isMac = navigator.platform.toUpperCase().includes('MAC');
+    const isMod = isMac ? (e.metaKey as boolean) : (e.ctrlKey as boolean);
+
+    if (isMod) {
+      const key = e.key.toLowerCase();
+
+      if (key === 'b') {
+        e.preventDefault();
+        onUpdate(element.id, {
+          fontWeight: (element.fontWeight === 'bold' || element.style?.fontWeight === 'bold') ? 'normal' : 'bold'
+        });
+        return;
+      }
+
+      if (key === 'i') {
+        e.preventDefault();
+        onUpdate(element.id, {
+          fontStyle: (element.fontStyle === 'italic' || element.style?.fontStyle === 'italic') ? 'normal' : 'italic'
+        });
+        return;
+      }
+
+      if (key === 'u') {
+        e.preventDefault();
+        const current = element.textDecoration || element.style?.textDecoration || 'none';
+        const next = current.includes('underline')
+          ? (current.replace('underline', '').replace(/\s+/g, ' ').trim() || 'none')
+          : ((current === 'none' || !current) ? 'underline' : `${current} underline`);
+        onUpdate(element.id, { textDecoration: next });
+        return;
+      }
+
+      if (e.shiftKey && key === 'l') {
+        e.preventDefault();
+        onUpdate(element.id, { textAlign: 'left' });
+        return;
+      }
+      if (e.shiftKey && key === 'c') {
+        e.preventDefault();
+        onUpdate(element.id, { textAlign: 'center' });
+        return;
+      }
+      if (e.shiftKey && key === 'r') {
+        e.preventDefault();
+        onUpdate(element.id, { textAlign: 'right' });
+        return;
+      }
+
+      if (e.shiftKey && (key === '.' || e.key === '.')) {
+        e.preventDefault();
+        const cur = typeof element.fontSize === 'number' ? element.fontSize : parseInt((element.style?.fontSize as any) || '16', 10);
+        onUpdate(element.id, { fontSize: Math.min(200, (isNaN(cur) ? 16 : cur) + 1) });
+        return;
+      }
+      if (e.shiftKey && (key === ',' || e.key === ',')) {
+        e.preventDefault();
+        const cur = typeof element.fontSize === 'number' ? element.fontSize : parseInt((element.style?.fontSize as any) || '16', 10);
+        onUpdate(element.id, { fontSize: Math.max(8, (isNaN(cur) ? 16 : cur) - 1) });
+        return;
+      }
+
+      // Laisser Cmd/Ctrl+A au comportement natif pour sélectionner tout le texte
+      if (key === 'a') {
+        return;
+      }
+    }
+
     if (e.key === 'Enter') {
       setIsEditing(false);
     }
-  }, []);
+  }, [element, onUpdate]);
 
   const handleTextBlur = useCallback(() => {
     setIsEditing(false);
