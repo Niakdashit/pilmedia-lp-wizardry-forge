@@ -13,7 +13,7 @@ import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 
 interface GameCanvasPreviewProps {
   campaign: any;
-  previewDevice: 'desktop' | 'tablet' | 'mobile';
+  previewDevice?: 'desktop' | 'tablet' | 'mobile';
   disableForm?: boolean;
   onGameFinish?: (result: any) => void;
   isLoading?: boolean;
@@ -22,7 +22,7 @@ interface GameCanvasPreviewProps {
 
 const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   campaign,
-  previewDevice,
+  previewDevice = 'desktop',
   disableForm = true,
   onGameFinish,
   isLoading = false,

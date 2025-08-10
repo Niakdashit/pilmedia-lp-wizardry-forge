@@ -43,19 +43,12 @@ const DesignEditorLayout: React.FC = () => {
   // Store centralisé pour l'optimisation
   const { 
     setCampaign,
-    setPreviewDevice,
     setIsLoading,
     setIsModified
   } = useEditorStore();
 
-  // État local pour la compatibilité existante
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
-
-  // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
-  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
-    setSelectedDevice(device);
-    setCanvasZoom(getDefaultZoom(device));
-  };
+  // Mode uniquement bureau (desktop-only)
+  const selectedDevice: 'desktop' = 'desktop';
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
@@ -63,7 +56,7 @@ const DesignEditorLayout: React.FC = () => {
     type: 'color',
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
-  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+  const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom('desktop'));
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -337,10 +330,7 @@ const DesignEditorLayout: React.FC = () => {
     }
   }, [selectedElement, handleAddElement]);
   
-  // Synchronisation avec le store
-  useEffect(() => {
-    setPreviewDevice(selectedDevice);
-  }, [selectedDevice, setPreviewDevice]);
+  // Desktop-only: aucune synchronisation d'appareil nécessaire
 
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
@@ -655,8 +645,6 @@ const DesignEditorLayout: React.FC = () => {
       {!showFunnel && (
         <>
           <DesignToolbar
-            selectedDevice={selectedDevice}
-            onDeviceChange={handleDeviceChange}
             onPreviewToggle={handlePreview}
             isPreviewMode={showFunnel}
             onUndo={undo}

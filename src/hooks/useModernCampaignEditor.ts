@@ -21,7 +21,8 @@ export const useModernCampaignEditor = () => {
   
   const [activeTab, setActiveTab] = useState('general');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  // Desktop-only mode: previewDevice is a constant
+  const previewDevice: 'desktop' = 'desktop';
   const [isLoading, setIsLoading] = useState(false);
   
   const { saveCampaign, getCampaign } = useCampaigns();
@@ -93,7 +94,6 @@ export const useModernCampaignEditor = () => {
     showPreviewModal,
     setShowPreviewModal,
     previewDevice,
-    setPreviewDevice,
     isLoading: isLoading || isSaving,
     campaignType,
     isNewCampaign,

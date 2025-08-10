@@ -1,10 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Tablet, Smartphone, Save, Eye, X, Undo, Redo } from 'lucide-react';
+import { Monitor, Save, Eye, X, Undo, Redo } from 'lucide-react';
 
 interface DesignToolbarProps {
-  selectedDevice: 'desktop' | 'tablet' | 'mobile';
-  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onPreviewToggle?: () => void;
   isPreviewMode?: boolean;
   // Props pour undo/redo
@@ -18,8 +16,6 @@ interface DesignToolbarProps {
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
-  selectedDevice,
-  onDeviceChange,
   onPreviewToggle,
   isPreviewMode = false,
   onUndo,
@@ -63,41 +59,12 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </div>
       </div>
 
-      {/* Center Section - Device Selector */}
-      <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-1 border border-[hsl(var(--sidebar-border))]">
-        <button
-          onClick={() => onDeviceChange('desktop')}
-          className={`p-2 rounded-md transition-all duration-200 ${
-            selectedDevice === 'desktop' 
-              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
-              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
-          }`}
-          title="Desktop"
-        >
+      {/* Center Section - Desktop-only label */}
+      <div className="flex items-center">
+        <span className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-[hsl(var(--sidebar-surface))] border border-[hsl(var(--sidebar-border))] rounded-lg text-[hsl(var(--sidebar-icon))]">
           <Monitor className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDeviceChange('tablet')}
-          className={`p-2 rounded-md transition-all duration-200 ${
-            selectedDevice === 'tablet' 
-              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
-              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
-          }`}
-          title="Tablet"
-        >
-          <Tablet className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onDeviceChange('mobile')}
-          className={`p-2 rounded-md transition-all duration-200 ${
-            selectedDevice === 'mobile' 
-              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
-              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
-          }`}
-          title="Mobile"
-        >
-          <Smartphone className="w-4 h-4" />
-        </button>
+          Desktop uniquement
+        </span>
       </div>
 
       {/* Right Section - Actions */}

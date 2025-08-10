@@ -226,7 +226,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
         }}>
           <canvas
             ref={canvasRef}
-            className="rounded-full"
+            className="rounded-full relative z-40 pointer-events-none"
             style={{
               filter: wheelState.isSpinning ? 'brightness(1.1) saturate(1.2)' : 'none',
               transition: 'filter 0.3s ease'
@@ -238,7 +238,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             <button
               onClick={handleButtonClick}
               disabled={isButtonDisabled()}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 flex items-center justify-center text-sm"
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-0 flex items-center justify-center text-sm"
               style={{
                 backgroundColor: buttonConfig.color,
                 color: buttonConfig.textColor,
@@ -251,7 +251,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           
           {/* Message si aucun segment */}
           {segments.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 z-50 flex items-center justify-center">
               <div className="text-center text-gray-500 bg-white/80 backdrop-blur-sm rounded-lg p-4">
                 <p className="text-sm">Aucun segment configuré</p>
               </div>

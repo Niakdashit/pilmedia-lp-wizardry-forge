@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { throttle } from 'lodash-es';
 import { useEditorStore } from '@/stores/editorStore';
+import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 interface UseOptimizedDragDropProps {
   containerRef: React.RefObject<HTMLElement>;
@@ -20,8 +21,13 @@ export const useOptimizedDragDrop = ({
     handleElementSelect,
     handleDeselectAll
   } = useEditorStore();
-
-  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Store grab offset relative to the element (logical coords) and its size for bounds
+  const dragStartRef = useRef<{ 
+    offsetX: number; 
+    offsetY: number; 
+    elementWidth: number; 
+    elementHeight: number;
+  }>({ offsetX: 0, offsetY: 0, elementWidth: 0, elementHeight: 0 });
   const rafRef = useRef<number>();
 
   // Throttled drag move with requestAnimationFrame for 60fps
@@ -31,60 +37,97 @@ export const useOptimizedDragDrop = ({
 
       rafRef.current = requestAnimationFrame(() => {
         const containerRect = containerRef.current!.getBoundingClientRect();
-        const newX = clientX - containerRect.left - dragStartRef.current.x;
-        const newY = clientY - containerRect.top - dragStartRef.current.y;
+        const deviceDims = getDeviceDimensions(previewDevice);
+        const scaleX = containerRect.width / deviceDims.width;
+        const scaleY = containerRect.height / deviceDims.height;
+        // Use uniform scaling with potential letterboxing (contain)
+        const scale = Math.min(scaleX, scaleY);
+        const contentWidth = deviceDims.width * scale;
+        const contentHeight = deviceDims.height * scale;
+        const contentLeft = containerRect.left + (containerRect.width - contentWidth) / 2;
+        const contentTop = containerRect.top + (containerRect.height - contentHeight) / 2;
 
-        updateDragState({
-          currentOffset: { x: newX, y: newY }
-        });
+        // Pointer in logical device coords
+        const currentXLogical = (clientX - contentLeft) / scale;
+        const currentYLogical = (clientY - contentTop) / scale;
 
-        // Update campaign with optimized batching
+        const { offsetX, offsetY, elementWidth, elementHeight } = dragStartRef.current;
+
+        // Absolute new position in logical coords (cursor minus grab offset)
+        let newX = currentXLogical - offsetX;
+        let newY = currentYLogical - offsetY;
+
+        // Clamp to device bounds accounting for element size
+        const maxX = Math.max(0, Math.round(deviceDims.width - elementWidth));
+        const maxY = Math.max(0, Math.round(deviceDims.height - elementHeight));
+        newX = Math.min(Math.max(0, Math.round(newX)), maxX);
+        newY = Math.min(Math.max(0, Math.round(newY)), maxY);
+
+        // We update the absolute position directly; keep transform offset zero to avoid double movement
+        updateDragState({ currentOffset: { x: 0, y: 0 } });
+
         if (dragState.draggedElementId && dragState.draggedElementType) {
           setCampaign((prev: any) => {
-            const deviceKey = previewDevice === 'mobile' ? 'mobile' : 'desktop';
-            const customTexts = prev.design?.customTexts || {};
-            const customImages = prev.design?.customImages || {};
+            const design = prev.design || {};
+            const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
+            const elements = design[arrayKey] ?? [];
 
-            const updatedTexts = { ...customTexts };
-            const updatedImages = { ...customImages };
+            const numericId = typeof dragState.draggedElementId === 'string'
+              ? parseInt(dragState.draggedElementId)
+              : dragState.draggedElementId;
 
-            // Update text element position
-            if (dragState.draggedElementId && updatedTexts[dragState.draggedElementId]) {
-              updatedTexts[dragState.draggedElementId] = {
-                ...updatedTexts[dragState.draggedElementId],
-                [deviceKey]: {
-                  ...updatedTexts[dragState.draggedElementId][deviceKey],
-                  x: Math.max(0, newX),
-                  y: Math.max(0, newY)
+            let updatedElements: any;
+
+            if (Array.isArray(elements)) {
+              updatedElements = elements.map((el: any) => {
+                if (el.id === numericId) {
+                  if (previewDevice !== 'desktop') {
+                    return {
+                      ...el,
+                      [previewDevice]: {
+                        ...el[previewDevice],
+                        x: newX,
+                        y: newY
+                      }
+                    };
+                  }
+                  return { ...el, x: newX, y: newY };
                 }
-              };
-            }
-
-            // Update image element position
-            if (dragState.draggedElementId && updatedImages[dragState.draggedElementId]) {
-              updatedImages[dragState.draggedElementId] = {
-                ...updatedImages[dragState.draggedElementId],
-                [deviceKey]: {
-                  ...updatedImages[dragState.draggedElementId][deviceKey],
-                  x: Math.max(0, newX),
-                  y: Math.max(0, newY)
+                return el;
+              });
+            } else {
+              // Object map shape fallback
+              updatedElements = { ...elements };
+              const key = String(numericId);
+              if (updatedElements[key]) {
+                if (previewDevice !== 'desktop') {
+                  updatedElements[key] = {
+                    ...updatedElements[key],
+                    [previewDevice]: {
+                      ...updatedElements[key][previewDevice],
+                      x: newX,
+                      y: newY
+                    }
+                  };
+                } else {
+                  updatedElements[key] = { ...updatedElements[key], x: newX, y: newY };
                 }
-              };
+              }
             }
 
             return {
               ...prev,
               design: {
-                ...prev.design,
-                customTexts: updatedTexts,
-                customImages: updatedImages
-              }
+                ...design,
+                [arrayKey]: updatedElements
+              },
+              _lastUpdate: Date.now()
             };
           });
         }
       });
-    }, 16), // 60fps = ~16ms
-    [dragState.isDragging, dragState.draggedElementId, previewDevice, containerRef, updateDragState, setCampaign]
+    }, 16),
+    [dragState.isDragging, dragState.draggedElementId, dragState.draggedElementType, previewDevice, containerRef, updateDragState, setCampaign]
   );
 
   const handleDragStart = useCallback((
@@ -96,23 +139,46 @@ export const useOptimizedDragDrop = ({
     if (!containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const offsetX = clientX - containerRect.left;
-    const offsetY = clientY - containerRect.top;
+    const deviceDims = getDeviceDimensions(previewDevice);
+    const scaleX = containerRect.width / deviceDims.width;
+    const scaleY = containerRect.height / deviceDims.height;
+    const scale = Math.min(scaleX, scaleY);
+    const contentWidth = deviceDims.width * scale;
+    const contentHeight = deviceDims.height * scale;
+    const contentLeft = containerRect.left + (containerRect.width - contentWidth) / 2;
+    const contentTop = containerRect.top + (containerRect.height - contentHeight) / 2;
 
-    dragStartRef.current = { x: offsetX, y: offsetY };
+    const element = document.querySelector(`[data-element-id="${elementId}"]`) as HTMLElement | null;
+    const elRect = element?.getBoundingClientRect();
+
+    const startXLogical = (clientX - contentLeft) / scale;
+    const startYLogical = (clientY - contentTop) / scale;
+
+    const elLeftLogical = elRect ? (elRect.left - contentLeft) / scale : startXLogical;
+    const elTopLogical = elRect ? (elRect.top - contentTop) / scale : startYLogical;
+
+    const offsetX = startXLogical - elLeftLogical;
+    const offsetY = startYLogical - elTopLogical;
+
+    dragStartRef.current = {
+      offsetX,
+      offsetY,
+      elementWidth: elRect ? elRect.width / scale : 0,
+      elementHeight: elRect ? elRect.height / scale : 0
+    };
 
     updateDragState({
       isDragging: true,
       draggedElementId: elementId,
-      draggedElementType: elementType,
-      startPosition: { x: offsetX, y: offsetY },
+      draggedElementType: elementType as any,
+      startPosition: { x: Math.round(startXLogical), y: Math.round(startYLogical) },
       currentOffset: { x: 0, y: 0 }
     });
 
     // Set cursor styles for better UX
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
-  }, [containerRef, updateDragState]);
+  }, [containerRef, previewDevice, updateDragState]);
 
   const handleDragMove = useCallback((clientX: number, clientY: number) => {
     throttledDragMove(clientX, clientY);

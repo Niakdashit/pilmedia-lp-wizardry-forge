@@ -1,7 +1,6 @@
 
 import { useCallback } from 'react';
 import { DragState, DragStartMeta } from './types/dragDropTypes';
-import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 interface UseDragHandlersProps {
   dragState: DragState;
@@ -44,30 +43,26 @@ export const useDragHandlers = ({
 
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    // Determine preview scale between logical device coords and rendered pixels
-    const deviceDims = getDeviceDimensions(previewDevice);
-    const scaleX = containerRect.width / deviceDims.width;
-    const scaleY = containerRect.height / deviceDims.height;
+    // Work in SCREEN pixels to match DOM and avoid any scale mismatch
+    const startX = clientX - containerRect.left;
+    const startY = clientY - containerRect.top;
 
-    const startXLogical = (clientX - containerRect.left) / scaleX;
-    const startYLogical = (clientY - containerRect.top) / scaleY;
-
-    // Compute grab offset relative to element's top-left in logical coords
+    // Compute grab offset relative to element's top-left (screen px)
     const targetEl = e.currentTarget as HTMLElement;
     const elRect = targetEl.getBoundingClientRect();
-    const elLeftLogical = (elRect.left - containerRect.left) / scaleX;
-    const elTopLogical = (elRect.top - containerRect.top) / scaleY;
-    const offsetX = startXLogical - elLeftLogical;
-    const offsetY = startYLogical - elTopLogical;
+    const elLeft = elRect.left - containerRect.left;
+    const elTop = elRect.top - containerRect.top;
+    const offsetX = startX - elLeft;
+    const offsetY = startY - elTop;
 
-    const elementWidth = elRect.width / scaleX;
-    const elementHeight = elRect.height / scaleY;
+    const elementWidth = elRect.width;
+    const elementHeight = elRect.height;
 
-    console.log('📍 Drag start (logical):', { startXLogical, startYLogical, offsetX, offsetY, elementWidth, elementHeight, scaleX, scaleY });
+    console.log('📍 Drag start (screen):', { startX, startY, offsetX, offsetY, elementWidth, elementHeight });
 
     dragStartRef.current = {
-      x: Math.round(startXLogical),
-      y: Math.round(startYLogical),
+      x: Math.round(startX),
+      y: Math.round(startY),
       offsetX,
       offsetY,
       elementWidth,
@@ -78,7 +73,7 @@ export const useDragHandlers = ({
       isDragging: true,
       draggedElementId: elementId,
       draggedElementType: elementType,
-      startPosition: { x: Math.round(startXLogical), y: Math.round(startYLogical) },
+      startPosition: { x: Math.round(startX), y: Math.round(startY) },
       currentOffset: { x: 0, y: 0 }
     });
 
@@ -94,22 +89,17 @@ export const useDragHandlers = ({
 
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    // Recompute scale to convert pointer (screen) to logical device coords
-    const deviceDims = getDeviceDimensions(previewDevice);
-    const scaleX = containerRect.width / deviceDims.width;
-    const scaleY = containerRect.height / deviceDims.height;
-
-    const currentXLogical = (clientX - containerRect.left) / scaleX;
-    const currentYLogical = (clientY - containerRect.top) / scaleY;
+    const currentX = (clientX - containerRect.left);
+    const currentY = (clientY - containerRect.top);
 
     const { offsetX = 0, offsetY = 0, elementWidth = 0, elementHeight = 0 } = dragStartRef.current || ({} as DragStartMeta);
 
-    let newX = currentXLogical - offsetX;
-    let newY = currentYLogical - offsetY;
+    let newX = currentX - offsetX;
+    let newY = currentY - offsetY;
 
-    // Clamp within logical device bounds
-    const maxX = Math.max(0, Math.round(deviceDims.width - elementWidth));
-    const maxY = Math.max(0, Math.round(deviceDims.height - elementHeight));
+    // Clamp within SCREEN/container bounds
+    const maxX = Math.max(0, Math.round(containerRect.width - elementWidth));
+    const maxY = Math.max(0, Math.round(containerRect.height - elementHeight));
     newX = Math.min(Math.max(0, Math.round(newX)), maxX);
     newY = Math.min(Math.max(0, Math.round(newY)), maxY);
 
