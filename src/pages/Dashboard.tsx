@@ -8,12 +8,14 @@ const Dashboard: React.FC = () => {
   return (
     <PageContainer>
       <DashboardHeader />
-      
-      <div className="space-y-6 px-[25px] py-0">
+
+      <div className="space-y-6 px-0 sm:px-[25px] py-0">
         <StatsGrid />
         <RecentCampaigns />
       </div>
     </PageContainer>
   );
 };
+
 export default Dashboard;
+

@@ -160,11 +160,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
       {/* Persistent Bottom Tab Bar (mobile only) */}
       <div
-        className="fixed left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200"
+        className="fixed left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-gray-200 bottom-0"
         style={{
-          // Sit above the iOS/Android gesture area
-          bottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
-          paddingBottom: 'env(safe-area-inset-bottom)'
+          // Reserve space for iOS/Android gesture area and Safari toolbar
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)'
         }}
       >
         <div className="flex items-center justify-around px-2 py-2">
