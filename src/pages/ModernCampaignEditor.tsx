@@ -13,6 +13,8 @@ const ModernCampaignEditor: React.FC = () => {
     setActiveTab,
     showPreviewModal,
     setShowPreviewModal,
+    previewDevice,
+    setPreviewDevice,
     isLoading,
     campaignType,
     isNewCampaign,
@@ -39,6 +41,8 @@ const ModernCampaignEditor: React.FC = () => {
           setCampaign={setCampaign}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          previewDevice={previewDevice}
+          onDeviceChange={setPreviewDevice}
           onSave={() => handleSave(true)}
           onPreview={() => setShowPreviewModal(true)}
           isLoading={isLoading}

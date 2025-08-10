@@ -28,12 +28,9 @@ export const useSmartWheelRenderer = ({
   const BULB_COUNT = 15;
   // Pointer visual scale multiplier
   const POINTER_SCALE = 1.22825; // reduced by 15% from 1.445
-  const CENTER_SCALE = 0.1; // reduce center image to 10% of wheel size (diameter factor)
-  const DEBUG_ASSETS = true; // temporary: log asset resolution details
   // Invisible ratchet notches for pointer tip collisions (independent from bulbs)
   const NOTCH_COUNT = 36; // number of invisible notches around the rim
   const NOTCH_PHASE_DEG = 0; // phase offset if we need to align to art later
-  const POINTER_ANIMATION_ENABLED = false; // disable pointer wobble/deflection animation
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
   
@@ -47,37 +44,10 @@ export const useSmartWheelRenderer = ({
   const prevBoundaryIndexRef = useRef<number | null>(null);
   const segAngleDegRef = useRef<number>(360); // actually bulb step angle
   const segCountRef = useRef<number>(1); // actually bulb count
-  // Pointer/Center image sprites with robust sourcing
+  // Pointer SVG sprite (from public/)
+  const POINTER_SVG_SRC = '/assets/wheel/pointer.svg';
   const pointerImgRef = useRef<HTMLImageElement | null>(null);
   const pointerImgReadyRef = useRef(false);
-  const centerImgRef = useRef<HTMLImageElement | null>(null);
-  const centerImgReadyRef = useRef(false);
-
-  // Try to resolve assets bundled inside the repo via Vite (if present), otherwise use public/ URLs
-  const pointerGlob = import.meta.glob('../../../../assets/wheel/pointer.{svg,png}', { eager: true, as: 'url' }) as Record<string, string>;
-  const pointerGlobAlt = import.meta.glob('../../../../wheel/pointer.{svg,png}', { eager: true, as: 'url' }) as Record<string, string>;
-  const centerGlob = import.meta.glob('../../../../assets/wheel/center.{png,svg,jpg,jpeg,webp}', { eager: true, as: 'url' }) as Record<string, string>;
-  const centerGlobAlt = import.meta.glob('../../../../wheel/center.{png,svg,jpg,jpeg,webp}', { eager: true, as: 'url' }) as Record<string, string>;
-  const POINTER_CANDIDATES: string[] = [
-    ...Object.values(pointerGlob),
-    ...Object.values(pointerGlobAlt),
-    '/assets/wheel/pointer.svg',
-    '/assets/wheel/pointer.png',
-    '/wheel/pointer.svg',
-    '/wheel/pointer.png',
-    '/pointer.svg',
-    '/pointer.png'
-  ];
-  const CENTER_CANDIDATES: string[] = [
-    ...Object.values(centerGlob),
-    ...Object.values(centerGlobAlt),
-    '/assets/wheel/center.png',
-    '/assets/wheel/center.svg',
-    '/wheel/center.png',
-    '/wheel/center.svg',
-    '/center.png',
-    '/center.svg'
-  ];
   
   // Keep refs in sync without retriggering RAF setup
   useEffect(() => { rotationRef.current = wheelState.rotation; }, [wheelState.rotation]);
@@ -89,60 +59,22 @@ export const useSmartWheelRenderer = ({
     segAngleDegRef.current = 360 / count;
   }, [NOTCH_COUNT]);
 
-  // Helper to try multiple sources sequentially
-  const loadFirstAvailable = (urls: string[], onSuccess: (img: HTMLImageElement, url: string) => void, onFail?: () => void) => {
-    if (!urls.length) { onFail?.(); return; }
-    const [head, ...tail] = urls;
+  // Preload pointer SVG once
+  useEffect(() => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    if (DEBUG_ASSETS) console.debug('[SmartWheel] Trying asset URL:', head);
     img.onload = () => {
-      if (DEBUG_ASSETS) console.info('[SmartWheel] Loaded asset URL:', head);
-      onSuccess(img, head);
+      pointerImgRef.current = img;
+      pointerImgReadyRef.current = true;
     };
     img.onerror = () => {
-      if (DEBUG_ASSETS) console.warn('[SmartWheel] Failed asset URL:', head);
-      loadFirstAvailable(tail, onSuccess, onFail);
+      pointerImgReadyRef.current = false;
     };
-    img.src = head;
-  };
-
-  // Preload pointer once
-  useEffect(() => {
-    loadFirstAvailable(POINTER_CANDIDATES,
-      (img, url) => {
-        pointerImgRef.current = img;
-        pointerImgReadyRef.current = true;
-        if (DEBUG_ASSETS) console.info('[SmartWheel] Pointer image ready from:', url);
-        // Redraw once
-        setAnimationTime((t) => t + 1);
-      },
-      () => { pointerImgReadyRef.current = false; if (DEBUG_ASSETS) console.warn('[SmartWheel] No pointer image could be loaded from candidates'); }
-    );
-  }, []);
-
-  // Preload center image once
-  useEffect(() => {
-    loadFirstAvailable(CENTER_CANDIDATES,
-      (img, url) => {
-        centerImgRef.current = img;
-        centerImgReadyRef.current = true;
-        if (DEBUG_ASSETS) console.info('[SmartWheel] Center image ready from:', url);
-        // Force one redraw even if no animation running
-        setAnimationTime((t) => t + 1);
-      },
-      () => { centerImgReadyRef.current = false; if (DEBUG_ASSETS) console.warn('[SmartWheel] No center image could be loaded from candidates'); }
-    );
+    img.src = POINTER_SVG_SRC;
   }, []);
 
   // Animation frame pour les effets animés
   useEffect(() => {
-    if (!POINTER_ANIMATION_ENABLED) {
-      // Ensure static pointer, no RAF
-      pointerAngleRef.current = 0;
-      prevTimestampRef.current = 0;
-      return;
-    }
     let animationId: number;
     
     const animate = (timestamp: number) => {
@@ -307,11 +239,11 @@ export const useSmartWheelRenderer = ({
       drawBulbs(ctx, centerX, centerY, borderRadius, borderStyle, customBorderWidth);
     }
 
+    // Dessiner le centre
+    drawCenter(ctx, centerX, centerY, size, theme);
+
     // Dessiner le pointeur
     drawPointer(ctx, centerX, centerY, maxRadius);
-
-    // Dessiner le centre tout à la fin (au-dessus de tout, y compris le bouton "GO")
-    drawCenter(ctx, centerX, centerY, size, theme);
 
   }, [segments, theme, wheelState, size, borderStyle, animationTime, showBulbs, customBorderWidth]);
 
@@ -357,7 +289,7 @@ export const useSmartWheelRenderer = ({
       // Bordure fine entre segments (largeur fixe, indépendante du curseur de bordure)
       ctx.save(); // Sauvegarder l'état du contexte
       ctx.strokeStyle = theme.colors.background;
-      ctx.lineWidth = 2; // Toujours 2px fixe
+      ctx.lineWidth = 2; // Toujours 2px fixe, jamais mise à l'échelle
       ctx.lineJoin = 'miter';
       ctx.lineCap = 'square';
       ctx.stroke();
@@ -551,30 +483,10 @@ export const useSmartWheelRenderer = ({
   };
 
   const drawCenter = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, theme: WheelTheme) => {
-    const centerRadius = size * CENTER_SCALE;
-    const diameter = centerRadius * 2;
-    const padding = Math.max(2, size * 0.004);
-    const drawDiameter = Math.max(1, diameter - padding * 2);
-    const drawX = centerX - drawDiameter / 2;
-    const drawY = centerY - drawDiameter / 2;
-
-    if (centerImgReadyRef.current && centerImgRef.current) {
-      // Clip to a circle and draw the center image
-      ctx.save();
-      ctx.beginPath();
-      // Expand clip radius slightly to avoid edge halo from anti-aliasing
-      ctx.arc(centerX, centerY, (drawDiameter / 2) + 0.5, 0, 2 * Math.PI);
-      ctx.clip();
-      // Overdraw the image by 1px in each dimension to cover any fringe
-      ctx.drawImage(centerImgRef.current, drawX - 0.5, drawY - 0.5, drawDiameter + 1, drawDiameter + 1);
-      ctx.restore();
-      // No ring/contour when custom image is present
-      return;
-    }
-
-    // Fallback to existing gradient disk if image not ready
+    const centerRadius = size * 0.08;
     ctx.beginPath();
     ctx.arc(centerX, centerY, centerRadius, 0, 2 * Math.PI);
+    
     if (theme.effects.gradient) {
       const centerGradient = ctx.createRadialGradient(
         centerX, centerY, 0,
@@ -586,6 +498,7 @@ export const useSmartWheelRenderer = ({
     } else {
       ctx.fillStyle = theme.colors.accent;
     }
+    
     ctx.fill();
     ctx.strokeStyle = theme.colors.border;
     ctx.lineWidth = 3;
@@ -610,7 +523,7 @@ export const useSmartWheelRenderer = ({
     ctx.save();
     ctx.translate(centerX, tipY);
     // Apply animated wobble/deflection
-    ctx.rotate(POINTER_ANIMATION_ENABLED ? pointerAngleRef.current : 0);
+    ctx.rotate(pointerAngleRef.current);
 
     // If SVG is loaded, draw it. Otherwise fallback to the procedural pointer.
     if (pointerImgReadyRef.current && pointerImgRef.current) {

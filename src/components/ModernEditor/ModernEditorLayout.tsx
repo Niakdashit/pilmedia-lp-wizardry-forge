@@ -16,6 +16,8 @@ interface ModernEditorLayoutProps {
   setCampaign: (updater: (prev: any) => any) => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  previewDevice: 'desktop' | 'tablet' | 'mobile';
+  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onSave: () => void;
   onPreview: () => void;
   isLoading: boolean;
@@ -31,6 +33,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
   setCampaign,
   activeTab,
   onTabChange,
+  previewDevice,
+  onDeviceChange,
   onSave,
   onPreview,
   isLoading,
@@ -39,8 +43,6 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
   previewKey,
   isPreviewLoading = false
 }) => {
-  // Desktop-only mode
-  const previewDevice: 'desktop' = 'desktop';
   const [showAIAssistant] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   
@@ -111,6 +113,8 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
           onPreview={onPreview} 
           isLoading={isLoading} 
           isNewCampaign={isNewCampaign} 
+          selectedDevice={previewDevice} 
+          onDeviceChange={onDeviceChange} 
         />
         
         {/* Bouton d'aide des raccourcis clavier */}

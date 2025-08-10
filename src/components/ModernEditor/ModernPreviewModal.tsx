@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Monitor } from 'lucide-react';
+import { X, Monitor, Smartphone, Tablet } from 'lucide-react';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../funnels/FunnelStandard';
 import FormPreview from '../GameTypes/FormPreview';
@@ -122,9 +122,34 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b bg-white">
           <div className="flex items-center space-x-4">
             <h2 className="text-lg font-semibold">Aperçu - {campaign.name}</h2>
-            <div className="flex items-center bg-gray-100 rounded-lg px-2 py-1">
-              <Monitor className="w-4 h-4 mr-2" />
-              <span className="text-sm text-gray-600">Desktop uniquement</span>
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => handleDeviceChange('desktop')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  device === 'desktop' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
+                }`}
+                disabled={isChangingDevice}
+              >
+                <Monitor className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleDeviceChange('tablet')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  device === 'tablet' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
+                }`}
+                disabled={isChangingDevice}
+              >
+                <Tablet className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleDeviceChange('mobile')}
+                className={`p-2 rounded-md transition-all duration-200 ${
+                  device === 'mobile' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
+                }`}
+                disabled={isChangingDevice}
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
             </div>
           </div>
           <button

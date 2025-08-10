@@ -6,7 +6,7 @@ import InteractiveCustomElementsRenderer from './InteractiveCustomElementsRender
 interface InteractiveDragDropOverlayProps {
   campaign: any;
   setCampaign: (updater: (prev: any) => any) => void;
-  previewDevice?: 'desktop' | 'tablet' | 'mobile';
+  previewDevice: 'desktop' | 'tablet' | 'mobile';
   isEnabled?: boolean;
   children?: React.ReactNode;
 }
@@ -14,7 +14,7 @@ interface InteractiveDragDropOverlayProps {
 const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   campaign,
   setCampaign,
-  previewDevice = 'desktop',
+  previewDevice,
   isEnabled = true,
   children
 }) => {

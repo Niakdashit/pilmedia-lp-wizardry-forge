@@ -1,11 +1,15 @@
 import React from 'react';
 import { Eye, Save, Share2, MoreHorizontal } from 'lucide-react';
+
+import PreviewDeviceButtons from './PreviewDeviceButtons';
 interface EditorHeaderProps {
   campaign: any;
   onSave: () => void;
   onPreview: () => void;
   isLoading?: boolean;
   isNewCampaign?: boolean;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  onDeviceChange?: (device: 'desktop' | 'tablet' | 'mobile') => void;
 }
 const EditorHeader: React.FC<EditorHeaderProps> = ({
   campaign,
@@ -13,6 +17,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   onPreview,
   isLoading = false,
   isNewCampaign = false,
+  selectedDevice = 'desktop',
+  onDeviceChange = () => {}
 }) => {
   return <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100 flex-shrink-0 z-50">
       <div className="px-6 py-4">
@@ -37,9 +43,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             </div>
           </div>
 
-          {/* Center section - Desktop only indicator */}
+          {/* Center section - Device buttons */}
           <div className="flex items-center justify-center flex-1">
-            <span className="px-3 py-1 rounded bg-gray-100 text-gray-600 text-sm">Desktop uniquement</span>
+            <PreviewDeviceButtons selectedDevice={selectedDevice} onDeviceChange={onDeviceChange} />
           </div>
 
           {/* Right section - Actions */}

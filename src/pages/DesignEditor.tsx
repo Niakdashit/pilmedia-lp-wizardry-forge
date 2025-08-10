@@ -6,4 +6,3 @@ const DesignEditor: React.FC = () => {
 };
 
 export default DesignEditor;
-

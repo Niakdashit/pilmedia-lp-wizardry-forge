@@ -7,7 +7,7 @@ import GameCanvasPreview from './GameCanvasPreview';
 
 interface OptimizedGameCanvasPreviewProps {
   campaign: any;
-  previewDevice?: 'desktop' | 'tablet' | 'mobile';
+  previewDevice: 'desktop' | 'tablet' | 'mobile';
   isLoading?: boolean;
   setCampaign: (updater: any) => void;
   previewKey?: string;
@@ -15,7 +15,7 @@ interface OptimizedGameCanvasPreviewProps {
 
 const OptimizedGameCanvasPreview: React.FC<OptimizedGameCanvasPreviewProps> = memo(({
   campaign,
-  previewDevice = 'desktop',
+  previewDevice,
   isLoading = false,
   setCampaign,
   previewKey
