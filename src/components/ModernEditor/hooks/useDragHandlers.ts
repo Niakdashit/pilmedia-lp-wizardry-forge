@@ -1,10 +1,10 @@
 
 import { useCallback } from 'react';
-import { DragState } from './types/dragDropTypes';
+import { DragState, DragStartMeta } from './types/dragDropTypes';
 
 interface UseDragHandlersProps {
   dragState: DragState;
-  dragStartRef: React.MutableRefObject<{ x: number; y: number }>;
+  dragStartRef: React.MutableRefObject<DragStartMeta>;
   updateDragState: (newState: Partial<DragState>) => void;
   resetDragState: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
@@ -33,8 +33,8 @@ export const useDragHandlers = ({
 
     console.log('🎯 Drag start for element:', elementId, 'type:', elementType);
 
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
 
     if (!containerRef.current) {
       console.log('❌ No container ref');
@@ -45,9 +45,24 @@ export const useDragHandlers = ({
     const startX = clientX - containerRect.left;
     const startY = clientY - containerRect.top;
 
-    console.log('📍 Drag start position:', { startX, startY });
+    // Compute grab offset relative to element's top-left
+    const targetEl = e.currentTarget as HTMLElement;
+    const elRect = targetEl.getBoundingClientRect();
+    const elLeft = elRect.left - containerRect.left;
+    const elTop = elRect.top - containerRect.top;
+    const offsetX = startX - elLeft;
+    const offsetY = startY - elTop;
 
-    dragStartRef.current = { x: startX, y: startY };
+    console.log('📍 Drag start position:', { startX, startY, offsetX, offsetY });
+
+    dragStartRef.current = {
+      x: startX,
+      y: startY,
+      offsetX,
+      offsetY,
+      elementWidth: elRect.width,
+      elementHeight: elRect.height
+    };
     setSelectedElementId(elementId);
     updateDragState({
       isDragging: true,
@@ -64,15 +79,23 @@ export const useDragHandlers = ({
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!dragState.isDragging || !containerRef.current || !dragState.draggedElementId) return;
 
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const currentX = clientX - containerRect.left;
     const currentY = clientY - containerRect.top;
 
-    const newX = Math.max(0, currentX);
-    const newY = Math.max(0, currentY);
+    const { offsetX = 0, offsetY = 0, elementWidth = 0, elementHeight = 0 } = dragStartRef.current || ({} as DragStartMeta);
+
+    let newX = currentX - offsetX;
+    let newY = currentY - offsetY;
+
+    // Clamp within container bounds
+    const maxX = Math.max(0, Math.round(containerRect.width - elementWidth));
+    const maxY = Math.max(0, Math.round(containerRect.height - elementHeight));
+    newX = Math.min(Math.max(0, Math.round(newX)), maxX);
+    newY = Math.min(Math.max(0, Math.round(newY)), maxY);
 
     setCampaign((prev: any) => {
       const design = prev.design || {};
@@ -90,22 +113,22 @@ export const useDragHandlers = ({
               ...element,
               [previewDevice]: {
                 ...element[previewDevice],
-                x: Math.round(newX),
-                y: Math.round(newY)
+                x: newX,
+                y: newY
               }
             };
           } else {
             return {
               ...element,
-              x: Math.round(newX),
-              y: Math.round(newY)
+              x: newX,
+              y: newY
             };
           }
         }
         return element;
       });
 
-      return {
+    return {
         ...prev,
         design: {
           ...design,
@@ -114,7 +137,7 @@ export const useDragHandlers = ({
         _lastUpdate: Date.now()
       };
     });
-  }, [dragState, containerRef, setCampaign, previewDevice]);
+  }, [dragState, containerRef, setCampaign, previewDevice, dragStartRef]);
 
   const handleDragEnd = useCallback(() => {
     if (!dragState.isDragging) return;
