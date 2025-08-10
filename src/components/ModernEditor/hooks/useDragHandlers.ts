@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { DragState, DragStartMeta } from './types/dragDropTypes';
+import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 interface UseDragHandlersProps {
   dragState: DragState;
@@ -42,33 +43,42 @@ export const useDragHandlers = ({
     }
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const startX = clientX - containerRect.left;
-    const startY = clientY - containerRect.top;
 
-    // Compute grab offset relative to element's top-left
+    // Determine preview scale between logical device coords and rendered pixels
+    const deviceDims = getDeviceDimensions(previewDevice);
+    const scaleX = containerRect.width / deviceDims.width;
+    const scaleY = containerRect.height / deviceDims.height;
+
+    const startXLogical = (clientX - containerRect.left) / scaleX;
+    const startYLogical = (clientY - containerRect.top) / scaleY;
+
+    // Compute grab offset relative to element's top-left in logical coords
     const targetEl = e.currentTarget as HTMLElement;
     const elRect = targetEl.getBoundingClientRect();
-    const elLeft = elRect.left - containerRect.left;
-    const elTop = elRect.top - containerRect.top;
-    const offsetX = startX - elLeft;
-    const offsetY = startY - elTop;
+    const elLeftLogical = (elRect.left - containerRect.left) / scaleX;
+    const elTopLogical = (elRect.top - containerRect.top) / scaleY;
+    const offsetX = startXLogical - elLeftLogical;
+    const offsetY = startYLogical - elTopLogical;
 
-    console.log('📍 Drag start position:', { startX, startY, offsetX, offsetY });
+    const elementWidth = elRect.width / scaleX;
+    const elementHeight = elRect.height / scaleY;
+
+    console.log('📍 Drag start (logical):', { startXLogical, startYLogical, offsetX, offsetY, elementWidth, elementHeight, scaleX, scaleY });
 
     dragStartRef.current = {
-      x: startX,
-      y: startY,
+      x: Math.round(startXLogical),
+      y: Math.round(startYLogical),
       offsetX,
       offsetY,
-      elementWidth: elRect.width,
-      elementHeight: elRect.height
+      elementWidth,
+      elementHeight
     };
     setSelectedElementId(elementId);
     updateDragState({
       isDragging: true,
       draggedElementId: elementId,
       draggedElementType: elementType,
-      startPosition: { x: startX, y: startY },
+      startPosition: { x: Math.round(startXLogical), y: Math.round(startYLogical) },
       currentOffset: { x: 0, y: 0 }
     });
 
@@ -83,17 +93,23 @@ export const useDragHandlers = ({
     const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const currentX = clientX - containerRect.left;
-    const currentY = clientY - containerRect.top;
+
+    // Recompute scale to convert pointer (screen) to logical device coords
+    const deviceDims = getDeviceDimensions(previewDevice);
+    const scaleX = containerRect.width / deviceDims.width;
+    const scaleY = containerRect.height / deviceDims.height;
+
+    const currentXLogical = (clientX - containerRect.left) / scaleX;
+    const currentYLogical = (clientY - containerRect.top) / scaleY;
 
     const { offsetX = 0, offsetY = 0, elementWidth = 0, elementHeight = 0 } = dragStartRef.current || ({} as DragStartMeta);
 
-    let newX = currentX - offsetX;
-    let newY = currentY - offsetY;
+    let newX = currentXLogical - offsetX;
+    let newY = currentYLogical - offsetY;
 
-    // Clamp within container bounds
-    const maxX = Math.max(0, Math.round(containerRect.width - elementWidth));
-    const maxY = Math.max(0, Math.round(containerRect.height - elementHeight));
+    // Clamp within logical device bounds
+    const maxX = Math.max(0, Math.round(deviceDims.width - elementWidth));
+    const maxY = Math.max(0, Math.round(deviceDims.height - elementHeight));
     newX = Math.min(Math.max(0, Math.round(newX)), maxX);
     newY = Math.min(Math.max(0, Math.round(newY)), maxY);
 
