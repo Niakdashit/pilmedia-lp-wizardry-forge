@@ -24,7 +24,7 @@ const DesignEditorLayout: React.FC = () => {
   };
 
   // Détection de l'appareil physique réel (pour l'interface)
-  const actualDevice = detectDevice();
+  const [actualDevice, setActualDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
 
   // Zoom par défaut selon l'appareil
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -49,7 +49,7 @@ const DesignEditorLayout: React.FC = () => {
   } = useEditorStore();
 
   // État local pour la compatibilité existante
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
 
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
@@ -64,6 +64,14 @@ const DesignEditorLayout: React.FC = () => {
     value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
   });
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+
+  // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
+  useEffect(() => {
+    const device = detectDevice();
+    setActualDevice(device);
+    setSelectedDevice(device);
+    setCanvasZoom(getDefaultZoom(device));
+  }, []);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -675,7 +683,7 @@ const DesignEditorLayout: React.FC = () => {
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex overflow-hidden relative ${actualDevice === 'mobile' ? 'pb-20' : ''}`}>
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
@@ -695,31 +703,29 @@ const DesignEditorLayout: React.FC = () => {
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
-            {actualDevice !== 'mobile' && (
-              <HybridSidebar 
-                onAddElement={handleAddElement}
-                onBackgroundChange={handleBackgroundChange}
-                onExtractedColorsChange={handleExtractedColorsChange}
-                campaignConfig={campaignConfig}
-                onCampaignConfigChange={handleCampaignConfigChange}
-                elements={canvasElements}
-                onElementsChange={setCanvasElements}
-                selectedElement={selectedElement}
-                onElementUpdate={handleElementUpdate}
-                showEffectsPanel={showEffectsInSidebar}
-                onEffectsPanelChange={setShowEffectsInSidebar}
-                showAnimationsPanel={showAnimationsInSidebar}
-                onAnimationsPanelChange={setShowAnimationsInSidebar}
-                showPositionPanel={showPositionInSidebar}
-                onPositionPanelChange={setShowPositionInSidebar}
-                canvasRef={canvasRef}
-                selectedElements={selectedElements}
-                onSelectedElementsChange={setSelectedElements}
-                onAddToHistory={addToHistory}
-              />
-            )}
-            
+            {/* Hybrid Sidebar - Design & Technical */}
+            <HybridSidebar
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              campaignConfig={campaignConfig}
+              onCampaignConfigChange={handleCampaignConfigChange}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              selectedElement={selectedElement}
+              onElementUpdate={handleElementUpdate}
+              showEffectsPanel={showEffectsInSidebar}
+              onEffectsPanelChange={setShowEffectsInSidebar}
+              showAnimationsPanel={showAnimationsInSidebar}
+              onAnimationsPanelChange={setShowAnimationsInSidebar}
+              showPositionPanel={showPositionInSidebar}
+              onPositionPanelChange={setShowPositionInSidebar}
+              canvasRef={canvasRef}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
+              onAddToHistory={addToHistory}
+            />
+
             {/* Main Canvas Area */}
             <DesignCanvas 
               selectedDevice={selectedDevice}
