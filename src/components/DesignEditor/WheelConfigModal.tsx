@@ -46,23 +46,13 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
   const getModalPosition = () => {
     switch (selectedDevice) {
       case 'mobile':
-        return {
-          position: 'fixed' as const,
-          right: '20px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          maxWidth: '300px',
-          maxHeight: '80vh',
-          overflowY: 'auto' as const
-        };
       case 'tablet':
         return {
           position: 'fixed' as const,
-          right: '20px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          maxWidth: '350px',
-          maxHeight: '80vh',
+          top: '10px',
+          bottom: '10px',
+          left: '10px',
+          right: '10px',
           overflowY: 'auto' as const
         };
       case 'desktop':
@@ -73,7 +63,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
           left: '50%',
           transform: 'translateX(-50%)',
           maxWidth: '600px',
-          maxHeight: '400px',
+          maxHeight: '80vh',
           overflowY: 'auto' as const
         };
     }
