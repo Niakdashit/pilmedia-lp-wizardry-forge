@@ -433,6 +433,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
+  // Forcer un format mobile 9:16 sans bordures ni encoches
+  const effectiveCanvasSize = useMemo(() => {
+    if (selectedDevice === 'mobile') {
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
+    }
+    return canvasSize;
+  }, [selectedDevice, canvasSize]);
+
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
   const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
     containerRef: activeCanvasRef,
@@ -699,12 +708,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className="relative bg-white shadow-lg rounded-lg overflow-hidden border border-[hsl(var(--border))]" 
+              className="relative bg-white rounded-3xl overflow-hidden" 
               style={{
-                width: `${canvasSize.width}px`,
-                height: `${canvasSize.height}px`,
-                minWidth: `${canvasSize.width}px`,
-                minHeight: `${canvasSize.height}px`,
+                width: `${effectiveCanvasSize.width}px`,
+                height: `${effectiveCanvasSize.height}px`,
+                minWidth: `${effectiveCanvasSize.width}px`,
+                minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
                 transform: `scale(${localZoom})`,
                 transformOrigin: 'center center',
@@ -747,9 +756,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 canPaste={!!clipboard && clipboard.type === 'element'}
                 hasStyleToCopy={selectedElement !== null}
               />
-              {/* Grid Overlay Optimisé */}
               <GridOverlay 
-                canvasSize={canvasSize}
+                canvasSize={effectiveCanvasSize}
                 showGrid={showGridLines}
                 gridSize={20}
                 opacity={0.15}
@@ -757,7 +765,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               
               {/* Alignment Guides */}
               <AlignmentGuides
-                canvasSize={canvasSize}
+                canvasSize={effectiveCanvasSize}
                 elements={elementsWithResponsive}
               />
               
@@ -767,23 +775,28 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               
               
               
-              {/* Roue standardisée avec découpage cohérent */}
-              <StandardizedWheel
-                campaign={campaign}
-                device={selectedDevice}
-                shouldCropWheel={true}
-                onClick={() => {
-                  console.log('🔘 Clic sur la roue détecté');
-                  setShowBorderModal(true);
-                }}
-              />
-              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-              <div className="absolute bottom-2 right-2 z-50">
-                <WheelSettingsButton onClick={() => {
-                  console.log('🔘 Clic sur WheelSettingsButton détecté');
-                  setShowBorderModal(true);
-                }} />
-              </div>
+              {/* Contenu spécifique Desktop/Tablet uniquement */}
+              {selectedDevice !== 'mobile' && (
+                <>
+                  {/* Roue standardisée avec découpage cohérent */}
+                  <StandardizedWheel
+                    campaign={campaign}
+                    device={selectedDevice}
+                    shouldCropWheel={true}
+                    onClick={() => {
+                      console.log('🔘 Clic sur la roue détecté');
+                      setShowBorderModal(true);
+                    }}
+                  />
+                  {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+                  <div className="absolute bottom-2 right-2 z-50">
+                    <WheelSettingsButton onClick={() => {
+                      console.log('🔘 Clic sur WheelSettingsButton détecté');
+                      setShowBorderModal(true);
+                    }} />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
@@ -854,35 +867,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })}
 
-            {/* Grid and Guides Toggle */}
-            <div className="absolute top-2 right-2 flex gap-2">
-              <button
-                onClick={() => setShowGridLines(!showGridLines)}
-                className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
-                  showGridLines 
-                    ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
-                    : 'bg-white/80 hover:bg-white text-gray-700'
-                }`}
-                title="Afficher/masquer la grille (G)"
-              >
-                📐
-              </button>
-              
+            {/* Grid and Guides Toggle - desktop only */}
+            {selectedDevice === 'desktop' && (
+              <div className="absolute top-2 right-2 flex gap-2">
+                <button
+                  onClick={() => setShowGridLines(!showGridLines)}
+                  className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
+                    showGridLines 
+                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
+                      : 'bg-white/80 hover:bg-white text-gray-700'
+                  }`}
+                  title="Afficher/masquer la grille (G)"
+                >
+                  📐
+                </button>
+              </div>
+            )}
 
-            </div>
-
-            {/* Device Frame for mobile/tablet */}
-            {selectedDevice !== 'desktop' && <div className="absolute inset-0 pointer-events-none">
-                {selectedDevice === 'mobile' && <>
-                    {/* iPhone-like frame */}
-                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-6 bg-black rounded-full"></div>
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded-full"></div>
-                  </>}
-                {selectedDevice === 'tablet' && <>
-                    {/* Tablet-like frame */}
-                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-gray-300 rounded-full"></div>
-                  </>}
-              </div>}
             </div>
           </div>
         </div>
@@ -890,7 +891,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         {/* Canvas Info - desktop only */}
         {selectedDevice === 'desktop' && (
           <div className="text-center mt-4 text-sm text-gray-500">
-            {selectedDevice} • {canvasSize.width} × {canvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
+            {selectedDevice} • {effectiveCanvasSize.width} × {effectiveCanvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
           </div>
         )}
 
