@@ -113,6 +113,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  // Références pour lisser les mises à jour de zoom
+  const rafRef = useRef<number | null>(null);
+  const pendingZoomRef = useRef<number | null>(null);
   
   // État pour le menu contextuel global du canvas
   
@@ -166,6 +170,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [onZoomChange]);
 
+
+
   // Zoom au pincement (pinch) sur écrans tactiles
   useEffect(() => {
     const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current) as HTMLElement | null;
@@ -181,6 +187,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return Math.hypot(dx, dy);
     };
 
+    const flushZoom = () => {
+      if (pendingZoomRef.current != null) {
+        setLocalZoom(pendingZoomRef.current);
+        onZoomChange?.(pendingZoomRef.current);
+        pendingZoomRef.current = null;
+      }
+      rafRef.current = null;
+    };
+
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         isPinching = true;
@@ -193,12 +208,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const onTouchMove = (e: TouchEvent) => {
       if (isPinching && e.touches.length === 2) {
         const newDist = getDist(e.touches);
-        // Faster pinch response on real mobile: non-linear scaling
         const ratio = newDist / startDist;
-        const accelerated = Math.pow(ratio, 1.35); // increase sensitivity
+        const accelerated = Math.pow(ratio, 1.35);
         const newZoom = Math.max(0.1, Math.min(1.0, startZoom * accelerated));
-        setLocalZoom(newZoom);
-        onZoomChange?.(newZoom);
+        pendingZoomRef.current = newZoom;
+        if (!rafRef.current) {
+          rafRef.current = requestAnimationFrame(flushZoom);
+        }
         e.preventDefault();
       }
     };
@@ -219,8 +235,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       el.removeEventListener('touchmove', onTouchMove as EventListener);
       el.removeEventListener('touchend', onTouchEnd as EventListener);
       el.removeEventListener('touchcancel', onTouchEnd as EventListener);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
   }, [activeCanvasRef, localZoom, onZoomChange]);
+
 
   // Support du zoom via trackpad et molette souris + Ctrl/Cmd
   useEffect(() => {
@@ -717,7 +738,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 flexShrink: 0,
                 transform: `scale(${localZoom})`,
                 transformOrigin: 'center center',
-                touchAction: 'none'
+                touchAction: 'none',
+                transition: 'transform 0.15s ease-out',
+                willChange: 'transform'
               }}
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
