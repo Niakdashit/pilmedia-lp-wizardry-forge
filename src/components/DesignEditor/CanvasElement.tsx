@@ -3,7 +3,6 @@ import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';
-import { useEnhancedDragCalibration } from './hooks/useEnhancedDragCalibration';
 import TextContextMenu from './components/TextContextMenu';
 import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -43,16 +42,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     zoom 
   });
   
-  // 🎯 Hook de calibrage avancé pour le drag & drop précis
-  const dragCalibration = useEnhancedDragCalibration({
-    deviceType: selectedDevice,
-    zoom,
-    containerRef: containerRef || { current: null }
-  });
-  
   // Get device-specific properties with proper typing - memoized
-  const deviceProps = useMemo(() => 
-    getPropertiesForDevice(element, selectedDevice), 
+  const deviceProps = useMemo(() =>
+    getPropertiesForDevice(element, selectedDevice),
     [element, selectedDevice, getPropertiesForDevice]
   );
   
@@ -69,190 +61,99 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   const [isEditing, setIsEditing] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
+  const elementRef = React.useRef<HTMLDivElement>(null);
 
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
   const setClipboard = useEditorStore(state => state.setClipboard);
   const canPaste = useEditorStore(state => state.canPaste);
 
-  // Optimized drag handlers with useCallback - Enhanced for mobile/tablet
+  // Optimized drag handlers with useCallback - precise cursor tracking
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Détecter si Ctrl/Cmd est pressé pour la sélection multiple AVANT preventDefault
     const isMultiSelect = e.ctrlKey || e.metaKey;
-    
-    console.log('🎯 Element PointerDown Event:', {
-      elementId: element.id,
-      isMultiSelect,
-      ctrlKey: e.ctrlKey,
-      metaKey: e.metaKey,
-      eventType: e.type,
-      pointerType: e.pointerType,
-      button: e.button
-    });
-    
-    // Appeler onSelect avec l'information de sélection multiple AVANT preventDefault
-    console.log('🎯 Calling onSelect with:', { elementId: element.id, isMultiSelect });
     onSelect(element.id, isMultiSelect);
-    
     e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
 
-    const currentProps = deviceProps;
-    
-    // Obtenir les informations du conteneur pour les calculs précis
-    if (!containerRef?.current) return;
+    const el = elementRef.current;
+    const canvasEl = containerRef?.current;
+    if (!el || !canvasEl) return;
 
-    // 🎯 Utiliser le calibrage avancé pour une précision parfaite
-    const isTouchInteraction = dragCalibration.isTouchEvent(e);
-    
-    // Vérifier si on doit traiter cet événement tactile
-    if (isTouchInteraction && !dragCalibration.shouldProcessTouchEvent(e.clientX, e.clientY)) {
-      return; // Ignorer les micro-mouvements
-    }
-    
-    // Convertir les coordonnées avec le calibrage avancé
-    const dragCoords = dragCalibration.convertDragCoordinates(
-      e.clientX, 
-      e.clientY, 
-      isTouchInteraction
-    );
-    
-    console.log('🎯 Drag Start Calibration:', {
-      device: selectedDevice,
-      zoom,
-      raw: { x: dragCoords.rawX, y: dragCoords.rawY },
-      calibrated: { x: dragCoords.x, y: dragCoords.y },
-      isTouch: isTouchInteraction,
-      calibrationApplied: dragCoords.calibrated
-    });
-    
-    const startX = dragCoords.x - currentProps.x;
-    const startY = dragCoords.y - currentProps.y;
+    el.setPointerCapture?.(e.pointerId);
+    el.style.transition = 'none';
+    el.style.transformOrigin = '0 0';
 
-    const handlePointerMove = (e: PointerEvent) => {
-      // 🎯 Détecter et optimiser pour les interactions tactiles avec calibrage avancé
-      const isTouchMove = dragCalibration.isTouchEvent(e);
-      
-      // Vérifier si on doit traiter cet événement tactile (filtrer les micro-mouvements)
-      if (isTouchMove && !dragCalibration.shouldProcessTouchEvent(e.clientX, e.clientY, 1)) {
-        return; // Ignorer les micro-mouvements pour une expérience plus fluide
+    let rect = canvasEl.getBoundingClientRect();
+    let matrix = new DOMMatrixReadOnly(window.getComputedStyle(canvasEl).transform);
+    let zoomScale = matrix.a || zoom || 1;
+    let panX = matrix.e;
+    let panY = matrix.f;
+
+    const offsetX = (e.clientX - rect.left - panX) / zoomScale - (deviceProps.x || 0);
+    const offsetY = (e.clientY - rect.top - panY) / zoomScale - (deviceProps.y || 0);
+
+    const lastPos = { x: deviceProps.x || 0, y: deviceProps.y || 0 };
+    let rafId = 0;
+
+    const update = () => {
+      rafId = 0;
+      if (elementRef.current) {
+        elementRef.current.style.transform = `translate3d(${lastPos.x}px, ${lastPos.y}px, 0)`;
       }
-      
-      // Convertir les coordonnées avec le calibrage avancé
-      const moveCoords = dragCalibration.convertDragCoordinates(
-        e.clientX, 
-        e.clientY, 
-        isTouchMove
-      );
-      
-      // Calculer la vitesse pour l'inertie (optionnel)
-      const velocity = dragCalibration.calculateDragVelocity(moveCoords.x, moveCoords.y);
-      
-      const newX = moveCoords.x - startX;
-      const newY = moveCoords.y - startY;
-      
-      console.log('🎯 Drag Move Calibration:', {
-        device: selectedDevice,
-        raw: { x: moveCoords.rawX, y: moveCoords.rawY },
-        calibrated: { x: moveCoords.x, y: moveCoords.y },
-        final: { x: newX, y: newY },
-        velocity,
-        isTouch: isTouchMove
-      });
-      
-      // Calculer les dimensions réelles de l'élément avec plus de précision
-      const elementWidth = currentProps.width || (element.type === 'text' ? 100 : 100);
-      const elementHeight = currentProps.height || (element.type === 'text' ? 30 : 100);
-      
-      // Pour les éléments de texte, utiliser les dimensions du contenu si disponibles
-      let actualWidth = elementWidth;
-      let actualHeight = elementHeight;
-      
-      if (element.type === 'text' && e.target instanceof HTMLElement) {
-        const textElement = e.target.closest('[data-element-type="text"]');
-        if (textElement) {
-          const rect = textElement.getBoundingClientRect();
-          const currentZoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
-          actualWidth = rect.width / currentZoomScale;
-          actualHeight = rect.height / currentZoomScale;
+      const width = deviceProps.width || 100;
+      const height = deviceProps.height || 30;
+      const elementCenterX = lastPos.x + width / 2;
+      const elementCenterY = lastPos.y + height / 2;
+      const canvasCenterX = (rect.width / zoomScale) / 2;
+      const canvasCenterY = (rect.height / zoomScale) / 2;
+      document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
+        detail: {
+          elementId: element.id,
+          x: lastPos.x,
+          y: lastPos.y,
+          width,
+          height,
+          elementCenterX,
+          elementCenterY,
+          canvasCenterX,
+          canvasCenterY,
+          newX: lastPos.x,
+          newY: lastPos.y,
         }
-      }
-      
-      // 📱 Ajustement des dimensions pour les interactions tactiles
-      if (isTouchMove) {
-        const adjustedDimensions = touchOptimization.adjustDimensionsForTouch(
-          actualWidth, 
-          actualHeight, 
-          isTouchMove
-        );
-        actualWidth = adjustedDimensions.width;
-        actualHeight = adjustedDimensions.height;
-      }
-      
-      // Calculer le centre précis de l'élément
-      const elementCenterX = newX + actualWidth / 2;
-      const elementCenterY = newY + actualHeight / 2;
-      
-      // Get canvas dimensions for alignment guides
-      if (containerRef?.current) {
-        // Obtenir les dimensions réelles du canvas
-        const canvasElement = containerRef.current;
-        const canvasRect = canvasElement.getBoundingClientRect();
-        const currentZoomScale = touchOptimization.calculateZoomScale(containerRef.current!) || 1;
-        const canvasWidth = canvasRect.width / currentZoomScale;
-        const canvasHeight = canvasRect.height / currentZoomScale;
-        
-        // Le centre du canvas avec calculs précis
-        const canvasCenterX = canvasWidth / 2;
-        const canvasCenterY = canvasHeight / 2;
-        
-        // Tolérance adaptative pour l'alignement au centre
-        const centerToleranceX = Math.max(2, actualWidth * 0.05);
-        const centerToleranceY = Math.max(2, actualHeight * 0.05);
-        
-        // Déclencher les guides avec la position en temps réel et tolérance adaptative
-        document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
-          detail: {
-            elementId: element.id,
-            x: newX,
-            y: newY,
-            width: currentProps.width || 100,
-            height: currentProps.height || 30,
-            elementCenterX,
-            elementCenterY,
-            canvasCenterX,
-            canvasCenterY,
-            elementWidth: actualWidth,
-            elementHeight: actualHeight,
-            newX,
-            newY,
-            centerToleranceX,
-            centerToleranceY,
-            isNearCenterX: Math.abs(elementCenterX - canvasCenterX) <= centerToleranceX,
-            isNearCenterY: Math.abs(elementCenterY - canvasCenterY) <= centerToleranceY
-          }
-        }));
-      }
-      
-      // Throttled updates for smooth 60fps movement
-      requestAnimationFrame(() => {
-        onUpdate(element.id, {
-          x: newX,
-          y: newY,
-        });
-      });
+      }));
     };
 
-    const handlePointerUp = () => {
-      document.removeEventListener('pointermove', handlePointerMove);
-      document.removeEventListener('pointerup', handlePointerUp);
-      // Hide guides when drag ends
+    const move = (evt: PointerEvent) => {
+      rect = canvasEl.getBoundingClientRect();
+      matrix = new DOMMatrixReadOnly(window.getComputedStyle(canvasEl).transform);
+      zoomScale = matrix.a || zoom || 1;
+      panX = matrix.e;
+      panY = matrix.f;
+
+      lastPos.x = (evt.clientX - rect.left - panX) / zoomScale - offsetX;
+      lastPos.y = (evt.clientY - rect.top - panY) / zoomScale - offsetY;
+      if (!rafId) {
+        rafId = requestAnimationFrame(update);
+      }
+    };
+
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
       document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        update();
+      } else {
+        update();
+      }
+      el.releasePointerCapture?.(e.pointerId);
+      el.style.transition = '';
+      onUpdate(element.id, { x: lastPos.x, y: lastPos.y });
     };
 
-    document.addEventListener('pointermove', handlePointerMove);
-    document.addEventListener('pointerup', handlePointerUp);
-  }, [element.id, deviceProps, onSelect, onUpdate, containerRef]);
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }, [element.id, onSelect, containerRef, zoom, onUpdate, deviceProps.x, deviceProps.y, deviceProps.width, deviceProps.height]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
@@ -679,19 +580,20 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
   }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur]);
 
-  return (
-    <div
-      ref={drag}
-      className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
-      style={{
-        left: deviceProps.x || 0,
-        top: deviceProps.y || 0,
-        opacity,
-        zIndex: element.zIndex || 1,
-      }}
-      onPointerDown={handlePointerDown}
-      onDoubleClick={handleDoubleClick}
-    >
+    return (
+      <div
+        ref={(node) => { drag(node); elementRef.current = node; }}
+        className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
+        style={{
+          transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
+          transformOrigin: '0 0',
+          opacity,
+          zIndex: element.zIndex || 1,
+          touchAction: 'none',
+        }}
+        onPointerDown={handlePointerDown}
+        onDoubleClick={handleDoubleClick}
+      >
       {renderElement}
       
       {/* Selection handles - masqués pendant le drag */}
