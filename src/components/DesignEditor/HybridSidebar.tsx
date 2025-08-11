@@ -69,12 +69,14 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
 }) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
+      setIsMobileDevice(true);
     }
   }, []);
   const [activeTab, setActiveTab] = useState<string | null>('assets');
@@ -241,6 +243,40 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   };
 
   if (isCollapsed) {
+    if (isMobileDevice) {
+      return (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsCollapsed(false);
+                  setActiveTab(tab.id);
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className={`flex-1 p-3 flex flex-col items-center justify-center transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
+                    : 'text-gray-600'
+                }`}
+                title={tab.label}
+              >
+                <Icon className="w-5 h-5 mb-1" />
+                <span className="text-xs">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
     return (
       <div className="w-16 bg-white border-r border-gray-200 flex flex-col">
         {/* Collapse/Expand Button */}
@@ -251,7 +287,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         >
           <ChevronRight className="w-5 h-5 text-gray-600" />
         </button>
-        
+
         {/* Collapsed Icons */}
         <div className="flex flex-col space-y-2 p-2">
           {tabs.map((tab) => {
@@ -277,7 +313,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 title={tab.label}
-                style={{ 
+                style={{
                   pointerEvents: 'auto',
                   userSelect: 'none'
                 }}

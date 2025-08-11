@@ -683,7 +683,7 @@ const DesignEditorLayout: React.FC = () => {
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex overflow-hidden relative ${actualDevice === 'mobile' ? 'pb-20' : ''}`}>
         {showFunnel ? (
           /* Funnel Preview Mode */
           <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
@@ -703,31 +703,29 @@ const DesignEditorLayout: React.FC = () => {
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
-            {actualDevice !== 'mobile' && (
-              <HybridSidebar 
-                onAddElement={handleAddElement}
-                onBackgroundChange={handleBackgroundChange}
-                onExtractedColorsChange={handleExtractedColorsChange}
-                campaignConfig={campaignConfig}
-                onCampaignConfigChange={handleCampaignConfigChange}
-                elements={canvasElements}
-                onElementsChange={setCanvasElements}
-                selectedElement={selectedElement}
-                onElementUpdate={handleElementUpdate}
-                showEffectsPanel={showEffectsInSidebar}
-                onEffectsPanelChange={setShowEffectsInSidebar}
-                showAnimationsPanel={showAnimationsInSidebar}
-                onAnimationsPanelChange={setShowAnimationsInSidebar}
-                showPositionPanel={showPositionInSidebar}
-                onPositionPanelChange={setShowPositionInSidebar}
-                canvasRef={canvasRef}
-                selectedElements={selectedElements}
-                onSelectedElementsChange={setSelectedElements}
-                onAddToHistory={addToHistory}
-              />
-            )}
-            
+            {/* Hybrid Sidebar - Design & Technical */}
+            <HybridSidebar
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              campaignConfig={campaignConfig}
+              onCampaignConfigChange={handleCampaignConfigChange}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              selectedElement={selectedElement}
+              onElementUpdate={handleElementUpdate}
+              showEffectsPanel={showEffectsInSidebar}
+              onEffectsPanelChange={setShowEffectsInSidebar}
+              showAnimationsPanel={showAnimationsInSidebar}
+              onAnimationsPanelChange={setShowAnimationsInSidebar}
+              showPositionPanel={showPositionInSidebar}
+              onPositionPanelChange={setShowPositionInSidebar}
+              canvasRef={canvasRef}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
+              onAddToHistory={addToHistory}
+            />
+
             {/* Main Canvas Area */}
             <DesignCanvas 
               selectedDevice={selectedDevice}
