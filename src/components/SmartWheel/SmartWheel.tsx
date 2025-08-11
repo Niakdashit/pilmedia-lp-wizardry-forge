@@ -72,7 +72,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
   const {
-    canvasRef
+    canvasRef,
+    centerImgReady
   } = useSmartWheelRenderer({
     segments,
     theme: resolvedTheme,
@@ -226,7 +227,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
         }}>
           <canvas
             ref={canvasRef}
-            className="rounded-full"
+            className={`rounded-full relative ${centerImgReady ? 'z-40 pointer-events-none' : 'z-0'}`}
             style={{
               filter: wheelState.isSpinning ? 'brightness(1.1) saturate(1.2)' : 'none',
               transition: 'filter 0.3s ease'
@@ -238,7 +239,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             <button
               onClick={handleButtonClick}
               disabled={isButtonDisabled()}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 flex items-center justify-center text-sm"
+              className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 font-semibold rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${centerImgReady ? 'z-0' : 'z-10'} flex items-center justify-center text-sm`}
               style={{
                 backgroundColor: buttonConfig.color,
                 color: buttonConfig.textColor,

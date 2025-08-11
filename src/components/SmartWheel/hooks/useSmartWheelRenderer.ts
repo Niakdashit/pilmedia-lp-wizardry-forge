@@ -49,6 +49,13 @@ export const useSmartWheelRenderer = ({
   const pointerImgRef = useRef<HTMLImageElement | null>(null);
   const pointerImgReadyRef = useRef(false);
   
+  // Center image asset support
+  const CENTER_SCALE = 0.10;
+  const CENTER_SOURCES = ['/assets/wheel/center.svg', '/assets/wheel/center.png'];
+  const centerImgRef = useRef<HTMLImageElement | null>(null);
+  const centerImgReadyRef = useRef(false);
+  const [centerImgReady, setCenterImgReady] = useState(false);
+  
   // Keep refs in sync without retriggering RAF setup
   useEffect(() => { rotationRef.current = wheelState.rotation; }, [wheelState.rotation]);
   useEffect(() => { spinningRef.current = wheelState.isSpinning; }, [wheelState.isSpinning]);
@@ -71,6 +78,34 @@ export const useSmartWheelRenderer = ({
       pointerImgReadyRef.current = false;
     };
     img.src = POINTER_SVG_SRC;
+  }, []);
+
+  // Preload center image (svg/png) if present in public/assets/wheel
+  useEffect(() => {
+    let canceled = false;
+    (async () => {
+      for (const src of CENTER_SOURCES) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const ok = await new Promise<boolean>((resolve) => {
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = src;
+        });
+        if (canceled) return;
+        if (ok) {
+          centerImgRef.current = img;
+          centerImgReadyRef.current = true;
+          setCenterImgReady(true);
+          return;
+        }
+      }
+      if (!canceled) {
+        centerImgReadyRef.current = false;
+        setCenterImgReady(false);
+      }
+    })();
+    return () => { canceled = true; };
   }, []);
 
   // Animation frame pour les effets animés
@@ -483,22 +518,38 @@ export const useSmartWheelRenderer = ({
   };
 
   const drawCenter = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, theme: WheelTheme) => {
-    const centerRadius = size * 0.08;
+    const centerRadius = size * CENTER_SCALE;
+
+    // If a custom center image is available, draw it clipped in a circle and skip the ring stroke
+    if (centerImgReadyRef.current && centerImgRef.current) {
+      const img = centerImgRef.current;
+      const naturalW = img.naturalWidth || 512;
+      const naturalH = img.naturalHeight || 512;
+      const aspect = naturalW / Math.max(1, naturalH);
+      const drawW = centerRadius * 2;
+      const drawH = drawW / aspect;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, centerRadius, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(img, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
+      ctx.restore();
+      return; // do not draw gradient ring when custom image is present
+    }
+
+    // Fallback: gradient/flat center with border ring
     ctx.beginPath();
     ctx.arc(centerX, centerY, centerRadius, 0, 2 * Math.PI);
-    
     if (theme.effects.gradient) {
-      const centerGradient = ctx.createRadialGradient(
-        centerX, centerY, 0,
-        centerX, centerY, centerRadius
-      );
+      const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, centerRadius);
       centerGradient.addColorStop(0, lightenColor(theme.colors.accent, 0.3));
       centerGradient.addColorStop(1, theme.colors.accent);
       ctx.fillStyle = centerGradient;
     } else {
       ctx.fillStyle = theme.colors.accent;
     }
-    
     ctx.fill();
     ctx.strokeStyle = theme.colors.border;
     ctx.lineWidth = 3;
@@ -649,7 +700,7 @@ export const useSmartWheelRenderer = ({
     }
   };
 
-  return { canvasRef };
+  return { canvasRef, centerImgReady };
 };
 
 // Utilitaires de couleur
