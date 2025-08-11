@@ -127,11 +127,11 @@ export const useMobileOptimization = (
     
     const preventBounce = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
-      
+
       // Permettre le scroll uniquement dans les zones scrollables spécifiques
       const isScrollableArea = target.closest('.scrollable-area, .sidebar-content, .panel-content');
-      
-      if (!isScrollableArea) {
+
+      if (!isScrollableArea && e.type === 'touchmove' && e.cancelable) {
         e.preventDefault();
       }
     };
