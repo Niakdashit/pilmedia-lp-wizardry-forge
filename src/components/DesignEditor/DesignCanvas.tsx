@@ -810,76 +810,72 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
-            {selectedDevice !== 'mobile' && (
-              <>
-                {elementsWithResponsive
-                  .filter((element: any) => {
-                    // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
-                    const elementWithProps = {
-                      ...element,
-                      ...getPropertiesForDevice(element, selectedDevice)
-                    };
-                    
-                    // Ajouter des dimensions par défaut pour les éléments de texte si manquantes
-                    if (element.type === 'text') {
-                      elementWithProps.width = elementWithProps.width || 200;
-                      elementWithProps.height = elementWithProps.height || 40;
-                    }
-                    
-                    // S'assurer que x, y, width, height sont des nombres
-                    elementWithProps.x = Number(elementWithProps.x) || 0;
-                    elementWithProps.y = Number(elementWithProps.y) || 0;
-                    elementWithProps.width = Number(elementWithProps.width) || 100;
-                    elementWithProps.height = Number(elementWithProps.height) || 100;
-                    
-                    return isElementVisible(elementWithProps);
-                  })
-                  .map((element: any) => {
-                  // Obtenir les propriétés pour l'appareil actuel
-                  const responsiveProps = getPropertiesForDevice(element, selectedDevice);
-                  
-                  // Calculer la position absolue pour les éléments groupés
-                  const absolutePosition = calculateAbsolutePosition(element);
-                  
-                  // Fusionner les propriétés responsive avec l'élément original et les positions absolues
-                  const elementWithResponsive = {
-                    ...element,
-                    // Utiliser les positions absolues calculées pour les éléments groupés
-                    x: absolutePosition.x,
-                    y: absolutePosition.y,
-                    // Garder les autres propriétés responsive
-                    width: responsiveProps.width,
-                    height: responsiveProps.height,
-                    fontSize: responsiveProps.fontSize,
-                    // Appliquer l'alignement de texte responsive si disponible
-                    textAlign: responsiveProps.textAlign || element.textAlign
-                  };
+            {elementsWithResponsive
+              .filter((element: any) => {
+                // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
+                const elementWithProps = {
+                  ...element,
+                  ...getPropertiesForDevice(element, selectedDevice)
+                };
+                
+                // Ajouter des dimensions par défaut pour les éléments de texte si manquantes
+                if (element.type === 'text') {
+                  elementWithProps.width = elementWithProps.width || 200;
+                  elementWithProps.height = elementWithProps.height || 40;
+                }
+                
+                // S'assurer que x, y, width, height sont des nombres
+                elementWithProps.x = Number(elementWithProps.x) || 0;
+                elementWithProps.y = Number(elementWithProps.y) || 0;
+                elementWithProps.width = Number(elementWithProps.width) || 100;
+                elementWithProps.height = Number(elementWithProps.height) || 100;
+                
+                return isElementVisible(elementWithProps);
+              })
+              .map((element: any) => {
+              // Obtenir les propriétés pour l'appareil actuel
+              const responsiveProps = getPropertiesForDevice(element, selectedDevice);
+              
+              // Calculer la position absolue pour les éléments groupés
+              const absolutePosition = calculateAbsolutePosition(element);
+              
+              // Fusionner les propriétés responsive avec l'élément original et les positions absolues
+              const elementWithResponsive = {
+                ...element,
+                // Utiliser les positions absolues calculées pour les éléments groupés
+                x: absolutePosition.x,
+                y: absolutePosition.y,
+                // Garder les autres propriétés responsive
+                width: responsiveProps.width,
+                height: responsiveProps.height,
+                fontSize: responsiveProps.fontSize,
+                // Appliquer l'alignement de texte responsive si disponible
+                textAlign: responsiveProps.textAlign || element.textAlign
+              };
 
-                  return (
-                    <CanvasElement 
-                      key={element.id} 
-                      element={elementWithResponsive} 
-                      selectedDevice={selectedDevice}
-                      isSelected={
-                        selectedElement === element.id || 
-                        Boolean(selectedElements && selectedElements.some((sel: any) => sel.id === element.id))
-                      } 
-                      onSelect={handleElementSelect} 
-                      onUpdate={handleElementUpdate} 
-                      onDelete={handleElementDelete}
-                      containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
-                      zoom={zoom}
-                      onAddElement={(newElement) => {
-                        const updatedElements = [...elements, newElement];
-                        onElementsChange(updatedElements);
-                        handleElementSelect(newElement.id);
-                      }}
-                      elements={elements}
-                    />
-                  );
-                })}
-              </>
-            )}
+              return (
+                <CanvasElement 
+                  key={element.id} 
+                  element={elementWithResponsive} 
+                  selectedDevice={selectedDevice}
+                  isSelected={
+                    selectedElement === element.id || 
+                    Boolean(selectedElements && selectedElements.some((sel: any) => sel.id === element.id))
+                  } 
+                  onSelect={handleElementSelect} 
+                  onUpdate={handleElementUpdate} 
+                  onDelete={handleElementDelete}
+                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+                  zoom={zoom}
+                  onAddElement={(newElement) => {
+                    const updatedElements = [...elements, newElement];
+                    onElementsChange(updatedElements);
+                    handleElementSelect(newElement.id);
+                  }}
+                  elements={elements}
+                />
+              );
+            })}
 
             {/* Grid and Guides Toggle - desktop only */}
             {selectedDevice === 'desktop' && (

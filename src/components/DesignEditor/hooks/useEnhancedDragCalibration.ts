@@ -48,23 +48,23 @@ export const useEnhancedDragCalibration = ({
       switch (deviceType) {
         case 'mobile':
           newCalibration = {
-            offsetX: Math.round(2 * zoom),
-            offsetY: Math.round(8 * zoom),
-            scaleX: 0.98 / zoom,
-            scaleY: 0.96 / zoom,
-            sensitivity: 1.1,
-            precision: 0.95
+            offsetX: 0,
+            offsetY: 0,
+            scaleX: 1 / zoom,
+            scaleY: 1 / zoom,
+            sensitivity: 1,
+            precision: 1
           };
           break;
 
         case 'tablet':
           newCalibration = {
-            offsetX: Math.round(1 * zoom),
-            offsetY: Math.round(4 * zoom),
-            scaleX: 0.99 / zoom,
-            scaleY: 0.98 / zoom,
-            sensitivity: 1.05,
-            precision: 0.98
+            offsetX: 0,
+            offsetY: 0,
+            scaleX: 1 / zoom,
+            scaleY: 1 / zoom,
+            sensitivity: 1,
+            precision: 1
           };
           break;
 
