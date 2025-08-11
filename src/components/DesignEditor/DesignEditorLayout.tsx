@@ -10,6 +10,7 @@ import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
+import { getDeviceDimensions } from '../../utils/deviceDimensions';
 
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
@@ -28,6 +29,11 @@ const DesignEditorLayout: React.FC = () => {
 
   // Zoom par défaut selon l'appareil
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
+    if (device === 'mobile' && typeof window !== 'undefined') {
+      const { width, height } = getDeviceDimensions('mobile');
+      const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
+      return Math.min(scale, 1);
+    }
     switch (device) {
       case 'desktop':
         return 0.7; // 70%
@@ -72,6 +78,15 @@ const DesignEditorLayout: React.FC = () => {
     setSelectedDevice(device);
     setCanvasZoom(getDefaultZoom(device));
   }, []);
+
+  // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
+  useEffect(() => {
+    if (actualDevice === 'mobile') {
+      const updateZoom = () => setCanvasZoom(getDefaultZoom('mobile'));
+      window.addEventListener('resize', updateZoom);
+      return () => window.removeEventListener('resize', updateZoom);
+    }
+  }, [actualDevice]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
