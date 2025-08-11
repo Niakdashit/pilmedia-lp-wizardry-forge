@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Tablet, Smartphone, Save, Eye, X, Undo, Redo } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo } from 'lucide-react';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -76,17 +76,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         >
           <Monitor className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => onDeviceChange('tablet')}
-          className={`p-2 rounded-md transition-all duration-200 ${
-            selectedDevice === 'tablet' 
-              ? 'bg-white shadow-sm text-[hsl(var(--sidebar-icon-active))] ring-1 ring-[hsl(var(--sidebar-glow))]' 
-              : 'text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))] hover:bg-[hsl(var(--sidebar-hover))]'
-          }`}
-          title="Tablet"
-        >
-          <Tablet className="w-4 h-4" />
-        </button>
+        {/* Tablet button removed */}
         <button
           onClick={() => onDeviceChange('mobile')}
           className={`p-2 rounded-md transition-all duration-200 ${
