@@ -24,7 +24,7 @@ const StatsGrid: React.FC = () => {
     icon: <Calendar className="w-6 h-6 text-[#841b60]" />
   }];
   return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-      {stats.map((stat, statIndex) => <div key={statIndex} className="bg-white p-6 rounded-[28px] shadow-md hover:shadow-lg transition-shadow duration-300 my-[13px]">
+      {stats.map((stat, statIndex) => <div key={statIndex} className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 my-[13px]">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-700 font-semibold">{stat.name}</p>
