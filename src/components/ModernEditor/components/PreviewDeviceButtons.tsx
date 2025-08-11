@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Monitor, Tablet, Smartphone } from 'lucide-react';
+import { Monitor, Smartphone } from 'lucide-react';
 
 interface PreviewDeviceButtonsProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -23,17 +23,6 @@ const PreviewDeviceButtons: React.FC<PreviewDeviceButtonsProps> = ({
         title="Desktop"
       >
         <Monitor className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => onDeviceChange('tablet')}
-        className={`p-2 rounded-md transition-colors ${
-          selectedDevice === 'tablet' 
-            ? 'bg-white shadow-sm text-[#841b60]' 
-            : 'text-gray-600 hover:text-gray-900'
-        }`}
-        title="Tablette"
-      >
-        <Tablet className="w-4 h-4" />
       </button>
       <button
         onClick={() => onDeviceChange('mobile')}

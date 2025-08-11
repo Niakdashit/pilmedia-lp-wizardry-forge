@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { X, Monitor, Smartphone } from 'lucide-react';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import FunnelStandard from '../funnels/FunnelStandard';
 import FormPreview from '../GameTypes/FormPreview';
@@ -131,15 +131,6 @@ const ModernPreviewModal: React.FC<ModernPreviewModalProps> = ({
                 disabled={isChangingDevice}
               >
                 <Monitor className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDeviceChange('tablet')}
-                className={`p-2 rounded-md transition-all duration-200 ${
-                  device === 'tablet' ? 'bg-white shadow-sm scale-105' : 'hover:bg-gray-200'
-                }`}
-                disabled={isChangingDevice}
-              >
-                <Tablet className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleDeviceChange('mobile')}

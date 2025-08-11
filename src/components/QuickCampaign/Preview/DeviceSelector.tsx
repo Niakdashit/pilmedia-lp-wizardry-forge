@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Monitor, Tablet, Smartphone } from 'lucide-react';
+import { Monitor, Smartphone } from 'lucide-react';
 
 interface DeviceSelectorProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -23,17 +23,6 @@ const DeviceSelector: React.FC<DeviceSelectorProps> = ({
       >
         <Monitor className="w-4 h-4" />
         <span>Desktop</span>
-      </button>
-      <button
-        onClick={() => onDeviceChange('tablet')}
-        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-          selectedDevice === 'tablet'
-            ? 'bg-white text-[#841b60] shadow-sm'
-            : 'text-gray-600 hover:text-gray-900'
-        }`}
-      >
-        <Tablet className="w-4 h-4" />
-        <span>Tablette</span>
       </button>
       <button
         onClick={() => onDeviceChange('mobile')}
