@@ -775,38 +775,27 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               
               
               
-              {/* Contenu spécifique Desktop/Tablet uniquement */}
-              {selectedDevice !== 'mobile' && (
-                <>
-                  {/* Roue standardisée avec découpage cohérent */}
-                  <StandardizedWheel
-                    campaign={campaign}
-                    device={selectedDevice}
-                    shouldCropWheel={true}
-                    onClick={() => {
-                      console.log('🔘 Clic sur la roue détecté');
-                      setShowBorderModal(true);
-                    }}
-                  />
-                  {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-                  <div className="absolute bottom-2 right-2 z-50">
-                    <WheelSettingsButton onClick={() => {
-                      console.log('🔘 Clic sur WheelSettingsButton détecté');
-                      setShowBorderModal(true);
-                    }} />
-                  </div>
-                </>
-              )}
+              {/* Roue standardisée avec découpage cohérent */}
+              <StandardizedWheel
+                campaign={campaign}
+                device={selectedDevice}
+                shouldCropWheel={true}
+                disabled={false}
+                onClick={() => {
+                  console.log('🔘 Clic sur la roue détecté');
+                  setShowBorderModal(true);
+                }}
+              />
 
-              {/* Contenu spécifique Mobile */}
-              {selectedDevice === 'mobile' && (
-                <StandardizedWheel
-                  campaign={campaign}
-                  device="mobile"
-                  shouldCropWheel={true}
-                  disabled={false}
+              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+              <div className="absolute bottom-2 right-2 z-50">
+                <WheelSettingsButton
+                  onClick={() => {
+                    console.log('🔘 Clic sur WheelSettingsButton détecté');
+                    setShowBorderModal(true);
+                  }}
                 />
-              )}
+              </div>
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
