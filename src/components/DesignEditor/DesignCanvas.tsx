@@ -803,7 +803,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 <StandardizedWheel
                   campaign={campaign}
                   device="mobile"
-                  shouldCropWheel={false}
+                  shouldCropWheel={true}
                   disabled={false}
                 />
               )}
