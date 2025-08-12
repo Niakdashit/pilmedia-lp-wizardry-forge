@@ -16,7 +16,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-const logo = '/prosplay-logo.svg';
+const sidebarLogo = '/logos/prosplay-sidebar-logo.svg';
 const logoIcon = '/prosplay-icon.svg';
 
 const AdminSidebar: React.FC = () => {
@@ -43,7 +43,7 @@ const AdminSidebar: React.FC = () => {
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">
         {!sidebarCollapsed ? (
           <div className="flex items-center space-x-2">
-            <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
+            <img src={sidebarLogo} alt="Prosplay Logo" className="h-8 w-auto" />
             <span className="text-red-600 font-bold text-sm">ADMIN</span>
           </div>
         ) : (

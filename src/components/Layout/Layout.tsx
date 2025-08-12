@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAppContext } from '../../context/AppContext';
 import { Menu, User, LogOut } from 'lucide-react';
-const logo = '/prosplay-logo.svg';
+const headerLogo = '/logos/prosplay-header-logo.svg';
 
 const Layout: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
@@ -68,7 +68,7 @@ const Layout: React.FC = () => {
           padding: '0 24px'
         }}>
           <img 
-            src={logo} 
+            src={headerLogo} 
             alt="Prosplay Logo" 
             style={{
               height: '93px',
@@ -154,7 +154,7 @@ const Layout: React.FC = () => {
             <button onClick={toggleSidebar} className="text-gray-500">
               <Menu className="w-6 h-6" />
             </button>
-            <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
+            <img src={headerLogo} alt="Prosplay Logo" className="h-8 w-auto" />
           </header>
           <main className="flex-1 overflow-y-auto w-full py-0 px-0">
             <div className="w-full max-w-full py-0 sm:py-6 px-4 sm:px-6">

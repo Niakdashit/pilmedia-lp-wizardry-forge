@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-const logo = '/prosplay-logo.svg';
+const headerLogo = '/logos/prosplay-header-logo.svg';
 
 interface EditorOnlyLayoutProps {
   children: React.ReactNode;
@@ -42,7 +42,7 @@ const EditorOnlyLayout: React.FC<EditorOnlyLayoutProps> = ({
               </>
             )}
           </div>
-          <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
+          <img src={headerLogo} alt="Prosplay Logo" className="h-8 w-auto" />
         </header>
       )}
       

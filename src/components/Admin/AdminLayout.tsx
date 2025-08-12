@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { useAppContext } from '../../context/AppContext';
 import { Menu } from 'lucide-react';
-const logo = '/prosplay-logo.svg';
+const headerLogo = '/logos/prosplay-header-logo.svg';
 
 const AdminLayout: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
@@ -45,7 +45,7 @@ const AdminLayout: React.FC = () => {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <img src={logo} alt="Prosplay Logo" className="h-8 w-auto" />
+            <img src={headerLogo} alt="Prosplay Logo" className="h-8 w-auto" />
             <span className="text-red-600 font-bold text-sm">ADMIN</span>
           </div>
         </header>

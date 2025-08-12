@@ -160,13 +160,24 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
       {/* Persistent Bottom Tab Bar (mobile only) */}
       <div
-        className="fixed left-0 right-0 z-[9999] bg-white/95 backdrop-blur border-t border-gray-200"
+        className="fixed left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200"
         style={{
           // Position above the iOS/Android gesture area
+          position: 'fixed',
           bottom: '0',
+          left: '0',
+          right: '0',
+          zIndex: 9999,
           paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
           // Ensure it stays on top of other content
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
+          // Force hardware acceleration
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          // Prevent any parent from hiding this element
+          visibility: 'visible !important',
+          opacity: '1 !important',
+          display: 'block !important'
         }}
       >
         <div className="flex items-center justify-around px-2 py-2">
