@@ -29,9 +29,53 @@ export const useCanvasZoom = ({
 
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [isMobileView, setIsMobileView] = useState(false);
+
+  // Auto-zoom pour mobile en mode PC
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const userAgent = typeof window.navigator === 'undefined' ? '' : navigator.userAgent;
+      const mobile = 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) || 
+        (navigator as any).maxTouchPoints > 0;
+      
+      setIsMobileView(mobile);
+      
+      if (mobile && canvasRef.current) {
+        // Ajuster le zoom pour le mode mobile
+        const container = canvasRef.current.parentElement;
+        if (container) {
+          const containerWidth = container.clientWidth;
+          const containerHeight = container.clientHeight;
+          
+          // Calculer l'échelle pour que le canvas tienne dans la vue
+          const scaleX = (containerWidth * 0.9) / 1200; // 1200 est la largeur du canvas PC
+          const scaleY = (containerHeight * 0.9) / 800;  // 800 est la hauteur du canvas PC
+          const newScale = Math.min(scaleX, scaleY, 1); // Ne pas dépasser 100%
+          
+          if (newScale > minZoom && newScale < maxZoom) {
+            setZoomState(prev => ({
+              ...prev,
+              scale: newScale,
+              translateX: (containerWidth - (1200 * newScale)) / 2, // Centrer horizontalement
+              translateY: 20 // Petit décalage du haut
+            }));
+          }
+        }
+      }
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, [minZoom, maxZoom, canvasRef]);
 
   // Fonction pour zoomer vers un point spécifique
   const zoomToPoint = useCallback((newScale: number, clientX: number, clientY: number) => {
+    // Si on est sur mobile, limiter le zoom minimum pour éviter que le canvas devienne trop petit
+    if (isMobileView) {
+      newScale = Math.max(minZoom * 1.5, Math.min(maxZoom, newScale));
+    }
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;

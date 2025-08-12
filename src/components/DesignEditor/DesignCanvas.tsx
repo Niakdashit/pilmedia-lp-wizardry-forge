@@ -113,6 +113,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  // Prevent repeated auto-fit on mobile when viewing desktop canvas
+  const didAutoFitRef = useRef(false);
 
   // Références pour lisser les mises à jour de zoom
   const rafRef = useRef<number | null>(null);
@@ -159,6 +161,55 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return selectedDevice === 'mobile' ? 0.85 :
            selectedDevice === 'tablet' ? 0.6 : 0.7;
   }, [selectedDevice]);
+
+  // Auto-fit: if on a real mobile device but viewing the desktop canvas, fit the canvas to viewport
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isRealMobile() || selectedDevice !== 'desktop') return;
+
+    const computeAndApplyFit = () => {
+      // Only auto-fit once until orientation changes
+      if (didAutoFitRef.current) return;
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Match paddings used in the container around the canvas for desktop-on-mobile
+      const paddingTop = 32;
+      const paddingBottom = 180; // space reserved for MobileSidebarDrawer
+      const paddingLeft = 20;
+      const paddingRight = 20;
+
+      const availableWidth = Math.max(0, viewportWidth - paddingLeft - paddingRight);
+      const availableHeight = Math.max(0, viewportHeight - paddingTop - paddingBottom);
+
+      const targetW = effectiveCanvasSize.width;
+      const targetH = effectiveCanvasSize.height;
+
+      if (targetW > 0 && targetH > 0 && availableWidth > 0 && availableHeight > 0) {
+        const scaleX = availableWidth / targetW;
+        const scaleY = availableHeight / targetH;
+        const fitted = Math.min(scaleX, scaleY, 1);
+        const clamped = Math.max(0.1, Math.min(1, fitted));
+
+        setLocalZoom(clamped);
+        onZoomChange?.(clamped);
+        didAutoFitRef.current = true;
+      }
+    };
+
+    // Initial fit
+    computeAndApplyFit();
+
+    // Re-fit on orientation changes
+    const handleOrientation = () => {
+      didAutoFitRef.current = false;
+      // Allow the browser to update innerWidth/innerHeight first
+      requestAnimationFrame(() => computeAndApplyFit());
+    };
+    window.addEventListener('orientationchange', handleOrientation);
+    return () => window.removeEventListener('orientationchange', handleOrientation);
+  }, [selectedDevice, effectiveCanvasSize, onZoomChange]);
 
   // Handler centralisé pour changer le zoom depuis la barre d'échelle
   const handleZoomChange = useCallback((value: number) => {

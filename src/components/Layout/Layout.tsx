@@ -89,43 +89,29 @@ const Layout: React.FC = () => {
           }}>
             <button 
               onClick={handleAccount}
+              className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
+              title="Mon compte"
               style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '8px',
                 borderRadius: '50%',
                 transition: 'background-color 0.2s',
               }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              title="Mon compte"
             >
-              <User size={28} />
+              <User className="w-4 h-4" />
             </button>
             <button 
               onClick={handleLogout}
+              className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
+              title="Déconnexion"
               style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '8px',
                 borderRadius: '50%',
                 transition: 'background-color 0.2s',
               }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              title="Déconnexion"
             >
-              <LogOut size={28} />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>

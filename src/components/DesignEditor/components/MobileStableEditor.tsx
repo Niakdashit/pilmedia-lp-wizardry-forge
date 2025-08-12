@@ -119,7 +119,10 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           position: relative;
           width: 100%;
           height: 100vh;
-          overflow: hidden;
+          /* Allow mobile tab bar to be visible */
+          overflow: visible;
+          /* Create a stacking context */
+          isolation: isolate;
         }
         
         .mobile-optimized {
@@ -138,9 +141,12 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           
           /* Safe areas iOS */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: env(safe-area-inset-bottom);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 80px); /* Space for mobile tab bar */
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
+          
+          /* Ensure content doesn't get hidden behind tab bar */
+          box-sizing: border-box;
         }
         
         .tablet-optimized {

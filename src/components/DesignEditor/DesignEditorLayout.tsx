@@ -703,14 +703,14 @@ const DesignEditorLayout: React.FC = () => {
             className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
             title="Mon compte"
           >
-            <User className="w-6 h-6" />
+            <User className="w-4 h-4" />
           </button>
           <button 
             onClick={() => {}}
             className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
             title="Déconnexion"
           >
-            <LogOut className="w-6 h-6" />
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </GradientBand>
