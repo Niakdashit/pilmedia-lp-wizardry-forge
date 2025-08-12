@@ -233,7 +233,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
-  useEffect(() => {
     if (externalSelectedElement && externalSelectedElement.id !== selectedElement) {
       setSelectedElement(externalSelectedElement.id);
     }
@@ -575,33 +574,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
   }, []);
 
-  // 🚀 Cache intelligent pour optimiser les performances
-  const elementCache = useAdvancedCache({
-    maxSize: 5 * 1024 * 1024, // 5MB pour commencer
-    maxEntries: 200,
-    ttl: 10 * 60 * 1000, // 10 minutes
-    enableCompression: true,
-    storageKey: 'design-canvas-cache'
-  });
-
-  // 🚀 Auto-save adaptatif pour une sauvegarde intelligente
-  const { updateData: updateAutoSaveData, recordActivity } = useAdaptiveAutoSave({
-    onSave: async (data) => {
-      if (onCampaignChange) {
-        onCampaignChange(data);
-      }
-    },
-    baseDelay: 2000, // 2 secondes de base
-    minDelay: 500,   // Minimum 500ms
-    maxDelay: 8000,  // Maximum 8 secondes
-    onSaveSuccess: () => {
-      console.log('✓ Sauvegarde automatique réussie');
-    },
-    onError: (error) => {
-      console.warn('⚠️ Erreur de sauvegarde automatique:', error);
-    }
-  });
-
   // (moved) auto-responsive, canvasSize, and effectiveCanvasSize are defined earlier to avoid TDZ issues
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
@@ -613,65 +585,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   });
 
   // Hooks optimisés pour snapping (gardé pour compatibilité)
-  const { applySnapping } = useSmartSnapping({
-    containerRef: activeCanvasRef,
-    gridSize: 20,
-    snapTolerance: 3 // Réduit pour plus de précision
-  });
-
-  // Handlers optimisés avec snapping et cache intelligent
-  const handleElementUpdate = useCallback((id: string, updates: any) => {
-    // Utiliser la fonction externe si disponible
-    if (externalOnElementUpdate && selectedElement === id) {
-      externalOnElementUpdate(updates);
-      return;
-    }
-    // Vérifier le cache pour éviter les recalculs
-    const cacheKey = `element-update-${id}-${JSON.stringify(updates).slice(0, 50)}`;
-    const cachedResult = elementCache.get(cacheKey);
-    
-    if (cachedResult && Date.now() - cachedResult.timestamp < 1000) {
-      // Utiliser le résultat mis en cache si récent (< 1 seconde)
-      onElementsChange(cachedResult.elements);
-      return;
-    }
-
-    // Appliquer le snapping si c'est un déplacement
-    if (updates.x !== undefined && updates.y !== undefined) {
-      const element = elements.find(el => el.id === id);
-      if (element) {
-        const snappedPosition = applySnapping(
-          updates.x,
-          updates.y,
-          element.width || 100,
-          element.height || 100,
-          id
-        );
-        updates.x = snappedPosition.x;
-        updates.y = snappedPosition.y;
-        
-        // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
-        const positionCacheKey = `snap-${id}-${Math.floor(updates.x/5)}-${Math.floor(updates.y/5)}`;
-        elementCache.set(positionCacheKey, { x: updates.x, y: updates.y, timestamp: Date.now() });
-      }
-    }
-
-    const updatedElements = elements.map(el => el.id === id ? {
-      ...el,
-      ...updates
-    } : el);
-    
-    // Mettre en cache le résultat
-    elementCache.set(cacheKey, { elements: updatedElements, timestamp: Date.now() });
-    
-    onElementsChange(updatedElements);
-    
-    // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
-    const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
-    const intensity = activityType === 'drag' ? 0.8 : 0.5;
-    updateAutoSaveData(campaign, activityType, intensity);
-  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement]);
-
   // 🚀 Drag & drop ultra-fluide pour une expérience premium
   useUltraFluidDragDrop({
     containerRef: activeCanvasRef,
