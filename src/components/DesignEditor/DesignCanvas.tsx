@@ -185,51 +185,80 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       externalOnElementUpdate(updates);
       return;
     }
-    // Vérifier le cache pour éviter les recalculs
-    const cacheKey = `element-update-${id}-${JSON.stringify(updates).slice(0, 50)}`;
-    const cachedResult = elementCache.get(cacheKey);
-    
-    if (cachedResult && Date.now() - cachedResult.timestamp < 1000) {
-      // Utiliser le résultat mis en cache si récent (< 1 seconde)
-      onElementsChange(cachedResult.elements);
-      return;
-    }
 
-    // Appliquer le snapping si c'est un déplacement
-    if (updates.x !== undefined && updates.y !== undefined) {
+    // Préparer les updates selon l'appareil courant (desktop = racine, mobile/tablet = scope par device)
+    const deviceScopedKeys = ['x', 'y', 'width', 'height', 'fontSize', 'textAlign'];
+    const isDeviceScoped = selectedDevice !== 'desktop';
+
+    // Copier pour ne pas muter l'argument
+    const workingUpdates: Record<string, any> = { ...updates };
+    const devicePatch: Record<string, any> = {};
+
+    // Appliquer le snapping si c'est un déplacement (avant de répartir par device)
+    if (workingUpdates.x !== undefined && workingUpdates.y !== undefined) {
       const element = elements.find(el => el.id === id);
       if (element) {
         const snappedPosition = applySnapping(
-          updates.x,
-          updates.y,
+          workingUpdates.x,
+          workingUpdates.y,
           element.width || 100,
           element.height || 100,
           id
         );
-        updates.x = snappedPosition.x;
-        updates.y = snappedPosition.y;
-        
+        workingUpdates.x = snappedPosition.x;
+        workingUpdates.y = snappedPosition.y;
+
         // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
-        const positionCacheKey = `snap-${id}-${Math.floor(updates.x/5)}-${Math.floor(updates.y/5)}`;
-        elementCache.set(positionCacheKey, { x: updates.x, y: updates.y, timestamp: Date.now() });
+        const positionCacheKey = `snap-${id}-${Math.floor(workingUpdates.x/5)}-${Math.floor(workingUpdates.y/5)}`;
+        elementCache.set(positionCacheKey, { x: workingUpdates.x, y: workingUpdates.y, timestamp: Date.now() });
       }
     }
 
-    const updatedElements = elements.map(el => el.id === id ? {
-      ...el,
-      ...updates
-    } : el);
-    
+    if (isDeviceScoped) {
+      // Extraire les props dépendantes de l'appareil
+      for (const key of deviceScopedKeys) {
+        if (workingUpdates[key] !== undefined) {
+          devicePatch[key] = workingUpdates[key];
+          delete workingUpdates[key];
+        }
+      }
+    }
+
+    // Vérifier le cache pour éviter les recalculs
+    const cacheKey = `element-update-${id}-${JSON.stringify({ workingUpdates, devicePatch }).slice(0, 50)}`;
+    const cachedResult = elementCache.get(cacheKey);
+    if (cachedResult && Date.now() - cachedResult.timestamp < 1000) {
+      onElementsChange(cachedResult.elements);
+      return;
+    }
+
+    const updatedElements = elements.map(el => {
+      if (el.id !== id) return el;
+
+      const base = { ...el, ...workingUpdates };
+      if (isDeviceScoped) {
+        const currentDeviceData = (el as any)[selectedDevice] || {};
+        return {
+          ...base,
+          [selectedDevice]: {
+            ...currentDeviceData,
+            ...devicePatch
+          }
+        };
+      }
+      return base;
+    });
+
     // Mettre en cache le résultat
     elementCache.set(cacheKey, { elements: updatedElements, timestamp: Date.now() });
-    
+
     onElementsChange(updatedElements);
-    
+
     // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
     const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
     const intensity = activityType === 'drag' ? 0.8 : 0.5;
     updateAutoSaveData(campaign, activityType, intensity);
-  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement]);
+  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice]);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
