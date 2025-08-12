@@ -54,17 +54,18 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       width: '100%',
       height: '100%',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start', // Changé de 'center' à 'flex-start' pour aligner en haut
       justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden',
       backgroundColor: campaign.design?.background || '#ebf4f7',
       backgroundImage: resolvedBackground ? `url(${resolvedBackground})` : undefined,
-      backgroundSize: 'contain', // Changed from 'cover' to 'contain'
+      backgroundSize: 'contain',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
       borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
-      border: '2px solid #e5e7eb'
+      border: '2px solid #e5e7eb',
+      transform: `translateY(${(previewDevice === 'mobile' || previewDevice === 'tablet') ? '-25%' : '-15%'})` // 25% en mobile/tablette, 15% en desktop
     };
   };
 

@@ -62,13 +62,13 @@ const CampaignMobile: React.FC<CampaignMobileProps> = ({
       <div className="flex-1 flex flex-col min-w-0 max-w-full">
         {/* Sub-tabs */}
         <div className="border-b border-gray-200 bg-gray-50 flex-shrink-0">
-          <nav className="flex overflow-x-auto scrollbar-hide px-2 py-2">
-            <div className="flex space-x-1 min-w-max">
+          <nav className="md:flex md:flex-col lg:flex-row overflow-x-auto overflow-y-hidden scrollbar-hide px-2 py-2">
+            <div className="flex flex-col md:flex-row space-y-1 md:space-y-0 md:space-x-1 min-w-max">
               {subTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveSubTab(tab.id)}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 text-left ${
                     activeSubTab === tab.id
                       ? 'bg-white text-[#841b60] shadow-sm'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'

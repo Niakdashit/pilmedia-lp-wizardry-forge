@@ -113,49 +113,65 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     handleDeviceTransition();
   }, [previewDevice, handleDeviceTransition]);
 
+  // Appliquer un décalage vertical standardisé selon l'appareil
+  const getVerticalOffsetStyle = (): React.CSSProperties => {
+    const isMobileOrTablet = previewDevice === 'mobile' || previewDevice === 'tablet';
+    const offset = isMobileOrTablet ? '-37.5%' : '-22.5%';
+    return {
+      position: 'relative',
+      top: offset,
+      width: '100%',
+      height: '100%',
+      zIndex: 10
+    };
+  };
+
+
+  // Apply vertical offset after GamePositioner to ensure it's not overridden by wheel-specific transforms
+  const renderPreviewContent = (gameConfig: any) => (
+    <DeviceFrame device={previewDevice}>
+      <GamePositioner campaign={campaign}>
+        <GameRenderer
+          campaign={campaign}
+          gameConfig={gameConfig}
+          previewDevice={previewDevice}
+          disableForm={disableForm}
+          onGameFinish={handleGameFinish}
+        />
+      </GamePositioner>
+      
+      {/* Apply vertical offset after GamePositioner */}
+      <div style={getVerticalOffsetStyle()}>
+        <CustomElementsRenderer
+          customTexts={customTextsForRenderer}
+          customImages={customImagesForRenderer}
+          previewDevice={previewDevice}
+          sizeMap={sizeMap}
+        />
+        
+        {setCampaign && (
+          <InteractiveDragDropOverlay
+            campaign={campaign}
+            setCampaign={setCampaign}
+            previewDevice={previewDevice}
+            isEnabled={true}
+          />
+        )}
+      </div>
+    </DeviceFrame>
+  );
 
   return (
     <div className="w-full h-full flex flex-col relative">
-
       <div className="flex-1 flex items-center justify-center relative">
         <PreviewErrorBoundary onError={handleError}>
           <DeviceTransition device={previewDevice} isChanging={isChangingDevice}>
             <GameConfigProvider campaign={campaign}>
-              {(gameConfig) => (
-                <DeviceFrame device={previewDevice}>
-                  <GamePositioner campaign={campaign}>
-                    <GameRenderer
-                      campaign={campaign}
-                      gameConfig={gameConfig}
-                      previewDevice={previewDevice}
-                      disableForm={disableForm}
-                      onGameFinish={handleGameFinish}
-                    />
-                  </GamePositioner>
-                  
-                  {/* Render custom elements (texts and images) */}
-                  <CustomElementsRenderer
-                    customTexts={customTextsForRenderer}
-                    customImages={customImagesForRenderer}
-                    previewDevice={previewDevice}
-                    sizeMap={sizeMap}
-                  />
-                  
-                  {/* Always render interactive overlay when setCampaign is available */}
-                  {setCampaign && (
-                    <InteractiveDragDropOverlay
-                      campaign={campaign}
-                      setCampaign={setCampaign}
-                      previewDevice={previewDevice}
-                      isEnabled={true}
-                    />
-                  )}
-                </DeviceFrame>
-              )}
+              {(gameConfig) => renderPreviewContent(gameConfig)}
             </GameConfigProvider>
           </DeviceTransition>
           
-          {/* Feedback overlay - SANS MASQUE NI FLOU */}
+          {/* Feedback overlay - SANS MASQUE NI FLOUR */}
           {(isLoading || error) && (
             <PreviewFeedback
               device={previewDevice}

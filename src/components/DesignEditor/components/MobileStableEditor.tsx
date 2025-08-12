@@ -36,8 +36,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
         webkitOverflowScrolling: 'touch',
         
         // Optimiser les performances tactiles
-        willChange: 'transform',
-        transform: 'translateZ(0)',
+        willChange: 'auto',
         backfaceVisibility: 'hidden',
         
         // Empêcher la sélection de texte accidentelle
@@ -48,11 +47,12 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
         
         // Stabiliser la position
         position: 'relative' as const,
-        overflow: 'hidden',
+        overflow: 'visible',
         
         // Hauteur fixe pour éviter les redimensionnements
-        height: '100vh',
-        maxHeight: '100vh'
+        height: '100dvh',
+        maxHeight: '100dvh',
+        minHeight: '100dvh'
       };
 
       // Appliquer les styles selon l'appareil
@@ -61,7 +61,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
         
         // Styles spécifiques mobile
         if (isMobile) {
-          container.style.minHeight = '100vh';
+          container.style.minHeight = '100dvh';
           container.style.paddingBottom = 'env(safe-area-inset-bottom)';
         }
         
@@ -104,7 +104,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
       data-mobile-optimized={(isMobile || isTablet).toString()}
     >
       {/* Indicateur de statut mobile (dev only) */}
-      {process.env.NODE_ENV === 'development' && (isMobile || isTablet) && (
+      {import.meta.env.DEV && (isMobile || isTablet) && (
         <div className="fixed top-2 right-2 z-50 bg-green-500 text-white px-2 py-1 rounded text-xs">
           📱 {deviceType.toUpperCase()} OPTIMIZED
         </div>
@@ -118,7 +118,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           /* Base stable */
           position: relative;
           width: 100%;
-          height: 100vh;
+          height: 100dvh;
           /* Allow mobile tab bar to be visible */
           overflow: visible;
           /* Create a stacking context */
@@ -135,8 +135,7 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           -webkit-tap-highlight-color: transparent;
           
           /* Performance */
-          will-change: transform;
-          transform: translateZ(0);
+          will-change: auto;
           backface-visibility: hidden;
           
           /* Safe areas iOS */

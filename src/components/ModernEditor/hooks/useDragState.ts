@@ -8,6 +8,7 @@ export const useDragState = () => {
     draggedElementId: null,
     draggedElementType: null,
     startPosition: { x: 0, y: 0 },
+    currentPosition: null,
     currentOffset: { x: 0, y: 0 }
   });
 
@@ -23,6 +24,7 @@ export const useDragState = () => {
       draggedElementId: null,
       draggedElementType: null,
       startPosition: { x: 0, y: 0 },
+      currentPosition: null,
       currentOffset: { x: 0, y: 0 }
     });
     dragStartRef.current = { x: 0, y: 0, offsetX: 0, offsetY: 0, elementWidth: 0, elementHeight: 0 };

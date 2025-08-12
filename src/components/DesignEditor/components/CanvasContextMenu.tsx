@@ -116,9 +116,13 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
     <>
       {/* Zone invisible pour détecter le clic droit sur le canvas */}
       <div
-        className="absolute inset-0 pointer-events-auto"
+        className="absolute left-0 right-0 pointer-events-auto"
+        style={{
+          top: '-25%',
+          height: '125%',
+          zIndex: 1
+        }}
         onContextMenu={handleCanvasContextMenu}
-        style={{ zIndex: 1 }}
       />
 
       {/* Menu contextuel */}

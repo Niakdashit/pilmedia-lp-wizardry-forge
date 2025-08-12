@@ -4,6 +4,7 @@ export interface DragState {
   draggedElementId: string | null;
   draggedElementType: 'text' | 'image' | null;
   startPosition: { x: number; y: number };
+  currentPosition: { x: number; y: number } | null;
   currentOffset: { x: number; y: number };
 }
 
