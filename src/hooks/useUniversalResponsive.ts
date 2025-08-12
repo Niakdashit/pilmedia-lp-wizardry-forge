@@ -145,12 +145,20 @@ export const useUniversalResponsive = (baseDevice: DeviceType = 'desktop') => {
 
   const getPropertiesForDevice = useMemo(() => {
     return (element: ResponsiveElementWithConfig, device: DeviceType): any => {
-      const deviceProps = element.deviceConfig?.[device];
-      if (!deviceProps) return element;
+      // Elements may store responsive overrides either in a dedicated
+      // `deviceConfig` object or directly under a key matching the device
+      // (e.g. `element.mobile`). Mobile specific coordinates were not
+      // taken into account previously which caused dragged elements to snap
+      // back to the left when switching viewpoint.
+      const directProps = (element as any)[device];
+      const configProps = element.deviceConfig?.[device];
+
+      if (!directProps && !configProps) return element;
 
       return {
         ...element,
-        ...deviceProps
+        ...(configProps || {}),
+        ...(directProps || {})
       };
     };
   }, []);

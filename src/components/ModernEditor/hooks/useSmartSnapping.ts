@@ -19,7 +19,10 @@ export const useSmartSnapping = ({
   gridSize = 10,
   snapTolerance = 3
 }: UseSmartSnappingProps) => {
-  const { campaign, showGridLines } = useEditorStore();
+  // We no longer rely on the `showGridLines` flag for snapping so the
+  // magnetic grid is always active. The editor store is still queried for
+  // campaign data to gather element dimensions.
+  const { campaign } = useEditorStore();
 
   // Get all elements for snapping calculations
   const allElements = useMemo(() => {
@@ -67,28 +70,26 @@ export const useSmartSnapping = ({
     const containerWidth = containerRect.width;
     const containerHeight = containerRect.height;
 
-    // Grid snapping
-    if (showGridLines) {
-      // Vertical grid lines
-      for (let x = 0; x <= containerWidth; x += gridSize) {
-        if (Math.abs(draggedElement.x - x) <= snapTolerance) {
-          guides.push({
-            type: 'grid',
-            orientation: 'vertical',
-            position: x
-          });
-        }
+    // Grid snapping – always active for a magnetic grid experience.
+    // Vertical grid lines
+    for (let x = 0; x <= containerWidth; x += gridSize) {
+      if (Math.abs(draggedElement.x - x) <= snapTolerance) {
+        guides.push({
+          type: 'grid',
+          orientation: 'vertical',
+          position: x
+        });
       }
+    }
 
-      // Horizontal grid lines
-      for (let y = 0; y <= containerHeight; y += gridSize) {
-        if (Math.abs(draggedElement.y - y) <= snapTolerance) {
-          guides.push({
-            type: 'grid',
-            orientation: 'horizontal',
-            position: y
-          });
-        }
+    // Horizontal grid lines
+    for (let y = 0; y <= containerHeight; y += gridSize) {
+      if (Math.abs(draggedElement.y - y) <= snapTolerance) {
+        guides.push({
+          type: 'grid',
+          orientation: 'horizontal',
+          position: y
+        });
       }
     }
 
@@ -170,7 +171,7 @@ export const useSmartSnapping = ({
     }
 
     return guides;
-  }, [allElements, showGridLines, gridSize, snapTolerance, containerRef]);
+  }, [allElements, gridSize, snapTolerance, containerRef]);
 
   // Apply snapping to position avec priorité au centre
   const applySnapping = useCallback((
