@@ -33,7 +33,8 @@ const TextElement: React.FC<TextElementProps> = ({
     elementRef,
     containerRef,
     deviceConfig,
-    onUpdate
+    onUpdate,
+    element.id
   );
 
   const handleCenterElement = useCallback(() => {
@@ -128,8 +129,8 @@ const TextElement: React.FC<TextElementProps> = ({
     return baseStyles;
   }, [element, sizeMap, isDragging, hexToRgb]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    console.log('Text element mouse down:', element.id);
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    console.log('Text element pointer down:', element.id);
     onSelect();
     handleDragStart(e);
   }, [onSelect, handleDragStart, element.id]);
@@ -154,7 +155,7 @@ const TextElement: React.FC<TextElementProps> = ({
           cursor: isDragging ? 'grabbing' : 'grab'
         } : getTextStyles())
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       className={`${
         isSelected 
           ? 'ring-2 ring-blue-500 shadow-lg' 
