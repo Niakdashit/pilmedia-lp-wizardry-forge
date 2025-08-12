@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import GamePreview from '../components/GameEditor/GamePreview';
 import type { DeviceType, EditorConfig } from '../components/GameEditor/GameEditorLayout';
+import BottomTabBar from '@/components/Navigation/BottomTabBar';
 
 const LivePreview: React.FC = () => {
   const location = useLocation();
@@ -44,8 +45,9 @@ const LivePreview: React.FC = () => {
   const isMode2 = config.displayMode === 'mode2-background';
 
   return (
-    <div className={isMode2 ? "w-screen h-screen overflow-hidden" : "bg-gray-100 min-h-screen"}>
+    <div className={isMode2 ? "w-screen h-screen overflow-hidden pb-20 md:pb-0" : "bg-gray-100 min-h-screen pb-20 md:pb-0"}>
       <GamePreview device={device} config={config} isLivePreview={true} />
+      <BottomTabBar variant="preview" />
     </div>
   );
 };
