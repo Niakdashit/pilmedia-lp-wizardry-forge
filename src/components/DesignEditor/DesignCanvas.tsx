@@ -933,16 +933,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               // Obtenir les propriétés pour l'appareil actuel
               const responsiveProps = getPropertiesForDevice(element, selectedDevice);
               
-              // Calculer la position absolue pour les éléments groupés
-              const absolutePosition = calculateAbsolutePosition(element);
+              // (plus de calcul absolu ici pour éviter les décalages en mobile)
               
-              // Fusionner les propriétés responsive avec l'élément original et les positions absolues
+              // Fusionner les propriétés responsive avec l'élément original (utiliser directement les props responsive pour éviter les décalages)
               const elementWithResponsive = {
                 ...element,
-                // Utiliser les positions absolues calculées pour les éléments groupés
-                x: absolutePosition.x,
-                y: absolutePosition.y,
-                // Garder les autres propriétés responsive
+                x: responsiveProps.x,
+                y: responsiveProps.y,
                 width: responsiveProps.width,
                 height: responsiveProps.height,
                 fontSize: responsiveProps.fontSize,
