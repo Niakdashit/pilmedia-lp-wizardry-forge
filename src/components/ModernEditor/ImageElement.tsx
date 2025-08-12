@@ -34,7 +34,8 @@ const ImageElement: React.FC<ImageElementProps> = ({
     elementRef,
     containerRef,
     deviceConfig,
-    onUpdate
+    onUpdate,
+    element.id
   );
 
   const { isResizing, handleResizeStart } = useImageElementResize(

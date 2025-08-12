@@ -1,103 +1,72 @@
 
 import { useState, useCallback, useRef } from 'react';
+import { useSmartSnapping } from './useSmartSnapping';
 
 export const useTextElementDrag = (
   elementRef: React.RefObject<HTMLDivElement>,
   containerRef: React.RefObject<HTMLDivElement>,
   deviceConfig: any,
-  onUpdate: (updates: any) => void
+  onUpdate: (updates: any) => void,
+  elementId: string | number
 ) => {
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{offsetX: number, offsetY: number} | null>(null);
+  const dragStartRef = useRef<{ offsetX: number; offsetY: number } | null>(null);
+  const { applySnapping } = useSmartSnapping({ containerRef });
 
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('Starting text drag for element:', deviceConfig);
+  const handleDragStart = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    if (!containerRef.current || !elementRef.current) {
-      console.log('Missing refs:', { container: !!containerRef.current, element: !!elementRef.current });
-      return;
-    }
-
-    const elementRect = elementRef.current.getBoundingClientRect();
-    
-    // Calculate offset relative to container
-    const offsetX = e.clientX - elementRect.left;
-    const offsetY = e.clientY - elementRect.top;
-    
-    console.log('Drag start - offset:', { offsetX, offsetY });
-    
-    dragStartRef.current = { offsetX, offsetY };
-    setIsDragging(true);
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!containerRef.current || !dragStartRef.current) return;
-      
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const elementWidth = elementRef.current?.offsetWidth || 0;
-      const elementHeight = elementRef.current?.offsetHeight || 0;
-      
-      let newX = moveEvent.clientX - containerRect.left - dragStartRef.current.offsetX;
-      let newY = moveEvent.clientY - containerRect.top - dragStartRef.current.offsetY;
-      
-      // Snap to alignment guides avec précision accrue
-      const snapTolerance = 12;
-      const centerX = containerRect.width / 2;
-      const centerY = containerRect.height / 2;
-      const elementCenterX = newX + elementWidth / 2;
-      const elementCenterY = newY + elementHeight / 2;
-      
-      // Magnétisme pour l'alignement centre horizontal
-      if (Math.abs(elementCenterX - centerX) <= snapTolerance) {
-        newX = centerX - elementWidth / 2;
+      if (!containerRef.current || !elementRef.current) {
+        return;
       }
-      
-      // Magnétisme pour l'alignement centre vertical
-      if (Math.abs(elementCenterY - centerY) <= snapTolerance) {
-        newY = centerY - elementHeight / 2;
-      }
-      
-      // Constrain to container bounds
-      newX = Math.max(0, Math.min(newX, containerRect.width - elementWidth));
-      newY = Math.max(0, Math.min(newY, containerRect.height - elementHeight));
-      
-      console.log('Moving text to:', { newX, newY });
-      
-      // Dispatch custom event with alignment info for guides
-      const alignmentEvent = new CustomEvent('showAlignmentGuides', {
-        detail: {
-          elementId: deviceConfig.id,
-          x: newX,
-          y: newY,
-          width: elementWidth,
-          height: elementHeight,
-          isDragging: true
-        }
-      });
-      document.dispatchEvent(alignmentEvent);
-      
-      // Update immediately for real-time feedback
-      onUpdate({ x: newX, y: newY });
-    };
 
-    const handleMouseUp = () => {
-      console.log('Text drag ended');
-      setIsDragging(false);
-      dragStartRef.current = null;
-      
-      // Hide alignment guides
-      const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
-      document.dispatchEvent(hideGuidesEvent);
-      
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
+      const elementRect = elementRef.current.getBoundingClientRect();
+      const offsetX = e.clientX - elementRect.left;
+      const offsetY = e.clientY - elementRect.top;
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [containerRef, deviceConfig, onUpdate]);
+      dragStartRef.current = { offsetX, offsetY };
+      setIsDragging(true);
+
+      const handlePointerMove = (moveEvent: PointerEvent) => {
+        if (!containerRef.current || !dragStartRef.current) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const elementWidth = elementRef.current?.offsetWidth || 0;
+        const elementHeight = elementRef.current?.offsetHeight || 0;
+
+        let newX = moveEvent.clientX - containerRect.left - dragStartRef.current.offsetX;
+        let newY = moveEvent.clientY - containerRect.top - dragStartRef.current.offsetY;
+
+        const snapped = applySnapping(newX, newY, elementWidth, elementHeight, String(elementId));
+        newX = snapped.x;
+        newY = snapped.y;
+
+        const alignmentEvent = new CustomEvent('showAlignmentGuides', {
+          detail: { elementId, guides: snapped.guides, isDragging: true }
+        });
+        document.dispatchEvent(alignmentEvent);
+
+        onUpdate({ x: newX, y: newY });
+      };
+
+      const handlePointerUp = () => {
+        setIsDragging(false);
+        dragStartRef.current = null;
+
+        const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+        document.dispatchEvent(hideGuidesEvent);
+
+        document.removeEventListener('pointermove', handlePointerMove);
+        document.removeEventListener('pointerup', handlePointerUp);
+      };
+
+      document.addEventListener('pointermove', handlePointerMove);
+      document.addEventListener('pointerup', handlePointerUp);
+    },
+    [containerRef, elementRef, applySnapping, onUpdate, elementId]
+  );
 
   return {
     isDragging,
