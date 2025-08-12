@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAppContext } from '../../context/AppContext';
 import { Menu, User, LogOut } from 'lucide-react';
@@ -7,7 +7,7 @@ const logo = '/prosplay-logo.svg';
 
 const Layout: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
-  const navigate = useNavigate();
+  
 
   const handleLogout = () => {
     // TODO: Implémenter la logique de déconnexion

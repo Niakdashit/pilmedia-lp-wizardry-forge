@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { useDrag } from 'react-dnd';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
@@ -62,6 +62,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const [isEditing, setIsEditing] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (elementRef.current) {
+      // Connect the drag source to the element ref
+      drag(elementRef);
+    }
+  }, [drag]);
 
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
@@ -569,7 +576,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     return (
       <div
-        ref={(node) => { drag(node); elementRef.current = node; }}
+        ref={elementRef}
         className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
         style={{
           transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,

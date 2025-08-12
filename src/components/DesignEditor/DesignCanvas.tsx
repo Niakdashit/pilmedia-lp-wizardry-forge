@@ -127,6 +127,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Optimisation mobile pour une expérience tactile parfaite
 
+  // Intégration du système auto-responsive (doit être défini avant canvasSize)
+  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
+  // Taille du canvas memoized
+  const canvasSize = useMemo(() => {
+    return DEVICE_DIMENSIONS[selectedDevice];
+  }, [selectedDevice, DEVICE_DIMENSIONS]);
+
+  // Forcer un format mobile 9:16 sans bordures ni encoches
+  const effectiveCanvasSize = useMemo(() => {
+    if (selectedDevice === 'mobile') {
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
+    }
+    return canvasSize;
+  }, [selectedDevice, canvasSize]);
+
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
     if (externalSelectedElement && externalSelectedElement.id !== selectedElement) {
@@ -497,22 +514,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   });
 
-  // Intégration du système auto-responsive (doit être défini avant canvasSize)
-  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
-
-  // Taille du canvas memoized
-  const canvasSize = useMemo(() => {
-    return DEVICE_DIMENSIONS[selectedDevice];
-  }, [selectedDevice, DEVICE_DIMENSIONS]);
-
-  // Forcer un format mobile 9:16 sans bordures ni encoches
-  const effectiveCanvasSize = useMemo(() => {
-    if (selectedDevice === 'mobile') {
-      // 9:16 exact ratio
-      return { width: 360, height: 640 };
-    }
-    return canvasSize;
-  }, [selectedDevice, canvasSize]);
+  // (moved) auto-responsive, canvasSize, and effectiveCanvasSize are defined earlier to avoid TDZ issues
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
   const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
