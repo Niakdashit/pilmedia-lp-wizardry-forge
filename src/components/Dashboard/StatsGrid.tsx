@@ -6,25 +6,25 @@ const StatsGrid: React.FC = () => {
     name: 'Campagnes actives',
     value: '5',
     change: '+2 cette semaine',
-    icon: <Target className="w-6 h-6 text-brand-primary" />
+    icon: <Target className="w-6 h-6 text-[#841b60]" />
   }, {
     name: 'Participations',
     value: '1254',
     change: '+18% ce mois',
-    icon: <Users className="w-6 h-6 text-brand-primary" />
+    icon: <Users className="w-6 h-6 text-[#841b60]" />
   }, {
     name: 'Taux de conversion',
     value: '42%',
     change: '+5% ce mois',
-    icon: <BarChart className="w-6 h-6 text-brand-primary" />
+    icon: <BarChart className="w-6 h-6 text-[#841b60]" />
   }, {
     name: 'Prochaine campagne',
     value: '2j',
     change: '10 avril',
-    icon: <Calendar className="w-6 h-6 text-brand-primary" />
+    icon: <Calendar className="w-6 h-6 text-[#841b60]" />
   }];
   return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-      {stats.map((stat, statIndex) => <div key={statIndex} className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 my-[13px]">
+      {stats.map((stat, statIndex) => <div key={statIndex} className="bg-white p-6 rounded-[28px] shadow-md hover:shadow-lg transition-shadow duration-300 my-[13px]">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-700 font-semibold">{stat.name}</p>
@@ -33,7 +33,7 @@ const StatsGrid: React.FC = () => {
                 
               </div>
             </div>
-            <div className="bg-[hsl(var(--brand-primary)/0.12)] rounded-full p-3">
+            <div className="bg-[#f8e9f0] rounded-full p-3">
               {stat.icon}
             </div>
           </div>

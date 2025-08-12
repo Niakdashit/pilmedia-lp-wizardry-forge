@@ -567,14 +567,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
   }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur]);
 
-    const setElementRef = React.useCallback((node: HTMLDivElement | null) => {
-      drag(node as any);
-      (elementRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-    }, [drag]);
-
     return (
       <div
-        ref={setElementRef}
+        ref={(node) => { drag(node); elementRef.current = node; }}
         className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
         style={{
           transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
