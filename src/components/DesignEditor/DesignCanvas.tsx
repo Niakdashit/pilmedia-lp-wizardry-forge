@@ -760,6 +760,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowPositionPanel={onShowPositionPanel}
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
+        forceDeviceType={selectedDevice}
         className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
         // Props pour la sidebar mobile
         onAddElement={onAddElement}
