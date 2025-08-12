@@ -44,7 +44,7 @@ const DashboardHeader: React.FC = () => {
             border-b border-white/25
           ">
           {/* Overlay coloré pour contraste subtil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#841b60]/8 via-transparent to-[#841b60]/5 pointer-events-none rounded-b-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--brand-primary)/0.08)] via-transparent to-[hsl(var(--brand-primary)/0.05)] pointer-events-none rounded-b-3xl" />
           {/* Décorations géométriques flottantes style PageHeader */}
           <div className="absolute top-4 right-8 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-xl pointer-events-none"></div>
           <div className="absolute bottom-6 left-12 w-16 h-16 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-lg pointer-events-none"></div>
@@ -72,7 +72,7 @@ const DashboardHeader: React.FC = () => {
             {/* Section "Qu'allez-vous créer aujourd'hui ?" */}
             <div className="w-full">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+                <h2 className="text-xl font-bold mb-2 text-brand-primary drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
               </div>
 
               {/* Container pour desktop avec flex center */}
@@ -84,9 +84,9 @@ const DashboardHeader: React.FC = () => {
                   animationFillMode: 'forwards'
                 }}>
                       <div className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                        <IconComponent className="w-6 h-6 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
+                        <IconComponent className="w-6 h-6 text-[hsl(var(--brand-primary))] group-hover:brightness-90 transition-colors drop-shadow-sm" />
                       </div>
-                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-brand-primary transition-colors text-center drop-shadow-sm">
                         {game.label}
                       </span>
                     </Link>;
@@ -106,9 +106,9 @@ const DashboardHeader: React.FC = () => {
                     animationFillMode: 'forwards'
                   }}>
                         <div className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                          <IconComponent className="w-6 h-6 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
+                          <IconComponent className="w-6 h-6 text-[hsl(var(--brand-primary))] group-hover:brightness-90 transition-colors drop-shadow-sm" />
                         </div>
-                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-brand-primary transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
                       </Link>;
@@ -118,12 +118,12 @@ const DashboardHeader: React.FC = () => {
 
               {/* Boutons pills */}
               <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-                <Link to="/campaigns" className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl hover:from-[#841b60] hover:to-[#6d164f] transition-all duration-300 shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30 transform hover:-translate-y-0.5 border border-white/20 text-sm">
+                <Link to="/campaigns" className="inline-flex items-center px-4 py-2 bg-[hsl(var(--brand-primary))] text-white font-medium rounded-xl hover:brightness-90 transition-all duration-300 shadow-lg shadow-[hsl(var(--brand-primary)/0.2)] hover:shadow-[hsl(var(--brand-primary)/0.3)] transform hover:-translate-y-0.5 border border-white/20 text-sm">
                   <FolderOpen className="w-4 h-4 mr-2 drop-shadow-sm" />
                   <span className="drop-shadow-sm">Mes campagnes</span>
                 </Link>
                 
-                <button className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl hover:from-[#841b60] hover:to-[#6d164f] transition-all duration-300 shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30 transform hover:-translate-y-0.5 border border-white/20 text-sm">
+                <button className="inline-flex items-center px-4 py-2 bg-[hsl(var(--brand-primary))] text-white font-medium rounded-xl hover:brightness-90 transition-all duration-300 shadow-lg shadow-[hsl(var(--brand-primary)/0.2)] hover:shadow-[hsl(var(--brand-primary)/0.3)] transform hover:-translate-y-0.5 border border-white/20 text-sm">
                   <Layers className="w-4 h-4 mr-2 drop-shadow-sm" />
                   <span className="drop-shadow-sm">Modèles</span>
                 </button>

@@ -72,12 +72,12 @@ const RecentCampaigns: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Galerie des créations</h2>
             <p className="text-gray-600">Vos dernières campagnes avec style</p>
           </div>
-          <Link to="/campaigns" className="group relative overflow-hidden px-4 py-2 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#841b60]/25 transition-all duration-300 transform hover:-translate-y-0.5 text-sm">
+          <Link to="/campaigns" className="group relative overflow-hidden px-4 py-2 bg-[hsl(var(--brand-primary))] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[hsl(var(--brand-primary)/0.25)] transition-all duration-300 transform hover:-translate-y-0.5 text-sm">
             <span className="relative z-10 flex items-center">
               Voir toutes
               <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
             </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#6d164f] to-[#841b60] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-[hsl(var(--brand-primary))] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </Link>
         </div>
 
@@ -101,17 +101,17 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
 
                   {/* Neon Border Glow Effect */}
-                  <div className="absolute inset-0 rounded-2xl border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
+                  <div className="absolute inset-0 rounded-2xl border border-white/20 group-hover:border-[hsl(var(--brand-primary))/0.5] group-hover:shadow-[0_0_30px_hsl(var(--brand-primary)/0.3)] transition-all duration-500"></div>
 
                   {/* Campaign Type Badge */}
                   <div className="absolute top-4 left-4 z-20">
-                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#841b60] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
+                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[hsl(var(--brand-primary))] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
                       <div className="flex items-center space-x-1.5">
                         <IconComponent className="w-3.5 h-3.5 transition-transform group-hover/badge:rotate-12 duration-300" />
                         <span className="relative z-10">{getCampaignTypeText(campaign.type)}</span>
                       </div>
                       {/* Badge Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#841b60]/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--brand-primary))/0.2] to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity duration-300 rounded-full"></div>
                     </div>
                   </div>
 
@@ -153,7 +153,7 @@ const RecentCampaigns: React.FC = () => {
                     </div>
 
                     {/* Hover Reveal: Action Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--brand-primary))/0.4] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-2xl"></div>
                   </div>
 
                   {/* Animated Light Streak */}
