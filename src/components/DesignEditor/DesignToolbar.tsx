@@ -31,7 +31,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
 }) => {
   const navigate = useNavigate();
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
+    <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
       {/* Left Section - Logo/Title */}
       <div className="flex items-center space-x-3">
         <h1 className="text-lg font-bold text-gray-900 font-inter hidden">Design Editor</h1>

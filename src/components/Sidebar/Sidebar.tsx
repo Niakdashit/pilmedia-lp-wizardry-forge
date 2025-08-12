@@ -41,6 +41,7 @@ const Sidebar: React.FC = () => {
   return (
     <div
       className={`fixed md:static inset-y-0 left-0 z-40 flex flex-col bg-white/95 backdrop-blur-sm border-r border-gray-200/50 transform md:transform-none transition-transform duration-300 ease-in-out ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 md:w-20' : 'translate-x-0 md:w-64'} w-64`}
+      style={{ borderTopLeftRadius: '28px' }}
     >
       {/* Logo section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">

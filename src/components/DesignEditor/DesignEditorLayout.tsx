@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { User, LogOut } from 'lucide-react';
 import HybridSidebar from './HybridSidebar';
 import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
 import { useEditorStore } from '../../stores/editorStore';
@@ -673,7 +675,46 @@ const DesignEditorLayout: React.FC = () => {
   });
 
   return (
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden">
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px]">
+      {/* Bande dégradée avec logo et icônes */}
+      <GradientBand>
+        <img 
+          src="/logo.png" 
+          alt="Prosplay Logo" 
+          style={{
+            height: '93px',
+            width: 'auto',
+            filter: 'brightness(0) invert(1)',
+            maxWidth: '468px',
+            marginTop: '-120px',
+            marginLeft: '1.5%',
+            padding: 0
+          }} 
+        />
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'center',
+          marginTop: '-122px',
+          marginRight: '24px'
+        }}>
+          <button 
+            onClick={() => {}}
+            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
+            title="Mon compte"
+          >
+            <User className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={() => {}}
+            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
+            title="Déconnexion"
+          >
+            <LogOut className="w-6 h-6" />
+          </button>
+        </div>
+      </GradientBand>
+
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
