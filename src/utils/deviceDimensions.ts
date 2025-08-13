@@ -2,7 +2,7 @@
 export const STANDARD_DEVICE_DIMENSIONS = {
   desktop: { width: 1700, height: 850 },
   tablet: { width: 820, height: 1180 }, // Plus réaliste: iPad Pro 11" (834x1194) avec ratio d'affichage 
-  mobile: { width: 375, height: 812 }   // iPhone 13/14 standard (375x812)
+  mobile: { width: 360, height: 640 }   // Format 9:16 mobile standardisé
 } as const;
 
 export type DeviceType = keyof typeof STANDARD_DEVICE_DIMENSIONS;

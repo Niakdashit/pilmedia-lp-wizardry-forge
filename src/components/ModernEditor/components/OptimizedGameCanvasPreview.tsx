@@ -40,11 +40,11 @@ const OptimizedGameCanvasPreview: React.FC<OptimizedGameCanvasPreviewProps> = me
   const deviceDimensions = useMemo(() => {
     switch (previewDevice) {
       case 'mobile':
-        return { width: 375, height: 667 };
+        return { width: 360, height: 640 };
       case 'tablet':
-        return { width: 768, height: 1024 };
+        return { width: 820, height: 1180 };
       default:
-        return { width: 1200, height: 800 };
+        return { width: 1700, height: 850 };
     }
   }, [previewDevice]);
 

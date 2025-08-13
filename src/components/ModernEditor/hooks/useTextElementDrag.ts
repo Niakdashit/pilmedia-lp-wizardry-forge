@@ -5,7 +5,6 @@ import { useSmartSnapping } from './useSmartSnapping';
 export const useTextElementDrag = (
   elementRef: React.RefObject<HTMLDivElement>,
   containerRef: React.RefObject<HTMLDivElement>,
-  deviceConfig: any,
   onUpdate: (updates: any) => void,
   elementId: string | number
 ) => {

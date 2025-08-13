@@ -158,12 +158,9 @@ export const useDragHandlers = ({
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (!containerRect) return;
       
-      // Get device pixel ratio for high-DPI displays
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      
-      // Calculate scale considering device pixel ratio
-      const scaleX = (containerDims.width / deviceDims.current.width) * devicePixelRatio;
-      const scaleY = (containerDims.height / deviceDims.current.height) * devicePixelRatio;
+      // Simplified scale calculation without double devicePixelRatio
+      const scaleX = containerDims.width / deviceDims.current.width;
+      const scaleY = containerDims.height / deviceDims.current.height;
 
       // Calculate logical positions
       const currentXLogical = (clientX - containerRect.left) / scaleX;
@@ -171,15 +168,15 @@ export const useDragHandlers = ({
 
       const { offsetX = 0, offsetY = 0, elementWidth = 0, elementHeight = 0 } = dragStartRef.current || ({} as DragStartMeta);
 
-      // Calculate new position with subpixel precision
+      // Calculate new position 
       let newX = currentXLogical - offsetX;
       let newY = currentYLogical - offsetY;
 
-      // Clamp within logical device bounds with subpixel precision
+      // Clamp within logical device bounds
       const maxX = Math.max(0, deviceDims.current.width - elementWidth);
       const maxY = Math.max(0, deviceDims.current.height - elementHeight);
       
-      // Apply bounds with subpixel precision
+      // Apply bounds 
       newX = Math.min(Math.max(0, newX), maxX);
       newY = Math.min(Math.max(0, newY), maxY);
 
@@ -195,8 +192,8 @@ export const useDragHandlers = ({
           
           if (element.id === numericElementId) {
             const updatedPosition = { 
-              x: Math.round(newX * 2) / 2, // Arrondi au demi-pixel pour le lissage
-              y: Math.round(newY * 2) / 2
+              x: Math.round(newX), // Position entière pour éviter les sauts
+              y: Math.round(newY)
             };
             
             if (previewDevice !== 'desktop') {
@@ -239,39 +236,14 @@ export const useDragHandlers = ({
     
     if (!containerRef.current) return;
     
-    // Get container dimensions and transformations
+    // Simplified scale calculation
     const containerRect = containerRef.current.getBoundingClientRect();
-    const containerStyle = window.getComputedStyle(containerRef.current);
+    const scaleX = containerDims.width / deviceDims.current.width;
+    const scaleY = containerDims.height / deviceDims.current.height;
     
-    // Get device pixel ratio for high-DPI displays
-    const devicePixelRatio = window.devicePixelRatio || 1;
-    
-    // Calculate scale considering CSS transforms
-    let scaleX = 1, scaleY = 1;
-    const transform = containerStyle.transform;
-    
-    if (transform && transform !== 'none') {
-      try {
-        const matrix = new DOMMatrixReadOnly(transform);
-        scaleX = Math.abs(matrix.a) * devicePixelRatio;
-        scaleY = Math.abs(matrix.d) * devicePixelRatio;
-      } catch (e) {
-        console.warn('Error parsing transform matrix, using fallback scale');
-      }
-    }
-    
-    // Fallback to logical dimensions if no transform
-    if (scaleX === 1 || scaleY === 1) {
-      scaleX = (containerDims.width / deviceDims.current.width) * devicePixelRatio;
-      scaleY = (containerDims.height / deviceDims.current.height) * devicePixelRatio;
-    }
-    
-    // Calculate position considering viewport, zoom, and device pixel ratio
+    // Calculate position
     const currentXLogical = (clientX - containerRect.left) / scaleX;
     const currentYLogical = (clientY - containerRect.top) / scaleY;
-    
-    // For touch events, add a small offset to account for finger size
-    const touchOffset = touchEvent ? 15 : 0;
     
     // Update state with current position
     updateDragState({
@@ -281,8 +253,8 @@ export const useDragHandlers = ({
       }
     });
     
-    // Update element position with touch compensation
-    updateElementPosition(clientX - (touchEvent ? touchOffset : 0), clientY);
+    // Update element position
+    updateElementPosition(clientX, clientY);
   }, [containerRef, updateElementPosition, updateDragState, containerDims, deviceDims]);
 
   const handleDragEnd = useCallback(() => {
