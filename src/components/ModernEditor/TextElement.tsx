@@ -1,6 +1,7 @@
 
 import React, { useRef, useCallback } from 'react';
 import { Trash2, Target } from 'lucide-react';
+import { useUnifiedElementDrag } from './hooks/useUnifiedElementDrag';
 
 interface TextElementProps {
   element: any;
@@ -28,7 +29,14 @@ const TextElement: React.FC<TextElementProps> = ({
   // Get current device-specific position and size
   const deviceConfig = getElementDeviceConfig(element);
 
-  // Use simplified drag handling without conflicting systems
+  // Use unified drag system
+  const { isDragging, handleDragStart } = useUnifiedElementDrag(
+    elementRef,
+    containerRef,
+    deviceConfig,
+    onUpdate,
+    element.id
+  );
 
   const handleCenterElement = useCallback(() => {
     if (!containerRef.current || !elementRef.current) return;
@@ -60,7 +68,7 @@ const TextElement: React.FC<TextElementProps> = ({
       fontStyle: element.italic ? 'italic' : (element.fontStyle || 'normal'),
       textDecoration: element.underline ? 'underline' : (element.textDecoration || 'none'),
       fontFamily: element.fontFamily || 'Inter, sans-serif',
-      cursor: 'grab',
+      cursor: isDragging ? 'grabbing' : 'grab',
       userSelect: 'none',
       transition: 'box-shadow 0.1s ease',
       textAlign: element.textAlign || 'left'
@@ -121,11 +129,11 @@ const TextElement: React.FC<TextElementProps> = ({
     return baseStyles;
   }, [element, sizeMap, hexToRgb]);
 
-  const handlePointerDown = useCallback((_e: React.PointerEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     console.log('Text element pointer down:', element.id);
     onSelect();
-    // Let the parent drag system handle the actual dragging
-  }, [onSelect, element.id]);
+    handleDragStart(e);
+  }, [onSelect, handleDragStart, element.id]);
 
   return (
     <div

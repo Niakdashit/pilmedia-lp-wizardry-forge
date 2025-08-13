@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
-import { useImageElementDrag } from './hooks/useImageElementDrag';
+import { useUnifiedElementDrag } from './hooks/useUnifiedElementDrag';
 import { useImageElementResize } from './hooks/useImageElementResize';
 import ImageElementControls from './components/ImageElementControls';
 import ImageElementResizeHandles from './components/ImageElementResizeHandles';
@@ -30,7 +30,7 @@ const ImageElement: React.FC<ImageElementProps> = ({
   // Get current device-specific position and size
   const deviceConfig = getElementDeviceConfig(element);
 
-  const { isDragging, handleDragStart } = useImageElementDrag(
+  const { isDragging, handleDragStart } = useUnifiedElementDrag(
     elementRef,
     containerRef,
     deviceConfig,
