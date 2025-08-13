@@ -41,7 +41,7 @@ export const useOptimizedDragDrop = ({
         // Update campaign with optimized batching
         if (dragState.draggedElementId && dragState.draggedElementType) {
           setCampaign((prev: any) => {
-            const deviceKey = previewDevice === 'mobile' ? 'mobile' : 'desktop';
+            const deviceKey = previewDevice; // 'desktop', 'tablet', 'mobile'
             const customTexts = prev.design?.customTexts || {};
             const customImages = prev.design?.customImages || {};
 

@@ -148,24 +148,30 @@ export const useDragHandlers = ({
   const updateElementPosition = useCallback((clientX: number, clientY: number) => {
     if (!dragState.isDragging || !containerRef.current || !dragState.draggedElementId) return;
     
-    // Utiliser requestAnimationFrame pour des mises à jour fluides
+    // Use requestAnimationFrame for smooth updates
     rafId.current = requestAnimationFrame(() => {
       const now = Date.now();
-      // Limiter à ~60 FPS
+      // Limit to ~60 FPS
       if (now - lastMoveTime.current < 16) return;
       lastMoveTime.current = now;
       
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (!containerRect) return;
       
-      const scaleX = containerDims.width / deviceDims.current.width;
-      const scaleY = containerDims.height / deviceDims.current.height;
+      // Get device pixel ratio for high-DPI displays
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      
+      // Calculate scale considering device pixel ratio
+      const scaleX = (containerDims.width / deviceDims.current.width) * devicePixelRatio;
+      const scaleY = (containerDims.height / deviceDims.current.height) * devicePixelRatio;
 
+      // Calculate logical positions
       const currentXLogical = (clientX - containerRect.left) / scaleX;
       const currentYLogical = (clientY - containerRect.top) / scaleY;
 
       const { offsetX = 0, offsetY = 0, elementWidth = 0, elementHeight = 0 } = dragStartRef.current || ({} as DragStartMeta);
 
+      // Calculate new position with subpixel precision
       let newX = currentXLogical - offsetX;
       let newY = currentYLogical - offsetY;
 
@@ -173,7 +179,7 @@ export const useDragHandlers = ({
       const maxX = Math.max(0, deviceDims.current.width - elementWidth);
       const maxY = Math.max(0, deviceDims.current.height - elementHeight);
       
-      // Arrondir uniquement pour l'affichage final
+      // Apply bounds with subpixel precision
       newX = Math.min(Math.max(0, newX), maxX);
       newY = Math.min(Math.max(0, newY), maxY);
 
@@ -231,25 +237,53 @@ export const useDragHandlers = ({
     const clientX = touchEvent ? e.touches[0].clientX : (e as MouseEvent).clientX;
     const clientY = touchEvent ? e.touches[0].clientY : (e as MouseEvent).clientY;
     
-    // Mettre à jour la position actuelle dans l'état
-    if (containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const scaleX = containerDims.width / deviceDims.current.width;
-      const scaleY = containerDims.height / deviceDims.current.height;
-      
-      const currentXLogical = (clientX - containerRect.left) / scaleX;
-      const currentYLogical = (clientY - containerRect.top) / scaleY;
-      
-      updateDragState({
-        currentPosition: {
-          x: currentXLogical,
-          y: currentYLogical
-        }
-      });
+    if (!containerRef.current) return;
+    
+    // Get container dimensions and transformations
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerStyle = window.getComputedStyle(containerRef.current);
+    
+    // Get device pixel ratio for high-DPI displays
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    
+    // Calculate scale considering CSS transforms
+    let scaleX = 1, scaleY = 1;
+    const transform = containerStyle.transform;
+    
+    if (transform && transform !== 'none') {
+      try {
+        const matrix = new DOMMatrixReadOnly(transform);
+        scaleX = Math.abs(matrix.a) * devicePixelRatio;
+        scaleY = Math.abs(matrix.d) * devicePixelRatio;
+      } catch (e) {
+        console.warn('Error parsing transform matrix, using fallback scale');
+      }
     }
     
-    updateElementPosition(clientX, clientY);
-  }, [dragState, containerRef, setCampaign, previewDevice, dragStartRef]);
+    // Fallback to logical dimensions if no transform
+    if (scaleX === 1 || scaleY === 1) {
+      scaleX = (containerDims.width / deviceDims.current.width) * devicePixelRatio;
+      scaleY = (containerDims.height / deviceDims.current.height) * devicePixelRatio;
+    }
+    
+    // Calculate position considering viewport, zoom, and device pixel ratio
+    const currentXLogical = (clientX - containerRect.left) / scaleX;
+    const currentYLogical = (clientY - containerRect.top) / scaleY;
+    
+    // For touch events, add a small offset to account for finger size
+    const touchOffset = touchEvent ? 15 : 0;
+    
+    // Update state with current position
+    updateDragState({
+      currentPosition: {
+        x: currentXLogical,
+        y: currentYLogical
+      }
+    });
+    
+    // Update element position with touch compensation
+    updateElementPosition(clientX - (touchEvent ? touchOffset : 0), clientY);
+  }, [containerRef, updateElementPosition, updateDragState, containerDims, deviceDims]);
 
   const handleDragEnd = useCallback(() => {
     if (!dragState.isDragging) return;

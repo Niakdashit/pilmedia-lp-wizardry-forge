@@ -32,10 +32,10 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapTimeRef = useRef<number>(0);
   const getElementDeviceConfig = (element: any) => {
-    if (previewDevice !== 'desktop' && element[previewDevice]) {
-      return { ...element, ...element[previewDevice] };
-    }
-    return element;
+    if (previewDevice === 'desktop') return element;
+    const fromConfig = element.deviceConfig?.[previewDevice] || {};
+    const fromDirect = element[previewDevice] || {};
+    return { ...element, ...fromConfig, ...fromDirect };
   };
 
   const getDragTransform = (elementId: string) => {
@@ -172,6 +172,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       <div
         key={`interactive-text-${customText.id}-${previewDevice}`}
         data-element-id={customText.id}
+        data-element-type="text"
         style={textStyle}
         onClick={(e) => {
           if (!isEditing) {
@@ -296,6 +297,7 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
       <div
         key={`interactive-image-${customImage.id}-${previewDevice}`}
         data-element-id={customImage.id}
+        data-element-type="image"
         style={containerStyle}
         onClick={(e) => {
           e.stopPropagation();

@@ -35,6 +35,7 @@ import Auth from './pages/Auth';
 import PublicCampaign from './pages/PublicCampaign';
 import PageBeta from './pages/PageBeta';
 import TestPage from './pages/TestPage';
+import ModernEditorPage from './pages/ModernEditorPage';
 
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
             
             <Route path="/campaign-editor" element={<GameEditor />} />
             <Route path="/design-editor" element={<DesignEditor />} />
+            <Route path="/modern-editor" element={<ModernEditorPage />} />
             <Route path="/live-preview" element={<LivePreview />} />
             
             <Route path="/admin" element={<AdminLayout />}>

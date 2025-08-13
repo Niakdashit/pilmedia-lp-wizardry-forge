@@ -8,8 +8,8 @@ export const useCanvasElements = (
 ) => {
   const [selectedElement, setSelectedElement] = useState<{type: 'text' | 'image', id: number} | null>(null);
 
-  // Get device key - desktop and tablet share the same config
-  const deviceKey = previewDevice === 'mobile' ? 'mobile' : 'desktop';
+  // Get device key - each device has its own config
+  const deviceKey = previewDevice; // 'desktop', 'tablet', 'mobile'
 
   const customTexts = campaign.design?.customTexts || [];
   const customImages = campaign.design?.customImages || [];
