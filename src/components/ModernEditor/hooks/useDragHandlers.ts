@@ -285,10 +285,18 @@ export const useDragHandlers = ({
       console.log('✅ Drag ended', dragState);
     }
     
-    // Utiliser directement les dernières coordonnées connues du drag
-    const lastPosition = dragState.currentPosition || dragState.startPosition;
+    // La position finale doit être calculée avec l'offset, pas juste la position du curseur
+    const lastCursorPosition = dragState.currentPosition || dragState.startPosition;
     
-    if (dragState.draggedElementId && lastPosition) {
+    if (dragState.draggedElementId && lastCursorPosition) {
+      const { offsetX = 0, offsetY = 0 } = dragStartRef.current || {};
+      
+      // Calculer la position finale de l'élément (curseur - offset)
+      const finalElementPosition = {
+        x: Math.round(lastCursorPosition.x - offsetX),
+        y: Math.round(lastCursorPosition.y - offsetY)
+      };
+      
       setCampaign((prev: any) => {
         const design = prev.design || {};
         const arrayKey = dragState.draggedElementType === 'text' ? 'customTexts' : 'customImages';
@@ -300,23 +308,18 @@ export const useDragHandlers = ({
             : dragState.draggedElementId;
           
           if (element.id === numericElementId) {
-            const updatedPosition = {
-              x: Math.round(lastPosition.x),
-              y: Math.round(lastPosition.y)
-            };
-            
             if (previewDevice !== 'desktop') {
               return {
                 ...element,
                 [previewDevice]: {
                   ...(element[previewDevice] || {}),
-                  ...updatedPosition
+                  ...finalElementPosition
                 }
               };
             } else {
               return {
                 ...element,
-                ...updatedPosition
+                ...finalElementPosition
               };
             }
           }
@@ -331,7 +334,9 @@ export const useDragHandlers = ({
         if (process.env.NODE_ENV === 'development') {
           console.log('Updating element position:', {
             elementId: dragState.draggedElementId,
-            position: lastPosition,
+            cursorPosition: lastCursorPosition,
+            offset: { offsetX, offsetY },
+            finalPosition: finalElementPosition,
             design: updatedDesign
           });
         }
