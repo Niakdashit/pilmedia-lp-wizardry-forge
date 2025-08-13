@@ -1,4 +1,3 @@
-
 import { useCallback, useRef, useEffect } from 'react';
 import { DragState, DragStartMeta } from './types/dragDropTypes';
 import { getDeviceDimensions } from '../../../utils/deviceDimensions';
@@ -75,6 +74,7 @@ export const useDragHandlers = ({
       }
     };
   }, []);
+
   const handleDragStart = useCallback((
     e: React.MouseEvent | React.TouchEvent,
     elementId: string,
@@ -87,7 +87,6 @@ export const useDragHandlers = ({
     document.body.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
     
-    // Optimisation: éviter les logs en production
     if (process.env.NODE_ENV === 'development') {
       console.log('🎯 Drag start for element:', elementId, 'type:', elementType);
     }
@@ -103,47 +102,63 @@ export const useDragHandlers = ({
       return;
     }
 
-    // Utiliser les dimensions mises en cache
+    // Get container and scale info
     const containerRect = containerRef.current.getBoundingClientRect();
     const scaleX = containerDims.width / deviceDims.current.width;
     const scaleY = containerDims.height / deviceDims.current.height;
 
-    const startXLogical = (clientX - containerRect.left) / scaleX;
-    const startYLogical = (clientY - containerRect.top) / scaleY;
+    // Calculate cursor position in logical coordinates
+    const cursorXLogical = (clientX - containerRect.left) / scaleX;
+    const cursorYLogical = (clientY - containerRect.top) / scaleY;
 
-    // Compute grab offset relative to element's top-left in logical coords
+    // Get element dimensions
     const targetEl = e.currentTarget as HTMLElement;
     const elRect = targetEl.getBoundingClientRect();
-    const elLeftLogical = (elRect.left - containerRect.left) / scaleX;
-    const elTopLogical = (elRect.top - containerRect.top) / scaleY;
-    const offsetX = startXLogical - elLeftLogical;
-    const offsetY = startYLogical - elTopLogical;
-
     const elementWidth = elRect.width / scaleX;
     const elementHeight = elRect.height / scaleY;
 
-    console.log('📍 Drag start (logical):', { startXLogical, startYLogical, offsetX, offsetY, elementWidth, elementHeight, scaleX, scaleY });
+    // Calculate element's current position in logical coordinates
+    const elLeftLogical = (elRect.left - containerRect.left) / scaleX;
+    const elTopLogical = (elRect.top - containerRect.top) / scaleY;
+
+    // Calculate offset from cursor to element's top-left corner
+    const offsetX = cursorXLogical - elLeftLogical;
+    const offsetY = cursorYLogical - elTopLogical;
+
+    console.log('📍 Drag start calculated:', { 
+      cursorXLogical, 
+      cursorYLogical, 
+      elLeftLogical, 
+      elTopLogical, 
+      offsetX, 
+      offsetY, 
+      elementWidth, 
+      elementHeight,
+      scaleX,
+      scaleY
+    });
 
     dragStartRef.current = {
-      x: Math.round(startXLogical),
-      y: Math.round(startYLogical),
+      x: Math.round(cursorXLogical),
+      y: Math.round(cursorYLogical),
       offsetX,
       offsetY,
       elementWidth,
       elementHeight
     };
+    
     setSelectedElementId(elementId);
     updateDragState({
       isDragging: true,
       draggedElementId: elementId,
       draggedElementType: elementType,
-      startPosition: { x: Math.round(startXLogical), y: Math.round(startYLogical) },
+      startPosition: { x: Math.round(cursorXLogical), y: Math.round(cursorYLogical) },
       currentOffset: { x: 0, y: 0 }
     });
 
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
-  }, [containerRef, dragStartRef, updateDragState, setSelectedElementId]);
+  }, [containerRef, dragStartRef, updateDragState, setSelectedElementId, containerDims, deviceDims]);
 
   const updateElementPosition = useCallback((clientX: number, clientY: number) => {
     if (!dragState.isDragging || !containerRef.current || !dragState.draggedElementId) return;
@@ -158,7 +173,7 @@ export const useDragHandlers = ({
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (!containerRect) return;
       
-      // Simplified scale calculation without double devicePixelRatio
+      // Simplified scale calculation
       const scaleX = containerDims.width / deviceDims.current.width;
       const scaleY = containerDims.height / deviceDims.current.height;
 
@@ -220,7 +235,7 @@ export const useDragHandlers = ({
             ...design,
             [arrayKey]: updatedElements
           },
-          _lastUpdate: now // Utiliser le timestamp du RAF
+          _lastUpdate: now
         };
       });
     });
@@ -337,7 +352,7 @@ export const useDragHandlers = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     }, 50);
-  }, [dragState.isDragging, resetDragState]);
+  }, [dragState, setCampaign, previewDevice, resetDragState]);
 
   return {
     handleDragStart,

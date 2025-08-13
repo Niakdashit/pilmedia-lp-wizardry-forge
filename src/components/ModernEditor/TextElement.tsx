@@ -32,7 +32,6 @@ const TextElement: React.FC<TextElementProps> = ({
   const { isDragging, handleDragStart } = useTextElementDrag(
     elementRef,
     containerRef,
-    deviceConfig,
     onUpdate,
     element.id
   );
