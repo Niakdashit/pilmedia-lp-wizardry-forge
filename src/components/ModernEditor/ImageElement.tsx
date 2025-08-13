@@ -13,6 +13,7 @@ interface ImageElementProps {
   onDelete: () => void;
   containerRef: React.RefObject<HTMLDivElement>;
   getElementDeviceConfig: (element: any) => any;
+  previewDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
 const ImageElement: React.FC<ImageElementProps> = ({
@@ -22,7 +23,8 @@ const ImageElement: React.FC<ImageElementProps> = ({
   onUpdate,
   onDelete,
   containerRef,
-  getElementDeviceConfig
+  getElementDeviceConfig,
+  previewDevice
 }) => {
   const [aspectRatioLocked, setAspectRatioLocked] = useState(true);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -35,7 +37,8 @@ const ImageElement: React.FC<ImageElementProps> = ({
     containerRef,
     deviceConfig,
     onUpdate,
-    element.id
+    element.id,
+    previewDevice
   );
 
   const { isResizing, handleResizeStart } = useImageElementResize(

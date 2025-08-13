@@ -12,6 +12,7 @@ interface TextElementProps {
   containerRef: React.RefObject<HTMLDivElement>;
   sizeMap: Record<string, string>;
   getElementDeviceConfig: (element: any) => any;
+  previewDevice: 'desktop' | 'tablet' | 'mobile';
 }
 
 const TextElement: React.FC<TextElementProps> = ({
@@ -22,7 +23,8 @@ const TextElement: React.FC<TextElementProps> = ({
   onDelete,
   containerRef,
   sizeMap,
-  getElementDeviceConfig
+  getElementDeviceConfig,
+  previewDevice
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +37,8 @@ const TextElement: React.FC<TextElementProps> = ({
     containerRef,
     deviceConfig,
     onUpdate,
-    element.id
+    element.id,
+    previewDevice
   );
 
   const handleCenterElement = useCallback(() => {

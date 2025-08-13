@@ -1,14 +1,56 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { getDeviceDimensions } from '../../../utils/deviceDimensions';
+
+// Hook pour les dimensions du conteneur avec cache
+const useContainerDimensions = (containerRef: React.RefObject<HTMLElement>) => {
+  const dimensions = useRef({ width: 0, height: 0 });
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        dimensions.current = {
+          width: rect.width,
+          height: rect.height
+        };
+      }
+    };
+    
+    updateDimensions();
+    
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(containerRef.current);
+    
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+      resizeObserver.disconnect();
+    };
+  }, [containerRef]);
+  
+  return dimensions.current;
+};
 
 export const useUnifiedElementDrag = (
   elementRef: React.RefObject<HTMLDivElement>,
   containerRef: React.RefObject<HTMLDivElement>,
   deviceConfig: { x: number; y: number; width?: number; height?: number },
   onUpdate: (updates: any) => void,
-  elementId: string | number
+  elementId: string | number,
+  previewDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ offsetX: number; offsetY: number } | null>(null);
+  const containerDims = useContainerDimensions(containerRef);
+  const deviceDims = useRef(getDeviceDimensions(previewDevice));
+  
+  // Mise à jour des dimensions du périphérique lors du changement
+  useEffect(() => {
+    deviceDims.current = getDeviceDimensions(previewDevice);
+  }, [previewDevice]);
 
   const handleDragStart = useCallback(
     (e: React.PointerEvent) => {
@@ -19,12 +61,24 @@ export const useUnifiedElementDrag = (
         return;
       }
 
-      const elementRect = elementRef.current.getBoundingClientRect();
       const containerRect = containerRef.current.getBoundingClientRect();
+      const elementRect = elementRef.current.getBoundingClientRect();
+      
+      // Calcul des échelles pour la conversion entre coordonnées physiques et logiques
+      const scaleX = containerDims.width / deviceDims.current.width;
+      const scaleY = containerDims.height / deviceDims.current.height;
 
-      // Calculate offset from click point to element's top-left corner
-      const offsetX = e.clientX - elementRect.left;
-      const offsetY = e.clientY - elementRect.top;
+      // Position du curseur en coordonnées logiques
+      const cursorXLogical = (e.clientX - containerRect.left) / scaleX;
+      const cursorYLogical = (e.clientY - containerRect.top) / scaleY;
+
+      // Position de l'élément en coordonnées logiques
+      const elLeftLogical = (elementRect.left - containerRect.left) / scaleX;
+      const elTopLogical = (elementRect.top - containerRect.top) / scaleY;
+
+      // Calcul de l'offset du curseur par rapport à l'élément
+      const offsetX = cursorXLogical - elLeftLogical;
+      const offsetY = cursorYLogical - elTopLogical;
 
       dragStartRef.current = { offsetX, offsetY };
       setIsDragging(true);
@@ -33,49 +87,64 @@ export const useUnifiedElementDrag = (
       document.body.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
 
-      console.log('🎯 Drag start:', {
+      console.log('🎯 Unified drag start:', {
         elementId,
-        clickX: e.clientX,
-        clickY: e.clientY,
-        elementLeft: elementRect.left,
-        elementTop: elementRect.top,
+        previewDevice,
+        cursorXLogical,
+        cursorYLogical,
+        elLeftLogical,
+        elTopLogical,
         offsetX,
         offsetY,
-        containerLeft: containerRect.left,
-        containerTop: containerRect.top
+        scaleX,
+        scaleY,
+        containerDims: containerDims,
+        deviceDims: deviceDims.current
       });
 
       const handlePointerMove = (moveEvent: PointerEvent) => {
         if (!containerRef.current || !dragStartRef.current) return;
 
         const containerRect = containerRef.current.getBoundingClientRect();
+        
+        // Calcul des échelles
+        const scaleX = containerDims.width / deviceDims.current.width;
+        const scaleY = containerDims.height / deviceDims.current.height;
 
-        // Calculate new position by subtracting the initial offset
-        const newX = moveEvent.clientX - containerRect.left - dragStartRef.current.offsetX;
-        const newY = moveEvent.clientY - containerRect.top - dragStartRef.current.offsetY;
+        // Position actuelle du curseur en coordonnées logiques
+        const currentXLogical = (moveEvent.clientX - containerRect.left) / scaleX;
+        const currentYLogical = (moveEvent.clientY - containerRect.top) / scaleY;
 
-        // Clamp within container bounds
-        const clampedX = Math.max(0, Math.min(newX, containerRect.width - (deviceConfig.width || 100)));
-        const clampedY = Math.max(0, Math.min(newY, containerRect.height - (deviceConfig.height || 30)));
+        // Calculer la nouvelle position de l'élément (curseur - offset)
+        let newX = currentXLogical - dragStartRef.current.offsetX;
+        let newY = currentYLogical - dragStartRef.current.offsetY;
 
-        console.log('📍 Drag move:', {
+        // Limites dans les coordonnées logiques du device
+        const maxX = Math.max(0, deviceDims.current.width - (deviceConfig.width || 100));
+        const maxY = Math.max(0, deviceDims.current.height - (deviceConfig.height || 30));
+        
+        // Appliquer les limites
+        newX = Math.min(Math.max(0, newX), maxX);
+        newY = Math.min(Math.max(0, newY), maxY);
+
+        console.log('📍 Unified drag move:', {
           mouseX: moveEvent.clientX,
           mouseY: moveEvent.clientY,
-          containerLeft: containerRect.left,
-          containerTop: containerRect.top,
+          currentXLogical,
+          currentYLogical,
           offsetX: dragStartRef.current.offsetX,
           offsetY: dragStartRef.current.offsetY,
           newX,
           newY,
-          clampedX,
-          clampedY
+          scaleX,
+          scaleY
         });
 
-        onUpdate({ x: Math.round(clampedX), y: Math.round(clampedY) });
+        onUpdate({ x: Math.round(newX), y: Math.round(newY) });
       };
 
       const handlePointerUp = () => {
-        console.log('✅ Drag ended');
+        console.log('✅ Unified drag ended');
         setIsDragging(false);
         dragStartRef.current = null;
 
@@ -90,7 +159,7 @@ export const useUnifiedElementDrag = (
       document.addEventListener('pointermove', handlePointerMove);
       document.addEventListener('pointerup', handlePointerUp);
     },
-    [containerRef, elementRef, onUpdate, elementId, deviceConfig.width, deviceConfig.height]
+    [containerRef, elementRef, onUpdate, elementId, deviceConfig.width, deviceConfig.height, containerDims, previewDevice]
   );
 
   return {

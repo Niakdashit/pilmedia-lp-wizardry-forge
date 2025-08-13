@@ -88,6 +88,7 @@ const CanvasContent: React.FC<CanvasContentProps> = ({
               containerRef={containerRef}
               sizeMap={sizeMap}
               getElementDeviceConfig={getElementDeviceConfig}
+              previewDevice={previewDevice}
             />
           )
         ))}
@@ -113,6 +114,7 @@ const CanvasContent: React.FC<CanvasContentProps> = ({
               }}
               containerRef={containerRef}
               getElementDeviceConfig={getElementDeviceConfig}
+              previewDevice={previewDevice}
             />
           )
         ))}
