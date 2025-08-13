@@ -1,7 +1,6 @@
 
 import React, { useRef, useCallback } from 'react';
 import { Trash2, Target } from 'lucide-react';
-import { useTextElementDrag } from './hooks/useTextElementDrag';
 
 interface TextElementProps {
   element: any;
@@ -29,12 +28,7 @@ const TextElement: React.FC<TextElementProps> = ({
   // Get current device-specific position and size
   const deviceConfig = getElementDeviceConfig(element);
 
-  const { isDragging, handleDragStart } = useTextElementDrag(
-    elementRef,
-    containerRef,
-    onUpdate,
-    element.id
-  );
+  // Use simplified drag handling without conflicting systems
 
   const handleCenterElement = useCallback(() => {
     if (!containerRef.current || !elementRef.current) return;
@@ -66,10 +60,9 @@ const TextElement: React.FC<TextElementProps> = ({
       fontStyle: element.italic ? 'italic' : (element.fontStyle || 'normal'),
       textDecoration: element.underline ? 'underline' : (element.textDecoration || 'none'),
       fontFamily: element.fontFamily || 'Inter, sans-serif',
-      cursor: isDragging ? 'grabbing' : 'grab',
+      cursor: 'grab',
       userSelect: 'none',
-      willChange: isDragging ? 'transform' : 'auto',
-      transition: isDragging ? 'none' : 'box-shadow 0.1s ease',
+      transition: 'box-shadow 0.1s ease',
       textAlign: element.textAlign || 'left'
     };
 
@@ -126,13 +119,13 @@ const TextElement: React.FC<TextElementProps> = ({
     }
 
     return baseStyles;
-  }, [element, sizeMap, isDragging, hexToRgb]);
+  }, [element, sizeMap, hexToRgb]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+  const handlePointerDown = useCallback((_e: React.PointerEvent) => {
     console.log('Text element pointer down:', element.id);
     onSelect();
-    handleDragStart(e);
-  }, [onSelect, handleDragStart, element.id]);
+    // Let the parent drag system handle the actual dragging
+  }, [onSelect, element.id]);
 
   return (
     <div
@@ -151,7 +144,7 @@ const TextElement: React.FC<TextElementProps> = ({
           padding: '8px',
           overflow: 'hidden',
           wordWrap: 'break-word',
-          cursor: isDragging ? 'grabbing' : 'grab'
+          cursor: 'grab'
         } : getTextStyles())
       }}
       onPointerDown={handlePointerDown}

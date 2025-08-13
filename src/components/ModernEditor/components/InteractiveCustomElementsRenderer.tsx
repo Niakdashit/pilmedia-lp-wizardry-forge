@@ -38,10 +38,8 @@ const InteractiveCustomElementsRenderer: React.FC<InteractiveCustomElementsRende
     return { ...element, ...fromConfig, ...fromDirect };
   };
 
-  const getDragTransform = (elementId: string) => {
-    if (dragState.isDragging && dragState.draggedElementId === elementId) {
-      return `translate(${dragState.currentOffset.x}px, ${dragState.currentOffset.y}px)`;
-    }
+  // Remove conflicting transform - position is handled directly in style
+  const getDragTransform = (_elementId: string) => {
     return 'none';
   };
 
