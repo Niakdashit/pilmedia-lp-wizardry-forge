@@ -1,13 +1,14 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
-import { useDrag } from 'react-dnd';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';
 import TextContextMenu from './components/TextContextMenu';
 import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
+import { getCanvasViewport, viewportToCanvas } from './core/Transform';
+import { createPreciseDrag } from './core/Drag';
 
-// Force cache invalidation - React DnD v14+ compliant
+// Professional drag & drop implementation - Excalidraw/Canva precision
 
 export interface CanvasElementProps {
   element: any;
@@ -45,115 +46,98 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     [element, selectedDevice, getPropertiesForDevice]
   );
 
-  // Modern useDrag hook (v14+ compatible) - no deprecated begin/end callbacks
-  const [{ opacity, isDragging }, drag] = useDrag(() => ({
-    type: 'canvas-element',
-    item: { id: element.id },
-    collect: (monitor) => ({
-      opacity: monitor.isDragging() ? 0.5 : 1,
-      isDragging: monitor.isDragging(),
-    }),
-  }));
-
   const [isEditing, setIsEditing] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (elementRef.current) {
-      // Connect the drag source to the element ref
-      drag(elementRef);
-    }
-  }, [drag]);
+  const dragSystemRef = useRef<ReturnType<typeof createPreciseDrag> | null>(null);
 
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
   const setClipboard = useEditorStore(state => state.setClipboard);
   const canPaste = useEditorStore(state => state.canPaste);
 
-  // Optimized drag handlers with useCallback - precise cursor tracking
+  // Professional drag system (Excalidraw/Canva precision)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     const isMultiSelect = e.ctrlKey || e.metaKey;
     onSelect(element.id, isMultiSelect);
-    e.preventDefault();
-
+    
     const el = elementRef.current;
     const canvasEl = containerRef?.current;
     if (!el || !canvasEl) return;
 
-    el.setPointerCapture?.(e.pointerId);
-    el.style.transition = 'none';
+    // CAPTURE IMMEDIATE: Position réelle de l'élément AVANT tout calcul
+    const canvasRect = canvasEl.getBoundingClientRect();
+    const elementRect = el.getBoundingClientRect();
+    const currentRealX = elementRect.left - canvasRect.left;
+    const currentRealY = elementRect.top - canvasRect.top;
 
-    const rect = canvasEl.getBoundingClientRect();
-    const zoomScale = touchOptimization.calculateZoomScale(canvasEl);
+    // Créer le système de drag professionnel
+    const getViewport = () => getCanvasViewport(canvasEl);
+    const getItem = () => ({
+      x: currentRealX, // Utiliser la position DOM réelle capturée
+      y: currentRealY,
+      w: deviceProps.width || 100,
+      h: deviceProps.height || 30
+    });
+    
+    // Variable pour tracker la dernière position pendant le drag
+    let lastDragPosition = { x: currentRealX, y: currentRealY };
+    
+    const setItemPos = (x: number, y: number) => {
+      // Sauvegarder la position pour la fin du drag
+      lastDragPosition = { x, y };
+      
+      // Mise à jour immédiate du transform
+      if (elementRef.current) {
+        elementRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      }
+      // Marquer comme en cours de drag
+      if (!isDragging) {
+        setIsDragging(true);
+      }
+    };
 
-    const initialCoords = touchOptimization.convertToCanvasCoordinates(
-      e.clientX,
-      e.clientY,
-      touchOptimization.isTouchInteraction(e)
+    // Initialiser le drag system avec seuil de 5px
+    dragSystemRef.current = createPreciseDrag(
+      getViewport,
+      getItem,
+      setItemPos,
+      5
     );
 
-    const offsetX = initialCoords.x - (deviceProps.x || 0);
-    const offsetY = initialCoords.y - (deviceProps.y || 0);
-
-    const lastPos = { x: deviceProps.x || 0, y: deviceProps.y || 0 };
-    let rafId = 0;
-
-    const update = () => {
-      rafId = 0;
-      if (elementRef.current) {
-        elementRef.current.style.transform = `translate3d(${lastPos.x}px, ${lastPos.y}px, 0)`;
-      }
-      const width = deviceProps.width || 100;
-      const height = deviceProps.height || 30;
-      const elementCenterX = lastPos.x + width / 2;
-      const elementCenterY = lastPos.y + height / 2;
-      const canvasCenterX = (rect.width / zoomScale) / 2;
-      const canvasCenterY = (rect.height / zoomScale) / 2;
-      document.dispatchEvent(new CustomEvent('showAlignmentGuides', {
-        detail: {
-          elementId: element.id,
-          x: lastPos.x,
-          y: lastPos.y,
-          width,
-          height,
-          elementCenterX,
-          elementCenterY,
-          canvasCenterX,
-          canvasCenterY,
-          newX: lastPos.x,
-          newY: lastPos.y,
+    // Gérer la fin du drag
+    const originalOnPointerDown = dragSystemRef.current.onPointerDown;
+    const enhancedOnPointerDown = (evt: PointerEvent, hostEl: HTMLElement) => {
+      // Intercepter la fin du drag pour sauvegarder
+      const originalUp = document.onpointerup;
+      const enhancedUp = (upEvt: PointerEvent) => {
+        if (originalUp) originalUp.call(document, upEvt);
+        
+        // Sauvegarder la position finale si on a bougé
+        if (dragSystemRef.current?.isActive()) {
+          const finalState = dragSystemRef.current.getState();
+          if (finalState.started) {
+            // SOLUTION MOBILE: Utiliser directement la dernière position trackée
+            // au lieu de recalculer avec viewport (qui peut être incorrect sur mobile)
+            onUpdate(element.id, { 
+              x: Math.round(lastDragPosition.x * 100) / 100,
+              y: Math.round(lastDragPosition.y * 100) / 100
+            });
+          }
         }
-      }));
+        
+        setIsDragging(false);
+        document.onpointerup = originalUp;
+      };
+      
+      document.onpointerup = enhancedUp;
+      originalOnPointerDown(evt, hostEl);
     };
 
-    const move = (evt: PointerEvent) => {
-      const coords = touchOptimization.convertToCanvasCoordinates(
-        evt.clientX,
-        evt.clientY,
-        touchOptimization.isTouchInteraction(evt)
-      );
-
-      lastPos.x = coords.x - offsetX;
-      lastPos.y = coords.y - offsetY;
-
-      if (!rafId) {
-        rafId = requestAnimationFrame(update);
-      }
-    };
-
-    const up = () => {
-      document.removeEventListener('pointermove', move);
-      document.removeEventListener('pointerup', up);
-      document.dispatchEvent(new CustomEvent('hideAlignmentGuides'));
-      el.releasePointerCapture?.(e.pointerId);
-      el.style.transition = '';
-      onUpdate(element.id, { x: lastPos.x, y: lastPos.y });
-    };
-
-    document.addEventListener('pointermove', move);
-    document.addEventListener('pointerup', up);
-  }, [element.id, onSelect, containerRef, onUpdate, deviceProps.x, deviceProps.y, deviceProps.width, deviceProps.height, touchOptimization]);
+    // Démarrer le drag professionnel
+    enhancedOnPointerDown(e.nativeEvent, el);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
@@ -546,10 +530,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
       style={{
         transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
-        opacity,
+        opacity: isDragging ? 0.8 : 1,
         zIndex: element.zIndex || 1,
-        transition: 'transform 0.1s linear',
+        transition: isDragging ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
+        cursor: isDragging ? 'grabbing' : 'grab',
       }}
       onPointerDown={handlePointerDown}
       onDoubleClick={handleDoubleClick}
