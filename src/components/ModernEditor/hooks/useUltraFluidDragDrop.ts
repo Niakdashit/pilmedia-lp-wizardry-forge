@@ -142,7 +142,7 @@ export const useUltraFluidDragDrop = ({
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerStyle = getComputedStyle(containerRef.current);
-    
+
     // Calculer le zoom
     let zoomScale = 1;
     const transform = containerStyle.transform;
@@ -154,9 +154,13 @@ export const useUltraFluidDragDrop = ({
       }
     }
 
+    // Tenir compte du padding du conteneur avant de diviser par le zoom
+    const paddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
+    const paddingTop = parseFloat(containerStyle.paddingTop) || 0;
+
     // Position dans le canvas
-    const canvasX = (clientX - containerRect.left) / zoomScale;
-    const canvasY = (clientY - containerRect.top) / zoomScale;
+    const canvasX = (clientX - containerRect.left - paddingLeft) / zoomScale;
+    const canvasY = (clientY - containerRect.top - paddingTop) / zoomScale;
 
     // Offset par rapport au coin de l'élément
     const offset = {
@@ -211,9 +215,13 @@ export const useUltraFluidDragDrop = ({
       }
     }
 
+    // Tenir compte du padding du conteneur avant de diviser par le zoom
+    const paddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
+    const paddingTop = parseFloat(containerStyle.paddingTop) || 0;
+
     // Nouvelle position dans le canvas
-    const canvasX = (clientX - containerRect.left) / zoomScale;
-    const canvasY = (clientY - containerRect.top) / zoomScale;
+    const canvasX = (clientX - containerRect.left - paddingLeft) / zoomScale;
+    const canvasY = (clientY - containerRect.top - paddingTop) / zoomScale;
 
     // Position de l'élément (en soustrayant l'offset)
     const elementPosition = {
