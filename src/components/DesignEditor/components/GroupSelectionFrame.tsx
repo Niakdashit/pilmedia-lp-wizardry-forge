@@ -42,7 +42,7 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
   };
 
   // Gérer le début du drag
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.detail === 2) {
       // Double-clic : éditer le groupe
       onDoubleClick?.();
@@ -51,41 +51,53 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
 
     e.preventDefault();
     e.stopPropagation();
-    
+
+    const container = (frameRef.current?.offsetParent as HTMLElement) || null;
+    const offsetX = container?.offsetLeft ?? 0;
+    const offsetY = container?.offsetTop ?? 0;
+
     setIsDragging(true);
     setDragStart({
-      x: e.clientX - scaledBounds.x,
-      y: e.clientY - scaledBounds.y
+      x: e.clientX - offsetX - scaledBounds.x,
+      y: e.clientY - offsetY - scaledBounds.y
     });
 
     console.log('🎯 Group drag started:', groupId);
   }, [groupId, scaledBounds, onDoubleClick]);
 
   // Gérer le début du resize
-  const handleResizeStart = useCallback((e: React.MouseEvent, handle: string) => {
+  const handleResizeStart = useCallback((e: React.PointerEvent, handle: string) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
+    const container = (frameRef.current?.offsetParent as HTMLElement) || null;
+    const offsetX = container?.offsetLeft ?? 0;
+    const offsetY = container?.offsetTop ?? 0;
+
     setIsResizing(true);
     setResizeHandle(handle);
-    setDragStart({ x: e.clientX, y: e.clientY });
+    setDragStart({ x: e.clientX - offsetX, y: e.clientY - offsetY });
 
     console.log('🎯 Group resize started:', { groupId, handle });
   }, [groupId]);
 
   // Gérer le déplacement
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    const container = (frameRef.current?.offsetParent as HTMLElement) || null;
+    const offsetX = container?.offsetLeft ?? 0;
+    const offsetY = container?.offsetTop ?? 0;
+
     if (isDragging && onMove) {
-      const deltaX = (e.clientX - dragStart.x - scaledBounds.x) / zoom;
-      const deltaY = (e.clientY - dragStart.y - scaledBounds.y) / zoom;
-      
+      const deltaX = (e.clientX - offsetX - dragStart.x - scaledBounds.x) / zoom;
+      const deltaY = (e.clientY - offsetY - dragStart.y - scaledBounds.y) / zoom;
+
       onMove(deltaX, deltaY);
     } else if (isResizing && onResize && resizeHandle) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      
+      const deltaX = e.clientX - offsetX - dragStart.x;
+      const deltaY = e.clientY - offsetY - dragStart.y;
+
       let newBounds = { ...bounds };
-      
+
       switch (resizeHandle) {
         case 'nw':
           newBounds.x += deltaX / zoom;
@@ -122,17 +134,17 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
           newBounds.width += deltaX / zoom;
           break;
       }
-      
+
       // Empêcher les tailles négatives
       if (newBounds.width > 10 && newBounds.height > 10) {
         onResize(newBounds);
-        setDragStart({ x: e.clientX, y: e.clientY });
+        setDragStart({ x: e.clientX - offsetX, y: e.clientY - offsetY });
       }
     }
   }, [isDragging, isResizing, dragStart, scaledBounds, zoom, bounds, onMove, onResize, resizeHandle]);
 
   // Gérer la fin du drag/resize
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     if (isDragging) {
       console.log('🎯 Group drag ended:', groupId);
     }
@@ -148,15 +160,15 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
   // Ajouter les event listeners globaux
   React.useEffect(() => {
     if (isDragging || isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      
+      document.addEventListener('pointermove', handlePointerMove);
+      document.addEventListener('pointerup', handlePointerUp);
+
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('pointermove', handlePointerMove);
+        document.removeEventListener('pointerup', handlePointerUp);
       };
     }
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, handlePointerMove, handlePointerUp]);
 
   if (!isVisible) return null;
 
@@ -175,7 +187,7 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
       {/* Cadre principal du groupe */}
       <div
         className="absolute inset-0 border-2 border-blue-500 bg-blue-50 bg-opacity-10 cursor-move"
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
         style={{
           borderStyle: 'dashed',
           borderRadius: '4px'
@@ -206,7 +218,7 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
         <div
           key={handle}
           className={`absolute w-3 h-3 bg-blue-500 border border-white rounded-sm ${className}`}
-          onMouseDown={(e) => handleResizeStart(e, handle)}
+          onPointerDown={(e) => handleResizeStart(e, handle)}
           style={{ marginTop: '-6px', marginLeft: '-6px' }}
         />
       ))}
