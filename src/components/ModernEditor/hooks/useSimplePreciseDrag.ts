@@ -35,8 +35,7 @@ export const useSimplePreciseDrag = ({
     if (!elementRef.current || !containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const elementRect = elementRef.current.getBoundingClientRect();
-
+    
     // Calculer l'échelle entre le container physique et les dimensions logiques du device
     const scaleX = containerRect.width / deviceDims.width;
     const scaleY = containerRect.height / deviceDims.height;
@@ -45,13 +44,17 @@ export const useSimplePreciseDrag = ({
     const containerX = e.clientX - containerRect.left;
     const containerY = e.clientY - containerRect.top;
 
-    // Position de l'élément dans les coordonnées du container
-    const elementX = elementRect.left - containerRect.left;
-    const elementY = elementRect.top - containerRect.top;
+    // Convertir en coordonnées logiques
+    const logicalCursorX = containerX / scaleX;
+    const logicalCursorY = containerY / scaleY;
 
-    // Calculer l'offset entre le curseur et le coin supérieur gauche de l'élément
-    const offsetX = containerX - elementX;
-    const offsetY = containerY - elementY;
+    // Position actuelle de l'élément en coordonnées logiques (from config)
+    const currentElementX = deviceConfig.x;
+    const currentElementY = deviceConfig.y;
+
+    // L'offset est la différence entre le curseur et la position logique actuelle de l'élément
+    const offsetX = logicalCursorX - currentElementX;
+    const offsetY = logicalCursorY - currentElementY;
 
     dragStateRef.current = {
       offsetX,
@@ -67,8 +70,8 @@ export const useSimplePreciseDrag = ({
     console.log('🎯 Simple drag start:', {
       elementId,
       previewDevice,
-      containerPos: { x: containerX, y: containerY },
-      elementPos: { x: elementX, y: elementY },
+      cursorLogicalPos: { x: logicalCursorX, y: logicalCursorY },
+      elementCurrentPos: { x: currentElementX, y: currentElementY },
       offset: { x: offsetX, y: offsetY },
       scales: { scaleX, scaleY },
       deviceConfig,
@@ -84,16 +87,17 @@ export const useSimplePreciseDrag = ({
       const currentX = moveEvent.clientX - containerRect.left;
       const currentY = moveEvent.clientY - containerRect.top;
 
-      // Nouvelle position de l'élément (curseur - offset)
-      const newElementX = currentX - dragStateRef.current.offsetX;
-      const newElementY = currentY - dragStateRef.current.offsetY;
-
       // Convertir en coordonnées logiques du device
       const scaleX = containerRect.width / deviceDims.width;
       const scaleY = containerRect.height / deviceDims.height;
 
-      const logicalX = newElementX / scaleX;
-      const logicalY = newElementY / scaleY;
+      // Position logique actuelle du curseur
+      const logicalCursorX = currentX / scaleX;
+      const logicalCursorY = currentY / scaleY;
+
+      // Nouvelle position de l'élément (curseur logique - offset logique)
+      const logicalX = logicalCursorX - dragStateRef.current.offsetX;
+      const logicalY = logicalCursorY - dragStateRef.current.offsetY;
 
       // Appliquer les limites dans l'espace logique
       const elementWidth = deviceConfig.width || 100;
@@ -106,9 +110,9 @@ export const useSimplePreciseDrag = ({
       const constrainedY = Math.min(Math.max(0, logicalY), maxY);
 
       console.log('📍 Simple drag move:', {
-        currentPos: { x: currentX, y: currentY },
-        newElementPos: { x: newElementX, y: newElementY },
-        logicalPos: { x: logicalX, y: logicalY },
+        cursorPhysical: { x: currentX, y: currentY },
+        cursorLogical: { x: logicalCursorX, y: logicalCursorY },
+        newLogicalPos: { x: logicalX, y: logicalY },
         constrainedPos: { x: constrainedX, y: constrainedY },
         offset: dragStateRef.current,
         scales: { scaleX, scaleY }
