@@ -91,11 +91,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const rect = canvasEl.getBoundingClientRect();
     const matrix = new DOMMatrixReadOnly(window.getComputedStyle(canvasEl).transform);
     const zoomScale = matrix.a || zoom || 1;
-    const panX = matrix.e;
-    const panY = matrix.f;
 
-    const offsetX = (e.clientX - rect.left - panX) / zoomScale - (deviceProps.x || 0);
-    const offsetY = (e.clientY - rect.top - panY) / zoomScale - (deviceProps.y || 0);
+    const offsetX = (e.clientX - rect.left) / zoomScale - (deviceProps.x || 0);
+    const offsetY = (e.clientY - rect.top) / zoomScale - (deviceProps.y || 0);
 
     const lastPos = { x: deviceProps.x || 0, y: deviceProps.y || 0 };
     let rafId = 0;
@@ -129,8 +127,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     };
 
     const move = (evt: PointerEvent) => {
-      lastPos.x = (evt.clientX - rect.left - panX) / zoomScale - offsetX;
-      lastPos.y = (evt.clientY - rect.top - panY) / zoomScale - offsetY;
+      lastPos.x = (evt.clientX - rect.left) / zoomScale - offsetX;
+      lastPos.y = (evt.clientY - rect.top) / zoomScale - offsetY;
       if (!rafId) {
         rafId = requestAnimationFrame(update);
       }
