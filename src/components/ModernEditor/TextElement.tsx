@@ -1,7 +1,7 @@
 
 import React, { useRef, useCallback } from 'react';
 import { Trash2, Target } from 'lucide-react';
-import { useUnifiedElementDrag } from './hooks/useUnifiedElementDrag';
+import { useFluidElementDrag } from './hooks/useFluidElementDrag';
 
 interface TextElementProps {
   element: any;
@@ -31,15 +31,15 @@ const TextElement: React.FC<TextElementProps> = ({
   // Get current device-specific position and size
   const deviceConfig = getElementDeviceConfig(element);
 
-  // Use unified drag system
-  const { isDragging, handleDragStart } = useUnifiedElementDrag(
+  // Use fluid drag system
+  const { isDragging, handleDragStart } = useFluidElementDrag({
     elementRef,
     containerRef,
     deviceConfig,
     onUpdate,
-    element.id,
+    elementId: element.id,
     previewDevice
-  );
+  });
 
   const handleCenterElement = useCallback(() => {
     if (!containerRef.current || !elementRef.current) return;
