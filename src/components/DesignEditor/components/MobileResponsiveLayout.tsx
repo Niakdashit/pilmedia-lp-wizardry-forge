@@ -338,10 +338,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: none !important;
         }
 
-        /* Ajustements pour la toolbar visible */
+        /* Toolbar mobile positionnée en fixed - pas besoin d'ajuster le canvas */
         .mobile-layout.toolbar-visible .design-canvas-container {
-          /* Réduire légèrement le padding pour laisser place à la toolbar */
-          padding-top: 60px;
+          /* Pas d'ajustement de padding car la toolbar est en position fixed */
         }
 
         /* Empêcher le zoom accidentel sur iOS */
