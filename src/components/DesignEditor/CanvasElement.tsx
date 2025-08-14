@@ -17,7 +17,6 @@ export interface CanvasElementProps {
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
   containerRef?: React.RefObject<HTMLDivElement>;
-  zoom?: number;
   onAddElement?: (element: any) => void;
   elements?: any[];
 }
@@ -30,17 +29,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   onUpdate,
   onDelete,
   containerRef,
-  zoom = 1,
   onAddElement
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
   // 📱 Hook d'optimisation tactile pour mobile/tablette
-  const touchOptimization = useTouchOptimization({ 
-    selectedDevice, 
-    containerRef,
-    zoom 
-  });
+    const touchOptimization = useTouchOptimization({
+      selectedDevice,
+      containerRef
+    });
   
   // Get device-specific properties with proper typing - memoized
   const deviceProps = useMemo(
