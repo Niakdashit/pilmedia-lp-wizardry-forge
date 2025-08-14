@@ -1,6 +1,6 @@
 import React, { memo, useState, useRef } from 'react';
 import { Move, Edit2 } from 'lucide-react';
-import { useFluidElementDrag } from '../hooks/useFluidElementDrag';
+import { useSimplePreciseDrag } from '../hooks/useSimplePreciseDrag';
 
 interface InteractiveCustomElementsRendererProps {
   customTexts: any[];
@@ -77,8 +77,8 @@ const FluidTextElement: React.FC<{
     });
   };
 
-  // Use fluid drag system
-  const { isDragging, handleDragStart } = useFluidElementDrag({
+  // Use simple precise drag system
+  const { isDragging, handleDragStart } = useSimplePreciseDrag({
     elementRef,
     containerRef: containerRef || { current: null },
     deviceConfig: { x: config.x || 0, y: config.y || 0, width: 100, height: 30 },
@@ -310,8 +310,8 @@ const FluidImageElement: React.FC<{
     });
   };
 
-  // Use fluid drag system
-  const { isDragging, handleDragStart } = useFluidElementDrag({
+  // Use simple precise drag system
+  const { isDragging, handleDragStart } = useSimplePreciseDrag({
     elementRef,
     containerRef: containerRef || { current: null },
     deviceConfig: { 
