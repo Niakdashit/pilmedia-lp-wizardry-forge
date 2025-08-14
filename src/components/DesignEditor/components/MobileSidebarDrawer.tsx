@@ -175,6 +175,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       {/* Persistent Bottom Tab Bar (mobile only) - real mobile devices only */}
       {isMobile && (
         <div
+          id="mobile-toolbar"
           className="fixed left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 md:hidden"
           style={{
             // Position above the iOS/Android gesture area
