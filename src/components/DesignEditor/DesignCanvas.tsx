@@ -113,6 +113,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
   // Prevent repeated auto-fit on mobile when viewing desktop canvas
   const didAutoFitRef = useRef(false);
 
@@ -124,6 +125,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
+
+  // Mesure dynamique de la hauteur de la toolbar mobile
+  useEffect(() => {
+    if (!isRealMobile()) return;
+    const updateHeight = () => {
+      const toolbar = document.getElementById('mobile-toolbar');
+      setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   // Optimisation mobile pour une expérience tactile parfaite
 
@@ -309,7 +322,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
       // Match paddings used in the container around the canvas for desktop-on-mobile
       const paddingTop = 32;
-      const paddingBottom = 180; // space reserved for MobileSidebarDrawer
+      const paddingBottom = mobileToolbarHeight; // space reserved for MobileSidebarDrawer
       const paddingLeft = 20;
       const paddingRight = 20;
 
@@ -342,7 +355,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
     window.addEventListener('orientationchange', handleOrientation);
     return () => window.removeEventListener('orientationchange', handleOrientation);
-  }, [selectedDevice, effectiveCanvasSize, onZoomChange]);
+  }, [selectedDevice, effectiveCanvasSize, onZoomChange, mobileToolbarHeight]);
 
   // Handler centralisé pour changer le zoom depuis la barre d'échelle
   const handleZoomChange = useCallback((value: number) => {
@@ -796,7 +809,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
           paddingLeft: selectedDevice === 'tablet' ? 32 : 20,
           paddingRight: selectedDevice === 'tablet' ? 32 : 20,
-          paddingBottom: (isRealMobile() ? 180 : (selectedDevice === 'tablet' ? 48 : 32)),
+          paddingBottom: (isRealMobile() ? `calc(${mobileToolbarHeight}px + env(safe-area-inset-bottom))` : (selectedDevice === 'tablet' ? 48 : 32)),
           transition: 'padding 0.2s ease-in-out',
           minHeight: '100%'
         }}>

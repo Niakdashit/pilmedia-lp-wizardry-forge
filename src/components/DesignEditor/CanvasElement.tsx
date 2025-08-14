@@ -43,11 +43,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   });
   
   // Get device-specific properties with proper typing - memoized
-  const deviceProps = useMemo(() =>
-    getPropertiesForDevice(element, selectedDevice),
+  const deviceProps = useMemo(
+    () => getPropertiesForDevice(element, selectedDevice),
     [element, selectedDevice, getPropertiesForDevice]
   );
-  
 
   // Modern useDrag hook (v14+ compatible) - no deprecated begin/end callbacks
   const [{ opacity, isDragging }, drag] = useDrag(() => ({
@@ -248,10 +247,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setIsEditing(false);
   }, []);
 
-
-
   const handleAlign = useCallback((alignment: string) => {
-    // Logique d'alignement basée sur le conteneur
     if (!containerRef?.current) return;
     
     const containerWidth = containerRef.current.offsetWidth;
@@ -292,97 +288,60 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     // Detect if it's a corner handle (for proportional scaling with font size change)
     const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
 
-      const handleResizePointerMove = (e: PointerEvent) => {
-        // Throttled resize for smooth performance
-        requestAnimationFrame(() => {
-          // 📱 Appliquer la sensibilité tactile aux deltas
-          const rawDeltaX = e.clientX - startX;
-          const rawDeltaY = e.clientY - startY;
-          
-          const adjustedDeltas = touchOptimization.applyTouchSensitivity(
-            rawDeltaX, 
-            rawDeltaY, 
-            isTouchResize
-          );
-          
-          const deltaX = adjustedDeltas.deltaX;
-          const deltaY = adjustedDeltas.deltaY;
+    const handleResizePointerMove = (e: PointerEvent) => {
+      requestAnimationFrame(() => {
+        // 📱 Appliquer la sensibilité tactile aux deltas
+        const rawDeltaX = e.clientX - startX;
+        const rawDeltaY = e.clientY - startY;
+        
+        const adjustedDeltas = touchOptimization.applyTouchSensitivity(
+          rawDeltaX, 
+          rawDeltaY, 
+          isTouchResize
+        );
+        
+        const deltaX = adjustedDeltas.deltaX;
+        const deltaY = adjustedDeltas.deltaY;
 
-      let newWidth = startWidth;
-      let newHeight = startHeight;
-      let newX = startPosX;
-      let newY = startPosY;
-      let newFontSize = startFontSize;
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+        let newX = startPosX;
+        let newY = startPosY;
+        let newFontSize = startFontSize;
 
-      if (isCornerHandle && element.type === 'text') {
-        // For corner handles on text: scale font size proportionally
-        
-        let scaleFactor = 1;
-        
-        switch (direction) {
-          case 'se': // bottom-right
-            scaleFactor = 1 + (deltaX + deltaY) / 150;
-            break;
-          case 'sw': // bottom-left
-            scaleFactor = 1 + (-deltaX + deltaY) / 150;
-            break;
-          case 'ne': // top-right
-            scaleFactor = 1 + (deltaX - deltaY) / 150;
-            break;
-          case 'nw': // top-left
-            scaleFactor = 1 + (-deltaX - deltaY) / 150;
-            break;
-        }
-        
-        scaleFactor = Math.max(0.2, scaleFactor);
-        newFontSize = Math.max(8, Math.round(startFontSize * scaleFactor));
-        
-        
-        // Keep text box dimensions tight to content (remove width/height to make it auto)
-        onUpdate(element.id, {
-          fontSize: newFontSize,
-          width: undefined,
-          height: undefined,
-          isCornerScaled: true,
-        });
-      } else {
-        // For edge handles or non-text elements: change dimensions only
-        switch (direction) {
-          case 'n': // top
-            newHeight = Math.max(20, startHeight - deltaY);
-            newY = startPosY + (startHeight - newHeight);
-            break;
-          case 's': // bottom
-            newHeight = Math.max(20, startHeight + deltaY);
-            break;
-          case 'w': // left
-            newWidth = Math.max(20, startWidth - deltaX);
-            newX = startPosX + (startWidth - newWidth);
-            break;
-          case 'e': // right
-            newWidth = Math.max(20, startWidth + deltaX);
-            break;
-          case 'se': // bottom-right
-            newWidth = Math.max(20, startWidth + deltaX);
-            newHeight = Math.max(20, startHeight + deltaY);
-            break;
-          case 'sw': // bottom-left
-            newWidth = Math.max(20, startWidth - deltaX);
-            newHeight = Math.max(20, startHeight + deltaY);
-            newX = startPosX + (startWidth - newWidth);
-            break;
-          case 'ne': // top-right
-            newWidth = Math.max(20, startWidth + deltaX);
-            newHeight = Math.max(20, startHeight - deltaY);
-            newY = startPosY + (startHeight - newHeight);
-            break;
-          case 'nw': // top-left
-            newWidth = Math.max(20, startWidth - deltaX);
-            newHeight = Math.max(20, startHeight - deltaY);
-            newX = startPosX + (startWidth - newWidth);
-            newY = startPosY + (startHeight - newHeight);
-            break;
-        }
+        if (isCornerHandle && element.type === 'text') {
+          // For corner handles on text: scale font size proportionally
+          let scaleFactor = 1;
+          
+          switch (direction) {
+            case 'se': scaleFactor = 1 + (deltaX + deltaY) / 150; break;
+            case 'sw': scaleFactor = 1 + (-deltaX + deltaY) / 150; break;
+            case 'ne': scaleFactor = 1 + (deltaX - deltaY) / 150; break;
+            case 'nw': scaleFactor = 1 + (-deltaX - deltaY) / 150; break;
+          }
+          
+          scaleFactor = Math.max(0.2, scaleFactor);
+          newFontSize = Math.max(8, Math.round(startFontSize * scaleFactor));
+          
+          // Keep text box dimensions tight to content (remove width/height to make it auto)
+          onUpdate(element.id, {
+            fontSize: newFontSize,
+            width: undefined,
+            height: undefined,
+            isCornerScaled: true,
+          });
+        } else {
+          // For edge handles or non-text elements: change dimensions only
+          switch (direction) {
+            case 'n': newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
+            case 's': newHeight = Math.max(20, startHeight + deltaY); break;
+            case 'w': newWidth = Math.max(20, startWidth - deltaX); newX = startPosX + (startWidth - newWidth); break;
+            case 'e': newWidth = Math.max(20, startWidth + deltaX); break;
+            case 'se': newWidth = Math.max(20, startWidth + deltaX); newHeight = Math.max(20, startHeight + deltaY); break;
+            case 'sw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight + deltaY); newX = startPosX + (startWidth - newWidth); break;
+            case 'ne': newWidth = Math.max(20, startWidth + deltaX); newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
+            case 'nw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight - deltaY); newX = startPosX + (startWidth - newWidth); newY = startPosY + (startHeight - newHeight); break;
+          }
 
           onUpdate(element.id, {
             width: newWidth,
@@ -392,8 +351,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             isCornerScaled: false,
           });
         }
-        });
-      };
+      });
+    };
 
     const handleResizePointerUp = () => {
       document.removeEventListener('pointermove', handleResizePointerMove);
@@ -402,7 +361,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     document.addEventListener('pointermove', handleResizePointerMove);
     document.addEventListener('pointerup', handleResizePointerUp);
-  }, [element.id, onUpdate]);
+  }, [element.id, onUpdate, element.width, element.height, element.x, element.y, element.fontSize, element.style, touchOptimization]);
 
   // Clipboard Handlers
   const handleCopy = useCallback((elementToCopy: any) => {
@@ -437,8 +396,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
   }, [onAddElement, getPropertiesForDevice, selectedDevice]);
 
-// --- Remove any previous/old handleCopy, handlePaste, handleDuplicate below this line ---
-
+  // --- Remove any previous/old handleCopy, handlePaste, handleDuplicate below this line ---
 
   // Memoized element rendering for performance
   const renderElement = useMemo(() => {
@@ -453,7 +411,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     } : {};
 
     switch (element.type) {
-      case 'text':
+      case 'text': {
         const getTextStyle = (): React.CSSProperties => {
           const baseStyle: React.CSSProperties = {
             fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
@@ -537,6 +495,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             {element.content || 'Texte'}
           </div>
         );
+      }
       case 'image':
         return (
           <img
@@ -584,20 +543,20 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
   }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur]);
 
-    return (
-      <div
-        ref={elementRef}
-        className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
-        style={{
-          transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
-          opacity,
-          zIndex: element.zIndex || 1,
-          transition: 'transform 0.1s linear',
-          touchAction: 'none',
-        }}
-        onPointerDown={handlePointerDown}
-        onDoubleClick={handleDoubleClick}
-      >
+  return (
+    <div
+      ref={elementRef}
+      className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
+      style={{
+        transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
+        opacity,
+        zIndex: element.zIndex || 1,
+        transition: 'transform 0.1s linear',
+        touchAction: 'none',
+      }}
+      onPointerDown={handlePointerDown}
+      onDoubleClick={handleDoubleClick}
+    >
       {renderElement}
       
       {/* Selection handles - masqués pendant le drag */}
