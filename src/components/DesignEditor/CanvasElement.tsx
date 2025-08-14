@@ -89,13 +89,16 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     el.style.transition = 'none';
 
     const rect = canvasEl.getBoundingClientRect();
-    const matrix = new DOMMatrixReadOnly(window.getComputedStyle(canvasEl).transform);
-    const zoomScale = matrix.a || zoom || 1;
-    const panX = matrix.e;
-    const panY = matrix.f;
+    const zoomScale = touchOptimization.calculateZoomScale(canvasEl);
 
-    const offsetX = (e.clientX - rect.left - panX) / zoomScale - (deviceProps.x || 0);
-    const offsetY = (e.clientY - rect.top - panY) / zoomScale - (deviceProps.y || 0);
+    const initialCoords = touchOptimization.convertToCanvasCoordinates(
+      e.clientX,
+      e.clientY,
+      touchOptimization.isTouchInteraction(e)
+    );
+
+    const offsetX = initialCoords.x - (deviceProps.x || 0);
+    const offsetY = initialCoords.y - (deviceProps.y || 0);
 
     const lastPos = { x: deviceProps.x || 0, y: deviceProps.y || 0 };
     let rafId = 0;
@@ -129,8 +132,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     };
 
     const move = (evt: PointerEvent) => {
-      lastPos.x = (evt.clientX - rect.left - panX) / zoomScale - offsetX;
-      lastPos.y = (evt.clientY - rect.top - panY) / zoomScale - offsetY;
+      const coords = touchOptimization.convertToCanvasCoordinates(
+        evt.clientX,
+        evt.clientY,
+        touchOptimization.isTouchInteraction(evt)
+      );
+
+      lastPos.x = coords.x - offsetX;
+      lastPos.y = coords.y - offsetY;
+
       if (!rafId) {
         rafId = requestAnimationFrame(update);
       }
@@ -147,7 +157,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
-  }, [element.id, onSelect, containerRef, zoom, onUpdate, deviceProps.x, deviceProps.y, deviceProps.width, deviceProps.height]);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps.x, deviceProps.y, deviceProps.width, deviceProps.height, touchOptimization]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
