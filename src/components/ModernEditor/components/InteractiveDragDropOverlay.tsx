@@ -196,7 +196,7 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
         position: 'relative'
       }}
     >
-      {/* Overlay des éléments interactifs */}
+      {/* Overlay des éléments interactifs fluides */}
       <div className="relative w-full h-full">
         <InteractiveCustomElementsRenderer
           customTexts={campaign.design?.customTexts || []}
@@ -205,8 +205,8 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
           sizeMap={sizeMap}
           selectedElementId={selectedElementId}
           onElementSelect={handleElementSelect}
-          onDragStart={handleDragStart}
-          dragState={dragState}
+          setCampaign={setCampaign}
+          containerRef={containerRef}
         />
       </div>
 
