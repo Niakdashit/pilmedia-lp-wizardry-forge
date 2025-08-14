@@ -58,6 +58,33 @@ export const useSmartSnapping = ({
   }, [campaign?.design?.customTexts, campaign?.design?.customImages]);
 
   // Calculate snap guides
+  // Helper: read current zoom from container's CSS transform
+  const getContainerZoom = () => {
+    if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return 1;
+    try {
+      const style = getComputedStyle(containerRef.current);
+      const transform = style.transform || (style as any).webkitTransform || 'none';
+      if (!transform || transform === 'none') return 1;
+      if (transform.startsWith('matrix3d(')) {
+        const parts = transform.slice(9, -1).split(',').map((v: string) => parseFloat(v.trim()));
+        const m11 = parts[0], m12 = parts[1], m13 = parts[2];
+        const scaleX = Math.sqrt(m11 * m11 + m12 * m12 + m13 * m13) || 1;
+        return scaleX;
+      } else if (transform.startsWith('matrix(')) {
+        const parts = transform.slice(7, -1).split(',').map((v: string) => parseFloat(v.trim()));
+        const a = parts[0], b = parts[1];
+        const scaleX = Math.sqrt(a * a + b * b) || 1;
+        return scaleX;
+      } else if (transform.startsWith('scale(')) {
+        const s = parseFloat(transform.slice(6, -1));
+        return !Number.isNaN(s) && s > 0 ? s : 1;
+      }
+    } catch {
+      // ignore
+    }
+    return 1;
+  };
+
   const calculateSnapGuides = useCallback((
     draggedElement: { x: number; y: number; width: number; height: number },
     excludeId?: string
@@ -67,13 +94,17 @@ export const useSmartSnapping = ({
     if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return guides;
     
     const containerRect = containerRef.current.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
+    const z = getContainerZoom();
+    // Convertir la taille du conteneur en unités canvas
+    const containerWidth = containerRect.width / z;
+    const containerHeight = containerRect.height / z;
+    // Tolérance exprimée en px viewport -> convertir en unités canvas
+    const tol = (snapTolerance ?? 3) / z;
 
     // Grid snapping – always active for a magnetic grid experience.
     // Vertical grid lines
     for (let x = 0; x <= containerWidth; x += gridSize) {
-      if (Math.abs(draggedElement.x - x) <= snapTolerance) {
+      if (Math.abs(draggedElement.x - x) <= tol) {
         guides.push({
           type: 'grid',
           orientation: 'vertical',
@@ -84,7 +115,7 @@ export const useSmartSnapping = ({
 
     // Horizontal grid lines
     for (let y = 0; y <= containerHeight; y += gridSize) {
-      if (Math.abs(draggedElement.y - y) <= snapTolerance) {
+      if (Math.abs(draggedElement.y - y) <= tol) {
         guides.push({
           type: 'grid',
           orientation: 'horizontal',
@@ -113,9 +144,9 @@ export const useSmartSnapping = ({
 
       // Vertical alignment guides
       [elementLeft, elementRight, elementCenterX].forEach(pos => {
-        if (Math.abs(draggedLeft - pos) <= snapTolerance ||
-            Math.abs(draggedRight - pos) <= snapTolerance ||
-            Math.abs(draggedCenterX - pos) <= snapTolerance) {
+        if (Math.abs(draggedLeft - pos) <= tol ||
+            Math.abs(draggedRight - pos) <= tol ||
+            Math.abs(draggedCenterX - pos) <= tol) {
           guides.push({
             type: 'element',
             orientation: 'vertical',
@@ -127,9 +158,9 @@ export const useSmartSnapping = ({
 
       // Horizontal alignment guides
       [elementTop, elementBottom, elementCenterY].forEach(pos => {
-        if (Math.abs(draggedTop - pos) <= snapTolerance ||
-            Math.abs(draggedBottom - pos) <= snapTolerance ||
-            Math.abs(draggedCenterY - pos) <= snapTolerance) {
+        if (Math.abs(draggedTop - pos) <= tol ||
+            Math.abs(draggedBottom - pos) <= tol ||
+            Math.abs(draggedCenterY - pos) <= tol) {
           guides.push({
             type: 'element',
             orientation: 'horizontal',
@@ -149,8 +180,8 @@ export const useSmartSnapping = ({
     const draggedCenterY = draggedElement.y + draggedElement.height / 2;
     
     // Tolérance adaptative basée sur la taille de l'élément (plus précise pour les petits éléments)
-    const adaptiveToleranceX = Math.max(2, Math.min(snapTolerance, draggedElement.width * 0.1));
-    const adaptiveToleranceY = Math.max(2, Math.min(snapTolerance, draggedElement.height * 0.1));
+    const adaptiveToleranceX = Math.max(2 / z, Math.min(tol, draggedElement.width * 0.1));
+    const adaptiveToleranceY = Math.max(2 / z, Math.min(tol, draggedElement.height * 0.1));
     
     // Guide vertical (alignement horizontal au centre)
     if (Math.abs(draggedCenterX - centerX) <= adaptiveToleranceX) {
@@ -182,6 +213,8 @@ export const useSmartSnapping = ({
     excludeId?: string
   ) => {
     const guides = calculateSnapGuides({ x, y, width, height }, excludeId);
+    const z = getContainerZoom();
+    const baseTol = (snapTolerance ?? 3) / z;
     
     let snappedX = x;
     let snappedY = y;
@@ -195,8 +228,8 @@ export const useSmartSnapping = ({
         const rightDiff = Math.abs(x + width - guide.position);
         const centerDiff = Math.abs(x + width / 2 - guide.position);
         
-        // Tolérance adaptative
-        const tolerance = guide.type === 'center' ? Math.max(1, width * 0.05) : snapTolerance;
+        // Tolérance adaptative (identique en ressenti quel que soit le zoom)
+        const tolerance = guide.type === 'center' ? Math.max(1 / z, width * 0.05) : baseTol;
         
         // Priorité au centre pour un alignement plus intuitif
         if (centerDiff <= tolerance && (snapPriorityX < 2 || guide.type === 'center')) {
@@ -215,7 +248,7 @@ export const useSmartSnapping = ({
         const bottomDiff = Math.abs(y + height - guide.position);
         const centerDiff = Math.abs(y + height / 2 - guide.position);
         
-        const tolerance = guide.type === 'center' ? Math.max(1, height * 0.05) : snapTolerance;
+        const tolerance = guide.type === 'center' ? Math.max(1 / z, height * 0.05) : baseTol;
         
         if (centerDiff <= tolerance && (snapPriorityY < 2 || guide.type === 'center')) {
           snappedY = guide.position - height / 2;

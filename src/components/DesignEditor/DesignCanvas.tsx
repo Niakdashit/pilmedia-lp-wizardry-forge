@@ -879,12 +879,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 showGrid={selectedDevice !== 'mobile' && showGridLines}
                 gridSize={20}
                 opacity={0.15}
+                zoom={localZoom}
               />
               
               {/* Alignment Guides */}
               <AlignmentGuides
                 canvasSize={effectiveCanvasSize}
                 elements={elementsWithResponsive}
+                zoom={localZoom}
               />
               
               {/* Clouds */}
@@ -970,7 +972,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
                   containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
-                  zoom={zoom}
                   onAddElement={(newElement) => {
                     const updatedElements = [...elements, newElement];
                     onElementsChange(updatedElements);

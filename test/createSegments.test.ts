@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createSegments } from '../src/components/QualifioEditor/Preview/wheelHelpers';
+import { createSegments } from '../src/components/GameEditor/Preview/wheelHelpers';
 
 const baseConfig: any = { wheelSegments: [{ label: 'A' }, { label: 'B' }, { label: 'C' }] };
 

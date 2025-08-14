@@ -72,17 +72,24 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const currentRealX = elementRect.left - canvasRect.left;
     const currentRealY = elementRect.top - canvasRect.top;
 
+    // Convertir la position DOM (viewport px) en unités canvas en tenant compte du zoom
+    const initialViewport = getCanvasViewport(canvasEl);
+    const z = initialViewport.zoom || 1;
+    const currentCanvasX = currentRealX / z;
+    const currentCanvasY = currentRealY / z;
+
     // Créer le système de drag professionnel
     const getViewport = () => getCanvasViewport(canvasEl);
     const getItem = () => ({
-      x: currentRealX, // Utiliser la position DOM réelle capturée
-      y: currentRealY,
+      // Utiliser les coordonnées canvas (indépendantes du zoom)
+      x: currentCanvasX,
+      y: currentCanvasY,
       w: deviceProps.width || 100,
       h: deviceProps.height || 30
     });
     
     // Variable pour tracker la dernière position pendant le drag
-    let lastDragPosition = { x: currentRealX, y: currentRealY };
+    let lastDragPosition = { x: currentCanvasX, y: currentCanvasY };
     
     const setItemPos = (x: number, y: number) => {
       // Sauvegarder la position pour la fin du drag
@@ -90,6 +97,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       
       // Mise à jour immédiate du transform
       if (elementRef.current) {
+        // Appliquer la translate en unités canvas (le parent est déjà scalé)
         elementRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }
       // Marquer comme en cours de drag
@@ -99,11 +107,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     };
 
     // Initialiser le drag system avec seuil de 5px
+    // Seuil de 5px en viewport => converti en unités canvas = 5 / zoom
+    const thresholdCanvas = 5 / (z || 1);
     dragSystemRef.current = createPreciseDrag(
       getViewport,
       getItem,
       setItemPos,
-      5
+      thresholdCanvas
     );
 
     // Gérer la fin du drag
@@ -271,18 +281,21 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     const handleResizePointerMove = (e: PointerEvent) => {
       requestAnimationFrame(() => {
-        // 📱 Appliquer la sensibilité tactile aux deltas
+        // 📱 Appliquer la sensibilité tactile aux deltas (en viewport px)
         const rawDeltaX = e.clientX - startX;
         const rawDeltaY = e.clientY - startY;
-        
+
         const adjustedDeltas = touchOptimization.applyTouchSensitivity(
-          rawDeltaX, 
-          rawDeltaY, 
+          rawDeltaX,
+          rawDeltaY,
           isTouchResize
         );
-        
-        const deltaX = adjustedDeltas.deltaX;
-        const deltaY = adjustedDeltas.deltaY;
+
+        // 🔍 Convertir les deltas viewport -> unités canvas en tenant compte du zoom actuel
+        const canvasEl = containerRef?.current as HTMLElement | null;
+        const z = canvasEl ? (getCanvasViewport(canvasEl).zoom || 1) : 1;
+        const deltaX = adjustedDeltas.deltaX / z;
+        const deltaY = adjustedDeltas.deltaY / z;
 
         let newWidth = startWidth;
         let newHeight = startHeight;

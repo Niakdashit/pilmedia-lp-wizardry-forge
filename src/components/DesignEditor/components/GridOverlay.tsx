@@ -5,18 +5,21 @@ interface GridOverlayProps {
   showGrid: boolean;
   gridSize?: number;
   opacity?: number;
+  zoom?: number;
 }
 
 const GridOverlay: React.FC<GridOverlayProps> = ({
   canvasSize,
   showGrid,
   gridSize = 20,
-  opacity = 0.1
+  opacity = 0.1,
+  zoom = 1,
 }) => {
   if (!showGrid) return null;
 
   const verticalLines = [];
   const horizontalLines = [];
+  const thicknessPx = `${1 / Math.max(zoom, 0.0001)}px`;
 
   // Create vertical grid lines
   for (let x = gridSize; x < canvasSize.width; x += gridSize) {
@@ -27,7 +30,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         style={{
           left: `${x}px`,
           top: 0,
-          width: '1px',
+          width: thicknessPx,
           height: '100%',
           opacity
         }}
@@ -44,7 +47,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         style={{
           top: `${y}px`,
           left: 0,
-          height: '1px',
+          height: thicknessPx,
           width: '100%',
           opacity
         }}
@@ -63,7 +66,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         style={{
           left: `${canvasSize.width / 2}px`,
           top: 0,
-          width: '1px',
+          width: thicknessPx,
           height: '100%',
           opacity: opacity * 2
         }}
@@ -73,7 +76,7 @@ const GridOverlay: React.FC<GridOverlayProps> = ({
         style={{
           top: `${canvasSize.height / 2}px`,
           left: 0,
-          height: '1px',
+          height: thicknessPx,
           width: '100%',
           opacity: opacity * 2
         }}

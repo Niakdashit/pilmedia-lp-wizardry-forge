@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 interface AlignmentGuidesProps {
   canvasSize: { width: number; height: number };
   elements: any[];
+  zoom?: number;
 }
 
 const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
   canvasSize,
-  elements
+  elements,
+  zoom = 1
 }) => {
   const [activeGuides, setActiveGuides] = useState<Array<{
     type: 'vertical' | 'horizontal';
@@ -46,7 +48,8 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         thickness: number;
       }> = [];
 
-      const tolerance = 15; // Tolérance pour la détection
+      // Tolérance exprimée en px viewport -> convertir en unités canvas
+      const tolerance = 15 / Math.max(zoom, 0.0001);
 
       // Guides de centre - utiliser les centres calculés
       const centerX = canvasCenterX || canvasSize.width / 2;
@@ -62,7 +65,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           type: 'vertical',
           position: centerX,
           color: '#ef4444', // Rouge pour le centre
-          thickness: 4
+          thickness: 4 / Math.max(zoom, 0.0001)
         });
       }
 
@@ -72,7 +75,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           type: 'horizontal',
           position: centerY,
           color: '#ef4444', // Rouge pour le centre
-          thickness: 4
+          thickness: 4 / Math.max(zoom, 0.0001)
         });
       }
 
@@ -92,7 +95,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             type: 'vertical',
             position: elCenterX,
             color: '#10b981',
-            thickness: 1
+            thickness: 1 / Math.max(zoom, 0.0001)
           });
         }
 
@@ -101,7 +104,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             type: 'horizontal',
             position: elCenterY,
             color: '#10b981',
-            thickness: 1
+            thickness: 1 / Math.max(zoom, 0.0001)
           });
         }
 
@@ -111,7 +114,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             type: 'vertical',
             position: elX,
             color: '#f59e0b',
-            thickness: 1
+            thickness: 1 / Math.max(zoom, 0.0001)
           });
         }
 
@@ -120,7 +123,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             type: 'vertical',
             position: elX + elWidth,
             color: '#f59e0b',
-            thickness: 1
+            thickness: 1 / Math.max(zoom, 0.0001)
           });
         }
 
@@ -129,7 +132,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             type: 'horizontal',
             position: elY,
             color: '#f59e0b',
-            thickness: 1
+            thickness: 1 / Math.max(zoom, 0.0001)
           });
         }
 
@@ -138,7 +141,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             type: 'horizontal',
             position: elY + elHeight,
             color: '#f59e0b',
-            thickness: 1
+            thickness: 1 / Math.max(zoom, 0.0001)
           });
         }
       });
@@ -147,7 +150,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
       const uniqueGuides = guides.filter((guide, index, self) =>
         index === self.findIndex(g => 
           g.type === guide.type && 
-          Math.abs(g.position - guide.position) < 2
+          Math.abs(g.position - guide.position) < (2 / Math.max(zoom, 0.0001))
         )
       );
 
@@ -166,7 +169,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
       document.removeEventListener('showAlignmentGuides', handleShowGuides as EventListener);
       document.removeEventListener('hideAlignmentGuides', handleHideGuides);
     };
-  }, [canvasSize, elements]);
+  }, [canvasSize, elements, zoom]);
 
   if (!isDragging || activeGuides.length === 0) return null;
 
