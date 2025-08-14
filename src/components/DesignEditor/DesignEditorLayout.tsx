@@ -185,9 +185,37 @@ const DesignEditorLayout: React.FC = () => {
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
   const handleElementUpdate = (updates: any) => {
     if (selectedElement) {
-      const updatedElement = { ...selectedElement, ...updates };
+      const deviceScopedKeys = ['x', 'y', 'width', 'height', 'fontSize', 'textAlign'];
+      const isDeviceScoped = selectedDevice !== 'desktop';
+      const workingUpdates: Record<string, any> = { ...updates };
+      const devicePatch: Record<string, any> = {};
+
+      if (isDeviceScoped) {
+        for (const key of deviceScopedKeys) {
+          if (workingUpdates[key] !== undefined) {
+            devicePatch[key] = workingUpdates[key];
+            delete workingUpdates[key];
+          }
+        }
+      }
+
+      const updatedElement = {
+        ...selectedElement,
+        ...workingUpdates,
+        ...(isDeviceScoped
+          ? {
+              [selectedDevice]: {
+                ...(selectedElement as any)[selectedDevice],
+                ...devicePatch
+              }
+            }
+          : {})
+      };
+
       setCanvasElements(prev => {
-        const newArr = prev.map(el => el.id === selectedElement.id ? updatedElement : el);
+        const newArr = prev.map(el =>
+          el.id === selectedElement.id ? updatedElement : el
+        );
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
