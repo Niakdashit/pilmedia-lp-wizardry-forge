@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useCallback, memo } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { useInteractiveDragDrop } from '../hooks/useInteractiveDragDrop';
 import InteractiveCustomElementsRenderer from './InteractiveCustomElementsRenderer';
 
@@ -39,15 +39,9 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   children
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const lastTouchTimeRef = useRef(0);
-  const isDraggingRef = useRef(false);
   
   const {
-    dragState,
     selectedElementId,
-    handleDragStart,
-    handleDragMove,
-    handleDragEnd,
     handleElementSelect,
     handleDeselectAll
   } = useInteractiveDragDrop({
@@ -57,94 +51,7 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
     previewDevice
   });
 
-  // Gestion optimisée des événements tactiles
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDraggingRef.current) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const now = Date.now();
-    // Limiter le taux de rafraîchissement pour les appareils lents (~60fps)
-    if (now - lastTouchTimeRef.current < 16) return;
-    lastTouchTimeRef.current = now;
-    
-    handleDragMove(e);
-  }, [handleDragMove]);
-
-  // Gestion du toucher final
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
-    if (!isDraggingRef.current) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const now = Date.now();
-    // Détection du double tap pour la sélection
-    if (now - lastTouchTimeRef.current < 300) {
-      const target = e.target as HTMLElement;
-      const elementId = target.closest('[data-element-id]')?.getAttribute('data-element-id');
-      if (elementId) {
-        handleElementSelect(elementId);
-      }
-    }
-    
-    isDraggingRef.current = false;
-    handleDragEnd();
-  }, [handleDragEnd, handleElementSelect]);
-
-  // Gestion du début du toucher
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    isDraggingRef.current = true;
-    lastTouchTimeRef.current = Date.now();
-    
-    // Transmettre l'événement au gestionnaire de drag
-    const touch = e.touches[0];
-    const fakeMouseEvent = {
-      ...e,
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      preventDefault: () => e.preventDefault(),
-      stopPropagation: () => e.stopPropagation()
-    } as unknown as React.MouseEvent;
-    
-    const element = e.target as HTMLElement;
-    const elementId = element.closest('[data-element-id]')?.getAttribute('data-element-id');
-    const elementType = element.closest('[data-element-type]')?.getAttribute('data-element-type') as 'text' | 'image';
-    
-    if (elementId && elementType) {
-      handleDragStart(fakeMouseEvent, elementId, elementType);
-    }
-  }, [handleDragStart]);
-
-  // Gestion des événements globaux
-  useEffect(() => {
-    if (!isEnabled) return;
-
-    const handleMouseMove = (e: MouseEvent) => handleDragMove(e);
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-      handleDragEnd();
-    };
-
-    // Ajouter les écouteurs pour le mode tactile
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-    
-    if (dragState.isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [isEnabled, dragState.isDragging, handleDragMove, handleDragEnd, handleTouchMove, handleTouchEnd]);
-
-  // Handle escape key to deselect
+  // Simplified event handling - let individual elements handle their own drag
   useEffect(() => {
     if (!isEnabled) return;
 
@@ -179,19 +86,14 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 w-full h-full overflow-hidden touch-none select-none"
+      className="absolute inset-0 w-full h-full overflow-hidden"
       onClick={handleContainerClick}
-      onTouchStart={handleTouchStart}
       style={{
-        cursor: dragState.isDragging ? 'grabbing' : 'default',
+        cursor: selectedElementId ? 'default' : 'default',
         zIndex: 1000,
         // Optimisation pour le rendu matériel
         transform: 'translateZ(0)',
         willChange: 'transform',
-        // Désactive les actions tactiles indésirables
-        touchAction: 'none',
-        // Améliore le rendu sur iOS
-        WebkitTapHighlightColor: 'transparent',
         // Assure que les éléments sont correctement positionnés
         position: 'relative'
       }}
@@ -211,7 +113,7 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       </div>
 
       <DragFeedback 
-        isDragging={dragState.isDragging} 
+        isDragging={false} 
         selectedElementId={selectedElementId} 
       />
     </div>

@@ -248,6 +248,14 @@ const FluidTextElement: React.FC<{
           >
             <Edit2 className="w-4 h-4" />
           </button>
+          
+          {/* Resize handles for text */}
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize touch-manipulation"
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 // TODO: Implement resize logic
+               }}
+          ></div>
         </>
       )}
     </div>
@@ -395,7 +403,12 @@ const FluidImageElement: React.FC<{
           <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
           <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
           <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize touch-manipulation"
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 // TODO: Implement resize logic for images
+               }}
+          ></div>
         </>
       )}
     </div>
