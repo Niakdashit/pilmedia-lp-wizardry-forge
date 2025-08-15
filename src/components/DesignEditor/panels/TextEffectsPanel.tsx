@@ -91,8 +91,8 @@ const textEffects = [
     id: 'background',
     name: 'Background',
     css: {
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      color: '#ffffff',
+      backgroundColor: 'rgba(251,255,0,1)',
+      color: '#000000',
       padding: '8px 16px',
       borderRadius: '4px'
     }
@@ -121,7 +121,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
   const [backgroundRoundness, setBackgroundRoundness] = useState(50);
   const [backgroundSpread, setBackgroundSpread] = useState(50);
   const [backgroundTransparency, setBackgroundTransparency] = useState(100);
-  const [backgroundColor, setBackgroundColor] = useState('#000000');
+  const [backgroundColor, setBackgroundColor] = useState('#fbff00');
   
   // General controls
   const [effectColor, setEffectColor] = useState('#ff00ff');
@@ -148,18 +148,6 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
   };
 
-  const getContrastColor = (hex: string): string => {
-    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!match) return '#ffffff';
-    const r = parseInt(match[1], 16);
-    const g = parseInt(match[2], 16);
-    const b = parseInt(match[3], 16);
-    // Perceived luminance formula
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.6 ? '#000000' : '#ffffff';
-  };
-
-
 
   // Mettre à jour l'effet en temps réel quand les contrôles changent
   useEffect(() => {
@@ -172,7 +160,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
   }, [selectedEffect, shadowOffset, shadowDirection, shadowBlur, shadowTransparency, shadowColor, 
       outlineThickness, outlineColor, backgroundRoundness, backgroundSpread, backgroundTransparency, 
       backgroundColor, effectColor, gradientStart, gradientEnd, gradientAngle, glitchColorA, glitchColorB,
-      liftStrength, liftBlur, liftTransparency, liftColor]);
+      liftStrength, liftBlur, liftTransparency, liftColor, selectedElement?.color, selectedElement?.fontSize]);
 
   const applyEffect = (effect: any) => {
     setSelectedEffect(effect.id);
@@ -205,14 +193,41 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
       case 'background':
         const fontSize = selectedElement?.fontSize ?? 24;
         const vPad = Math.round(Math.max(6, fontSize * 0.35));
-        const spread = 8 + (backgroundSpread / 100) * 40;
-        combinedCSS = {
-          ...combinedCSS,
-          backgroundColor: `rgba(${hexToRgb(backgroundColor)}, ${backgroundTransparency / 100})`,
-          color: selectedElement?.color || getContrastColor(backgroundColor),
-          padding: `${vPad}px ${spread}px`,
-          borderRadius: backgroundRoundness >= 99 ? '9999px' : `${((backgroundRoundness / 100) * 48).toFixed(2)}px`
-        };
+        const spreadDelta = (backgroundSpread / 100) * 40; // apply uniformly
+        const hPad = 8 + spreadDelta; // keep existing 8px min horizontally
+        const vPadAug = vPad + spreadDelta; // add spread vertically too
+        {
+          const progress = Math.min(100, Math.max(1, backgroundRoundness)) / 100; // 0.01..1
+          const parseNumber = (v: any, fb = 0) => {
+            if (v == null) return fb;
+            if (typeof v === 'number') return v;
+            const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
+            return m ? parseFloat(m[1]) : fb;
+          };
+          // Prefer actual element height if available, else estimate via fontSize & line-height
+          const actualH = parseNumber((selectedElement as any)?.height, 0);
+          const lh = parseNumber((selectedElement as any)?.lineHeight, 1.2);
+          const approxHeight = Math.max(1, (actualH || (fontSize * lh)) + vPadAug * 2); // px includes spread vertically
+          const fudge = 2; // px safety margin to ensure rounded ends
+          const maxRadius = approxHeight / 2 + fudge; // theoretical pill radius + safety
+          // Sqrt easing: more rounding earlier, very smooth from 98→100
+          const eased = Math.sqrt(progress);
+          const radiusPx = +(Math.min(maxRadius, Math.max(0, eased * maxRadius))).toFixed(2);
+          combinedCSS = {
+            ...combinedCSS,
+            backgroundColor: `rgba(${hexToRgb(backgroundColor)}, ${backgroundTransparency / 100})`,
+            color: selectedElement?.color ?? '#000000',
+            padding: `${vPadAug}px ${hPad}px`,
+            display: 'inline-block',
+            boxSizing: 'border-box',
+            textShadow: 'none',
+            boxShadow: 'none',
+            border: 'none',
+            WebkitTextStroke: 'initial',
+            borderRadius: `${radiusPx}px`
+          };
+        }
+        ;
         break;
 
       case 'lift': {
@@ -599,8 +614,9 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
-                  min="0"
+                  min="1"
                   max="100"
+                  step="1"
                   value={backgroundRoundness}
                   onChange={(e) => setBackgroundRoundness(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -609,9 +625,9 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setBackgroundRoundness(Math.max(0, backgroundRoundness - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <button onClick={() => setBackgroundRoundness(Math.max(1, backgroundRoundness - 1))} className="hover:bg-gray-700 px-1 rounded">−</button>
                   <span className="min-w-[2rem] text-center">{backgroundRoundness}</span>
-                  <button onClick={() => setBackgroundRoundness(Math.min(100, backgroundRoundness + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                  <button onClick={() => setBackgroundRoundness(Math.min(100, backgroundRoundness + 1))} className="hover:bg-gray-700 px-1 rounded">+</button>
                 </div>
               </div>
             </div>

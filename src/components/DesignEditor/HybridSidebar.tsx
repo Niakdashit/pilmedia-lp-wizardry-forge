@@ -110,6 +110,14 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     }
   }, [onForceElementsTab, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange]);
 
+  // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
+  React.useEffect(() => {
+    if (activeTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
+      onEffectsPanelChange?.(false);
+      setActiveTab('assets');
+    }
+  }, [selectedElement, activeTab, onEffectsPanelChange]);
+
   const tabs = [
     { 
       id: 'assets', 
