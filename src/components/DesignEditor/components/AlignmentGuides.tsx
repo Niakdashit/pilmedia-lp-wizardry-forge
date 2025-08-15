@@ -48,8 +48,11 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         thickness: number;
       }> = [];
 
-      // Tolérance exprimée en px viewport -> convertir en unités canvas
-      const tolerance = 15 / Math.max(zoom, 0.0001);
+      // Tolérances (px viewport -> unités canvas)
+      // Centre: très strict, uniquement quand on est pile au centre
+      const centerTolerance = 0.5 / Math.max(zoom, 0.0001);
+      // Autres guides: plus strict que précédemment pour éviter l'affichage multiple
+      const otherTolerance = 6 / Math.max(zoom, 0.0001);
 
       // Guides de centre - utiliser les centres calculés
       const centerX = canvasCenterX || canvasSize.width / 2;
@@ -59,23 +62,25 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
       const elemCenterX = elementCenterX || (x + width / 2);
       const elemCenterY = elementCenterY || (y + height / 2);
 
-      // Guide vertical centre - ligne rouge épaisse quand l'élément est centré horizontalement
-      if (Math.abs(elemCenterX - centerX) <= tolerance) {
+      // Guide vertical centre - uniquement quand c'est strictement centré
+      const centerXActive = Math.abs(elemCenterX - centerX) <= centerTolerance;
+      if (centerXActive) {
         guides.push({
           type: 'vertical',
-          position: centerX,
-          color: '#ef4444', // Rouge pour le centre
-          thickness: 4 / Math.max(zoom, 0.0001)
+          position: elemCenterX,
+          color: '#8d117a',
+          thickness: 1 / Math.max(zoom, 0.0001)
         });
       }
 
-      // Guide horizontal centre - ligne rouge épaisse quand l'élément est centré verticalement  
-      if (Math.abs(elemCenterY - centerY) <= tolerance) {
+      // Guide horizontal centre - uniquement quand c'est strictement centré
+      const centerYActive = Math.abs(elemCenterY - centerY) <= centerTolerance;
+      if (centerYActive) {
         guides.push({
           type: 'horizontal',
-          position: centerY,
-          color: '#ef4444', // Rouge pour le centre
-          thickness: 4 / Math.max(zoom, 0.0001)
+          position: elemCenterY,
+          color: '#8d117a',
+          thickness: 1 / Math.max(zoom, 0.0001)
         });
       }
 
@@ -90,7 +95,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         const elCenterY = elY + elHeight / 2;
 
         // Center alignment with other elements
-        if (Math.abs(elemCenterX - elCenterX) <= tolerance) {
+        if (!centerXActive && Math.abs(elemCenterX - elCenterX) <= otherTolerance) {
           guides.push({
             type: 'vertical',
             position: elCenterX,
@@ -99,7 +104,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           });
         }
 
-        if (Math.abs(elemCenterY - elCenterY) <= tolerance) {
+        if (!centerYActive && Math.abs(elemCenterY - elCenterY) <= otherTolerance) {
           guides.push({
             type: 'horizontal',
             position: elCenterY,
@@ -109,7 +114,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         }
 
         // Edge alignment
-        if (Math.abs(x - elX) <= tolerance) {
+        if (!centerXActive && Math.abs(x - elX) <= otherTolerance) {
           guides.push({
             type: 'vertical',
             position: elX,
@@ -118,7 +123,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           });
         }
 
-        if (Math.abs(x + width - (elX + elWidth)) <= tolerance) {
+        if (!centerXActive && Math.abs(x + width - (elX + elWidth)) <= otherTolerance) {
           guides.push({
             type: 'vertical',
             position: elX + elWidth,
@@ -127,7 +132,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           });
         }
 
-        if (Math.abs(y - elY) <= tolerance) {
+        if (!centerYActive && Math.abs(y - elY) <= otherTolerance) {
           guides.push({
             type: 'horizontal',
             position: elY,
@@ -136,7 +141,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
           });
         }
 
-        if (Math.abs(y + height - (elY + elHeight)) <= tolerance) {
+        if (!centerYActive && Math.abs(y + height - (elY + elHeight)) <= otherTolerance) {
           guides.push({
             type: 'horizontal',
             position: elY + elHeight,

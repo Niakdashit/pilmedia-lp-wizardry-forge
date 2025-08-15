@@ -211,6 +211,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           flex-direction: column;
           overflow: hidden;
           position: relative;
+          /* Prevent flex children from overflowing in mobile dynamic viewport */
+          min-height: 0;
+          min-width: 0;
         }
 
         /* Masquer la sidebar sur mobile - affichée via drawer */
@@ -229,9 +232,11 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 10px;
+          padding: 0; /* Ensure full-canvas display without cropping */
           overflow: hidden;
           position: relative;
+          min-height: 0;
+          min-width: 0;
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */
@@ -241,11 +246,12 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           touch-action: none;
         }
 
-        .mobile-layout.is-dragging * {
+        /* Scope pointer-events disabling to canvas content only */
+        .mobile-layout.is-dragging .design-canvas-container * {
           pointer-events: none;
         }
 
-        .mobile-layout.is-dragging [data-element-id] {
+        .mobile-layout.is-dragging .design-canvas-container [data-element-id] {
           pointer-events: auto;
         }
 

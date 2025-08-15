@@ -38,12 +38,32 @@ export const useImageElementDrag = (
         let newX = moveEvent.clientX - containerRect.left - dragStartRef.current.offsetX;
         let newY = moveEvent.clientY - containerRect.top - dragStartRef.current.offsetY;
 
-        const snapped = applySnapping(newX, newY, deviceConfig.width, deviceConfig.height, String(elementId));
+        const elementWidth = deviceConfig.width;
+        const elementHeight = deviceConfig.height;
+
+        const snapped = applySnapping(newX, newY, elementWidth, elementHeight, String(elementId));
         newX = snapped.x;
         newY = snapped.y;
 
+        // Compute centers for the payload expected by AlignmentGuides
+        const canvasCenterX = containerRect.width / 2;
+        const canvasCenterY = containerRect.height / 2;
+        const elementCenterX = newX + elementWidth / 2;
+        const elementCenterY = newY + elementHeight / 2;
+
         const alignmentEvent = new CustomEvent('showAlignmentGuides', {
-          detail: { elementId, guides: snapped.guides, isDragging: true }
+          detail: {
+            elementId,
+            x: newX,
+            y: newY,
+            width: elementWidth,
+            height: elementHeight,
+            elementCenterX,
+            elementCenterY,
+            canvasCenterX,
+            canvasCenterY,
+            isDragging: true
+          }
         });
         document.dispatchEvent(alignmentEvent);
 

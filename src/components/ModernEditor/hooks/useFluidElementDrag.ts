@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { useUltraFluidDragDrop } from './useUltraFluidDragDrop';
 import { getDeviceDimensions } from '../../../utils/deviceDimensions';
+import { useSmartSnapping } from './useSmartSnapping';
 
 interface FluidElementDragOptions {
   elementRef: React.RefObject<HTMLDivElement>;
@@ -26,6 +27,8 @@ export const useFluidElementDrag = ({
   elementPositionRef.current = deviceConfig;
   deviceDims.current = getDeviceDimensions(previewDevice);
 
+  const { applySnapping } = useSmartSnapping({ containerRef });
+
   const handleDragStart = useCallback((_dragElementId: string, position: { x: number; y: number }) => {
     console.log('🚀 Fluid drag started:', { elementId, position });
   }, [elementId]);
@@ -49,19 +52,54 @@ export const useFluidElementDrag = ({
     const constrainedX = Math.min(Math.max(0, logicalX), maxX);
     const constrainedY = Math.min(Math.max(0, logicalY), maxY);
 
+    // Dimensions actuelles de l'élément (logiques)
+    const elementWidth = deviceConfig.width || (elementRef.current ? elementRef.current.offsetWidth / scaleX : 100);
+    const elementHeight = deviceConfig.height || (elementRef.current ? elementRef.current.offsetHeight / scaleY : 30);
+
+    // Appliquer le smart snapping (centre/edges) en coordonnées logiques
+    const snapped = applySnapping(constrainedX, constrainedY, elementWidth, elementHeight, String(elementId));
+    const snappedX = snapped.x;
+    const snappedY = snapped.y;
+
+    // Centres en unités logiques du canvas/device
+    const canvasCenterX = deviceDims.current.width / 2;
+    const canvasCenterY = deviceDims.current.height / 2;
+    const elementCenterX = snappedX + elementWidth / 2;
+    const elementCenterY = snappedY + elementHeight / 2;
+
     console.log('🎯 Fluid drag move:', {
       position,
       logicalPos: { x: logicalX, y: logicalY },
       constrainedPos: { x: constrainedX, y: constrainedY },
+      snappedPos: { x: snappedX, y: snappedY },
       velocity,
       scales: { scaleX, scaleY }
     });
 
-    onUpdate({ x: Math.round(constrainedX), y: Math.round(constrainedY) });
+    // Dispatch alignment guides to render visual lines during drag
+    const alignmentEvent = new CustomEvent('showAlignmentGuides', {
+      detail: {
+        elementId,
+        x: snappedX,
+        y: snappedY,
+        width: elementWidth,
+        height: elementHeight,
+        elementCenterX,
+        elementCenterY,
+        canvasCenterX,
+        canvasCenterY,
+        isDragging: true
+      }
+    });
+    document.dispatchEvent(alignmentEvent);
+
+    onUpdate({ x: Math.round(snappedX), y: Math.round(snappedY) });
   }, [onUpdate, containerRef, deviceConfig, previewDevice]);
 
   const handleDragEnd = useCallback((_dragElementId: string, position: { x: number; y: number }) => {
     console.log('✅ Fluid drag ended:', { elementId, position });
+    const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+    document.dispatchEvent(hideGuidesEvent);
   }, [elementId]);
 
   const { isDragging, startDrag } = useUltraFluidDragDrop({

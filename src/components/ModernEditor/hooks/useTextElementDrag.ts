@@ -42,8 +42,25 @@ export const useTextElementDrag = (
         newX = snapped.x;
         newY = snapped.y;
 
+        // Compute centers for the payload expected by AlignmentGuides
+        const canvasCenterX = containerRect.width / 2;
+        const canvasCenterY = containerRect.height / 2;
+        const elementCenterX = newX + elementWidth / 2;
+        const elementCenterY = newY + elementHeight / 2;
+
         const alignmentEvent = new CustomEvent('showAlignmentGuides', {
-          detail: { elementId, guides: snapped.guides, isDragging: true }
+          detail: {
+            elementId,
+            x: newX,
+            y: newY,
+            width: elementWidth,
+            height: elementHeight,
+            elementCenterX,
+            elementCenterY,
+            canvasCenterX,
+            canvasCenterY,
+            isDragging: true
+          }
         });
         document.dispatchEvent(alignmentEvent);
 

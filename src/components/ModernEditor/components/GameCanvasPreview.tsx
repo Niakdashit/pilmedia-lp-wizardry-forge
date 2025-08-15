@@ -113,18 +113,7 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
     handleDeviceTransition();
   }, [previewDevice, handleDeviceTransition]);
 
-  // Appliquer un décalage vertical standardisé selon l'appareil
-  const getVerticalOffsetStyle = (): React.CSSProperties => {
-    const isMobileOrTablet = previewDevice === 'mobile' || previewDevice === 'tablet';
-    const offset = isMobileOrTablet ? '-37.5%' : '-22.5%';
-    return {
-      position: 'relative',
-      top: offset,
-      width: '100%',
-      height: '100%',
-      zIndex: 10
-    };
-  };
+  // Removed device-dependent vertical offset to unify coordinate systems with editor
 
 
   // Apply vertical offset after GamePositioner to ensure it's not overridden by wheel-specific transforms
@@ -139,16 +128,16 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
           onGameFinish={handleGameFinish}
         />
       </GamePositioner>
-      
-      {/* Apply vertical offset after GamePositioner */}
-      <div style={getVerticalOffsetStyle()}>
+
+      {/* Neutral relative container to anchor absolutely positioned custom elements (no offset) */}
+      <div style={{ position: 'relative', width: '100%', height: '100%', zIndex: 10 }}>
         <CustomElementsRenderer
           customTexts={customTextsForRenderer}
           customImages={customImagesForRenderer}
           previewDevice={previewDevice}
           sizeMap={sizeMap}
         />
-        
+
         {setCampaign && (
           <InteractiveDragDropOverlay
             campaign={campaign}

@@ -77,6 +77,17 @@ const textEffects = [
     }
   },
   {
+    id: 'gradient',
+    name: 'Gradient',
+    css: {
+      color: 'transparent',
+      WebkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      backgroundImage: 'linear-gradient(90deg, #ff00ff, #00ffff)'
+    }
+  },
+  {
     id: 'background',
     name: 'Background',
     css: {
@@ -109,16 +120,43 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
   // Background controls
   const [backgroundRoundness, setBackgroundRoundness] = useState(50);
   const [backgroundSpread, setBackgroundSpread] = useState(50);
-  const [backgroundTransparency, setBackgroundTransparency] = useState(20);
+  const [backgroundTransparency, setBackgroundTransparency] = useState(100);
   const [backgroundColor, setBackgroundColor] = useState('#000000');
   
   // General controls
   const [effectColor, setEffectColor] = useState('#ff00ff');
 
+  // Gradient controls
+  const [gradientStart, setGradientStart] = useState('#ff00ff');
+  const [gradientEnd, setGradientEnd] = useState('#00ffff');
+  // 0..100 mapped to 0..360deg
+  const [gradientAngle, setGradientAngle] = useState(25);
+
+  // Glitch dual colors
+  const [glitchColorA, setGlitchColorA] = useState('#00ffff');
+  const [glitchColorB, setGlitchColorB] = useState('#ff00ff');
+
+  // Lift controls (0..100 logical)
+  const [liftStrength, setLiftStrength] = useState(30);
+  const [liftBlur, setLiftBlur] = useState(20);
+  const [liftTransparency, setLiftTransparency] = useState(30);
+  const [liftColor, setLiftColor] = useState('#000000');
+
   // Fonction utilitaire pour convertir hex en rgb
   const hexToRgb = (hex: string): string => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
+  };
+
+  const getContrastColor = (hex: string): string => {
+    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!match) return '#ffffff';
+    const r = parseInt(match[1], 16);
+    const g = parseInt(match[2], 16);
+    const b = parseInt(match[3], 16);
+    // Perceived luminance formula
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? '#000000' : '#ffffff';
   };
 
 
@@ -133,7 +171,8 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     }
   }, [selectedEffect, shadowOffset, shadowDirection, shadowBlur, shadowTransparency, shadowColor, 
       outlineThickness, outlineColor, backgroundRoundness, backgroundSpread, backgroundTransparency, 
-      backgroundColor, effectColor]);
+      backgroundColor, effectColor, gradientStart, gradientEnd, gradientAngle, glitchColorA, glitchColorB,
+      liftStrength, liftBlur, liftTransparency, liftColor]);
 
   const applyEffect = (effect: any) => {
     setSelectedEffect(effect.id);
@@ -150,7 +189,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         const offsetY = Math.sin((shadowDirection * Math.PI) / 180) * (shadowOffset / 10);
         combinedCSS = {
           ...combinedCSS,
-          textShadow: `${offsetX}px ${offsetY}px ${shadowBlur}px rgba(${hexToRgb(shadowColor)}, ${shadowTransparency / 100})`
+          textShadow: `${offsetX}px ${offsetY}px ${Math.round((shadowBlur / 100) * 40)}px rgba(${hexToRgb(shadowColor)}, ${shadowTransparency / 100})`
         };
         break;
         
@@ -158,22 +197,90 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         const thickness = outlineThickness / 50;
         combinedCSS = {
           ...combinedCSS,
-          textShadow: `${-thickness}px ${-thickness}px 0 ${outlineColor}, ${thickness}px ${-thickness}px 0 ${outlineColor}, ${-thickness}px ${thickness}px 0 ${outlineColor}, ${thickness}px ${thickness}px 0 ${outlineColor}`
+          textShadow: `${-thickness}px ${-thickness}px 0 ${outlineColor}, ${thickness}px ${-thickness}px 0 ${outlineColor}, ${-thickness}px ${thickness}px 0 ${outlineColor}, ${thickness}px ${thickness}px 0 ${outlineColor}`,
+          WebkitTextStroke: `${Math.max(1, thickness * 2)}px ${outlineColor}`
         };
         break;
         
       case 'background':
-        const roundness = (backgroundRoundness / 100) * 20;
-        const spread = 8 + (backgroundSpread / 100) * 16;
+        const fontSize = selectedElement?.fontSize ?? 24;
+        const vPad = Math.round(Math.max(6, fontSize * 0.35));
+        const spread = 8 + (backgroundSpread / 100) * 40;
         combinedCSS = {
           ...combinedCSS,
           backgroundColor: `rgba(${hexToRgb(backgroundColor)}, ${backgroundTransparency / 100})`,
-          color: selectedElement?.color || '#000000',
-          padding: `8px ${spread}px`,
-          borderRadius: `${roundness}px`
+          color: selectedElement?.color || getContrastColor(backgroundColor),
+          padding: `${vPad}px ${spread}px`,
+          borderRadius: backgroundRoundness >= 99 ? '9999px' : `${((backgroundRoundness / 100) * 48).toFixed(2)}px`
         };
         break;
+
+      case 'lift': {
+        const dy = -Math.round((liftStrength / 100) * 6); // up to -6px lift
+        const blurPx = Math.round((liftBlur / 100) * 20); // up to 20px blur
+        const alpha = Math.min(1, liftTransparency / 100);
+        combinedCSS = {
+          ...combinedCSS,
+          transform: `translateY(${dy}px)`,
+          textShadow: `0 ${Math.abs(dy)}px ${blurPx}px rgba(${hexToRgb(liftColor)}, ${alpha})`
+        };
+        break;
+      }
         
+      case 'echo': {
+        // Multi-shadow extrude along direction
+        const steps = 5;
+        const distance = shadowOffset / 10; // 0..10
+        const angleRad = (shadowDirection * Math.PI) / 180;
+        const dx = Math.cos(angleRad) * distance;
+        const dy = Math.sin(angleRad) * distance;
+        const col = `rgba(${hexToRgb(shadowColor)}, ${Math.min(1, shadowTransparency / 100)})`;
+        const layers: string[] = [];
+        for (let i = 1; i <= steps; i++) {
+          layers.push(`${(dx * i).toFixed(2)}px ${(dy * i).toFixed(2)}px 0 ${col}`);
+        }
+        combinedCSS = {
+          ...combinedCSS,
+          textShadow: layers.join(', '),
+          color: selectedElement?.color || '#000000'
+        };
+        break;
+      }
+
+      case 'glitch': {
+        // RGB split using two colored shadows
+        const distance = shadowOffset / 8; // 0..12.5 approx
+        const angleRad = (shadowDirection * Math.PI) / 180;
+        const dx = Math.cos(angleRad) * distance;
+        const dy = Math.sin(angleRad) * distance;
+        const c1 = glitchColorA || '#00ffff';
+        const c2 = glitchColorB || '#ff00ff';
+        combinedCSS = {
+          ...combinedCSS,
+          textShadow: `${dx.toFixed(2)}px ${dy.toFixed(2)}px 0 ${c1}, ${(-dx).toFixed(2)}px ${(-dy).toFixed(2)}px 0 ${c2}`
+        };
+        break;
+      }
+
+      case 'splice': {
+        // 3D slice/extrude using multiple shadows with chosen color
+        const steps = Math.max(3, Math.round(outlineThickness / 10));
+        const distance = shadowOffset / 12; // 0..8.3
+        const angleRad = (shadowDirection * Math.PI) / 180;
+        const dx = Math.cos(angleRad) * distance;
+        const dy = Math.sin(angleRad) * distance;
+        const col = effectColor || 'rgba(0,0,0,0.3)';
+        const layers: string[] = [];
+        for (let i = 1; i <= steps; i++) {
+          layers.push(`${(dx * i).toFixed(2)}px ${(dy * i).toFixed(2)}px 0 ${col}`);
+        }
+        combinedCSS = {
+          ...combinedCSS,
+          textShadow: layers.join(', ')
+        };
+        break;
+      }
+
       case 'hollow':
         combinedCSS = {
           ...combinedCSS,
@@ -183,11 +290,30 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         break;
         
       case 'neon':
+        {
+          const intensity = Math.max(1, Math.round((shadowOffset / 100) * 4));
+          const layers: string[] = [];
+          for (let i = 1; i <= 4 + intensity; i++) {
+            const blur = i * 4;
+            layers.push(`0 0 ${blur}px ${effectColor}`);
+          }
+          combinedCSS = {
+            ...combinedCSS,
+            color: effectColor,
+            textShadow: layers.join(', ')
+          };
+        }
+        break;
+
+      case 'gradient':
         combinedCSS = {
           ...combinedCSS,
-          color: effectColor,
-          textShadow: `0 0 5px ${effectColor}, 0 0 10px ${effectColor}, 0 0 15px ${effectColor}, 0 0 20px ${effectColor}`
-        };
+          color: 'transparent',
+          WebkitTextFillColor: 'transparent' as any,
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          backgroundImage: `linear-gradient(${Math.round((gradientAngle / 100) * 360)}deg, ${gradientStart}, ${gradientEnd})`
+        } as any;
         break;
         
       default:
@@ -267,7 +393,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowOffset(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -284,13 +410,16 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
-                  min="-180"
-                  max="180"
-                  value={shadowDirection}
-                  onChange={(e) => setShadowDirection(Number(e.target.value))}
+                  min="0"
+                  max="100"
+                  value={((shadowDirection + 180) / 360) * 100}
+                  onChange={(e) => {
+                    const p = Number(e.target.value);
+                    setShadowDirection(Math.round((p / 100) * 360 - 180));
+                  }}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -308,18 +437,18 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                 <input
                   type="range"
                   min="0"
-                  max="20"
+                  max="100"
                   value={shadowBlur}
                   onChange={(e) => setShadowBlur(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${(shadowBlur / 20) * 100}%, #e5e7eb ${(shadowBlur / 20) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowBlur}%, #e5e7eb ${shadowBlur}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowBlur(Math.max(0, shadowBlur - 1))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <button onClick={() => setShadowBlur(Math.max(0, shadowBlur - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
                   <span className="min-w-[2rem] text-center">{shadowBlur}</span>
-                  <button onClick={() => setShadowBlur(Math.min(20, shadowBlur + 1))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                  <button onClick={() => setShadowBlur(Math.min(100, shadowBlur + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
                 </div>
               </div>
             </div>
@@ -336,7 +465,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowTransparency(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${shadowTransparency}%, #e5e7eb ${shadowTransparency}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowTransparency}%, #e5e7eb ${shadowTransparency}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -353,11 +482,67 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
-                  value={shadowColor}
-                  onChange={(e) => setShadowColor(e.target.value)}
+                  value={effectColor}
+                  onChange={(e) => setEffectColor(e.target.value)}
                   className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
                 />
-                <span className="text-sm text-gray-500 font-mono">{shadowColor}</span>
+                <span className="text-sm text-gray-500 font-mono">{effectColor}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'gradient':
+        return (
+          <div className="space-y-4">
+            {/* Angle */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Angle</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={gradientAngle}
+                  onChange={(e) => setGradientAngle(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${gradientAngle}%, #e5e7eb ${gradientAngle}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setGradientAngle(Math.max(0, gradientAngle - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{Math.round((gradientAngle / 100) * 360)}°</span>
+                  <button onClick={() => setGradientAngle(Math.min(100, gradientAngle + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Start Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Start Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={gradientStart}
+                  onChange={(e) => setGradientStart(e.target.value)}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{gradientStart}</span>
+              </div>
+            </div>
+
+            {/* End Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">End Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={gradientEnd}
+                  onChange={(e) => setGradientEnd(e.target.value)}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{gradientEnd}</span>
               </div>
             </div>
           </div>
@@ -378,7 +563,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setOutlineThickness(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${outlineThickness}%, #e5e7eb ${outlineThickness}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${outlineThickness}%, #e5e7eb ${outlineThickness}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -420,7 +605,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setBackgroundRoundness(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${backgroundRoundness}%, #e5e7eb ${backgroundRoundness}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${backgroundRoundness}%, #e5e7eb ${backgroundRoundness}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -443,7 +628,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setBackgroundSpread(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${backgroundSpread}%, #e5e7eb ${backgroundSpread}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${backgroundSpread}%, #e5e7eb ${backgroundSpread}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -466,7 +651,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setBackgroundTransparency(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${backgroundTransparency}%, #e5e7eb ${backgroundTransparency}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${backgroundTransparency}%, #e5e7eb ${backgroundTransparency}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -526,7 +711,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowOffset(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -554,7 +739,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowOffset(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -571,13 +756,16 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
-                  min="-180"
-                  max="180"
-                  value={shadowDirection}
-                  onChange={(e) => setShadowDirection(Number(e.target.value))}
+                  min="0"
+                  max="100"
+                  value={((shadowDirection + 180) / 360) * 100}
+                  onChange={(e) => {
+                    const p = Number(e.target.value);
+                    setShadowDirection(Math.round((p / 100) * 360 - 180));
+                  }}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -588,17 +776,42 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               </div>
             </div>
 
-            {/* Color */}
+            {/* Split Colors */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Color</label>
+              <label className="text-sm font-medium text-gray-700">Split Colors</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="color"
+                    value={glitchColorA}
+                    onChange={(e) => setGlitchColorA(e.target.value)}
+                    className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-500 font-mono">{glitchColorA}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="color"
+                    value={glitchColorB}
+                    onChange={(e) => setGlitchColorB(e.target.value)}
+                    className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-500 font-mono">{glitchColorB}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Text Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
-                  value={effectColor}
-                  onChange={(e) => setEffectColor(e.target.value)}
+                  value={selectedElement?.color || '#000000'}
+                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
                   className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
                 />
-                <span className="text-sm text-gray-500 font-mono">{effectColor}</span>
+                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
               </div>
             </div>
           </div>
@@ -619,7 +832,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowOffset(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -642,7 +855,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowDirection(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -666,6 +879,20 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                 <span className="text-sm text-gray-500 font-mono">{shadowColor}</span>
               </div>
             </div>
+
+            {/* Text Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={selectedElement?.color || '#000000'}
+                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
+              </div>
+            </div>
           </div>
         );
 
@@ -684,7 +911,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setOutlineThickness(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${outlineThickness}%, #e5e7eb ${outlineThickness}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${outlineThickness}%, #e5e7eb ${outlineThickness}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -707,7 +934,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowOffset(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -730,7 +957,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   onChange={(e) => setShadowDirection(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
@@ -773,6 +1000,122 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                 <span className="text-sm text-gray-500 font-mono">{effectColor}</span>
               </div>
             </div>
+
+            {/* Text Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={selectedElement?.color || '#000000'}
+                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'lift':
+        return (
+          <div className="space-y-4">
+            {/* Strength */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Strength</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={liftStrength}
+                  onChange={(e) => setLiftStrength(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftStrength}%, #e5e7eb ${liftStrength}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setLiftStrength(Math.max(0, liftStrength - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{liftStrength}</span>
+                  <button onClick={() => setLiftStrength(Math.min(100, liftStrength + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Blur */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Blur</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={liftBlur}
+                  onChange={(e) => setLiftBlur(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftBlur}%, #e5e7eb ${liftBlur}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setLiftBlur(Math.max(0, liftBlur - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{liftBlur}</span>
+                  <button onClick={() => setLiftBlur(Math.min(100, liftBlur + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Transparency */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Transparency</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={liftTransparency}
+                  onChange={(e) => setLiftTransparency(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftTransparency}%, #e5e7eb ${liftTransparency}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setLiftTransparency(Math.max(0, liftTransparency - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{liftTransparency}</span>
+                  <button onClick={() => setLiftTransparency(Math.min(100, liftTransparency + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Shadow Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Shadow Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={liftColor}
+                  onChange={(e) => setLiftColor(e.target.value)}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{liftColor}</span>
+              </div>
+            </div>
+
+            {/* Text Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={selectedElement?.color || '#000000'}
+                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
+              </div>
+            </div>
           </div>
         );
 
@@ -806,11 +1149,11 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                 onClick={() => applyEffect(effect)}
                 className={`p-2 border rounded-lg transition-colors ${
                   selectedEffect === effect.id 
-                    ? 'border-[#841b60] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white' 
+                    ? 'border-indigo-500 ring-2 ring-indigo-500 bg-indigo-50 text-indigo-900' 
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="bg-gray-100 rounded p-2 mb-2 h-12 flex items-center justify-center">
+                <div className={`rounded p-2 mb-2 h-12 flex items-center justify-center ${selectedEffect === effect.id ? 'bg-white' : 'bg-gray-100'}`}>
                   <span 
                     className="text-sm font-bold text-gray-800"
                     style={{

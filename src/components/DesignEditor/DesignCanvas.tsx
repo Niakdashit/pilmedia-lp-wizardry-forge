@@ -63,6 +63,8 @@ export interface DesignCanvasProps {
   canRedo?: boolean;
   updateWheelConfig?: (updates: any) => void;
   getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
+  // Read-only mode to disable interactions
+  readOnly?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -99,7 +101,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   canUndo,
   canRedo,
   updateWheelConfig,
-  getCanonicalConfig
+  getCanonicalConfig,
+  readOnly = false
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -633,6 +636,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     snapToGrid: showGridLines,
     gridSize: 20,
     enableInertia: true,
+    enabled: !readOnly,
     onDragStart: (elementId, position) => {
       // Enregistrer l'activité de début de drag
       recordActivity('drag', 0.9);
@@ -790,7 +794,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canRedo={canRedo}
       >
         {/* Canvas Toolbar - Only show when text element is selected */}
-        {selectedElementData && selectedElementData.type === 'text' && (
+        {(!readOnly) && selectedElementData && selectedElementData.type === 'text' && (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
               selectedElement={selectedElementData} 
@@ -838,6 +842,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 willChange: 'transform'
               }}
             onMouseDown={(e) => {
+              if (readOnly) return; // Guard in read-only mode
               if (e.target === e.currentTarget) {
                 setSelectedElement(null);
                 // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
@@ -856,8 +861,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               }}
               onMouseDown={(e) => {
                 console.log('🔘 Clic sur le background détecté');
-                // Désélectionner l'élément quand on clique sur le background
                 e.stopPropagation();
+                if (readOnly) return; // Guard in read-only mode
+                // Désélectionner l'élément quand on clique sur le background
                 setSelectedElement(null);
                 // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
                 if (onSelectedElementChange) {
@@ -867,13 +873,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               }}
             >
               {/* Menu contextuel global du canvas */}
-              <CanvasContextMenu
-                onCopyStyle={handleCanvasCopyStyle}
-                onPaste={handleCanvasPaste}
-                onRemoveBackground={handleRemoveBackground}
-                canPaste={!!clipboard && clipboard.type === 'element'}
-                hasStyleToCopy={selectedElement !== null}
-              />
+              {!readOnly && (
+                <CanvasContextMenu
+                  onCopyStyle={handleCanvasCopyStyle}
+                  onPaste={handleCanvasPaste}
+                  onRemoveBackground={handleRemoveBackground}
+                  canPaste={!!clipboard && clipboard.type === 'element'}
+                  hasStyleToCopy={selectedElement !== null}
+                />
+              )}
               <GridOverlay 
                 canvasSize={effectiveCanvasSize}
                 showGrid={selectedDevice !== 'mobile' && showGridLines}
@@ -900,22 +908,25 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 campaign={campaign}
                 device={selectedDevice}
                 shouldCropWheel={true}
-                disabled={false}
+                disabled={readOnly}
                 onClick={() => {
+                  if (readOnly) return;
                   console.log('🔘 Clic sur la roue détecté');
                   setShowBorderModal(true);
                 }}
               />
 
               {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-              <div className="absolute bottom-2 right-2 z-50">
-                <WheelSettingsButton
-                  onClick={() => {
-                    console.log('🔘 Clic sur WheelSettingsButton détecté');
-                    setShowBorderModal(true);
-                  }}
-                />
-              </div>
+              {!readOnly && (
+                <div className="absolute bottom-2 right-2 z-50">
+                  <WheelSettingsButton
+                    onClick={() => {
+                      console.log('🔘 Clic sur WheelSettingsButton détecté');
+                      setShowBorderModal(true);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
@@ -972,6 +983,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
                   containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+                  readOnly={readOnly}
                   onAddElement={(newElement) => {
                     const updatedElements = [...elements, newElement];
                     onElementsChange(updatedElements);
@@ -1023,7 +1035,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         )}
         
         {/* Cadre de sélection pour les groupes */}
-        {selectedGroupId && groups && (
+        {selectedGroupId && groups && !readOnly && (
           (() => {
             const selectedGroup = groups.find(g => g.id === selectedGroupId);
             if (selectedGroup && selectedGroup.groupChildren) {

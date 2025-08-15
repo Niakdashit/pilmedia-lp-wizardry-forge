@@ -19,6 +19,7 @@ interface UltraFluidDragDropOptions {
   gridSize?: number;
   enableInertia?: boolean;
   dampingFactor?: number;
+  enabled?: boolean;
 }
 
 export const useUltraFluidDragDrop = ({
@@ -29,7 +30,8 @@ export const useUltraFluidDragDrop = ({
   snapToGrid = false,
   gridSize = 10,
   enableInertia = true,
-  dampingFactor = 0.95
+  dampingFactor = 0.95,
+  enabled = true
 }: UltraFluidDragDropOptions) => {
   
   const dragStateRef = useRef<DragState>({
@@ -45,6 +47,24 @@ export const useUltraFluidDragDrop = ({
   const rafRef = useRef<number>();
   const velocityHistoryRef = useRef<Array<{ x: number; y: number; timestamp: number }>>([]);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Extract scale from CSS transform (supports matrix and matrix3d)
+  const getScaleFromTransform = useCallback((transform: string | null | undefined) => {
+    if (!transform || transform === 'none') return 1;
+    // matrix(a, b, c, d, tx, ty) => scaleX = a
+    const m2d = transform.match(/matrix\(([^)]+)\)/);
+    if (m2d) {
+      const values = m2d[1].split(',').map(v => parseFloat(v.trim()));
+      return Number.isFinite(values[0]) ? values[0] : 1;
+    }
+    // matrix3d(m11, m12, ..., m44) => scaleX = m11
+    const m3d = transform.match(/matrix3d\(([^)]+)\)/);
+    if (m3d) {
+      const values = m3d[1].split(',').map(v => parseFloat(v.trim()));
+      return Number.isFinite(values[0]) ? values[0] : 1;
+    }
+    return 1;
+  }, []);
 
   // Calculer la vélocité avec lissage
   const calculateVelocity = useCallback((
@@ -89,7 +109,11 @@ export const useUltraFluidDragDrop = ({
   // Boucle de rendu ultra-fluide avec requestAnimationFrame
   const renderLoop = useCallback(() => {
     const dragState = dragStateRef.current;
-    
+
+    if (!enabled) {
+      return;
+    }
+
     if (!dragState.isDragging || !dragState.elementId) {
       return;
     }
@@ -129,7 +153,7 @@ export const useUltraFluidDragDrop = ({
     if (dragState.isDragging) {
       rafRef.current = requestAnimationFrame(renderLoop);
     }
-  }, [onDragMove, applyGridSnap, enableInertia, dampingFactor]);
+  }, [onDragMove, applyGridSnap, enableInertia, dampingFactor, enabled]);
 
   // Démarrer le drag
   const startDrag = useCallback((
@@ -138,21 +162,14 @@ export const useUltraFluidDragDrop = ({
     clientY: number,
     elementRect: { x: number; y: number; width: number; height: number }
   ) => {
+    if (!enabled) return;
     if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerStyle = getComputedStyle(containerRef.current);
 
     // Calculer le zoom
-    let zoomScale = 1;
-    const transform = containerStyle.transform;
-    if (transform && transform !== 'none') {
-      const matrix = transform.match(/matrix\(([^)]+)\)/);
-      if (matrix) {
-        const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
-        zoomScale = values[0];
-      }
-    }
+    const zoomScale = getScaleFromTransform(containerStyle.transform);
 
     // Tenir compte du padding du conteneur avant de diviser par le zoom
     const paddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
@@ -194,10 +211,11 @@ export const useUltraFluidDragDrop = ({
     document.body.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
     document.body.style.webkitUserSelect = 'none';
-  }, [containerRef, onDragStart, renderLoop]);
+  }, [containerRef, onDragStart, renderLoop, enabled]);
 
   // Mettre à jour la position pendant le drag
   const updateDrag = useCallback((clientX: number, clientY: number) => {
+    if (!enabled) return;
     const dragState = dragStateRef.current;
     if (!dragState.isDragging || !containerRef || typeof containerRef === 'function' || !containerRef.current) return;
 
@@ -205,15 +223,7 @@ export const useUltraFluidDragDrop = ({
     const containerStyle = getComputedStyle(containerRef.current);
     
     // Calculer le zoom
-    let zoomScale = 1;
-    const transform = containerStyle.transform;
-    if (transform && transform !== 'none') {
-      const matrix = transform.match(/matrix\(([^)]+)\)/);
-      if (matrix) {
-        const values = matrix[1].split(',').map(v => parseFloat(v.trim()));
-        zoomScale = values[0];
-      }
-    }
+    const zoomScale = getScaleFromTransform(containerStyle.transform);
 
     // Tenir compte du padding du conteneur avant de diviser par le zoom
     const paddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
@@ -238,10 +248,11 @@ export const useUltraFluidDragDrop = ({
     dragState.currentPosition = elementPosition;
     dragState.velocity = velocity;
     dragState.lastTimestamp = now;
-  }, [containerRef, calculateVelocity]);
+  }, [containerRef, calculateVelocity, enabled]);
 
   // Terminer le drag
   const endDrag = useCallback(() => {
+    if (!enabled) return;
     const dragState = dragStateRef.current;
     
     if (!dragState.isDragging || !dragState.elementId) return;
@@ -279,7 +290,7 @@ export const useUltraFluidDragDrop = ({
 
     // Nettoyer l'historique
     velocityHistoryRef.current = [];
-  }, [onDragEnd, applyGridSnap]);
+  }, [onDragEnd, applyGridSnap, enabled]);
 
   // Gestionnaires d'événements globaux
   useEffect(() => {
@@ -310,23 +321,48 @@ export const useUltraFluidDragDrop = ({
       }
     };
 
+    const handleTouchCancel = () => {
+      if (dragStateRef.current.isDragging) {
+        endDrag();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && dragStateRef.current.isDragging) {
+        endDrag();
+      }
+    };
+
+    // Si le hook est désactivé, ne rien attacher
+    if (!enabled) {
+      return () => {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+        }
+      };
+    }
+
     // Ajouter les listeners avec options optimisées
     document.addEventListener('mousemove', handleMouseMove, { passive: false });
     document.addEventListener('mouseup', handleMouseUp, { passive: true });
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', handleTouchCancel, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true } as any);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchCancel);
+      document.removeEventListener('visibilitychange', handleVisibilityChange as any);
       
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [updateDrag, endDrag]);
+  }, [updateDrag, endDrag, enabled]);
 
   return {
     // État

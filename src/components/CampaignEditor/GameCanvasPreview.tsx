@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GameSize } from '../configurators/GameSizeSelector';
 import { getCampaignBackgroundImage } from '../../utils/background';
 import WheelPreview from '../GameTypes/WheelPreview';
@@ -7,6 +7,7 @@ import ScratchPreview from '../GameTypes/ScratchPreview';
 import DicePreview from '../GameTypes/DicePreview';
 import QuizPreview from '../GameTypes/QuizPreview';
 import CustomElementsRenderer from '../ModernEditor/components/CustomElementsRenderer';
+import { STANDARD_DEVICE_DIMENSIONS } from '../../utils/deviceDimensions';
 
 interface GameCanvasPreviewProps {
   campaign: any;
@@ -27,6 +28,35 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
 }) => {
   const resolvedBackground =
     gameBackgroundImage || getCampaignBackgroundImage(campaign, previewDevice);
+
+  // Fixed canvas dimensions derived from device, like the editor's canvas
+  const canvasDims = STANDARD_DEVICE_DIMENSIONS[previewDevice];
+
+  // Measure container and compute scale to fit the fixed canvas
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const computeScale = () => {
+      const rect = el.getBoundingClientRect();
+      const sx = rect.width / canvasDims.width;
+      const sy = rect.height / canvasDims.height;
+      const s = Math.max(0.1, Math.min(sx, sy));
+      setScale(s);
+    };
+
+    computeScale();
+    const ro = new ResizeObserver(computeScale);
+    ro.observe(el);
+    window.addEventListener('resize', computeScale);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', computeScale);
+    };
+  }, [canvasDims.width, canvasDims.height]);
 
   // Size mapping for text elements
   const sizeMap: Record<string, string> = {
@@ -54,18 +84,12 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
       width: '100%',
       height: '100%',
       display: 'flex',
-      alignItems: 'flex-start', // Changé de 'center' à 'flex-start' pour aligner en haut
+      alignItems: 'flex-start', // align top
       justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden',
-      backgroundColor: campaign.design?.background || '#ebf4f7',
-      backgroundImage: resolvedBackground ? `url(${resolvedBackground})` : undefined,
-      backgroundSize: 'contain',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
-      border: '2px solid #e5e7eb',
-      transform: `translateY(${(previewDevice === 'mobile' || previewDevice === 'tablet') ? '-25%' : '-15%'})` // 25% en mobile/tablette, 15% en desktop
+      // Background and border moved to the inner canvas to match editor coordinate space
+      // Removed vertical translateY offset to keep coordinates consistent with editor overlay
     };
   };
 
@@ -182,31 +206,48 @@ const GameCanvasPreview: React.FC<GameCanvasPreviewProps> = ({
   };
 
   return (
-    <div className={className} style={getContainerStyle()}>
-      {resolvedBackground && showBackgroundOverlay && (
-        <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
-      )}
-      
-      <div style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        zIndex: 10,
-        overflow: 'hidden'
-      }}>
-        {renderPreviewGame()}
-      </div>
+    <div className={className} style={getContainerStyle()} ref={containerRef}>
 
-      {/* Render custom elements on top */}
-      <CustomElementsRenderer
-        customTexts={customTexts}
-        customImages={customImages}
-        previewDevice={previewDevice}
-        sizeMap={sizeMap}
-      />
+      {/* Fixed-size canvas wrapper (same coordinate space as editor), scaled to fit */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          width: `${canvasDims.width}px`,
+          height: `${canvasDims.height}px`,
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          transformOrigin: 'center center',
+          zIndex: 10,
+          overflow: 'hidden',
+          borderRadius: previewDevice === 'mobile' ? '24px' : previewDevice === 'tablet' ? '16px' : '12px',
+          border: '2px solid #e5e7eb',
+          backgroundColor: campaign.design?.background || '#ebf4f7',
+          backgroundImage: resolvedBackground ? `url(${resolvedBackground})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Optional dark overlay over the same canvas area */}
+        {resolvedBackground && showBackgroundOverlay && (
+          <div className="absolute inset-0 bg-black/20" style={{ zIndex: 1 }} />
+        )}
+
+        {/* Game content fills the canvas */}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {renderPreviewGame()}
+        </div>
+
+        {/* Custom elements positioned in the same canvas coordinate system */}
+        <CustomElementsRenderer
+          customTexts={customTexts}
+          customImages={customImages}
+          previewDevice={previewDevice}
+          sizeMap={sizeMap}
+          zoom={1}
+        />
+      </div>
     </div>
   );
 };

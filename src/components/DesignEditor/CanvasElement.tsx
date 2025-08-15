@@ -5,8 +5,9 @@ import { useTouchOptimization } from './hooks/useTouchOptimization';
 import TextContextMenu from './components/TextContextMenu';
 import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
-import { getCanvasViewport, viewportToCanvas } from './core/Transform';
+import { getCanvasViewport } from './core/Transform';
 import { createPreciseDrag } from './core/Drag';
+import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 
 // Professional drag & drop implementation - Excalidraw/Canva precision
 
@@ -20,6 +21,7 @@ export interface CanvasElementProps {
   containerRef?: React.RefObject<HTMLDivElement>;
   onAddElement?: (element: any) => void;
   elements?: any[];
+  readOnly?: boolean;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -30,7 +32,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   onUpdate,
   onDelete,
   containerRef,
-  onAddElement
+  onAddElement,
+  readOnly = false
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -52,6 +55,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const elementRef = React.useRef<HTMLDivElement>(null);
   const dragSystemRef = useRef<ReturnType<typeof createPreciseDrag> | null>(null);
 
+  // Smart snapping integration for alignment guides and snapping during drag
+  const { applySnapping } = useSmartSnapping({
+    containerRef: containerRef as React.RefObject<HTMLDivElement>,
+    gridSize: 20,
+    snapTolerance: 3
+  });
+
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
   const setClipboard = useEditorStore(state => state.setClipboard);
@@ -59,6 +69,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   // Professional drag system (Excalidraw/Canva precision)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (readOnly) return; // Disable drag & selection in read-only mode
     const isMultiSelect = e.ctrlKey || e.metaKey;
     onSelect(element.id, isMultiSelect);
     
@@ -92,14 +103,62 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     let lastDragPosition = { x: currentCanvasX, y: currentCanvasY };
     
     const setItemPos = (x: number, y: number) => {
+      // Calculer/mettre à jour le zoom et dimensions en unités canvas
+      const canvasElNow = containerRef?.current as HTMLElement | null;
+      const viewport = canvasElNow ? getCanvasViewport(canvasElNow) : { zoom: 1 } as any;
+      const zNow = viewport?.zoom || 1;
+      // Mesurer la taille réelle pour les textes afin d'obtenir un centre précis
+      const isText = element.type === 'text';
+      // IMPORTANT: getBoundingClientRect() retourne des dimensions en px viewport (affectées par le scale)
+      // Pour obtenir des unités canvas cohérentes, on divise par le zoom courant.
+      const rectNow = elementRef.current ? elementRef.current.getBoundingClientRect() : null;
+      const measuredW = rectNow ? (rectNow.width / zNow) : undefined;
+      const measuredH = rectNow ? (rectNow.height / zNow) : undefined;
+      const elW = isText
+        ? (measuredW ?? (deviceProps.width != null ? Number(deviceProps.width) : 100))
+        : ((deviceProps.width != null) ? Number(deviceProps.width) : (measuredW ?? 100));
+      const elH = isText
+        ? (measuredH ?? (deviceProps.height != null ? Number(deviceProps.height) : 30))
+        : ((deviceProps.height != null) ? Number(deviceProps.height) : (measuredH ?? 30));
+
+      // Appliquer le smart snapping (retourne positions en unités canvas)
+      const snapped = applySnapping(x, y, elW, elH, String(element.id));
+      const sx = snapped.x;
+      const sy = snapped.y;
+
       // Sauvegarder la position pour la fin du drag
-      lastDragPosition = { x, y };
-      
-      // Mise à jour immédiate du transform
+      lastDragPosition = { x: sx, y: sy };
+
+      // Mise à jour immédiate du transform avec la position "snappée"
       if (elementRef.current) {
-        // Appliquer la translate en unités canvas (le parent est déjà scalé)
-        elementRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        elementRef.current.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
       }
+
+      // Dispatch visual alignment guides event avec payload complet
+      if (canvasElNow) {
+        const rect = canvasElNow.getBoundingClientRect();
+        const canvasCenterX = (rect.width / zNow) / 2;
+        const canvasCenterY = (rect.height / zNow) / 2;
+        const elementCenterX = sx + elW / 2;
+        const elementCenterY = sy + elH / 2;
+
+        const alignmentEvent = new CustomEvent('showAlignmentGuides', {
+          detail: {
+            elementId: element.id,
+            x: sx,
+            y: sy,
+            width: elW,
+            height: elH,
+            elementCenterX,
+            elementCenterY,
+            canvasCenterX,
+            canvasCenterY,
+            isDragging: true
+          }
+        });
+        document.dispatchEvent(alignmentEvent);
+      }
+
       // Marquer comme en cours de drag
       if (!isDragging) {
         setIsDragging(true);
@@ -137,6 +196,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           }
         }
         
+        // Cacher les guides d'alignement à la fin du drag
+        const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+        document.dispatchEvent(hideGuidesEvent);
+
         setIsDragging(false);
         document.onpointerup = originalUp;
       };
@@ -147,14 +210,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     // Démarrer le drag professionnel
     enhancedOnPointerDown(e.nativeEvent, el);
-  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging]);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
+    if (readOnly) return; // Disable entering edit mode in read-only
     if (element.type === 'text') {
       setIsEditing(true);
     }
-  }, [element.type]);
+  }, [element.type, readOnly]);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newContent = e.target.value;
@@ -407,14 +471,26 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     switch (element.type) {
       case 'text': {
         const getTextStyle = (): React.CSSProperties => {
+          const parsePx = (v: any, fallback: number = 0) => {
+            if (v == null) return fallback;
+            if (typeof v === 'number') return v;
+            const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
+            return m ? parseFloat(m[1]) : fallback;
+          };
+
+          const baseFontSize = (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16;
+          // Do not scale per-element font size here; the whole canvas is already scaled via container transform
+          const scaledFontSize = parsePx(baseFontSize, 16);
+
           const baseStyle: React.CSSProperties = {
-            fontSize: (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16,
+            fontSize: scaledFontSize,
             fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
             color: element.color || element.style?.color || '#000000',
             fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
             fontStyle: element.fontStyle || element.style?.fontStyle || 'normal',
             textDecoration: element.textDecoration || element.style?.textDecoration || 'none',
             textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
+            lineHeight: '1.2',
             ...elementStyle
           };
 
@@ -427,21 +503,27 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
           // Add border radius
           if (element.borderRadius) {
-            baseStyle.borderRadius = `${element.borderRadius}px`;
+            // Keep original value; container zoom will scale visually
+            baseStyle.borderRadius = `${parsePx(element.borderRadius, 0)}px`;
           }
 
           // Add padding
           if (element.padding) {
-            baseStyle.padding = `${element.padding.top}px ${element.padding.right}px ${element.padding.bottom}px ${element.padding.left}px`;
+            const p = element.padding;
+            // Keep original values; container zoom will scale visually
+            baseStyle.padding = `${parsePx(p.top, 0)}px ${parsePx(p.right, 0)}px ${parsePx(p.bottom, 0)}px ${parsePx(p.left, 0)}px`;
           }
 
           // Add text shadow
           if (element.textShadow && (element.textShadow.blur > 0 || element.textShadow.offsetX !== 0 || element.textShadow.offsetY !== 0)) {
-            baseStyle.textShadow = `${element.textShadow.offsetX}px ${element.textShadow.offsetY}px ${element.textShadow.blur}px ${element.textShadow.color}`;
+            const ts = element.textShadow;
+            // Keep original values; container zoom will scale visually
+            baseStyle.textShadow = `${parsePx(ts.offsetX, 0)}px ${parsePx(ts.offsetY, 0)}px ${parsePx(ts.blur, 0)}px ${ts.color}`;
           }
 
           // Add custom CSS from effects
           if (element.customCSS) {
+            // Do not scale custom CSS; let container transform handle visual scaling
             Object.assign(baseStyle, element.customCSS);
           }
 
@@ -457,7 +539,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           } : null;
         };
 
-        return isEditing ? (
+        return (isEditing && !readOnly) ? (
           <input
             type="text"
             value={element.content || 'Texte'}
@@ -482,7 +564,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         ) : (
           <div
             ref={textRef}
-            className="cursor-move select-none whitespace-pre-wrap break-words"
+            className={`${readOnly ? '' : 'cursor-move'} select-none whitespace-pre-wrap break-words`
+            }
             style={getTextStyle()}
             data-element-type="text"
           >
@@ -495,7 +578,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           <img
             src={element.src}
             alt={element.alt || 'Image'}
-            className="cursor-move object-cover"
+            className={`${readOnly ? '' : 'cursor-move'} object-cover`}
             draggable={false}
             loading="lazy"
             style={elementStyle}
@@ -504,7 +587,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       case 'wheel':
         return (
           <div 
-            className="cursor-move"
+            className={`${readOnly ? '' : 'cursor-move'}`}
             style={{ 
               ...elementStyle,
               pointerEvents: 'none' // Empêche l'interaction directe avec la roue
@@ -524,7 +607,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       case 'shape':
         return (
           <div
-            className="cursor-move"
+            className={`${readOnly ? '' : 'cursor-move'}`}
             style={{
               ...elementStyle,
               backgroundColor: element.backgroundColor || element.style?.backgroundColor || '#3B82F6',
@@ -533,29 +616,30 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           />
         );
       default:
-        return <div className="w-20 h-20 bg-gray-300 cursor-move" style={elementStyle} />;
+        return <div className={`w-20 h-20 bg-gray-300 ${readOnly ? '' : 'cursor-move'}`} style={elementStyle} />;
     }
-  }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur]);
+  }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur, readOnly]);
 
   return (
     <div
       ref={elementRef}
-      className={`absolute ${isSelected ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
+      className={`absolute ${isSelected && !readOnly ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
       style={{
         transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
         opacity: isDragging ? 0.8 : 1,
         zIndex: element.zIndex || 1,
         transition: isDragging ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: readOnly ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+        pointerEvents: readOnly ? 'none' : 'auto',
       }}
-      onPointerDown={handlePointerDown}
-      onDoubleClick={handleDoubleClick}
+      onPointerDown={readOnly ? undefined : handlePointerDown}
+      onDoubleClick={readOnly ? undefined : handleDoubleClick}
     >
       {renderElement}
       
       {/* Selection handles - masqués pendant le drag */}
-      {isSelected && !isDragging && (
+      {isSelected && !isDragging && !readOnly && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 
