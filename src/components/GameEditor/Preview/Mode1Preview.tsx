@@ -7,8 +7,6 @@ import ContentArea from './ContentArea';
 import EditableText from '../EditableText';
 import EditableImage from '../EditableImage';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
-import { useBrandColorExtraction } from '../../QuickCampaign/Preview/hooks/useBrandColorExtraction';
-import { synchronizeCampaignWithColors } from '../../QuickCampaign/Preview/utils/campaignSynchronizer';
 
 interface Mode1PreviewProps {
   device: DeviceType;
@@ -47,23 +45,10 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
     accent: config.backgroundColor || '#10b981'
   }), [config.participateButtonColor, config.outlineColor, config.backgroundColor]);
 
-  const { finalColors, brandStyleExtracted } = useBrandColorExtraction(
-    customColors,
-    config.bannerImage
-  );
-
-  // Synchroniser la configuration avec les couleurs extraites
+  // Configuration synchronisée simple
   useEffect(() => {
-    if (brandStyleExtracted && finalColors) {
-      const updatedConfig = {
-        ...config,
-        ...synchronizeCampaignWithColors(config, finalColors)
-      };
-      setSynchronizedConfig(updatedConfig);
-    } else {
-      setSynchronizedConfig(config);
-    }
-  }, [config, finalColors, brandStyleExtracted]);
+    setSynchronizedConfig(config);
+  }, [config]);
 
   // Système responsif unifié - utiliser le device courant comme base
   const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');

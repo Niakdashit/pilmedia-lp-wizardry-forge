@@ -1,6 +1,10 @@
 
 import React from 'react';
-import { DEVICE_CONSTRAINTS } from '../../QuickCampaign/Preview/utils/previewConstraints';
+const DEVICE_CONSTRAINTS = {
+  mobile: { width: 375, height: 667 },
+  tablet: { width: 768, height: 1024 },
+  desktop: { width: 1920, height: 1080 }
+};
 
 interface DeviceFrameProps {
   device: 'desktop' | 'tablet' | 'mobile';
@@ -26,8 +30,8 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
     );
   }
 
-  // Utiliser les contraintes Qualifio standardisées
-  const { maxWidth, maxHeight } = DEVICE_CONSTRAINTS[device];
+  // Utiliser les contraintes standardisées
+  const { width: maxWidth, height: maxHeight } = DEVICE_CONSTRAINTS[device];
 
   const getDeviceStyles = () => {
     if (device === 'mobile') {

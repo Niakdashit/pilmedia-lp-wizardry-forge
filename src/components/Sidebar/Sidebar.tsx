@@ -5,17 +5,9 @@ import {
   LayoutDashboard,
   Target,
   Gamepad2,
-  Mail,
   BarChart3,
-  Users,
-  Database,
-  Share2,
-  BookOpen,
-  UserCircle,
-  LogOut,
   ChevronLeft,
-  ChevronRight,
-  Shield
+  ChevronRight
 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 const sidebarLogo = '/logos/prosplay-sidebar-logo.svg';
@@ -29,13 +21,7 @@ const Sidebar: React.FC = () => {
     { name: 'Tableau de bord', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Campagnes', path: '/campaigns', icon: <Target className="w-5 h-5" /> },
     { name: 'Gamification', path: '/gamification', icon: <Gamepad2 className="w-5 h-5" /> },
-    { name: 'Newsletter', path: '/newsletter', icon: <Mail className="w-5 h-5" /> },
-    { name: 'Statistiques', path: '/statistics', icon: <BarChart3 className="w-5 h-5" /> },
-    { name: 'Contacts', path: '/contacts', icon: <Users className="w-5 h-5" /> },
-    { name: 'Données', path: '/data', icon: <Database className="w-5 h-5" /> },
-    { name: 'Réseaux sociaux', path: '/social', icon: <Share2 className="w-5 h-5" /> },
-    { name: 'Études', path: '/studies', icon: <BookOpen className="w-5 h-5" /> },
-    { name: 'Compte', path: '/account', icon: <UserCircle className="w-5 h-5" /> }
+    { name: 'Statistiques', path: '/statistics', icon: <BarChart3 className="w-5 h-5" /> }
   ];
 
   return (
@@ -79,28 +65,6 @@ const Sidebar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Footer section */}
-      <div className="p-3 border-t border-gray-200/50">
-        <Link
-          to="/admin"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group mb-2"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
-            <Shield className="w-5 h-5" />
-          </div>
-          {!sidebarCollapsed && <span className="ml-3 font-medium">Interface Admin</span>}
-        </Link>
-        
-        <Link
-          to="/login"
-          className="flex items-center px-3 py-2 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-white">
-            <LogOut className="w-5 h-5" />
-          </div>
-          {!sidebarCollapsed && <span className="ml-3 font-medium">Déconnexion</span>}
-        </Link>
-      </div>
     </div>
   );
 };
