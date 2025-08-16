@@ -119,7 +119,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </div>
         <button 
           onClick={onPreviewToggle}
-          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${
+          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${
             isPreviewMode 
               ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border-[#841b60]' 
               : 'border-gray-300 hover:bg-gray-50'

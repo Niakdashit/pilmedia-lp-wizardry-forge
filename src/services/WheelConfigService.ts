@@ -177,7 +177,7 @@ export class WheelConfigService {
   ) {
     if (!shouldCrop) {
       return {
-        containerClass: 'flex justify-center items-center',
+        containerClass: 'flex justify-center items-center z-40',
         wheelClass: '',
         transform: ''
       };
@@ -188,8 +188,8 @@ export class WheelConfigService {
       const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden';
       const centerClass = 'left-1/2 -translate-x-1/2';
       return {
-        containerClass: `${base} ${centerClass}`,
-        wheelClass: 'cursor-pointer hover:scale-105 transition-transform duration-200',
+        containerClass: `${base} ${centerClass} z-40`,
+        wheelClass: 'cursor-pointer pointer-events-auto hover:scale-105 transition-transform duration-200',
         transform: 'translate-y-1/3',
         styles: {
           paddingBottom: '-30%'
@@ -202,8 +202,8 @@ export class WheelConfigService {
     const positionClass = position === 'left' ? 'left-0' : 'right-0';
     const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };
     return {
-      containerClass: `${base} ${positionClass}`,
-      wheelClass: 'cursor-pointer hover:scale-105 transition-transform duration-200',
+      containerClass: `${base} ${positionClass} z-40`,
+      wheelClass: 'cursor-pointer pointer-events-auto hover:scale-105 transition-transform duration-200',
       transform: '-translate-y-1/2',
       styles: insetStyles
     };

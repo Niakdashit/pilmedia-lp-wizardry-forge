@@ -119,6 +119,29 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
   // Prevent repeated auto-fit on mobile when viewing desktop canvas
   const didAutoFitRef = useRef(false);
+  // Marquee selection state
+  const [isMarqueeActive, setIsMarqueeActive] = useState(false);
+  const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
+
+  // Precise DOM-measured bounds per element (canvas-space units)
+  const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
+
+  // Stable origin bounds for resize interactions to prevent drift
+  const multiResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  // Per-element snapshot at resize start to avoid cumulative errors and apply per-element rules
+  const multiResizeElementsSnapshotRef = useRef<Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }>>({});
+  const groupResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const groupResizeElementsSnapshotRef = useRef<Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }>>({});
+  const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
+    setMeasuredBounds(prev => {
+      const prevRect = prev[id];
+      if (prevRect && prevRect.x === rect.x && prevRect.y === rect.y && prevRect.width === rect.width && prevRect.height === rect.height) {
+        return prev;
+      }
+      return { ...prev, [id]: rect };
+    });
+  }, []);
 
   // Références pour lisser les mises à jour de zoom
   const rafRef = useRef<number | null>(null);
@@ -159,6 +182,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
     return canvasSize;
   }, [selectedDevice, canvasSize]);
+
+  // Memoized maps for fast lookups during interactions
+  const elementById = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const el of elements) m.set(el.id, el);
+    return m;
+  }, [elements]);
+
+  const devicePropsById = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const el of elements) m.set(el.id, getPropertiesForDevice(el, selectedDevice));
+    return m;
+  }, [elements, selectedDevice, getPropertiesForDevice]);
 
   // 🚀 Cache intelligent pour optimiser les performances (moved earlier to avoid TDZ)
   const elementCache = useAdvancedCache({
@@ -202,6 +238,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return;
     }
 
+    // 🔒 Blocage des déplacements des enfants quand leur groupe parent est sélectionné
+    // Si l'élément a un parentGroupId, et que ce groupe est actuellement sélectionné,
+    // on ignore toute mise à jour de position (x/y) pour empêcher le déplacement indépendant.
+    try {
+      const el = elementById.get(id);
+      const isChildOfActiveGroup = !!(el && (el as any).parentGroupId && selectedGroupId && (el as any).parentGroupId === selectedGroupId);
+      const isPositionalUpdate = updates && ("x" in updates || "y" in updates);
+      if (isChildOfActiveGroup && isPositionalUpdate) {
+        // Ne rien faire: le déplacement des enfants est verrouillé quand le groupe est actif
+        return;
+      }
+    } catch (e) {
+      // Safe guard: en cas d'erreur, on laisse le flux normal
+    }
+
     // Préparer les updates selon l'appareil courant (desktop = racine, mobile/tablet = scope par device)
     const deviceScopedKeys = ['x', 'y', 'width', 'height', 'fontSize', 'textAlign'];
     const isDeviceScoped = selectedDevice !== 'desktop';
@@ -212,7 +263,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
     // Appliquer le snapping si c'est un déplacement (avant de répartir par device)
     if (workingUpdates.x !== undefined && workingUpdates.y !== undefined) {
-      const element = elements.find(el => el.id === id);
+      const element = elementById.get(id);
       if (element) {
         const snappedPosition = applySnapping(
           workingUpdates.x,
@@ -227,6 +278,59 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
         const positionCacheKey = `snap-${id}-${Math.floor(workingUpdates.x/5)}-${Math.floor(workingUpdates.y/5)}`;
         elementCache.set(positionCacheKey, { x: workingUpdates.x, y: workingUpdates.y, timestamp: Date.now() });
+
+        // Si l'élément est enfant d'un groupe, convertir en positions RELATIVES avant sauvegarde
+        if ((element as any).parentGroupId) {
+          const parentId = (element as any).parentGroupId as string;
+          const parentProps = devicePropsById.get(parentId);
+          if (parentProps) {
+            const parentX = Number(parentProps.x) || 0;
+            const parentY = Number(parentProps.y) || 0;
+            workingUpdates.x = (Number(workingUpdates.x) || 0) - parentX;
+            workingUpdates.y = (Number(workingUpdates.y) || 0) - parentY;
+          }
+        }
+
+        // 🚧 Clamp aux limites du canvas (en coordonnées absolues)
+        // NB: Pour les enfants de groupe, workingUpdates.x/y sont devenus relatifs après soustraction ci-dessus.
+        // On doit donc clore en ABSOLU avant soustraction. Recalculons l'absolu pour clamping fiable.
+        const elDeviceProps = getPropertiesForDevice(element, selectedDevice);
+        const widthForClamp = Number(elDeviceProps.width ?? element.width ?? 100) || 100;
+        const heightForClamp = Number(elDeviceProps.height ?? element.height ?? 100) || 100;
+
+        // Reconstituer position ABSOLUE proposée
+        const parentId = (element as any).parentGroupId;
+        let absX = Number(workingUpdates.x) || 0;
+        let absY = Number(workingUpdates.y) || 0;
+        if (parentId) {
+          const parentProps2 = devicePropsById.get(parentId);
+          if (parentProps2) {
+            absX = (Number(workingUpdates.x) || 0) + (Number(parentProps2.x) || 0);
+            absY = (Number(workingUpdates.y) || 0) + (Number(parentProps2.y) || 0);
+          }
+        }
+
+        const maxX = Math.max(0, (effectiveCanvasSize.width || 0) - widthForClamp);
+        const maxY = Math.max(0, (effectiveCanvasSize.height || 0) - heightForClamp);
+        const clampedAbsX = Math.min(Math.max(absX, 0), maxX);
+        const clampedAbsY = Math.min(Math.max(absY, 0), maxY);
+
+        // Convertir en relatif si nécessaire après clamping
+        if (parentId) {
+          const parentProps2 = devicePropsById.get(parentId);
+          if (parentProps2) {
+            const pX = Number(parentProps2.x) || 0;
+            const pY = Number(parentProps2.y) || 0;
+            workingUpdates.x = clampedAbsX - pX;
+            workingUpdates.y = clampedAbsY - pY;
+          } else {
+            workingUpdates.x = clampedAbsX;
+            workingUpdates.y = clampedAbsY;
+          }
+        } else {
+          workingUpdates.x = clampedAbsX;
+          workingUpdates.y = clampedAbsY;
+        }
       }
     }
 
@@ -274,7 +378,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
     const intensity = activityType === 'drag' ? 0.8 : 0.5;
     updateAutoSaveData(campaign, activityType, intensity);
-  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice]);
+  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -370,6 +474,397 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [onZoomChange]);
 
+
+  // Compute canvas-space coordinates from a pointer event
+  const getCanvasPointFromClient = useCallback((clientX: number, clientY: number) => {
+    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+    if (!canvasEl) return { x: 0, y: 0 };
+    const rect = canvasEl.getBoundingClientRect();
+    // rect is in CSS pixels and includes the scale; divide by zoom to get canvas-space
+    const x = (clientX - rect.left) / localZoom;
+    const y = (clientY - rect.top) / localZoom;
+    return { x, y };
+  }, [activeCanvasRef, localZoom]);
+
+  // Begin marquee when clicking empty background
+  const handleBackgroundPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (readOnly) return;
+    // Only react to primary button
+    if (e.button !== 0) return;
+    // Start marquee selection
+    const pt = getCanvasPointFromClient(e.clientX, e.clientY);
+    marqueeStartRef.current = pt;
+    setMarqueeEnd(pt);
+    setIsMarqueeActive(true);
+
+    // Clear single selection immediately; multi selection will be set on pointerup
+    setSelectedElement(null);
+    onSelectedElementChange?.(null);
+
+    // Setup global listeners
+    const onMove = (ev: PointerEvent) => {
+      if (!marqueeStartRef.current) return;
+      const p = getCanvasPointFromClient(ev.clientX, ev.clientY);
+      setMarqueeEnd(p);
+    };
+    const onUp = (ev: PointerEvent) => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+
+      if (!marqueeStartRef.current) {
+        setIsMarqueeActive(false);
+        setMarqueeEnd(null);
+        return;
+      }
+      const start = marqueeStartRef.current;
+      const end = getCanvasPointFromClient(ev.clientX, ev.clientY);
+      marqueeStartRef.current = null;
+
+      const minX = Math.min(start.x, end.x);
+      const minY = Math.min(start.y, end.y);
+      const maxX = Math.max(start.x, end.x);
+      const maxY = Math.max(start.y, end.y);
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      // If tiny drag (click), just clear multi-selection
+      const MIN_SIZE = 3; // canvas-space px
+      if (width < MIN_SIZE && height < MIN_SIZE) {
+        onSelectedElementsChange?.([]);
+        setIsMarqueeActive(false);
+        setMarqueeEnd(null);
+        return;
+      }
+
+      // Determine which elements intersect the marquee using ONLY DOM-measured bounds
+      const shouldUnion = ev.shiftKey || ev.ctrlKey || ev.metaKey;
+
+      const intersecting: any[] = [];
+      for (const el of elements) {
+        const mb = measuredBounds[el.id];
+        if (!mb) {
+          // Defer selection for elements without measurements to maintain precision
+          continue;
+        }
+        const elMinX = mb.x;
+        const elMinY = mb.y;
+        const elMaxX = mb.x + mb.width;
+        const elMaxY = mb.y + mb.height;
+        const intersects = !(elMaxX < minX || elMinX > maxX || elMaxY < minY || elMinY > maxY);
+        if (intersects) intersecting.push(el);
+      }
+
+      const newSelection = shouldUnion
+        ? Array.from(new Map([...(selectedElements || []), ...intersecting].map((e: any) => [e.id, e]))).map(([, v]) => v)
+        : intersecting;
+
+      onSelectedElementsChange?.(newSelection);
+      setIsMarqueeActive(false);
+      setMarqueeEnd(null);
+    };
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }, [getCanvasPointFromClient, readOnly, onSelectedElementChange, onSelectedElementsChange, elements, selectedElements, measuredBounds]);
+
+  // Compute marquee rect in canvas-space for rendering
+  const marqueeRect = useMemo(() => {
+    if (!isMarqueeActive || !marqueeStartRef.current || !marqueeEnd) return null;
+    const sx = marqueeStartRef.current.x;
+    const sy = marqueeStartRef.current.y;
+    const ex = marqueeEnd.x;
+    const ey = marqueeEnd.y;
+    const x = Math.min(sx, ex);
+    const y = Math.min(sy, ey);
+    const w = Math.abs(ex - sx);
+    const h = Math.abs(ey - sy);
+    return { x, y, w, h };
+  }, [isMarqueeActive, marqueeEnd]);
+
+  // Move multiple selected elements by delta (canvas-space)
+  const moveSelectedElements = useCallback((deltaX: number, deltaY: number) => {
+    if (!selectedElements || selectedElements.length < 1) return;
+    const selectedIdSet = new Set(selectedElements.map((e: any) => e.id));
+    const updated = elements.map(el => {
+      if (!selectedIdSet.has(el.id)) return el;
+      if (selectedDevice !== 'desktop') {
+        const currentDeviceData = (el as any)[selectedDevice] || {};
+        return {
+          ...el,
+          [selectedDevice]: {
+            ...currentDeviceData,
+            x: (Number(currentDeviceData.x) || 0) + deltaX,
+            y: (Number(currentDeviceData.y) || 0) + deltaY
+          }
+        };
+      }
+      return {
+        ...el,
+        x: (Number(el.x) || 0) + deltaX,
+        y: (Number(el.y) || 0) + deltaY
+      };
+    });
+    onElementsChange(updated);
+  }, [elements, onElementsChange, selectedElements, selectedDevice]);
+
+  // Resize selection applying per-element, anchor-based logic using stable snapshots and handle direction
+  const resizeSelectedElements = useCallback((oldBounds: { x: number; y: number; width: number; height: number }, newBounds: { x: number; y: number; width: number; height: number }, handle?: string, targetElements?: any[], stableSnapshots?: Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }>) => {
+    const targets = targetElements ?? selectedElements ?? [];
+    if (targets.length < 1) return;
+    const MIN_ELEMENT_SIZE = 20; // keep element min size aligned with CanvasElement
+    const MIN_FRAME_SIZE = 10;   // selection frame min size
+
+    const selectedIdSet = new Set(targets.map((e: any) => e.id));
+    // Detect if we're resizing a group's children as a batch. If all targets share the same parentGroupId,
+    // we should convert back to relative using the NEW group's x/y (nx, ny) instead of reading stale parent props.
+    const firstParentId = (targets[0] as any)?.parentGroupId as string | undefined;
+    const isGroupChildrenBatch = !!firstParentId && targets.every((t: any) => t.parentGroupId === firstParentId);
+    const sx = oldBounds.x, sy = oldBounds.y, sw = oldBounds.width || 1, sh = oldBounds.height || 1;
+    const nx = newBounds.x, ny = newBounds.y, nw = Math.max(MIN_FRAME_SIZE, newBounds.width), nh = Math.max(MIN_FRAME_SIZE, newBounds.height);
+
+    // If handle not provided, fallback to legacy proportional mapping to avoid breakage
+    const legacyFallback = !handle || !stableSnapshots;
+
+    // Pre-compute scale per axis based on which handle is active
+    const rawScaleX = nw / sw;
+    const rawScaleY = nh / sh;
+    const affectsX = ['w', 'e'].some((d) => handle?.includes(d)) || ['nw','ne','sw','se'].some((d) => handle === d);
+    const affectsY = ['n', 's'].some((d) => handle?.includes(d)) || ['nw','ne','sw','se'].some((d) => handle === d);
+    const scaleX = affectsX ? rawScaleX : 1;
+    const scaleY = affectsY ? rawScaleY : 1;
+    const uniformScale = Math.min(scaleX, scaleY);
+
+    // Determine anchor (old and new) based on handle
+    const getAnchors = () => {
+      // default top-left anchor (se)
+      let axOld = sx, ayOld = sy, axNew = nx, ayNew = ny;
+      switch (handle) {
+        case 'se': axOld = sx;       ayOld = sy;       axNew = nx;       ayNew = ny;       break; // anchor top-left
+        case 'sw': axOld = sx + sw;  ayOld = sy;       axNew = nx + nw;  ayNew = ny;       break; // anchor top-right
+        case 'ne': axOld = sx;       ayOld = sy + sh;  axNew = nx;       ayNew = ny + nh;  break; // anchor bottom-left
+        case 'nw': axOld = sx + sw;  ayOld = sy + sh;  axNew = nx + nw;  ayNew = ny + nh;  break; // anchor bottom-right
+        case 'e':  axOld = sx;       ayOld = sy;       axNew = nx;       ayNew = ny;       break; // anchor left edge
+        case 'w':  axOld = sx + sw;  ayOld = sy;       axNew = nx + nw;  ayNew = ny;       break; // anchor right edge
+        case 's':  axOld = sx;       ayOld = sy;       axNew = nx;       ayNew = ny;       break; // anchor top edge
+        case 'n':  axOld = sx;       ayOld = sy + sh;  axNew = nx;       ayNew = ny + nh;  break; // anchor bottom edge
+      }
+      return { axOld, ayOld, axNew, ayNew };
+    };
+
+    const { axOld, ayOld, axNew, ayNew } = getAnchors();
+
+    const updated = elements.map(el => {
+      if (!selectedIdSet.has(el.id)) return el;
+
+      // Snapshot at start of resize (absolute coordinates)
+      const snap = stableSnapshots?.[el.id];
+
+      if (legacyFallback || !snap) {
+        // Legacy: proportional mapping of top-left and uniform font scaling
+        const rp = getPropertiesForDevice(el, selectedDevice);
+        const relX = Number(rp.x) || 0;
+        const relY = Number(rp.y) || 0;
+        const ew = Number(rp.width) || 0;
+        const eh = Number(rp.height) || 0;
+        const parseFont = (v: any, fb: number) => {
+          if (v == null) return fb;
+          if (typeof v === 'number') return v;
+          const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
+          return m ? parseFloat(m[1]) : fb;
+        };
+        const isText = (el as any)?.type === 'text';
+        const currentFontSize = isText
+          ? parseFont((rp as any).fontSize ?? (el as any).fontSize ?? (el as any).style?.fontSize, 16)
+          : undefined;
+
+        const parentId = (el as any)?.parentGroupId as string | undefined;
+        let parentAbsX = 0;
+        let parentAbsY = 0;
+        if (parentId) {
+          const parentProps = devicePropsById.get(parentId);
+          if (parentProps) {
+            parentAbsX = Number(parentProps.x) || 0;
+            parentAbsY = Number(parentProps.y) || 0;
+          }
+        }
+        const absEx = relX + parentAbsX;
+        const absEy = relY + parentAbsY;
+        const rx = (absEx - sx) / sw;
+        const ry = (absEy - sy) / sh;
+        const newAbsX = nx + rx * nw;
+        const newAbsY = ny + ry * nh;
+        const newW = Math.max(MIN_ELEMENT_SIZE, ew * (nw / sw));
+        const newH = Math.max(MIN_ELEMENT_SIZE, eh * (nh / sh));
+        const newFontSize = isText ? Math.max(8, Math.round((currentFontSize as number) * Math.min(nw/sw, nh/sh))) : undefined;
+
+        // Apply snapping and canvas clamp on absolute position
+        const snapped = applySnapping(newAbsX, newAbsY, newW, newH, String(el.id));
+        let ax = snapped.x, ay = snapped.y;
+        // Clamp
+        const maxX = Math.max(0, (effectiveCanvasSize.width || 0) - newW);
+        const maxY = Math.max(0, (effectiveCanvasSize.height || 0) - newH);
+        ax = Math.min(Math.max(ax, 0), maxX);
+        ay = Math.min(Math.max(ay, 0), maxY);
+
+        const targetX = parentId ? (ax - parentAbsX) : ax;
+        const targetY = parentId ? (ay - parentAbsY) : ay;
+
+        if (selectedDevice !== 'desktop') {
+          const currentDeviceData = (el as any)[selectedDevice] || {};
+          return {
+            ...el,
+            [selectedDevice]: {
+              ...currentDeviceData,
+              x: targetX,
+              y: targetY,
+              width: newW,
+              height: newH,
+              ...(isText ? { fontSize: newFontSize } : {})
+            }
+          };
+        }
+        return {
+          ...el,
+          x: targetX,
+          y: targetY,
+          width: newW,
+          height: newH,
+          ...(isText ? { fontSize: newFontSize } : {})
+        };
+      }
+
+      // --- Per-element anchor-based resize ---
+      const startLeft = snap.absX;
+      const startTop = snap.absY;
+      const startRight = snap.absX + (Number(snap.width) || 0);
+      const startBottom = snap.absY + (Number(snap.height) || 0);
+
+      // Transform the two opposite corners relative to anchor
+      const tPoint = (px: number, py: number) => ({
+        x: axNew + scaleX * (px - axOld),
+        y: ayNew + scaleY * (py - ayOld)
+      });
+      const p1 = tPoint(startLeft, startTop);
+      const p2 = tPoint(startRight, startBottom);
+
+      // Compute new rect from transformed points
+      const rawLeft = Math.min(p1.x, p2.x);
+      const rawTop = Math.min(p1.y, p2.y);
+      const rawRight = Math.max(p1.x, p2.x);
+      const rawBottom = Math.max(p1.y, p2.y);
+      let newWidth = Math.max(MIN_ELEMENT_SIZE, Math.abs(p2.x - p1.x));
+      let newHeight = Math.max(MIN_ELEMENT_SIZE, Math.abs(p2.y - p1.y));
+
+      // Decide which edges are being dragged; keep opposite edge anchored
+      const movingLeft = !!handle && handle.includes('w');
+      const movingRight = !!handle && handle.includes('e');
+      const movingTop = !!handle && handle.includes('n');
+      const movingBottom = !!handle && handle.includes('s');
+
+      let newLeft = movingLeft && !movingRight ? (rawRight - newWidth) : rawLeft;
+      let newTop = movingTop && !movingBottom ? (rawBottom - newHeight) : rawTop;
+
+      const isText = (el as any)?.type === 'text';
+
+      // Font size scaling for text only when corner handles are used
+      const isCornerHandle = ['nw','ne','sw','se'].includes(handle || '');
+      let newFontSize: number | undefined = undefined;
+      if (isText && isCornerHandle) {
+        const startFS = typeof snap.fontSize === 'number' ? snap.fontSize : 16;
+        newFontSize = Math.max(8, Math.round(startFS * uniformScale));
+        // Estimation des dimensions visuelles du texte après mise à l'échelle uniforme
+        const estW = Math.max(MIN_ELEMENT_SIZE, (Number(snap.width) || 0) * uniformScale);
+        const estH = Math.max(MIN_ELEMENT_SIZE, (Number(snap.height) || 0) * uniformScale);
+        // Recalcul ancré par poignée pour éviter les décalages côté Ouest/Nord
+        switch (handle) {
+          case 'se':
+            // ancre: top-left
+            newLeft = rawLeft;
+            newTop = rawTop;
+            break;
+          case 'sw':
+            // ancre: top-right
+            newLeft = rawRight - estW;
+            newTop = rawTop;
+            break;
+          case 'ne':
+            // ancre: bottom-left
+            newLeft = rawLeft;
+            newTop = rawBottom - estH;
+            break;
+          case 'nw':
+            // ancre: bottom-right
+            newLeft = rawRight - estW;
+            newTop = rawBottom - estH;
+            break;
+        }
+        // On ne modifie pas width/height pour le texte (taille gérée via fontSize)
+      }
+
+      // If not corner-scaled text, keep computed width/height
+      let outWidth = newWidth;
+      let outHeight = newHeight;
+
+      // Apply canvas clamp (no per-child snapping during group resize to avoid jitter)
+      const widthForSnap = isText && isCornerHandle ? Math.max(MIN_ELEMENT_SIZE, (Number(snap.width) || 0) * uniformScale) : outWidth;
+      const heightForSnap = isText && isCornerHandle ? Math.max(MIN_ELEMENT_SIZE, (Number(snap.height) || 0) * uniformScale) : outHeight;
+      let ax = newLeft, ay = newTop;
+
+      // Clamp to canvas bounds
+      const maxX = Math.max(0, (effectiveCanvasSize.width || 0) - widthForSnap);
+      const maxY = Math.max(0, (effectiveCanvasSize.height || 0) - heightForSnap);
+      ax = Math.min(Math.max(ax, 0), maxX);
+      ay = Math.min(Math.max(ay, 0), maxY);
+
+      // Convert to relative if element is a child of a group
+      const parentId = (el as any)?.parentGroupId as string | undefined;
+      let parentAbsX = 0, parentAbsY = 0;
+      if (parentId) {
+        if (isGroupChildrenBatch && parentId === firstParentId) {
+          // Use the NEW group bounds during this interaction
+          parentAbsX = nx;
+          parentAbsY = ny;
+        } else {
+          const parentProps = devicePropsById.get(parentId);
+          if (parentProps) {
+            parentAbsX = Number(parentProps.x) || 0;
+            parentAbsY = Number(parentProps.y) || 0;
+          }
+        }
+      }
+
+      const targetX = parentId ? (ax - parentAbsX) : ax;
+      const targetY = parentId ? (ay - parentAbsY) : ay;
+
+      const basePatch: any = {};
+      basePatch.x = targetX;
+      basePatch.y = targetY;
+      if (!(isText && isCornerHandle)) {
+        basePatch.width = outWidth;
+        basePatch.height = outHeight;
+      }
+      if (isText && newFontSize != null) {
+        basePatch.fontSize = newFontSize;
+      }
+
+      if (selectedDevice !== 'desktop') {
+        const currentDeviceData = (el as any)[selectedDevice] || {};
+        return {
+          ...el,
+          [selectedDevice]: {
+            ...currentDeviceData,
+            ...basePatch
+          }
+        };
+      }
+      return {
+        ...el,
+        ...basePatch
+      };
+    });
+
+    onElementsChange(updated);
+  }, [elements, onElementsChange, selectedElements, selectedDevice, getPropertiesForDevice, applySnapping, effectiveCanvasSize]);
 
 
   // Zoom au pincement (pinch) sur écrans tactiles
@@ -504,7 +999,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onSelectedElementsChange?.(newSelectedElements);
       } else {
         // Ajouter l'élément à la sélection
-        const elementToAdd = elements.find(el => el.id === elementId);
+        const elementToAdd = elementById.get(elementId);
         if (elementToAdd) {
           const newSelectedElements = [...currentSelectedElements, elementToAdd];
           console.log('🔥 Adding element to selection:', {
@@ -527,44 +1022,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       console.log('🔥 Single select mode:', { elementId, clearingMultiSelection: true });
       setSelectedElement(elementId);
       if (onSelectedElementChange) {
-        const element = elementId ? elements.find(el => el.id === elementId) : null;
+        const element = elementId ? elementById.get(elementId) : null;
         onSelectedElementChange(element);
       }
       // Réinitialiser la sélection multiple
       onSelectedElementsChange?.([]);
     }
-  }, [elements, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
+  }, [elementById, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
 
-  // Fonction utilitaire pour calculer les positions absolues des éléments groupés
-  const calculateAbsolutePosition = useCallback((element: any) => {
-    if (!element.parentGroupId) {
-      // Élément non groupé : position absolue normale
-      return { x: element.x, y: element.y };
-    }
-    
-    // Élément groupé : calculer position absolue = position du groupe + position relative
-    const parentGroup = elements.find(el => el.id === element.parentGroupId && el.isGroup);
-    if (!parentGroup) {
-      console.warn('🎯 Parent group not found for element:', element.id, 'parentGroupId:', element.parentGroupId);
-      return { x: element.x, y: element.y };
-    }
-    
-    const absoluteX = parentGroup.x + element.x; // element.x est relatif au groupe
-    const absoluteY = parentGroup.y + element.y; // element.y est relatif au groupe
-    
-    console.log('🎯 Calculating absolute position:', {
-      elementId: element.id,
-      parentGroupId: element.parentGroupId,
-      groupPosition: { x: parentGroup.x, y: parentGroup.y },
-      relativePosition: { x: element.x, y: element.y },
-      absolutePosition: { x: absoluteX, y: absoluteY }
-    });
-    
-    return { x: absoluteX, y: absoluteY };
-  }, [elements]);
+  // (removed) calculateAbsolutePosition was unused after adopting DOM-measured bounds exclusively for group frames
 
   // Les fonctions de configuration de la roue sont maintenant fournies par le composant parent
 
@@ -641,7 +1110,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       // Enregistrer l'activité de début de drag
       recordActivity('drag', 0.9);
       // Marquer les éléments affectés pour le rendu optimisé
-      const element = elements.find(el => el.id === elementId);
+      const element = elementById.get(elementId);
       if (element) {
         markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
       }
@@ -649,7 +1118,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     },
     onDragMove: (elementId, position, velocity) => {
       // Optimiser le rendu en marquant seulement les éléments nécessaires
-      const element = elements.find(el => el.id === elementId);
+      const element = elementById.get(elementId);
       if (element) {
         markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
       }
@@ -658,7 +1127,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     },
     onDragEnd: (elementId, position) => {
       // Finaliser le drag avec mise à jour des données
-      const element = elements.find(el => el.id === elementId);
+      const element = elementById.get(elementId);
       if (element) {
         markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
       }
@@ -697,6 +1166,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
+  // Calculer des positions ABSOLUES pour les éléments enfants de groupe
+  // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
+  const elementsWithAbsolute = useMemo(() => {
+    return elementsWithResponsive.map((el: any) => {
+      const parentId = (el as any).parentGroupId;
+      if (!parentId) return el;
+      const parentProps = devicePropsById.get(parentId);
+      if (!parentProps) return el;
+      const childProps = getPropertiesForDevice(el, selectedDevice);
+      return {
+        ...el,
+        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
+        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
+      };
+    });
+  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
+
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
   const handleElementDelete = useCallback((id: string) => {
@@ -713,7 +1199,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Handlers pour le menu contextuel global du canvas
   const handleCanvasCopyStyle = useCallback(() => {
     if (selectedElement) {
-      const element = elements.find(el => el.id === selectedElement);
+      const element = elementById.get(selectedElement);
       if (element) {
         const style = {
           fontFamily: element.fontFamily,
@@ -728,10 +1214,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         console.log('Style copié depuis le canvas:', style);
       }
     }
-  }, [selectedElement, elements]);
+  }, [selectedElement, elementById]);
 
   const handleCanvasPaste = useCallback(() => {
-    if (clipboard && clipboard.type === 'element' && onElementsChange) {
+    if (clipboard && clipboard.type === 'element') {
       const elementToPaste = clipboard.payload;
       const deviceProps = getPropertiesForDevice(elementToPaste, selectedDevice);
       const newElement = {
@@ -760,13 +1246,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       console.log('Arrière-plan supprimé');
     }
   }, [background]);
-  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
+  const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
   return (
     <DndProvider backend={HTML5Backend}>
       <MobileResponsiveLayout
-        selectedElement={elements.find(el => el.id === selectedElement)}
+        selectedElement={selectedElementData || undefined}
         onElementUpdate={(updates) => {
           if (selectedElement) {
             handleElementUpdate(selectedElement, updates);
@@ -859,17 +1345,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               style={{
                 background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
-              onMouseDown={(e) => {
-                console.log('🔘 Clic sur le background détecté');
+              onPointerDown={(e) => {
                 e.stopPropagation();
-                if (readOnly) return; // Guard in read-only mode
-                // Désélectionner l'élément quand on clique sur le background
-                setSelectedElement(null);
-                // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
-                if (onSelectedElementChange) {
-                  console.log('🎯 Background click - clearing selection via onSelectedElementChange');
-                  onSelectedElementChange(null);
-                }
+                handleBackgroundPointerDown(e);
               }}
             >
               {/* Menu contextuel global du canvas */}
@@ -893,7 +1371,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               {/* Alignment Guides */}
               <AlignmentGuides
                 canvasSize={effectiveCanvasSize}
-                elements={elementsWithResponsive}
+                elements={elementsWithAbsolute}
                 zoom={localZoom}
               />
               
@@ -949,6 +1427,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 elementWithProps.y = Number(elementWithProps.y) || 0;
                 elementWithProps.width = Number(elementWithProps.width) || 100;
                 elementWithProps.height = Number(elementWithProps.height) || 100;
+
+                // Si l'élément est enfant d'un groupe, ajouter l'offset du groupe pour la visibilité
+                if (element.parentGroupId) {
+                  const parentProps = devicePropsById.get(element.parentGroupId);
+                  if (parentProps) {
+                    elementWithProps.x += Number(parentProps.x) || 0;
+                    elementWithProps.y += Number(parentProps.y) || 0;
+                  }
+                }
                 
                 return isElementVisible(elementWithProps);
               })
@@ -970,10 +1457,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 textAlign: responsiveProps.textAlign || element.textAlign
               };
 
+              // Ajouter l'offset du groupe pour fournir des coordonnées ABSOLUES au composant CanvasElement
+              let elementForCanvas = elementWithResponsive;
+              if ((element as any).parentGroupId) {
+                const parentProps = devicePropsById.get((element as any).parentGroupId);
+                if (parentProps) {
+                  elementForCanvas = {
+                    ...elementWithResponsive,
+                    x: (Number(elementWithResponsive.x) || 0) + (Number(parentProps.x) || 0),
+                    y: (Number(elementWithResponsive.y) || 0) + (Number(parentProps.y) || 0)
+                  };
+                }
+              }
+
               return (
                 <CanvasElement 
                   key={element.id} 
-                  element={elementWithResponsive} 
+                  element={elementForCanvas} 
                   selectedDevice={selectedDevice}
                   isSelected={
                     selectedElement === element.id || 
@@ -984,15 +1484,35 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onDelete={handleElementDelete}
                   containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
                   readOnly={readOnly}
+                  onMeasureBounds={handleMeasureBounds}
                   onAddElement={(newElement) => {
                     const updatedElements = [...elements, newElement];
                     onElementsChange(updatedElements);
                     handleElementSelect(newElement.id);
                   }}
                   elements={elements}
+                  // New: pass selection context flags
+                  isMultiSelecting={Boolean(selectedElements && selectedElements.length > 1)}
+                  isGroupSelecting={Boolean(selectedGroupId)}
+                  activeGroupId={selectedGroupId || null}
                 />
               );
             })}
+
+            {/* Marquee selection overlay */}
+            {marqueeRect && (
+              <div
+                className="absolute border-2 border-blue-500/70 bg-blue-400/10 pointer-events-none"
+                style={{
+                  left: marqueeRect.x,
+                  top: marqueeRect.y,
+                  width: marqueeRect.w,
+                  height: marqueeRect.h,
+                  zIndex: 2000,
+                  boxShadow: '0 0 0 1px rgba(59,130,246,0.4) inset'
+                }}
+              />
+            )}
 
             {/* Grid and Guides Toggle - desktop only */}
             {selectedDevice === 'desktop' && (
@@ -1010,6 +1530,87 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </button>
               </div>
             )}
+
+            {/* Group frame for arbitrary multi-selection (not pre-defined groups) */}
+            {selectedElements && selectedElements.length > 1 && !readOnly && (() => {
+              // Use only DOM-measured bounds for pixel-perfect union; defer if missing
+              const measuredSelected = selectedElements.filter((el: any) => !!measuredBounds[el.id]);
+              if (measuredSelected.length < selectedElements.length) return null;
+              const elementsForBounds = measuredSelected.map((el: any) => measuredBounds[el.id]);
+              const minX = Math.min(...elementsForBounds.map(e => e.x));
+              const minY = Math.min(...elementsForBounds.map(e => e.y));
+              const maxX = Math.max(...elementsForBounds.map(e => e.x + e.width));
+              const maxY = Math.max(...elementsForBounds.map(e => e.y + e.height));
+              const bounds = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+
+              return (
+                <GroupSelectionFrame
+                  key="multi-selection-frame"
+                  groupId="multi-selection"
+                  bounds={bounds}
+                  zoom={localZoom}
+                  onMove={(dx, dy) => {
+                    // Snap the frame move and convert back to adjusted delta
+                    const snapped = applySnapping(
+                      bounds.x + dx,
+                      bounds.y + dy,
+                      bounds.width,
+                      bounds.height,
+                      (selectedElements || []).map((e: any) => e.id)
+                    );
+                    const adjDx = snapped.x - bounds.x;
+                    const adjDy = snapped.y - bounds.y;
+                    moveSelectedElements(adjDx, adjDy);
+                  }}
+                  onResizeStart={(origin, _handle) => {
+                    // Capture stable origin bounds at resize start
+                    multiResizeOriginRef.current = origin;
+                    // Capture stable per-element snapshots (absolute coords, sizes, font sizes, parent offsets)
+                    const snapshot: Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }> = {};
+                    for (const el of selectedElements) {
+                      const rp = getPropertiesForDevice(el, selectedDevice);
+                      const relX = Number(rp.x) || 0;
+                      const relY = Number(rp.y) || 0;
+                      const ew = Number(rp.width) || 0;
+                      const eh = Number(rp.height) || 0;
+                      const isText = (el as any)?.type === 'text';
+                      const parseFont = (v: any, fb: number) => {
+                        if (v == null) return fb;
+                        if (typeof v === 'number') return v;
+                        const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
+                        return m ? parseFloat(m[1]) : fb;
+                      };
+                      const fontSize = isText ? parseFont((rp as any).fontSize ?? (el as any).fontSize ?? (el as any).style?.fontSize, 16) : undefined;
+                      const parentId = (el as any)?.parentGroupId as string | undefined;
+                      let parentAbsX = 0, parentAbsY = 0;
+                      if (parentId) {
+                        const pp = devicePropsById.get(parentId);
+                        if (pp) {
+                          parentAbsX = Number(pp.x) || 0;
+                          parentAbsY = Number(pp.y) || 0;
+                        }
+                      }
+                      const absX = relX + parentAbsX;
+                      const absY = relY + parentAbsY;
+                      snapshot[el.id] = { absX, absY, width: ew, height: eh, fontSize, parentAbsX, parentAbsY };
+                    }
+                    multiResizeElementsSnapshotRef.current = snapshot;
+                  }}
+                  onResize={(nb, handle) => {
+                    const ob = multiResizeOriginRef.current || bounds;
+                    resizeSelectedElements(ob, nb, handle, selectedElements, multiResizeElementsSnapshotRef.current);
+                  }}
+                  onResizeEnd={() => {
+                    multiResizeOriginRef.current = null;
+                    multiResizeElementsSnapshotRef.current = {};
+                  }}
+                  onDoubleClick={() => {
+                    // Collapse multi-selection on double-click
+                    onSelectedElementsChange?.([]);
+                  }}
+                />
+              );
+            })()}
 
             </div>
           </div>
@@ -1042,16 +1643,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               // Calculer les bounds du groupe à partir des positions absolues de ses éléments
               const groupElements = elements.filter(el => selectedGroup.groupChildren?.includes(el.id));
               if (groupElements.length > 0) {
-                // Utiliser les positions absolues pour calculer les bounds du groupe
-                const elementsWithAbsolutePos = groupElements.map(el => {
-                  const absPos = calculateAbsolutePosition(el);
-                  return { ...el, x: absPos.x, y: absPos.y };
-                });
-                
-                const minX = Math.min(...elementsWithAbsolutePos.map(el => el.x));
-                const minY = Math.min(...elementsWithAbsolutePos.map(el => el.y));
-                const maxX = Math.max(...elementsWithAbsolutePos.map(el => el.x + (el.width || 0)));
-                const maxY = Math.max(...elementsWithAbsolutePos.map(el => el.y + (el.height || 0)));
+                // Utiliser uniquement les mesures DOM pour une délimitation exacte; différer si manquantes
+                const measuredGroup = groupElements.filter(el => !!measuredBounds[el.id]);
+                if (measuredGroup.length < groupElements.length) return null;
+                const elementsForBounds = measuredGroup.map(el => measuredBounds[el.id]);
+
+                const minX = Math.min(...elementsForBounds.map(el => el.x));
+                const minY = Math.min(...elementsForBounds.map(el => el.y));
+                const maxX = Math.max(...elementsForBounds.map(el => el.x + el.width));
+                const maxY = Math.max(...elementsForBounds.map(el => el.y + el.height));
                 
                 const groupBounds = {
                   x: minX,
@@ -1063,8 +1663,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 console.log('🎯 Group bounds calculated:', {
                   groupId: selectedGroup.id,
                   groupElements: groupElements.length,
-                  bounds: groupBounds,
-                  elementsPositions: elementsWithAbsolutePos.map(el => ({ id: el.id, x: el.x, y: el.y }))
+                  bounds: groupBounds
                 });
                 
                 return (
@@ -1072,18 +1671,66 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     key={selectedGroup.id}
                     groupId={selectedGroup.id}
                     bounds={groupBounds}
-                    zoom={zoom}
+                    zoom={localZoom}
                     onMove={(deltaX, deltaY) => {
-                      console.log('🎯 Moving group:', selectedGroup.id, { deltaX, deltaY });
-                      onGroupMove?.(selectedGroup.id, deltaX, deltaY);
+                      // Snap the group frame move and convert back to adjusted delta
+                      const snapped = applySnapping(
+                        groupBounds.x + deltaX,
+                        groupBounds.y + deltaY,
+                        groupBounds.width,
+                        groupBounds.height,
+                        groupElements.map(el => el.id)
+                      );
+                      const adjDx = snapped.x - groupBounds.x;
+                      const adjDy = snapped.y - groupBounds.y;
+                      onGroupMove?.(selectedGroup.id, adjDx, adjDy);
                     }}
-                    onResize={(newBounds) => {
-                      console.log('🎯 Resizing group:', selectedGroup.id, newBounds);
+                    onResizeStart={(origin, _handle) => {
+                      // Keep stable group origin during the whole interaction
+                      groupResizeOriginRef.current = origin;
+                      // Snapshot current group children
+                      const snapshot: Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }>= {};
+                      for (const el of groupElements) {
+                        const rp = getPropertiesForDevice(el, selectedDevice);
+                        const relX = Number(rp.x) || 0;
+                        const relY = Number(rp.y) || 0;
+                        const ew = Number(rp.width) || 0;
+                        const eh = Number(rp.height) || 0;
+                        const isText = (el as any)?.type === 'text';
+                        const parseFont = (v: any, fb: number) => {
+                          if (v == null) return fb;
+                          if (typeof v === 'number') return v;
+                          const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
+                          return m ? parseFloat(m[1]) : fb;
+                        };
+                        const fontSize = isText ? parseFont((rp as any).fontSize ?? (el as any).fontSize ?? (el as any).style?.fontSize, 16) : undefined;
+                        const parentId = (el as any)?.parentGroupId as string | undefined;
+                        let parentAbsX = 0, parentAbsY = 0;
+                        if (parentId) {
+                          const pp = devicePropsById.get(parentId);
+                          if (pp) {
+                            parentAbsX = Number(pp.x) || 0;
+                            parentAbsY = Number(pp.y) || 0;
+                          }
+                        }
+                        const absX = relX + parentAbsX;
+                        const absY = relY + parentAbsY;
+                        snapshot[el.id] = { absX, absY, width: ew, height: eh, fontSize, parentAbsX, parentAbsY };
+                      }
+                      groupResizeElementsSnapshotRef.current = snapshot;
+                    }}
+                    onResize={(newBounds, handle) => {
+                      // Apply per-element anchor-based resize using snapshots
+                      const ob = groupResizeOriginRef.current || groupBounds;
+                      resizeSelectedElements(ob, newBounds, handle, groupElements, groupResizeElementsSnapshotRef.current);
+                      // External sync callback
                       onGroupResize?.(selectedGroup.id, newBounds);
                     }}
+                    onResizeEnd={() => {
+                      groupResizeOriginRef.current = null;
+                      groupResizeElementsSnapshotRef.current = {};
+                    }}
                     onDoubleClick={() => {
-                      console.log('🎯 Double-click on group - entering edit mode:', selectedGroup.id);
-                      // Passer en mode édition individuelle des éléments du groupe
                       onSelectedGroupChange?.(null);
                     }}
                   />

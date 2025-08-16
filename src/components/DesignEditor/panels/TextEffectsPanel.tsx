@@ -1140,6 +1140,22 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     }
   };
 
+  // Clear any applied advancedStyle/customCSS on the selected text element
+  const clearEffects = () => {
+    setSelectedEffect('none');
+    if (selectedElement && onElementUpdate) {
+      onElementUpdate({ customCSS: undefined, advancedStyle: undefined });
+    } else {
+      const selectedTextElement = document.querySelector('[data-selected="true"][data-type="text"]');
+      if (selectedTextElement) {
+        const updateEvent = new CustomEvent('applyTextEffect', {
+          detail: { customCSS: undefined, advancedStyle: undefined }
+        });
+        window.dispatchEvent(updateEvent);
+      }
+    }
+  };
+
   return (
     <div className="h-full bg-white flex flex-col">
 
@@ -1155,6 +1171,15 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Clear Effects Quick Action */}
+        <div className="flex items-center justify-end">
+          <button
+            onClick={clearEffects}
+            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Effacer les effets
+          </button>
+        </div>
         {/* Style Section */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Style</h4>

@@ -200,18 +200,14 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
     onElementsChange(updatedElements);
   }, [elements, onElementsChange]);
 
-  // Redimensionner un groupe
+  // Redimensionner un groupe (mettre à jour UNIQUEMENT le cadre du groupe)
+  // Les enfants sont redimensionnés proportionnellement par DesignCanvas.resizeSelectedElements()
   const resizeGroup = useCallback((groupId: string, newBounds: GroupBounds) => {
     const group = elements.find(el => el.id === groupId && el.isGroup);
     if (!group || !group.groupChildren) return;
 
-    const currentBounds = calculateGroupBounds(group.groupChildren);
-    const scaleX = newBounds.width / currentBounds.width;
-    const scaleY = newBounds.height / currentBounds.height;
-
     const updatedElements = elements.map(element => {
       if (element.id === groupId) {
-        // Mettre à jour le groupe
         return {
           ...element,
           x: newBounds.x,
@@ -219,25 +215,13 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
           width: newBounds.width,
           height: newBounds.height
         };
-      } else if (group.groupChildren?.includes(element.id)) {
-        // Redimensionner et repositionner les éléments du groupe
-        const relativeX = element.x - currentBounds.x;
-        const relativeY = element.y - currentBounds.y;
-        
-        return {
-          ...element,
-          x: newBounds.x + (relativeX * scaleX),
-          y: newBounds.y + (relativeY * scaleY),
-          width: element.width ? element.width * scaleX : element.width,
-          height: element.height ? element.height * scaleY : element.height,
-          fontSize: element.fontSize ? element.fontSize * Math.min(scaleX, scaleY) : element.fontSize
-        };
       }
+      // Ne pas toucher aux enfants ici pour éviter un double-redimensionnement
       return element;
     });
 
     onElementsChange(updatedElements);
-  }, [elements, calculateGroupBounds, onElementsChange]);
+  }, [elements, onElementsChange]);
 
   // Obtenir tous les groupes
   const groups = useMemo(() => {

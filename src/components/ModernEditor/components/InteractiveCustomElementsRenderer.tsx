@@ -184,7 +184,6 @@ const FluidTextElement: React.FC<{
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!isEditing) {
-      e.preventDefault();
       // Sélectionner seulement si pas déjà sélectionné
       if (!isSelected) {
         onElementSelect(customText.id.toString());
@@ -359,7 +358,6 @@ const FluidImageElement: React.FC<{
   }
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
     // Sélectionner seulement si pas déjà sélectionné
     if (!isSelected) {
       onElementSelect(customImage.id.toString());

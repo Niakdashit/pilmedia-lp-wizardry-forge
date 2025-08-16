@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef } from 'react';
+import { RotateCw } from 'lucide-react';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';
@@ -22,6 +23,12 @@ export interface CanvasElementProps {
   onAddElement?: (element: any) => void;
   elements?: any[];
   readOnly?: boolean;
+  onMeasureBounds?: (id: string, rect: { x: number; y: number; width: number; height: number }) => void;
+  // Additional selection context passed by DesignCanvas
+  isMultiSelecting?: boolean;
+  isGroupSelecting?: boolean;
+  // Currently active group ID (if any). When set, children of this group are locked from direct manipulation
+  activeGroupId?: string | null;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -33,7 +40,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   onDelete,
   containerRef,
   onAddElement,
-  readOnly = false
+  readOnly = false,
+  onMeasureBounds,
+  isMultiSelecting,
+  isGroupSelecting,
+  activeGroupId
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -42,18 +53,63 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       selectedDevice,
       containerRef
     });
-  
+
   // Get device-specific properties with proper typing - memoized
   const deviceProps = useMemo(
     () => getPropertiesForDevice(element, selectedDevice),
     [element, selectedDevice, getPropertiesForDevice]
   );
 
+  // Report current bounds (canvas-space) to parent for accurate group/marquee calculations
+  const reportBounds = useCallback((override?: { x?: number; y?: number; width?: number; height?: number }) => {
+    if (!onMeasureBounds) return;
+    const ref = elementRef.current;
+    if (!ref) return;
+    const width = override?.width ?? ref.offsetWidth;
+    const height = override?.height ?? ref.offsetHeight;
+    const x = override?.x ?? (Number(deviceProps.x) || 0);
+    const y = override?.y ?? (Number(deviceProps.y) || 0);
+    if (width && height) {
+      onMeasureBounds(element.id, { x, y, width, height });
+    }
+  }, [onMeasureBounds, element.id, deviceProps.x, deviceProps.y]);
+
+  React.useEffect(() => {
+    // Initial and reactive measurement
+    reportBounds();
+    if (!elementRef.current) return;
+    const ro = new ResizeObserver(() => reportBounds());
+    ro.observe(elementRef.current);
+    const onWinResize = () => reportBounds();
+    window.addEventListener('resize', onWinResize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', onWinResize);
+    };
+  // Re-measure when content/layout-affecting props change
+  }, [reportBounds, element.content, element.width, element.height, element.fontSize, element.style, deviceProps.x, deviceProps.y]);
+  
+
   const [isEditing, setIsEditing] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [isResizing, setIsResizing] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLDivElement>(null);
   const dragSystemRef = useRef<ReturnType<typeof createPreciseDrag> | null>(null);
+  const [isRotating, setIsRotating] = React.useState(false);
+  const [tempRotation, setTempRotation] = React.useState<number | null>(null);
+
+  // Determine if the element is inside a designated zone/container (e.g., group)
+  // We check common fields used for nesting/containerization.
+  const isInZone = Boolean((element as any)?.parentGroupId || (element as any)?.containerId || (element as any)?.zoneId);
+
+  // Centralized flag to hide controls based on context
+  const shouldHideControls = Boolean(isInZone || isMultiSelecting || isGroupSelecting);
+
+  // Normalize angle to [-180, 180] inclusive (keep -180 and 180 as is)
+  const normalize180 = useCallback((deg: number) => {
+    return ((deg + 180) % 360 + 360) % 360 - 180;
+  }, []);
 
   // Smart snapping integration for alignment guides and snapping during drag
   const { applySnapping } = useSmartSnapping({
@@ -70,6 +126,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   // Professional drag system (Excalidraw/Canva precision)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (readOnly) return; // Disable drag & selection in read-only mode
+    // If a group is selected and this element is a child of that group, lock interactions
+    if (activeGroupId && (element as any)?.parentGroupId === activeGroupId) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     const isMultiSelect = e.ctrlKey || e.metaKey;
     onSelect(element.id, isMultiSelect);
     
@@ -77,17 +139,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const canvasEl = containerRef?.current;
     if (!el || !canvasEl) return;
 
-    // CAPTURE IMMEDIATE: Position réelle de l'élément AVANT tout calcul
-    const canvasRect = canvasEl.getBoundingClientRect();
-    const elementRect = el.getBoundingClientRect();
-    const currentRealX = elementRect.left - canvasRect.left;
-    const currentRealY = elementRect.top - canvasRect.top;
-
-    // Convertir la position DOM (viewport px) en unités canvas en tenant compte du zoom
-    const initialViewport = getCanvasViewport(canvasEl);
-    const z = initialViewport.zoom || 1;
-    const currentCanvasX = currentRealX / z;
-    const currentCanvasY = currentRealY / z;
+    // UTILISER LES COORDONNÉES MODÈLE: évite le drift avec rotation et zoom
+    // Les paramètres de translation CSS utilisent x/y en unités canvas.
+    const currentCanvasX = Number(deviceProps.x) || 0;
+    const currentCanvasY = Number(deviceProps.y) || 0;
 
     // Créer le système de drag professionnel
     const getViewport = () => getCanvasViewport(canvasEl);
@@ -102,72 +157,91 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     // Variable pour tracker la dernière position pendant le drag
     let lastDragPosition = { x: currentCanvasX, y: currentCanvasY };
     
+    // Cache metrics at drag start to avoid repeated layout reads
+    const canvasElNow = containerRef?.current as HTMLElement | null;
+    const initialViewport = canvasElNow ? getCanvasViewport(canvasElNow) : ({ zoom: 1 } as any);
+    const zNow = initialViewport?.zoom || 1;
+    const rectNow = canvasElNow?.getBoundingClientRect();
+    const canvasW = rectNow ? rectNow.width / zNow : Number.POSITIVE_INFINITY;
+    const canvasH = rectNow ? rectNow.height / zNow : Number.POSITIVE_INFINITY;
+    const refEl = elementRef.current;
+    const layoutW = refEl ? refEl.offsetWidth : undefined;
+    const layoutH = refEl ? refEl.offsetHeight : undefined;
+    const elW = (deviceProps.width != null) ? Number(deviceProps.width) : (layoutW ?? 100);
+    const elH = (deviceProps.height != null) ? Number(deviceProps.height) : (layoutH ?? 30);
+
+    // Throttle updates to once per frame
+    let dragRafId: number | null = null;
+    let pendingXY: { x: number; y: number } | null = null;
+
     const setItemPos = (x: number, y: number) => {
-      // Calculer/mettre à jour le zoom et dimensions en unités canvas
-      const canvasElNow = containerRef?.current as HTMLElement | null;
-      const viewport = canvasElNow ? getCanvasViewport(canvasElNow) : { zoom: 1 } as any;
-      const zNow = viewport?.zoom || 1;
-      // Mesurer la taille réelle pour les textes afin d'obtenir un centre précis
-      const isText = element.type === 'text';
-      // IMPORTANT: getBoundingClientRect() retourne des dimensions en px viewport (affectées par le scale)
-      // Pour obtenir des unités canvas cohérentes, on divise par le zoom courant.
-      const rectNow = elementRef.current ? elementRef.current.getBoundingClientRect() : null;
-      const measuredW = rectNow ? (rectNow.width / zNow) : undefined;
-      const measuredH = rectNow ? (rectNow.height / zNow) : undefined;
-      const elW = isText
-        ? (measuredW ?? (deviceProps.width != null ? Number(deviceProps.width) : 100))
-        : ((deviceProps.width != null) ? Number(deviceProps.width) : (measuredW ?? 100));
-      const elH = isText
-        ? (measuredH ?? (deviceProps.height != null ? Number(deviceProps.height) : 30))
-        : ((deviceProps.height != null) ? Number(deviceProps.height) : (measuredH ?? 30));
+      pendingXY = { x, y };
+      if (dragRafId != null) return;
+      dragRafId = requestAnimationFrame(() => {
+        dragRafId = null;
+        if (!pendingXY) return;
+        const { x, y } = pendingXY;
+        pendingXY = null;
 
-      // Appliquer le smart snapping (retourne positions en unités canvas)
-      const snapped = applySnapping(x, y, elW, elH, String(element.id));
-      const sx = snapped.x;
-      const sy = snapped.y;
+        // Appliquer le smart snapping (retourne positions en unités canvas)
+        const snapped = applySnapping(x, y, elW, elH, String(element.id));
+        const sx = snapped.x;
+        const sy = snapped.y;
 
-      // Sauvegarder la position pour la fin du drag
-      lastDragPosition = { x: sx, y: sy };
+        // Clamp aux bornes du canvas (en unités canvas)
+        const maxX = Math.max(0, canvasW - elW);
+        const maxY = Math.max(0, canvasH - elH);
+        const cx = Math.min(Math.max(sx, 0), maxX);
+        const cy = Math.min(Math.max(sy, 0), maxY);
 
-      // Mise à jour immédiate du transform avec la position "snappée"
-      if (elementRef.current) {
-        elementRef.current.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
-      }
+        // Sauvegarder la position pour la fin du drag
+        lastDragPosition = { x: cx, y: cy };
 
-      // Dispatch visual alignment guides event avec payload complet
-      if (canvasElNow) {
-        const rect = canvasElNow.getBoundingClientRect();
-        const canvasCenterX = (rect.width / zNow) / 2;
-        const canvasCenterY = (rect.height / zNow) / 2;
-        const elementCenterX = sx + elW / 2;
-        const elementCenterY = sy + elH / 2;
+        // Mise à jour immédiate du transform avec la position clampée
+        if (elementRef.current) {
+          const angleRaw = typeof element.rotation === 'number' ? element.rotation : 0;
+          const angle = normalize180(angleRaw);
+          elementRef.current.style.transform = `translate3d(${cx}px, ${cy}px, 0) rotate(${angle}deg)`;
+        }
 
-        const alignmentEvent = new CustomEvent('showAlignmentGuides', {
-          detail: {
-            elementId: element.id,
-            x: sx,
-            y: sy,
-            width: elW,
-            height: elH,
-            elementCenterX,
-            elementCenterY,
-            canvasCenterX,
-            canvasCenterY,
-            isDragging: true
-          }
-        });
-        document.dispatchEvent(alignmentEvent);
-      }
+        // Report live bounds during drag pour un cadre de groupe précis (throttled)
+        reportBounds({ x: cx, y: cy, width: elW, height: elH });
 
-      // Marquer comme en cours de drag
-      if (!isDragging) {
-        setIsDragging(true);
-      }
+        // Dispatch visual alignment guides event avec payload complet (throttled)
+        if (canvasElNow && rectNow) {
+          const canvasCenterX = (rectNow.width / zNow) / 2;
+          const canvasCenterY = (rectNow.height / zNow) / 2;
+          const elementCenterX = cx + elW / 2;
+          const elementCenterY = cy + elH / 2;
+
+          const alignmentEvent = new CustomEvent('showAlignmentGuides', {
+            detail: {
+              elementId: element.id,
+              x: cx,
+              y: cy,
+              width: elW,
+              height: elH,
+              elementCenterX,
+              elementCenterY,
+              canvasCenterX,
+              canvasCenterY,
+              isDragging: true
+            }
+          });
+          document.dispatchEvent(alignmentEvent);
+        }
+
+        // Marquer comme en cours de drag
+        if (!isDragging) {
+          setIsDragging(true);
+        }
+      });
     };
 
-    // Initialiser le drag system avec seuil de 5px
-    // Seuil de 5px en viewport => converti en unités canvas = 5 / zoom
-    const thresholdCanvas = 5 / (z || 1);
+    // Initialiser le drag system avec seuil de 5px (converti en unités canvas dynamiquement)
+    const initialViewportForThreshold = getCanvasViewport(canvasEl);
+    const z = initialViewportForThreshold.zoom || 1;
+    const thresholdCanvas = 5 / z;
     dragSystemRef.current = createPreciseDrag(
       getViewport,
       getItem,
@@ -210,7 +284,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     // Démarrer le drag professionnel
     enhancedOnPointerDown(e.nativeEvent, el);
-  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping]);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping, activeGroupId, element]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
@@ -328,20 +402,33 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const handleResizePointerDown = useCallback((e: React.PointerEvent, direction: string) => {
     e.preventDefault();
     e.stopPropagation();
+    // Block resizing when this element belongs to the active (selected) group
+    if (activeGroupId && (element as any)?.parentGroupId === activeGroupId) {
+      return;
+    }
 
     // 📱 Détection du type d'interaction pour le redimensionnement
     const isTouchResize = touchOptimization.isTouchInteraction(e);
+    setIsResizing(true);
     
     const startX = e.clientX;
     const startY = e.clientY;
-    const startWidth = element.width || 100;
-    const startHeight = element.height || 100;
-    const startPosX = element.x || 0;
-    const startPosY = element.y || 0;
+    // Mesurer les dimensions de layout pour une base fiable (surtout pour le texte)
+    const refEl = elementRef.current;
+    const layoutW = refEl ? refEl.offsetWidth : undefined;
+    const layoutH = refEl ? refEl.offsetHeight : undefined;
+    const startWidth = (element.width != null) ? Number(element.width) : (layoutW ?? 100);
+    const startHeight = (element.height != null) ? Number(element.height) : (layoutH ?? 100);
+    // Utiliser deviceProps.x/y si disponibles pour cohérence avec le rendu
+    const startPosX = (deviceProps.x != null ? Number(deviceProps.x) : (element.x || 0));
+    const startPosY = (deviceProps.y != null ? Number(deviceProps.y) : (element.y || 0));
     const startFontSize = element.fontSize || element.style?.fontSize || 16;
     
     // Detect if it's a corner handle (for proportional scaling with font size change)
     const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
+
+    // Stage updates for text to avoid jittery re-renders during resize
+    let pendingUpdate: any = null;
 
     const handleResizePointerMove = (e: PointerEvent) => {
       requestAnimationFrame(() => {
@@ -358,6 +445,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         // 🔍 Convertir les deltas viewport -> unités canvas en tenant compte du zoom actuel
         const canvasEl = containerRef?.current as HTMLElement | null;
         const z = canvasEl ? (getCanvasViewport(canvasEl).zoom || 1) : 1;
+        const rectNow = canvasEl?.getBoundingClientRect();
+        const canvasW = rectNow ? rectNow.width / z : Number.POSITIVE_INFINITY;
+        const canvasH = rectNow ? rectNow.height / z : Number.POSITIVE_INFINITY;
         const deltaX = adjustedDeltas.deltaX / z;
         const deltaY = adjustedDeltas.deltaY / z;
 
@@ -366,29 +456,52 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         let newX = startPosX;
         let newY = startPosY;
         let newFontSize = startFontSize;
+        const startRight = startPosX + startWidth;
 
         if (isCornerHandle && element.type === 'text') {
-          // For corner handles on text: scale font size proportionally
-          let scaleFactor = 1;
-          
+          // Corner handles on text: uniform scale from width/height ratios, anchor opposite edges
+          let targetW = startWidth;
+          let targetH = startHeight;
           switch (direction) {
-            case 'se': scaleFactor = 1 + (deltaX + deltaY) / 150; break;
-            case 'sw': scaleFactor = 1 + (-deltaX + deltaY) / 150; break;
-            case 'ne': scaleFactor = 1 + (deltaX - deltaY) / 150; break;
-            case 'nw': scaleFactor = 1 + (-deltaX - deltaY) / 150; break;
+            case 'se': targetW = startWidth + deltaX; targetH = startHeight + deltaY; break;
+            case 'sw': targetW = startWidth - deltaX; targetH = startHeight + deltaY; break;
+            case 'ne': targetW = startWidth + deltaX; targetH = startHeight - deltaY; break;
+            case 'nw': targetW = startWidth - deltaX; targetH = startHeight - deltaY; break;
           }
-          
-          scaleFactor = Math.max(0.2, scaleFactor);
-          newFontSize = Math.max(8, Math.round(startFontSize * scaleFactor));
-          
-          // Keep text box dimensions tight to content (remove width/height to make it auto)
-          onUpdate(element.id, {
-            fontSize: newFontSize,
+          targetW = Math.max(20, targetW);
+          targetH = Math.max(20, targetH);
+          // Use a single scale to keep proportions stable (reduce jitter)
+          const scaleX = targetW / startWidth;
+          const scaleY = targetH / startHeight;
+          const scale = Math.max(0.2, Math.min(scaleX, scaleY));
+          newFontSize = Math.max(8, startFontSize * scale);
+
+          // Anchor opposite edge horizontally when dragging left corners; otherwise keep X
+          let adjX = (direction === 'sw' || direction === 'nw')
+            ? (startRight - Math.max(20, targetW))
+            : startPosX;
+
+          // Clamp X to canvas bounds based on target width
+          const maxX = Math.max(0, canvasW - Math.max(20, targetW));
+          adjX = Math.min(Math.max(adjX, 0), maxX);
+
+          if (elementRef.current) {
+            const angleRaw = typeof element.rotation === 'number' ? element.rotation : 0;
+            const angle = normalize180(angleRaw);
+            elementRef.current.style.transform = `translate3d(${adjX}px, ${startPosY}px, 0) rotate(${angle}deg)`;
+          }
+
+          // Stage update only (commit at pointerup)
+          pendingUpdate = {
+            fontSize: Math.round(newFontSize),
             width: undefined,
             height: undefined,
+            x: Math.round(adjX * 100) / 100,
+            y: Math.round(startPosY * 100) / 100,
             isCornerScaled: true,
-          });
-        } else {
+          };
+          return;
+          }
           // For edge handles or non-text elements: change dimensions only
           switch (direction) {
             case 'n': newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
@@ -401,6 +514,22 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             case 'nw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight - deltaY); newX = startPosX + (startWidth - newWidth); newY = startPosY + (startHeight - newHeight); break;
           }
 
+          // Clamp dimensions/position to stay within canvas bounds
+          if (newX < 0) {
+            newWidth = Math.max(20, newWidth + newX);
+            newX = 0;
+          }
+          if (newY < 0) {
+            newHeight = Math.max(20, newHeight + newY);
+            newY = 0;
+          }
+          if (newX + newWidth > canvasW) {
+            newWidth = Math.max(20, canvasW - newX);
+          }
+          if (newY + newHeight > canvasH) {
+            newHeight = Math.max(20, canvasH - newY);
+          }
+
           onUpdate(element.id, {
             width: newWidth,
             height: newHeight,
@@ -408,18 +537,23 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             y: newY,
             isCornerScaled: false,
           });
-        }
       });
     };
 
     const handleResizePointerUp = () => {
       document.removeEventListener('pointermove', handleResizePointerMove);
       document.removeEventListener('pointerup', handleResizePointerUp);
+
+      // Commit any pending text update
+      if (pendingUpdate) {
+        onUpdate(element.id, pendingUpdate);
+      }
+      setIsResizing(false);
     };
 
     document.addEventListener('pointermove', handleResizePointerMove);
     document.addEventListener('pointerup', handleResizePointerUp);
-  }, [element.id, onUpdate, element.width, element.height, element.x, element.y, element.fontSize, element.style, touchOptimization]);
+  }, [element.id, onUpdate, element.width, element.height, element.x, element.y, element.fontSize, element.style, touchOptimization, deviceProps.x, deviceProps.y, activeGroupId, element]);
 
   // Clipboard Handlers
   const handleCopy = useCallback((elementToCopy: any) => {
@@ -455,6 +589,98 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   }, [onAddElement, getPropertiesForDevice, selectedDevice]);
 
   // --- Remove any previous/old handleCopy, handlePaste, handleDuplicate below this line ---
+
+  // Drag-to-rotate handler (Shift = snap to 15°)
+  const handleRotatePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!elementRef.current) return;
+    // Block rotation when this element belongs to the active (selected) group
+    if (activeGroupId && (element as any)?.parentGroupId === activeGroupId) {
+      return;
+    }
+
+    setIsRotating(true);
+
+    const rect = elementRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const startAngle = (Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180) / Math.PI;
+    const initialRotation = normalize180(typeof element.rotation === 'number' ? element.rotation : 0);
+
+    const onMove = (ev: PointerEvent) => {
+      const curr = (Math.atan2(ev.clientY - centerY, ev.clientX - centerX) * 180) / Math.PI;
+      let next = initialRotation + (curr - startAngle);
+      if (ev.shiftKey) {
+        next = Math.round(next / 15) * 15;
+      }
+      next = normalize180(next);
+      if (elementRef.current) {
+        const baseX = deviceProps.x || 0;
+        const baseY = deviceProps.y || 0;
+        elementRef.current.style.transform = `translate3d(${baseX}px, ${baseY}px, 0) rotate(${next}deg)`;
+      }
+      setTempRotation(next);
+
+      // Show alignment guides while rotating (use element center vs canvas center in canvas units)
+      const canvasElNow = containerRef?.current as HTMLElement | null;
+      if (canvasElNow) {
+        const viewport = getCanvasViewport(canvasElNow);
+        const zNow = viewport?.zoom || 1;
+        const rectCanvas = canvasElNow.getBoundingClientRect();
+
+        const refEl = elementRef.current;
+        const layoutW = refEl ? refEl.offsetWidth : undefined;
+        const layoutH = refEl ? refEl.offsetHeight : undefined;
+        const elW = (deviceProps.width != null) ? Number(deviceProps.width) : (layoutW ?? 100);
+        const elH = (deviceProps.height != null) ? Number(deviceProps.height) : (layoutH ?? 30);
+
+        const canvasCenterX = (rectCanvas.width / zNow) / 2;
+        const canvasCenterY = (rectCanvas.height / zNow) / 2;
+        const elementCenterX = (deviceProps.x || 0) + elW / 2;
+        const elementCenterY = (deviceProps.y || 0) + elH / 2;
+
+        const alignmentEvent = new CustomEvent('showAlignmentGuides', {
+          detail: {
+            elementId: element.id,
+            x: deviceProps.x || 0,
+            y: deviceProps.y || 0,
+            width: elW,
+            height: elH,
+            elementCenterX,
+            elementCenterY,
+            canvasCenterX,
+            canvasCenterY,
+            isDragging: true
+          }
+        });
+        document.dispatchEvent(alignmentEvent);
+      }
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+
+      const curr = (Math.atan2(ev.clientY - centerY, ev.clientX - centerX) * 180) / Math.PI;
+      let finalRotation = initialRotation + (curr - startAngle);
+      if (ev.shiftKey) {
+        finalRotation = Math.round(finalRotation / 15) * 15;
+      }
+      finalRotation = normalize180(finalRotation);
+      onUpdate(element.id, { rotation: Math.round(finalRotation * 100) / 100 });
+      setIsRotating(false);
+      setTempRotation(null);
+
+      // Hide alignment guides at the end of rotation
+      const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+      document.dispatchEvent(hideGuidesEvent);
+    };
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }, [element.id, element.rotation, onUpdate, deviceProps.x, deviceProps.y, normalize180, activeGroupId, element]);
 
   // Memoized element rendering for performance
   const renderElement = useMemo(() => {
@@ -623,12 +849,19 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   return (
     <div
       ref={elementRef}
-      className={`absolute ${isSelected && !readOnly ? 'ring-2 ring-[hsl(var(--primary))]' : ''}`}
+      className={`absolute ${
+        isSelected && !readOnly
+          ? (shouldHideControls
+              ? 'ring-2 ring-[hsl(var(--primary))] ring-opacity-60' // subtle ring when controls hidden
+              : 'ring-2 ring-[hsl(var(--primary))]')
+          : ''
+      }`}
       style={{
-        transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0)`,
+        transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0) rotate(${typeof element.rotation === 'number' ? normalize180(element.rotation) : 0}deg)`,
+        transformOrigin: 'center center',
         opacity: isDragging ? 0.8 : 1,
         zIndex: element.zIndex || 1,
-        transition: isDragging ? 'none' : 'transform 0.1s linear',
+        transition: (isDragging || isRotating || isResizing) ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
         cursor: readOnly ? 'default' : (isDragging ? 'grabbing' : 'grab'),
         pointerEvents: readOnly ? 'none' : 'auto',
@@ -639,7 +872,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       {renderElement}
       
       {/* Selection handles - masqués pendant le drag */}
-      {isSelected && !isDragging && !readOnly && (
+      {isSelected && !isDragging && !isResizing && !readOnly && !shouldHideControls && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 
@@ -687,6 +920,25 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           >
             ×
           </button>
+
+          {/* Rotate handle button */}
+          <button
+            onPointerDown={handleRotatePointerDown}
+            className="absolute -top-8 left-1/2 -translate-x-1/2 w-6 h-6 bg-white text-gray-800 border border-gray-300 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50"
+            style={{ zIndex: 1001 }}
+            aria-label="Rotate"
+            title="Rotate (hold Shift to snap)"
+          >
+            <RotateCw className="w-3 h-3" />
+          </button>
+          {isRotating && (
+            <div
+              className="absolute -top-5 left-1/2 -translate-x-1/2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded shadow-lg"
+              style={{ zIndex: 1002 }}
+            >
+              {Math.round((tempRotation ?? (typeof element.rotation === 'number' ? normalize180(element.rotation) : 0)))}°
+            </div>
+          )}
           
           {/* Context Menu for Text Elements */}
           {element.type === 'text' && (

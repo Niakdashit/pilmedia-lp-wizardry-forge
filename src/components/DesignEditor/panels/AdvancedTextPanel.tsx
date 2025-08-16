@@ -46,6 +46,17 @@ const AdvancedTextPanel: React.FC<AdvancedTextPanelProps> = ({ onAddElement }) =
     onAddElement(newElement);
   };
 
+  const clearEffects = () => {
+    // Dispatch the same event used by TextEffectsPanel when no direct callback is available
+    const selectedTextElement = document.querySelector('[data-selected="true"][data-type="text"]');
+    if (selectedTextElement) {
+      const updateEvent = new CustomEvent('applyTextEffect', {
+        detail: { customCSS: undefined, advancedStyle: undefined }
+      });
+      window.dispatchEvent(updateEvent);
+    }
+  };
+
   const stylesForCategory = getStylesByCategory(selectedCategory);
   const fontsForCategory = specializedFonts[selectedCategory as keyof typeof specializedFonts] || specializedFonts.modern;
 
@@ -54,6 +65,16 @@ const AdvancedTextPanel: React.FC<AdvancedTextPanelProps> = ({ onAddElement }) =
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Styles Avancés</h3>
         <p className="text-sm text-muted-foreground">Effets de texte professionnels</p>
+      </div>
+
+      {/* Action to clear effects on selected text */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={clearEffects}
+          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+          Effacer les effets
+        </button>
       </div>
 
       {/* Sélecteur de polices spécialisées */}

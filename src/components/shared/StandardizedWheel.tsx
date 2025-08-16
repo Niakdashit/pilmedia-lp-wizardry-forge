@@ -79,7 +79,11 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     >
       <div 
         className={croppingStyles.wheelClass}
-        onClick={onClick}
+        onClick={(e) => {
+          // Empêcher la propagation afin d'éviter les sélections ou autres handlers globaux
+          e.stopPropagation();
+          if (onClick) onClick();
+        }}
       >
         <SmartWheel
           segments={segments}

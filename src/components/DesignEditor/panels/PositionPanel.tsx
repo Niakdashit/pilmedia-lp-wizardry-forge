@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ArrowUp, ArrowDown, Lock, RotateCw } from 'lucide-react';
 
 interface PositionPanelProps {
@@ -16,6 +16,11 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'organiser' | 'calques'>('organiser');
   const [isRatioLocked, setIsRatioLocked] = useState(true);
+
+  // Normalize angle to [-180, 180]
+  const normalize180 = useCallback((deg: number) => {
+    return ((deg + 180) % 360 + 360) % 360 - 180;
+  }, []);
 
   // Obtenir les dimensions RÉELLES du canvas de travail
   const getCanvasDimensions = () => {
@@ -421,12 +426,16 @@ const PositionPanel: React.FC<PositionPanelProps> = ({
                 <div className="flex items-center space-x-2">
                   <input
                     type="number"
-                    value={Math.round(selectedElement?.rotation || 0)}
-                    onChange={(e) => onElementUpdate && onElementUpdate({ rotation: parseInt(e.target.value) || 0 })}
+                    value={Math.round(normalize180(selectedElement?.rotation || 0))}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      const next = Number.isFinite(val) ? normalize180(val) : 0;
+                      onElementUpdate && onElementUpdate({ rotation: next });
+                    }}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-[#841b60] focus:ring-1 focus:ring-[#841b60] transition-colors"
                     placeholder="0"
-                    min="-360"
-                    max="360"
+                    min="-180"
+                    max="180"
                   />
                   <span className="text-xs text-gray-500 font-medium">°</span>
                 </div>

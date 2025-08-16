@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useEditorStore } from '@/stores/editorStore';
 
 interface SnapGuide {
@@ -58,75 +58,107 @@ export const useSmartSnapping = ({
   }, [campaign?.design?.customTexts, campaign?.design?.customImages]);
 
   // Calculate snap guides
-  // Helper: read current zoom from container's CSS transform
+  // Caches for zoom and grid computations
+  const zoomCacheRef = useRef<{ transform: string; zoom: number }>({ transform: '', zoom: 1 });
+  const gridCacheRef = useRef<{ width: number; height: number; gridSize: number; xs: number[]; ys: number[] }>({ width: 0, height: 0, gridSize: gridSize, xs: [], ys: [] });
+
+  // Helper: read current zoom from container's CSS transform (cached)
   const getContainerZoom = () => {
     if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return 1;
     try {
       const style = getComputedStyle(containerRef.current);
       const transform = style.transform || (style as any).webkitTransform || 'none';
-      if (!transform || transform === 'none') return 1;
-      if (transform.startsWith('matrix3d(')) {
+
+      // Use cached zoom if transform hasn't changed
+      if (transform === zoomCacheRef.current.transform) {
+        return zoomCacheRef.current.zoom;
+      }
+
+      let scale = 1;
+      if (!transform || transform === 'none') {
+        scale = 1;
+      } else if (transform.startsWith('matrix3d(')) {
         const parts = transform.slice(9, -1).split(',').map((v: string) => parseFloat(v.trim()));
         const m11 = parts[0], m12 = parts[1], m13 = parts[2];
-        const scaleX = Math.sqrt(m11 * m11 + m12 * m12 + m13 * m13) || 1;
-        return scaleX;
+        scale = Math.sqrt(m11 * m11 + m12 * m12 + m13 * m13) || 1;
       } else if (transform.startsWith('matrix(')) {
         const parts = transform.slice(7, -1).split(',').map((v: string) => parseFloat(v.trim()));
         const a = parts[0], b = parts[1];
-        const scaleX = Math.sqrt(a * a + b * b) || 1;
-        return scaleX;
+        scale = Math.sqrt(a * a + b * b) || 1;
       } else if (transform.startsWith('scale(')) {
         const s = parseFloat(transform.slice(6, -1));
-        return !Number.isNaN(s) && s > 0 ? s : 1;
+        scale = !Number.isNaN(s) && s > 0 ? s : 1;
       }
+
+      zoomCacheRef.current.transform = transform;
+      zoomCacheRef.current.zoom = scale;
+      return scale;
     } catch {
       // ignore
     }
     return 1;
   };
 
+  // Helper: compute container metrics once
+  const getContainerMetrics = () => {
+    if (!containerRef || typeof containerRef === 'function' || !containerRef.current) {
+      return { z: 1, containerWidth: 0, containerHeight: 0, tol: (snapTolerance ?? 3) };
+    }
+    const rect = containerRef.current.getBoundingClientRect();
+    const z = getContainerZoom();
+    const containerWidth = rect.width / z;
+    const containerHeight = rect.height / z;
+    const tol = (snapTolerance ?? 3) / z;
+    return { z, containerWidth, containerHeight, tol };
+  };
+
+  // Helper: cache grid lines for current container dimensions
+  const getGridLines = (containerWidth: number, containerHeight: number) => {
+    const cache = gridCacheRef.current;
+    if (cache.width === containerWidth && cache.height === containerHeight && cache.gridSize === gridSize) {
+      return cache;
+    }
+    const xs: number[] = [];
+    for (let x = 0; x <= containerWidth; x += gridSize) xs.push(x);
+    const ys: number[] = [];
+    for (let y = 0; y <= containerHeight; y += gridSize) ys.push(y);
+    gridCacheRef.current = { width: containerWidth, height: containerHeight, gridSize, xs, ys };
+    return gridCacheRef.current;
+  };
+
   const calculateSnapGuides = useCallback((
     draggedElement: { x: number; y: number; width: number; height: number },
-    excludeId?: string
+    excludeId?: string | string[],
+    metrics?: { z: number; containerWidth: number; containerHeight: number; tol: number }
   ): SnapGuide[] => {
     const guides: SnapGuide[] = [];
     
     if (!containerRef || typeof containerRef === 'function' || !containerRef.current) return guides;
     
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const z = getContainerZoom();
-    // Convertir la taille du conteneur en unités canvas
-    const containerWidth = containerRect.width / z;
-    const containerHeight = containerRect.height / z;
-    // Tolérance exprimée en px viewport -> convertir en unités canvas
-    const tol = (snapTolerance ?? 3) / z;
+    const m = metrics ?? getContainerMetrics();
+    const { z, containerWidth, containerHeight, tol } = m;
+    const excludeSet = new Set<string>(Array.isArray(excludeId) ? excludeId : excludeId ? [excludeId] : []);
 
     // Grid snapping – always active for a magnetic grid experience.
+    const { xs, ys } = getGridLines(containerWidth, containerHeight);
     // Vertical grid lines
-    for (let x = 0; x <= containerWidth; x += gridSize) {
+    for (let i = 0; i < xs.length; i++) {
+      const x = xs[i];
       if (Math.abs(draggedElement.x - x) <= tol) {
-        guides.push({
-          type: 'grid',
-          orientation: 'vertical',
-          position: x
-        });
+        guides.push({ type: 'grid', orientation: 'vertical', position: x });
       }
     }
-
     // Horizontal grid lines
-    for (let y = 0; y <= containerHeight; y += gridSize) {
+    for (let j = 0; j < ys.length; j++) {
+      const y = ys[j];
       if (Math.abs(draggedElement.y - y) <= tol) {
-        guides.push({
-          type: 'grid',
-          orientation: 'horizontal',
-          position: y
-        });
+        guides.push({ type: 'grid', orientation: 'horizontal', position: y });
       }
     }
 
     // Element snapping
     allElements.forEach(element => {
-      if (element.id === excludeId) return;
+      if (excludeSet.has(element.id)) return;
 
       const elementLeft = element.x;
       const elementRight = element.x + element.width;
@@ -210,11 +242,12 @@ export const useSmartSnapping = ({
     y: number,
     width: number = 100,
     height: number = 30,
-    excludeId?: string
+    excludeId?: string | string[]
   ) => {
-    const guides = calculateSnapGuides({ x, y, width, height }, excludeId);
-    const z = getContainerZoom();
-    const baseTol = (snapTolerance ?? 3) / z;
+    const metrics = getContainerMetrics();
+    const guides = calculateSnapGuides({ x, y, width, height }, excludeId, metrics);
+    const z = metrics.z;
+    const baseTol = metrics.tol;
     
     let snappedX = x;
     let snappedY = y;

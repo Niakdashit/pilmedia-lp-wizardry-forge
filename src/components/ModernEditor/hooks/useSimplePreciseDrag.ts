@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { getDeviceDimensions } from '../../../utils/deviceDimensions';
+import { useSmartSnapping } from './useSmartSnapping';
 
 interface SimpleDragOptions {
   elementRef: React.RefObject<HTMLDivElement>;
@@ -22,125 +23,168 @@ export const useSimplePreciseDrag = ({
   const dragStateRef = useRef<{
     offsetX: number;
     offsetY: number;
-    startX: number;
-    startY: number;
+    startClientX: number;
+    startClientY: number;
+    started: boolean;
+    elementLogicalW: number;
+    elementLogicalH: number;
   } | null>(null);
-  
+
+  const rafRef = useRef<number | null>(null);
+  const pendingPosRef = useRef<{ x: number; y: number } | null>(null);
   const deviceDims = getDeviceDimensions(previewDevice);
+  const { applySnapping } = useSmartSnapping({ containerRef });
+
+  const commitUpdate = useCallback((x: number, y: number, elW: number, elH: number) => {
+    // Clamp within logical device bounds
+    const maxX = Math.max(0, deviceDims.width - elW);
+    const maxY = Math.max(0, deviceDims.height - elH);
+    const cx = Math.min(Math.max(0, x), maxX);
+    const cy = Math.min(Math.max(0, y), maxY);
+
+    // Snap in logical space
+    const snapped = applySnapping(cx, cy, elW, elH, String(elementId));
+    const sx = Math.round(snapped.x);
+    const sy = Math.round(snapped.y);
+
+    // Alignment guides payload (centers in logical units)
+    const elementCenterX = sx + elW / 2;
+    const elementCenterY = sy + elH / 2;
+    const canvasCenterX = deviceDims.width / 2;
+    const canvasCenterY = deviceDims.height / 2;
+
+    const alignmentEvent = new CustomEvent('showAlignmentGuides', {
+      detail: {
+        elementId,
+        x: sx,
+        y: sy,
+        width: elW,
+        height: elH,
+        elementCenterX,
+        elementCenterY,
+        canvasCenterX,
+        canvasCenterY,
+        isDragging: true
+      }
+    });
+    document.dispatchEvent(alignmentEvent);
+
+    onUpdate({ x: sx, y: sy });
+  }, [applySnapping, deviceDims.width, deviceDims.height, elementId, onUpdate]);
+
+  const scheduleUpdate = useCallback((x: number, y: number, elW: number, elH: number) => {
+    pendingPosRef.current = { x, y };
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      if (!pendingPosRef.current) return;
+      const { x, y } = pendingPosRef.current;
+      pendingPosRef.current = null;
+      commitUpdate(x, y, elW, elH);
+    });
+  }, [commitUpdate]);
 
   const handlePointerStart = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
     if (!elementRef.current || !containerRef.current) return;
 
+    const el = elementRef.current;
+    try { el.setPointerCapture(e.pointerId); } catch {}
+
+    // DO NOT preventDefault immediately to allow simple clicks; we'll prevent after drag starts
+    e.stopPropagation();
+
     const containerRect = containerRef.current.getBoundingClientRect();
-    
-    // Calculer l'échelle entre le container physique et les dimensions logiques du device
+    const elementRect = el.getBoundingClientRect();
+
     const scaleX = containerRect.width / deviceDims.width;
     const scaleY = containerRect.height / deviceDims.height;
 
-    // Position du curseur dans les coordonnées du container
-    const containerX = e.clientX - containerRect.left;
-    const containerY = e.clientY - containerRect.top;
+    // Element logical position derived from DOM for precision
+    const elLeftLogical = (elementRect.left - containerRect.left) / scaleX;
+    const elTopLogical = (elementRect.top - containerRect.top) / scaleY;
 
-    // Convertir en coordonnées logiques
-    const logicalCursorX = containerX / scaleX;
-    const logicalCursorY = containerY / scaleY;
+    const cursorLogicalX = (e.clientX - containerRect.left) / scaleX;
+    const cursorLogicalY = (e.clientY - containerRect.top) / scaleY;
 
-    // Position actuelle de l'élément en coordonnées logiques (from config)
-    const currentElementX = deviceConfig.x;
-    const currentElementY = deviceConfig.y;
+    const offsetX = cursorLogicalX - elLeftLogical;
+    const offsetY = cursorLogicalY - elTopLogical;
 
-    // L'offset est la différence entre le curseur et la position logique actuelle de l'élément
-    const offsetX = logicalCursorX - currentElementX;
-    const offsetY = logicalCursorY - currentElementY;
+    const elementLogicalW = (deviceConfig.width != null)
+      ? deviceConfig.width
+      : Math.max(1, elementRect.width / scaleX);
+    const elementLogicalH = (deviceConfig.height != null)
+      ? deviceConfig.height
+      : Math.max(1, elementRect.height / scaleY);
 
     dragStateRef.current = {
       offsetX,
       offsetY,
-      startX: containerX,
-      startY: containerY
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      started: false,
+      elementLogicalW,
+      elementLogicalH
     };
-
-    setIsDragging(true);
-    document.body.style.cursor = 'grabbing';
-    document.body.style.userSelect = 'none';
-
-    console.log('🎯 Simple drag start:', {
-      elementId,
-      previewDevice,
-      cursorLogicalPos: { x: logicalCursorX, y: logicalCursorY },
-      elementCurrentPos: { x: currentElementX, y: currentElementY },
-      offset: { x: offsetX, y: offsetY },
-      scales: { scaleX, scaleY },
-      deviceConfig,
-      deviceDims
-    });
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       if (!containerRef.current || !dragStateRef.current) return;
 
-      const containerRect = containerRef.current.getBoundingClientRect();
-      
-      // Position actuelle du curseur dans les coordonnées du container
-      const currentX = moveEvent.clientX - containerRect.left;
-      const currentY = moveEvent.clientY - containerRect.top;
+      const dx = moveEvent.clientX - dragStateRef.current.startClientX;
+      const dy = moveEvent.clientY - dragStateRef.current.startClientY;
+      const dist2 = dx * dx + dy * dy;
+      const threshold = 5; // px
 
-      // Convertir en coordonnées logiques du device
+      if (!dragStateRef.current.started) {
+        if (dist2 < threshold * threshold) {
+          return; // still pre-drag
+        }
+        // Start real drag now
+        dragStateRef.current.started = true;
+        setIsDragging(true);
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+        moveEvent.preventDefault();
+      }
+
+      const containerRect = containerRef.current.getBoundingClientRect();
       const scaleX = containerRect.width / deviceDims.width;
       const scaleY = containerRect.height / deviceDims.height;
 
-      // Position logique actuelle du curseur
-      const logicalCursorX = currentX / scaleX;
-      const logicalCursorY = currentY / scaleY;
+      const cursorLogicalX = (moveEvent.clientX - containerRect.left) / scaleX;
+      const cursorLogicalY = (moveEvent.clientY - containerRect.top) / scaleY;
 
-      // Nouvelle position de l'élément (curseur logique - offset logique)
-      const logicalX = logicalCursorX - dragStateRef.current.offsetX;
-      const logicalY = logicalCursorY - dragStateRef.current.offsetY;
+      const nextX = cursorLogicalX - dragStateRef.current.offsetX;
+      const nextY = cursorLogicalY - dragStateRef.current.offsetY;
 
-      // Appliquer les limites dans l'espace logique
-      const elementWidth = deviceConfig.width || 100;
-      const elementHeight = deviceConfig.height || 30;
-      
-      const maxX = Math.max(0, deviceDims.width - elementWidth);
-      const maxY = Math.max(0, deviceDims.height - elementHeight);
-      
-      const constrainedX = Math.min(Math.max(0, logicalX), maxX);
-      const constrainedY = Math.min(Math.max(0, logicalY), maxY);
-
-      console.log('📍 Simple drag move:', {
-        cursorPhysical: { x: currentX, y: currentY },
-        cursorLogical: { x: logicalCursorX, y: logicalCursorY },
-        newLogicalPos: { x: logicalX, y: logicalY },
-        constrainedPos: { x: constrainedX, y: constrainedY },
-        offset: dragStateRef.current,
-        scales: { scaleX, scaleY }
-      });
-
-      onUpdate({ 
-        x: Math.round(constrainedX), 
-        y: Math.round(constrainedY) 
-      });
+      scheduleUpdate(nextX, nextY, dragStateRef.current.elementLogicalW, dragStateRef.current.elementLogicalH);
     };
 
     const handlePointerUp = () => {
-      console.log('✅ Simple drag ended');
-      setIsDragging(false);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      const wasDragging = !!dragStateRef.current?.started;
       dragStateRef.current = null;
+      if (wasDragging) {
+        setIsDragging(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+        document.dispatchEvent(hideGuidesEvent);
+      }
 
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      try { el.releasePointerCapture(e.pointerId); } catch {}
 
       document.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('pointerup', handlePointerUp);
       document.removeEventListener('pointercancel', handlePointerUp);
     };
 
-    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointermove', handlePointerMove, { passive: false });
     document.addEventListener('pointerup', handlePointerUp);
     document.addEventListener('pointercancel', handlePointerUp);
-  }, [elementRef, containerRef, onUpdate, elementId, deviceConfig, previewDevice, deviceDims]);
+  }, [elementRef, containerRef, deviceConfig.width, deviceConfig.height, deviceDims.width, deviceDims.height, scheduleUpdate]);
 
   return {
     isDragging,
