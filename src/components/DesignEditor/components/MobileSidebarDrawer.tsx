@@ -71,6 +71,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     preventZoomGestures: false
   });
 
+<<<<<<< HEAD
+=======
+  // Disable auto-open on mobile for specific editor routes
+>>>>>>> b51c6c6e (feat(modern-editor): device-scaled image resize + centering)
   const location = useLocation();
   const disableAutoOpen = isMobile && (location.pathname === '/design-editor' || location.pathname === '/template-editor');
 
