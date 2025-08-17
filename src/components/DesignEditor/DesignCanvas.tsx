@@ -495,6 +495,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Begin marquee when clicking empty background
   const handleBackgroundPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (readOnly) return;
+    
+    // Désactiver la sélection marquee sur mobile/tablette pour éviter les interactions accidentelles
+    if (selectedDevice === 'mobile' || selectedDevice === 'tablet') {
+      return;
+    }
     // Only react to primary button
     if (e.button !== 0) return;
     // Start marquee selection

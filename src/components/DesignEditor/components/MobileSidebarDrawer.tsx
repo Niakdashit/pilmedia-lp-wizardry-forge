@@ -173,10 +173,12 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="flex-1 overflow-y-auto p-4"
+                className="flex-1 overflow-y-auto overflow-x-hidden p-4 scrollable-content"
                 style={{
                   height: 'calc(85vh - 100px)',
-                  overscrollBehavior: 'contain'
+                  overscrollBehavior: 'contain',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'thin'
                 }}
               >
                 {renderPanel(activeTab)}
@@ -261,6 +263,31 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           </div>
         </div>
       )}
+
+      {/* CSS pour améliorer le scroll */}
+      <style>{`
+        .scrollable-content {
+          scrollbar-width: thin;
+          scrollbar-color: #CBD5E0 transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb {
+          background-color: #CBD5E0;
+          border-radius: 3px;
+        }
+        
+        .scrollable-content::-webkit-scrollbar-thumb:hover {
+          background-color: #A0AEC0;
+        }
+      `}</style>
     </div>
   );
 };

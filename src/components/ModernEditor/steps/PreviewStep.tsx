@@ -47,8 +47,8 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               <p className="text-gray-500">Aperçu de la campagne : {campaign.name}</p>
             </div>
             
-            {/* Barre d'édition en bas */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+            {/* Barre d'édition responsive - visible sur tous appareils */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm sm:max-w-md lg:max-w-lg px-4">
               <PreviewEditBar
                 onAddElement={(elementType) => {
                   console.log('Ajout d\'élément:', elementType);
