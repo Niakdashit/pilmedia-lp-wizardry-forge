@@ -98,13 +98,13 @@ const Gamification: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {gamificationTypes.map((game, index) => {
               const IconComponent = getCampaignTypeIcon(game.type);
               return (
                 <div key={index} className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-300">
-                  <div className="relative h-24 overflow-hidden">
-                    <img src={game.image} alt={game.name} className="object-cover w-full h-full" />
+                  <div className="relative aspect-[16/9] overflow-hidden">
+                    <img src={game.image} alt={game.name} className="object-contain w-full h-full" />
                     <div className="absolute inset-0" style={{ backgroundColor: game.color, opacity: 0.3 }} />
                     <IconComponent className="absolute inset-0 m-auto w-10 h-10 text-white" />
                   </div>
