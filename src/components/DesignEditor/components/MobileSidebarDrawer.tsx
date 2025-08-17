@@ -33,6 +33,9 @@ interface MobileSidebarDrawerProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  // Contrôle externe du panneau de jeu (roue)
+  showWheelPanel?: boolean;
+  onWheelPanelChange?: (show: boolean) => void;
 }
 
 const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
@@ -49,7 +52,9 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   onUndo,
   onRedo,
   canUndo,
-  canRedo
+  canRedo,
+  showWheelPanel,
+  onWheelPanelChange
 }) => {
   const [activeTab, setActiveTab] = useState<string>('assets');
   const [isMinimized, setIsMinimized] = useState(true);
@@ -71,6 +76,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     preventZoomGestures: false
   });
 
+  // Disable auto-open on mobile for specific editor routes
   const location = useLocation();
   const disableAutoOpen = isMobile && (location.pathname === '/design-editor' || location.pathname === '/template-editor');
 
@@ -81,6 +87,19 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       setIsMinimized(false);
     }
   }, [selectedElement, disableAutoOpen]);
+
+  // Synchroniser avec showWheelPanel externe
+  useEffect(() => {
+    if (showWheelPanel === undefined) return;
+    if (showWheelPanel) {
+      setActiveTab('gamelogic');
+      setIsMinimized(false);
+    } else {
+      // Fermer le tiroir et revenir à l'onglet par défaut si nécessaire
+      setIsMinimized(true);
+      setActiveTab((prev) => (prev === 'gamelogic' ? 'assets' : prev));
+    }
+  }, [showWheelPanel]);
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
@@ -132,7 +151,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/20 z-30"
-              onClick={() => setIsMinimized(true)}
+              onClick={() => { setIsMinimized(true); onWheelPanelChange?.(false); }}
             />
           )}
         </AnimatePresence>
@@ -157,17 +176,17 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         >
           <div 
             className="flex items-center justify-center p-4 cursor-pointer"
-            onClick={() => setIsMinimized(true)}
-            onTouchEnd={() => setIsMinimized(true)}
+            onClick={() => { setIsMinimized(true); onWheelPanelChange?.(false); }}
+            onTouchEnd={() => { setIsMinimized(true); onWheelPanelChange?.(false); }}
           >
             <div 
               className="w-12 h-1.5 bg-gray-300 rounded-full"
               role="button"
               aria-label="Fermer le tiroir"
               tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-              onTouchEnd={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsMinimized(true); } }}
+              onClick={(e) => { e.stopPropagation(); setIsMinimized(true); onWheelPanelChange?.(false); }}
+              onTouchEnd={(e) => { e.stopPropagation(); setIsMinimized(true); onWheelPanelChange?.(false); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsMinimized(true); onWheelPanelChange?.(false); } }}
               style={{ touchAction: 'manipulation' }}
             />
           </div>
@@ -251,10 +270,20 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                     onClick={() => {
                       setActiveTab(tab.id);
                       setIsMinimized(false);
+                      if (tab.id === 'gamelogic') {
+                        onWheelPanelChange?.(true);
+                      } else {
+                        onWheelPanelChange?.(false);
+                      }
                     }}
                     onTouchEnd={() => {
                       setActiveTab(tab.id);
                       setIsMinimized(false);
+                      if (tab.id === 'gamelogic') {
+                        onWheelPanelChange?.(true);
+                      } else {
+                        onWheelPanelChange?.(false);
+                      }
                     }}
                     className={`flex flex-col items-center justify-center px-2 py-1 rounded-md transition-colors ${
                       isActive ? 'text-gray-900' : 'text-gray-600'

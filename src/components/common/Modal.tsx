@@ -7,9 +7,10 @@ interface ModalProps {
   children: React.ReactNode;
   onClose: () => void;
   width?: string;
+  roundedClass?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
+const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md', roundedClass = 'rounded-xl' }) => {
   const modalContent = (
     <div 
       className="bg-black/40 p-4"
@@ -26,7 +27,7 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
       }}
     >
       <div 
-        className={`bg-white rounded-xl shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
+        className={`bg-white ${roundedClass} shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
       >
         {/* Bouton de fermeture */}
         <button

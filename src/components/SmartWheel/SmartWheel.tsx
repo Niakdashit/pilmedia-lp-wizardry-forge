@@ -12,7 +12,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   theme = 'modern',
   size = 400,
   disabled = false,
-  onSpin,
+  onSpin: _onSpin,
   onResult,
   onShowParticipationModal,
   brandColors,
@@ -47,6 +47,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Calculate actual size respecting maxSize constraint
   const actualSize = maxSize ? Math.min(size, maxSize) : size;
+  // Global switch to disable spinning capability
+  const disableSpin = true;
 
   // Fonctions de gestion
   const handleWheelResult = (result: any) => {
@@ -61,8 +63,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Animation de la roue
   const {
-    wheelState,
-    spin
+    wheelState
   } = useWheelAnimation({
     segments,
     theme: resolvedTheme,
@@ -87,9 +88,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   
   const handleSpin = () => {
     if (!isMode1) {
-      // Mode 2: ouvrir la modale de participation
+      // Mode 2: ouvrir la modale de participation (autorisé)
       if (mode2State === 'form') {
-        // Utiliser le callback externe si fourni, sinon la logique interne
         if (onShowParticipationModal) {
           onShowParticipationModal();
         } else {
@@ -97,19 +97,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
         }
         return;
       }
-      // Si on est déjà dans l'état wheel, faire tourner
+      // État "wheel": spinning désactivé
       if (mode2State === 'wheel') {
-        if (onSpin) onSpin();
-        spin();
-        return;
+        return; // ne rien faire
       }
     }
-    
-    // Mode 1: comportement normal
-    if (onSpin) {
-      onSpin();
-    }
-    spin();
+    // Mode 1: spinning désactivé
+    return; // ne rien faire
   };
   
   const handleParticipationSubmit = (formData: any) => {
@@ -168,7 +162,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
           };
         case 'wheel':
           return {
-            text: wheelState.isSpinning ? 'Rotation...' : 'Faire tourner',
+            text: disableSpin ? 'Indisponible' : (wheelState.isSpinning ? 'Rotation...' : 'Faire tourner'),
             color: customButton?.color || resolvedTheme.colors.primary,
             textColor: customButton?.textColor || '#ffffff'
           };
@@ -183,7 +177,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     
     // Mode 1 - comportement par défaut
     return {
-      text: wheelState.isSpinning ? 'Rotation...' : (customButton?.text || 'Faire tourner'),
+      text: disableSpin ? 'Désactivé' : (wheelState.isSpinning ? 'Rotation...' : (customButton?.text || 'Faire tourner')),
       color: customButton?.color || resolvedTheme.colors.primary,
       textColor: customButton?.textColor || '#ffffff'
     };
@@ -197,16 +191,17 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
       // Mode 2
       switch (mode2State) {
         case 'form':
+          // Autoriser l'ouverture du formulaire si segments présents
           return disabled || segments.length === 0;
         case 'wheel':
-          return disabled || wheelState.isSpinning || segments.length === 0;
+          // Désactiver le bouton qui lancerait la rotation
+          return true;
         case 'result':
           return false;
       }
     }
-    
-    // Mode 1
-    return disabled || wheelState.isSpinning || segments.length === 0;
+    // Mode 1: toujours désactivé (spinning interdit)
+    return true;
   };
 
   const handleButtonClick = () => {
@@ -246,7 +241,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
                 boxShadow: `0 4px 14px ${buttonConfig.color}40`
               }}
             >
-              {wheelState.isSpinning ? '...' : 'GO'}
+              {buttonConfig.text}
             </button>
           )}
           

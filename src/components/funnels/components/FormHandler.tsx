@@ -33,6 +33,7 @@ const FormHandler: React.FC<FormHandlerProps> = ({
     <Modal
       onClose={onClose}
       title={campaign.screens?.[1]?.title || 'Vos informations'}
+      roundedClass="rounded-[2px]"
     >
       <DynamicContactForm
         fields={fields}
@@ -47,7 +48,7 @@ const FormHandler: React.FC<FormHandlerProps> = ({
           button: {
             backgroundColor: buttonColor,
             color: '#ffffff',
-            borderRadius: design.borderRadius || '8px',
+            borderRadius: 2,
             fontFamily: design.fontFamily || 'inherit',
             fontWeight: '600',
             ...design.textStyles?.button
