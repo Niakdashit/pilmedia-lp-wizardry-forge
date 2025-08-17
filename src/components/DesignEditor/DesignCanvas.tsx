@@ -502,6 +502,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
     // Only react to primary button
     if (e.button !== 0) return;
+    // Disable marquee selection on touch for mobile UX
+    if (e.pointerType === 'touch' && isRealMobile()) {
+      // On touch, treat as tap-to-clear without starting marquee
+      setSelectedElement(null);
+      onSelectedElementChange?.(null);
+      onSelectedElementsChange?.([]);
+      return;
+    }
     // Start marquee selection
     const pt = getCanvasPointFromClient(e.clientX, e.clientY);
     marqueeStartRef.current = pt;
@@ -884,13 +892,33 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (!el) return;
 
     let isPinching = false;
+    let isPinchResizing = false;
+    let isPinchZooming = false;
     let startDist = 0;
     let startZoom = 1;
+    let startBounds: { x: number; y: number; width: number; height: number } | null = null;
 
     const getDist = (touches: TouchList) => {
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
       return Math.hypot(dx, dy);
+    };
+
+    const pointInRect = (pt: { x: number; y: number }, rect: { x: number; y: number; width: number; height: number } | null) => {
+      if (!rect) return false;
+      return pt.x >= rect.x && pt.x <= rect.x + rect.width && pt.y >= rect.y && pt.y <= rect.y + rect.height;
+    };
+
+    const getSelectionBounds = () => {
+      const sels = selectedElements || [];
+      if (!sels || sels.length === 0) return null;
+      const mbs = sels.map((el: any) => measuredBounds[el.id]).filter(Boolean) as Array<{ x: number; y: number; width: number; height: number }>;
+      if (mbs.length !== sels.length) return null; // wait until all are measured for precision
+      const minX = Math.min(...mbs.map(b => b.x));
+      const minY = Math.min(...mbs.map(b => b.y));
+      const maxX = Math.max(...mbs.map(b => b.x + b.width));
+      const maxY = Math.max(...mbs.map(b => b.y + b.height));
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
     };
 
     const flushZoom = () => {
@@ -903,31 +931,71 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
 
     const onTouchStart = (e: TouchEvent) => {
+      if (readOnly) return;
       if (e.touches.length === 2) {
         isPinching = true;
         startDist = getDist(e.touches);
         startZoom = localZoom;
+        startBounds = getSelectionBounds();
+
+        // Determine if pinch starts over the current selection
+        if (startBounds) {
+          const p0 = getCanvasPointFromClient(e.touches[0].clientX, e.touches[0].clientY);
+          const p1 = getCanvasPointFromClient(e.touches[1].clientX, e.touches[1].clientY);
+          const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+          const within = pointInRect(mid, startBounds) || pointInRect(p0, startBounds) || pointInRect(p1, startBounds);
+          isPinchResizing = within;
+          isPinchZooming = !within;
+        } else {
+          isPinchResizing = false;
+          isPinchZooming = true;
+        }
         e.preventDefault();
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
+      if (readOnly) return;
       if (isPinching && e.touches.length === 2) {
         const newDist = getDist(e.touches);
-        const ratio = newDist / startDist;
-        const accelerated = Math.pow(ratio, 1.35);
-        const newZoom = Math.max(0.1, Math.min(1.0, startZoom * accelerated));
-        pendingZoomRef.current = newZoom;
-        if (!rafRef.current) {
-          rafRef.current = requestAnimationFrame(flushZoom);
+        const ratio = newDist / (startDist || 1);
+
+        if (isPinchResizing && startBounds) {
+          // Uniform resize around the center of the selection bounds
+          const cx = startBounds.x + startBounds.width / 2;
+          const cy = startBounds.y + startBounds.height / 2;
+          const newW = Math.max(10, startBounds.width * ratio);
+          const newH = Math.max(10, startBounds.height * ratio);
+          const newBounds = {
+            x: cx - newW / 2,
+            y: cy - newH / 2,
+            width: newW,
+            height: newH
+          };
+          // Use legacy proportional mapping by omitting handle and snapshots
+          resizeSelectedElements(startBounds, newBounds);
+          e.preventDefault();
+          return;
         }
-        e.preventDefault();
+
+        if (isPinchZooming) {
+          const accelerated = Math.pow(ratio, 1.35);
+          const newZoom = Math.max(0.1, Math.min(1.0, startZoom * accelerated));
+          pendingZoomRef.current = newZoom;
+          if (!rafRef.current) {
+            rafRef.current = requestAnimationFrame(flushZoom);
+          }
+          e.preventDefault();
+        }
       }
     };
 
     const onTouchEnd = () => {
       if (isPinching) {
         isPinching = false;
+        isPinchResizing = false;
+        isPinchZooming = false;
+        startBounds = null;
       }
     };
 
@@ -946,7 +1014,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         rafRef.current = null;
       }
     };
-  }, [activeCanvasRef, localZoom, onZoomChange]);
+  }, [activeCanvasRef, localZoom, onZoomChange, selectedElements, measuredBounds, getCanvasPointFromClient, resizeSelectedElements, readOnly]);
 
 
   // Support du zoom via trackpad et molette souris + Ctrl/Cmd
@@ -1263,7 +1331,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowAnimationsPanel={onShowAnimationsPanel}
         onShowPositionPanel={onShowPositionPanel}
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
-        zoom={zoom}
+        zoom={localZoom}
         forceDeviceType={selectedDevice}
         className={`design-canvas-container flex-1 flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative overflow-hidden`}
         // Props pour la sidebar mobile

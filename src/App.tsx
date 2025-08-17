@@ -6,9 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Campaigns from './pages/Campaigns';
 import Gamification from './pages/Gamification';
 import Statistics from './pages/Statistics';
-import GameEditor from './pages/GameEditor';
 import DesignEditor from './pages/DesignEditor';
-import ModernEditorPage from './pages/ModernEditorPage';
 import TemplatesEditor from './pages/TemplatesEditor';
 import TemplateEditor from './pages/TemplateEditor';
 
@@ -29,10 +27,8 @@ function App() {
             </Route>
 
             {/* Routes éditeur en plein écran */}
-            <Route path="/campaign-editor" element={<GameEditor />} />
             <Route path="/design-editor" element={<DesignEditor />} />
             <Route path="/template-editor" element={<TemplateEditor />} />
-            <Route path="/modern-editor" element={<ModernEditorPage />} />
           </Routes>
         </Router>
       </BrandThemeProvider>
@@ -41,3 +37,4 @@ function App() {
 }
 
 export default App;
+

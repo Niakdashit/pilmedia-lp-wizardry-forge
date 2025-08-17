@@ -39,24 +39,36 @@ export const useMobileOptimization = (
   const detectDevice = useCallback(() => {
     const width = window.innerWidth;
     const height = window.innerHeight;
+    const minDim = Math.min(width, height);
     const userAgent = navigator.userAgent;
-    
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-    const isTabletDevice = isMobileDevice && Math.min(width, height) >= 768;
-    const isMobilePhone = isMobileDevice && !isTabletDevice;
+    // Some iPads on iPadOS report desktop UA (e.g., "Macintosh"). Use touch capability as a fallback.
+    const touchCapable = typeof navigator !== 'undefined' && (navigator as any).maxTouchPoints > 1;
 
-    setIsMobile(isMobilePhone);
-    setIsTablet(isTabletDevice);
+    const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    let inferredTablet = false;
+    let inferredMobile = false;
+
+    if (uaMobile) {
+      inferredTablet = minDim >= 768;
+      inferredMobile = !inferredTablet;
+    } else if (touchCapable) {
+      // Treat touch-capable large screens as tablets, smaller as phones
+      inferredTablet = minDim >= 768;
+      inferredMobile = !inferredTablet;
+    }
+
+    setIsMobile(inferredMobile);
+    setIsTablet(inferredTablet);
 
     // Calibrage tactile selon l'appareil
-    if (isMobilePhone) {
+    if (inferredMobile) {
       setTouchCalibration({
         offsetX: 2,
         offsetY: 8,
         sensitivity: 1.1,
         precision: 0.95
       });
-    } else if (isTabletDevice) {
+    } else if (inferredTablet) {
       setTouchCalibration({
         offsetX: 1,
         offsetY: 4,
@@ -72,7 +84,7 @@ export const useMobileOptimization = (
       });
     }
 
-    return { isMobile: isMobilePhone, isTablet: isTabletDevice };
+    return { isMobile: inferredMobile, isTablet: inferredTablet };
   }, []);
 
   // Stabiliser le viewport mobile

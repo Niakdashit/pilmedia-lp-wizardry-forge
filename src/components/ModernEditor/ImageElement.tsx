@@ -4,6 +4,7 @@ import { useFluidElementDrag } from './hooks/useFluidElementDrag';
 import { useImageElementResize } from './hooks/useImageElementResize';
 import ImageElementControls from './components/ImageElementControls';
 import ImageElementResizeHandles from './components/ImageElementResizeHandles';
+import { getDeviceDimensions } from '../../utils/deviceDimensions';
 
 interface ImageElementProps {
   element: any;
@@ -45,18 +46,17 @@ const ImageElement: React.FC<ImageElementProps> = ({
     containerRef,
     deviceConfig,
     onUpdate,
-    aspectRatioLocked
+    aspectRatioLocked,
+    previewDevice
   );
 
   const handleCenterElement = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const centerX = (containerRect.width - deviceConfig.width) / 2;
-    const centerY = (containerRect.height - deviceConfig.height) / 2;
-    
+    // Center using logical device dimensions to match drag/resize coordinate system
+    const dims = getDeviceDimensions(previewDevice);
+    const centerX = (dims.width - deviceConfig.width) / 2;
+    const centerY = (dims.height - deviceConfig.height) / 2;
     onUpdate({ x: centerX, y: centerY });
-  }, [onUpdate, containerRef, deviceConfig]);
+  }, [onUpdate, deviceConfig, previewDevice]);
 
   const toggleAspectRatio = useCallback(() => {
     setAspectRatioLocked(!aspectRatioLocked);
