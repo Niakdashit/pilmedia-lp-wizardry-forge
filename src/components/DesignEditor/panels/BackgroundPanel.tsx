@@ -5,13 +5,21 @@ import ColorThief from 'colorthief';
 interface BackgroundPanelProps {
   onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
+  currentBackground?: { type: 'color' | 'image'; value: string };
 }
 
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
   onBackgroundChange, 
-  onExtractedColorsChange 
+  onExtractedColorsChange,
+  currentBackground
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Détermination de la sélection courante (pour l'état "sélectionné" dans l'UI)
+  const currentBgValue = currentBackground?.type === 'color' ? currentBackground.value : undefined;
+  const isTurquoiseSelected = (currentBgValue || '').toLowerCase() === '#4ecdc4';
+  const cloudGradient = 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)';
+  const isCloudGradientSelected = currentBgValue === cloudGradient;
 
   const backgroundColors = [
     '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
@@ -133,16 +141,42 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         </div>
       </div>
 
-      {/* Predefined Backgrounds */}
+      {/* Predefined Backgrounds */
+      /* Affiche l'état sélectionné pour refléter la couleur actuelle */}
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">ARRIÈRE-PLANS PRÉDÉFINIS</h3>
         <div className="space-y-2">
           <button
             onClick={() => onBackgroundChange({ 
               type: 'color', 
+              value: '#4ECDC4'
+            })}
+            aria-selected={isTurquoiseSelected}
+            className={`w-full p-3 border rounded-lg transition-colors text-left group ${
+              isTurquoiseSelected
+                ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+            }`}
+          >
+            <div className="flex items-center">
+              <div 
+                className="w-8 h-8 rounded mr-3"
+                style={{ background: '#4ECDC4' }}
+              ></div>
+              <span className="text-sm group-hover:text-white">Turquoise (défaut template)</span>
+            </div>
+          </button>
+          <button
+            onClick={() => onBackgroundChange({ 
+              type: 'color', 
               value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' 
             })}
-            className="w-full p-3 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left group"
+            aria-selected={isCloudGradientSelected}
+            className={`w-full p-3 border rounded-lg transition-colors text-left group ${
+              isCloudGradientSelected
+                ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+            }`}
           >
             <div className="flex items-center">
               <div 

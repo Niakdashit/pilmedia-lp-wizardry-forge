@@ -44,17 +44,43 @@ export const useSmartWheelRenderer = ({
   const prevBoundaryIndexRef = useRef<number | null>(null);
   const segAngleDegRef = useRef<number>(360); // actually bulb step angle
   const segCountRef = useRef<number>(1); // actually bulb count
-  // Pointer SVG sprite (from public/)
-  const POINTER_SVG_SRC = '/assets/wheel/pointer.svg';
+  // Pointer and Center assets
   const pointerImgRef = useRef<HTMLImageElement | null>(null);
   const pointerImgReadyRef = useRef(false);
+  const pointerLoadingRef = useRef(true);
   
   // Center image asset support
   const CENTER_SCALE = 0.10;
-  const CENTER_SOURCES = ['/assets/wheel/center.svg', '/assets/wheel/center.png'];
+  
+  // Helpers: choose default asset candidates based on style
+  const isSilverStyle = (name: string) => name.toLowerCase().includes('silver');
+  const getPointerSourcesForStyle = (name: string): string[] => {
+    if (isSilverStyle(name)) {
+      return [
+        '/assets/wheel/pointer-silver.svg',
+        '/assets/wheel/pointer.svg'
+      ];
+    }
+    return ['/assets/wheel/pointer.svg'];
+  };
+  const getCenterSourcesForStyle = (name: string): string[] => {
+    const base = ['/assets/wheel/center.svg', '/assets/wheel/center.png'];
+    if (isSilverStyle(name)) {
+      return [
+        '/assets/wheel/center-silver.svg',
+        '/assets/wheel/center-silver.png',
+        ...base
+      ];
+    }
+    return base;
+  };
   const centerImgRef = useRef<HTMLImageElement | null>(null);
   const centerImgReadyRef = useRef(false);
   const [centerImgReady, setCenterImgReady] = useState(false);
+  const centerLoadingRef = useRef(true);
+
+  // Cache pour les anneaux image-based (styles 'pattern')
+  const ringImageCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
   
   // Keep refs in sync without retriggering RAF setup
   useEffect(() => { rotationRef.current = wheelState.rotation; }, [wheelState.rotation]);
@@ -66,25 +92,48 @@ export const useSmartWheelRenderer = ({
     segAngleDegRef.current = 360 / count;
   }, [NOTCH_COUNT]);
 
-  // Preload pointer SVG once
+  // Preload pointer asset; reload when style changes to pick silver defaults when applicable
   useEffect(() => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      pointerImgRef.current = img;
-      pointerImgReadyRef.current = true;
-    };
-    img.onerror = () => {
-      pointerImgReadyRef.current = false;
-    };
-    img.src = POINTER_SVG_SRC;
-  }, []);
+    let canceled = false;
+    pointerLoadingRef.current = true;
+    pointerImgReadyRef.current = false;
+    pointerImgRef.current = null;
+    const sources = getPointerSourcesForStyle(borderStyle);
+    (async () => {
+      for (const src of sources) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const ok = await new Promise<boolean>((resolve) => {
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = src;
+        });
+        if (canceled) return;
+        if (ok) {
+          pointerImgRef.current = img;
+          pointerImgReadyRef.current = true;
+          pointerLoadingRef.current = false;
+          return;
+        }
+      }
+      if (!canceled) {
+        pointerImgReadyRef.current = false;
+        pointerLoadingRef.current = false; // finished loading attempt, but not available
+      }
+    })();
+    return () => { canceled = true; };
+  }, [borderStyle]);
 
-  // Preload center image (svg/png) if present in public/assets/wheel
+  // Preload center image (svg/png) with silver defaults when applicable; reload when style changes
   useEffect(() => {
     let canceled = false;
     (async () => {
-      for (const src of CENTER_SOURCES) {
+      centerLoadingRef.current = true;
+      centerImgRef.current = null;
+      centerImgReadyRef.current = false;
+      setCenterImgReady(false);
+      const sources = getCenterSourcesForStyle(borderStyle);
+      for (const src of sources) {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         const ok = await new Promise<boolean>((resolve) => {
@@ -97,16 +146,18 @@ export const useSmartWheelRenderer = ({
           centerImgRef.current = img;
           centerImgReadyRef.current = true;
           setCenterImgReady(true);
+          centerLoadingRef.current = false;
           return;
         }
       }
       if (!canceled) {
         centerImgReadyRef.current = false;
         setCenterImgReady(false);
+        centerLoadingRef.current = false; // loading finished, asset not found
       }
     })();
     return () => { canceled = true; };
-  }, []);
+  }, [borderStyle]);
 
   // Animation frame pour les effets animés
   useEffect(() => {
@@ -255,12 +306,17 @@ export const useSmartWheelRenderer = ({
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Dessiner l'arrière-plan
-    drawBackground(ctx, centerX, centerY, borderRadius, theme);
+    // Dessiner l'arrière-plan sauf pour les styles 'pattern'
+    // (les templates anneau doivent remplacer toute la couronne blanche autour)
+    const currentStyle = getBorderStyle(borderStyle);
+    const isPatternStyle = currentStyle.type === 'pattern' && (currentStyle as any).imageSrc;
+    if (!isPatternStyle) {
+      drawBackground(ctx, centerX, centerY, borderRadius, theme);
+    }
 
     // Dessiner les segments
     if (segments.length > 0) {
-      drawSegments(ctx, segments, centerX, centerY, maxRadius, wheelState, theme);
+      drawSegments(ctx, segments, centerX, centerY, maxRadius, wheelState, theme, !!isPatternStyle);
     }
 
     // Dessiner les bordures stylisées
@@ -299,7 +355,16 @@ export const useSmartWheelRenderer = ({
     ctx.fill();
   };
 
-  const drawSegments = (ctx: CanvasRenderingContext2D, segments: WheelSegment[], centerX: number, centerY: number, radius: number, wheelState: WheelState, theme: WheelTheme) => {
+  const drawSegments = (
+    ctx: CanvasRenderingContext2D,
+    segments: WheelSegment[],
+    centerX: number,
+    centerY: number,
+    radius: number,
+    wheelState: WheelState,
+    theme: WheelTheme,
+    isPatternBorder: boolean
+  ) => {
     const anglePerSegment = (2 * Math.PI) / segments.length;
     
     segments.forEach((segment, index) => {
@@ -321,14 +386,38 @@ export const useSmartWheelRenderer = ({
       
       ctx.fill();
 
-      // Bordure fine entre segments (largeur fixe, indépendante du curseur de bordure)
-      ctx.save(); // Sauvegarder l'état du contexte
+      // Bordure fine entre segments
+      // Pour les styles 'pattern', NE PAS tracer l'arc externe (crée un liseré blanc).
+      // On ne trace que les séparateurs radiaux pour garder la séparation sans anneau blanc.
+      ctx.save();
       ctx.strokeStyle = theme.colors.background;
-      ctx.lineWidth = 2; // Toujours 2px fixe, jamais mise à l'échelle
+      ctx.lineWidth = 2; // 2px fixe
       ctx.lineJoin = 'miter';
       ctx.lineCap = 'square';
-      ctx.stroke();
-      ctx.restore(); // Restaurer l'état du contexte
+
+      if (isPatternBorder) {
+        // Tracer uniquement les deux rayons du quartier
+        // Ligne au début
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(
+          centerX + radius * Math.cos(startAngle),
+          centerY + radius * Math.sin(startAngle)
+        );
+        ctx.stroke();
+        // Ligne à la fin
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(
+          centerX + radius * Math.cos(endAngle),
+          centerY + radius * Math.sin(endAngle)
+        );
+        ctx.stroke();
+      } else {
+        // Comportement existant: tracer tout le contour (y compris l'arc externe)
+        ctx.stroke();
+      }
+      ctx.restore();
 
       // Dessiner le texte
       drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);
@@ -378,6 +467,86 @@ export const useSmartWheelRenderer = ({
       if (borderStyleConfig.effects.metallic) {
         // Effet métallique brillant pour l'argent
         createNeonEffect(ctx, centerX, centerY, radius, '#C0C0C0', 0.6);
+      }
+    } 
+    // Gestion des styles image-based ('pattern'): dessiner un anneau image si disponible
+    else if (borderStyleConfig.type === 'pattern' && (borderStyleConfig as any).imageSrc) {
+      const imageSrc = (borderStyleConfig as any).imageSrc as string | undefined;
+      if (imageSrc) {
+        const cache = ringImageCacheRef.current;
+        let entry = cache.get(imageSrc);
+        if (!entry) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          entry = { img, ready: false, loading: true };
+          cache.set(imageSrc, entry);
+          img.onload = () => {
+            const e = cache.get(imageSrc);
+            if (e) {
+              e.ready = true;
+              e.loading = false;
+            }
+          };
+          img.onerror = () => {
+            const e = cache.get(imageSrc);
+            if (e) {
+              e.ready = false;
+              e.loading = false;
+              e.failed = true;
+            }
+          };
+          img.src = imageSrc;
+        }
+
+        // Eviter tout rendu temporaire avant que l'image ne soit prête (pas de fallback pendant le chargement)
+        if (entry.loading) {
+          ctx.restore();
+          return;
+        }
+
+        if (entry.ready) {
+          // Optionnel: ombre douce si demandée
+          if (borderStyleConfig.effects.shadow) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+            ctx.shadowBlur = 12;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2;
+          }
+          // Dessiner l'image centrée et découper en anneau avec marges ajustables
+          // Calcul des rayons de découpe
+          const cfg: any = borderStyleConfig;
+          const innerInsetPx = (typeof cfg.imageInnerInsetPx === 'number' ? cfg.imageInnerInsetPx : 0) * scaleFactor;
+          const outerInsetPx = (typeof cfg.imageOuterInsetPx === 'number' ? cfg.imageOuterInsetPx : 0) * scaleFactor;
+          const innerBase = radius - borderWidth / 2;
+          // Assurer une épaisseur minimale visible pour les templates (pour 12px et moins)
+          const minThicknessPx = (typeof cfg.imageMinThicknessPx === 'number' ? cfg.imageMinThicknessPx : 20) * scaleFactor;
+          const effectiveThickness = Math.max(borderWidth, minThicknessPx);
+          const innerR = Math.max(0, innerBase + innerInsetPx);
+          const outerR = Math.max(innerR + effectiveThickness + outerInsetPx, 0);
+          const destSize = outerR * 2;
+
+          // Clip en anneau: externe (outerR), interne (innerR)
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, outerR, 0, 2 * Math.PI, false);
+          ctx.arc(centerX, centerY, innerR, 0, 2 * Math.PI, true);
+          ctx.closePath();
+          ctx.clip();
+
+          // Dessiner l'image à l'échelle du diamètre externe
+          ctx.drawImage(entry.img, centerX - outerR, centerY - outerR, destSize, destSize);
+          ctx.restore();
+        } else {
+          // Fallback si l'image a échoué à charger: utiliser un gradient métallique avec les couleurs fournies
+          const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+          ctx.strokeStyle = metallicGradient;
+          ctx.lineWidth = borderWidth;
+          ctx.lineJoin = 'miter';
+          ctx.lineCap = 'square';
+          ctx.stroke();
+        }
       }
     } else {
       switch (borderStyleConfig.type) {
@@ -520,6 +689,11 @@ export const useSmartWheelRenderer = ({
   const drawCenter = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, theme: WheelTheme) => {
     const centerRadius = size * CENTER_SCALE;
 
+    // If still loading the center asset, draw nothing to avoid temporary wrong visuals
+    if (centerLoadingRef.current) {
+      return;
+    }
+
     // If a custom center image is available, draw it clipped in a circle and skip the ring stroke
     if (centerImgReadyRef.current && centerImgRef.current) {
       const img = centerImgRef.current;
@@ -539,10 +713,17 @@ export const useSmartWheelRenderer = ({
       return; // do not draw gradient ring when custom image is present
     }
 
-    // Fallback: gradient/flat center with border ring
+    // Fallback: procedural silver center when silver style is active, else theme-based
     ctx.beginPath();
     ctx.arc(centerX, centerY, centerRadius, 0, 2 * Math.PI);
-    if (theme.effects.gradient) {
+    const silverMode = borderStyle.toLowerCase().includes('silver');
+    if (silverMode) {
+      const g = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, centerRadius);
+      g.addColorStop(0, '#f2f2f2');
+      g.addColorStop(0.5, '#cfcfcf');
+      g.addColorStop(1, '#a6a6a6');
+      ctx.fillStyle = g;
+    } else if (theme.effects.gradient) {
       const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, centerRadius);
       centerGradient.addColorStop(0, lightenColor(theme.colors.accent, 0.3));
       centerGradient.addColorStop(1, theme.colors.accent);
@@ -576,6 +757,12 @@ export const useSmartWheelRenderer = ({
     // Apply animated wobble/deflection
     ctx.rotate(pointerAngleRef.current);
 
+    // If pointer asset is still loading, skip drawing to avoid showing fallback temporarily
+    if (pointerLoadingRef.current) {
+      ctx.restore();
+      return;
+    }
+
     // If SVG is loaded, draw it. Otherwise fallback to the procedural pointer.
     if (pointerImgReadyRef.current && pointerImgRef.current) {
       // Soft drop shadow for depth
@@ -594,7 +781,7 @@ export const useSmartWheelRenderer = ({
       ctx.drawImage(img, -drawW / 2, -drawH, drawW, drawH);
       ctx.restore();
     } else {
-      // Fallback: existing gold pointer rendering
+      // Fallback: procedural pointer (silver when silver style active, else gold)
       // Soft drop shadow for depth
       ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
       ctx.shadowBlur = 6 * scaleFactor;
@@ -606,11 +793,20 @@ export const useSmartWheelRenderer = ({
         -pointerWidth, -pointerHeight,
         pointerWidth, 0
       );
-      mainGradient.addColorStop(0, '#8a6c10');
-      mainGradient.addColorStop(0.25, '#b8860b');
-      mainGradient.addColorStop(0.5, '#daa520');
-      mainGradient.addColorStop(0.75, '#ffd700');
-      mainGradient.addColorStop(1, '#ffe680');
+      const silverMode = borderStyle.toLowerCase().includes('silver');
+      if (silverMode) {
+        mainGradient.addColorStop(0, '#6e6e6e');
+        mainGradient.addColorStop(0.25, '#9e9e9e');
+        mainGradient.addColorStop(0.5, '#c0c0c0');
+        mainGradient.addColorStop(0.75, '#e0e0e0');
+        mainGradient.addColorStop(1, '#f5f5f5');
+      } else {
+        mainGradient.addColorStop(0, '#8a6c10');
+        mainGradient.addColorStop(0.25, '#b8860b');
+        mainGradient.addColorStop(0.5, '#daa520');
+        mainGradient.addColorStop(0.75, '#ffd700');
+        mainGradient.addColorStop(1, '#ffe680');
+      }
 
       // Pointer shape (downward tip)
       ctx.fillStyle = mainGradient;
@@ -627,14 +823,20 @@ export const useSmartWheelRenderer = ({
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
-      // Thick gold border
+      // Thick border (silver or gold)
       const borderGradient = ctx.createLinearGradient(
         -pointerWidth, -pointerHeight,
         pointerWidth, 0
       );
-      borderGradient.addColorStop(0, '#B8860B');
-      borderGradient.addColorStop(0.5, '#DAA520');
-      borderGradient.addColorStop(1, '#FFD700');
+      if (silverMode) {
+        borderGradient.addColorStop(0, '#9a9a9a');
+        borderGradient.addColorStop(0.5, '#c8c8c8');
+        borderGradient.addColorStop(1, '#f0f0f0');
+      } else {
+        borderGradient.addColorStop(0, '#B8860B');
+        borderGradient.addColorStop(0.5, '#DAA520');
+        borderGradient.addColorStop(1, '#FFD700');
+      }
 
       ctx.strokeStyle = borderGradient;
       ctx.lineWidth = 4 * scaleFactor;

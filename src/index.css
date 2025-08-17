@@ -824,3 +824,12 @@ html, body {
 .delay-1500 { animation-delay: 1.5s !important; }
 .delay-2000 { animation-delay: 2s !important; }
 .delay-3000 { animation-delay: 3s !important; }
+
+/* Utility: two-line clamp fallback (no @tailwindcss/line-clamp) */
+.clamp-2 {
+  line-clamp: 2; /* standard prop for linters; may be ignored by browsers */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

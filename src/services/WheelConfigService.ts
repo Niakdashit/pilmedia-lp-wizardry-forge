@@ -189,7 +189,7 @@ export class WheelConfigService {
       const centerClass = 'left-1/2 -translate-x-1/2';
       return {
         containerClass: `${base} ${centerClass} z-40`,
-        wheelClass: 'cursor-pointer pointer-events-auto hover:scale-105 transition-transform duration-200',
+        wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
         transform: 'translate-y-1/3',
         styles: {
           paddingBottom: '-30%'
@@ -203,7 +203,7 @@ export class WheelConfigService {
     const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };
     return {
       containerClass: `${base} ${positionClass} z-40`,
-      wheelClass: 'cursor-pointer pointer-events-auto hover:scale-105 transition-transform duration-200',
+      wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
       transform: '-translate-y-1/2',
       styles: insetStyles
     };

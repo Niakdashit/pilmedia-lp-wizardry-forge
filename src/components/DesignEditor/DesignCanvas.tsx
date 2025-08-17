@@ -4,7 +4,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
-import WheelConfigModal from './WheelConfigModal';
 import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
 import WheelSettingsButton from './components/WheelSettingsButton';
@@ -63,8 +62,13 @@ export interface DesignCanvasProps {
   canRedo?: boolean;
   updateWheelConfig?: (updates: any) => void;
   getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
+  // Inline wheel panel controls
+  showWheelPanel?: boolean;
+  onWheelPanelChange?: (show: boolean) => void;
   // Read-only mode to disable interactions
   readOnly?: boolean;
+  // Optional classes for the outer container (e.g., to override background color)
+  containerClassName?: string;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -100,9 +104,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onRedo,
   canUndo,
   canRedo,
-  updateWheelConfig,
-  getCanonicalConfig,
-  readOnly = false
+  
+  
+  
+  onWheelPanelChange,
+  readOnly = false,
+  containerClassName
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -111,7 +118,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [localZoom, setLocalZoom] = useState(zoom);
-  const [showBorderModal, setShowBorderModal] = useState(false);
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
@@ -1135,16 +1141,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   });
 
-  // Configuration canonique de la roue
-  const wheelConfig = useMemo(() =>
-    getCanonicalConfig
-      ? getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true })
-      : { borderStyle: 'classic', borderColor: '#841b60', borderWidth: 12, scale: 1 },
-    [getCanonicalConfig, selectedDevice]
-  );
-
-
-
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
     return elements.map(element => ({
@@ -1235,17 +1231,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   const handleRemoveBackground = useCallback(() => {
     if (background && background.type !== 'color') {
-      // Remettre le background par défaut
+      // Remettre le background par défaut et notifier le parent (source de vérité)
       const defaultBackground = {
         type: 'color' as const,
         value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
       };
-      // Déclencher un événement personnalisé pour notifier le changement de background
-      const event = new CustomEvent('backgroundChange', { detail: defaultBackground });
-      window.dispatchEvent(event);
-      console.log('Arrière-plan supprimé');
+      onBackgroundChange?.(defaultBackground);
+      // Optionnel: réinitialiser les couleurs extraites car il n'y a plus d'image
+      onExtractedColorsChange?.([]);
+      console.log("🧹 Arrière-plan supprimé -> retour au dégradé par défaut");
     }
-  }, [background]);
+  }, [background, onBackgroundChange, onExtractedColorsChange]);
   const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;
 
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
@@ -1264,11 +1260,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={zoom}
         forceDeviceType={selectedDevice}
-        className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
+        className={`design-canvas-container flex-1 flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative overflow-hidden`}
         // Props pour la sidebar mobile
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
+        currentBackground={background}
         campaignConfig={campaign}
         onCampaignConfigChange={onCampaignChange}
         elements={elements}
@@ -1314,7 +1311,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className="relative bg-white rounded-3xl overflow-hidden" 
+              className="relative bg-transparent rounded-3xl overflow-hidden" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
@@ -1390,7 +1387,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 onClick={() => {
                   if (readOnly) return;
                   console.log('🔘 Clic sur la roue détecté');
-                  setShowBorderModal(true);
+                  onWheelPanelChange?.(true);
                 }}
               />
 
@@ -1400,7 +1397,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   <WheelSettingsButton
                     onClick={() => {
                       console.log('🔘 Clic sur WheelSettingsButton détecté');
-                      setShowBorderModal(true);
+                      onWheelPanelChange?.(true);
                     }}
                   />
                 </div>
@@ -1685,7 +1682,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       const adjDy = snapped.y - groupBounds.y;
                       onGroupMove?.(selectedGroup.id, adjDx, adjDy);
                     }}
-                    onResizeStart={(origin, _handle) => {
+                    onResizeStart={(origin) => {
                       // Keep stable group origin during the whole interaction
                       groupResizeOriginRef.current = origin;
                       // Snapshot current group children
@@ -1743,26 +1740,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         
         
 
-        {/* Modal pour la configuration de la roue */}
-        <WheelConfigModal
-          isOpen={showBorderModal}
-          onClose={() => setShowBorderModal(false)}
-          wheelBorderStyle={wheelConfig.borderStyle}
-          wheelBorderColor={wheelConfig.borderColor}
-          wheelBorderWidth={wheelConfig.borderWidth}
-          wheelScale={wheelConfig.scale}
-          wheelShowBulbs={!!wheelConfig.showBulbs}
-          wheelPosition={(wheelConfig as any)?.position || 'center'}
-
-          onBorderStyleChange={(style) => updateWheelConfig?.({ borderStyle: style })}
-          onBorderColorChange={(color) => updateWheelConfig?.({ borderColor: color })}
-          onBorderWidthChange={(width) => updateWheelConfig?.({ borderWidth: width })}
-          onScaleChange={(scale) => updateWheelConfig?.({ scale })}
-          onShowBulbsChange={(show) => updateWheelConfig?.({ showBulbs: show })}
-          onPositionChange={(position) => updateWheelConfig?.({ position })}
-
-          selectedDevice={selectedDevice}
-        />
+        
         
         {/* Barre d'échelle de zoom (overlay bas-centre) */}
         {selectedDevice !== 'mobile' && (

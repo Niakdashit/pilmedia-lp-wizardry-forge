@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Smartphone, Save, Eye, X, Undo, Redo } from 'lucide-react';
+import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers } from 'lucide-react';
 
 interface DesignToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
@@ -15,6 +15,8 @@ interface DesignToolbarProps {
   // Contrôle de la position du bouton d'aperçu (gauche/droite)
   previewButtonSide?: 'left' | 'right';
   onPreviewButtonSideChange?: (side: 'left' | 'right') => void;
+  // Mode de l'éditeur: influence le libellé du bouton d'enregistrement
+  mode?: 'template' | 'campaign';
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -27,9 +29,12 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   canUndo = false,
   canRedo = false,
   previewButtonSide = 'right',
-  onPreviewButtonSideChange
+  onPreviewButtonSideChange,
+  mode = 'campaign'
 }) => {
   const navigate = useNavigate();
+  const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et continuer';
+  const saveMobileLabel = mode === 'template' ? 'Enregistrer' : 'Sauvegarder';
   return (
     <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
       {/* Left Section - Logo/Title */}
@@ -92,6 +97,15 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
 
       {/* Right Section - Actions */}
       <div className="flex items-center space-x-1">
+        <button 
+          onClick={() => navigate('/templates-editor')}
+          className="hidden flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          title="Parcourir les modèles"
+          aria-hidden="true"
+        >
+          <Layers className="w-4 h-4 mr-1" />
+          Modèles
+        </button>
         {/* Position du bouton d'aperçu */}
         <div className="hidden items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-0.5 border border-[hsl(var(--sidebar-border))] mr-2">
           <button
@@ -137,8 +151,8 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </button>
         <button className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors">
           <Save className="w-4 h-4 mr-1" />
-          <span className="hidden sm:inline">Sauvegarder et continuer</span>
-          <span className="sm:hidden">Sauvegarder</span>
+          <span className="hidden sm:inline">{saveDesktopLabel}</span>
+          <span className="sm:hidden">{saveMobileLabel}</span>
         </button>
       </div>
     </div>

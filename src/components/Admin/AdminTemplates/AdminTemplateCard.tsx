@@ -1,5 +1,9 @@
 
 import React from 'react';
+import {
+  TEMPLATE_TILE_HEIGHT_CLASS,
+  TEMPLATE_TILE_RADIUS_CLASS,
+} from '../../../config/templateThumb';
 import { Eye, Copy, Edit, Trash2 } from 'lucide-react';
 import { getCampaignTypeIcon, CampaignType } from '../../../utils/campaignTypes';
 
@@ -18,18 +22,19 @@ interface GameTemplate {
 
 interface AdminTemplateCardProps {
   template: GameTemplate;
+  onUse?: (template: GameTemplate) => void;
 }
 
-const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template }) => {
+const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template, onUse }) => {
   const CampaignIcon = getCampaignTypeIcon(template.type);
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
-      <div className="relative">
-        <img 
-          src={template.thumbnail} 
+      <div className={`relative overflow-hidden ${TEMPLATE_TILE_HEIGHT_CLASS} ${TEMPLATE_TILE_RADIUS_CLASS}`}>
+        <img
+          src={template.thumbnail}
           alt={template.name}
-          className="w-full h-36 sm:h-48 object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute top-3 left-3">
           <CampaignIcon />
@@ -67,6 +72,14 @@ const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template }) => {
             {new Date(template.createdAt).toLocaleDateString('fr-FR')}
           </span>
           <div className="flex items-center gap-1 ml-2">
+            {onUse && (
+              <button
+                onClick={() => onUse(template)}
+                className="px-2.5 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:opacity-95 transition-colors"
+              >
+                Utiliser ce modèle
+              </button>
+            )}
             <button className="p-1.5 sm:p-2 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
               <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
@@ -88,3 +101,4 @@ const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template }) => {
 
 export default AdminTemplateCard;
 export type { GameTemplate };
+

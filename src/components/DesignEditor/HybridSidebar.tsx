@@ -18,12 +18,14 @@ import ExportPanel from './panels/ExportPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import PositionPanel from './panels/PositionPanel';
+import WheelConfigPanel from './panels/WheelConfigPanel';
 
 
 interface HybridSidebarProps {
   onAddElement: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
+  currentBackground?: { type: 'color' | 'image'; value: string };
   campaignConfig?: any;
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
@@ -36,18 +38,38 @@ interface HybridSidebarProps {
   onAnimationsPanelChange?: (show: boolean) => void;
   showPositionPanel?: boolean;
   onPositionPanelChange?: (show: boolean) => void;
+  // Inline wheel panel controls
+  showWheelPanel?: boolean;
+  onWheelPanelChange?: (show: boolean) => void;
   onForceElementsTab?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
   // Props pour le système de groupes
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
   onAddToHistory?: (snapshot: any) => void;
+  // Wheel config values & callbacks (provided by parent)
+  wheelBorderStyle?: string;
+  wheelBorderColor?: string;
+  wheelBorderWidth?: number;
+  wheelScale?: number;
+  wheelShowBulbs?: boolean;
+  wheelPosition?: 'left' | 'right' | 'center';
+  onWheelBorderStyleChange?: (style: string) => void;
+  onWheelBorderColorChange?: (color: string) => void;
+  onWheelBorderWidthChange?: (width: number) => void;
+  onWheelScaleChange?: (scale: number) => void;
+  onWheelShowBulbsChange?: (show: boolean) => void;
+  onWheelPositionChange?: (pos: 'left' | 'right' | 'center') => void;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  // Tabs à masquer (par id: 'campaign', 'gamelogic', 'export', ...)
+  hiddenTabs?: string[];
 }
 
 const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   onAddElement,
   onBackgroundChange,
   onExtractedColorsChange,
+  currentBackground,
   campaignConfig,
   onCampaignConfigChange,
   elements = [],
@@ -60,12 +82,28 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   onAnimationsPanelChange,
   showPositionPanel = false,
   onPositionPanelChange,
+  showWheelPanel = false,
+  onWheelPanelChange,
   onForceElementsTab,
   canvasRef,
   // Props pour le système de groupes
   selectedElements,
   onSelectedElementsChange,
-  onAddToHistory
+  onAddToHistory,
+  wheelBorderStyle = 'classic',
+  wheelBorderColor = '#841b60',
+  wheelBorderWidth = 12,
+  wheelScale = 1,
+  wheelShowBulbs = false,
+  wheelPosition = 'center',
+  onWheelBorderStyleChange,
+  onWheelBorderColorChange,
+  onWheelBorderWidthChange,
+  onWheelScaleChange,
+  onWheelShowBulbsChange,
+  onWheelPositionChange,
+  selectedDevice = 'desktop',
+  hiddenTabs = []
 }) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -87,10 +125,12 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       setActiveTab('animations');
     } else if (showPositionPanel) {
       setActiveTab('position');
+    } else if (showWheelPanel) {
+      setActiveTab('wheel');
     } else if (activeTab === 'effects' || activeTab === 'animations' || activeTab === 'position') {
       setActiveTab('assets'); // Retourner aux éléments quand on ferme les panneaux spéciaux
     }
-  }, [showEffectsPanel, showAnimationsPanel, showPositionPanel, activeTab]);
+  }, [showEffectsPanel, showAnimationsPanel, showPositionPanel, showWheelPanel, activeTab]);
 
   // Gérer l'ouverture forcée de l'onglet Elements
   React.useEffect(() => {
@@ -118,7 +158,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     }
   }, [selectedElement, activeTab, onEffectsPanelChange]);
 
-  const tabs = [
+  const allTabs = [
     { 
       id: 'assets', 
       label: 'Elements', 
@@ -150,6 +190,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       icon: Share
     }
   ];
+  const tabs = allTabs.filter(tab => !hiddenTabs.includes(tab.id));
 
   const handleTabClick = (tabId: string) => {
     console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
@@ -166,6 +207,10 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     if (showPositionPanel && tabId !== 'position') {
       console.log('🗂️ Fermeture du panneau position');
       onPositionPanelChange?.(false);
+    }
+    if (showWheelPanel && tabId !== 'wheel') {
+      console.log('🗂️ Fermeture du panneau roue');
+      onWheelPanelChange?.(false);
     }
     
     if (activeTab === tabId) {
@@ -213,13 +258,36 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             canvasRef={canvasRef}
           />
         );
+      case 'wheel':
+        return (
+          <WheelConfigPanel
+            onBack={() => {
+              onWheelPanelChange?.(false);
+              setActiveTab('assets');
+            }}
+            wheelBorderStyle={wheelBorderStyle}
+            wheelBorderColor={wheelBorderColor}
+            wheelBorderWidth={wheelBorderWidth}
+            wheelScale={wheelScale}
+            wheelShowBulbs={wheelShowBulbs}
+            wheelPosition={wheelPosition}
+            onBorderStyleChange={(s) => onWheelBorderStyleChange?.(s)}
+            onBorderColorChange={(c) => onWheelBorderColorChange?.(c)}
+            onBorderWidthChange={(w) => onWheelBorderWidthChange?.(w)}
+            onScaleChange={(s) => onWheelScaleChange?.(s)}
+            onShowBulbsChange={(b) => onWheelShowBulbsChange?.(b)}
+            onPositionChange={(p) => onWheelPositionChange?.(p)}
+            selectedDevice={selectedDevice}
+          />
+        );
       case 'assets':
-        return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} />;
+        return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'background':
         return (
           <BackgroundPanel 
             onBackgroundChange={onBackgroundChange || (() => {})} 
             onExtractedColorsChange={onExtractedColorsChange}
+            currentBackground={currentBackground}
           />
         );
       case 'layers':
@@ -365,6 +433,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
               {activeTab === 'effects' ? 'Effets de texte' : 
                activeTab === 'animations' ? 'Animations de texte' : 
                activeTab === 'position' ? 'Position' : 
+               activeTab === 'wheel' ? 'Roue de fortune' : 
                tabs.find(tab => tab.id === activeTab)?.label}
             </h2>
           </div>

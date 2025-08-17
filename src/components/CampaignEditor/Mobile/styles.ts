@@ -28,7 +28,7 @@ export const getScreenStyle = (mobileConfig: MobileConfig) => ({
 });
 
 export const getContentLayoutStyle = (mobileConfig: MobileConfig) => {
-  const position = mobileConfig.textPosition || 'top';
+  const position = mobileConfig.textPosition || 'center';
   const spacing = mobileConfig.verticalSpacing || 20;
   const padding = mobileConfig.horizontalPadding || 16;
   
@@ -48,5 +48,9 @@ export const getContentLayoutStyle = (mobileConfig: MobileConfig) => {
 };
 
 export const getTextBlockStyle = () => ({
-  width: '100%'
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  textAlign: 'center' as const
 });

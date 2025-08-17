@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { BrandThemeProvider } from './contexts/BrandThemeContext';
@@ -10,7 +9,8 @@ import Statistics from './pages/Statistics';
 import GameEditor from './pages/GameEditor';
 import DesignEditor from './pages/DesignEditor';
 import ModernEditorPage from './pages/ModernEditorPage';
-
+import TemplatesEditor from './pages/TemplatesEditor';
+import TemplateEditor from './pages/TemplateEditor';
 
 function App() {
   return (
@@ -25,11 +25,13 @@ function App() {
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="gamification" element={<Gamification />} />
               <Route path="statistics" element={<Statistics />} />
+              <Route path="templates-editor" element={<TemplatesEditor />} />
             </Route>
 
             {/* Routes éditeur en plein écran */}
             <Route path="/campaign-editor" element={<GameEditor />} />
             <Route path="/design-editor" element={<DesignEditor />} />
+            <Route path="/template-editor" element={<TemplateEditor />} />
             <Route path="/modern-editor" element={<ModernEditorPage />} />
           </Routes>
         </Router>

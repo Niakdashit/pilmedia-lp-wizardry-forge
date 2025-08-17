@@ -18,9 +18,10 @@ interface AssetsPanelProps {
   onAddElement: (element: any) => void;
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate }) => {
+const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate, selectedDevice = 'desktop' }) => {
   const [activeCategory, setActiveCategory] = useState('text');
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImages, setUploadedImages] = useState<any[]>([]);
@@ -97,7 +98,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   const renderContent = () => {
     switch (activeCategory) {
       case 'text':
-        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} />;
+        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
 
       case 'shapes':
         return (

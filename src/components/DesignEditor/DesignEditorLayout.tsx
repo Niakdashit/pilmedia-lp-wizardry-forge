@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { User, LogOut } from 'lucide-react';
 import HybridSidebar from './HybridSidebar';
-import DesignCanvas from './DesignCanvas';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
+import DesignCanvas from './DesignCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -17,7 +18,12 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
 
-const DesignEditorLayout: React.FC = () => {
+interface DesignEditorLayoutProps {
+  mode?: 'template' | 'campaign';
+  hiddenTabs?: string[];
+}
+
+const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -67,10 +73,11 @@ const DesignEditorLayout: React.FC = () => {
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>({
-    type: 'color',
-    value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-  });
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
+    mode === 'template'
+      ? { type: 'color', value: '#4ECDC4' }
+      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+  ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
@@ -97,6 +104,8 @@ const DesignEditorLayout: React.FC = () => {
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
+  // Inline WheelConfigPanel visibility (controlled at layout level)
+  const [showWheelPanel, setShowWheelPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
       wheelConfig: {
@@ -135,12 +144,49 @@ const DesignEditorLayout: React.FC = () => {
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
+  // Calcul des onglets à masquer selon le mode
+  const effectiveHiddenTabs = useMemo(() => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export'] : []), [hiddenTabs, mode]);
 
   useEffect(() => {
     try {
       localStorage.setItem('previewButtonSide', previewButtonSide);
     } catch {}
   }, [previewButtonSide]);
+
+  // Chargement d'un modèle transmis via navigation state
+  const location = useLocation();
+  useEffect(() => {
+    const state = (location as any)?.state as any;
+    const template = state?.templateCampaign;
+    if (template) {
+      const tplCanvas = template.canvasConfig || {};
+      const bg = tplCanvas.background || template.design?.background || { type: 'color', value: '#ffffff' };
+
+      setCanvasElements(Array.isArray(tplCanvas.elements) ? tplCanvas.elements : []);
+      setCanvasBackground(typeof bg === 'string' ? { type: 'color', value: bg } : bg);
+
+      if (template.design?.extractedColors && Array.isArray(template.design.extractedColors)) {
+        setExtractedColors(template.design.extractedColors);
+      }
+
+      setCampaignConfig((prev: any) => ({
+        ...prev,
+        design: {
+          ...(prev?.design || {}),
+          ...(template.design || {}),
+          wheelConfig: {
+            ...((prev?.design as any)?.wheelConfig || {}),
+            ...((template.design as any)?.wheelConfig || {})
+          }
+        }
+      }));
+
+      if (tplCanvas.device && ['desktop', 'tablet', 'mobile'].includes(tplCanvas.device)) {
+        setSelectedDevice(tplCanvas.device);
+        setCanvasZoom(getDefaultZoom(tplCanvas.device));
+      }
+    }
+  }, [location]);
 
   // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
   const handleAddElement = (element: any) => {
@@ -232,8 +278,13 @@ const DesignEditorLayout: React.FC = () => {
   // Utilisation du hook de synchronisation unifié
   const {
     wheelModalConfig,
-    updateWheelConfig,
-    getCanonicalConfig
+    // Individual setters for wheel config to wire into the sidebar panel
+    setWheelBorderStyle,
+    setWheelBorderColor,
+    setWheelBorderWidth,
+    setWheelScale,
+    setShowBulbs,
+    setWheelPosition
   } = useWheelConfigSync({
     campaign: campaignConfig,
     extractedColors,
@@ -292,8 +343,6 @@ const DesignEditorLayout: React.FC = () => {
     ungroupElements,
     selectedGroupId,
     setSelectedGroupId,
-    moveGroup,
-    resizeGroup,
     getGroupElements
   } = groupManager;
   
@@ -706,19 +755,35 @@ const DesignEditorLayout: React.FC = () => {
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px]">
       {/* Bande dégradée avec logo et icônes */}
       <GradientBand>
-        <img 
-          src="/logo.png" 
-          alt="Prosplay Logo" 
-          style={{
-            height: '93px',
-            width: 'auto',
-            filter: 'brightness(0) invert(1)',
-            maxWidth: '468px',
-            marginTop: '-120px',
-            marginLeft: '1.5%',
-            padding: 0
-          }} 
-        />
+        {mode === 'template' ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginTop: '-122px',
+              marginLeft: '24px'
+            }}
+          >
+            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-none">
+              Edition de template
+            </span>
+          </div>
+        ) : (
+          <img 
+            src="/logo.png" 
+            alt="Prosplay Logo" 
+            style={{
+              height: '93px',
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+              maxWidth: '468px',
+              marginTop: '-120px',
+              marginLeft: '1.5%',
+              padding: 0
+            }} 
+          />
+        )}
         <div style={{
           display: 'flex',
           gap: '16px',
@@ -757,6 +822,7 @@ const DesignEditorLayout: React.FC = () => {
             canRedo={canRedo}
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
+            mode={mode}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -789,10 +855,11 @@ const DesignEditorLayout: React.FC = () => {
           <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
-              <HybridSidebar 
+              <HybridSidebar
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
+                currentBackground={canvasBackground}
                 campaignConfig={campaignConfig}
                 onCampaignConfigChange={handleCampaignConfigChange}
                 elements={canvasElements}
@@ -805,15 +872,35 @@ const DesignEditorLayout: React.FC = () => {
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
+                showWheelPanel={showWheelPanel}
+                onWheelPanelChange={setShowWheelPanel}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
+                wheelBorderStyle={wheelModalConfig?.wheelBorderStyle || campaignConfig?.design?.wheelConfig?.borderStyle}
+                wheelBorderColor={wheelModalConfig?.wheelBorderColor || campaignConfig?.design?.wheelConfig?.borderColor}
+                wheelBorderWidth={campaignConfig?.design?.wheelConfig?.borderWidth}
+                wheelScale={
+                  wheelModalConfig?.wheelScale !== undefined
+                    ? wheelModalConfig.wheelScale
+                    : campaignConfig?.design?.wheelConfig?.scale
+                }
+                wheelShowBulbs={campaignConfig?.design?.wheelConfig?.showBulbs}
+                wheelPosition={campaignConfig?.design?.wheelConfig?.position}
+                onWheelBorderStyleChange={setWheelBorderStyle}
+                onWheelBorderColorChange={setWheelBorderColor}
+                onWheelBorderWidthChange={setWheelBorderWidth}
+                onWheelScaleChange={setWheelScale}
+                onWheelShowBulbsChange={setShowBulbs}
+                onWheelPositionChange={setWheelPosition}
+                selectedDevice={selectedDevice}
+                hiddenTabs={effectiveHiddenTabs}
               />
             )}
-            
             {/* Main Canvas Area */}
-            <DesignCanvas 
+            <DesignCanvas
+              ref={canvasRef}
               selectedDevice={selectedDevice}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
@@ -827,16 +914,12 @@ const DesignEditorLayout: React.FC = () => {
               selectedElements={selectedElements}
               onSelectedElementsChange={setSelectedElements}
               onElementUpdate={handleElementUpdate}
-              updateWheelConfig={updateWheelConfig}
-              getCanonicalConfig={getCanonicalConfig}
-              selectedGroupId={selectedGroupId || undefined}
-              onSelectedGroupChange={setSelectedGroupId}
-              groups={groupManager.groups}
-              onGroupMove={moveGroup}
-              onGroupResize={resizeGroup}
+              containerClassName={mode === 'template' ? 'bg-[#eaf5f6]' : undefined}
+              // Sidebar panel triggers
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
                 setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
               }}
               onShowAnimationsPanel={() => {
                 setShowAnimationsInSidebar(true);
@@ -848,19 +931,30 @@ const DesignEditorLayout: React.FC = () => {
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
               }}
+              // Mobile sidebar integrations
               onAddElement={handleAddElement}
               onBackgroundChange={handleBackgroundChange}
               onExtractedColorsChange={handleExtractedColorsChange}
+              // Group selection wiring
+              selectedGroupId={selectedGroupId as any}
+              onSelectedGroupChange={setSelectedGroupId as any}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              showWheelPanel={showWheelPanel}
+              onWheelPanelChange={setShowWheelPanel}
             />
-            
             {/* Zoom Slider - Always visible in bottom center */}
-            <ZoomSlider 
-              zoom={canvasZoom}
-              onZoomChange={setCanvasZoom}
-              minZoom={0.1}
-              maxZoom={1}
-              step={0.05}
-            />
+            {selectedDevice === 'mobile' && (
+              <ZoomSlider 
+                zoom={canvasZoom}
+                onZoomChange={setCanvasZoom}
+                minZoom={0.1}
+                maxZoom={1}
+                step={0.05}
+              />
+            )}
           </>
         )}
       </div>

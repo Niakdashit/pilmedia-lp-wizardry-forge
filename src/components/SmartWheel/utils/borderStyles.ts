@@ -16,6 +16,8 @@ export interface BorderStyle {
     metallic?: boolean;
     animated?: boolean;
   };
+  // Optional image source (for pattern/image-based ring templates)
+  imageSrc?: string;
 }
 
 export interface WheelBorderConfig {
@@ -301,6 +303,19 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     }
   },
   
+  // Image-based gold ring template (uses PNG/SVG ring asset)
+  goldRing: {
+    name: 'Or (Template)',
+    type: 'pattern',
+    colors: ['#FFD700'],
+    width: 16,
+    effects: {
+      metallic: true,
+      shadow: true
+    },
+    imageSrc: '/assets/wheel/ring-gold.png'
+  },
+  
   silver: {
     name: 'Argent',
     type: 'metallic',
@@ -310,6 +325,19 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
       metallic: true,
       shadow: true
     }
+  },
+  
+  // Image-based silver ring template (uses PNG/SVG ring asset)
+  silverRing: {
+    name: 'Argent (Template)',
+    type: 'pattern',
+    colors: ['#C0C0C0'],
+    width: 14,
+    effects: {
+      metallic: true,
+      shadow: true
+    },
+    imageSrc: '/assets/wheel/ring-silver.png'
   },
   neonBlue: {
     name: 'Néon Bleu',

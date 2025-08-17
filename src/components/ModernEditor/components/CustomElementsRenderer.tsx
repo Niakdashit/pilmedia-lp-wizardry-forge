@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { STANDARD_DEVICE_DIMENSIONS } from '../../../utils/deviceDimensions';
 
 interface CustomElementsRendererProps {
   customTexts: any[];
@@ -30,8 +31,9 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
     if (!customText?.content && !customText?.text) return null;
 
     // Gestion du responsive : utiliser les propriétés responsives si disponibles
-    const deviceConfig = customText.deviceConfig?.[previewDevice] || customText.responsive?.[previewDevice];
-    const config = deviceConfig || customText;
+    const deviceCfg = customText.deviceConfig?.[previewDevice] || customText.responsive?.[previewDevice];
+    const directDevice = (customText as any)[previewDevice] || {};
+    const config = { ...customText, ...(deviceCfg || {}), ...directDevice } as any;
     
     const textContent = customText.content || customText.text || 'Texte personnalisé';
     
@@ -52,20 +54,34 @@ const CustomElementsRenderer: React.FC<CustomElementsRendererProps> = ({
       return width ? `${width}px` : 'auto';
     };
 
+    // Determine default top-center position for mobile if no device-specific x/y are set
+    const hasDeviceXY = (deviceCfg?.x != null || deviceCfg?.y != null) || (directDevice?.x != null || directDevice?.y != null);
+    const usingMobileFallback = previewDevice === 'mobile' && !hasDeviceXY;
+    let defaultX = 0;
+    let defaultY = 0;
+    if (usingMobileFallback) {
+      const container = STANDARD_DEVICE_DIMENSIONS.mobile;
+      defaultX = 0; // full-width block, start at 0
+      defaultY = Math.round(container.height * 0.12); // ~12% from top
+    }
+
+    const finalX = usingMobileFallback ? defaultX : (config.x ?? customText.x ?? 0);
+    const finalY = usingMobileFallback ? defaultY : (config.y ?? customText.y ?? 0);
+
     const textStyle: React.CSSProperties = {
       position: 'absolute',
-      transform: `translate3d(${config.x ?? customText.x ?? 0}px, ${config.y ?? customText.y ?? 0}px, 0)`,
+      transform: `translate3d(${finalX}px, ${finalY}px, 0)`,
       fontSize: getFontSize(),
       color: config.color || customText.color || '#000000',
       fontFamily: config.fontFamily || customText.fontFamily || 'Arial',
       fontWeight: config.fontWeight || customText.fontWeight || ((config.bold || customText.bold) ? 'bold' : 'normal'),
       fontStyle: config.fontStyle || customText.fontStyle || ((config.italic || customText.italic) ? 'italic' : 'normal'),
       textDecoration: config.textDecoration || customText.textDecoration || ((config.underline || customText.underline) ? 'underline' : 'none'),
-      textAlign: (config.textAlign || customText.textAlign || 'left') as any,
+      textAlign: (config.textAlign || customText.textAlign || (previewDevice === 'mobile' ? 'center' : 'left')) as any,
       zIndex: 100,
       pointerEvents: 'none',
       cursor: 'default',
-      width: getResponsiveWidth(),
+      width: usingMobileFallback ? '100%' : getResponsiveWidth(),
       height: config.height ? `${config.height}px` : 'auto',
       minWidth: '50px',
       lineHeight: '1.2',

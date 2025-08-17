@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Bold, Italic, Underline, Plus, Trash2 } from 'lucide-react';
+import { STANDARD_DEVICE_DIMENSIONS } from '../../../utils/deviceDimensions';
 
 interface CustomTextsManagerProps {
   customTexts: any[];
@@ -16,12 +17,10 @@ const CustomTextsManager: React.FC<CustomTextsManagerProps> = ({
   const design = campaign.design || {};
 
   const getInitialPosition = () => {
-    const basePosition = { x: 100, y: 100 };
-    const offset = customTexts.length * 20;
-    return {
-      x: basePosition.x + offset,
-      y: basePosition.y + offset
-    };
+    // Default top-center position for mobile: x=0 (full width), y≈12% from top
+    const container = STANDARD_DEVICE_DIMENSIONS.mobile;
+    const topY = Math.round(container.height * 0.12);
+    return { x: 0, y: topY, width: container.width };
   };
 
   const addCustomText = () => {
@@ -32,6 +31,8 @@ const CustomTextsManager: React.FC<CustomTextsManagerProps> = ({
       text: `Texte personnalisé ${customTexts.length + 1}`,
       x: position.x,
       y: position.y,
+      // Provide a device-specific default for mobile so previews/editors use centered coords
+      mobile: { x: position.x, y: position.y, width: position.width, textAlign: 'center' as const },
       size: 'base',
       color: '#000000',
       fontFamily: 'Inter, sans-serif',

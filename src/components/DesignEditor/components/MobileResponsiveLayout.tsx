@@ -22,6 +22,7 @@ interface MobileResponsiveLayoutProps {
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
+  currentBackground?: { type: 'color' | 'image'; value: string };
   campaignConfig?: any;
   onCampaignConfigChange?: (config: any) => void;
   elements?: any[];
@@ -49,10 +50,16 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   onAddElement,
   onBackgroundChange,
   onExtractedColorsChange,
+  currentBackground,
   campaignConfig,
   onCampaignConfigChange,
   elements,
   onElementsChange,
+  // Props toolbar mobile
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -157,12 +164,18 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           onAddElement={onAddElement}
           onBackgroundChange={onBackgroundChange}
           onExtractedColorsChange={onExtractedColorsChange}
+          currentBackground={currentBackground}
           campaignConfig={campaignConfig}
           onCampaignConfigChange={onCampaignConfigChange}
           elements={elements}
           onElementsChange={onElementsChange}
           selectedElement={selectedElement}
           onElementUpdate={onElementUpdate}
+          // Undo/redo
+          onUndo={onUndo}
+          onRedo={onRedo}
+          canUndo={canUndo}
+          canRedo={canRedo}
         />
       )}
 

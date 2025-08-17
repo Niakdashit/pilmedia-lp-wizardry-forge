@@ -1,6 +1,7 @@
 import React, { memo, useState, useRef } from 'react';
 import { Move, Edit2 } from 'lucide-react';
 import { useSimplePreciseDrag } from '../hooks/useSimplePreciseDrag';
+import { STANDARD_DEVICE_DIMENSIONS } from '../../../utils/deviceDimensions';
 
 interface InteractiveCustomElementsRendererProps {
   customTexts: any[];
@@ -31,7 +32,11 @@ const FluidTextElement: React.FC<{
     if (previewDevice === 'desktop') return element;
     const fromConfig = element.deviceConfig?.[previewDevice] || {};
     const fromDirect = element[previewDevice] || {};
-    return { ...element, ...fromConfig, ...fromDirect };
+    // Avoid inheriting desktop x/y so fallback can trigger on mobile/tablet
+    const base = { ...element } as any;
+    delete base.x;
+    delete base.y;
+    return { ...base, ...fromConfig, ...fromDirect };
   };
 
   const config = getElementDeviceConfig(customText);
@@ -117,23 +122,36 @@ const FluidTextElement: React.FC<{
 
   if (!customText?.enabled) return null;
 
+  // Compute top-center defaults for mobile if coordinates are not provided
+  const usingMobileFallback = previewDevice === 'mobile' && (config.x == null || config.y == null);
+  let defaultX = 0;
+  let defaultY = 0;
+  if (usingMobileFallback) {
+    const container = STANDARD_DEVICE_DIMENSIONS.mobile;
+    defaultX = 0; // full-width block, start at left 0
+    defaultY = Math.round(container.height * 0.12); // ~12% from top
+  }
+
   const textStyle: React.CSSProperties = {
     position: 'absolute',
-    left: `${config.x || 0}px`,
-    top: `${config.y || 0}px`,
+    left: `${(config.x ?? defaultX ?? 0)}px`,
+    top: `${(config.y ?? defaultY ?? 0)}px`,
     fontSize: config.fontSize ? `${config.fontSize}px` : (sizeMap[config.size || 'base'] || '14px'),
     color: config.color || '#000000',
     fontFamily: config.fontFamily || 'Inter, sans-serif',
     fontWeight: config.bold ? 'bold' : (config.fontWeight || 'normal'),
     fontStyle: config.italic ? 'italic' : (config.fontStyle || 'normal'),
     textDecoration: config.underline ? 'underline' : (config.textDecoration || 'none'),
-    textAlign: config.textAlign || 'left',
+    textAlign: (previewDevice === 'mobile' ? (config.textAlign || 'center') : (config.textAlign || 'left')) as any,
     zIndex: isSelected ? 1000 : 200,
     cursor: isDragging ? 'grabbing' : 'grab',
     userSelect: 'none',
-    whiteSpace: 'nowrap',
+    whiteSpace: previewDevice === 'mobile' ? 'normal' : 'nowrap',
     touchAction: 'none',
-    maxWidth: '400px',
+    width: previewDevice === 'mobile'
+      ? (config.width != null ? `${config.width}px` : '100%')
+      : (config.width != null ? `${config.width}px` : undefined),
+    maxWidth: previewDevice === 'mobile' ? '100%' : '400px',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     transition: isDragging ? 'none' : 'all 0.2s ease',

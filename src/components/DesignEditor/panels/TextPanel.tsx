@@ -3,11 +3,13 @@ import type { CSSProperties } from 'react';
 import { Type } from 'lucide-react';
 import TextEffectsPanel from './TextEffectsPanel';
 import { titlePresets, compositeTitlePresets } from '../../../config/titlePresets';
+import { getDeviceDimensions, calculateCenteredPosition } from '../../../utils/deviceDimensions';
 
 interface TextPanelProps {
   onAddElement: (element: any) => void;
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 // Polices organisées par catégories - Enrichies avec de nouvelles Google Fonts
@@ -75,7 +77,8 @@ function mergeStyles(base: CSSProperties = {}, extra: CSSProperties = {}): CSSPr
 const TextPanel: React.FC<TextPanelProps> = ({
   onAddElement,
   selectedElement,
-  onElementUpdate
+  onElementUpdate,
+  selectedDevice = 'desktop'
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(fontCategories[0]);
   const [showEffects, setShowEffects] = useState(false);
@@ -122,7 +125,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
     }
     
     // Sinon, créer un nouveau texte comme avant
-    const newElement = {
+    const newElement: any = {
       id: `text-${Date.now()}`,
       type: 'text',
       content: preset?.text || stylePreset?.text || 'Nouveau texte',
@@ -145,6 +148,17 @@ const TextPanel: React.FC<TextPanelProps> = ({
         }
       })
     };
+    // If added from desktop, pre-set mobile coordinates to be centered on mobile canvas
+    if (selectedDevice === 'desktop') {
+      const mobileCanvas = getDeviceDimensions('mobile');
+      const defaultTextSize = { width: 200, height: 40 };
+      const centered = calculateCenteredPosition(mobileCanvas, defaultTextSize);
+      newElement.mobile = {
+        ...(newElement.mobile || {}),
+        x: centered.x,
+        y: centered.y
+      };
+    }
     onAddElement(newElement);
   };
 
@@ -154,7 +168,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
     const baseY = Math.random() * 300 + 100;
     const layers = [...(composite?.layers || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
     layers.forEach((layer: any, idx: number) => {
-      const el = {
+      const el: any = {
         id: `text-${Date.now()}-${idx}`,
         type: 'text',
         content: layer.text || composite.sample || 'Texte',
@@ -177,6 +191,16 @@ const TextPanel: React.FC<TextPanelProps> = ({
           }
         })
       };
+      if (selectedDevice === 'desktop') {
+        const mobileCanvas = getDeviceDimensions('mobile');
+        const defaultTextSize = { width: 200, height: 40 };
+        const centered = calculateCenteredPosition(mobileCanvas, defaultTextSize);
+        el.mobile = {
+          ...(el.mobile || {}),
+          x: centered.x,
+          y: centered.y
+        };
+      }
       onAddElement(el);
     });
   };
