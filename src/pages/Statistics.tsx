@@ -9,18 +9,18 @@ const Statistics: React.FC = () => {
       <PageHeader
         title="Statistiques"
         actions={
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
             <select
               value={period}
               onChange={e => setPeriod(e.target.value)}
-              className="bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#841b60]"
             >
               <option value="7">7 derniers jours</option>
               <option value="30">30 derniers jours</option>
               <option value="90">90 derniers jours</option>
               <option value="365">Cette année</option>
             </select>
-            <button className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20">
+            <button className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20">
               <Download className="w-4 h-4 mr-2" />
               Exporter
             </button>

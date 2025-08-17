@@ -67,12 +67,12 @@ const RecentCampaigns: React.FC = () => {
   };
   return <div className="relative">
       <div className="p-0 my-[10px]">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Galerie des créations</h2>
             <p className="text-gray-600">Vos dernières campagnes avec style</p>
           </div>
-          <Link to="/campaigns" className="group relative overflow-hidden inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20" aria-label="Voir toutes les campagnes">
+          <Link to="/campaigns" className="group relative overflow-hidden inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20" aria-label="Voir toutes les campagnes">
             <span className="relative z-10 flex items-center">
               Voir toutes
               <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
