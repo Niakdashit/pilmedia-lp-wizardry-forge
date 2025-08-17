@@ -9,6 +9,7 @@ import type { DeviceType } from '../../utils/deviceDimensions';
 import { getCanvasViewport } from './core/Transform';
 import { createPreciseDrag } from './core/Drag';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
+import { usePinchResize } from './hooks/usePinchResize';
 
 // Professional drag & drop implementation - Excalidraw/Canva precision
 
@@ -49,10 +50,40 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
   // 📱 Hook d'optimisation tactile pour mobile/tablette
-    const touchOptimization = useTouchOptimization({
-      selectedDevice,
-      containerRef
-    });
+  const touchOptimization = useTouchOptimization({
+    selectedDevice,
+    containerRef
+  });
+
+  // 🤏 Hook de pincement pour redimensionnement tactile
+  const { attachListeners: attachPinchListeners } = usePinchResize({
+    onResize: (scaleX, scaleY) => {
+      if (!isSelected || readOnly) return;
+      
+      const currentWidth = Number(deviceProps.width) || 100;
+      const currentHeight = Number(deviceProps.height) || 100;
+      
+      const newWidth = Math.max(20, currentWidth * scaleX);
+      const newHeight = Math.max(20, currentHeight * scaleY);
+      
+      onUpdate(element.id, {
+        width: newWidth,
+        height: newHeight,
+        fontSize: element.type === 'text' ? Math.max(8, (Number(element.fontSize) || 16) * scaleY) : element.fontSize
+      });
+    },
+    onResizeStart: () => {
+      setIsResizing(true);
+      console.log('🤏 Pinch resize started for element:', element.id);
+    },
+    onResizeEnd: () => {
+      setIsResizing(false);
+      console.log('🤏 Pinch resize ended for element:', element.id);
+    },
+    minScale: 0.5,
+    maxScale: 3,
+    maintainAspectRatio: element.type === 'image'
+  });
 
   // Get device-specific properties with proper typing - memoized
   const deviceProps = useMemo(
@@ -88,6 +119,14 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     };
   // Re-measure when content/layout-affecting props change
   }, [reportBounds, element.content, element.width, element.height, element.fontSize, element.style, deviceProps.x, deviceProps.y]);
+
+  // Attacher les listeners de pincement à l'élément
+  React.useEffect(() => {
+    if (!elementRef.current || readOnly) return;
+    
+    const cleanup = attachPinchListeners(elementRef.current);
+    return cleanup;
+  }, [attachPinchListeners, readOnly]);
   
 
   const [isEditing, setIsEditing] = React.useState(false);

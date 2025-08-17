@@ -36,8 +36,9 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
         const relativeX = (elementRect.left - canvasRect.left) / zoom;
         const relativeY = (elementRect.top - canvasRect.top) / zoom;
         
-        // Centrer la toolbar au-dessus de l'élément
-        const toolbarWidth = 280; // Largeur approximative de la toolbar
+        // Centrer la toolbar au-dessus de l'élément - responsive
+        const viewportWidth = window.innerWidth;
+        const toolbarWidth = Math.min(280, viewportWidth - 40); // Responsive width
         const toolbarHeight = 50;
         
         let x = relativeX + (elementRect.width / zoom / 2) - (toolbarWidth / 2);
@@ -125,15 +126,16 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
   return (
     <div
       ref={toolbarRef}
-      className="fixed z-50 bg-gray-900 rounded-lg shadow-2xl border border-gray-700 p-2"
+      className="fixed z-50 bg-gray-900 rounded-lg shadow-2xl border border-gray-700"
       style={{
         left: `${toolbarPosition.x}px`,
         top: `${toolbarPosition.y}px`,
         transform: `scale(${1 / zoom})`,
-        transformOrigin: 'top left'
+        transformOrigin: 'top left',
+        padding: window.innerWidth < 640 ? '4px' : '8px' // Responsive padding
       }}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
         {isTextElement && (
           <>
             {/* Taille de police */}

@@ -38,12 +38,6 @@ const Mode1Preview: React.FC<Mode1PreviewProps> = ({
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [synchronizedConfig, setSynchronizedConfig] = useState(config);
 
-  // Extraction automatique des couleurs de l'image de fond
-  const customColors = useMemo(() => ({
-    primary: config.participateButtonColor || '#841b60',
-    secondary: config.outlineColor || '#dc2626', 
-    accent: config.backgroundColor || '#10b981'
-  }), [config.participateButtonColor, config.outlineColor, config.backgroundColor]);
 
   // Configuration synchronisée simple
   useEffect(() => {

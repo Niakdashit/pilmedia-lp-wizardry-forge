@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { generateBrandThemeFromUrl, BrandTheme } from '../utils/BrandStyleAnalyzer';
-import { getExactBrandColors } from '../components/QuickCampaign/Preview/utils/exactColorExtractor';
+// import { getExactBrandColors } from '../components/QuickCampaign/Preview/utils/exactColorExtractor';
 
 interface BrandThemeContextValue {
   theme: BrandTheme | null;
@@ -33,20 +33,9 @@ const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
     setError(null);
 
     try {
-      // Priorité absolue : couleurs exactes prédéfinies
-      const exactColors = getExactBrandColors(url);
-      if (exactColors) {
-        setTheme({
-          customColors: {
-            primary: exactColors.primary,
-            secondary: exactColors.secondary,
-            accent: exactColors.accent || '#ffffff',
-            text: '#ffffff'
-          },
-          logoUrl: undefined
-        });
-        return;
-      }
+      // Couleurs par défaut - fonction supprimée
+      // const exactColors = getExactBrandColors(url);
+      // Continuer avec l'extraction BrandStyleAnalyzer
 
       // Extraction via BrandStyleAnalyzer
       const brandTheme = await generateBrandThemeFromUrl(url);

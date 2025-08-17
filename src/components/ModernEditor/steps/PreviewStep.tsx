@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Eye, Smartphone, Tablet, Monitor } from 'lucide-react';
+import PreviewEditBar from '../../DesignEditor/components/PreviewEditBar';
 
 interface PreviewStepProps {
   campaign: any;
@@ -41,9 +42,23 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
             </button>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-8 text-center">
+          <div className="bg-gray-50 rounded-xl p-8 text-center relative">
             <div className="w-full h-96 bg-white rounded-lg shadow-sm flex items-center justify-center">
               <p className="text-gray-500">Aperçu de la campagne : {campaign.name}</p>
+            </div>
+            
+            {/* Barre d'édition en bas */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+              <PreviewEditBar
+                onAddElement={(elementType) => {
+                  console.log('Ajout d\'élément:', elementType);
+                  // TODO: Implémenter l'ajout d'éléments en mode aperçu
+                }}
+                onOpenPanel={(panelType) => {
+                  console.log('Ouverture du panneau:', panelType);
+                  // TODO: Implémenter l'ouverture des panneaux
+                }}
+              />
             </div>
           </div>
         </div>

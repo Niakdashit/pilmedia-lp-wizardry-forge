@@ -58,6 +58,12 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
 
   // Gérer le début du drag
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Désactiver les interactions tactiles pour la sélection de groupe
+    if (e.pointerType === 'touch') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     if (e.detail === 2) {
       // Double-clic : éditer le groupe
       onDoubleClick?.();
@@ -94,6 +100,12 @@ const GroupSelectionFrame: React.FC<GroupSelectionFrameProps> = ({
 
   // Gérer le début du resize
   const handleResizeStart = useCallback((e: React.PointerEvent, handle: string) => {
+    // Désactiver le redimensionnement tactile pour les groupes
+    if (e.pointerType === 'touch') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
 

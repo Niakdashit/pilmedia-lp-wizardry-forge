@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
 import {
@@ -73,13 +73,13 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     preventZoomGestures: false
   });
 
-  // Auto-ouverture si un élément est sélectionné
-  useEffect(() => {
-    if (selectedElement) {
-      setActiveTab('assets');
-      setIsMinimized(false);
-    }
-  }, [selectedElement]);
+  // Désactivé : auto-ouverture automatique du tiroir lors de la sélection
+  // useEffect(() => {
+  //   if (selectedElement) {
+  //     setActiveTab('assets');
+  //     setIsMinimized(false);
+  //   }
+  // }, [selectedElement]);
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
