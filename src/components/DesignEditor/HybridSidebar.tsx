@@ -6,7 +6,6 @@ import {
   Layers,
   Settings,
   Gamepad2,
-  Share,
   Palette
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
@@ -14,7 +13,6 @@ import BackgroundPanel from './panels/BackgroundPanel';
 import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
-import ExportPanel from './panels/ExportPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import PositionPanel from './panels/PositionPanel';
@@ -183,11 +181,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       id: 'gamelogic', 
       label: 'Game', 
       icon: Gamepad2
-    },
-    { 
-      id: 'export', 
-      label: 'Export', 
-      icon: Share
     }
   ];
   const tabs = allTabs.filter(tab => !hiddenTabs.includes(tab.id));
@@ -309,8 +302,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         );
       case 'gamelogic':
         return <GameLogicPanel />;
-      case 'export':
-        return <ExportPanel />;
       default:
         return null;
     }

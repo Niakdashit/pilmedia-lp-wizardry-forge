@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
+import { useLocation } from 'react-router-dom';
 import {
   Plus,
   Palette,
   Layers,
   Settings,
   Gamepad2,
-  Share,
   RotateCcw,
   RotateCw
 } from 'lucide-react';
@@ -16,7 +16,6 @@ import BackgroundPanel from '../panels/BackgroundPanel';
 import LayersPanel from '../panels/LayersPanel';
 import CampaignConfigPanel from '../panels/CampaignConfigPanel';
 import GameLogicPanel from '../panels/GameLogicPanel';
-import ExportPanel from '../panels/ExportPanel';
 
 interface MobileSidebarDrawerProps {
   onAddElement: (element: any) => void;
@@ -60,26 +59,28 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
     { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
     { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' },
-    { id: 'gamelogic', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' },
-    { id: 'export', label: 'Export', icon: Share, color: '#06B6D4' }
+    { id: 'gamelogic', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' }
   ];
 
   // Device detection: show bottom bar only on real mobile devices
   const containerRef = useRef<HTMLDivElement>(null);
-  const { isMobile } = useMobileOptimization(containerRef, {
+  const { isMobile, isTablet } = useMobileOptimization(containerRef, {
     preventScrollBounce: true,
     stabilizeViewport: true,
     optimizeTouchEvents: true,
     preventZoomGestures: false
   });
 
-  // Désactivé : auto-ouverture automatique du tiroir lors de la sélection
-  // useEffect(() => {
-  //   if (selectedElement) {
-  //     setActiveTab('assets');
-  //     setIsMinimized(false);
-  //   }
-  // }, [selectedElement]);
+  const location = useLocation();
+  const disableAutoOpen = isMobile && (location.pathname === '/design-editor' || location.pathname === '/template-editor');
+
+  // Auto-ouverture si un élément est sélectionné
+  useEffect(() => {
+    if (selectedElement && !disableAutoOpen) {
+      setActiveTab('assets');
+      setIsMinimized(false);
+    }
+  }, [selectedElement, disableAutoOpen]);
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
@@ -115,8 +116,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         );
       case 'gamelogic':
         return <GameLogicPanel />;
-      case 'export':
-        return <ExportPanel />;
       default:
         return null;
     }
@@ -125,7 +124,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   return (
     <div ref={containerRef}>
       {/* Overlay (mobile only) */}
-      {isMobile && (
+      {(isMobile || isTablet) && (
         <AnimatePresence>
           {!isMinimized && (
             <motion.div
@@ -140,7 +139,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       )}
 
       {/* Bottom Drawer (mobile only) */}
-      {isMobile && (
+      {(isMobile || isTablet) && (
         <motion.div
           initial={false}
           animate={{
@@ -158,10 +157,19 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         >
           <div 
             className="flex items-center justify-center p-4 cursor-pointer"
-            onClick={() => setIsMinimized(!isMinimized)}
-            onTouchEnd={() => setIsMinimized(!isMinimized)}
+            onClick={() => setIsMinimized(true)}
+            onTouchEnd={() => setIsMinimized(true)}
           >
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            <div 
+              className="w-12 h-1.5 bg-gray-300 rounded-full"
+              role="button"
+              aria-label="Fermer le tiroir"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+              onTouchEnd={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsMinimized(true); } }}
+              style={{ touchAction: 'manipulation' }}
+            />
           </div>
 
           {/* Panel Content */}
@@ -173,12 +181,11 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="flex-1 overflow-y-auto overflow-x-hidden p-4 scrollable-content"
+                className="flex-1 overflow-y-auto p-4 panel-content scrollable-area"
                 style={{
                   height: 'calc(85vh - 100px)',
                   overscrollBehavior: 'contain',
-                  WebkitOverflowScrolling: 'touch',
-                  scrollbarWidth: 'thin'
+                  WebkitOverflowScrolling: 'touch'
                 }}
               >
                 {renderPanel(activeTab)}
@@ -189,10 +196,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       )}
 
       {/* Persistent Bottom Tab Bar (mobile only) - real mobile devices only */}
-      {isMobile && (
+      {(isMobile || isTablet) && (
         <div
           id="mobile-toolbar"
-          className="fixed left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 md:hidden"
+          className="fixed left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200"
           style={{
             // Position above the iOS/Android gesture area
             position: 'fixed',

@@ -78,8 +78,11 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
   // Forcer le type d'appareil si demandé (ex: preview mobile sur desktop)
   const effectiveDeviceType = forceDeviceType || deviceType;
-  const mIsMobile = forceDeviceType ? forceDeviceType === 'mobile' : isMobile;
-  const mIsTablet = forceDeviceType ? forceDeviceType === 'tablet' : isTablet;
+  // IMPORTANT: la détection physique reste la source pour activer l'UI mobile
+  const mIsMobile = isMobile;
+  const mIsTablet = isTablet;
+  // Afficher l'UI mobile soit sur appareil mobile/tablette réel, soit quand on force mobile/tablette
+  const showMobileUI = mIsMobile || mIsTablet || forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
 
   // Système de verrouillage du canvas pour mobile
   const {
@@ -94,17 +97,17 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
   // Gestion de la visibilité de la toolbar mobile
   useEffect(() => {
-    if (selectedElement && (mIsMobile || mIsTablet)) {
+    if (selectedElement && showMobileUI) {
       setIsToolbarVisible(true);
     } else {
       setIsToolbarVisible(false);
     }
-  }, [selectedElement, mIsMobile, mIsTablet]);
+  }, [selectedElement, showMobileUI]);
 
   // Écouteur pour l'ajustement automatique du zoom
   useEffect(() => {
     const handleZoomAdjust = (event: CustomEvent) => {
-      if (onZoomChange && (mIsMobile || mIsTablet)) {
+      if (onZoomChange && showMobileUI) {
         onZoomChange(event.detail.zoom);
       }
     };
@@ -127,7 +130,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     const stateClasses = [
       isDragging ? 'is-dragging' : '',
       isToolbarVisible ? 'toolbar-visible' : '',
-      selectedElement ? 'has-selection' : ''
+      selectedElement ? 'has-selection' : '',
+      showMobileUI ? 'mobile-ui-enabled' : ''
     ].filter(Boolean).join(' ');
 
     return `${baseClasses} ${deviceClasses[effectiveDeviceType] || 'desktop-layout'} ${stateClasses}`;
@@ -146,7 +150,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       </div>
 
       {/* Toolbar mobile overlay - s'affiche au-dessus de l'élément sélectionné */}
-      {isToolbarVisible && (mIsMobile || mIsTablet) && selectedElement && onElementUpdate && (
+      {isToolbarVisible && showMobileUI && selectedElement && onElementUpdate && (
         <MobileToolbarOverlay
           selectedElement={selectedElement}
           onElementUpdate={onElementUpdate}
@@ -158,8 +162,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         />
       )}
 
-      {/* Sidebar mobile drawer - seulement sur mobile */}
-      {mIsMobile && onAddElement && (
+      {/* Sidebar mobile drawer - mobile et tablette */}
+      {showMobileUI && onAddElement && (
         <MobileSidebarDrawer
           onAddElement={onAddElement}
           onBackgroundChange={onBackgroundChange}
@@ -353,13 +357,15 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
         }
 
         /* Masquer la toolbar mobile sur desktop */
-        .desktop-layout .mobile-toolbar-overlay {
+        /* Ne pas masquer la toolbar overlay si l'UI mobile est activée */
+        .desktop-layout:not(.mobile-ui-enabled) .mobile-toolbar-overlay {
           display: none !important;
         }
 
         /* Toolbar mobile positionnée en fixed - pas besoin d'ajuster le canvas */
-        .mobile-layout.toolbar-visible .design-canvas-container {
-          /* Pas d'ajustement de padding car la toolbar est en position fixed */
+        .mobile-layout.toolbar-visible .layout-content {
+          /* Laisser la place sous la toolbar mobile compacte */
+          padding-top: var(--mobile-toolbar-height, 0px);
         }
 
         /* Empêcher le zoom accidentel sur iOS */

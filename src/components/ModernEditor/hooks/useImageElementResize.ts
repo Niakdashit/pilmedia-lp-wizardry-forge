@@ -1,11 +1,13 @@
 
 import { useState, useCallback, useRef } from 'react';
+import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 export const useImageElementResize = (
   containerRef: React.RefObject<HTMLDivElement>,
   deviceConfig: any,
   onUpdate: (updates: any) => void,
-  aspectRatioLocked: boolean
+  aspectRatioLocked: boolean,
+  previewDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ) => {
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartRef = useRef<{
@@ -22,6 +24,12 @@ export const useImageElementResize = (
     e.stopPropagation();
 
     if (!containerRef.current) return;
+    
+    // Compute device scaling (logical units vs physical pixels)
+    const deviceDims = getDeviceDimensions(previewDevice);
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const scaleX = containerRect.width / deviceDims.width;
+    const scaleY = containerRect.height / deviceDims.height;
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -44,8 +52,9 @@ export const useImageElementResize = (
       if (!resizeStartRef.current || !containerRef.current) return;
 
       const { startX, startY, startWidth, startHeight, handle, aspectRatio: ratio } = resizeStartRef.current;
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
+      // Convert physical deltas to logical device deltas
+      const deltaX = (moveEvent.clientX - startX) / scaleX;
+      const deltaY = (moveEvent.clientY - startY) / scaleY;
 
       let newWidth = startWidth;
       let newHeight = startHeight;
@@ -106,10 +115,9 @@ export const useImageElementResize = (
           break;
       }
 
-      // Constrain to container bounds
-      const containerRect = containerRef.current.getBoundingClientRect();
-      newX = Math.max(0, Math.min(newX, containerRect.width - newWidth));
-      newY = Math.max(0, Math.min(newY, containerRect.height - newHeight));
+      // Constrain to device bounds (logical units)
+      newX = Math.max(0, Math.min(newX, deviceDims.width - newWidth));
+      newY = Math.max(0, Math.min(newY, deviceDims.height - newHeight));
 
       onUpdate({
         x: newX,
@@ -128,10 +136,11 @@ export const useImageElementResize = (
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [containerRef, deviceConfig, onUpdate, aspectRatioLocked]);
+  }, [containerRef, deviceConfig, onUpdate, aspectRatioLocked, previewDevice]);
 
   return {
     isResizing,
     handleResizeStart
   };
 };
+
