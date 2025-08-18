@@ -35,8 +35,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   // États pour le mode 2
   const [mode2State, setMode2State] = useState<Mode2State>('form');
   const [showParticipationModal, setShowParticipationModal] = useState(false);
-  const [participantData, setParticipantData] = useState<any>(null);
-  const [finalResult, setFinalResult] = useState<any>(null);
+  const [participantData, setParticipantData] = useState<any>(null); // utilisé dans handleParticipationSubmit et handlePlayAgain
+  const [finalResult, setFinalResult] = useState<any>(null); // utilisé dans handleWheelResult et handlePlayAgain
 
   // Synchroniser l'état local avec la prop borderStyle
   useEffect(() => {
