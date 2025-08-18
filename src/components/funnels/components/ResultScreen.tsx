@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ContrastBackground from '../../common/ContrastBackground';
+import { useBrandTheme } from '../../../hooks/useBrandTheme';
 
 interface ResultScreenProps {
   gameResult: 'win' | 'lose';
@@ -15,6 +16,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
   mobileConfig,
   onReset
 }) => {
+  const { primaryColor, accentColor } = useBrandTheme();
   const resultScreen = campaign.screens?.[3] || {};
   const contrastBg = mobileConfig?.contrastBackground || resultScreen.contrastBackground;
   
@@ -28,19 +30,19 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
 
   
 
-  // Always show the message in a centered framed card
+  // Always show the message in a centered framed card (force 2px radius)
   const frameConfig = contrastBg && typeof contrastBg === 'object'
     ? {
         color: contrastBg.color,
         opacity: contrastBg.opacity,
         padding: contrastBg.padding ?? 24,
-        borderRadius: contrastBg.borderRadius ?? 8
+        borderRadius: 2
       }
     : {
         color: 'rgba(255,255,255,0.9)',
         opacity: 90,
         padding: 24,
-        borderRadius: 8
+        borderRadius: 2
       };
 
   return (
@@ -48,7 +50,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
       <ContrastBackground
         enabled={true}
         config={frameConfig}
-        className="text-center space-y-4 w-full max-w-lg rounded-lg border border-black/5"
+        className="text-center space-y-4 w-full max-w-lg rounded-[2px] border border-black/5"
       >
         <div className="space-y-3">
           <h2 className="text-2xl font-bold text-gray-900">
@@ -73,10 +75,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
           
           <button 
             onClick={onReset} 
-            className="inline-flex items-center justify-center px-6 py-2 font-medium rounded-lg transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2 font-medium rounded-[2px] transition-colors"
             style={{
-              backgroundColor: campaign.design?.primaryColor || '#841b60',
-              color: campaign.design?.accentColor || '#ffffff'
+              backgroundColor: primaryColor || campaign.design?.primaryColor || '#841b60',
+              color: accentColor || campaign.design?.accentColor || '#ffffff'
             }}
           >
             {resultScreen?.replayButtonText || 'Rejouer'}

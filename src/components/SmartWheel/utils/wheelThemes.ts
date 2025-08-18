@@ -122,13 +122,34 @@ export const createBrandTheme = (brandColors: {
 };
 
 export const getTheme = (theme: WheelTheme | string, brandColors?: any): WheelTheme => {
+  // Resolve base theme first
   if (typeof theme === 'string') {
-    return PREDEFINED_THEMES[theme] || PREDEFINED_THEMES.modern;
+    const base = PREDEFINED_THEMES[theme] || PREDEFINED_THEMES.modern;
+    if (!brandColors) return base;
+    // Merge brand colors into base theme while preserving base background/border/text/effects/animation
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: brandColors.primary ?? base.colors.primary,
+        secondary: brandColors.secondary ?? base.colors.secondary,
+        accent: brandColors.accent ?? brandColors.primary ?? base.colors.accent
+      }
+    };
   }
-  
+
+  // theme is an object; merge brand colors if provided
   if (brandColors) {
-    return createBrandTheme(brandColors);
+    return {
+      ...theme,
+      colors: {
+        ...theme.colors,
+        primary: brandColors.primary ?? theme.colors.primary,
+        secondary: brandColors.secondary ?? theme.colors.secondary,
+        accent: brandColors.accent ?? brandColors.primary ?? theme.colors.accent
+      }
+    };
   }
-  
+
   return theme;
 };

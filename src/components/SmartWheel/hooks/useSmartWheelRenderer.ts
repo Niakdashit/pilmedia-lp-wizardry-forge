@@ -166,90 +166,72 @@ export const useSmartWheelRenderer = ({
   useEffect(() => {
     let animationId: number | null = null;
 
-    if (disablePointerAnimation) {
-      // Stop any motion and keep the pointer static at neutral angle
-      pointerVelRef.current = 0;
-      pointerAngleRef.current = 0; // neutral straight-down
-      prevBoundaryIndexRef.current = null;
-      // Force a redraw once to reflect the static pointer
-      setAnimationTime((t) => t + 1);
-      return () => {
-        if (animationId) cancelAnimationFrame(animationId);
-      };
-    }
-
     const animate = (timestamp: number) => {
       const prevTs = prevTimestampRef.current || timestamp - 16;
       const dtMs = Math.max(1, timestamp - prevTs);
       const dt = dtMs / 1000; // seconds
 
-      // If the wheel is spinning, keep the pointer strictly static
-      if (spinningRef.current) {
+      const shouldFreezePointer = disablePointerAnimation || spinningRef.current;
+
+      if (shouldFreezePointer) {
+        // Keep pointer strictly static at neutral angle
         pointerVelRef.current = 0;
         pointerAngleRef.current = 0; // neutral straight-down
         prevBoundaryIndexRef.current = null; // reset notch tracking to avoid a big impulse after
-        // Keep timers in sync to avoid large dt on resume
-        prevRotationRef.current = rotationRef.current;
-        prevTimestampRef.current = timestamp;
-        // Trigger redraw to ensure static pointer is rendered
-        setAnimationTime(timestamp);
-        animationId = requestAnimationFrame(animate);
-        return;
+      } else {
+        // Detect invisible ratchet notch crossings (pointer tip hits notches)
+        const stepDeg = segAngleDegRef.current;
+        const segCount = segCountRef.current;
+        const currRot = rotationRef.current; // degrees
+        const prevRot = prevRotationRef.current;
+        const phasedRot = currRot + NOTCH_PHASE_DEG; // allow aligning notches to art
+        const currIndex = Math.floor((((phasedRot % 360) + 360) % 360) / stepDeg);
+        if (prevBoundaryIndexRef.current === null) prevBoundaryIndexRef.current = currIndex;
+        const prevIndex = prevBoundaryIndexRef.current!;
+
+        if (currIndex !== prevIndex) {
+          // Direction based on rotation delta
+          const dRot = currRot - prevRot;
+          const dir = dRot >= 0 ? 1 : -1; // +1 clockwise, -1 counter
+          // Number of notches crossed (robust across large deltas)
+          const rawDiff = currIndex - prevIndex;
+          let diff = rawDiff;
+          if (diff > segCount / 2) diff -= segCount;
+          if (diff < -segCount / 2) diff += segCount;
+          const steps = Math.max(1, Math.abs(diff));
+          // Clicky impulse: stronger at higher speed, but still present when slow
+          const stepDegLocal = segAngleDegRef.current;
+          const speedRatio = Math.min(2, Math.abs(dRot) / Math.max(1e-3, stepDegLocal));
+          const speedFactor = 0.35 + 0.65 * Math.sqrt(speedRatio); // sqrt for smoother response
+          const baseImpulse = 0.22; // ~12.6° equivalent impulse
+          const impulse = (-dir) * baseImpulse * speedFactor;
+          for (let i = 0; i < steps; i++) pointerVelRef.current += impulse;
+          prevBoundaryIndexRef.current = currIndex;
+        }
+
+        // Spring-damper toward a slight downward rest angle to mimic gravity on the tip
+        const REST_ANGLE = -0.08; // radians (~-4.6°)
+        const k = 32; // spring stiffness
+        const c = 7;  // damping
+        const delta = (pointerAngleRef.current - REST_ANGLE);
+        const accel = (-k * delta) - (c * pointerVelRef.current);
+        pointerVelRef.current += accel * dt;
+        pointerAngleRef.current += pointerVelRef.current * dt;
+
+        // Clamp around rest to avoid extreme rotation
+        const maxRad = 0.5; // ~28.6° excursion around REST_ANGLE
+        if (pointerAngleRef.current > REST_ANGLE + maxRad) pointerAngleRef.current = REST_ANGLE + maxRad;
+        if (pointerAngleRef.current < REST_ANGLE - maxRad) pointerAngleRef.current = REST_ANGLE - maxRad;
       }
 
-      // Detect invisible ratchet notch crossings (pointer tip hits notches)
-      const stepDeg = segAngleDegRef.current;
-      const segCount = segCountRef.current;
-      const currRot = rotationRef.current; // degrees
-      const prevRot = prevRotationRef.current;
-      const phasedRot = currRot + NOTCH_PHASE_DEG; // allow aligning notches to art
-      const currIndex = Math.floor((((phasedRot % 360) + 360) % 360) / stepDeg);
-      if (prevBoundaryIndexRef.current === null) prevBoundaryIndexRef.current = currIndex;
-      const prevIndex = prevBoundaryIndexRef.current!;
-
-      if (currIndex !== prevIndex) {
-        // Direction based on rotation delta
-        const dRot = currRot - prevRot;
-        const dir = dRot >= 0 ? 1 : -1; // +1 clockwise, -1 counter
-        // Number of notches crossed (robust across large deltas)
-        const rawDiff = currIndex - prevIndex;
-        let diff = rawDiff;
-        if (diff > segCount / 2) diff -= segCount;
-        if (diff < -segCount / 2) diff += segCount;
-        const steps = Math.max(1, Math.abs(diff));
-        // Clicky impulse: stronger at higher speed, but still present when slow
-        const stepDegLocal = segAngleDegRef.current;
-        const speedRatio = Math.min(2, Math.abs(dRot) / Math.max(1e-3, stepDegLocal));
-        const speedFactor = 0.35 + 0.65 * Math.sqrt(speedRatio); // sqrt for smoother response
-        const baseImpulse = 0.22; // ~12.6° equivalent impulse
-        const impulse = (-dir) * baseImpulse * speedFactor;
-        for (let i = 0; i < steps; i++) pointerVelRef.current += impulse;
-        prevBoundaryIndexRef.current = currIndex;
-      }
-
-      // Spring-damper toward a slight downward rest angle to mimic gravity on the tip
-      const REST_ANGLE = -0.08; // radians (~-4.6°)
-      const k = 32; // spring stiffness
-      const c = 7;  // damping
-      const delta = (pointerAngleRef.current - REST_ANGLE);
-      const accel = (-k * delta) - (c * pointerVelRef.current);
-      pointerVelRef.current += accel * dt;
-      pointerAngleRef.current += pointerVelRef.current * dt;
-
-      // Clamp around rest to avoid extreme rotation
-      const maxRad = 0.5; // ~28.6° excursion around REST_ANGLE
-      if (pointerAngleRef.current > REST_ANGLE + maxRad) pointerAngleRef.current = REST_ANGLE + maxRad;
-      if (pointerAngleRef.current < REST_ANGLE - maxRad) pointerAngleRef.current = REST_ANGLE - maxRad;
-
-      prevRotationRef.current = currRot;
+      // Keep timers in sync and trigger redraw for border animations
+      prevRotationRef.current = rotationRef.current;
       prevTimestampRef.current = timestamp;
-
-      // Trigger canvas redraw
       setAnimationTime(timestamp);
       animationId = requestAnimationFrame(animate);
     };
 
-    // Run RAF to animate the pointer
+    // Always run RAF to ensure sparkle/gradient animations update
     animationId = requestAnimationFrame(animate);
     
     return () => {
