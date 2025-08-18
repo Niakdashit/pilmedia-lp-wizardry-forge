@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
@@ -59,6 +59,35 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
       onResult(result);
     }
   };
+
+  // Sanitize formFields and build a stable key to force remount of modal when fields change
+  const safeModalFields = useMemo(() => {
+    const allowedTypes = new Set(['text', 'email', 'tel', 'select', 'textarea', 'checkbox']);
+    const src = Array.isArray(formFields) && formFields.length > 0
+      ? formFields
+      : [
+          { id: 'firstName', label: 'Prénom', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true }
+        ];
+    return src
+      .filter((f: any) => f && typeof f === 'object' && typeof f.id === 'string' && typeof f.label === 'string')
+      .map((f: any) => ({
+        id: f.id,
+        label: f.label,
+        type: allowedTypes.has(f.type) ? f.type : 'text',
+        required: !!f.required,
+        options: Array.isArray(f.options) ? f.options.filter((o: any) => typeof o === 'string') : undefined,
+        placeholder: typeof f.placeholder === 'string' ? f.placeholder : undefined
+      }));
+  }, [formFields]);
+
+  const modalFieldsKey = useMemo(() => {
+    try {
+      return JSON.stringify(safeModalFields.map((f: any) => ({ id: f.id, type: f.type, required: !!f.required, label: f.label, options: f.options })));
+    } catch {
+      return String(safeModalFields.length);
+    }
+  }, [safeModalFields]);
 
   // Animation de la roue
   const {
@@ -298,14 +327,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
       {/* Modale de participation pour le mode 2 */}
       <ParticipationModal
+        key={modalFieldsKey}
         isOpen={showParticipationModal}
         onClose={() => setShowParticipationModal(false)}
         onSubmit={handleParticipationSubmit}
         title="Formulaire de participation"
-        fields={formFields || [
-          { id: 'firstName', label: 'Prénom', type: 'text', required: true },
-          { id: 'email', label: 'Email', type: 'email', required: true }
-        ]}
+        submitLabel={buttonConfig.text || 'Valider et participer'}
+        fields={safeModalFields}
       />
     </>
   );

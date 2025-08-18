@@ -1,6 +1,6 @@
 
 import React from 'react';
-import GameCanvasPreview from '../../CampaignEditor/GameCanvasPreview';
+import GameCanvasPreview from './GameCanvasPreview';
 import TextElement from '../TextElement';
 import ImageElement from '../ImageElement';
 import CanvasHeader from './CanvasHeader';
@@ -60,8 +60,6 @@ const CanvasContent: React.FC<CanvasContentProps> = ({
       <div className="flex-1 flex relative h-full">
         <GameCanvasPreview
           campaign={enhancedCampaign}
-          gameSize={gameSize}
-          className="w-full h-full"
           key={`preview-${gameSize}-${gamePosition}-${enhancedCampaign.type}-${JSON.stringify(enhancedCampaign.design)}-${JSON.stringify(enhancedCampaign.gameConfig)}-${previewDevice}`}
           previewDevice={previewDevice}
         />

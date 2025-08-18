@@ -98,7 +98,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       {/* Right Section - Actions */}
       <div className="flex items-center space-x-1">
         <button 
-          onClick={() => navigate('/templates-editor')}
+          onClick={() => navigate('/template-editor')}
           className="hidden flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           title="Parcourir les modèles"
           aria-hidden="true"

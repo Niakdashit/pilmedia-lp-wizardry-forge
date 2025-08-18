@@ -112,8 +112,8 @@ const DashboardHeader: React.FC = () => {
                         <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
-                      </Link>;
-                })}
+                      </Link>
+                  })}
                 </div>
               </div>
 
@@ -122,14 +122,14 @@ const DashboardHeader: React.FC = () => {
                 <PillButton to="/campaigns" icon={<FolderOpen className="w-4 h-4" />}>
                   Mes campagnes
                 </PillButton>
-                
-                <PillButton to="/templates-editor" icon={<Layers className="w-4 h-4" />}>
+
+                <PillButton to="/template-editor" icon={<Layers className="w-4 h-4" />}>
                   Modèles
                 </PillButton>
               </div>
             </div>
           </div>
-          
+
           {/* Gradient border en bas */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
         </div>

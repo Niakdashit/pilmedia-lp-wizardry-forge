@@ -1,5 +1,5 @@
 import React from 'react';
-import GameCanvasPreview from '../CampaignEditor/GameCanvasPreview';
+import GameCanvasPreview from '../ModernEditor/components/GameCanvasPreview';
 
 interface JackpotAppearanceProps {
   campaign: any;
@@ -31,7 +31,7 @@ const JackpotAppearance: React.FC<JackpotAppearanceProps> = ({
       {/* Aperçu du jeu avec configurateur intégré */}
       <GameCanvasPreview 
         campaign={campaign}
-        gameSize={campaign.gameSize || 'large'}
+        previewDevice="desktop"
       />
 
       {/* Configurateur d'apparence */}

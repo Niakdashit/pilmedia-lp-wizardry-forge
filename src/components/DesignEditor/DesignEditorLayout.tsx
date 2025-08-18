@@ -61,6 +61,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setIsLoading,
     setIsModified
   } = useEditorStore();
+  // Campagne centralisée (source de vérité pour les champs de contact)
+  const campaignState = useEditorStore((s) => s.campaign);
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -515,11 +517,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           buttonText: buttonElement?.content || 'Jouer'
         }
       ],
-      formFields: [
-        { id: 'prenom', label: 'Prénom', type: 'text', required: true },
-        { id: 'nom', label: 'Nom', type: 'text', required: true },
-        { id: 'email', label: 'Email', type: 'email', required: true }
-      ],
+      // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
+      formFields: ((campaignState as any)?.formFields !== undefined)
+        ? ((campaignState as any)?.formFields as any)
+        : [
+            { id: 'prenom', label: 'Prénom', type: 'text', required: true },
+            { id: 'nom', label: 'Nom', type: 'text', required: true },
+            { id: 'email', label: 'Email', type: 'email', required: true }
+          ],
       // Garder la configuration canvas pour compatibilité
       canvasConfig: {
         elements: canvasElements,
@@ -527,23 +532,44 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
 
-  // Synchronisation avec le store
+  // Synchronisation avec le store (éviter les boucles d'updates)
+  const lastTransformedSigRef = useRef<string>('');
   useEffect(() => {
-    if (campaignData) {
-      const transformedCampaign = {
-        ...campaignData,
-        name: 'Ma Campagne',
-        type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
-        design: {
-          ...campaignData.design,
-          background: typeof campaignData.design?.background === 'object' 
-            ? campaignData.design.background.value || '#ffffff'
-            : campaignData.design?.background || '#ffffff'
-        }
-      };
+    if (!campaignData) return;
+
+    const transformedCampaign = {
+      ...campaignData,
+      name: 'Ma Campagne',
+      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      design: {
+        ...campaignData.design,
+        background: typeof campaignData.design?.background === 'object'
+          ? campaignData.design.background.value || '#ffffff'
+          : campaignData.design?.background || '#ffffff'
+      }
+    };
+
+    // Signature stable pour éviter les mises à jour redondantes
+    const signature = (() => {
+      try {
+        return JSON.stringify(transformedCampaign);
+      } catch {
+        return String(Date.now());
+      }
+    })();
+
+    if (signature !== lastTransformedSigRef.current) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[DesignEditorLayout] setCampaign: content changed, updating store');
+      }
       setCampaign(transformedCampaign);
+      lastTransformedSigRef.current = signature;
+    } else {
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[DesignEditorLayout] Skipping setCampaign: no material change');
+      }
     }
   }, [campaignData, setCampaign]);
 

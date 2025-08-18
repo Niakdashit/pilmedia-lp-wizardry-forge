@@ -23,8 +23,17 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    this.setState({ error, errorInfo });
+    // Normalize potential non-Error throws and improve logging
+    const normalized = error instanceof Error
+      ? error
+      : new Error(typeof (error as any) === 'string' ? (error as any) : (() => { try { return JSON.stringify(error); } catch { return String(error); } })());
+
+    console.error('[ErrorBoundary] Caught error', {
+      message: normalized.message,
+      stack: normalized.stack,
+      errorInfo
+    });
+    this.setState({ error: normalized, errorInfo });
   }
 
   private handleRefresh = () => {
@@ -62,8 +71,13 @@ class ErrorBoundary extends Component<Props, State> {
                   Détails de l'erreur (développement)
                 </summary>
                 <pre className="whitespace-pre-wrap text-red-600">
-                  {this.state.error.message}
+                  {this.state.error?.message || String(this.state.error)}
                 </pre>
+                {(this.state.error as any)?.stack && (
+                  <pre className="whitespace-pre-wrap text-gray-600 mt-2">
+                    {(this.state.error as any).stack}
+                  </pre>
+                )}
                 {this.state.errorInfo && (
                   <pre className="whitespace-pre-wrap text-gray-600 mt-2">
                     {this.state.errorInfo.componentStack}

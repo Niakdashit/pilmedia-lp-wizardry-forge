@@ -4,19 +4,20 @@ import {
   ChevronRight,
   Plus,
   Layers,
-  Settings,
   Gamepad2,
-  Palette
+  Palette,
+  FormInput
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
-import CampaignConfigPanel from './panels/CampaignConfigPanel';
 import GameLogicPanel from './panels/GameLogicPanel';
 import LayersPanel from './panels/LayersPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import PositionPanel from './panels/PositionPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
+import ModernFormTab from '../ModernEditor/ModernFormTab';
+import { useEditorStore } from '../../stores/editorStore';
 
 
 interface HybridSidebarProps {
@@ -24,8 +25,9 @@ interface HybridSidebarProps {
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
   currentBackground?: { type: 'color' | 'image'; value: string };
+  // Campaign config from DesignEditorLayout (optional, not directly used here but passed through)
   campaignConfig?: any;
-  onCampaignConfigChange?: (config: any) => void;
+  onCampaignConfigChange?: (cfg: any) => void;
   elements?: any[];
   onElementsChange?: (elements: any[]) => void;
   selectedElement?: any;
@@ -68,8 +70,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
   onBackgroundChange,
   onExtractedColorsChange,
   currentBackground,
-  campaignConfig,
-  onCampaignConfigChange,
   elements = [],
   onElementsChange,
   selectedElement,
@@ -105,6 +105,9 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
 }) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
+  // Centralized campaign state (Zustand)
+  const campaign = useEditorStore((s) => s.campaign);
+  const setCampaign = useEditorStore((s) => s.setCampaign);
   
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
@@ -168,14 +171,14 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       icon: Palette
     },
     { 
+      id: 'form', 
+      label: 'Contact', 
+      icon: FormInput
+    },
+    { 
       id: 'layers', 
       label: 'Layers', 
       icon: Layers
-    },
-    { 
-      id: 'campaign', 
-      label: 'Settings', 
-      icon: Settings
     },
     { 
       id: 'gamelogic', 
@@ -283,6 +286,15 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             currentBackground={currentBackground}
           />
         );
+      case 'form':
+        return (
+          <div className="p-4">
+            <ModernFormTab 
+              campaign={campaign}
+              setCampaign={setCampaign as any}
+            />
+          </div>
+        );
       case 'layers':
         return (
           <LayersPanel 
@@ -291,13 +303,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
             selectedElements={selectedElements}
             onSelectedElementsChange={onSelectedElementsChange}
             onAddToHistory={onAddToHistory}
-          />
-        );
-      case 'campaign':
-        return (
-          <CampaignConfigPanel 
-            config={campaignConfig} 
-            onConfigChange={onCampaignConfigChange || (() => {})} 
           />
         );
       case 'gamelogic':

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Trash2, Move, FormInput } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Trash2, Move, FormInput, Search, ChevronDown } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -12,6 +12,8 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import Modal from '@/components/common/Modal';
+import { useSavedForms } from '@/hooks/useSavedForms';
 
 interface ModernFormTabProps {
   campaign: any;
@@ -84,16 +86,6 @@ function SortableField({
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Placeholder</label>
-        <input
-          type="text"
-          value={field.placeholder || ''}
-          onChange={(e) => updateField(field.id, { placeholder: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-        />
-      </div>
-
       {field.type === 'select' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
@@ -142,7 +134,39 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
   campaign,
   setCampaign
 }) => {
-  const formFields = campaign.formFields || [];
+  const formFields = campaign?.formFields || [];
+
+  // Saved forms state & logic
+  const { forms, fetchForms, createForm, updateForm, error: formsError } = useSavedForms();
+  const [search, setSearch] = useState('');
+  const [selectedSavedFormId, setSelectedSavedFormId] = useState<string>('');
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [updateExisting, setUpdateExisting] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Initial fetch
+    fetchForms();
+  }, [fetchForms]);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  const filteredForms = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return forms;
+    return forms.filter((f) => f.name.toLowerCase().includes(q));
+  }, [forms, search]);
 
   const fieldTypes = [
     { value: 'text', label: 'Texte' },
@@ -159,30 +183,29 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       label: 'Nouveau champ',
       type: 'text',
       required: false,
-      placeholder: '',
       options: []
     };
 
-    setCampaign((prev: any) => ({
+    setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: [...formFields, newField]
-    }));
+      formFields: [...(prev.formFields || []), newField]
+    } : prev));
   };
 
   const updateField = (fieldId: string, updates: any) => {
-    setCampaign((prev: any) => ({
+    setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: prev.formFields.map((field: any) => 
+      formFields: (prev.formFields || []).map((field: any) => 
         field.id === fieldId ? { ...field, ...updates } : field
       )
-    }));
+    } : prev));
   };
 
   const removeField = (fieldId: string) => {
-    setCampaign((prev: any) => ({
+    setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: prev.formFields.filter((field: any) => field.id !== fieldId)
-    }));
+      formFields: (prev.formFields || []).filter((field: any) => field.id !== fieldId)
+    } : prev));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -191,10 +214,10 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       const oldIndex = formFields.findIndex((f: any) => f.id === active.id);
       const newIndex = formFields.findIndex((f: any) => f.id === over.id);
       const items = arrayMove(formFields, oldIndex, newIndex);
-      setCampaign((prev: any) => ({
+      setCampaign((prev: any) => (prev ? {
         ...prev,
         formFields: items
-      }));
+      } : prev));
     }
   };
 
@@ -221,23 +244,96 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
     }
   };
 
+  const handleLoadSavedForm = (id?: string) => {
+    const targetId = id || selectedSavedFormId;
+    if (!targetId) return;
+    const selected = forms.find((f) => f.id === targetId);
+    if (!selected) return;
+    const proceed = formFields.length === 0 || window.confirm('Charger ce formulaire remplacera les champs existants. Continuer ?');
+    if (!proceed) return;
+    setCampaign((prev: any) => (prev ? {
+      ...prev,
+      formFields: Array.isArray(selected.fields) ? selected.fields : []
+    } : prev));
+  };
+
+  const handleSelectAndLoad = (id: string) => {
+    setSelectedSavedFormId(id);
+    setIsDropdownOpen(false);
+    handleLoadSavedForm(id);
+  };
+
+  const openSaveModal = () => {
+    const selected = forms.find((f) => f.id === selectedSavedFormId);
+    setSaveName(selected?.name || '');
+    setUpdateExisting(!!selected);
+    setIsSaveModalOpen(true);
+  };
+
+  const handleSaveForm = async () => {
+    try {
+      if (updateExisting && selectedSavedFormId) {
+        const existing = forms.find((f) => f.id === selectedSavedFormId);
+        await updateForm(selectedSavedFormId, saveName || existing?.name || 'Formulaire', formFields);
+      } else {
+        const created = await createForm(saveName || 'Formulaire', formFields);
+        setSelectedSavedFormId(created.id);
+      }
+      setIsSaveModalOpen(false);
+    } catch (e) {
+      // Errors are handled in hook state; keep UI minimal here
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Configuration du formulaire</h2>
-        <p className="text-sm text-gray-600">
-          Configurez les champs de saisie pour collecter les données des participants
-        </p>
+      {/* Saved forms searchable dropdown */}
+      <div ref={dropdownRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setIsDropdownOpen((v) => !v)}
+          className="w-full text-left px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg flex items-center justify-between hover:border-[#841b60]"
+        >
+          <span className="text-gray-700">
+            {forms.find((f) => f.id === selectedSavedFormId)?.name || 'Chercher un questionnaire existant'}
+          </span>
+          <ChevronDown className="w-4 h-4 text-gray-500" />
+        </button>
+        {isDropdownOpen && (
+          <div className="absolute z-20 mt-2 w-full bg-gray-50 border border-gray-200 rounded-lg shadow-lg">
+            <div className="p-3 border-b">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder=""
+                  className="w-full px-3 py-2 pr-9 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+                />
+                <Search className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+              </div>
+              <p className="mt-2 text-sm text-gray-600">Chercher un questionnaire existant</p>
+            </div>
+            <div className="px-3 py-2 text-xs uppercase tracking-wide text-gray-500">Dernières créations</div>
+            <div className="max-h-72 overflow-y-auto">
+              {filteredForms.length === 0 && (
+                <div className="px-4 py-3 text-sm text-gray-500">Aucun résultat</div>
+              )}
+              {filteredForms.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => handleSelectAndLoad(f.id)}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 border-t first:border-t-0"
+                >
+                  <div className="text-sm text-gray-900">{f.name}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {formsError && <p className="mt-2 text-xs text-red-600">{formsError}</p>}
       </div>
-
-      <button
-        onClick={addField}
-        className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
-      >
-        <Plus className="w-4 h-4" />
-        <span>Ajouter un champ</span>
-      </button>
-
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={formFields.map((f: any) => f.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
@@ -261,8 +357,70 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
         <div className="text-center py-8 text-gray-500">
           <FormInput className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p>Aucun champ configuré</p>
-          <p className="text-sm">Cliquez sur "Ajouter un champ" pour commencer</p>
+          <p className="text-sm">Cliquez sur "+ Champ" pour commencer</p>
         </div>
+      )}
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={addField}
+          className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+        >
+          + Champ
+        </button>
+        <button
+          onClick={openSaveModal}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-gray-50"
+          type="button"
+        >
+          Enregistrer
+        </button>
+      </div>
+
+      {isSaveModalOpen && (
+        <Modal title="Enregistrer le formulaire" onClose={() => setIsSaveModalOpen(false)}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom du formulaire</label>
+              <input
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Ex: Formulaire Prospect"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                id="update-existing"
+                type="checkbox"
+                checked={updateExisting && !!selectedSavedFormId}
+                onChange={(e) => setUpdateExisting(e.target.checked)}
+                disabled={!selectedSavedFormId}
+                className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+              />
+              <label htmlFor="update-existing" className="text-sm text-gray-700">
+                Mettre à jour le formulaire sélectionné
+              </label>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                className="px-4 py-2 text-gray-700 hover:bg-gray-50 border rounded-lg"
+                onClick={() => setIsSaveModalOpen(false)}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-[#841b60] text-white rounded-lg hover:opacity-90"
+                onClick={handleSaveForm}
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

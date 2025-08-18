@@ -77,7 +77,7 @@ const ModernEditorPanel: React.FC<ModernEditorPanelProps> = ({
       case 'form':
         return <ModernFormTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
       case 'mobile':
-        return <ModernMobileTab campaign={safeCampaign} setCampaign={safeSetCampaign} />;
+        return <ModernMobileTab campaign={safeCampaign} />;
       default:
         return <div className="p-4 text-center text-gray-500">
             Sélectionnez un onglet pour commencer

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export type FieldConfig = {
   id: string;
@@ -6,7 +6,6 @@ export type FieldConfig = {
   type?: "text" | "email" | "tel" | "select" | "textarea" | "checkbox";
   required?: boolean;
   options?: string[];
-  placeholder?: string;
   autoComplete?: string;
 };
 
@@ -37,6 +36,16 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<Record<string, string>>(defaultValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Keep form in sync when fields or defaultValues change
+  useEffect(() => {
+    const initial: Record<string, string> = {};
+    fields.forEach((f) => {
+      initial[f.id] = defaultValues[f.id] ?? '';
+    });
+    setFormData(initial);
+    setErrors({});
+  }, [fields, defaultValues]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -97,7 +106,6 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
       id: field.id,
       name: field.id,
       required: field.required,
-      placeholder: field.placeholder,
       autoComplete: field.autoComplete || "on",
       style: getInputStyle(),
       className: `w-full px-4 py-2 border rounded-[2px] ${getFocusClass()}`,
@@ -141,7 +149,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
               }}
             />
             <label htmlFor={field.id} className="text-sm text-gray-700">
-              {field.placeholder || 'Cocher cette case'}
+              {field.label}
             </label>
           </div>
         );

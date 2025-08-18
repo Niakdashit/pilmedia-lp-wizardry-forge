@@ -21,9 +21,17 @@ export const createSaveHandler = (
         }
       }
       
+      // Normalize form fields: remove placeholder keys to avoid persisting them
+      const normalizedFormFields = Array.isArray(campaign.formFields)
+        ? campaign.formFields.map((f: any) => {
+            const { placeholder, ...rest } = f || {};
+            return rest;
+          })
+        : campaign.formFields;
+
       const campaignData = {
         ...campaign,
-        form_fields: campaign.formFields
+        form_fields: normalizedFormFields
       };
       
       console.log('Saving campaign with data:', campaignData);

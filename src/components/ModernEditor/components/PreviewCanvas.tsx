@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Eye } from 'lucide-react';
-import GameCanvasPreview from '../../CampaignEditor/GameCanvasPreview';
+import GameCanvasPreview from './GameCanvasPreview';
 
 interface PreviewCanvasProps {
   campaign: any;
@@ -51,10 +51,7 @@ const PreviewCanvas: React.FC<PreviewCanvasProps> = ({
           {campaign && campaign.type ? (
             <GameCanvasPreview
               campaign={campaign}
-              gameSize={campaign.gameSize || 'medium'}
               previewDevice={selectedDevice}
-              showBackgroundOverlay={false}
-              className="w-full h-full"
             />
           ) : (
             <div className="w-full max-w-lg">

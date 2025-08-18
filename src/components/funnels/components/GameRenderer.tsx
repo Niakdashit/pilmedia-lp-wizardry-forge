@@ -8,7 +8,7 @@ import QuizPreview from '../../GameTypes/QuizPreview';
 import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
 import { GAME_SIZES, GameSize } from '../../configurators/GameSizeSelector';
-import { useGamePositionCalculator } from '../../CampaignEditor/GamePositionCalculator';
+// Removed legacy CampaignEditor dependency: inline position calculator
 import useCenteredStyles from '../../../hooks/useCenteredStyles';
 import { getCampaignBackgroundImage } from '../../../utils/background';
 
@@ -47,11 +47,25 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const isModal = previewMode !== 'desktop' || window.location.pathname.includes('preview');
 
   const { containerStyle, wrapperStyle } = useCenteredStyles();
-  const { getPositionStyles } = useGamePositionCalculator({
-    gameSize,
-    gamePosition,
-    shouldCropWheel: false
-  });
+  const getPositionStyles = () => {
+    const dims = GAME_SIZES[gameSize];
+    const style: React.CSSProperties = {
+      width: `${dims.width}px`,
+      height: `${dims.height}px`
+    };
+    switch (gamePosition) {
+      case 'top':
+        return { ...style, marginTop: 0, marginBottom: 'auto' } as React.CSSProperties;
+      case 'bottom':
+        return { ...style, marginTop: 'auto', marginBottom: 0 } as React.CSSProperties;
+      case 'left':
+        return { ...style, marginLeft: 0, marginRight: 'auto' } as React.CSSProperties;
+      case 'right':
+        return { ...style, marginLeft: 'auto', marginRight: 0 } as React.CSSProperties;
+      default:
+        return { ...style, margin: '0 auto' } as React.CSSProperties;
+    }
+  };
 
   const baseMinHeight = Math.max(GAME_SIZES[gameSize].height + 100, 400);
 
