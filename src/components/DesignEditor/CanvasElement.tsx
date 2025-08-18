@@ -862,6 +862,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
               segments={element.segments || []}
               size={Math.min(element.width || 300, element.height || 300)}
               disabled={true}
+              disablePointerAnimation={true}
               brandColors={{
                 primary: '#FF6B6B',
                 secondary: '#4ECDC4'

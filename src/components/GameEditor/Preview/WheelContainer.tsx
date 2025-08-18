@@ -92,6 +92,8 @@ const WheelContainer: React.FC<WheelContainerProps> = ({
         showBulbs={true}
         buttonPosition={config.wheelButtonPosition === 'center' ? 'center' : 'bottom'}
         onShowParticipationModal={onShowParticipationModal}
+        disabled={!isMode1}
+        disablePointerAnimation={true}
         customButton={{
           text: isMode1 ? "Faire tourner" : "Remplir le formulaire",
           color: brandColors?.primary || "#8E44AD",

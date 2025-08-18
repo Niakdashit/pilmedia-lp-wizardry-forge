@@ -75,7 +75,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
     <>
       {/* Modal */}
       <div 
-        className="bg-white rounded-lg shadow-xl z-50 border"
+        className="bg-white rounded-[2px] shadow-xl z-50 border"
         style={modalStyle}
       >
         <div className="p-4">

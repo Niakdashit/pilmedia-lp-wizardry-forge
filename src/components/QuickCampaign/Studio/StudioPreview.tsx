@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, Smartphone, Tablet, Monitor, Settings } from 'lucide-react';
+import { ChevronLeft, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import InteractiveWheel from './InteractiveWheel';
@@ -24,136 +24,7 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
-  const handleAdvancedEditor = () => {
-    try {
-      // Nettoyer d'abord le localStorage
-      localStorage.removeItem('editorConfig');
-      localStorage.removeItem('studioPreview');
-      localStorage.removeItem('game_live_preview_config');
-      
-      // Transformer les données Studio vers le format EditorConfig
-      const editorConfig = {
-        width: 810,
-        height: 1200,
-        anchor: 'fixed',
-        gameType: 'wheel',
-        gameMode: 'mode1-sequential',
-        displayMode: 'mode1-banner-game',
-        storyText: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
-        publisherLink: '',
-        prizeText: campaignData.content?.subtitle || campaignData.content?.description || 'Participez et tentez de gagner !',
-        customTexts: [
-          {
-            id: 'main-title',
-            text: campaignData.content?.title || 'PARTICIPEZ & GAGNEZ',
-            type: 'title',
-            position: { x: 0, y: 0 },
-            style: {
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              textAlign: 'center'
-            }
-          },
-          {
-            id: 'subtitle',
-            text: campaignData.content?.subtitle || '',
-            type: 'subtitle',
-            position: { x: 0, y: 60 },
-            style: {
-              fontSize: '24px',
-              fontWeight: 'medium',
-              color: '#ffffff',
-              textAlign: 'center'
-            }
-          },
-          {
-            id: 'description',
-            text: campaignData.content?.description || '',
-            type: 'description',
-            position: { x: 0, y: 120 },
-            style: {
-              fontSize: '16px',
-              fontWeight: 'normal',
-              color: '#ffffff',
-              textAlign: 'center'
-            }
-          }
-        ].filter(text => text.text), // Supprimer les textes vides
-        centerText: false,
-        centerForm: true,
-        centerGameZone: true,
-        backgroundColor: campaignData.design?.primaryColor || '#ffffff',
-        outlineColor: campaignData.design?.accentColor || '#ffffff',
-        borderStyle: 'classic',
-        jackpotBorderStyle: 'classic',
-        participateButtonText: campaignData.content?.callToAction || 'JOUER MAINTENANT',
-        participateButtonColor: campaignData.design?.primaryColor || '#ff6b35',
-        participateButtonTextColor: campaignData.design?.accentColor || '#ffffff',
-        footerText: '* Voir conditions d\'utilisation - Jeu gratuit sans obligation d\'achat',
-        footerColor: '#f8f9fa',
-        customCSS: '',
-        customJS: '',
-        trackingTags: '',
-        deviceConfig: {
-          mobile: {
-            fontSize: 14,
-            backgroundImage: backgroundUrl || undefined,
-            gamePosition: { x: 0, y: 0, scale: 1.7 }
-          },
-          tablet: {
-            fontSize: 16,
-            backgroundImage: backgroundUrl || undefined,
-            gamePosition: { x: 0, y: 0, scale: 1.7 }
-          },
-          desktop: {
-            fontSize: 18,
-            backgroundImage: backgroundUrl || undefined,
-            gamePosition: { x: 0, y: 0, scale: 1.7 }
-          }
-        },
-        autoSyncOnDeviceChange: false,
-        autoSyncRealTime: false,
-        autoSyncBaseDevice: 'desktop',
-        gameConfig: {},
-        wheelConfig: {},
-        brandAnalysis: campaignData.brandAnalysis || null,
-        centerLogo: logoUrl || null,
-        brandAssets: {
-          logo: logoUrl,
-          primaryColor: campaignData.design?.primaryColor,
-          secondaryColor: campaignData.design?.secondaryColor,
-          accentColor: campaignData.design?.accentColor
-        },
-        designColors: {
-          primary: campaignData.design?.primaryColor,
-          secondary: campaignData.design?.secondaryColor,
-          accent: campaignData.design?.accentColor
-        }
-      };
-      
-      // Sauvegarder les données complètes
-      const fullCampaignData = {
-        ...campaignData,
-        design: {
-          ...campaignData.design,
-          backgroundImage: backgroundUrl,
-          centerLogo: logoUrl
-        }
-      };
-      
-      // Sauvegarder dans localStorage
-      localStorage.setItem('studioPreview', JSON.stringify(fullCampaignData));
-      localStorage.setItem('editorConfig', JSON.stringify(editorConfig));
-      
-      console.log('Transferring Studio data:', { fullCampaignData, editorConfig });
-      
-      // Naviguer vers l'éditeur avec rechargement forcé
-      window.location.href = '/design-editor';
-    } catch (error) {
-      console.error('Erreur lors du transfert vers l\'éditeur:', error);
-    }
-  };
+  
 
   const getDeviceStyle = () => {
     switch (selectedDevice) {
@@ -208,14 +79,6 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
         </Button>
 
         <div className="flex items-center gap-4">
-          <Button
-            onClick={handleAdvancedEditor}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
-          >
-            <Settings className="w-4 h-4" />
-            Éditeur avancé
-          </Button>
-          
           <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setSelectedDevice('mobile')}
@@ -254,11 +117,11 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
           <CardContent className="relative h-full p-0 flex flex-col">
             {/* Overlay pour améliorer la lisibilité */}
             <div 
-              className="absolute inset-0 bg-black/30"
+              className="absolute inset-0"
               style={{
                 background: backgroundUrl 
                   ? 'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 100%)'
-                  : `linear-gradient(135deg, ${campaignData.design?.primaryColor || '#841b60'} 0%, ${campaignData.design?.secondaryColor || '#dc2626'} 100%)`
+                  : 'transparent'
               }}
             />
 

@@ -116,14 +116,28 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     setShowValidationMessage(false);
   };
 
-  // Si on a un résultat de jeu, afficher l'écran de résultat
+  // Si on a un résultat de jeu, afficher l'écran de résultat avec le même fond que le canvas
   if (gameResult) {
-    return <ResultScreen 
-      gameResult={gameResult} 
-      campaign={campaign} 
-      mobileConfig={mobileConfig} 
-      onReset={handleReset} 
-    />;
+    const backgroundStyle: React.CSSProperties = {
+      background: campaign.design?.background?.type === 'image'
+        ? `url(${campaign.design.background.value}) center/cover no-repeat`
+        : campaign.design?.background?.value || '#ffffff'
+    };
+    return (
+      <div className="w-full h-[100dvh] min-h-[100dvh]">
+        <div className="relative w-full h-full">
+          <div className="absolute inset-0" style={backgroundStyle} />
+          <div className="relative z-10 h-full flex items-center justify-center">
+            <ResultScreen 
+              gameResult={gameResult} 
+              campaign={campaign} 
+              mobileConfig={mobileConfig} 
+              onReset={handleReset} 
+            />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

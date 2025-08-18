@@ -11,6 +11,8 @@ interface UseSmartWheelRendererProps {
   customBorderColor?: string;
   customBorderWidth?: number;
   showBulbs?: boolean;
+  /** When true, disables pointer wobble/deflection animation */
+  disablePointerAnimation?: boolean;
 }
 
 export const useSmartWheelRenderer = ({
@@ -22,6 +24,7 @@ export const useSmartWheelRenderer = ({
   customBorderColor,
   customBorderWidth,
   showBulbs,
+  disablePointerAnimation,
 
 }: UseSmartWheelRendererProps) => {
   // Central bulb count used for visuals and pointer collisions
@@ -159,14 +162,40 @@ export const useSmartWheelRenderer = ({
     return () => { canceled = true; };
   }, [borderStyle]);
 
-  // Animation frame pour les effets animés
+  // Animation frame pour les effets animés (désactivable)
   useEffect(() => {
-    let animationId: number;
-    
+    let animationId: number | null = null;
+
+    if (disablePointerAnimation) {
+      // Stop any motion and keep the pointer static at neutral angle
+      pointerVelRef.current = 0;
+      pointerAngleRef.current = 0; // neutral straight-down
+      prevBoundaryIndexRef.current = null;
+      // Force a redraw once to reflect the static pointer
+      setAnimationTime((t) => t + 1);
+      return () => {
+        if (animationId) cancelAnimationFrame(animationId);
+      };
+    }
+
     const animate = (timestamp: number) => {
       const prevTs = prevTimestampRef.current || timestamp - 16;
       const dtMs = Math.max(1, timestamp - prevTs);
       const dt = dtMs / 1000; // seconds
+
+      // If the wheel is spinning, keep the pointer strictly static
+      if (spinningRef.current) {
+        pointerVelRef.current = 0;
+        pointerAngleRef.current = 0; // neutral straight-down
+        prevBoundaryIndexRef.current = null; // reset notch tracking to avoid a big impulse after
+        // Keep timers in sync to avoid large dt on resume
+        prevRotationRef.current = rotationRef.current;
+        prevTimestampRef.current = timestamp;
+        // Trigger redraw to ensure static pointer is rendered
+        setAnimationTime(timestamp);
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
 
       // Detect invisible ratchet notch crossings (pointer tip hits notches)
       const stepDeg = segAngleDegRef.current;
@@ -220,7 +249,7 @@ export const useSmartWheelRenderer = ({
       animationId = requestAnimationFrame(animate);
     };
 
-    // Always run RAF to animate the pointer (lightweight)
+    // Run RAF to animate the pointer
     animationId = requestAnimationFrame(animate);
     
     return () => {
@@ -228,7 +257,7 @@ export const useSmartWheelRenderer = ({
         cancelAnimationFrame(animationId);
       }
     };
-  }, [borderStyle]);
+  }, [borderStyle, disablePointerAnimation]);
 
   // Dessiner 15 petites ampoules blanches sur la bordure externe
   const drawBulbs = (

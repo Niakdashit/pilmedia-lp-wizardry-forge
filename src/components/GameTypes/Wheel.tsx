@@ -113,6 +113,7 @@ const Wheel: React.FC<WheelProps> = ({
         onResult={handleResult}
         onSpin={handleSpin}
         disabled={disabled}
+        disablePointerAnimation={true}
         borderStyle={borderStyle}
         showBulbs={showBulbs}
         customButton={{

@@ -83,7 +83,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
     borderColor: inputBorderColor,
     borderWidth: 1,
     borderStyle: "solid",
-    borderRadius: "0.5rem",
+    borderRadius: "2px",
     outline: "none"
   });
 
@@ -100,7 +100,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
       placeholder: field.placeholder,
       autoComplete: field.autoComplete || "on",
       style: getInputStyle(),
-      className: `w-full px-4 py-2 border rounded-lg ${getFocusClass()}`,
+      className: `w-full px-4 py-2 border rounded-[2px] ${getFocusClass()}`,
       onChange: handleChange
     };
 
@@ -134,7 +134,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
               name={field.id}
               checked={formData[field.id] === 'true'}
               onChange={handleChange}
-              className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+              className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded-[2px] focus:ring-[#841b60]"
               style={{
                 borderColor: inputBorderColor,
                 outline: "none"
@@ -178,7 +178,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
       <button
         type="submit"
         className="w-full px-6 py-3 font-medium transition-colors duration-200"
-        style={textStyles?.button}
+        style={{ ...(textStyles?.button || {}), borderRadius: 2 }}
       >
         {submitLabel}
       </button>

@@ -26,7 +26,7 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
       }}
     >
       <div 
-        className={`bg-white rounded-xl shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
+        className={`bg-white rounded-[2px] shadow-xl w-full ${width} relative max-h-[90vh] overflow-hidden`}
       >
         {/* Bouton de fermeture */}
         <button

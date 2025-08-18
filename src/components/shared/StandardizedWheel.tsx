@@ -105,6 +105,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           }}
           buttonPosition="center"
           disabled={disabled}
+          disablePointerAnimation={true}
           onSpin={onSpin}
         />
       </div>

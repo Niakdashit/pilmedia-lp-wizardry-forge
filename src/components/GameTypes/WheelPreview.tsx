@@ -150,6 +150,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             onResult={handleResult}
             onSpin={handleSpin}
             disabled={disabled}
+            disablePointerAnimation={true}
             borderStyle={wheelConfig.borderStyle}
             customBorderColor={wheelConfig.borderColor}
             customBorderWidth={wheelConfig.borderWidth}

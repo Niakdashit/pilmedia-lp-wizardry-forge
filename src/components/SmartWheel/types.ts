@@ -37,6 +37,8 @@ export interface SmartWheelProps {
   theme?: WheelTheme | string;
   size?: number;
   disabled?: boolean;
+  /** When true, disables the pointer wobble/click animation */
+  disablePointerAnimation?: boolean;
   onSpin?: () => void;
   onResult?: (segment: WheelSegment) => void;
   onShowParticipationModal?: () => void; // Callback pour ouvrir le modal de participation au niveau supérieur
@@ -76,3 +78,4 @@ export interface WheelState {
   targetRotation: number;
   currentSegment: WheelSegment | null;
 }
+

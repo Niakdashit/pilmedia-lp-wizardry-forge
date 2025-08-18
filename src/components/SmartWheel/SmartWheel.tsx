@@ -12,6 +12,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   theme = 'modern',
   size = 400,
   disabled = false,
+  disablePointerAnimation,
   onSpin,
   onResult,
   onShowParticipationModal,
@@ -82,7 +83,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     borderStyle: currentBorderStyle,
     customBorderColor: customBorderColor || brandColors?.primary,
     customBorderWidth,
-    showBulbs
+    showBulbs,
+    disablePointerAnimation
   });
   
   const handleSpin = () => {
@@ -290,31 +292,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
             {buttonConfig.text}
           </button>
         )}
-
-        {/* Message de validation si segment sélectionné */}
-        {!isMode1 && mode2State === 'result' && finalResult && (
-          <div className="text-center space-y-4">
-            <div
-              className="px-4 py-2 rounded-lg text-white font-medium animate-fade-in"
-              style={{ backgroundColor: resolvedTheme.colors.accent }}
-            >
-              🎉 {finalResult.label}
-            </div>
-            <div className="text-sm text-gray-600">
-              Félicitations {participantData?.firstName || 'Participant'} !
-            </div>
-          </div>
-        )}
         
-        {/* Message de résultat mode 1 */}
-        {isMode1 && wheelState.currentSegment && !wheelState.isSpinning && (
-          <div
-            className="px-4 py-2 rounded-lg text-white font-medium animate-fade-in"
-            style={{ backgroundColor: resolvedTheme.colors.accent }}
-          >
-            🎉 {wheelState.currentSegment.label}
-          </div>
-        )}
+        {/* Inline result messages intentionally removed to keep UI clean */}
       </div>
 
       {/* Modale de participation pour le mode 2 */}
