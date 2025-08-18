@@ -138,9 +138,9 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           will-change: auto;
           backface-visibility: hidden;
           
-          /* Safe areas iOS - ajusté pour le canvas */
+          /* Safe areas iOS */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: calc(env(safe-area-inset-bottom) + 100px); /* Space for mobile tab bar + extra margin */
+          padding-bottom: calc(env(safe-area-inset-bottom) + 80px); /* Space for mobile tab bar */
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
           

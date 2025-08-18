@@ -14,7 +14,7 @@ interface NewsletterState {
   updateModule: (id: string, updates: Partial<NewsletterModule>) => void;
 }
 
-export const useNewsletterStore = create<NewsletterState>((set) => ({
+export const useNewsletterStore = create<NewsletterState>((set, get) => ({
   modules: [],
   addModule: (mod) =>
     set((state) => ({ modules: [...state.modules, mod] })),

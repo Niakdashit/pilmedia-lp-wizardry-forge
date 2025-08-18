@@ -215,11 +215,11 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           -webkit-touch-callout: none;
           -webkit-tap-highlight-color: transparent;
           
-          /* Safe areas iOS - optimisé pour centrage */
-          padding-top: max(env(safe-area-inset-top), 10px);
-          padding-bottom: max(env(safe-area-inset-bottom), 120px);
-          padding-left: max(env(safe-area-inset-left), 10px);
-          padding-right: max(env(safe-area-inset-right), 10px);
+          /* Safe areas iOS */
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
+          padding-left: env(safe-area-inset-left);
+          padding-right: env(safe-area-inset-right);
         }
 
         .mobile-layout .layout-content {
@@ -231,11 +231,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           /* Prevent flex children from overflowing in mobile dynamic viewport */
           min-height: 0;
           min-width: 0;
-          /* Meilleur centrage */
-          align-items: center;
-          justify-content: center;
-          /* Marges pour éviter de couper */
-          margin: 10px;
         }
 
         /* Masquer la sidebar sur mobile - affichée via drawer */
