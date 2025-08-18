@@ -85,6 +85,9 @@ export const useSmartWheelRenderer = ({
   // Cache pour les anneaux image-based (styles 'pattern')
   const ringImageCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
   
+  // Cache pour les icônes des segments (images par segment)
+  const segmentIconCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
+  
   // Keep refs in sync without retriggering RAF setup
   useEffect(() => { rotationRef.current = wheelState.rotation; }, [wheelState.rotation]);
   useEffect(() => { spinningRef.current = wheelState.isSpinning; }, [wheelState.isSpinning]);
@@ -429,6 +432,52 @@ export const useSmartWheelRenderer = ({
         ctx.stroke();
       }
       ctx.restore();
+
+      // Dessiner une icône par segment si disponible (imageUrl mappé vers segment.icon)
+      if (segment.icon && typeof segment.icon === 'string') {
+        const url = segment.icon;
+        const cache = segmentIconCacheRef.current;
+        let entry = cache.get(url);
+        if (!entry) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          entry = { img, ready: false, loading: true };
+          cache.set(url, entry);
+          img.onload = () => {
+            const e = cache.get(url);
+            if (e) {
+              e.ready = true;
+              e.loading = false;
+            }
+          };
+          img.onerror = () => {
+            const e = cache.get(url);
+            if (e) {
+              e.ready = false;
+              e.loading = false;
+              e.failed = true;
+            }
+          };
+          img.src = url;
+        }
+        if (entry && entry.ready) {
+          // Positionner l'icône vers l'extérieur mais avant le texte pour éviter le chevauchement
+          const midAngle = startAngle + anglePerSegment / 2;
+          const iconRadius = Math.max(10, size * 0.06);
+          const dist = radius * 0.52; // légèrement plus proche du centre que le texte (0.7)
+          const iconX = centerX + dist * Math.cos(midAngle);
+          const iconY = centerY + dist * Math.sin(midAngle);
+
+          ctx.save();
+          // Dessin en disque (clip circulaire)
+          ctx.beginPath();
+          ctx.arc(iconX, iconY, iconRadius, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(entry.img, iconX - iconRadius, iconY - iconRadius, iconRadius * 2, iconRadius * 2);
+          ctx.restore();
+        }
+      }
 
       // Dessiner le texte
       drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);

@@ -60,12 +60,15 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     const secondaryRef = '#ffffff';
 
     return segments.map((segment: any, index: number) => {
-      const color = index % 2 === 0 ? primaryRef : secondaryRef;
+      const color = segment.color ?? (index % 2 === 0 ? primaryRef : secondaryRef);
+      const textColor = segment.textColor ?? (index % 2 === 0 ? secondaryRef : primaryRef);
+      const icon = segment.imageUrl || segment.image || segment.icon || null;
       return {
         id: segment.id || index.toString(),
         label: segment.label,
         color,
-        textColor: index % 2 === 0 ? secondaryRef : primaryRef
+        textColor,
+        icon
       };
     });
   }, [segments, wheelModalConfig?.wheelBorderColor, campaign.design?.customColors, extractedColors]);

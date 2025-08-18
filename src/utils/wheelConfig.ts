@@ -51,7 +51,9 @@ export const getWheelSegments = (campaign: any) => {
     ...segment,
     color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2),
     textColor: segment.textColor || (index % 2 === 0 ? segmentColor2 : segmentColor1),
-    id: segment.id || `segment-${index}`
+    id: segment.id || `segment-${index}`,
+    // Normaliser l'image pour les moteurs canvas: utiliser 'image' si présent, sinon mapper 'imageUrl' -> 'image'
+    image: segment.image ?? segment.imageUrl ?? undefined
   }));
 
   if (process.env.NODE_ENV !== 'production') {
