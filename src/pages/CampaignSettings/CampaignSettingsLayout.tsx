@@ -45,17 +45,18 @@ const CampaignSettingsLayout: React.FC = () => {
           {/* Center: Tabs (reserve space on the right for the 'Mode édition' button) */}
           <div className="flex-1 min-w-0 px-3 pr-[12rem] sm:pr-[14rem] md:pr-[16rem] max-w-6xl">
             <div className="flex items-stretch overflow-x-auto no-scrollbar">
-              {steps.map((s) => (
-                <NavLink
-                  key={s.label}
-                  to={s.path}
-                  end={s.path === ''}
-                  className={({ isActive }) =>
-                    `flex-1 min-w-[110px] sidebar-tab-horizontal flex w-full h-full items-center justify-center text-center border-l border-gray-200 first:border-l-0 cursor-pointer ${isActive ? 'active' : ''}`
-                  }
-                >
-                  <span className="truncate w-full">{s.label}</span>
-                </NavLink>
+              {steps.map((s, idx) => (
+                <div key={s.label} className="relative flex-1 min-w-[110px]">
+                  <NavLink
+                    to={s.path}
+                    end={s.path === ''}
+                    className={({ isActive }) =>
+                      `absolute inset-0 sidebar-tab-horizontal flex items-center justify-center text-center border-l border-gray-200 ${idx === 0 ? 'first:border-l-0' : ''} cursor-pointer ${isActive ? 'active' : ''}`
+                    }
+                  >
+                    <span className="truncate w-full px-2">{s.label}</span>
+                  </NavLink>
+                </div>
               ))}
             </div>
           </div>
