@@ -249,7 +249,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0; /* Ensure full-canvas display without cropping */
+          padding: 8px; /* Minimal padding to prevent edge cropping */
           overflow: hidden;
           position: relative;
           min-height: 0;
@@ -266,6 +266,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           width: 100%;
           height: 100%;
           flex: 1;
+          max-width: calc(100vw - 16px); /* Account for minimal padding */
+          max-height: calc(100vh - 160px); /* Account for safe areas and UI */
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */

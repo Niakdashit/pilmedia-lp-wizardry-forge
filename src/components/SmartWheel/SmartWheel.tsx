@@ -35,8 +35,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   // États pour le mode 2
   const [mode2State, setMode2State] = useState<Mode2State>('form');
   const [showParticipationModal, setShowParticipationModal] = useState(false);
-  const [participantData, setParticipantData] = useState<any>(null);
-  const [finalResult, setFinalResult] = useState<any>(null);
 
   // Synchroniser l'état local avec la prop borderStyle
   useEffect(() => {
@@ -52,7 +50,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   // Fonctions de gestion
   const handleWheelResult = (result: any) => {
     if (!isMode1) {
-      setFinalResult(result);
       setMode2State('result');
     }
     if (onResult) {
@@ -143,16 +140,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     spin();
   };
   
-  const handleParticipationSubmit = (formData: any) => {
-    setParticipantData(formData);
+  const handleParticipationSubmit = () => {
     setShowParticipationModal(false);
     setMode2State('wheel');
   };
   
   const handlePlayAgain = () => {
     setMode2State('form');
-    setParticipantData(null);
-    setFinalResult(null);
   };
 
   // Fonction pour déterminer la position optimale du bouton

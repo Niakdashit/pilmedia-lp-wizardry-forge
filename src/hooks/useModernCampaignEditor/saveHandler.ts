@@ -5,7 +5,6 @@ export const createSaveHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,
   navigate: ReturnType<typeof useNavigate>,
-  isNewCampaign: boolean,
   setCampaign: React.Dispatch<React.SetStateAction<any>>
 ) => {
   return async (continueEditing = false) => {
@@ -43,7 +42,7 @@ export const createSaveHandler = (
       const savedCampaign = await saveCampaign(campaignData);
       if (savedCampaign && !continueEditing) {
         navigate('/gamification');
-      } else if (savedCampaign && isNewCampaign) {
+      } else if (savedCampaign) {
         setCampaign((prev: any) => ({
           ...prev,
           id: (savedCampaign as any).id
@@ -95,7 +94,6 @@ export const createSaveAndContinueHandler = (
   campaign: any,
   saveCampaign: (data: any) => Promise<any>,
   navigate: ReturnType<typeof useNavigate>,
-  isNewCampaign: boolean,
   setCampaign: React.Dispatch<React.SetStateAction<any>>
 ) => {
   return async () => {

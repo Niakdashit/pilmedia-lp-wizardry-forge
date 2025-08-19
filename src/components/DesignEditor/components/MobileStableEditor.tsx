@@ -138,14 +138,18 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           will-change: auto;
           backface-visibility: hidden;
           
-          /* Safe areas iOS */
+          /* Safe areas iOS - optimized for canvas visibility */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: calc(env(safe-area-inset-bottom) + 80px); /* Space for mobile tab bar */
+          padding-bottom: calc(env(safe-area-inset-bottom) + 60px); /* Reduced padding for better canvas space */
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
           
           /* Ensure content doesn't get hidden behind tab bar */
           box-sizing: border-box;
+          
+          /* Maximize available space for canvas */
+          display: flex;
+          flex-direction: column;
         }
         
         .tablet-optimized {

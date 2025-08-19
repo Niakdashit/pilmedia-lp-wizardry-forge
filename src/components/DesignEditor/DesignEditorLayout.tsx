@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Save, X, Plus, Layers as LayersIcon, Gamepad2, Palette as PaletteIcon, FormInput, Sparkles, Move3D, Undo2, Redo2 } from 'lucide-react';
+import { User, LogOut, Save, X } from 'lucide-react';
 import HybridSidebar from './HybridSidebar';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
@@ -15,15 +15,6 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 
-// Panels reused inside the mobile bottom-sheet
-import AssetsPanel from './panels/AssetsPanel';
-import BackgroundPanel from './panels/BackgroundPanel';
-import LayersPanel from './panels/LayersPanel';
-import TextEffectsPanel from './panels/TextEffectsPanel';
-import TextAnimationsPanel from './panels/TextAnimationsPanel';
-import PositionPanel from './panels/PositionPanel';
-import WheelConfigPanel from './panels/WheelConfigPanel';
-import ModernFormTab from '../ModernEditor/ModernFormTab';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
@@ -616,7 +607,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       campaignState,
       saveCampaign,
       navigate,
-      !(campaignState as any)?.id,
       setCampaign
     );
     return fn();
