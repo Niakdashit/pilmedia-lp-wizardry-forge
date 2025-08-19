@@ -16,8 +16,10 @@ interface MobileResponsiveLayoutProps {
   zoom: number;
   onZoomChange?: (zoom: number) => void;
   className?: string;
-  // Force le type d’appareil pour la mise en page (ex: afficher l’UI mobile en preview desktop)
+  // Force le type d'appareil pour la mise en page (ex: afficher l'UI mobile en preview desktop)
   forceDeviceType?: 'desktop' | 'tablet' | 'mobile';
+  // Appareil sélectionné dans l'UI (utilisé pour forcer l'interface)
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   // Props pour la sidebar mobile
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
@@ -46,6 +48,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   onZoomChange,
   className = '',
   forceDeviceType,
+  selectedDevice,
   // Props pour la sidebar mobile
   onAddElement,
   onBackgroundChange,
@@ -77,12 +80,21 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   });
 
   // Forcer le type d'appareil si demandé (ex: preview mobile sur desktop)
-  const effectiveDeviceType = forceDeviceType || deviceType;
+  // Priorité: selectedDevice > forceDeviceType > deviceType détecté
+  const effectiveForceType = selectedDevice || forceDeviceType;
+  const effectiveDeviceType = effectiveForceType || deviceType;
+  
   // IMPORTANT: la détection physique reste la source pour activer l'UI mobile
   const mIsMobile = isMobile;
   const mIsTablet = isTablet;
-  // Afficher l'UI mobile soit sur appareil mobile/tablette réel, soit quand on force mobile/tablette
-  const showMobileUI = mIsMobile || mIsTablet || forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
+  
+  // Afficher l'UI mobile dans ces cas:
+  // 1. Appareil mobile/tablette réel
+  // 2. Device selector en mode mobile/tablette (selectedDevice)
+  // 3. Force explicite mobile/tablette (forceDeviceType)
+  const showMobileUI = mIsMobile || mIsTablet || 
+                      selectedDevice === 'mobile' || selectedDevice === 'tablet' ||
+                      forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
 
   // Système de verrouillage du canvas pour mobile
   const {
@@ -116,7 +128,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
     return () => {
       window.removeEventListener('adjustCanvasZoom', handleZoomAdjust as EventListener);
     };
-  }, [onZoomChange, mIsMobile, mIsTablet]);
+  }, [onZoomChange, showMobileUI]);
 
   // Classes CSS dynamiques selon l'appareil
   const getLayoutClasses = () => {
@@ -142,7 +154,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       ref={containerRef}
       className={getLayoutClasses()}
       data-device={effectiveDeviceType}
+      data-selected-device={selectedDevice}
       data-mobile-optimized={(mIsMobile || mIsTablet).toString()}
+      data-show-mobile-ui={showMobileUI.toString()}
     >
       {/* Contenu principal */}
       <div className={`layout-content ${className}`}>
@@ -249,7 +263,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 8px; /* Minimal padding to prevent edge cropping */
+          padding: 4px; /* Minimal padding to prevent edge cropping */
           overflow: hidden;
           position: relative;
           min-height: 0;
@@ -266,8 +280,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           width: 100%;
           height: 100%;
           flex: 1;
-          max-width: calc(100vw - 16px); /* Account for minimal padding */
-          max-height: calc(100vh - 160px); /* Account for safe areas and UI */
+          max-width: calc(100vw - 8px); /* Account for minimal padding */
+          max-height: calc(100vh - 120px); /* Account for safe areas and UI */
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */
@@ -370,9 +384,13 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           overflow: hidden;
         }
 
-        /* Masquer la toolbar mobile sur desktop */
-        /* Ne pas masquer la toolbar overlay si l'UI mobile est activée */
+        /* Masquer la toolbar mobile sur desktop sauf si UI mobile forcée */
         .desktop-layout:not(.mobile-ui-enabled) .mobile-toolbar-overlay {
+          display: none !important;
+        }
+
+        /* Masquer la sidebar drawer sur desktop sauf si UI mobile forcée */
+        .desktop-layout:not(.mobile-ui-enabled) .mobile-sidebar-drawer {
           display: none !important;
         }
 
@@ -491,6 +509,20 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
             /* Masquer le moniteur de performance sur mobile */
             display: none !important;
           }
+        }
+
+        /* Debug - affichage des données d'appareil */
+        .mobile-responsive-layout::before {
+          content: attr(data-device) ' | Selected: ' attr(data-selected-device) ' | Mobile UI: ' attr(data-show-mobile-ui);
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          z-index: 10000;
         }
       `}</style>
     </div>
