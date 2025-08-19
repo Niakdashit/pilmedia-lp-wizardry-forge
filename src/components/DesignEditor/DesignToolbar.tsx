@@ -17,6 +17,12 @@ interface DesignToolbarProps {
   onPreviewButtonSideChange?: (side: 'left' | 'right') => void;
   // Mode de l'éditeur: influence le libellé du bouton d'enregistrement
   mode?: 'template' | 'campaign';
+  // Action à exécuter lors du clic sur "Sauvegarder et continuer"
+  onSave?: () => void;
+  // Permet de masquer les boutons Fermer / Sauvegarder et continuer dans la barre du haut
+  showSaveCloseButtons?: boolean;
+  // Navigation directe vers l'écran Paramétrage (même chemin que "Sauvegarder et continuer")
+  onNavigateToSettings?: () => void;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -30,7 +36,10 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   canRedo = false,
   previewButtonSide = 'right',
   onPreviewButtonSideChange,
-  mode = 'campaign'
+  mode = 'campaign',
+  onSave,
+  showSaveCloseButtons = true,
+  onNavigateToSettings
 }) => {
   const navigate = useNavigate();
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et continuer';
@@ -98,7 +107,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       {/* Right Section - Actions */}
       <div className="flex items-center space-x-1">
         <button 
-          onClick={() => navigate('/template-editor')}
+          onClick={() => navigate('/templates-editor')}
           className="hidden flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           title="Parcourir les modèles"
           aria-hidden="true"
@@ -142,18 +151,31 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <Eye className="w-4 h-4 mr-1" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
-        <button 
-          onClick={() => navigate('/dashboard')}
+        <button
+          onClick={onNavigateToSettings}
           className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <X className="w-4 h-4 mr-1" />
-          Fermer
+          Paramétrage
         </button>
-        <button className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors">
-          <Save className="w-4 h-4 mr-1" />
-          <span className="hidden sm:inline">{saveDesktopLabel}</span>
-          <span className="sm:hidden">{saveMobileLabel}</span>
-        </button>
+        {showSaveCloseButtons && (
+          <>
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Fermer
+            </button>
+            <button 
+              onClick={onSave}
+              className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors"
+            >
+              <Save className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">{saveDesktopLabel}</span>
+              <span className="sm:hidden">{saveMobileLabel}</span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

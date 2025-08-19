@@ -3,6 +3,7 @@ import React from 'react';
 import {
   TEMPLATE_TILE_HEIGHT_CLASS,
   TEMPLATE_TILE_RADIUS_CLASS,
+  TEMPLATE_TILE_BG_CLASS,
 } from '../../../config/templateThumb';
 import { Eye, Copy, Edit, Trash2 } from 'lucide-react';
 import { getCampaignTypeIcon, CampaignType } from '../../../utils/campaignTypes';
@@ -18,15 +19,66 @@ interface GameTemplate {
   createdAt: string;
   createdBy: string;
   tags: string[];
+  // Optional orientation to drive gallery width (portrait = 9:16, landscape = 16:9)
+  orientation?: 'portrait' | 'landscape';
 }
 
 interface AdminTemplateCardProps {
   template: GameTemplate;
   onUse?: (template: GameTemplate) => void;
+  variant?: 'shape' | 'compact' | 'standard';
 }
 
-const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template, onUse }) => {
+const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template, onUse, variant = 'standard' }) => {
   const CampaignIcon = getCampaignTypeIcon(template.type);
+
+  // Shape-only variant: plain block, no overlays, used to demonstrate exact forms
+  if (variant === 'shape') {
+    const aspectClass = template.orientation === 'landscape' ? 'aspect-[16/9]' : 'aspect-[9/16]';
+    return (
+      <div className={`relative ${TEMPLATE_TILE_HEIGHT_CLASS}`}>
+        <div className={`h-full ${aspectClass} ${TEMPLATE_TILE_RADIUS_CLASS} ${TEMPLATE_TILE_BG_CLASS} mx-auto max-w-full`}></div>
+      </div>
+    );
+  }
+
+  // Compact variant: preview-only tile with equal height and subtle overlays
+  if (variant === 'compact') {
+    return (
+      <div className="group relative">
+        <div className={`relative overflow-hidden ${TEMPLATE_TILE_HEIGHT_CLASS} ${TEMPLATE_TILE_RADIUS_CLASS} bg-gray-100`}>
+          <img
+            src={template.thumbnail}
+            alt={template.name}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute top-3 left-3">
+            <CampaignIcon />
+          </div>
+          <div className="absolute top-3 right-3">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              template.isPrivate 
+                ? 'bg-orange-100 text-orange-800' 
+                : 'bg-green-100 text-green-800'
+            }`}>
+              {template.isPrivate ? 'Privé' : 'Public'}
+            </span>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 p-2 sm:p-3 bg-gradient-to-t from-black/50 via-black/20 to-transparent text-white">
+            <div className="text-xs sm:text-sm font-medium line-clamp-1">{template.name}</div>
+          </div>
+          {onUse && (
+            <button
+              onClick={() => onUse(template)}
+              className="absolute bottom-2 right-2 px-2.5 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              Utiliser
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">

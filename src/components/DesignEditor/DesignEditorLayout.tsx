@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { User, LogOut } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { User, LogOut, Save, X, Plus, Layers as LayersIcon, Gamepad2, Palette as PaletteIcon, FormInput, Sparkles, Move3D, Undo2, Redo2 } from 'lucide-react';
 import HybridSidebar from './HybridSidebar';
 import DesignToolbar from './DesignToolbar';
 import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
@@ -15,6 +15,19 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 
+// Panels reused inside the mobile bottom-sheet
+import AssetsPanel from './panels/AssetsPanel';
+import BackgroundPanel from './panels/BackgroundPanel';
+import LayersPanel from './panels/LayersPanel';
+import TextEffectsPanel from './panels/TextEffectsPanel';
+import TextAnimationsPanel from './panels/TextAnimationsPanel';
+import PositionPanel from './panels/PositionPanel';
+import WheelConfigPanel from './panels/WheelConfigPanel';
+import ModernFormTab from '../ModernEditor/ModernFormTab';
+
+import { useCampaigns } from '@/hooks/useCampaigns';
+import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+
 import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
 import MobileStableEditor from './components/MobileStableEditor';
 
@@ -24,6 +37,7 @@ interface DesignEditorLayoutProps {
 }
 
 const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
+  const navigate = useNavigate();
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -63,6 +77,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
+
+  // Supabase campaigns API
+  const { saveCampaign } = useCampaigns();
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -577,9 +594,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Simulation de sauvegarde
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const saved = await saveCampaignToDB(campaignState, saveCampaign);
+      if (saved?.id && !(campaignState as any)?.id) {
+        setCampaign((prev: any) => ({ ...prev, id: saved.id }));
+      }
       setIsModified(false);
+    } catch (e) {
+      console.error('[DesignEditorLayout] Save failed', e);
     } finally {
       setIsLoading(false);
     }
@@ -588,6 +609,36 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handlePreview = () => {
     setShowFunnel(!showFunnel);
   };
+
+  // Save and continue: persist then navigate to settings page
+  const handleSaveAndContinue = useCallback(() => {
+    const fn = createSaveAndContinueHandler(
+      campaignState,
+      saveCampaign,
+      navigate,
+      !(campaignState as any)?.id,
+      setCampaign
+    );
+    return fn();
+  }, [campaignState, saveCampaign, navigate, setCampaign]);
+
+  // Navigate to settings without saving (same destination as Save & Continue)
+  const handleNavigateToSettings = useCallback(() => {
+    let campaignId = (campaignState as any)?.id as string | undefined;
+    if (!campaignId) {
+      campaignId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+        ? (crypto as any).randomUUID()
+        : `draft-${Date.now()}`;
+      try {
+        const draft = { ...(campaignState || {}), id: campaignId, _source: 'localStorage' };
+        localStorage.setItem(`campaign:draft:${campaignId}`, JSON.stringify(draft));
+      } catch {}
+      setCampaign((prev: any) => ({ ...prev, id: campaignId }));
+    }
+    if (campaignId) {
+      navigate(`/campaign/${campaignId}/settings`);
+    }
+  }, [campaignState, navigate, setCampaign]);
 
   // Fonction pour appliquer les couleurs extraites à la roue
   const handleExtractedColorsChange = (colors: string[]) => {
@@ -849,6 +900,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             previewButtonSide={previewButtonSide}
             onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
+            onSave={handleSaveAndContinue}
+            showSaveCloseButtons={false}
+            onNavigateToSettings={handleNavigateToSettings}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}
@@ -984,6 +1038,28 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           </>
         )}
       </div>
+      {/* Floating bottom-right actions (no band) */}
+      {!showFunnel && (
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
+            title="Fermer"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Fermer
+          </button>
+          <button
+            onClick={handleSaveAndContinue}
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            title="Sauvegarder et continuer"
+          >
+            <Save className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Sauvegarder et continuer</span>
+            <span className="sm:hidden">Sauvegarder</span>
+          </button>
+        </div>
+      )}
     </MobileStableEditor>
   );
 };

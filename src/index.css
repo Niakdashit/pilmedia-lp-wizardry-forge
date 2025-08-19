@@ -147,6 +147,15 @@
   display: none;  /* Safari et Chrome */
 }
 
+/* Utility to hide scrollbars (mirror of .scrollbar-hide) */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Safari et Chrome */
+}
+
 /* Empêcher le débordement horizontal global */
 * {
   box-sizing: border-box;
@@ -435,7 +444,7 @@ html, body {
     @apply relative transition-all duration-300 ease-out w-full text-left;
     background: hsl(var(--sidebar-surface));
     border: 1px solid hsl(var(--sidebar-border));
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 12px 16px;
     color: hsl(var(--sidebar-text));
     display: flex;
@@ -460,6 +469,35 @@ html, body {
         0 4px 16px hsl(var(--sidebar-glow));
       transform: translateY(-2px);
     }
+  }
+
+  /* Compact variant for toolbar action band */
+  .toolbar-compact .sidebar-tab-horizontal {
+    padding: 6px 10px;
+    min-height: 36px;
+    border-radius: 0;
+    background: transparent;
+    /* allow parent .divide-x to render separators; do not override borders here */
+  }
+  .toolbar-compact .sidebar-tab-horizontal {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .toolbar-compact .sidebar-tab-horizontal:hover {
+    transform: none;
+    box-shadow: none;
+    background: transparent;
+    /* keep any divider borders */
+  }
+
+  .toolbar-compact .sidebar-tab-horizontal.active {
+    /* Flat look: no borders/shadows; emphasize text color only */
+    /* do not reset borders so vertical dividers remain */
+    box-shadow: none;
+    transform: none;
+    color: hsl(var(--sidebar-active));
+    background: transparent;
   }
 
   .sidebar-content {

@@ -123,7 +123,7 @@ const DashboardHeader: React.FC = () => {
                   Mes campagnes
                 </PillButton>
 
-                <PillButton to="/template-editor" icon={<Layers className="w-4 h-4" />}>
+                <PillButton to="/templates-editor" icon={<Layers className="w-4 h-4" />}>
                   Modèles
                 </PillButton>
               </div>

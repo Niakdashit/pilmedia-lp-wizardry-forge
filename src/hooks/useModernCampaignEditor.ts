@@ -9,13 +9,17 @@ import { useOptimizedCampaignState } from '../components/ModernEditor/hooks/useO
 import { usePreviewOptimization } from '../components/ModernEditor/hooks/usePreviewOptimization';
 
 export const useModernCampaignEditor = () => {
-  const { id } = useParams();
+  const { id: routeId } = useParams();
   const [searchParams] = useSearchParams();
   const location = window.location.pathname;
   
+  // Supporte aussi l'ID via query param (?id=...) pour retour explicite depuis les paramètres
+  const queryId = searchParams.get('id') || undefined;
+  const rawId = routeId ?? queryId;
+  
   // Gestion spéciale pour quick-preview
-  const isQuickPreview = location.includes('quick-preview') || id === 'quick-preview';
-  const actualId = isQuickPreview ? 'quick-preview' : id;
+  const isQuickPreview = location.includes('quick-preview') || rawId === 'quick-preview';
+  const actualId = isQuickPreview ? 'quick-preview' : rawId;
   const isNewCampaign = actualId === 'new';
   const campaignType = searchParams.get('type') as CampaignType || 'wheel';
   
