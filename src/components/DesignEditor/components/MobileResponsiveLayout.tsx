@@ -523,20 +523,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
             display: none !important;
           }
         }
-
-        /* Debug - affichage des données d'appareil */
-        .mobile-responsive-layout::before {
-          content: attr(data-device) ' | Selected: ' attr(data-selected-device) ' | Mobile UI: ' attr(data-show-mobile-ui);
-          position: fixed;
-          top: 10px;
-          left: 10px;
-          background: rgba(0, 0, 0, 0.8);
-          color: white;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 10px;
-          z-index: 10000;
-        }
       `}</style>
     </div>
   );
