@@ -113,18 +113,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const autoFitEnabledRef = useRef(true);
   
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [localZoom, setLocalZoom] = useState(zoom);
+  // Always start with a valid numeric zoom (fallback 1). Clamp to [0.1, 1].
+  const [localZoom, setLocalZoom] = useState<number>(
+    typeof zoom === 'number' && !Number.isNaN(zoom)
+      ? Math.max(0.1, Math.min(1, zoom))
+      : 1
+  );
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
-  // Prevent repeated auto-fit on mobile when viewing desktop canvas
-  const didAutoFitRef = useRef(false);
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -395,25 +400,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Synchroniser le zoom local avec le prop
   useEffect(() => {
-    // Clamp le zoom entre 0.1 et 1.0 (100%)
-    const clamped = Math.max(0.1, Math.min(1, zoom));
-    setLocalZoom(clamped);
-  }, [zoom]);
+    // Synchroniser depuis le prop uniquement s'il est valide
+    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
+      const clamped = Math.max(0.1, Math.min(1, zoom));
+      // Éviter les mises à jour inutiles et considérer ceci comme un zoom manuel externe
+      if (Math.abs(clamped - localZoom) > 0.0001) {
+        // Un changement de zoom manuel doit désactiver l'auto-fit jusqu'au prochain resize/device
+        autoFitEnabledRef.current = false;
+        setLocalZoom(clamped);
+      }
+    }
+  }, [zoom, localZoom]);
 
   // Définir le zoom par défaut selon l'appareil
   // - Mobile: 85%
   // - Tablette: 60%
   // - Desktop: 70%
-  useEffect(() => {
-    const defaultZoom =
-      selectedDevice === 'mobile' ? 0.85 :
-      selectedDevice === 'tablet' ? 0.6 : 0.7;
-
-    setLocalZoom(defaultZoom);
-    if (onZoomChange) {
-      onZoomChange(defaultZoom);
-    }
-  }, [selectedDevice]);
 
   // Calculer le zoom par défaut selon l'appareil (pour le bouton reset)
   const deviceDefaultZoom = useMemo(() => {
@@ -421,59 +423,57 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
            selectedDevice === 'tablet' ? 0.6 : 0.7;
   }, [selectedDevice]);
 
-  // Auto-fit: if on a real mobile device but viewing the desktop canvas, fit the canvas to viewport
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!isRealMobile() || selectedDevice !== 'desktop') return;
+  // Unified Auto-Fit: observe container size and fit the canvas on any device
+  const updateAutoFit = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    // Respect the auto-fit lock: skip recalculation if disabled by manual zoom
+    if (!autoFitEnabledRef.current) return;
 
-    const computeAndApplyFit = () => {
-      // Only auto-fit once until orientation changes
-      if (didAutoFitRef.current) return;
+    const style = getComputedStyle(container);
+    const paddingLeft = parseFloat(style.paddingLeft) || 0;
+    const paddingRight = parseFloat(style.paddingRight) || 0;
+    const paddingTop = parseFloat(style.paddingTop) || 0;
+    const paddingBottom = parseFloat(style.paddingBottom) || 0;
 
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+    const availableWidth = Math.max(0, container.clientWidth - paddingLeft - paddingRight);
+    const availableHeight = Math.max(0, container.clientHeight - paddingTop - paddingBottom);
 
-      // Match paddings used in the container around the canvas for desktop-on-mobile
-      const paddingTop = 32;
-      const paddingBottom = mobileToolbarHeight; // space reserved for MobileSidebarDrawer
-      const paddingLeft = 20;
-      const paddingRight = 20;
+    const targetW = effectiveCanvasSize.width;
+    const targetH = effectiveCanvasSize.height;
 
-      const availableWidth = Math.max(0, viewportWidth - paddingLeft - paddingRight);
-      const availableHeight = Math.max(0, viewportHeight - paddingTop - paddingBottom);
-
-      const targetW = effectiveCanvasSize.width;
-      const targetH = effectiveCanvasSize.height;
-
-      if (targetW > 0 && targetH > 0 && availableWidth > 0 && availableHeight > 0) {
-        const scaleX = availableWidth / targetW;
-        const scaleY = availableHeight / targetH;
-        const fitted = Math.min(scaleX, scaleY, 1);
-        const clamped = Math.max(0.1, Math.min(1, fitted));
-
+    if (targetW > 0 && targetH > 0 && availableWidth > 0 && availableHeight > 0) {
+      const scaleX = availableWidth / targetW;
+      const scaleY = availableHeight / targetH;
+      const fitted = Math.min(scaleX, scaleY, 1);
+      const clamped = Math.max(0.1, Math.min(1, fitted));
+      // Avoid thrashing state for tiny differences
+      if (Math.abs(clamped - localZoom) > 0.001) {
         setLocalZoom(clamped);
         onZoomChange?.(clamped);
-        didAutoFitRef.current = true;
       }
-    };
+    }
+  }, [effectiveCanvasSize, localZoom, onZoomChange]);
 
-    // Initial fit
-    computeAndApplyFit();
+  // One-time auto-fit on mount only, then keep it disabled
+  useEffect(() => {
+    // Apply auto-fit exactly once when the page loads
+    updateAutoFit();
+    // Then disable auto-fit so user zoom persists across interactions/resizes/device changes
+    autoFitEnabledRef.current = false;
+  }, []);
 
-    // Re-fit on orientation changes
-    const handleOrientation = () => {
-      didAutoFitRef.current = false;
-      // Allow the browser to update innerWidth/innerHeight first
-      requestAnimationFrame(() => computeAndApplyFit());
-    };
-    window.addEventListener('orientationchange', handleOrientation);
-    return () => window.removeEventListener('orientationchange', handleOrientation);
-  }, [selectedDevice, effectiveCanvasSize, onZoomChange, mobileToolbarHeight]);
+  // Do not auto-fit on resizes anymore; keep user's zoom unchanged
+  useEffect(() => {
+    // intentionally left blank
+  }, []);
 
   // Handler centralisé pour changer le zoom depuis la barre d'échelle
   const handleZoomChange = useCallback((value: number) => {
     // Clamp le zoom entre 0.1 et 1.0 (100%)
     const clamped = Math.max(0.1, Math.min(1, value));
+    // Manual slider zoom disables auto-fit temporarily
+    autoFitEnabledRef.current = false;
     setLocalZoom(clamped);
     if (onZoomChange) {
       onZoomChange(clamped);
@@ -946,9 +946,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           const within = pointInRect(mid, startBounds) || pointInRect(p0, startBounds) || pointInRect(p1, startBounds);
           isPinchResizing = within;
           isPinchZooming = !within;
+          // If this interaction is a canvas zoom, disable auto-fit until next resize/device change
+          if (isPinchZooming) {
+            autoFitEnabledRef.current = false;
+          }
         } else {
           isPinchResizing = false;
           isPinchZooming = true;
+          // Canvas pinch-zoom: disable auto-fit
+          autoFitEnabledRef.current = false;
         }
         e.preventDefault();
       }
@@ -1028,6 +1034,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Calculer le facteur de zoom basé sur le delta (plus lent)
         const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
         const newZoom = Math.max(0.1, Math.min(1, localZoom * zoomFactor));
+        // Manual wheel/trackpad zoom disables auto-fit temporarily
+        autoFitEnabledRef.current = false;
         
         setLocalZoom(newZoom);
         
@@ -1045,7 +1053,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasElement.removeEventListener('wheel', handleWheel);
       };
     }
-  }, [localZoom, activeCanvasRef]);
+  }, [localZoom, activeCanvasRef, onZoomChange]);
 
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
@@ -1365,7 +1373,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           </div>
         )}
         
-        <div className="flex justify-center items-center h-full w-full" style={{
+        <div ref={containerRef} className="flex justify-center items-center h-full w-full" style={{
           // Padding fixe (indépendant du zoom) pour garantir un centrage stable
           paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
           paddingLeft: selectedDevice === 'tablet' ? 32 : 20,

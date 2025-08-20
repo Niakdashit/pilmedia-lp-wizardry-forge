@@ -11,15 +11,15 @@ interface UseMobileCanvasLockOptions {
 
 export const useMobileCanvasLock = ({
   canvasRef,
-  selectedElement,
   isMobile,
-  isTablet,
-  zoom
+  isTablet
 }: UseMobileCanvasLockOptions) => {
   const isRealDevice = isRealMobile();
   const isMobileDevice = isMobile || isTablet || isRealDevice;
   const isDraggingRef = useRef(false);
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+  // Ne faire l'auto-fit qu'une seule fois à l'arrivée sur la page
+  const hasAutoAdjustedRef = useRef(false);
 
   // Fonction pour bloquer les interactions non désirées sur le canvas
   const preventCanvasInterference = useCallback((event: TouchEvent | MouseEvent) => {
@@ -112,7 +112,7 @@ export const useMobileCanvasLock = ({
 
   // Fonction pour assurer la visibilité complète du canvas
   const ensureCanvasVisibility = useCallback(() => {
-    if (!canvasRef.current || !isMobileDevice) return;
+    if (!canvasRef.current || !isMobileDevice || hasAutoAdjustedRef.current) return;
 
     const canvas = canvasRef.current;
     const canvasRect = canvas.getBoundingClientRect();
@@ -138,6 +138,8 @@ export const useMobileCanvasLock = ({
       });
       window.dispatchEvent(adjustZoomEvent);
     }
+    // Marquer comme fait pour ne pas réappliquer
+    hasAutoAdjustedRef.current = true;
   }, [canvasRef, isMobileDevice]);
 
   // Installation des écouteurs d'événements
@@ -201,8 +203,9 @@ export const useMobileCanvasLock = ({
 
   // Vérifier la visibilité du canvas lors des changements
   useEffect(() => {
+    // N'exécuter qu'au montage; le garde interne évite toute réapplication
     ensureCanvasVisibility();
-  }, [selectedElement, zoom, ensureCanvasVisibility]);
+  }, [ensureCanvasVisibility]);
 
   // Vérifier la visibilité lors du redimensionnement
   useEffect(() => {
