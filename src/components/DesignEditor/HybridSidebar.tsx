@@ -6,7 +6,8 @@ import {
   Layers,
   Gamepad2,
   Palette,
-  FormInput
+  FormInput,
+  Type
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
@@ -16,6 +17,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import PositionPanel from './panels/PositionPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
+import FontCombinationsPanel from './panels/FontCombinationsPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
 
@@ -166,6 +168,11 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       icon: Plus
     },
     { 
+      id: 'fonts', 
+      label: 'Fonts', 
+      icon: Type
+    },
+    { 
       id: 'background', 
       label: 'Design', 
       icon: Palette
@@ -278,6 +285,15 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         );
       case 'assets':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
+      case 'fonts':
+        return (
+          <FontCombinationsPanel 
+            onAddElement={onAddElement}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
+            selectedDevice={selectedDevice}
+          />
+        );
       case 'background':
         return (
           <BackgroundPanel 
@@ -314,14 +330,14 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
 
   if (isCollapsed) {
     return (
-      <div className="w-16 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col">
         {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(false)}
-          className="p-4 hover:bg-gray-100 border-b border-gray-200"
+          className="p-4 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))]"
           title="Développer la sidebar"
         >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
+          <ChevronRight className="w-5 h-5 text-[#565e68]" />
         </button>
         
         {/* Collapsed Icons */}
@@ -345,16 +361,12 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                 }}
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                   activeTab === tab.id
-                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-white'
+                    : 'text-[#565e68] hover:bg-[hsl(var(--sidebar-hover))] hover:text-white'
                 }`}
                 title={tab.label}
-                style={{ 
-                  pointerEvents: 'auto',
-                  userSelect: 'none'
-                }}
               >
-                <Icon className="w-5 h-5" style={{ pointerEvents: 'none' }} />
+                <Icon className="w-6 h-6" />
               </button>
             );
           })}
@@ -373,7 +385,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
           className="p-3 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))] transition-all duration-200"
           title="Réduire la sidebar"
         >
-          <ChevronLeft className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
+          <ChevronLeft className="w-5 h-5 text-[#565e68] hover:text-white" />
         </button>
         
         {/* Vertical Tabs */}
@@ -403,8 +415,8 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                 }}
                 className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 cursor-pointer ${
                   isActive 
-                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
-                    : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
+                    ? 'bg-[hsl(var(--sidebar-active-bg))] text-white border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
+                    : 'text-[#565e68] hover:bg-[hsl(var(--sidebar-hover))] hover:text-white'
                 }`}
                 title={tab.label}
                 style={{ 
@@ -425,7 +437,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
-            <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
+            <h2 className="font-semibold text-white font-inter">
               {activeTab === 'effects' ? 'Effets de texte' : 
                activeTab === 'animations' ? 'Animations de texte' : 
                activeTab === 'position' ? 'Position' : 
