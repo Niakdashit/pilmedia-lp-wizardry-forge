@@ -73,7 +73,7 @@ const DashboardHeader: React.FC = () => {
             {/* Section "Qu'allez-vous créer aujourd'hui ?" */}
             <div className="w-full">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+                <h2 className="text-xl font-bold mb-2 text-[#2e353e] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
               </div>
 
               {/* Container pour desktop avec flex center */}
@@ -85,9 +85,9 @@ const DashboardHeader: React.FC = () => {
                   animationFillMode: 'forwards'
                 }}>
                       <div className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                        <IconComponent className="w-6 h-6 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
+                        <IconComponent className="w-6 h-6 text-[#2e353e] group-hover:text-[#2e353e] transition-colors drop-shadow-sm" />
                       </div>
-                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#2e353e] transition-colors text-center drop-shadow-sm">
                         {game.label}
                       </span>
                     </Link>;
@@ -107,9 +107,9 @@ const DashboardHeader: React.FC = () => {
                     animationFillMode: 'forwards'
                   }}>
                         <div className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                          <IconComponent className="w-6 h-6 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
+                          <IconComponent className="w-6 h-6 text-[#2e353e] group-hover:text-[#2e353e] transition-colors drop-shadow-sm" />
                         </div>
-                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#2e353e] transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
                       </Link>
