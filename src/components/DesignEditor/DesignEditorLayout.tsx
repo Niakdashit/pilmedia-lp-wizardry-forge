@@ -984,7 +984,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               selectedElements={selectedElements}
               onSelectedElementsChange={setSelectedElements}
               onElementUpdate={handleElementUpdate}
-              containerClassName={mode === 'template' ? 'bg-[#eaf5f6]' : undefined}
+              containerClassName={mode === 'template' ? 'bg-[#f3f4f6]' : undefined}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);

@@ -44,7 +44,7 @@ const Layout: React.FC = () => {
   }, [sidebarCollapsed]);
 
   return (
-    <div className="flex min-h-screen bg-[#eaf5f6] w-full relative" style={{ overflow: 'hidden' }}>
+    <div className="flex min-h-screen bg-[#f3f4f6] w-full relative" style={{ overflow: 'hidden' }}>
       {/* Bande dégradée circulaire - Header avec Logo */}
       <div 
         className="fixed top-0 left-0 right-0 h-[5cm]"
@@ -128,7 +128,7 @@ const Layout: React.FC = () => {
           left: '0',
           right: '0',
           boxSizing: 'border-box',
-          backgroundColor: '#eaf5f6',
+          backgroundColor: '#f3f4f6',
         }}
       />
       
