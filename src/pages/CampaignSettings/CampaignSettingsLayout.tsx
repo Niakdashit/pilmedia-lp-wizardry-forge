@@ -41,22 +41,21 @@ const CampaignSettingsLayout: React.FC = () => {
       {/* Sticky top banner + centered stepper (no action buttons) */}
       <div className="sticky top-[1.16cm] z-30 -mt-px">
         {/* Action band styled like DesignToolbar, tabs centered */}
-        <div className="bg-white border-b border-gray-200 px-4 flex items-center justify-center shadow-sm rounded-tl-[28px] rounded-tr-[28px] toolbar-compact mb-4 relative">
+        <div className="bg-white border-b border-gray-200 px-4 py-1 flex items-center justify-center shadow-sm rounded-tl-[28px] rounded-tr-[28px] toolbar-compact mb-4 relative">
           {/* Center: Tabs (reserve space on the right for the 'Mode édition' button) */}
-          <div className="flex-1 min-w-0 px-3 pr-[12rem] sm:pr-[14rem] md:pr-[16rem] max-w-6xl">
-            <div className="flex items-stretch overflow-x-auto no-scrollbar">
-              {steps.map((s, idx) => (
-                <div key={s.label} className="relative flex-1 min-w-[110px]">
-                  <NavLink
-                    to={s.path}
-                    end={s.path === ''}
-                    className={({ isActive }) =>
-                      `absolute inset-0 sidebar-tab-horizontal flex items-center justify-center text-center border-l border-gray-200 ${idx === 0 ? 'first:border-l-0' : ''} cursor-pointer ${isActive ? 'active' : ''}`
-                    }
-                  >
-                    <span className="truncate w-full px-2">{s.label}</span>
-                  </NavLink>
-                </div>
+          <div className="flex-1 min-w-0 px-3 pr-36 sm:pr-40 md:pr-52 max-w-6xl">
+            <div className="flex overflow-x-auto no-scrollbar divide-x divide-gray-200">
+              {steps.map((s) => (
+                <NavLink
+                  key={s.label}
+                  to={s.path}
+                  end={s.path === ''}
+                  className={({ isActive }) =>
+                    `sidebar-tab-horizontal min-w-[110px] flex-1 text-center ${isActive ? 'active' : ''}`
+                  }
+                >
+                  <span className="truncate">{s.label}</span>
+                </NavLink>
               ))}
             </div>
           </div>
@@ -64,7 +63,7 @@ const CampaignSettingsLayout: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate(editorUrl)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg text-white shadow-md hover:opacity-95 transition-opacity bg-[radial-gradient(circle_at_0%_0%,_#b41b60,_#841b60_70%)]"
+            className="absolute right-4 top-1/2 -translate-y-1/2 h-8 inline-flex items-center gap-2 rounded-md px-3.5 text-white shadow-md hover:opacity-95 transition-opacity bg-[radial-gradient(circle_at_0%_0%,_#b41b60,_#841b60_70%)]"
           >
             Mode édition
           </button>

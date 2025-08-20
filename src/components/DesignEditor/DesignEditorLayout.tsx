@@ -90,12 +90,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  // Référence pour le canvas (utilisée dans les effets ci-dessous)
-  const canvasRef = useRef<HTMLDivElement>(null);
-
-  // État d'affichage du funnel (utilisé par le resize desktop auto-fit)
-  const [showFunnel, setShowFunnel] = useState(false);
-
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
     const device = detectDevice();
@@ -113,53 +107,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [actualDevice]);
   
-  // Calcul et application du zoom "auto-fit" pour le bureau (desktop)
-  const computeDesktopFitZoom = useCallback(() => {
-    if (selectedDevice !== 'desktop' || showFunnel) return;
-    const canvasEl = canvasRef.current;
-    if (!canvasEl) return;
-
-    // Remonter jusqu'au conteneur paddé qui centre le canvas
-    const paddedContainer = (canvasEl.parentElement?.parentElement as HTMLElement) || (canvasEl.parentElement as HTMLElement) || null;
-    if (!paddedContainer) return;
-
-    const styles = window.getComputedStyle(paddedContainer);
-    const paddingX = (parseFloat(styles.paddingLeft || '0') || 0) + (parseFloat(styles.paddingRight || '0') || 0);
-    const paddingY = (parseFloat(styles.paddingTop || '0') || 0) + (parseFloat(styles.paddingBottom || '0') || 0);
-
-    const availableWidth = Math.max(0, paddedContainer.clientWidth - paddingX);
-    const availableHeight = Math.max(0, paddedContainer.clientHeight - paddingY);
-
-    const { width: canvasWidth, height: canvasHeight } = getDeviceDimensions('desktop');
-    if (availableWidth <= 0 || availableHeight <= 0 || canvasWidth <= 0 || canvasHeight <= 0) return;
-
-    const scale = Math.min(availableWidth / canvasWidth, availableHeight / canvasHeight);
-    const clamped = Math.max(0.1, Math.min(1, Number.isFinite(scale) ? scale : 1));
-
-    setCanvasZoom(prev => (Math.abs(prev - clamped) > 0.005 ? clamped : prev));
-  }, [selectedDevice, showFunnel, setCanvasZoom]);
-
-  // Écouteur de redimensionnement fenêtre pour desktop auto-fit (avec rAF pour limiter la fréquence)
-  useEffect(() => {
-    if (selectedDevice !== 'desktop' || showFunnel) return;
-    let rafId: number | null = null;
-    const onResize = () => {
-      if (rafId != null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        computeDesktopFitZoom();
-      });
-    };
-
-    // Calcul initial
-    onResize();
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      if (rafId != null) cancelAnimationFrame(rafId);
-    };
-  }, [selectedDevice, showFunnel, computeDesktopFitZoom]);
-  
+  // Référence pour le canvas
+  const canvasRef = useRef<HTMLDivElement>(null);
   
   // État pour gérer l'affichage des panneaux dans la sidebar
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
@@ -201,7 +150,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
-  
+  const [showFunnel, setShowFunnel] = useState(false);
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -925,8 +874,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           </button>
         </div>
       </GradientBand>
- 
-      <div className="-mt-[0.5vh]">
+
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
@@ -1102,7 +1050,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           </button>
         </div>
       )}
-      </div>
     </MobileStableEditor>
   );
 };
