@@ -66,6 +66,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  // N'appliquer l'auto-zoom (adjustCanvasZoom) qu'une seule fois
+  const hasAppliedInitialZoomRef = useRef(false);
 
   // Optimisation mobile
   const {
@@ -128,7 +130,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   // Écouteur pour l'ajustement automatique du zoom
   useEffect(() => {
     const handleZoomAdjust = (event: CustomEvent) => {
+      if (hasAppliedInitialZoomRef.current) return;
       if (onZoomChange && showMobileUI) {
+        hasAppliedInitialZoomRef.current = true;
         onZoomChange(event.detail.zoom);
       }
     };
