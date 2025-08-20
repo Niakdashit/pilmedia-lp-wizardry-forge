@@ -37,32 +37,32 @@ const DashboardHeader: React.FC = () => {
             relative
             bg-white/60
             bg-gradient-to-br
-            from-[#fde7f2]/90
-            via-[#f7e5ef]/80
-            to-[#f2e8f5]/90
+            from-[#e9f1fd]/90
+            via-[#f3e8fa]/80
+            to-[#c4e0f9]/90
             backdrop-blur-xl
             rounded-b-3xl
             border-b border-white/25
           ">
           {/* Overlay coloré pour contraste subtil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#b41b60]/10 via-transparent to-[#841b60]/6 pointer-events-none rounded-b-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#841b60]/8 via-transparent to-[#841b60]/5 pointer-events-none rounded-b-3xl" />
           {/* Décorations géométriques flottantes style PageHeader */}
-          <div className="absolute top-4 right-8 w-20 h-20 bg-gradient-to-br from-fuchsia-400/20 to-rose-400/20 rounded-full blur-xl pointer-events-none"></div>
-          <div className="absolute bottom-6 left-12 w-16 h-16 bg-gradient-to-br from-rose-400/15 to-pink-400/15 rounded-full blur-lg pointer-events-none"></div>
+          <div className="absolute top-4 right-8 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-xl pointer-events-none"></div>
+          <div className="absolute bottom-6 left-12 w-16 h-16 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-lg pointer-events-none"></div>
           {/* SVG décoratif éditorial, moins saturé/opacité */}
           <div className="absolute top-0 right-0 w-96 h-full opacity-30 pointer-events-none">
             <svg viewBox="0 0 400 200" className="w-full h-full">
               <defs>
                 <linearGradient id="grad1-dh" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#EC4899" stopOpacity="0.16" />
-                  <stop offset="50%" stopColor="#DB2777" stopOpacity="0.13" />
-                  <stop offset="100%" stopColor="#BE185D" stopOpacity="0.08" />
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.16" />
+                  <stop offset="50%" stopColor="#3B82F6" stopOpacity="0.13" />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0.08" />
                 </linearGradient>
               </defs>
               <path d="M300,20 Q350,60 320,100 T280,140 Q320,160 360,120 T400,80 L400,0 Z" fill="url(#grad1-dh)" />
-              <circle cx="350" cy="40" r="15" fill="#EC4899" fillOpacity="0.08" />
-              <circle cx="320" cy="80" r="8" fill="#DB2777" fillOpacity="0.11" />
-              <path d="M280,120 Q300,100 320,120 T360,140" stroke="#BE185D" strokeWidth="2" strokeOpacity="0.12" fill="none" />
+              <circle cx="350" cy="40" r="15" fill="#8B5CF6" fillOpacity="0.08" />
+              <circle cx="320" cy="80" r="8" fill="#3B82F6" fillOpacity="0.11" />
+              <path d="M280,120 Q300,100 320,120 T360,140" stroke="#6366F1" strokeWidth="2" strokeOpacity="0.12" fill="none" />
             </svg>
           </div>
           
@@ -73,7 +73,7 @@ const DashboardHeader: React.FC = () => {
             {/* Section "Qu'allez-vous créer aujourd'hui ?" */}
             <div className="w-full">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold mb-2 text-[#2e353e] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+                <h2 className="text-xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
               </div>
 
               {/* Container pour desktop avec flex center */}
@@ -85,9 +85,9 @@ const DashboardHeader: React.FC = () => {
                   animationFillMode: 'forwards'
                 }}>
                       <div className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                        <IconComponent className="w-6 h-6 text-[#2e353e] group-hover:text-[#2e353e] transition-colors drop-shadow-sm" />
+                        <IconComponent className="w-6 h-6 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
                       </div>
-                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#2e353e] transition-colors text-center drop-shadow-sm">
+                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                         {game.label}
                       </span>
                     </Link>;
@@ -107,9 +107,9 @@ const DashboardHeader: React.FC = () => {
                     animationFillMode: 'forwards'
                   }}>
                         <div className="w-14 h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/90">
-                          <IconComponent className="w-6 h-6 text-[#2e353e] group-hover:text-[#2e353e] transition-colors drop-shadow-sm" />
+                          <IconComponent className="w-6 h-6 text-[#841b60] group-hover:text-[#6d164f] transition-colors drop-shadow-sm" />
                         </div>
-                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#2e353e] transition-colors text-center drop-shadow-sm">
+                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
                       </Link>

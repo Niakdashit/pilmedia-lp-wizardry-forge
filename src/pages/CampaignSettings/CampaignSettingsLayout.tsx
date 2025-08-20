@@ -21,10 +21,10 @@ const CampaignSettingsLayout: React.FC = () => {
     navigate(editorUrl);
   };
   return (
-    <div className="min-h-screen bg-[#f3f4f6]">
+    <div className="min-h-screen bg-[#eaf5f6]">
       {/* Bande dégradée identique au dashboard (magenta) */}
       <GradientBand heightClass="h-[5cm]" zIndex={1} className="pointer-events-none" />
-      {/* Carré #f3f4f6 avec coins supérieurs arrondis, identique au dashboard */}
+      {/* Carré #eaf5f6 avec coins supérieurs arrondis, identique au dashboard */}
       <div 
         className="fixed z-20"
         style={{
@@ -35,7 +35,7 @@ const CampaignSettingsLayout: React.FC = () => {
           left: '0',
           right: '0',
           boxSizing: 'border-box',
-          backgroundColor: '#f3f4f6',
+          backgroundColor: '#eaf5f6',
         }}
       />
       {/* Sticky top banner + centered stepper (no action buttons) */}
