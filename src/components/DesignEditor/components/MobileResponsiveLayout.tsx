@@ -89,12 +89,21 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   const mIsTablet = isTablet;
   
   // Afficher l'UI mobile dans ces cas:
-  // 1. Appareil mobile/tablette réel
+  // 1. Appareil mobile réel (pas tablette)
   // 2. Device selector en mode mobile/tablette (selectedDevice)
   // 3. Force explicite mobile/tablette (forceDeviceType)
-  const showMobileUI = mIsMobile || mIsTablet || 
+  const showMobileUI = mIsMobile || 
                       selectedDevice === 'mobile' || selectedDevice === 'tablet' ||
                       forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
+  
+  console.log('🔍 Device detection debug:', {
+    mIsMobile,
+    mIsTablet,
+    selectedDevice,
+    forceDeviceType,
+    showMobileUI,
+    effectiveDeviceType
+  });
 
   // Système de verrouillage du canvas pour mobile
   const {
