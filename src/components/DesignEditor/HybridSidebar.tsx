@@ -161,24 +161,24 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
 
   const allTabs = [
     { 
-      id: 'assets', 
-      label: 'Elements', 
-      icon: Plus
-    },
-    { 
       id: 'background', 
       label: 'Design', 
       icon: Palette
     },
     { 
-      id: 'form', 
-      label: 'Contact', 
-      icon: FormInput
+      id: 'assets', 
+      label: 'Elements', 
+      icon: Plus
     },
     { 
       id: 'layers', 
       label: 'Layers', 
       icon: Layers
+    },
+    { 
+      id: 'form', 
+      label: 'Contact', 
+      icon: FormInput
     },
     { 
       id: 'gamelogic', 

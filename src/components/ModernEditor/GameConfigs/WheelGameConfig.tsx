@@ -14,6 +14,9 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
   // Assurer que les segments existent avec une structure par défaut
   const segments = campaign.gameConfig?.wheel?.segments || campaign.config?.roulette?.segments || [];
 
+  // Palette de couleurs réutilisable pour les nouveaux segments
+  const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+
   const updateWheelConfig = (updates: any) => {
     setCampaign((prev: any) => {
       const newCampaign = {
@@ -46,14 +49,13 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
   };
 
   const addSegmentPair = () => {
-    const colors = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
     const currentCount = segments.length;
 
     // Ajouter une paire de segments (un gagnant et un perdant)
     const winningSegment = {
       id: `${Date.now()}-win`,
       label: `Prix ${Math.floor(currentCount / 2) + 1}`,
-      color: colors[currentCount % colors.length],
+      color: colorPalette[currentCount % colorPalette.length],
       textColor: '#ffffff',
       probability: 1,
       isWinning: true
@@ -62,7 +64,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
     const losingSegment = {
       id: `${Date.now()}-lose`,
       label: 'Dommage',
-      color: colors[(currentCount + 1) % colors.length],
+      color: colorPalette[(currentCount + 1) % colorPalette.length],
       textColor: '#ffffff',
       probability: 1,
       isWinning: false
@@ -81,6 +83,59 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         segments: newSegments
       });
     }
+  };
+
+  // Définir rapidement le nombre de segments total (4, 6, 8, 10)
+  const setSegmentCount = (targetCount: number) => {
+    // Toujours pair, borné à des valeurs autorisées
+    const allowed = [4, 6, 8, 10];
+    if (!allowed.includes(targetCount)) return;
+
+    // Construire une nouvelle liste à partir des segments existants
+    let newSegments = [...segments];
+
+    // Si on a un nombre impair (cas rare), on supprime le dernier pour garder des paires cohérentes
+    if (newSegments.length % 2 === 1) {
+      newSegments = newSegments.slice(0, -1);
+    }
+
+    // Si trop de segments, on tronque
+    if (newSegments.length > targetCount) {
+      newSegments = newSegments.slice(0, targetCount);
+    }
+
+    // Si pas assez, on ajoute des paires jusqu'à atteindre la cible
+    while (newSegments.length < targetCount) {
+      const idx = newSegments.length; // index du prochain segment à ajouter
+      const labelIndex = Math.floor(idx / 2) + 1;
+
+      const win = {
+        id: `${Date.now()}-${idx}-win`,
+        label: `Prix ${labelIndex}`,
+        color: colorPalette[idx % colorPalette.length],
+        textColor: '#ffffff',
+        probability: 1,
+        isWinning: true
+      };
+
+      const lose = {
+        id: `${Date.now()}-${idx}-lose`,
+        label: 'Dommage',
+        color: colorPalette[(idx + 1) % colorPalette.length],
+        textColor: '#ffffff',
+        probability: 1,
+        isWinning: false
+      };
+
+      newSegments.push(win, lose);
+    }
+
+    // S'assurer qu'on retombe exactement sur la cible
+    if (newSegments.length > targetCount) {
+      newSegments = newSegments.slice(0, targetCount);
+    }
+
+    updateWheelConfig({ segments: newSegments });
   };
 
   const updateSegment = (index: number, field: string, value: any) => {
@@ -173,6 +228,29 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             placeholder="Faire tourner" 
           />
         </div>
+      </div>
+
+      {/* Sélecteur rapide du nombre de segments */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">Nombre de segments</label>
+          <div className="grid grid-cols-4 gap-2">
+            {[4, 6, 8, 10].map((n) => (
+              <button
+                key={n}
+                onClick={() => setSegmentCount(n)}
+                className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                  segments.length === n
+                    ? 'bg-[#841b60] text-white border-[#841b60]'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-gray-500">Les segments sont gérés par paires (1 gagnant + 1 perdant).</p>
       </div>
 
       {/* Gestion des segments par paires */}
