@@ -105,6 +105,16 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
   }, [onMeasureBounds, element.id, deviceProps.x, deviceProps.y]);
 
+  // Schedule a post-commit DOM re-measure after React updates settle
+  const schedulePostCommitMeasure = useCallback(() => {
+    if (!onMeasureBounds) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        reportBounds();
+      });
+    });
+  }, [onMeasureBounds, reportBounds]);
+
   React.useEffect(() => {
     // Initial and reactive measurement
     reportBounds();
@@ -134,6 +144,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const [isResizing, setIsResizing] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLDivElement>(null);
+  const liveRectRef = React.useRef<{ x: number; y: number; width?: number; height?: number; fontSize?: number } | null>(null);
   const dragSystemRef = useRef<ReturnType<typeof createPreciseDrag> | null>(null);
   const [isRotating, setIsRotating] = React.useState(false);
   const [tempRotation, setTempRotation] = React.useState<number | null>(null);
@@ -314,6 +325,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         document.dispatchEvent(hideGuidesEvent);
 
         setIsDragging(false);
+        // Ensure measured bounds are refreshed after drag commit
+        schedulePostCommitMeasure();
         document.onpointerup = originalUp;
       };
       
@@ -323,7 +336,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     // Démarrer le drag professionnel
     enhancedOnPointerDown(e.nativeEvent, el);
-  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping, activeGroupId, element]);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping, activeGroupId, element, schedulePostCommitMeasure]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
@@ -462,6 +475,14 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     const startPosX = (deviceProps.x != null ? Number(deviceProps.x) : (element.x || 0));
     const startPosY = (deviceProps.y != null ? Number(deviceProps.y) : (element.y || 0));
     const startFontSize = element.fontSize || element.style?.fontSize || 16;
+    // Initialize live rect tracking
+    liveRectRef.current = {
+      x: startPosX,
+      y: startPosY,
+      width: startWidth,
+      height: startHeight,
+      fontSize: Number(startFontSize)
+    };
     
     // Detect if it's a corner handle (for proportional scaling with font size change)
     const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
@@ -528,7 +549,20 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             const angleRaw = typeof element.rotation === 'number' ? element.rotation : 0;
             const angle = normalize180(angleRaw);
             elementRef.current.style.transform = `translate3d(${adjX}px, ${startPosY}px, 0) rotate(${angle}deg)`;
+            // Live font-size update on inner text element for proper specificity
+            const textEl = (textRef.current as unknown as HTMLElement | null) || (elementRef.current.querySelector('[data-element-type="text"]') as HTMLElement | null);
+            if (textEl) {
+              textEl.style.fontSize = `${Math.round(Number(newFontSize))}px`;
+            }
           }
+
+          // Update live rect and report bounds
+          liveRectRef.current = {
+            x: Math.round(adjX * 100) / 100,
+            y: Math.round(startPosY * 100) / 100,
+            fontSize: Math.round(Number(newFontSize))
+          };
+          reportBounds({ x: liveRectRef.current.x, y: liveRectRef.current.y });
 
           // Stage update only (commit at pointerup)
           pendingUpdate = {
@@ -569,30 +603,79 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             newHeight = Math.max(20, canvasH - newY);
           }
 
-          onUpdate(element.id, {
-            width: newWidth,
-            height: newHeight,
-            x: newX,
-            y: newY,
+          // Live DOM updates: transform and size
+          if (elementRef.current) {
+            const angleRaw = typeof element.rotation === 'number' ? element.rotation : 0;
+            const angle = normalize180(angleRaw);
+            elementRef.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) rotate(${angle}deg)`;
+            elementRef.current.style.width = `${Math.round(newWidth)}px`;
+            elementRef.current.style.height = `${Math.round(newHeight)}px`;
+            // Update inner content size as well to reflect visual change immediately
+            const contentEl = elementRef.current.firstElementChild as HTMLElement | null;
+            if (contentEl) {
+              if (element.type === 'text') {
+                // Edge-resize for text should affect width; height auto
+                contentEl.style.width = `${Math.round(newWidth)}px`;
+                contentEl.style.height = '';
+              } else {
+                contentEl.style.width = `${Math.round(newWidth)}px`;
+                contentEl.style.height = `${Math.round(newHeight)}px`;
+              }
+            }
+          }
+
+          // Update live rect and report bounds
+          liveRectRef.current = {
+            x: Math.round(newX * 100) / 100,
+            y: Math.round(newY * 100) / 100,
+            width: Math.round(newWidth),
+            height: Math.round(newHeight)
+          };
+          reportBounds({ x: liveRectRef.current.x, y: liveRectRef.current.y, width: liveRectRef.current.width!, height: liveRectRef.current.height! });
+
+          // Stage update (commit at pointerup)
+          pendingUpdate = {
+            width: Math.round(newWidth),
+            height: Math.round(newHeight),
+            x: Math.round(newX * 100) / 100,
+            y: Math.round(newY * 100) / 100,
             isCornerScaled: false,
-          });
-      });
-    };
+          };
+        });
+      };
 
-    const handleResizePointerUp = () => {
-      document.removeEventListener('pointermove', handleResizePointerMove);
-      document.removeEventListener('pointerup', handleResizePointerUp);
+      const handleResizePointerUp = () => {
+        document.removeEventListener('pointermove', handleResizePointerMove);
+        document.removeEventListener('pointerup', handleResizePointerUp);
 
-      // Commit any pending text update
-      if (pendingUpdate) {
-        onUpdate(element.id, pendingUpdate);
-      }
-      setIsResizing(false);
-    };
+        // Commit any pending text/element update
+        if (pendingUpdate) {
+          onUpdate(element.id, pendingUpdate);
+        }
 
-    document.addEventListener('pointermove', handleResizePointerMove);
-    document.addEventListener('pointerup', handleResizePointerUp);
-  }, [element.id, onUpdate, element.width, element.height, element.x, element.y, element.fontSize, element.style, touchOptimization, deviceProps.x, deviceProps.y, activeGroupId, element]);
+        // Cleanup live refs and inline overrides
+        if (element.type === 'text') {
+          const textEl = (textRef.current as unknown as HTMLElement | null) || (elementRef.current?.querySelector('[data-element-type="text"]') as HTMLElement | null);
+          if (textEl) {
+            textEl.style.fontSize = '';
+            textEl.style.width = '';
+          }
+        }
+
+        // Clear wrapper inline sizes; React props will take over after update
+        if (elementRef.current) {
+          elementRef.current.style.width = '';
+          elementRef.current.style.height = '';
+        }
+        liveRectRef.current = null;
+        setIsResizing(false);
+        // Ensure measured bounds are refreshed after commit
+        schedulePostCommitMeasure();
+      };
+
+      document.addEventListener('pointermove', handleResizePointerMove);
+      document.addEventListener('pointerup', handleResizePointerUp);
+    }, [activeGroupId, element, deviceProps, touchOptimization, containerRef, normalize180, onUpdate, reportBounds, schedulePostCommitMeasure]);
 
   // Clipboard Handlers
   const handleCopy = useCallback((elementToCopy: any) => {
@@ -715,11 +798,13 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       // Hide alignment guides at the end of rotation
       const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
       document.dispatchEvent(hideGuidesEvent);
+      // Ensure measured bounds are refreshed after commit
+      schedulePostCommitMeasure();
     };
 
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
-  }, [element.id, element.rotation, onUpdate, deviceProps.x, deviceProps.y, normalize180, activeGroupId, element]);
+  }, [element.id, element.rotation, onUpdate, deviceProps.x, deviceProps.y, normalize180, activeGroupId, element, schedulePostCommitMeasure]);
 
   // Memoized element rendering for performance
   const renderElement = useMemo(() => {
@@ -897,7 +982,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           : ''
       }`}
       style={{
-        transform: `translate3d(${deviceProps.x || 0}px, ${deviceProps.y || 0}px, 0) rotate(${typeof element.rotation === 'number' ? normalize180(element.rotation) : 0}deg)`,
+        transform: `translate3d(${(isResizing && liveRectRef.current && (liveRectRef.current.x ?? liveRectRef.current.x === 0)) ? liveRectRef.current.x : (deviceProps.x || 0)}px, ${(isResizing && liveRectRef.current && (liveRectRef.current.y ?? liveRectRef.current.y === 0)) ? liveRectRef.current.y : (deviceProps.y || 0)}px, 0) rotate(${typeof element.rotation === 'number' ? normalize180(element.rotation) : 0}deg)`,
         transformOrigin: 'center center',
         opacity: isDragging ? 0.8 : 1,
         zIndex: element.zIndex || 1,

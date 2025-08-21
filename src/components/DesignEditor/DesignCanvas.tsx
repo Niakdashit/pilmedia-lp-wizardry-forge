@@ -41,6 +41,8 @@ export interface DesignCanvasProps {
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
   onElementUpdate?: (updates: any) => void;
+  // Report union of DOM-measured element bounds (canvas-space) to parent for auto-fit
+  onContentBoundsChange?: (bounds: { x: number; y: number; width: number; height: number } | null) => void;
   // Props pour la gestion des groupes
   selectedGroupId?: string;
   onSelectedGroupChange?: (groupId: string | null) => void;
@@ -60,6 +62,8 @@ export interface DesignCanvasProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  // Optionally enable internal one-time auto-fit (disabled by default; parent should manage auto-fit)
+  enableInternalAutoFit?: boolean;
   updateWheelConfig?: (updates: any) => void;
   getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
   // Inline wheel panel controls
@@ -104,9 +108,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onRedo,
   canUndo,
   canRedo,
-  
-  
-  
+  enableInternalAutoFit = false,
+  onContentBoundsChange,
   onWheelPanelChange,
   readOnly = false,
   containerClassName
@@ -125,6 +128,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       ? Math.max(0.1, Math.min(1, zoom))
       : 1
   );
+  // Pan offset in screen pixels, applied before scale with origin at center for stable centering
+  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
@@ -153,6 +158,41 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return { ...prev, [id]: rect };
     });
   }, []);
+
+  // Compute union of bounds from selected elements if any, otherwise all measured elements
+  const computeContentBounds = useCallback((): { x: number; y: number; width: number; height: number } | null => {
+    // Prefer selected elements when available
+    const source = (selectedElements && selectedElements.length > 0) ? selectedElements : elements;
+    if (!source || source.length === 0) return null;
+    const boxes = source
+      .map((el: any) => measuredBounds[el.id])
+      .filter(Boolean) as Array<{ x: number; y: number; width: number; height: number }>;
+    if (boxes.length === 0) return null;
+    const minX = Math.min(...boxes.map(b => b.x));
+    const minY = Math.min(...boxes.map(b => b.y));
+    const maxX = Math.max(...boxes.map(b => b.x + b.width));
+    const maxY = Math.max(...boxes.map(b => b.y + b.height));
+    return { x: minX, y: minY, width: Math.max(0, maxX - minX), height: Math.max(0, maxY - minY) };
+  }, [selectedElements, elements, measuredBounds]);
+
+  // Emit content bounds changes upstream when they change
+  const lastEmittedBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  useEffect(() => {
+    if (!onContentBoundsChange) return;
+    const bounds = computeContentBounds();
+    const last = lastEmittedBoundsRef.current;
+    const changed =
+      !last ||
+      !bounds ||
+      Math.abs((bounds?.x || 0) - (last?.x || 0)) > 0.5 ||
+      Math.abs((bounds?.y || 0) - (last?.y || 0)) > 0.5 ||
+      Math.abs((bounds?.width || 0) - (last?.width || 0)) > 0.5 ||
+      Math.abs((bounds?.height || 0) - (last?.height || 0)) > 0.5;
+    if (changed) {
+      lastEmittedBoundsRef.current = bounds;
+      onContentBoundsChange(bounds);
+    }
+  }, [computeContentBounds, onContentBoundsChange]);
 
   // Références pour lisser les mises à jour de zoom
   const rafRef = useRef<number | null>(null);
@@ -455,13 +495,57 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [effectiveCanvasSize, localZoom, onZoomChange]);
 
-  // One-time auto-fit on mount only, then keep it disabled
+  // Zoom-to-fit the current content bounds (selected union or all) inside the container
+  const zoomToFitContent = useCallback((fitPadding = 16) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const bounds = computeContentBounds();
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+
+    const style = getComputedStyle(container);
+    const paddingLeft = parseFloat(style.paddingLeft) || 0;
+    const paddingRight = parseFloat(style.paddingRight) || 0;
+    const paddingTop = parseFloat(style.paddingTop) || 0;
+    const paddingBottom = parseFloat(style.paddingBottom) || 0;
+
+    const availableWidth = Math.max(0, container.clientWidth - paddingLeft - paddingRight - 2 * fitPadding);
+    const availableHeight = Math.max(0, container.clientHeight - paddingTop - paddingBottom - 2 * fitPadding);
+
+    if (availableWidth <= 0 || availableHeight <= 0) return;
+
+    const scaleX = availableWidth / bounds.width;
+    const scaleY = availableHeight / bounds.height;
+    const fitted = Math.min(scaleX, scaleY, 1);
+    const clamped = Math.max(0.1, Math.min(1, fitted));
+
+    // Compute pan to center the bounds within the container with origin at center
+    const canvasCX = (effectiveCanvasSize.width || 0) / 2;
+    const canvasCY = (effectiveCanvasSize.height || 0) / 2;
+    const boundsCX = bounds.x + bounds.width / 2;
+    const boundsCY = bounds.y + bounds.height / 2;
+    const dxCanvas = boundsCX - canvasCX;
+    const dyCanvas = boundsCY - canvasCY;
+    // With transform: translate(px) scale(z) and origin center, translate is in screen px, so multiply by z
+    const panX = -clamped * dxCanvas;
+    const panY = -clamped * dyCanvas;
+
+    autoFitEnabledRef.current = false; // treat as manual zoom
+    if (Math.abs(clamped - localZoom) > 0.001) {
+      setLocalZoom(clamped);
+      onZoomChange?.(clamped);
+    }
+    setPanOffset({ x: panX, y: panY });
+  }, [computeContentBounds, effectiveCanvasSize, localZoom, onZoomChange]);
+
+  // One-time auto-fit on mount (only if explicitly enabled), then keep it disabled
   useEffect(() => {
-    // Apply auto-fit exactly once when the page loads
-    updateAutoFit();
+    if (enableInternalAutoFit) {
+      // Apply auto-fit exactly once when the page loads
+      updateAutoFit();
+    }
     // Then disable auto-fit so user zoom persists across interactions/resizes/device changes
     autoFitEnabledRef.current = false;
-  }, []);
+  }, [enableInternalAutoFit, updateAutoFit]);
 
   // Do not auto-fit on resizes anymore; keep user's zoom unchanged
   useEffect(() => {
@@ -1362,7 +1446,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         {(!readOnly) && selectedElementData && selectedElementData.type === 'text' && (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
-              selectedElement={selectedElementData} 
+              selectedElement={{
+                ...selectedElementData,
+                ...getPropertiesForDevice(selectedElementData, selectedDevice)
+              }} 
               onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
@@ -1400,7 +1487,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minWidth: `${effectiveCanvasSize.width}px`,
                 minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
-                transform: `scale(${localZoom})`,
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
                 transformOrigin: 'center center',
                 touchAction: 'none',
                 transition: 'transform 0.15s ease-out',
