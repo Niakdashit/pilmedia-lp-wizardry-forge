@@ -155,7 +155,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
   // Calcul des onglets à masquer selon le mode
-  const effectiveHiddenTabs = useMemo(() => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export'] : []), [hiddenTabs, mode]);
+  const effectiveHiddenTabs = useMemo(
+    () => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export', 'contact'] : []),
+    [hiddenTabs, mode]
+  );
 
   useEffect(() => {
     try {
