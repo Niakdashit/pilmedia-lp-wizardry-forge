@@ -70,6 +70,11 @@ export interface SmartWheelProps {
     required?: boolean;
     options?: string[];
   }>; // Champs de formulaire personnalisés pour le mode 2
+
+  // Nouvelles options de spin
+  spinMode?: 'random' | 'instant_winner' | 'probability';
+  winProbability?: number; // Utilisé uniquement pour instant_winner
+  speed?: 'slow' | 'medium' | 'fast';
 }
 
 export interface WheelState {

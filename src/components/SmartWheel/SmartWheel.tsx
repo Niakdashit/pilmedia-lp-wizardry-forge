@@ -27,7 +27,10 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   maxSize,
   buttonPosition,
   isMode1 = true,
-  formFields
+  formFields,
+  spinMode,
+  winProbability,
+  speed
 }) => {
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
@@ -94,7 +97,10 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     segments,
     theme: resolvedTheme,
     onResult: handleWheelResult,
-    disabled
+    disabled,
+    spinMode,
+    winProbability,
+    speed
   });
 
   // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle

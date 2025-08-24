@@ -7,13 +7,19 @@ interface UseWheelAnimationProps {
   theme: WheelTheme;
   onResult?: (segment: WheelSegment) => void;
   disabled?: boolean;
+  speed?: 'slow' | 'medium' | 'fast';
+  spinMode?: 'random' | 'instant_winner' | 'probability';
+  winProbability?: number;
 }
 
 export const useWheelAnimation = ({
   segments,
   theme,
   onResult,
-  disabled = false
+  disabled = false,
+  speed = 'medium',
+  spinMode = 'random',
+  winProbability
 }: UseWheelAnimationProps) => {
   const [wheelState, setWheelState] = useState<WheelState>({
     isSpinning: false,
@@ -28,16 +34,73 @@ export const useWheelAnimation = ({
   const spin = useCallback(() => {
     if (wheelState.isSpinning || disabled || segments.length === 0) return;
 
-    // Calculer la rotation cible
-    const baseRotation = 1080; // 3 tours minimum
-    const randomRotation = Math.random() * 360;
-    const targetRotation = wheelState.rotation + baseRotation + randomRotation;
-
-    // Déterminer le segment gagnant
+    // Helpers
     const segmentAngle = 360 / segments.length;
-    const normalizedRotation = (360 - (targetRotation % 360)) % 360;
-    const winningIndex = Math.floor(normalizedRotation / segmentAngle);
-    const winningSegment = segments[winningIndex] || segments[0];
+    const isLosingLabel = (label: string) => {
+      const l = (label || '').toLowerCase();
+      return (
+        l.includes('dommage') ||
+        l.includes('rejouer') ||
+        l.includes('perdu') ||
+        l.includes('essaie')
+      );
+    };
+
+    const pickWeightedIndex = (weights: number[]): number => {
+      const total = weights.reduce((sum, w) => sum + (isFinite(w) && w > 0 ? w : 0), 0);
+      if (!isFinite(total) || total <= 0) {
+        return Math.floor(Math.random() * segments.length);
+      }
+      let r = Math.random() * total;
+      for (let i = 0; i < weights.length; i++) {
+        const w = isFinite(weights[i]) && weights[i] > 0 ? weights[i] : 0;
+        if (r < w) return i;
+        r -= w;
+      }
+      return weights.length - 1;
+    };
+
+    // 3 tours minimum
+    const baseRotation = 1080;
+
+    // Choose the target segment index according to spin mode
+    let targetIndex = 0;
+    if (spinMode === 'probability') {
+      const weights = segments.map((s) => (typeof s.probability === 'number' ? s.probability! : 1));
+      targetIndex = pickWeightedIndex(weights);
+    } else if (spinMode === 'instant_winner') {
+      const winners: number[] = [];
+      const losers: number[] = [];
+      segments.forEach((s, idx) => (isLosingLabel(s.label) ? losers.push(idx) : winners.push(idx)));
+      const p = typeof winProbability === 'number' ? Math.max(0, Math.min(1, winProbability)) : 0.1;
+      const shouldWin = Math.random() < p;
+
+      let pool = shouldWin ? winners : losers;
+      if (pool.length === 0) {
+        pool = shouldWin ? losers : winners;
+      }
+      if (pool.length === 0) {
+        targetIndex = Math.floor(Math.random() * segments.length);
+      } else {
+        // Weight within the selected pool using probability if present
+        const weights = pool.map((idx) => (typeof segments[idx].probability === 'number' ? segments[idx].probability! : 1));
+        const localPick = pickWeightedIndex(weights);
+        targetIndex = pool[localPick] ?? pool[0];
+      }
+    } else {
+      // random
+      targetIndex = Math.floor(Math.random() * segments.length);
+    }
+
+    // Compute a target rotation that lands in the center of the target segment
+    const desiredNormalizedAngle = targetIndex * segmentAngle + segmentAngle / 2; // [0..360)
+    const currentMod = ((wheelState.rotation % 360) + 360) % 360;
+    const desiredMod = (360 - (desiredNormalizedAngle % 360)) % 360;
+    let delta = desiredMod - currentMod;
+    if (delta < 0) delta += 360;
+    const targetRotation = wheelState.rotation + baseRotation + delta;
+
+    const winningSegment = segments[targetIndex] || segments[0];
 
     setWheelState(prev => ({
       ...prev,
@@ -53,7 +116,10 @@ export const useWheelAnimation = ({
     const animate = () => {
       const currentTime = Date.now();
       const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / theme.animation.duration, 1);
+      const baseDuration = theme?.animation?.duration ?? 3000;
+      const speedFactor = speed === 'slow' ? 1.5 : speed === 'fast' ? 0.7 : 1.0;
+      const effectiveDuration = Math.max(500, baseDuration * speedFactor);
+      const progress = Math.min(elapsed / effectiveDuration, 1);
 
       // Fonction d'easing - ease-out cubic
       const easeProgress = 1 - Math.pow(1 - progress, 3);
@@ -83,7 +149,7 @@ export const useWheelAnimation = ({
     };
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [wheelState, segments, theme, onResult, disabled]);
+  }, [wheelState, segments, theme, onResult, disabled, speed, spinMode, winProbability]);
 
   const reset = useCallback(() => {
     if (animationRef.current) {

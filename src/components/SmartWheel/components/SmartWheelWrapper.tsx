@@ -22,6 +22,10 @@ interface SmartWheelWrapperProps {
   disabled?: boolean;
   buttonLabel?: string;
   className?: string;
+  // Nouveaux contrôles
+  spinMode?: 'random' | 'instant_winner' | 'probability';
+  winProbability?: number;
+  speed?: 'slow' | 'medium' | 'fast';
 }
 
 const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
@@ -38,7 +42,10 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
   onSpin,
   disabled = false,
   buttonLabel,
-  className = ''
+  className = '',
+  spinMode,
+  winProbability,
+  speed
 }) => {
   // Déterminer les segments à utiliser
   const segments = propSegments || 
@@ -66,6 +73,27 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
     secondary: campaign?.design?.customColors?.secondary || '#4ecdc4',
     accent: campaign?.design?.customColors?.accent || '#45b7d1'
   };
+
+  // Résoudre les paramètres de spin depuis les props ou la configuration
+  const resolvedSpinMode = spinMode ||
+    campaign?.gameConfig?.wheel?.mode ||
+    campaign?.config?.roulette?.mode ||
+    config?.wheel?.mode ||
+    config?.mode ||
+    'random';
+
+  const resolvedSpeed: 'slow' | 'medium' | 'fast' = speed ||
+    campaign?.gameConfig?.wheel?.speed ||
+    campaign?.config?.roulette?.speed ||
+    config?.wheel?.speed ||
+    config?.speed ||
+    'medium';
+
+  const resolvedWinProbability = typeof winProbability === 'number' ? winProbability :
+    (typeof campaign?.gameConfig?.wheel?.winProbability === 'number' ? campaign?.gameConfig?.wheel?.winProbability :
+    typeof campaign?.config?.roulette?.winProbability === 'number' ? campaign?.config?.roulette?.winProbability :
+    typeof config?.wheel?.winProbability === 'number' ? config?.wheel?.winProbability :
+    typeof config?.winProbability === 'number' ? config?.winProbability : undefined);
 
   // Gérer les callbacks multiples
   const handleResult = (segment: any) => {
@@ -104,8 +132,20 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
     'xlarge': Math.min(size, 550)
   }[gameSize] : size;
 
+  // Key to force remount when segments or size/bulbs change
+  const showBulbsFlag = !!campaign?.design?.wheelConfig?.showBulbs;
+  const wheelKey = React.useMemo(() => {
+    try {
+      const parts = smartWheelSegments.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}`).join('|');
+      return `${smartWheelSegments.length}-${parts}-${finalSize}-${showBulbsFlag ? 1 : 0}`;
+    } catch {
+      return `${smartWheelSegments.length}-${finalSize}`;
+    }
+  }, [smartWheelSegments, finalSize, showBulbsFlag]);
+
   return (
     <SmartWheel
+      key={wheelKey}
       segments={smartWheelSegments}
       theme="modern"
       size={finalSize}
@@ -115,6 +155,9 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
       disabled={disabled}
       disablePointerAnimation={true}
       showBulbs={!!campaign?.design?.wheelConfig?.showBulbs}
+      spinMode={resolvedSpinMode}
+      speed={resolvedSpeed}
+      winProbability={resolvedWinProbability}
       customButton={{
         text: buttonLabel || 
               campaign?.gameConfig?.wheel?.buttonLabel || 

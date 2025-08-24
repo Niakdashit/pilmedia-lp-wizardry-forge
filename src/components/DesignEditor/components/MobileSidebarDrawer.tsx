@@ -133,6 +133,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/20 z-30"
+              data-canvas-ui="1"
               onClick={() => setIsMinimized(true)}
             />
           )}
@@ -147,7 +148,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             y: isMinimized ? '100%' : '20%'
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
+          className="mobile-sidebar-drawer fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
           style={{
             height: '85vh',
             // Leave space for the persistent tab bar AND device safe area
@@ -219,6 +220,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             opacity: 1,
             display: 'block'
           }}
+          data-canvas-ui="1"
         >
           <div className="flex items-center justify-between px-2 py-2 gap-2">
             {/* Undo/Redo controls */}

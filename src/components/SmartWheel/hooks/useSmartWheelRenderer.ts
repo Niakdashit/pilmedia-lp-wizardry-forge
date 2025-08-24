@@ -380,6 +380,9 @@ export const useSmartWheelRenderer = ({
     isPatternBorder: boolean
   ) => {
     const anglePerSegment = (2 * Math.PI) / segments.length;
+    // Debug flag to print the resolved colors actually used for rendering once per draw
+    const DEBUG_SEGMENTS = !!(globalThis as any)?.__DEBUG_WHEEL_SEGMENTS__;
+    const usedColors: string[] = DEBUG_SEGMENTS ? [] : [];
     
     segments.forEach((segment, index) => {
       const startAngle = (index * anglePerSegment) + (wheelState.rotation * Math.PI / 180);
@@ -388,6 +391,7 @@ export const useSmartWheelRenderer = ({
       // Couleur du segment
       const segmentColor = segment.color || 
         (index % 2 === 0 ? theme.colors.primary : theme.colors.secondary);
+      if (DEBUG_SEGMENTS) usedColors.push(segmentColor);
 
       // Dessiner le segment - utiliser le rayon complet
       ctx.beginPath();
@@ -482,6 +486,12 @@ export const useSmartWheelRenderer = ({
       // Dessiner le texte
       drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);
     });
+
+    if (DEBUG_SEGMENTS) {
+      try {
+        console.log('🖌️ useSmartWheelRenderer - Used segment colors:', usedColors);
+      } catch {}
+    }
   };
 
   const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number, customWidth?: number) => {

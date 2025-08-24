@@ -45,7 +45,8 @@ const Wheel: React.FC<WheelProps> = ({
       id: segment.id || index.toString(),
       label: segment.label,
       color: segment.color,
-      textColor: segment.textColor || '#ffffff'
+      textColor: segment.textColor || '#ffffff',
+      probability: typeof segment.probability === 'number' ? segment.probability : 1
     })) : defaultSegments;
   
   // Calculer la taille de la roue en fonction des dimensions du jeu
@@ -87,6 +88,34 @@ const Wheel: React.FC<WheelProps> = ({
   // Propagation de l'option d'ampoules depuis la campagne ou la config
   const showBulbs = (campaign?.design?.wheelConfig?.showBulbs ?? config?.wheel?.showBulbs) ?? false;
 
+  // Résoudre les paramètres de spin (mode, vitesse, probabilité de gain)
+  const resolvedSpinMode = 
+    campaign?.gameConfig?.wheel?.mode ??
+    config?.wheel?.mode ??
+    config?.mode ??
+    'random';
+
+  const resolvedSpeed: 'slow' | 'medium' | 'fast' = 
+    (campaign?.gameConfig?.wheel?.speed ??
+    config?.wheel?.speed ??
+    config?.speed ??
+    'medium');
+
+  const resolvedWinProbability = 
+    (typeof campaign?.gameConfig?.wheel?.winProbability === 'number') ? campaign?.gameConfig?.wheel?.winProbability :
+    (typeof config?.wheel?.winProbability === 'number') ? config?.wheel?.winProbability :
+    (typeof config?.winProbability === 'number') ? config?.winProbability : undefined;
+
+  // Force remount when segments or visual config change
+  const wheelKey = React.useMemo(() => {
+    try {
+      const parts = segments.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}`).join('|');
+      return `${segments.length}-${parts}-${borderStyle}-${wheelSize}-${showBulbs ? 1 : 0}`;
+    } catch {
+      return `${segments.length}-${borderStyle}-${wheelSize}`;
+    }
+  }, [segments, borderStyle, wheelSize, showBulbs]);
+
   if (!isPreview) {
     return (
       <div className="space-y-6">
@@ -106,6 +135,7 @@ const Wheel: React.FC<WheelProps> = ({
       }}
     >
       <SmartWheel
+        key={wheelKey}
         segments={segments}
         theme="modern"
         size={wheelSize}
@@ -116,6 +146,9 @@ const Wheel: React.FC<WheelProps> = ({
         disablePointerAnimation={true}
         borderStyle={borderStyle}
         showBulbs={showBulbs}
+        spinMode={resolvedSpinMode}
+        speed={resolvedSpeed}
+        winProbability={resolvedWinProbability}
         customButton={{
           text: config?.buttonLabel || 'Faire tourner',
           color: brandColors.primary,

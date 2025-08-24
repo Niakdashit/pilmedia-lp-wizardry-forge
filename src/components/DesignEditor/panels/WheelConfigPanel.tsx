@@ -1,5 +1,6 @@
 import React from 'react';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
+import { useEditorStore } from '../../../stores/editorStore';
 
 interface WheelConfigPanelProps {
   onBack: () => void;
@@ -36,6 +37,79 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
   onPositionChange,
   selectedDevice
 }) => {
+  // Campaign store access to manage wheel segments directly from this panel
+  const campaign = useEditorStore((s) => s.campaign as any);
+  const setCampaign = useEditorStore((s) => s.setCampaign as any);
+
+  const getRawSegments = () =>
+    (campaign?.gameConfig?.wheel?.segments || campaign?.config?.roulette?.segments || []) as any[];
+
+  const updateWheelSegments = (newSegments: any[]) => {
+    setCampaign((prev: any) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        gameConfig: {
+          ...prev.gameConfig,
+          wheel: {
+            ...prev.gameConfig?.wheel,
+            segments: newSegments
+          }
+        },
+        config: {
+          ...prev.config,
+          roulette: {
+            ...prev.config?.roulette,
+            segments: newSegments
+          }
+        },
+        _lastUpdate: Date.now()
+      };
+      return next;
+    });
+  };
+
+  // Default palette for new segments
+  const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+
+  // Ensure even segment count, min 2, add/remove as needed
+  const setSegmentCount = (targetCount: number) => {
+    let count = Math.max(2, Math.floor(targetCount));
+    if (count % 2 === 1) count += 1;
+
+    const raw = getRawSegments();
+    let next = [...raw];
+
+    if (next.length % 2 === 1) {
+      next = next.slice(0, -1);
+    }
+
+    if (next.length > count) {
+      next = next.slice(0, count);
+    }
+
+    while (next.length < count) {
+      const idx = next.length;
+      const defaultSeg = {
+        id: `segment-${idx}`,
+        label: `Segment ${idx + 1}`,
+        color: colorPalette[idx % colorPalette.length],
+        textColor: '#ffffff'
+      } as any;
+      next.push(defaultSeg);
+    }
+
+    if (next.length > count) {
+      next = next.slice(0, count);
+    }
+
+    updateWheelSegments(next);
+  };
+
+  const decrementSegments = () => setSegmentCount((getRawSegments().length || 0) - 2);
+  const incrementSegments = () => setSegmentCount((getRawSegments().length || 0) + 2);
+  const segmentsLength = getRawSegments().length || 0;
+
   return (
     <div className="p-4">
       {/* Back */}
@@ -70,6 +144,41 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
             <span>0%</span>
             <span>100%</span>
           </div>
+        </div>
+
+        {/* Nombre de segments */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre de segments
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={decrementSegments}
+              className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 disabled:opacity-50"
+              disabled={segmentsLength <= 2}
+              aria-label="Retirer 2 segments"
+            >
+              −2
+            </button>
+            <input
+              type="number"
+              min={2}
+              step={2}
+              value={segmentsLength}
+              onChange={(e) => setSegmentCount(parseInt(e.target.value || '0', 10))}
+              className="w-24 px-3 py-1.5 text-sm rounded-md border border-gray-300 focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={incrementSegments}
+              className="px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50"
+              aria-label="Ajouter 2 segments"
+            >
+              +2
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">La roue fonctionne mieux avec un nombre pair de segments.</p>
         </div>
 
         {/* Couleur de la bordure */}
@@ -181,3 +290,4 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
 WheelConfigPanel.displayName = 'WheelConfigPanel';
 
 export default WheelConfigPanel;
+

@@ -145,6 +145,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const textRef = React.useRef<HTMLDivElement>(null);
   const elementRef = React.useRef<HTMLDivElement>(null);
   const liveRectRef = React.useRef<{ x: number; y: number; width?: number; height?: number; fontSize?: number } | null>(null);
+  const editingTextRef = React.useRef<string>('');
   const dragSystemRef = useRef<ReturnType<typeof createPreciseDrag> | null>(null);
   const [isRotating, setIsRotating] = React.useState(false);
   const [tempRotation, setTempRotation] = React.useState<number | null>(null);
@@ -176,6 +177,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   // Professional drag system (Excalidraw/Canva precision)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (readOnly) return; // Disable drag & selection in read-only mode
+    // Do not initiate drag when interacting with editable controls or while text is in edit mode
+    const targetEl = e.target as HTMLElement;
+    if (
+      targetEl.closest('input, textarea, [contenteditable="true"]') ||
+      (element.type === 'text' && isEditing)
+    ) {
+      e.stopPropagation();
+      return;
+    }
     // If a group is selected and this element is a child of that group, lock interactions
     if (activeGroupId && (element as any)?.parentGroupId === activeGroupId) {
       e.preventDefault();
@@ -351,6 +361,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     onUpdate(element.id, { content: newContent });
   }, [element.id, onUpdate]);
 
+  // Commit edits on blur/Enter without re-rendering per keystroke
+  const commitEditingContent = useCallback(() => {
+    const newText = (editingTextRef.current ?? '').replace(/\n/g, '');
+    const current = element.content ?? '';
+    if (newText !== current) {
+      onUpdate(element.id, { content: newText });
+    }
+  }, [element.content, element.id, onUpdate]);
+
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
     const isMod = isMac ? (e.metaKey as boolean) : (e.ctrlKey as boolean);
@@ -420,13 +439,47 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
 
     if (e.key === 'Enter') {
+      // Keep single-line behavior in contentEditable and commit edits
+      e.preventDefault();
+      commitEditingContent();
       setIsEditing(false);
     }
-  }, [element, onUpdate]);
+  }, [element, onUpdate, commitEditingContent]);
 
   const handleTextBlur = useCallback(() => {
+    commitEditingContent();
     setIsEditing(false);
+  }, [commitEditingContent]);
+
+  // ContentEditable input handler to persist content changes
+  const handleContentEditableInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
+    const newText = (e.currentTarget.textContent ?? '').replace(/\n/g, '');
+    editingTextRef.current = newText;
   }, []);
+
+  // Autofocus editable div and place caret at end on entering edit mode
+  React.useEffect(() => {
+    if (isEditing && !readOnly) {
+      const el = textRef.current;
+      if (el) {
+        // Initialize editing buffer with current content (no placeholder during edit)
+        const initial = (element.content ?? '');
+        editingTextRef.current = initial;
+        if (el.textContent !== initial) {
+          el.textContent = initial;
+        }
+        el.focus();
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        } catch {}
+      }
+    }
+  }, [isEditing, readOnly, element.content]);
 
   const handleAlign = useCallback((alignment: string) => {
     if (!containerRef?.current) return;
@@ -890,27 +943,32 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         };
 
         return (isEditing && !readOnly) ? (
-          <input
-            type="text"
-            value={element.content || 'Texte'}
-            onChange={handleTextChange}
+          <div
+            ref={textRef}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={handleContentEditableInput}
             onKeyDown={handleTextKeyDown}
             onBlur={handleTextBlur}
-            className="bg-transparent border-none outline-none"
+            className="outline-none bg-transparent border-none whitespace-pre-wrap break-words select-text cursor-text"
             style={{
               ...getTextStyle(),
-              width: `${Math.max((element.content || 'Texte').length * 0.5 + 0.5, 2)}em`,
-              height: 'auto',
               boxSizing: 'border-box',
               display: 'inline-block',
-              padding: '0',
-              margin: '0',
-              border: 'none',
-              minWidth: '2em'
+              touchAction: 'auto',
+              userSelect: 'text'
             }}
-            autoFocus
+            onPointerDown={(ev) => { ev.stopPropagation(); }}
+            onPointerMove={(ev) => { ev.stopPropagation(); }}
+            onMouseDown={(ev) => { ev.stopPropagation(); }}
+            onMouseMove={(ev) => { ev.stopPropagation(); }}
+            onTouchStart={(ev) => { ev.stopPropagation(); }}
+            onTouchMove={(ev) => { ev.stopPropagation(); }}
+            draggable={false}
             data-element-type="text"
-          />
+          >
+            {element.content || 'Texte'}
+          </div>
         ) : (
           <div
             ref={textRef}
@@ -944,6 +1002,16 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }}
           >
             <SmartWheel
+              key={(() => {
+                try {
+                  const segs = element.segments || [];
+                  const parts = segs.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}`).join('|');
+                  const size = Math.min(element.width || 300, element.height || 300);
+                  return `${segs.length}-${parts}-${size}`;
+                } catch {
+                  return `${(element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}`;
+                }
+              })()}
               segments={element.segments || []}
               size={Math.min(element.width || 300, element.height || 300)}
               disabled={true}
@@ -969,7 +1037,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       default:
         return <div className={`w-20 h-20 bg-gray-300 ${readOnly ? '' : 'cursor-move'}`} style={elementStyle} />;
     }
-  }, [element, deviceProps, isEditing, handleTextChange, handleTextKeyDown, handleTextBlur, readOnly]);
+  }, [element, deviceProps, isEditing, handleContentEditableInput, handleTextKeyDown, handleTextBlur, readOnly]);
 
   return (
     <div
@@ -977,27 +1045,28 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       className={`absolute ${
         isSelected && !readOnly
           ? (shouldHideControls
-              ? 'ring-2 ring-[hsl(var(--primary))] ring-opacity-60' // subtle ring when controls hidden
+              ? 'ring-2 ring-[hsl(var(--primary))] ring-opacity-60'
               : 'ring-2 ring-[hsl(var(--primary))]')
           : ''
       }`}
+      data-element-id={element.id}
       style={{
-        transform: `translate3d(${(isResizing && liveRectRef.current && (liveRectRef.current.x ?? liveRectRef.current.x === 0)) ? liveRectRef.current.x : (deviceProps.x || 0)}px, ${(isResizing && liveRectRef.current && (liveRectRef.current.y ?? liveRectRef.current.y === 0)) ? liveRectRef.current.y : (deviceProps.y || 0)}px, 0) rotate(${typeof element.rotation === 'number' ? normalize180(element.rotation) : 0}deg)`,
+        transform: `translate(${Number(deviceProps.x) || 0}px, ${Number(deviceProps.y) || 0}px) rotate(${typeof element.rotation === 'number' ? element.rotation : 0}deg)`,
         transformOrigin: 'center center',
         opacity: isDragging ? 0.8 : 1,
         zIndex: element.zIndex || 1,
         transition: (isDragging || isRotating || isResizing) ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
-        cursor: readOnly ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+        cursor: readOnly ? 'default' : (isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab')),
         pointerEvents: readOnly ? 'none' : 'auto',
       }}
       onPointerDown={readOnly ? undefined : handlePointerDown}
       onDoubleClick={readOnly ? undefined : handleDoubleClick}
     >
       {renderElement}
-      
+
       {/* Selection handles - masqués pendant le drag */}
-      {isSelected && !isDragging && !isResizing && !readOnly && !shouldHideControls && (
+      {isSelected && !isDragging && !isResizing && !readOnly && !shouldHideControls && !isEditing && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 

@@ -9,19 +9,19 @@ interface TextEffectsPanelProps {
 const textEffects = [
   {
     id: 'none',
-    name: 'None',
+    name: 'Aucun',
     css: {}
   },
   {
     id: 'shadow',
-    name: 'Shadow',
+    name: 'Ombre',
     css: {
       textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
     }
   },
   {
     id: 'lift',
-    name: 'Lift',
+    name: 'Relief',
     css: {
       textShadow: '0 2px 4px rgba(0,0,0,0.3)',
       transform: 'translateY(-1px)'
@@ -29,7 +29,7 @@ const textEffects = [
   },
   {
     id: 'hollow',
-    name: 'Hollow',
+    name: 'Creux',
     css: {
       color: 'transparent',
       WebkitTextStroke: '2px #000000',
@@ -38,7 +38,7 @@ const textEffects = [
   },
   {
     id: 'splice',
-    name: 'Splice',
+    name: 'Découpe',
     css: {
       textShadow: '3px 3px 0px rgba(0,0,0,0.3)',
       color: '#000000'
@@ -46,7 +46,7 @@ const textEffects = [
   },
   {
     id: 'outline',
-    name: 'Outline',
+    name: 'Contour',
     css: {
       color: '#000000',
       textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff'
@@ -54,7 +54,7 @@ const textEffects = [
   },
   {
     id: 'echo',
-    name: 'Echo',
+    name: 'Écho',
     css: {
       textShadow: '2px 2px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.2), 6px 6px 0px rgba(0,0,0,0.1)',
       color: '#000000'
@@ -70,7 +70,7 @@ const textEffects = [
   },
   {
     id: 'neon',
-    name: 'Neon',
+    name: 'Néon',
     css: {
       color: '#ff00ff',
       textShadow: '0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 15px #ff00ff, 0 0 20px #ff00ff'
@@ -78,7 +78,7 @@ const textEffects = [
   },
   {
     id: 'gradient',
-    name: 'Gradient',
+    name: 'Dégradé',
     css: {
       color: 'transparent',
       WebkitTextFillColor: 'transparent',
@@ -89,7 +89,7 @@ const textEffects = [
   },
   {
     id: 'background',
-    name: 'Background',
+    name: 'Fond',
     css: {
       backgroundColor: 'rgba(251,255,0,1)',
       color: '#000000',
@@ -192,10 +192,11 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         
       case 'background':
         const fontSize = selectedElement?.fontSize ?? 24;
-        const vPad = Math.round(Math.max(6, fontSize * 0.35));
-        const spreadDelta = (backgroundSpread / 100) * 40; // apply uniformly
-        const hPad = 8 + spreadDelta; // keep existing 8px min horizontally
-        const vPadAug = vPad + spreadDelta; // add spread vertically too
+        const vPadBase = Math.round(Math.max(6, fontSize * 0.34));
+        const spreadScale = Math.min(1, Math.max(0, backgroundSpread / 100));
+        // Canva-like balance: let horizontal follow vertical but stay a bit smaller
+        const vPadAug = vPadBase + Math.round(spreadScale * 40); // 0..40px extra vertically
+        const hPad = Math.round(vPadAug * 0.7 + fontSize * 0.08); // tie H to V for natural look
         {
           const progress = Math.min(100, Math.max(1, backgroundRoundness)) / 100; // 0.01..1
           const parseNumber = (v: any, fb = 0) => {
@@ -208,16 +209,15 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           const actualH = parseNumber((selectedElement as any)?.height, 0);
           const lh = parseNumber((selectedElement as any)?.lineHeight, 1.2);
           const approxHeight = Math.max(1, (actualH || (fontSize * lh)) + vPadAug * 2); // px includes spread vertically
-          const fudge = 2; // px safety margin to ensure rounded ends
-          const maxRadius = approxHeight / 2 + fudge; // theoretical pill radius + safety
-          // Sqrt easing: more rounding earlier, very smooth from 98→100
-          const eased = Math.sqrt(progress);
-          const radiusPx = +(Math.min(maxRadius, Math.max(0, eased * maxRadius))).toFixed(2);
+          const maxRadius = approxHeight / 2; // perfect pill at 100%
+          // Linear mapping like Canva: 0% = 0px, 100% = height/2
+          const radiusPx = +(Math.min(maxRadius, Math.max(0, progress * maxRadius))).toFixed(2);
           combinedCSS = {
             ...combinedCSS,
             backgroundColor: `rgba(${hexToRgb(backgroundColor)}, ${backgroundTransparency / 100})`,
             color: selectedElement?.color ?? '#000000',
             padding: `${vPadAug}px ${hPad}px`,
+            lineHeight: 1.1 as any,
             display: 'inline-block',
             boxSizing: 'border-box',
             textShadow: 'none',
@@ -398,7 +398,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Offset */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Offset</label>
+              <label className="text-sm font-medium text-gray-700">Décalage</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -447,7 +447,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Blur */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Blur</label>
+              <label className="text-sm font-medium text-gray-700">Flou</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -470,7 +470,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Transparency */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Transparency</label>
+              <label className="text-sm font-medium text-gray-700">Transparence</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -493,7 +493,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Color</label>
+              <label className="text-sm font-medium text-gray-700">Couleur</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -535,7 +535,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Start Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Start Color</label>
+              <label className="text-sm font-medium text-gray-700">Couleur de début</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -549,7 +549,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* End Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">End Color</label>
+              <label className="text-sm font-medium text-gray-700">Couleur de fin</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -568,7 +568,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Thickness */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Thickness</label>
+              <label className="text-sm font-medium text-gray-700">Épaisseur</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -610,7 +610,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Roundness */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Roundness</label>
+              <label className="text-sm font-medium text-gray-700">Rondeur</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -634,7 +634,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Spread */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Spread</label>
+              <label className="text-sm font-medium text-gray-700">Étendue</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -680,7 +680,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Background Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Background Color</label>
+              <label className="text-sm font-medium text-gray-700">Couleur du fond</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -694,7 +694,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Text Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Text Color</label>
+              <label className="text-sm font-medium text-gray-700">Couleur du texte</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -717,7 +717,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Intensity */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Intensity</label>
+              <label className="text-sm font-medium text-gray-700">Intensité</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -794,7 +794,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Split Colors */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Split Colors</label>
+              <label className="text-sm font-medium text-gray-700">Couleurs séparées</label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
                   <input
@@ -1038,7 +1038,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Strength */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Strength</label>
+              <label className="text-sm font-medium text-gray-700">Force</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -1107,7 +1107,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Shadow Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Shadow Color</label>
+              <label className="text-sm font-medium text-gray-700">Couleur de l'ombre</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -1161,7 +1161,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Effects</h2>
+        <h2 className="text-lg font-semibold text-gray-800">Effets</h2>
         <button
           onClick={onBack}
           className="text-gray-500 hover:text-gray-700 text-xl"

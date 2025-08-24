@@ -222,6 +222,7 @@ const MobileToolbarOverlay: React.FC<MobileToolbarOverlayProps> = ({
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch'
       }}
+      data-canvas-ui="1"
     >
       <div className="flex items-center gap-1 flex-wrap">
         {isTextElement && (

@@ -13,6 +13,13 @@ interface StandardizedWheelProps {
   onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
+  // Spin controls
+  spinMode?: 'random' | 'instant_winner' | 'probability';
+  speed?: 'slow' | 'medium' | 'fast';
+  winProbability?: number;
+  // External config handlers (optional)
+  getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
+  updateWheelConfig?: (updates: any) => void;
 }
 
 /**
@@ -29,30 +36,103 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
   onSpin,
   onClick,
   className = '',
-  style = {}
+  style = {},
+  spinMode,
+  speed,
+  winProbability,
 }) => {
-  // Configuration canonique via le service
-  const wheelConfig = useMemo(() => 
-    WheelConfigService.getCanonicalWheelConfig(
-      campaign,
-      extractedColors,
-      wheelModalConfig,
-      { shouldCropWheel, device }
-    ),
-    [campaign, extractedColors, wheelModalConfig, shouldCropWheel, device]
+  // Configuration canonique via le service (évaluée à chaque rendu pour capter les mutations profondes)
+  // Option A: ignorer toute fonction getCanonicalConfig potentiellement stale.
+  // Toujours recalculer à partir des props courants pour éviter les closures obsolètes.
+  const wheelConfig = WheelConfigService.getCanonicalWheelConfig(
+    campaign,
+    extractedColors,
+    wheelModalConfig,
+    { shouldCropWheel, device }
   );
 
-  // Segments standardisés
-  const segments = useMemo(() => 
-    WheelConfigService.getStandardizedSegments(wheelConfig),
-    [wheelConfig]
+  // Empreinte profonde des segments pour détecter les mutations in-place (id, label, couleurs, flags)
+  const segmentsFingerprint = useMemo(() => {
+    try {
+      const raw = (wheelConfig?.segments || []).map((s: any, idx: number) => ({
+        id: s?.id ?? String(idx + 1),
+        label: s?.label ?? '',
+        color: s?.color ?? '',
+        textColor: s?.textColor ?? '',
+        probability: s?.probability ?? null,
+        isWinning: s?.isWinning ?? null
+      }));
+      return JSON.stringify(raw);
+    } catch {
+      return '[]';
+    }
+  // Include a deep stringified value to ensure rerender when content changes even if reference is stable
+  }, [JSON.stringify(wheelConfig?.segments || [])]);
+
+  // Segments standardisés (dépend de l'empreinte et des couleurs de fallback)
+  const segments = useMemo(
+    () => WheelConfigService.getStandardizedSegments(wheelConfig),
+    [
+      segmentsFingerprint,
+      wheelConfig.customColors?.primary,
+      wheelConfig.brandColors?.primary,
+      wheelConfig.customColors?.secondary,
+      wheelConfig.brandColors?.secondary
+    ]
   );
+
+  // Empreinte structurelle (id/probability/isWinning + ordre + longueur) pour décider d'un remount du composant
+  const structuralSegmentsFingerprint = useMemo(() => {
+    try {
+      const raw = (wheelConfig?.segments || []).map((s: any, idx: number) => ({
+        id: s?.id ?? String(idx + 1),
+        probability: s?.probability ?? null,
+        isWinning: s?.isWinning ?? null
+      }));
+      return `${(wheelConfig?.segments || []).length}|${JSON.stringify(raw)}`;
+    } catch {
+      return '0|[]';
+    }
+  }, [JSON.stringify(wheelConfig?.segments || [])]);
+
+  // Key to force remount when structural segments or important visual config change (couleurs/labels ne remount pas)
+  const wheelKey = useMemo(() => {
+    try {
+      return `${segments.length}-${structuralSegmentsFingerprint}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelConfig.size}-${wheelConfig.showBulbs ? 1 : 0}`;
+    } catch {
+      return `${segments.length}-${wheelConfig.borderStyle}-${wheelConfig.size}`;
+    }
+  }, [segments.length, structuralSegmentsFingerprint, wheelConfig.borderStyle, wheelConfig.borderWidth, wheelConfig.size, wheelConfig.showBulbs]);
 
   // Styles de découpage
-  const croppingStyles = useMemo(() => 
-    WheelConfigService.getWheelCroppingStyles(shouldCropWheel, wheelConfig.position || 'center', device as 'desktop' | 'tablet' | 'mobile'),
+  const croppingStyles = useMemo(
+    () => WheelConfigService.getWheelCroppingStyles(shouldCropWheel, wheelConfig.position || 'center', device as 'desktop' | 'tablet' | 'mobile'),
     [shouldCropWheel, wheelConfig.position, device]
   );
+
+  // Resolve spin props from props -> campaign/config -> defaults
+  const resolvedSpinMode: 'random' | 'instant_winner' | 'probability' =
+    spinMode ||
+    wheelModalConfig?.wheel?.mode ||
+    wheelModalConfig?.mode ||
+    campaign?.gameConfig?.wheel?.mode ||
+    campaign?.config?.roulette?.mode ||
+    'random';
+
+  const resolvedSpeed: 'slow' | 'medium' | 'fast' =
+    speed ||
+    wheelModalConfig?.wheel?.speed ||
+    wheelModalConfig?.speed ||
+    campaign?.gameConfig?.wheel?.speed ||
+    campaign?.config?.roulette?.speed ||
+    'medium';
+
+  const resolvedWinProbability =
+    typeof winProbability === 'number' ? winProbability :
+    (typeof wheelModalConfig?.wheel?.winProbability === 'number' ? wheelModalConfig?.wheel?.winProbability :
+    (typeof wheelModalConfig?.winProbability === 'number' ? wheelModalConfig?.winProbability :
+    (typeof campaign?.gameConfig?.wheel?.winProbability === 'number' ? campaign?.gameConfig?.wheel?.winProbability :
+    (typeof campaign?.config?.roulette?.winProbability === 'number' ? campaign?.config?.roulette?.winProbability : undefined))));
 
   console.log('🎡 StandardizedWheel - Rendu:', {
     wheelConfig,
@@ -66,6 +146,12 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     wheelConfigSize: wheelConfig.size,
     scale: wheelConfig.scale
   });
+
+  // Debug: afficher les couleurs des segments pour vérifier l'alternance stricte
+  try {
+    const segColors = segments.map((s: any) => s?.color || '');
+    console.log('🎨 StandardizedWheel - Segment colors:', segColors);
+  } catch {}
 
   // Décalage géré via WheelConfigService.getWheelCroppingStyles (inset 150px)
 
@@ -86,16 +172,18 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
         }}
       >
         <SmartWheel
+          key={wheelKey}
           segments={segments}
           theme="modern"
           size={wheelConfig.size}
           borderStyle={wheelConfig.borderStyle}
+          customBorderColor={wheelConfig.borderColor}
           customBorderWidth={wheelConfig.borderWidth}
           showBulbs={wheelConfig.showBulbs}
 
           brandColors={{
             primary: wheelConfig.brandColors?.primary || '#841b60',
-            secondary: wheelConfig.brandColors?.secondary || '#4ecdc4',
+            secondary: wheelConfig.brandColors?.secondary || '#ffffff',
             accent: wheelConfig.brandColors?.accent || '#45b7d1'
           }}
           customButton={{
@@ -107,6 +195,9 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
           disabled={disabled}
           disablePointerAnimation={true}
           onSpin={onSpin}
+          spinMode={resolvedSpinMode}
+          speed={resolvedSpeed}
+          winProbability={resolvedWinProbability}
         />
       </div>
     </div>

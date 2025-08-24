@@ -122,7 +122,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   const CurrentAlignIcon = currentAlignmentOption.icon;
 
   return (
-    <div className="relative">
+    <div className="relative" data-canvas-ui="1">
       <div
         ref={toolbarRef}
         className="canvas-toolbar z-10 sticky top-0 bg-gray-800 text-white px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-lg shadow-lg flex items-center space-x-1 mb-2 sm:mb-3 md:mb-4 overflow-x-auto whitespace-nowrap"

@@ -47,6 +47,100 @@ export interface WheelConfig {
 }
 
 export class WheelConfigService {
+  // --- Color utilities: robust parsing to hex (#rrggbb) ---
+  private static normalizeHex(hex?: string): string | null {
+    if (!hex || typeof hex !== 'string') return null;
+    let h = hex.trim().toLowerCase();
+    if (!h) return null;
+    if (h.startsWith('#')) h = h.slice(1);
+    // 3-digit shorthand
+    if (/^[0-9a-f]{3}$/i.test(h)) {
+      const r = h[0];
+      const g = h[1];
+      const b = h[2];
+      return `#${r}${r}${g}${g}${b}${b}`;
+    }
+    // 6-digit
+    if (/^[0-9a-f]{6}$/i.test(h)) {
+      return `#${h}`;
+    }
+    return null;
+  }
+
+  private static rgbToHex(r: number, g: number, b: number): string {
+    const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+    const to2 = (v: number) => clamp(v).toString(16).padStart(2, '0');
+    return `#${to2(r)}${to2(g)}${to2(b)}`;
+  }
+
+  private static hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+    // h in [0, 360), s and l in [0,1]
+    const C = (1 - Math.abs(2 * l - 1)) * s;
+    const Hp = ((h % 360) + 360) % 360 / 60;
+    const X = C * (1 - Math.abs((Hp % 2) - 1));
+    let r1 = 0, g1 = 0, b1 = 0;
+    if (0 <= Hp && Hp < 1) { r1 = C; g1 = X; b1 = 0; }
+    else if (1 <= Hp && Hp < 2) { r1 = X; g1 = C; b1 = 0; }
+    else if (2 <= Hp && Hp < 3) { r1 = 0; g1 = C; b1 = X; }
+    else if (3 <= Hp && Hp < 4) { r1 = 0; g1 = X; b1 = C; }
+    else if (4 <= Hp && Hp < 5) { r1 = X; g1 = 0; b1 = C; }
+    else { r1 = C; g1 = 0; b1 = X; }
+    const m = l - C / 2;
+    return { r: Math.round((r1 + m) * 255), g: Math.round((g1 + m) * 255), b: Math.round((b1 + m) * 255) };
+  }
+
+  private static parseToHex(input?: string): string | null {
+    if (!input || typeof input !== 'string') return null;
+    const c = input.trim().toLowerCase();
+    // Try hex
+    const asHex = this.normalizeHex(c);
+    if (asHex) return asHex;
+
+    // rgb/rgba
+    const rgbMatch = c.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)$/i);
+    if (rgbMatch) {
+      const r = parseFloat(rgbMatch[1]);
+      const g = parseFloat(rgbMatch[2]);
+      const b = parseFloat(rgbMatch[3]);
+      return this.rgbToHex(r, g, b);
+    }
+
+    // hsl/hsla
+    const hslMatch = c.match(/^hsla?\(\s*([\-\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%(?:\s*,\s*([\d.]+))?\s*\)$/i);
+    if (hslMatch) {
+      const h = parseFloat(hslMatch[1]);
+      const s = parseFloat(hslMatch[2]) / 100;
+      const l = parseFloat(hslMatch[3]) / 100;
+      const { r, g, b } = this.hslToRgb(h, s, l);
+      return this.rgbToHex(r, g, b);
+    }
+
+    return null;
+  }
+
+  private static toRGBFromHex(hex: string): { r: number; g: number; b: number } {
+    const norm = this.normalizeHex(hex);
+    const h = (norm || '#000000').slice(1);
+    const r = parseInt(h.slice(0, 2), 16) / 255;
+    const g = parseInt(h.slice(2, 4), 16) / 255;
+    const b = parseInt(h.slice(4, 6), 16) / 255;
+    return { r, g, b };
+  }
+
+  private static luminanceFromHex(hex: string): number {
+    const { r, g, b } = this.toRGBFromHex(hex);
+    const srgb = [r, g, b].map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+    return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  }
+
+  private static isNearWhiteColor(input?: string): boolean {
+    if (!input) return false;
+    const hex = this.parseToHex(input);
+    if (!hex) return false;
+    const l = this.luminanceFromHex(hex);
+    return l >= 0.9;
+  }
+
   /**
    * Récupère la configuration canonique de la roue
    * Applique les priorités : wheelModalConfig > extractedColors > design > defaults
@@ -94,9 +188,16 @@ export class WheelConfigService {
     const hasImageBackground = typeof bg === 'object' && bg?.type === 'image';
 
     // Couleur primaire : extraite de l'image si disponible, sinon couleur de la bordure
-    const primaryColor = hasImageBackground && extractedColors[0]
-      ? extractedColors[0]
-      : (modalConfig.borderColor || designConfig.borderColor || defaults.borderColor);
+    // Ajout d'une garde: si la couleur extraite est trop proche du blanc, fallback à la couleur de bordure (ou défaut)
+    const extractedPrimaryHex = hasImageBackground && extractedColors[0]
+      ? (WheelConfigService.parseToHex(extractedColors[0]) || '')
+      : '';
+    const borderFallbackHex = WheelConfigService.parseToHex(
+      modalConfig.borderColor || designConfig.borderColor || defaults.borderColor
+    ) || '#841b60';
+    const primaryColor = extractedPrimaryHex && WheelConfigService.isNearWhiteColor(extractedPrimaryHex)
+      ? borderFallbackHex
+      : (extractedPrimaryHex || borderFallbackHex);
 
     // Fusion avec priorités
     const finalConfig: WheelConfig = {
@@ -112,6 +213,7 @@ export class WheelConfigService {
       // Configuration des couleurs avec priorités
       customColors: {
         primary: primaryColor,
+        // Forcer un schéma strict à 2 couleurs: primaire + blanc
         secondary: '#ffffff',
         accent: extractedColors[2] || '#45b7d1'
       },
@@ -122,14 +224,28 @@ export class WheelConfigService {
         accent: campaign?.design?.brandColors?.accent || '#45b7d1'
       },
 
+      // Segments provenant de la campagne (nouvelle priorité)
+      segments: (campaign as any)?.gameConfig?.wheel?.segments
+        || (campaign as any)?.config?.roulette?.segments,
+
       // Taille responsive
       size: this.getResponsiveSize(options.device, modalConfig.scale || designConfig.scale || defaults.scale)
     };
 
-    console.log('🔧 WheelConfigService - Configuration canonique:', {
-      input: { campaign: campaign?.id, extractedColors, wheelModalConfig, options },
-      output: finalConfig
-    });
+    try {
+      const outSegs = (finalConfig as any)?.segments || [];
+      const outSegIds = Array.isArray(outSegs) ? outSegs.map((s: any) => s?.id ?? '?') : [];
+      console.log('🔧 WheelConfigService - Configuration canonique:', {
+        input: { campaign: campaign?.id, extractedColors, wheelModalConfig, options },
+        output: {
+          ...finalConfig,
+          segmentsCount: Array.isArray(outSegs) ? outSegs.length : 0,
+          segmentIds: outSegIds
+        }
+      });
+    } catch (e) {
+      console.warn('🔧 WheelConfigService - log error', e);
+    }
 
     return finalConfig;
   }
@@ -155,16 +271,65 @@ export class WheelConfigService {
    */
   static getStandardizedSegments(config: WheelConfig): WheelSegment[] {
     const primaryColor = config.customColors?.primary || config.brandColors?.primary || '#ff6b6b';
-    const whiteColor = '#ffffff';
-    
-    return [
-      { id: '1', label: '10€', color: primaryColor, textColor: whiteColor },
-      { id: '2', label: '20€', color: whiteColor, textColor: primaryColor },
-      { id: '3', label: '5€', color: primaryColor, textColor: whiteColor },
-      { id: '4', label: 'Perdu', color: whiteColor, textColor: primaryColor },
-      { id: '5', label: '50€', color: primaryColor, textColor: whiteColor },
-      { id: '6', label: '30€', color: whiteColor, textColor: primaryColor }
+    const fallbackSecondary = config.customColors?.secondary || config.brandColors?.secondary || '#ffffff';
+
+    // Normalize to hex using robust parser
+    const normPrimary = WheelConfigService.parseToHex(primaryColor) || '#ff6b6b';
+    let secondaryColor = WheelConfigService.parseToHex(fallbackSecondary) || '#ffffff';
+    if (secondaryColor === normPrimary) {
+      secondaryColor = '#ffffff';
+    }
+
+    // Choix de la couleur de texte lisible (noir/blanc) selon luminance
+    const getReadableTextColor = (bgHex: string) => (WheelConfigService.luminanceFromHex(bgHex) > 0.5 ? '#000000' : '#ffffff');
+
+    // Toujours imposer l'alternance (même si seg.color est défini) pour respecter la règle globale
+    // Si le nombre de segments est impair, ajouter un "spacer" neutre pour obtenir un compte pair
+    let cfgSegments = (config.segments || []) as WheelSegment[];
+    if (cfgSegments.length % 2 === 1) {
+      try {
+        console.warn('🎯 WheelConfigService - Nombre impair de segments détecté. Ajout d\'un segment neutre pour garantir l\'alternance parfaite.');
+      } catch {}
+      cfgSegments = [
+        ...cfgSegments,
+        // Segment neutre (les couleurs seront calculées ci-dessous, label vide, non gagnant)
+        { id: 'auto-spacer', label: '', isWinning: false } as unknown as WheelSegment
+      ];
+    }
+    if (cfgSegments.length > 0) {
+      const out = cfgSegments.map((seg, idx) => {
+        const bg = idx % 2 === 0 ? normPrimary : secondaryColor;
+        return {
+          id: seg.id ?? String(idx + 1),
+          label: seg.label ?? `Item ${idx + 1}`,
+          color: bg,
+          textColor: getReadableTextColor(bg),
+          probability: seg.probability,
+          isWinning: seg.isWinning
+        };
+      });
+      try {
+        const inCount = (config.segments || []).length;
+        const padded = inCount % 2 === 1;
+        const ids = out.map((s) => s.id);
+        console.log('🧩 WheelConfigService.getStandardizedSegments', { inCount, padded, outCount: out.length, ids });
+      } catch {}
+      return out;
+    }
+
+    // Sinon, fallback démo avec alternance stricte
+    const demo = [
+      { id: '1', label: '10€' },
+      { id: '2', label: '20€' },
+      { id: '3', label: '5€' },
+      { id: '4', label: 'Perdu' },
+      { id: '5', label: '50€' },
+      { id: '6', label: '30€' }
     ];
+    return demo.map((s, idx) => {
+      const bg = idx % 2 === 0 ? normPrimary : secondaryColor;
+      return { id: s.id, label: s.label, color: bg, textColor: getReadableTextColor(bg) } as WheelSegment;
+    });
   }
 
   /**

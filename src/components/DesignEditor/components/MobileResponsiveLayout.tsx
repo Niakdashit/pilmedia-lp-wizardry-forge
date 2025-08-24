@@ -34,6 +34,8 @@ interface MobileResponsiveLayoutProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  // Permet de vider la sélection quand on clique hors sidebar/canvas
+  onClearSelection?: () => void;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -63,6 +65,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   onRedo,
   canUndo,
   canRedo,
+  onClearSelection,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -120,7 +123,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
   // Gestion de la visibilité de la toolbar mobile
   useEffect(() => {
-    if (selectedElement && showMobileUI) {
+    if (selectedElement && selectedElement.type !== 'text' && showMobileUI) {
       setIsToolbarVisible(true);
     } else {
       setIsToolbarVisible(false);
@@ -170,14 +173,42 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       data-selected-device={selectedDevice}
       data-mobile-optimized={(mIsMobile || mIsTablet).toString()}
       data-show-mobile-ui={showMobileUI.toString()}
+      onPointerDownCapture={(e) => {
+        // Ne rien faire s'il n'y a rien à désélectionner
+        if (!selectedElement || !onClearSelection) return;
+
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+
+        // Ignorer les clics dans la sidebar mobile (drawer) et la barre d'onglets persistante
+        const insideSidebar = !!target.closest('.mobile-sidebar-drawer');
+        const insideBottomBar = !!target.closest('#mobile-toolbar');
+        if (insideSidebar || insideBottomBar) return;
+
+        // Ignorer les clics dans l'UI du canvas (ex: CanvasToolbar, panneaux d'effets/position)
+        // Marquée avec l'attribut data-canvas-ui="1"
+        const insideCanvasUI = !!target.closest('[data-canvas-ui]');
+        if (insideCanvasUI) return;
+
+        // Ignorer les clics à l'intérieur de la toolbar overlay mobile (ne pas perdre la sélection)
+        const insideToolbarOverlay = !!target.closest('.mobile-toolbar-overlay');
+        if (insideToolbarOverlay) return;
+
+        // Si le clic est à l'intérieur du canvas, laisser la logique du canvas gérer (éléments, fond, etc.)
+        const canvasNode = canvasRef?.current;
+        if (canvasNode && canvasNode.contains(target)) return;
+
+        // Sinon: clic sur l'arrière-plan/zone grise -> vider la sélection
+        onClearSelection();
+      }}
     >
       {/* Contenu principal */}
       <div className={`layout-content ${className}`}>
         {children}
       </div>
 
-      {/* Toolbar mobile overlay - s'affiche au-dessus de l'élément sélectionné */}
-      {isToolbarVisible && showMobileUI && selectedElement && onElementUpdate && (
+      {/* Toolbar mobile overlay - s'affiche uniquement pour les éléments non-texte */}
+      {isToolbarVisible && showMobileUI && selectedElement && selectedElement.type !== 'text' && onElementUpdate && (
         <MobileToolbarOverlay
           selectedElement={selectedElement}
           onElementUpdate={onElementUpdate}
@@ -265,10 +296,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: none !important;
         }
 
-        /* Masquer la toolbar canvas sur mobile (sauf overlays utiles) */
-        .mobile-layout .z-10.canvas-toolbar {
-          display: none !important;
-        }
+        /* Afficher la toolbar canvas sur mobile pour le texte (comportement comme PC) */
 
         /* Ajuster le canvas pour mobile */
         .mobile-layout .design-canvas-container {
@@ -311,6 +339,16 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
         .mobile-layout.is-dragging .design-canvas-container [data-element-id] {
           pointer-events: auto;
+        }
+
+        /* Keep descendants of elements interactive (e.g., inline editors, inputs) */
+        .mobile-layout.is-dragging .design-canvas-container [data-element-id] * {
+          pointer-events: auto;
+        }
+
+        /* Always allow the inline text editor to receive events while dragging */
+        .mobile-layout.is-dragging .design-canvas-container .canvas-text-editor {
+          pointer-events: auto !important;
         }
 
         .mobile-layout.is-dragging .mobile-toolbar-overlay {
@@ -407,11 +445,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: none !important;
         }
 
-        /* Toolbar mobile positionnée en fixed - pas besoin d'ajuster le canvas */
-        .mobile-layout.toolbar-visible .layout-content {
-          /* Laisser la place sous la toolbar mobile compacte */
-          padding-top: var(--mobile-toolbar-height, 0px);
-        }
+        /* La toolbar mobile ne déplace plus le canvas lorsqu'elle apparaît */
 
         /* Empêcher le zoom accidentel sur iOS */
         .mobile-layout input,
@@ -420,6 +454,15 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           font-size: 16px !important; /* Empêche le zoom iOS */
           -webkit-appearance: none;
           border-radius: 0;
+        }
+
+        /* Préserver la taille réelle du texte pour l'éditeur inline du canvas */
+        .mobile-layout input.canvas-text-editor,
+        .mobile-layout .canvas-text-editor {
+          font-size: inherit !important;
+          line-height: inherit !important;
+          -webkit-user-select: text !important;
+          user-select: text !important;
         }
 
         /* Canvas stable sur mobile */

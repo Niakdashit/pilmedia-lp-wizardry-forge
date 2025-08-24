@@ -127,10 +127,10 @@ const GameLogicPanel: React.FC = () => {
   // Palette de couleurs par défaut pour nouveaux segments
   const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
 
-  // Définir rapidement le nombre de segments (4, 6, 8, 10)
+  // Définir rapidement le nombre de segments (valeur paire, sans limite haute)
   const setSegmentCount = (targetCount: number) => {
-    const allowed = [4, 6, 8, 10];
-    if (!allowed.includes(targetCount)) return;
+    let count = Math.max(2, Math.floor(targetCount));
+    if (count % 2 === 1) count += 1;
 
     const raw = getRawSegments();
     let next = [...raw];
@@ -141,12 +141,12 @@ const GameLogicPanel: React.FC = () => {
     }
 
     // Tronquer si trop long
-    if (next.length > targetCount) {
-      next = next.slice(0, targetCount);
+    if (next.length > count) {
+      next = next.slice(0, count);
     }
 
     // Ajouter des segments jusqu'à la cible
-    while (next.length < targetCount) {
+    while (next.length < count) {
       const idx = next.length;
       const defaultSeg = {
         id: `segment-${idx}`,
@@ -158,8 +158,8 @@ const GameLogicPanel: React.FC = () => {
     }
 
     // Sécurité: exactement la taille cible
-    if (next.length > targetCount) {
-      next = next.slice(0, targetCount);
+    if (next.length > count) {
+      next = next.slice(0, count);
     }
 
     updateWheelSegments(next);
@@ -311,24 +311,19 @@ const GameLogicPanel: React.FC = () => {
             )}
           </div>
 
-          {/* Sélecteur rapide du nombre de segments */}
+          {/* Sélecteur du nombre de segments (entrée numérique) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-gray-700">Nombre de segments</div>
-              <div className="grid grid-cols-4 gap-2">
-                {[4, 6, 8, 10].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setSegmentCount(n)}
-                    className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                      segments.length === n
-                        ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-[hsl(var(--primary))]'
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={2}
+                  step={2}
+                  value={segments.length || 0}
+                  onChange={(e) => setSegmentCount(parseInt(e.target.value || '0', 10))}
+                  className="w-24 px-3 py-1 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                />
               </div>
             </div>
             <p className="text-xs text-gray-500">La roue fonctionne mieux avec un nombre pair de segments.</p>

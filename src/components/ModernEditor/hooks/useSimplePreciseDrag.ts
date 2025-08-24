@@ -188,6 +188,19 @@ export const useSimplePreciseDrag = ({
 
   return {
     isDragging,
-    handleDragStart: handlePointerStart
+    handleDragStart: handlePointerStart,
+    // Allow external consumers to cancel drag and reset global cursor immediately
+    cancelDrag: () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      dragStateRef.current = null;
+      if (isDragging) setIsDragging(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+      document.dispatchEvent(hideGuidesEvent);
+    }
   };
 };

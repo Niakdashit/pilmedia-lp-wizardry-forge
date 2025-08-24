@@ -6,7 +6,7 @@ interface UseMobileCanvasLockOptions {
   selectedElement?: any;
   isMobile: boolean;
   isTablet: boolean;
-  zoom: number;
+  zoom?: number;
 }
 
 export const useMobileCanvasLock = ({
@@ -21,9 +21,15 @@ export const useMobileCanvasLock = ({
   // Ne faire l'auto-fit qu'une seule fois à l'arrivée sur la page
   const hasAutoAdjustedRef = useRef(false);
 
+  // Helper: whether the canvas is currently running a marquee selection
+  const isMarqueeActive = () => !!canvasRef.current?.getAttribute('data-marquee');
+
   // Fonction pour bloquer les interactions non désirées sur le canvas
   const preventCanvasInterference = useCallback((event: TouchEvent | MouseEvent) => {
     if (!canvasRef.current || !isMobileDevice) return;
+
+    // Do not block interactions while marquee selection is active
+    if (isMarqueeActive()) return;
 
     const target = event.target as HTMLElement;
     
@@ -33,7 +39,9 @@ export const useMobileCanvasLock = ({
                                target.closest('.canvas-toolbar') ||
                                target.closest('button') ||
                                target.closest('input') ||
-                               target.closest('select');
+                               target.closest('select') ||
+                               target.closest('textarea') ||
+                               target.closest('[contenteditable="true"]');
 
     // Si c'est un élément sélectionnable, ne pas bloquer
     if (isSelectableElement) {
@@ -76,6 +84,9 @@ export const useMobileCanvasLock = ({
   // Fonction pour empêcher le scroll du canvas pendant le drag d'éléments
   const preventScrollDuringDrag = useCallback((event: TouchEvent) => {
     if (!canvasRef.current || !isMobileDevice) return;
+
+    // Do not block scrolling/gestures specifically for marquee selection
+    if (isMarqueeActive()) return;
 
     const target = event.target as HTMLElement;
     const isDraggableElement = target.closest('[data-element-id]');
@@ -148,13 +159,21 @@ export const useMobileCanvasLock = ({
 
     const canvas = canvasRef.current;
 
+    // Wrappers typed for TS compatibility
+    const onTouchStart = (e: TouchEvent) => preventCanvasInterference(e);
+    const onTouchMove = (e: TouchEvent) => preventCanvasInterference(e);
+    const onTouchEnd = (e: TouchEvent) => preventCanvasInterference(e);
+    const onMouseDownCanvas = (e: MouseEvent) => preventCanvasInterference(e);
+    const onMouseMoveCanvas = (e: MouseEvent) => preventCanvasInterference(e);
+    const onMouseUpCanvas = (e: MouseEvent) => preventCanvasInterference(e);
+
     // Écouteurs pour bloquer les interactions non désirées
-    canvas.addEventListener('touchstart', preventCanvasInterference, { passive: false });
-    canvas.addEventListener('touchmove', preventCanvasInterference, { passive: false });
-    canvas.addEventListener('touchend', preventCanvasInterference, { passive: false });
-    canvas.addEventListener('mousedown', preventCanvasInterference);
-    canvas.addEventListener('mousemove', preventCanvasInterference);
-    canvas.addEventListener('mouseup', preventCanvasInterference);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    canvas.addEventListener('mousedown', onMouseDownCanvas);
+    canvas.addEventListener('mousemove', onMouseMoveCanvas);
+    canvas.addEventListener('mouseup', onMouseUpCanvas);
 
     // Écouteur pour empêcher le scroll pendant le drag
     canvas.addEventListener('touchmove', preventScrollDuringDrag, { passive: false });
@@ -162,6 +181,14 @@ export const useMobileCanvasLock = ({
     // Écouteurs globaux pour le drag d'éléments
     const handleGlobalTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
+      // Ignore global drag start while marquee selection is active
+      if (isMarqueeActive()) return;
+      // Ignore touches starting on editable controls
+      const isEditable = target.closest('input, textarea, [contenteditable="true"]');
+      if (isEditable) return;
+      // Do not force drag when interacting with text elements
+      const isText = !!target.closest('[data-element-type="text"]');
+      if (isText) return;
       if (target.closest('[data-element-id]')) {
         handleDragStart();
       }
@@ -171,28 +198,39 @@ export const useMobileCanvasLock = ({
       handleDragEnd();
     };
 
-    document.addEventListener('touchstart', handleGlobalTouchStart);
-    document.addEventListener('touchend', handleGlobalTouchEnd);
-    document.addEventListener('mousedown', (e) => {
+    const handleGlobalMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      // Ignore global drag start while marquee selection is active
+      if (isMarqueeActive()) return;
+      // Ignore mouse down on editable controls
+      const isEditable = target.closest('input, textarea, [contenteditable="true"]');
+      if (isEditable) return;
+      // Do not force drag when interacting with text elements
+      const isText = !!target.closest('[data-element-type="text"]');
+      if (isText) return;
       if (target.closest('[data-element-id]')) {
         handleDragStart();
       }
-    });
+    };
+
+    document.addEventListener('touchstart', handleGlobalTouchStart);
+    document.addEventListener('touchend', handleGlobalTouchEnd);
+    document.addEventListener('mousedown', handleGlobalMouseDown);
     document.addEventListener('mouseup', handleGlobalTouchEnd);
 
     return () => {
       // Nettoyage
-      canvas.removeEventListener('touchstart', preventCanvasInterference);
-      canvas.removeEventListener('touchmove', preventCanvasInterference);
-      canvas.removeEventListener('touchend', preventCanvasInterference);
-      canvas.removeEventListener('mousedown', preventCanvasInterference);
-      canvas.removeEventListener('mousemove', preventCanvasInterference);
-      canvas.removeEventListener('mouseup', preventCanvasInterference);
-      canvas.removeEventListener('touchmove', preventScrollDuringDrag);
+      canvas.removeEventListener('touchstart', onTouchStart, false);
+      canvas.removeEventListener('touchmove', onTouchMove, false);
+      canvas.removeEventListener('touchend', onTouchEnd, false);
+      canvas.removeEventListener('mousedown', onMouseDownCanvas);
+      canvas.removeEventListener('mousemove', onMouseMoveCanvas);
+      canvas.removeEventListener('mouseup', onMouseUpCanvas);
+      canvas.removeEventListener('touchmove', preventScrollDuringDrag, false);
 
       document.removeEventListener('touchstart', handleGlobalTouchStart);
       document.removeEventListener('touchend', handleGlobalTouchEnd);
+      document.removeEventListener('mousedown', handleGlobalMouseDown);
       document.removeEventListener('mouseup', handleGlobalTouchEnd);
 
       // Restaurer le scroll si nécessaire

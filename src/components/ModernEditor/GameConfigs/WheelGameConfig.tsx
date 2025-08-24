@@ -85,11 +85,11 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
     }
   };
 
-  // Définir rapidement le nombre de segments total (4, 6, 8, 10)
+  // Définir rapidement le nombre de segments total (valeur paire, sans limite haute)
   const setSegmentCount = (targetCount: number) => {
-    // Toujours pair, borné à des valeurs autorisées
-    const allowed = [4, 6, 8, 10];
-    if (!allowed.includes(targetCount)) return;
+    // Normaliser: minimum 2, arrondi à pair
+    let count = Math.max(2, Math.floor(targetCount));
+    if (count % 2 === 1) count += 1;
 
     // Construire une nouvelle liste à partir des segments existants
     let newSegments = [...segments];
@@ -100,12 +100,12 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
     }
 
     // Si trop de segments, on tronque
-    if (newSegments.length > targetCount) {
-      newSegments = newSegments.slice(0, targetCount);
+    if (newSegments.length > count) {
+      newSegments = newSegments.slice(0, count);
     }
 
     // Si pas assez, on ajoute des paires jusqu'à atteindre la cible
-    while (newSegments.length < targetCount) {
+    while (newSegments.length < count) {
       const idx = newSegments.length; // index du prochain segment à ajouter
       const labelIndex = Math.floor(idx / 2) + 1;
 
@@ -116,7 +116,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         textColor: '#ffffff',
         probability: 1,
         isWinning: true
-      };
+      } as any;
 
       const lose = {
         id: `${Date.now()}-${idx}-lose`,
@@ -125,14 +125,14 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         textColor: '#ffffff',
         probability: 1,
         isWinning: false
-      };
+      } as any;
 
       newSegments.push(win, lose);
     }
 
     // S'assurer qu'on retombe exactement sur la cible
-    if (newSegments.length > targetCount) {
-      newSegments = newSegments.slice(0, targetCount);
+    if (newSegments.length > count) {
+      newSegments = newSegments.slice(0, count);
     }
 
     updateWheelConfig({ segments: newSegments });
@@ -230,24 +230,19 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         </div>
       </div>
 
-      {/* Sélecteur rapide du nombre de segments */}
+      {/* Sélecteur du nombre de segments (entrée numérique) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-gray-700">Nombre de segments</label>
-          <div className="grid grid-cols-4 gap-2">
-            {[4, 6, 8, 10].map((n) => (
-              <button
-                key={n}
-                onClick={() => setSegmentCount(n)}
-                className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                  segments.length === n
-                    ? 'bg-[#841b60] text-white border-[#841b60]'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-[#841b60]'
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={2}
+              step={2}
+              value={segments.length || 0}
+              onChange={(e) => setSegmentCount(parseInt(e.target.value || '0', 10))}
+              className="w-24 px-3 py-1 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+            />
           </div>
         </div>
         <p className="text-xs text-gray-500">Les segments sont gérés par paires (1 gagnant + 1 perdant).</p>

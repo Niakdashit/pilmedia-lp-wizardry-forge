@@ -20,6 +20,10 @@ interface WheelPreviewProps {
   disabled?: boolean;
   wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   disableForm?: boolean;
+  // Spin controls (optional overrides)
+  spinMode?: 'random' | 'instant_winner' | 'probability';
+  speed?: 'slow' | 'medium' | 'fast';
+  winProbability?: number;
 }
 
 const WheelPreview: React.FC<WheelPreviewProps> = ({
@@ -30,55 +34,14 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   gameSize = 'medium',
   previewDevice = 'desktop',
   disabled = false,
-  wheelModalConfig = {}
+  wheelModalConfig = {},
+  spinMode,
+  speed,
+  winProbability
 }) => {
   const { getResponsiveDimensions } = useGameSize(gameSize);
   const gameDimensions = getResponsiveDimensions(previewDevice);
 
-  // Récupérer les segments depuis la configuration de la campagne (brut)
-  const primaryFallback = campaign.design?.customColors?.primary || '#ff6b6b';
-  const segments = campaign.gameConfig?.wheel?.segments ||
-                   campaign.config?.roulette?.segments || [
-    { id: '1', label: 'Prix 1', color: primaryFallback },
-    { id: '2', label: 'Prix 2', color: '#ffffff' },
-    { id: '3', label: 'Prix 3', color: primaryFallback },
-    { id: '4', label: 'Dommage',  color: '#ffffff' }
-  ];
-
-
-  // Utiliser les couleurs extraites de l'image de fond si disponibles
-  const extractedColors = campaign.design?.extractedColors || [];
-  
-  // Convertir les segments au format SmartWheel avec couleurs dérivées de la config unifiée
-  // (utilise la couleur de bordure ou les couleurs de marque comme référence)
-  const smartWheelSegments = React.useMemo(() => {
-    // Couleur primaire issue des priorités: wheelModalConfig.borderColor -> design.customColors.primary -> extracted -> fallback
-    const primaryRef = wheelModalConfig?.wheelBorderColor
-      || campaign.design?.customColors?.primary
-      || extractedColors[0]
-      || '#841b60';
-    const secondaryRef = '#ffffff';
-
-    return segments.map((segment: any, index: number) => {
-      const color = segment.color ?? (index % 2 === 0 ? primaryRef : secondaryRef);
-      const textColor = segment.textColor ?? (index % 2 === 0 ? secondaryRef : primaryRef);
-      const icon = segment.imageUrl || segment.image || segment.icon || null;
-      return {
-        id: segment.id || index.toString(),
-        label: segment.label,
-        color,
-        textColor,
-        icon
-      };
-    });
-  }, [segments, wheelModalConfig?.wheelBorderColor, campaign.design?.customColors, extractedColors]);
-
-  // Couleurs de marque unifiées - priorité aux customColors de la campagne
-  const brandColors = {
-    primary: campaign.design?.customColors?.primary || extractedColors[0] || '#841b60',
-    secondary: '#ffffff',
-    accent: campaign.design?.customColors?.accent || extractedColors[2] || '#45b7d1'
-  };
 
   const handleResult = () => {
     if (onFinish) {
@@ -103,6 +66,28 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     { device: previewDevice, shouldCropWheel: true }
   );
   
+  // Segments standardisés dérivés de la configuration canonique (identiques à l'édition)
+  const segments = React.useMemo(
+    () => WheelConfigService.getStandardizedSegments(wheelConfig),
+    [
+      // Inclure une empreinte profonde pour capter les mutations
+      JSON.stringify(wheelConfig?.segments || []),
+      wheelConfig.customColors?.primary,
+      wheelConfig.brandColors?.primary,
+      wheelConfig.customColors?.secondary,
+      wheelConfig.brandColors?.secondary
+    ]
+  );
+  try {
+    const ids = (segments as any[]).map((s: any, i: number) => s.id ?? String(i + 1));
+    console.log('🖥️ WheelPreview (desktop) - standardized segments', {
+      campaignId: campaign?.id,
+      sourceCount: (wheelConfig?.segments || []).length,
+      outCount: (segments as any[]).length,
+      ids
+    });
+  } catch {}
+  
   console.log('🎡 WheelPreview - Configuration unifiée:', {
     wheelConfigSize: wheelConfig.size,
     campaignScale: campaign?.design?.wheelConfig?.scale,
@@ -125,6 +110,30 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     scale: wheelConfig.scale
   });
 
+  // Resolve spin props from props -> wheelModalConfig -> campaign -> defaults
+  const resolvedSpinMode: 'random' | 'instant_winner' | 'probability' =
+    spinMode ||
+    wheelModalConfig?.wheel?.mode ||
+    wheelModalConfig?.mode ||
+    campaign?.gameConfig?.wheel?.mode ||
+    campaign?.config?.roulette?.mode ||
+    'random';
+
+  const resolvedSpeed: 'slow' | 'medium' | 'fast' =
+    speed ||
+    wheelModalConfig?.wheel?.speed ||
+    wheelModalConfig?.speed ||
+    campaign?.gameConfig?.wheel?.speed ||
+    campaign?.config?.roulette?.speed ||
+    'medium';
+
+  const resolvedWinProbability =
+    typeof winProbability === 'number' ? winProbability :
+    (typeof wheelModalConfig?.wheel?.winProbability === 'number' ? wheelModalConfig?.wheel?.winProbability :
+    (typeof wheelModalConfig?.winProbability === 'number' ? wheelModalConfig?.winProbability :
+    (typeof campaign?.gameConfig?.wheel?.winProbability === 'number' ? campaign?.gameConfig?.wheel?.winProbability :
+    (typeof campaign?.config?.roulette?.winProbability === 'number' ? campaign?.config?.roulette?.winProbability : undefined))));
+
   // Animation: après validation du formulaire, si la roue est en position centre,
   // remonter automatiquement la roue de 25% (une seule fois)
   const [lifted, setLifted] = React.useState(false);
@@ -146,10 +155,24 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
       >
         <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
           <SmartWheel
-            segments={smartWheelSegments}
+            key={(() => {
+              try {
+                const parts = segments.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}`).join('|');
+                const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
+                return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
+              } catch {
+                const fallbackSpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
+                return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
+              }
+            })()}
+            segments={segments}
             theme="modern"
             size={wheelSize}
-            brandColors={brandColors}
+            brandColors={{
+              primary: wheelConfig.brandColors?.primary || '#841b60',
+              secondary: wheelConfig.brandColors?.secondary || '#ffffff',
+              accent: wheelConfig.brandColors?.accent || '#45b7d1'
+            }}
             onResult={handleResult}
             onSpin={handleSpin}
             disabled={disabled}
@@ -159,9 +182,12 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             customBorderWidth={wheelConfig.borderWidth}
             showBulbs={wheelConfig.showBulbs}
             buttonPosition="center"
+            spinMode={resolvedSpinMode}
+            speed={resolvedSpeed}
+            winProbability={resolvedWinProbability}
             customButton={{
               text: "GO",
-              color: extractedColors[0] || campaign.buttonConfig?.color || brandColors.primary,
+              color: wheelConfig.borderColor,
               textColor: campaign.buttonConfig?.textColor || '#ffffff'
             }}
           />

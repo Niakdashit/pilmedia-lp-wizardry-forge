@@ -14,6 +14,7 @@ interface EnhancedKeyboardShortcutsProps {
   onZoomReset?: () => void;
   onZoomFit?: () => void;
   onToggleFullscreen?: () => void;
+  onSelectAll?: () => void;
 }
 
 export const useEnhancedKeyboardShortcuts = ({
@@ -28,7 +29,8 @@ export const useEnhancedKeyboardShortcuts = ({
   onZoomOut,
   onZoomReset,
   onZoomFit,
-  onToggleFullscreen
+  onToggleFullscreen,
+  onSelectAll
 }: EnhancedKeyboardShortcutsProps) => {
   const {
     selectedElementId,
@@ -49,7 +51,7 @@ export const useEnhancedKeyboardShortcuts = ({
 
   // Gestionnaire de raccourcis clavier amélioré
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const { ctrlKey, metaKey, shiftKey, key, target, altKey } = event;
+    const { ctrlKey, metaKey, shiftKey, key, target, altKey, code } = event;
     
     // Détection intelligente du modificateur selon la plateforme
     const isModifierPressed = isMac() ? metaKey : ctrlKey;
@@ -57,6 +59,7 @@ export const useEnhancedKeyboardShortcuts = ({
     // Debug amélioré
     console.log('🎹 Enhanced keyboard event:', {
       key: key,
+      code,
       ctrlKey,
       metaKey,
       shiftKey,
@@ -72,6 +75,14 @@ export const useEnhancedKeyboardShortcuts = ({
         (target as Element)?.tagName === 'TEXTAREA' ||
         (target as HTMLElement)?.contentEditable === 'true') {
       console.log('🎹 Ignoring - typing in input field');
+      return;
+    }
+
+    // Alt+A (Option+A on Mac): select all canvas elements
+    if (altKey && (key.toLowerCase() === 'a' || code === 'KeyA')) {
+      console.log('🎹 Alt+A: Selecting all canvas elements');
+      event.preventDefault();
+      onSelectAll?.();
       return;
     }
 
@@ -138,6 +149,15 @@ export const useEnhancedKeyboardShortcuts = ({
           console.log('🎹 Duplicate shortcut triggered!');
           event.preventDefault();
           onDuplicate?.();
+        }
+        break;
+
+      // Sélectionner tout (Cmd/Ctrl+A) pour les éléments du canvas
+      case 'a':
+        if (isModifierPressed) {
+          console.log('🎹 Ctrl/Cmd+A: Selecting all canvas elements');
+          event.preventDefault();
+          onSelectAll?.();
         }
         break;
 
@@ -261,6 +281,7 @@ export const useEnhancedKeyboardShortcuts = ({
     onZoomReset,
     onZoomFit,
     onToggleFullscreen,
+    onSelectAll,
     isMac
   ]);
 
@@ -342,6 +363,8 @@ export const useEnhancedKeyboardShortcuts = ({
       [`${modifierKey}+Y / ${modifierKey}+Shift+Z`]: 'Rétablir',
       [`${modifierKey}+T`]: 'Ajouter du texte au centre',
       [`${modifierKey}+D`]: 'Dupliquer l\'élément sélectionné',
+      [`${modifierKey}+A`]: 'Sélectionner tout (éléments du canvas)',
+      ['Alt+A']: 'Sélectionner tout (éléments du canvas)',
       'Double-clic': 'Ajouter du texte à la position du clic',
       'Échap': 'Désélectionner tout',
       'Suppr': 'Supprimer l\'élément sélectionné',

@@ -167,22 +167,22 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     },
     { 
       id: 'assets', 
-      label: 'Elements', 
+      label: 'Éléments', 
       icon: Plus
     },
     { 
       id: 'layers', 
-      label: 'Layers', 
+      label: 'Calques', 
       icon: Layers
     },
     { 
       id: 'form', 
-      label: 'Contact', 
+      label: 'Formulaire', 
       icon: FormInput
     },
     { 
       id: 'gamelogic', 
-      label: 'Game', 
+      label: 'Jeu', 
       icon: Gamepad2
     }
   ];

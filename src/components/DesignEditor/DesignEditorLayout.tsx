@@ -156,7 +156,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   );
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
-    () => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export', 'contact'] : []),
+    () => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export', 'form'] : []),
     [hiddenTabs, mode]
   );
 
@@ -486,6 +486,45 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       : currentWheelConfig.borderColor;
     const secondaryColor = '#ffffff';
 
+    // Build dynamic wheel segments for preview:
+    // Prefer central editor store (campaignState) updated by panels/modals,
+    // then fallback to local campaignConfig, else generate by count
+    const configuredSegments = (
+      (campaignState as any)?.gameConfig?.wheel?.segments ||
+      (campaignState as any)?.config?.roulette?.segments ||
+      (campaignConfig as any)?.gameConfig?.wheel?.segments ||
+      (campaignConfig as any)?.config?.roulette?.segments ||
+      []
+    );
+    const fallbackCount = configuredSegments.length > 0 ? configuredSegments.length : 6;
+    const generatedSegments = Array.from({ length: fallbackCount }, (_, i) => {
+      const isWinning = i % 2 === 0;
+      return {
+        id: String(i + 1),
+        label: isWinning ? `Prix ${Math.floor(i / 2) + 1}` : 'Dommage',
+        color: isWinning ? primaryColor : secondaryColor,
+        textColor: isWinning ? secondaryColor : primaryColor,
+        probability: 1,
+        isWinning
+      } as any;
+    });
+    const wheelSegments = configuredSegments.length > 0 ? configuredSegments : generatedSegments;
+    // Debug: trace the segment flow feeding the preview campaign
+    try {
+      const segIds = Array.isArray(wheelSegments) ? wheelSegments.map((s: any) => s?.id ?? '?') : [];
+      const source = configuredSegments.length > 0 ? 'configured' : `generated(${fallbackCount})`;
+      console.log('🧭 [DesignEditorLayout] campaignData segments:', {
+        source,
+        count: Array.isArray(wheelSegments) ? wheelSegments.length : 0,
+        ids: segIds,
+        haveCampaignState: Boolean((campaignState as any)?.gameConfig?.wheel?.segments || (campaignState as any)?.config?.roulette?.segments),
+        haveCampaignConfig: Boolean((campaignConfig as any)?.gameConfig?.wheel?.segments || (campaignConfig as any)?.config?.roulette?.segments),
+        device: selectedDevice
+      });
+    } catch (e) {
+      console.warn('🧭 [DesignEditorLayout] segment log error', e);
+    }
+
     return {
       id: 'wheel-design-preview',
       type: 'wheel',
@@ -504,12 +543,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       },
       gameConfig: {
         wheel: {
-          segments: [
-            { id: '1', label: 'Prix 1', color: primaryColor, textColor: secondaryColor, probability: 0.25, isWinning: true },
-            { id: '2', label: 'Prix 2', color: secondaryColor, textColor: primaryColor, probability: 0.25, isWinning: true },
-            { id: '3', label: 'Prix 3', color: primaryColor, textColor: secondaryColor, probability: 0.25, isWinning: true },
-            { id: '4', label: 'Dommage', color: secondaryColor, textColor: primaryColor, probability: 0.25, isWinning: false }
-          ],
+          segments: wheelSegments,
           winProbability: 0.75,
           maxWinners: 100,
           buttonLabel: buttonElement?.content || 'Faire tourner'
@@ -573,9 +607,55 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
     if (signature !== lastTransformedSigRef.current) {
       if (process.env.NODE_ENV !== 'production') {
-        console.debug('[DesignEditorLayout] setCampaign: content changed, updating store');
+        console.debug('[DesignEditorLayout] setCampaign: content changed, merging into store');
       }
-      setCampaign(transformedCampaign);
+      // Preserve existing wheel segments (including prizeId) to avoid overwriting
+      // them with generated/fallback segments during preview sync.
+      setCampaign((prev: any) => {
+        if (!prev) return transformedCampaign as any;
+
+        const prevSegments = (prev?.gameConfig?.wheel?.segments?.length
+          ? prev.gameConfig.wheel.segments
+          : (prev?.config?.roulette?.segments || [])) as any[];
+        const nextSegments = (transformedCampaign as any)?.gameConfig?.wheel?.segments as any[] | undefined;
+        const mergedSegments = (prevSegments && prevSegments.length) ? prevSegments : (nextSegments || []);
+
+        if (process.env.NODE_ENV !== 'production') {
+          try {
+            const hasPrizeIds = Array.isArray(mergedSegments) && mergedSegments.some((s: any) => s && 'prizeId' in s && s.prizeId);
+            console.debug('🎯 [DesignEditorLayout] Preserving wheel segments during merge', {
+              prevCount: Array.isArray(prevSegments) ? prevSegments.length : 0,
+              nextCount: Array.isArray(nextSegments) ? nextSegments.length : 0,
+              used: (prevSegments && prevSegments.length) ? 'prev' : 'next',
+              hasPrizeIds
+            });
+          } catch {}
+        }
+
+        return {
+          ...prev,
+          ...transformedCampaign,
+          gameConfig: {
+            ...prev.gameConfig,
+            ...(transformedCampaign as any).gameConfig,
+            wheel: {
+              ...prev.gameConfig?.wheel,
+              ...(transformedCampaign as any)?.gameConfig?.wheel,
+              segments: mergedSegments
+            }
+          },
+          // Mirror segments to legacy config.roulette as well for compatibility
+          config: {
+            ...prev.config,
+            ...(transformedCampaign as any).config,
+            roulette: {
+              ...prev.config?.roulette,
+              ...(transformedCampaign as any)?.config?.roulette,
+              segments: mergedSegments
+            }
+          }
+        } as any;
+      });
       lastTransformedSigRef.current = signature;
     } else {
       if (process.env.NODE_ENV !== 'production') {
@@ -987,6 +1067,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               selectedElements={selectedElements}
               onSelectedElementsChange={setSelectedElements}
               onElementUpdate={handleElementUpdate}
+              // Wheel sync props
+              wheelModalConfig={wheelModalConfig}
+              extractedColors={extractedColors}
               containerClassName={mode === 'template' ? 'bg-[#eaf5f6]' : undefined}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
