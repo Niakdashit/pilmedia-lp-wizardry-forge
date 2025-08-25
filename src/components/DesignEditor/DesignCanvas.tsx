@@ -136,7 +136,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       : 1
   );
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
-  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);

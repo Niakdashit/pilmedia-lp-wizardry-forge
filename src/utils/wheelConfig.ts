@@ -17,6 +17,61 @@ export const DEFAULT_WHEEL_SEGMENTS = [
   { label: 'Rejouer', color: '#ff9ff3' }
 ] as const;
 
+const calculateSegmentProbabilities = (segments: any[], prizes: any[]) => {
+  if (!segments || segments.length === 0) return [];
+  
+  // Filtrer les lots avec méthode probability/immediate
+  const probabilityPrizes = prizes?.filter(p => p.method === 'probability' || p.method === 'immediate') || [];
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🎯 calculateSegmentProbabilities - Prizes:', probabilityPrizes);
+    console.log('🎯 calculateSegmentProbabilities - Segments:', segments);
+  }
+  
+  // Calculer les probabilités assignées via les lots
+  let totalAssignedProbability = 0;
+  const segmentProbabilities = segments.map((segment: any) => {
+    if (segment.prizeId) {
+      const prize = probabilityPrizes.find(p => p.id === segment.prizeId);
+      if (prize && typeof prize.probabilityPercent === 'number') {
+        const prob = Math.max(0, Math.min(100, prize.probabilityPercent));
+        totalAssignedProbability += prob;
+        
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`🎯 Segment "${segment.label}" avec lot "${prize.name}": ${prob}%`);
+        }
+        
+        return prob;
+      }
+    }
+    return null; // Pas de lot assigné
+  });
+  
+  // Calculer le résiduel à distribuer
+  const residual = Math.max(0, 100 - totalAssignedProbability);
+  const segmentsWithoutPrizes = segmentProbabilities.filter(p => p === null).length;
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🎯 Total assigné: ${totalAssignedProbability}%, Résiduel: ${residual}%, Segments sans lots: ${segmentsWithoutPrizes}`);
+  }
+  
+  // Distribuer le résiduel
+  const residualPerSegment = segmentsWithoutPrizes > 0 ? residual / segmentsWithoutPrizes : 0;
+  
+  const finalProbabilities = segmentProbabilities.map(prob => {
+    if (prob === null) {
+      return residualPerSegment;
+    }
+    return prob;
+  });
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🎯 Probabilités finales:', finalProbabilities);
+  }
+  
+  return finalProbabilities;
+};
+
 export const getWheelSegments = (campaign: any) => {
   if (process.env.NODE_ENV !== 'production') {
     console.log('getWheelSegments - Campaign reçu:', campaign);
@@ -47,17 +102,23 @@ export const getWheelSegments = (campaign: any) => {
     return [];
   }
 
+  // Calculer les probabilités basées sur les lots
+  const prizes = campaign?.prizes || [];
+  const probabilities = calculateSegmentProbabilities(originalSegments, prizes);
+
   const segments = originalSegments.map((segment: any, index: number) => ({
     ...segment,
     color: segment.color || (index % 2 === 0 ? segmentColor1 : segmentColor2),
     textColor: segment.textColor || (index % 2 === 0 ? segmentColor2 : segmentColor1),
     id: segment.id || `segment-${index}`,
     // Normaliser l'image pour les moteurs canvas: utiliser 'image' si présent, sinon mapper 'imageUrl' -> 'image'
-    image: segment.image ?? segment.imageUrl ?? undefined
+    image: segment.image ?? segment.imageUrl ?? undefined,
+    // CRUCIAL: Ajouter la probabilité calculée
+    probability: probabilities[index] || 1
   }));
 
   if (process.env.NODE_ENV !== 'production') {
-    console.log('getWheelSegments - Segments finaux:', segments);
+    console.log('getWheelSegments - Segments finaux avec probabilités:', segments);
   }
   return segments;
 };

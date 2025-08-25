@@ -356,10 +356,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
   }, [element.type, readOnly]);
 
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newContent = e.target.value;
-    onUpdate(element.id, { content: newContent });
-  }, [element.id, onUpdate]);
 
   // Commit edits on blur/Enter without re-rendering per keystroke
   const commitEditingContent = useCallback(() => {
