@@ -3,6 +3,7 @@ import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
 import { WheelConfigService } from '../../services/WheelConfigService';
+import { getWheelSegments } from '../../utils/wheelConfig';
 
 interface WheelPreviewProps {
   campaign: any;
@@ -142,8 +143,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   // Utiliser la logique centralisée de wheelConfig.ts pour calculer les probabilités
   const segmentsWithWeights = React.useMemo(() => {
-    // Importer et utiliser getWheelSegments qui calcule correctement les probabilités
-    const { getWheelSegments } = require('../../utils/wheelConfig');
+    // Utiliser getWheelSegments qui calcule correctement les probabilités
     const segmentsWithProbabilities = getWheelSegments(campaign);
     
     if (process.env.NODE_ENV !== 'production') {
