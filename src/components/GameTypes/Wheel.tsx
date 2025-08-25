@@ -2,6 +2,8 @@
 import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
+import { usePrizeLogic } from '../../hooks/usePrizeLogic';
+import type { CampaignConfig } from '../../types/PrizeSystem';
 
 interface WheelProps {
   config: any;
@@ -40,15 +42,13 @@ const Wheel: React.FC<WheelProps> = ({
     { id: '6', label: 'Rejouer', color: '#ff9ff3' }
   ];
 
-  const segments = config?.segments?.length > 0 ? 
-    config.segments.map((segment: any, index: number) => ({
-      id: segment.id || index.toString(),
-      label: segment.label,
-      color: segment.color,
-      textColor: segment.textColor || '#ffffff',
-      prizeId: segment.prizeId,
-      probability: typeof segment.probability === 'number' ? segment.probability : 1
-    })) : defaultSegments;
+  // Utiliser le nouveau système centralisé
+  const { segments: computedSegments } = usePrizeLogic({
+    campaign: campaign as CampaignConfig,
+    setCampaign: () => {} // Read-only
+  });
+
+  const segments = computedSegments.length > 0 ? computedSegments : defaultSegments;
   
   // Calculer la taille de la roue en fonction des dimensions du jeu
   const wheelSize = Math.min(gameDimensions.width, gameDimensions.height) - 40;

@@ -3,7 +3,8 @@ import React from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
 import { WheelConfigService } from '../../services/WheelConfigService';
-import { getWheelSegments } from '../../utils/wheelConfig';
+import { usePrizeLogic } from '../../hooks/usePrizeLogic';
+import type { CampaignConfig } from '../../types/PrizeSystem';
 
 interface WheelPreviewProps {
   campaign: any;
@@ -73,47 +74,22 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     { device: previewDevice, shouldCropWheel: true }
   );
   
-  // Segments avec probabilités calculées selon les lots et couleurs standardisées
-  const segments = React.useMemo(() => {
-    // D'abord obtenir les segments avec probabilités de wheelConfig.ts
-    const segmentsWithProbabilities = getWheelSegments(campaign);
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🎲 WheelPreview - Segments bruts avec probabilités:', segmentsWithProbabilities);
-    }
-    
-    // Puis les standardiser avec WheelConfigService pour les couleurs et l'alternance
-    // IMPORTANT: Préserver les probabilités calculées
-    const standardized = WheelConfigService.getStandardizedSegments({
-      ...wheelConfig,
-      segments: segmentsWithProbabilities
-    }).map((segment: any, index: number) => ({
-      ...segment,
-      // Préserver la probabilité calculée par getWheelSegments
-      probability: segmentsWithProbabilities[index]?.probability || segment.probability
-    }));
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🎲 WheelPreview - Segments standardisés finaux:', standardized);
-    }
-    
-    return standardized;
-  }, [
-    // Inclure une empreinte profonde pour capter les mutations
-    JSON.stringify(campaign?.gameConfig?.wheel?.segments || []),
-    JSON.stringify(campaign?.prizes || []),
-    wheelConfig.customColors?.primary,
-    wheelConfig.brandColors?.primary,
-    wheelConfig.customColors?.secondary,
-    wheelConfig.brandColors?.secondary
-  ]);
+  // Utiliser le nouveau système centralisé via usePrizeLogic
+  const { segments } = usePrizeLogic({
+    campaign: campaign as CampaignConfig,
+    setCampaign: () => {} // Read-only pour l'aperçu
+  });
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🎲 WheelPreview - Segments du nouveau système:', segments);
+  }
   try {
-    const ids = (segments as any[]).map((s: any, i: number) => s.id ?? String(i + 1));
-    console.log('🖥️ WheelPreview (desktop) - standardized segments', {
+    const ids = segments.map((s: any, i: number) => s.id ?? String(i + 1));
+    console.log('🖥️ WheelPreview (desktop) - Segments du nouveau système:', {
       campaignId: campaign?.id,
-      sourceCount: (wheelConfig?.segments || []).length,
-      outCount: (segments as any[]).length,
-      ids
+      segmentCount: segments.length,
+      ids,
+      totalProbability: segments.reduce((sum: number, s: any) => sum + (s.probability || 0), 0)
     });
   } catch {}
   

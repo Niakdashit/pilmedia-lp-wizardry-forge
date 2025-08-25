@@ -1,23 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Gift, Calendar as CalendarIcon, Plus, GripVertical, Pencil, Copy, Trash2, Trophy, Image as ImageIcon } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';
 import ImageUpload from '../../common/ImageUpload';
-import { getWheelSegments } from '../../../utils/wheelConfig';
-
-type Prize = {
-  id: string;
-  name: string;
-  totalUnits: number;
-  awardedUnits: number;
-  imageUrl?: string;
-  // method kept backward-compatible: 'immediate' maps to 'probability'
-  method?: 'immediate' | 'calendar' | 'probability';
-  startDate?: string; // YYYY-MM-DD (for calendar method)
-  endDate?: string;
-  startTime?: string; // HH:MM (24h)
-  endTime?: string;
-  probabilityPercent?: number; // 0-100 when method is 'probability'
-};
+import { usePrizeLogic } from '../../../hooks/usePrizeLogic';
+import type { Prize, CampaignConfig } from '../../../types/PrizeSystem';
 
 type WheelSegment = {
   id?: string;
@@ -33,17 +19,69 @@ const GameLogicPanel: React.FC = () => {
   const setCampaign = useEditorStore((s) => s.setCampaign as any);
 
   const [activeTab, setActiveTab] = useState<'lots' | 'calendar'>('lots');
-  const prizes: Prize[] = useMemo(() => (campaign?.prizes as Prize[]) || [], [campaign]);
-  const showPrizes: boolean = campaign?.showPrizes ?? true;
-  // Segments used by the actual wheel rendering (source of truth)
-  const segments = useMemo<WheelSegment[]>(
-    () => getWheelSegments(campaign) as any,
-    [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]
-  );
+  
+  // Utiliser le nouveau système centralisé
+  const { 
+    segments, 
+    prizes, 
+    validation,
+    addPrize, 
+    updatePrize, 
+    removePrize, 
+    duplicatePrize,
+    updateSegmentPrize,
+    getPrizeById
+  } = usePrizeLogic({ 
+    campaign: campaign as CampaignConfig, 
+    setCampaign 
+  });
 
+  const showPrizes: boolean = campaign?.showPrizes ?? true;
+
+  // Fonctions utilitaires
   const upsertCampaign = (patch: Partial<any>) =>
     setCampaign((prev: any) => (prev ? { ...prev, ...patch } : prev));
 
+  const isValidHex = (v: any) =>
+    typeof v === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim());
+
+  const setShowPrizes = (val: boolean) => upsertCampaign({ showPrizes: val });
+
+  // Gestion des lots avec le nouveau système
+  const handleAddPrize = () => {
+    const newPrizeId = addPrize({
+      name: 'Nouveau lot',
+      totalUnits: 1,
+      awardedUnits: 0,
+      method: 'probability',
+      probabilityPercent: 100,
+    });
+    
+    const newPrize = getPrizeById(newPrizeId);
+    if (newPrize) {
+      setEditing(newPrize);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleUpdatePrize = (updated: Prize) => {
+    updatePrize(updated.id, updated);
+  };
+
+  const handleDuplicatePrize = (id: string) => {
+    const newPrizeId = duplicatePrize(id);
+    const newPrize = getPrizeById(newPrizeId);
+    if (newPrize) {
+      setEditing(newPrize);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleRemovePrize = (id: string) => {
+    removePrize(id);
+  };
+
+  // Gestion des segments - versions simplifiées qui utilisent le setCampaign directement
   const getRawSegments = () =>
     (campaign?.gameConfig?.wheel?.segments || campaign?.config?.roulette?.segments || []) as any[];
 
@@ -72,110 +110,9 @@ const GameLogicPanel: React.FC = () => {
     });
   };
 
-  const isValidHex = (v: any) =>
-    typeof v === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim());
-
-  // no hex text input anymore; color is edited via native color picker
-
-  const addPrize = () => {
-    const newPrize: Prize = {
-      id: `prize_${Date.now()}`,
-      name: 'Nouveau lot',
-      totalUnits: 1,
-      awardedUnits: 0,
-      method: 'probability',
-      probabilityPercent: 100,
-    };
-    upsertCampaign({ prizes: [...prizes, newPrize] });
-    setEditing(newPrize);
-    setIsModalOpen(true);
-  };
-
-  const updatePrize = (updated: Prize) => {
-    const next = prizes.map((p) => (p.id === updated.id ? updated : p));
-    upsertCampaign({ prizes: next });
-  };
-
-  const duplicatePrize = (id: string) => {
-    const src = prizes.find((p) => p.id === id);
-    if (!src) return;
-    const copy: Prize = { ...src, id: `prize_${Date.now()}` };
-    upsertCampaign({ prizes: [...prizes, copy] });
-  };
-
-  const deletePrize = (id: string) => {
-    const next = prizes.filter((p) => p.id !== id);
-    // Remove mapping from wheel segments as well
-    const raw = getRawSegments();
-    const updated = raw.map((seg: any) =>
-      seg?.prizeId === id ? { ...seg, prizeId: undefined } : seg
-    );
-    upsertCampaign({ prizes: next });
-    updateWheelSegments(updated);
-  };
-
-  // ----- Probability helpers -----
-  const isProbability = (p: Prize) => (p.method === 'probability' || p.method === 'immediate');
-  const getProbabilityTotal = (list: Prize[]) =>
-    list.filter(isProbability).reduce((sum, p) => sum + (Number(p.probabilityPercent) || 0), 0);
-
-  const probabilityTotal = useMemo(() => getProbabilityTotal(prizes), [prizes]);
-
-  // Normalize probabilities so that their sum is exactly 100 when it exceeds 100
-  const normalizeProbabilitiesList = (list: Prize[]): Prize[] => {
-    const probIndices = list
-      .map((p, i) => ({ p, i }))
-      .filter(({ p }) => isProbability(p));
-
-    if (probIndices.length === 0) return list;
-
-    const total = probIndices.reduce((s, { p }) => s + (Number(p.probabilityPercent) || 0), 0);
-    if (total <= 100) return list; // normalize only when sum exceeds 100
-
-    // Proportional scaling with largest-remainder to reach exactly 100
-    const rawScaled = probIndices.map(({ p }) => ((Number(p.probabilityPercent) || 0) * 100) / (total || 1));
-    const floors = rawScaled.map((v) => Math.floor(v));
-    let remainder = 100 - floors.reduce((s, v) => s + v, 0);
-    const remainders = rawScaled.map((v, idx) => ({ idx, frac: v - floors[idx] }));
-    remainders.sort((a, b) => b.frac - a.frac);
-    const finalScaled = [...floors];
-    for (let k = 0; k < finalScaled.length && remainder > 0; k++) {
-      finalScaled[remainders[k].idx] += 1;
-      remainder -= 1;
-    }
-
-    const next = [...list];
-    probIndices.forEach(({ i }, idx) => {
-      next[i] = { ...next[i], method: 'probability', probabilityPercent: finalScaled[idx] } as Prize;
-    });
-    return next;
-  };
-
-  const savePrizeWithNormalization = (payload: Prize) => {
-    const base = prizes.map((p) => (p.id === payload.id ? payload : p));
-    const normalized = normalizeProbabilitiesList(base);
-    upsertCampaign({ prizes: normalized });
-  };
-
-  const setShowPrizes = (val: boolean) => upsertCampaign({ showPrizes: val });
-
-  const setSegmentPrize = (index: number, prizeId?: string) => {
-    const raw = getRawSegments();
-    const newSegments = [...raw];
-    if (!newSegments[index]) {
-      // If segments aren't initialized, create placeholders to match visual segments
-      for (let i = raw.length; i <= index; i++) {
-        newSegments[i] = { id: `segment-${i}`, label: `Segment ${i + 1}` };
-      }
-    }
-    newSegments[index] = { ...newSegments[index], prizeId };
-    updateWheelSegments(newSegments);
-  };
-
-  // Palette de couleurs par défaut pour nouveaux segments
+  // Palette de couleurs par défaut
   const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
 
-  // Définir rapidement le nombre de segments (valeur paire, sans limite haute)
   const setSegmentCount = (targetCount: number) => {
     let count = Math.max(2, Math.floor(targetCount));
     if (count % 2 === 1) count += 1;
@@ -183,17 +120,14 @@ const GameLogicPanel: React.FC = () => {
     const raw = getRawSegments();
     let next = [...raw];
 
-    // Assurer un nombre pair de segments en supprimant le dernier si impair
     if (next.length % 2 === 1) {
       next = next.slice(0, -1);
     }
 
-    // Tronquer si trop long
     if (next.length > count) {
       next = next.slice(0, count);
     }
 
-    // Ajouter des segments jusqu'à la cible
     while (next.length < count) {
       const idx = next.length;
       const defaultSeg = {
@@ -205,12 +139,23 @@ const GameLogicPanel: React.FC = () => {
       next.push(defaultSeg);
     }
 
-    // Sécurité: exactement la taille cible
     if (next.length > count) {
       next = next.slice(0, count);
     }
 
     updateWheelSegments(next);
+  };
+
+  const setSegmentLabel = (index: number, label: string) => {
+    const raw = getRawSegments();
+    const newSegments = [...raw];
+    if (!newSegments[index]) {
+      for (let i = raw.length; i <= index; i++) {
+        newSegments[i] = { id: `segment-${i}`, label: `Segment ${i + 1}` };
+      }
+    }
+    newSegments[index] = { ...newSegments[index], label };
+    updateWheelSegments(newSegments);
   };
 
   const setSegmentColor = (index: number, color: string) => {
@@ -237,25 +182,16 @@ const GameLogicPanel: React.FC = () => {
     updateWheelSegments(newSegments);
   };
 
-  const setSegmentLabel = (index: number, label: string) => {
-    const raw = getRawSegments();
-    const newSegments = [...raw];
-    if (!newSegments[index]) {
-      for (let i = raw.length; i <= index; i++) {
-        newSegments[i] = { id: `segment-${i}`, label: `Segment ${i + 1}` };
-      }
-    }
-    newSegments[index] = { ...newSegments[index], label };
-    updateWheelSegments(newSegments);
-  };
-
-  // Modal state
+  // État de l'édition
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<Prize | null>(null);
 
+  // Filtrer les lots de probabilité pour l'affichage
+  const probabilityPrizes = prizes.filter(p => p.method === 'probability' || p.method === 'immediate');
+
   return (
     <div className="p-4 space-y-6">
-      {/* Header with tabs and toggle */}
+      {/* Header avec onglets */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <button
@@ -275,30 +211,39 @@ const GameLogicPanel: React.FC = () => {
             <span className="inline-flex items-center"><CalendarIcon className="w-4 h-4 mr-2"/>Calendrier</span>
           </button>
         </div>
-        {/* Toggle moved to the toolbar below */}
       </div>
 
       {activeTab === 'lots' && (
         <div className="space-y-6">
-          {/* Create button centered, then a single radio centered below */}
+          {/* Bouton d'ajout */}
           <div className="space-y-3">
             <div className="flex items-center justify-center">
               <button
-                onClick={addPrize}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-[hsl(var(--primary))] text-white rounded-md hover:opacity-90"
+                onClick={handleAddPrize}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
               >
-                <Plus className="w-4 h-4"/>
-                <span>Créer un lot</span>
+                <Plus className="w-4 h-4" />
+                Ajouter un lot
               </button>
             </div>
 
-          {/* Probability total indicator */}
-          <div className="text-xs mt-2">
-            <span className={probabilityTotal > 100 ? 'text-red-600' : 'text-gray-600'}>
-              Somme des probabilités: {Math.round(probabilityTotal)}%
-              {probabilityTotal > 100 && ' — la somme dépasse 100%, elle sera normalisée à l\'enregistrement'}
-            </span>
-          </div>
+            {/* Total des probabilités avec validation */}
+            {probabilityPrizes.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <span className={validation.totalProbability > 100 ? 'text-red-600' : 'text-gray-600'}>
+                  Somme des probabilités: {Math.round(validation.totalProbability)}%
+                  {validation.totalProbability > 100 && ' — la somme dépasse 100%, elle sera normalisée'}
+                </span>
+                {validation.warnings.length > 0 && (
+                  <div className="mt-2 text-sm text-yellow-600">
+                    {validation.warnings.map((warning, idx) => (
+                      <div key={idx}>⚠️ {warning}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center justify-center">
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
@@ -315,7 +260,7 @@ const GameLogicPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Table */}
+          {/* Table des lots */}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="grid grid-cols-[32px_1fr_160px_120px_132px] items-center bg-gray-50 text-xs font-medium text-gray-600 px-3 py-2">
               <div></div>
@@ -355,11 +300,19 @@ const GameLogicPanel: React.FC = () => {
                   <button className="hover:text-gray-700" onClick={() => { setEditing(p); setIsModalOpen(true); }} title="Éditer">
                     <Pencil className="w-4 h-4"/>
                   </button>
-                  <button className="hover:text-gray-700" onClick={() => duplicatePrize(p.id)} title="Dupliquer">
-                    <Copy className="w-4 h-4"/>
+                  <button
+                    onClick={() => handleDuplicatePrize(p.id)}
+                    className="p-1 text-gray-400 hover:text-gray-600"
+                    title="Dupliquer"
+                  >
+                    <Copy className="w-4 h-4" />
                   </button>
-                  <button className="hover:text-red-600" onClick={() => deletePrize(p.id)} title="Supprimer">
-                    <Trash2 className="w-4 h-4"/>
+                  <button
+                    onClick={() => handleRemovePrize(p.id)}
+                    className="p-1 text-gray-400 hover:text-red-600"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -369,7 +322,7 @@ const GameLogicPanel: React.FC = () => {
             )}
           </div>
 
-          {/* Sélecteur du nombre de segments (entrée numérique) */}
+          {/* Sélecteur du nombre de segments */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-gray-700">Nombre de segments</div>
@@ -387,7 +340,7 @@ const GameLogicPanel: React.FC = () => {
             <p className="text-xs text-gray-500">La roue fonctionne mieux avec un nombre pair de segments.</p>
           </div>
 
-          {/* Wheel segments assignment (one per row) */}
+          {/* Affectation des lots aux segments */}
           <div className="space-y-3">
             <div className="text-sm font-medium text-gray-700">Affectation des lots à la roue</div>
             <div className="grid grid-cols-1 gap-4">
@@ -427,7 +380,7 @@ const GameLogicPanel: React.FC = () => {
                     <select
                       className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
                       value={(s as any).prizeId || ''}
-                      onChange={(e) => setSegmentPrize(idx, e.target.value || undefined)}
+                      onChange={(e) => updateSegmentPrize(idx, e.target.value || undefined)}
                     >
                       <option value="">Aucun lot</option>
                       {prizes.map((p) => (
@@ -468,7 +421,7 @@ const GameLogicPanel: React.FC = () => {
                     <input
                       type="date"
                       value={p.startDate || ''}
-                      onChange={(e) => updatePrize({ ...p, startDate: e.target.value })}
+                      onChange={(e) => handleUpdatePrize({ ...p, startDate: e.target.value })}
                       className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     />
                   </div>
@@ -477,7 +430,7 @@ const GameLogicPanel: React.FC = () => {
                     <input
                       type="time"
                       value={p.startTime || ''}
-                      onChange={(e) => updatePrize({ ...p, startTime: e.target.value })}
+                      onChange={(e) => handleUpdatePrize({ ...p, startTime: e.target.value })}
                       className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     />
                   </div>
@@ -491,11 +444,11 @@ const GameLogicPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modal d'édition */}
       {isModalOpen && editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-5">
-            <div className="text-base font-semibold mb-4">{editing ? 'Éditer le lot' : 'Créer un lot'}</div>
+            <div className="text-base font-semibold mb-4">Éditer le lot</div>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Nom du lot</label>
@@ -551,7 +504,7 @@ const GameLogicPanel: React.FC = () => {
                       const clamped = Math.max(0, Math.min(100, isNaN(raw) ? 0 : raw));
                       setEditing({ ...editing, method: 'probability', probabilityPercent: clamped });
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                   />
                 </div>
               )}
@@ -597,7 +550,7 @@ const GameLogicPanel: React.FC = () => {
                           ? Math.max(0, Math.min(100, Number(editing.probabilityPercent ?? 100)))
                           : undefined,
                     } as typeof editing;
-                    savePrizeWithNormalization(payload);
+                    handleUpdatePrize(payload);
                   }
                   setIsModalOpen(false);
                   setEditing(null);
