@@ -73,18 +73,40 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     { device: previewDevice, shouldCropWheel: true }
   );
   
-  // Segments standardisés dérivés de la configuration canonique (identiques à l'édition)
-  const segments = React.useMemo(
-    () => WheelConfigService.getStandardizedSegments(wheelConfig),
-    [
-      // Inclure une empreinte profonde pour capter les mutations
-      JSON.stringify(wheelConfig?.segments || []),
-      wheelConfig.customColors?.primary,
-      wheelConfig.brandColors?.primary,
-      wheelConfig.customColors?.secondary,
-      wheelConfig.brandColors?.secondary
-    ]
-  );
+  // Segments avec probabilités calculées selon les lots et couleurs standardisées
+  const segments = React.useMemo(() => {
+    // D'abord obtenir les segments avec probabilités de wheelConfig.ts
+    const segmentsWithProbabilities = getWheelSegments(campaign);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🎲 WheelPreview - Segments bruts avec probabilités:', segmentsWithProbabilities);
+    }
+    
+    // Puis les standardiser avec WheelConfigService pour les couleurs et l'alternance
+    // IMPORTANT: Préserver les probabilités calculées
+    const standardized = WheelConfigService.getStandardizedSegments({
+      ...wheelConfig,
+      segments: segmentsWithProbabilities
+    }).map((segment: any, index: number) => ({
+      ...segment,
+      // Préserver la probabilité calculée par getWheelSegments
+      probability: segmentsWithProbabilities[index]?.probability || segment.probability
+    }));
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🎲 WheelPreview - Segments standardisés finaux:', standardized);
+    }
+    
+    return standardized;
+  }, [
+    // Inclure une empreinte profonde pour capter les mutations
+    JSON.stringify(campaign?.gameConfig?.wheel?.segments || []),
+    JSON.stringify(campaign?.prizes || []),
+    wheelConfig.customColors?.primary,
+    wheelConfig.brandColors?.primary,
+    wheelConfig.customColors?.secondary,
+    wheelConfig.brandColors?.secondary
+  ]);
   try {
     const ids = (segments as any[]).map((s: any, i: number) => s.id ?? String(i + 1));
     console.log('🖥️ WheelPreview (desktop) - standardized segments', {
@@ -141,18 +163,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     (typeof campaign?.gameConfig?.wheel?.winProbability === 'number' ? campaign?.gameConfig?.wheel?.winProbability :
     (typeof campaign?.config?.roulette?.winProbability === 'number' ? campaign?.config?.roulette?.winProbability : undefined))));
 
-  // Utiliser la logique centralisée de wheelConfig.ts pour calculer les probabilités
-  const segmentsWithWeights = React.useMemo(() => {
-    // Utiliser getWheelSegments qui calcule correctement les probabilités
-    const segmentsWithProbabilities = getWheelSegments(campaign);
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🎲 WheelPreview - Segments avec probabilités:', segmentsWithProbabilities);
-    }
-    
-    return segmentsWithProbabilities;
-  }, [campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments, campaign?.prizes]);
-
   // Animation: après validation du formulaire, si la roue est en position centre,
   // remonter automatiquement la roue de 25% (une seule fois)
   const [lifted, setLifted] = React.useState(false);
@@ -176,15 +186,15 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           <SmartWheel
             key={(() => {
               try {
-                const parts = segmentsWithWeights.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}`).join('|');
+                const parts = segments.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}`).join('|');
                 const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
-                return `${segmentsWithWeights.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
+                return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
               } catch {
                 const fallbackSpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
-                return `${segmentsWithWeights.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
+                return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
               }
             })()}
-            segments={segmentsWithWeights as any}
+            segments={segments as any}
             theme="modern"
             size={wheelSize}
             brandColors={{
