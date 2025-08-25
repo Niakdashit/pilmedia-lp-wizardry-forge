@@ -10,9 +10,13 @@ type Prize = {
   totalUnits: number;
   awardedUnits: number;
   imageUrl?: string;
-  method?: 'immediate' | 'calendar';
+  // method kept backward-compatible: 'immediate' maps to 'probability'
+  method?: 'immediate' | 'calendar' | 'probability';
   startDate?: string; // YYYY-MM-DD (for calendar method)
   endDate?: string;
+  startTime?: string; // HH:MM (24h)
+  endTime?: string;
+  probabilityPercent?: number; // 0-100 when method is 'probability'
 };
 
 type WheelSegment = {
@@ -79,7 +83,8 @@ const GameLogicPanel: React.FC = () => {
       name: 'Nouveau lot',
       totalUnits: 1,
       awardedUnits: 0,
-      method: 'immediate',
+      method: 'probability',
+      probabilityPercent: 100,
     };
     upsertCampaign({ prizes: [...prizes, newPrize] });
     setEditing(newPrize);
@@ -107,6 +112,49 @@ const GameLogicPanel: React.FC = () => {
     );
     upsertCampaign({ prizes: next });
     updateWheelSegments(updated);
+  };
+
+  // ----- Probability helpers -----
+  const isProbability = (p: Prize) => (p.method === 'probability' || p.method === 'immediate');
+  const getProbabilityTotal = (list: Prize[]) =>
+    list.filter(isProbability).reduce((sum, p) => sum + (Number(p.probabilityPercent) || 0), 0);
+
+  const probabilityTotal = useMemo(() => getProbabilityTotal(prizes), [prizes]);
+
+  // Normalize probabilities so that their sum is exactly 100 when it exceeds 100
+  const normalizeProbabilitiesList = (list: Prize[]): Prize[] => {
+    const probIndices = list
+      .map((p, i) => ({ p, i }))
+      .filter(({ p }) => isProbability(p));
+
+    if (probIndices.length === 0) return list;
+
+    const total = probIndices.reduce((s, { p }) => s + (Number(p.probabilityPercent) || 0), 0);
+    if (total <= 100) return list; // normalize only when sum exceeds 100
+
+    // Proportional scaling with largest-remainder to reach exactly 100
+    const rawScaled = probIndices.map(({ p }) => ((Number(p.probabilityPercent) || 0) * 100) / (total || 1));
+    const floors = rawScaled.map((v) => Math.floor(v));
+    let remainder = 100 - floors.reduce((s, v) => s + v, 0);
+    const remainders = rawScaled.map((v, idx) => ({ idx, frac: v - floors[idx] }));
+    remainders.sort((a, b) => b.frac - a.frac);
+    const finalScaled = [...floors];
+    for (let k = 0; k < finalScaled.length && remainder > 0; k++) {
+      finalScaled[remainders[k].idx] += 1;
+      remainder -= 1;
+    }
+
+    const next = [...list];
+    probIndices.forEach(({ i }, idx) => {
+      next[i] = { ...next[i], method: 'probability', probabilityPercent: finalScaled[idx] } as Prize;
+    });
+    return next;
+  };
+
+  const savePrizeWithNormalization = (payload: Prize) => {
+    const base = prizes.map((p) => (p.id === payload.id ? payload : p));
+    const normalized = normalizeProbabilitiesList(base);
+    upsertCampaign({ prizes: normalized });
   };
 
   const setShowPrizes = (val: boolean) => upsertCampaign({ showPrizes: val });
@@ -243,6 +291,14 @@ const GameLogicPanel: React.FC = () => {
                 <span>Créer un lot</span>
               </button>
             </div>
+
+          {/* Probability total indicator */}
+          <div className="text-xs mt-2">
+            <span className={probabilityTotal > 100 ? 'text-red-600' : 'text-gray-600'}>
+              Somme des probabilités: {Math.round(probabilityTotal)}%
+              {probabilityTotal > 100 && ' — la somme dépasse 100%, elle sera normalisée à l\'enregistrement'}
+            </span>
+          </div>
             <div className="flex items-center justify-center">
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
@@ -290,7 +346,9 @@ const GameLogicPanel: React.FC = () => {
                   {p.method === 'calendar' ? (
                     <span className="inline-flex items-center"><CalendarIcon className="w-4 h-4 mr-1"/>Calendrier</span>
                   ) : (
-                    <span>Immédiat</span>
+                    <span>
+                      Probabilité{typeof p.probabilityPercent === 'number' ? ` (${p.probabilityPercent}%)` : ''}
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center justify-end space-x-3 text-gray-500">
@@ -396,30 +454,30 @@ const GameLogicPanel: React.FC = () => {
 
       {activeTab === 'calendar' && (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">Planifiez la disponibilité des lots.</div>
-          {prizes.map((p) => (
+          <div className="text-sm text-gray-600">Planifiez la disponibilité des lots (seuls les lots en mode calendrier sont listés).</div>
+          {prizes.filter((p) => p.method === 'calendar').map((p) => (
             <div key={p.id} className="border border-gray-200 rounded-md p-3 flex items-center gap-3">
               <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400">
                 <Gift className="w-4 h-4"/>
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-800">{p.name}</div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-1 gap-2">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Début</label>
+                    <label className="block text-xs text-gray-500 mb-1">Date</label>
                     <input
                       type="date"
                       value={p.startDate || ''}
-                      onChange={(e) => updatePrize({ ...p, method: 'calendar', startDate: e.target.value })}
+                      onChange={(e) => updatePrize({ ...p, startDate: e.target.value })}
                       className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Fin</label>
+                    <label className="block text-xs text-gray-500 mb-1">Heure</label>
                     <input
-                      type="date"
-                      value={p.endDate || ''}
-                      onChange={(e) => updatePrize({ ...p, method: 'calendar', endDate: e.target.value })}
+                      type="time"
+                      value={p.startTime || ''}
+                      onChange={(e) => updatePrize({ ...p, startTime: e.target.value })}
                       className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     />
                   </div>
@@ -427,8 +485,8 @@ const GameLogicPanel: React.FC = () => {
               </div>
             </div>
           ))}
-          {prizes.length === 0 && (
-            <div className="text-sm text-gray-500">Aucun lot créé pour le moment.</div>
+          {prizes.filter((p) => p.method === 'calendar').length === 0 && (
+            <div className="text-sm text-gray-500">Aucun lot en mode calendrier. Passez un lot en « Calendrier » dans l'onglet Lots pour l'afficher ici.</div>
           )}
         </div>
       )}
@@ -472,18 +530,35 @@ const GameLogicPanel: React.FC = () => {
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Méthode</label>
                 <select
-                  value={editing.method || 'immediate'}
+                  value={(editing.method === 'immediate' ? 'probability' : (editing.method || 'probability'))}
                   onChange={(e) => setEditing({ ...editing, method: e.target.value as Prize['method'] })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
-                  <option value="immediate">Immédiat</option>
+                  <option value="probability">Probabilité</option>
                   <option value="calendar">Calendrier</option>
                 </select>
               </div>
+              {editing.method !== 'calendar' && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Probabilité (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={typeof editing.probabilityPercent === 'number' ? editing.probabilityPercent : 100}
+                    onChange={(e) => {
+                      const raw = Number(e.target.value);
+                      const clamped = Math.max(0, Math.min(100, isNaN(raw) ? 0 : raw));
+                      setEditing({ ...editing, method: 'probability', probabilityPercent: clamped });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+              )}
               {editing.method === 'calendar' && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Début</label>
+                    <label className="block text-xs text-gray-500 mb-1">Date</label>
                     <input
                       type="date"
                       value={editing.startDate || ''}
@@ -492,11 +567,11 @@ const GameLogicPanel: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Fin</label>
+                    <label className="block text-xs text-gray-500 mb-1">Heure</label>
                     <input
-                      type="date"
-                      value={editing.endDate || ''}
-                      onChange={(e) => setEditing({ ...editing, endDate: e.target.value })}
+                      type="time"
+                      value={editing.startTime || ''}
+                      onChange={(e) => setEditing({ ...editing, startTime: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                     />
                   </div>
@@ -512,7 +587,21 @@ const GameLogicPanel: React.FC = () => {
               </button>
               <button
                 className="px-4 py-2 rounded bg-[hsl(var(--primary))] text-white"
-                onClick={() => { if (editing) updatePrize(editing); setIsModalOpen(false); setEditing(null); }}
+                onClick={() => {
+                  if (editing) {
+                    const payload = {
+                      ...editing,
+                      method: editing.method === 'immediate' ? 'probability' : editing.method,
+                      probabilityPercent:
+                        (editing.method === 'probability' || editing.method === 'immediate')
+                          ? Math.max(0, Math.min(100, Number(editing.probabilityPercent ?? 100)))
+                          : undefined,
+                    } as typeof editing;
+                    savePrizeWithNormalization(payload);
+                  }
+                  setIsModalOpen(false);
+                  setEditing(null);
+                }}
               >
                 Enregistrer
               </button>

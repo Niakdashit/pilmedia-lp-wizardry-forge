@@ -299,14 +299,16 @@ export class WheelConfigService {
     if (cfgSegments.length > 0) {
       const out = cfgSegments.map((seg, idx) => {
         const bg = idx % 2 === 0 ? normPrimary : secondaryColor;
+        // Conserver les champs additionnels (ex: prizeId, image, etc.) pour la logique de gain
         return {
+          ...(seg as any),
           id: seg.id ?? String(idx + 1),
           label: seg.label ?? `Item ${idx + 1}`,
           color: bg,
           textColor: getReadableTextColor(bg),
           probability: seg.probability,
           isWinning: seg.isWinning
-        };
+        } as any;
       });
       try {
         const inCount = (config.segments || []).length;

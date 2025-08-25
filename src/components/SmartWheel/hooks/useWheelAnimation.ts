@@ -67,6 +67,11 @@ export const useWheelAnimation = ({
     let targetIndex = 0;
     if (spinMode === 'probability') {
       const weights = segments.map((s) => (typeof s.probability === 'number' ? s.probability! : 1));
+      try {
+        const total = weights.reduce((a, b) => a + (isFinite(b) && b > 0 ? b : 0), 0);
+        // eslint-disable-next-line no-console
+        console.debug('[SmartWheel] probability weights', { weights, total, n: weights.length });
+      } catch {}
       targetIndex = pickWeightedIndex(weights);
     } else if (spinMode === 'instant_winner') {
       const winners: number[] = [];
@@ -94,13 +99,35 @@ export const useWheelAnimation = ({
 
     // Compute a target rotation that lands in the center of the target segment
     const desiredNormalizedAngle = targetIndex * segmentAngle + segmentAngle / 2; // [0..360)
+    // Pointer is rendered at the TOP (-90°). Align the segment center with -90°.
+    // Therefore, the wheel's rotation modulo 360 should be (270 - desiredNormalizedAngle) mod 360.
     const currentMod = ((wheelState.rotation % 360) + 360) % 360;
-    const desiredMod = (360 - (desiredNormalizedAngle % 360)) % 360;
+    const pointerOffsetDeg = 90; // compensate for top pointer orientation
+    // Small bias to avoid any potential floating-point landing exactly on a boundary
+    const epsilon = 0.0001;
+    const desiredMod = ((360 - ((desiredNormalizedAngle + pointerOffsetDeg + epsilon) % 360)) + 360) % 360;
     let delta = desiredMod - currentMod;
     if (delta < 0) delta += 360;
     const targetRotation = wheelState.rotation + baseRotation + delta;
 
+    try {
+      // Minimal debug: helps verify alignment without being too noisy
+      // eslint-disable-next-line no-console
+      console.debug('[SmartWheel] targetIndex=%s segAngle=%s desired=%s desiredMod=%s currentMod=%s delta=%s targetRotation=%s',
+        targetIndex, segmentAngle, desiredNormalizedAngle, desiredMod, currentMod, delta, targetRotation);
+    } catch {}
+
     const winningSegment = segments[targetIndex] || segments[0];
+    try {
+      // eslint-disable-next-line no-console
+      console.debug('[SmartWheel] chosen', {
+        targetIndex,
+        id: (winningSegment as any)?.id,
+        label: (winningSegment as any)?.label,
+        prizeId: (winningSegment as any)?.prizeId,
+        probability: (winningSegment as any)?.probability
+      });
+    } catch {}
 
     setWheelState(prev => ({
       ...prev,
