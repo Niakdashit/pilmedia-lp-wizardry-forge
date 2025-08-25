@@ -20,11 +20,21 @@ export const DEFAULT_WHEEL_SEGMENTS = [
 const calculateSegmentProbabilities = (segments: any[], prizes: any[]) => {
   if (!segments || segments.length === 0) return [];
   
-  // Filtrer les lots avec méthode probability/immediate
-  const probabilityPrizes = prizes?.filter(p => p.method === 'probability' || p.method === 'immediate') || [];
+  // Filtrer les lots avec méthode probability/immediate et disponibles
+  const availablePrizes = prizes?.filter(p => {
+    if (!p.method) return false;
+    const method = String(p.method).toLowerCase();
+    if (!['probability', 'immediate', 'probabilite', 'probabilité'].includes(method)) return false;
+    
+    // Vérifier si le lot est encore disponible
+    if (typeof p.totalUnits === 'number' && typeof p.awardedUnits === 'number') {
+      return (p.totalUnits - p.awardedUnits) > 0;
+    }
+    return true; // Si pas de limite définie, considérer comme disponible
+  }) || [];
   
   if (process.env.NODE_ENV !== 'production') {
-    console.log('🎯 calculateSegmentProbabilities - Prizes:', probabilityPrizes);
+    console.log('🎯 calculateSegmentProbabilities - Available prizes:', availablePrizes);
     console.log('🎯 calculateSegmentProbabilities - Segments:', segments);
   }
   
@@ -32,22 +42,43 @@ const calculateSegmentProbabilities = (segments: any[], prizes: any[]) => {
   let totalAssignedProbability = 0;
   const segmentProbabilities = segments.map((segment: any) => {
     if (segment.prizeId) {
-      const prize = probabilityPrizes.find(p => p.id === segment.prizeId);
-      if (prize && typeof prize.probabilityPercent === 'number') {
-        const prob = Math.max(0, Math.min(100, prize.probabilityPercent));
-        totalAssignedProbability += prob;
+      const prize = availablePrizes.find(p => p.id === segment.prizeId);
+      if (prize) {
+        // Chercher le pourcentage de probabilité dans différents champs possibles
+        const prob = prize.probabilityPercent || prize.probability || prize.percentage || prize.percent || 0;
+        const normalizedProb = Math.max(0, Math.min(100, Number(prob)));
+        totalAssignedProbability += normalizedProb;
         
         if (process.env.NODE_ENV !== 'production') {
-          console.log(`🎯 Segment "${segment.label}" avec lot "${prize.name}": ${prob}%`);
+          console.log(`🎯 Segment "${segment.label}" avec lot "${prize.name}": ${normalizedProb}%`);
         }
         
-        return prob;
+        return normalizedProb;
       }
     }
-    return null; // Pas de lot assigné
+    return null; // Pas de lot assigné ou lot non disponible
   });
   
-  // Calculer le résiduel à distribuer
+  // LOGIQUE SPÉCIALE: Si un lot a 100% de probabilité, les autres segments doivent avoir 0%
+  const has100PercentPrize = segmentProbabilities.some(prob => prob === 100);
+  
+  if (has100PercentPrize) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🎯 Lot à 100% détecté - application de la logique garantie');
+    }
+    // Seuls les segments avec 100% gardent leur probabilité, les autres à 0
+    const finalProbabilities = segmentProbabilities.map(prob => {
+      return prob === 100 ? 100 : 0;
+    });
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🎯 Probabilités finales (100% forcé):', finalProbabilities);
+    }
+    
+    return finalProbabilities;
+  }
+  
+  // Logique normale: distribuer le résiduel aux segments sans lots
   const residual = Math.max(0, 100 - totalAssignedProbability);
   const segmentsWithoutPrizes = segmentProbabilities.filter(p => p === null).length;
   
@@ -55,8 +86,8 @@ const calculateSegmentProbabilities = (segments: any[], prizes: any[]) => {
     console.log(`🎯 Total assigné: ${totalAssignedProbability}%, Résiduel: ${residual}%, Segments sans lots: ${segmentsWithoutPrizes}`);
   }
   
-  // Distribuer le résiduel
-  const residualPerSegment = segmentsWithoutPrizes > 0 ? residual / segmentsWithoutPrizes : 0;
+  // Si pas de résiduel, les segments sans lots restent à 0
+  const residualPerSegment = (residual > 0 && segmentsWithoutPrizes > 0) ? residual / segmentsWithoutPrizes : 0;
   
   const finalProbabilities = segmentProbabilities.map(prob => {
     if (prob === null) {
