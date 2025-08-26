@@ -4,6 +4,7 @@
  */
 
 import type { Prize, WheelSegment, CampaignSegment, ProbabilityCalculationResult, SegmentPrizeMapping } from '../types/PrizeSystem';
+import { PrizeValidation } from '../utils/PrizeValidation';
 
 export class ProbabilityEngine {
   
@@ -27,23 +28,69 @@ export class ProbabilityEngine {
       };
     }
 
-    // 1. Filtrer et valider les lots disponibles
+    // 1. Filtrer et valider les lots disponibles (non épuisés, méthode connue)
     const availablePrizes = this.getAvailablePrizes(prizes);
-    
-    // 2. Créer le mapping segment -> lot
-    const mappings = this.createSegmentPrizeMappings(segments, availablePrizes);
-    
-    // 3. Détecter les lots à 100% (mode garantie)
-    const guaranteed100Prizes = availablePrizes.filter(p => 
-      this.getProbabilityPercent(p) >= 100 && 
-      this.isProbabilityMethod(p.method)
+
+    // 2. Compter le nombre de segments par lot
+    const segsByPrize = new Map<string, number>();
+    segments.forEach((segment) => {
+      const pid = this.normalizePrizeId((segment as any)?.prizeId);
+      if (pid) segsByPrize.set(pid, (segsByPrize.get(pid) || 0) + 1);
+    });
+
+    // 3. Gating calendrier: si des lots calendrier sont actifs maintenant,
+    //    répartir 100% uniquement entre ces lots (puis par segments de chaque lot)
+    const activeCalendarPrizes = availablePrizes.filter(
+      (p) => p.method === 'calendar' && PrizeValidation.isPrizeActive(p) && PrizeValidation.isPrizeAvailable(p)
     );
-    
-    if (guaranteed100Prizes.length > 0) {
-      return this.calculateGuaranteedWinProbabilities(segments, mappings, guaranteed100Prizes);
+
+    const activeCalendarWithSegments = activeCalendarPrizes.filter((p) => (segsByPrize.get(p.id) || 0) > 0);
+    if (activeCalendarWithSegments.length > 0) {
+      const perPrizeWeight = 100 / activeCalendarWithSegments.length;
+      const resultSegments: WheelSegment[] = segments.map((segment, index) => {
+        const segmentId = segment.id || `segment-${index}`;
+        const prizeId = this.normalizePrizeId((segment as any)?.prizeId);
+        const activePrize = prizeId ? activeCalendarWithSegments.find((p) => p.id === prizeId) : undefined;
+        let probability = 0;
+        if (activePrize) {
+          const count = Math.max(1, segsByPrize.get(activePrize.id) || 0);
+          probability = perPrizeWeight / count;
+        }
+        return {
+          id: segmentId,
+          label: segment.label || `Segment ${index + 1}`,
+          color: segment.color || '#ff6b6b',
+          textColor: segment.textColor || '#ffffff',
+          prizeId: prizeId,
+          imageUrl: (segment as any).imageUrl || (segment as any).image,
+          probability,
+          isWinning: probability > 0
+        };
+      });
+
+      return {
+        segments: resultSegments,
+        totalProbability: 100,
+        hasGuaranteedWin: true,
+        residualProbability: 0,
+        errors: []
+      };
     }
-    
-    // 4. Calcul normal avec distribution
+
+    // 4. Cas garantie: si un lot probabilité/immediate est à 100%, il prend 100% et les autres 0
+    const guaranteed100Prizes = availablePrizes.filter(
+      (p) => this.isProbabilityMethod(p.method) && this.getProbabilityPercent(p) === 100
+    );
+    const guaranteedWithSegments = guaranteed100Prizes.filter((p) => (segsByPrize.get(p.id) || 0) > 0);
+
+    // Préparer le mapping une seule fois (réutilisé ensuite)
+    const mappings = this.createSegmentPrizeMappings(segments, availablePrizes, segsByPrize);
+
+    if (guaranteedWithSegments.length > 0) {
+      return this.calculateGuaranteedWinProbabilities(segments, mappings, guaranteedWithSegments, segsByPrize);
+    }
+
+    // 5. Calcul normal avec distribution proportionnelle par lot
     return this.calculateNormalProbabilities(segments, mappings);
   }
 
@@ -67,12 +114,13 @@ export class ProbabilityEngine {
    */
   private static createSegmentPrizeMappings(
     segments: CampaignSegment[],
-    prizes: Prize[]
+    prizes: Prize[],
+    segsByPrize: Map<string, number>
   ): SegmentPrizeMapping[] {
     return segments.map((segment, index) => {
       const segmentId = segment.id || `segment-${index}`;
-      const prizeId = this.normalizePrizeId(segment.prizeId);
-      
+      const prizeId = this.normalizePrizeId((segment as any)?.prizeId);
+
       if (!prizeId) {
         return {
           segmentId,
@@ -81,8 +129,8 @@ export class ProbabilityEngine {
           reason: 'Aucun lot assigné'
         };
       }
-      
-      const prize = prizes.find(p => p.id === prizeId);
+
+      const prize = prizes.find((p) => p.id === prizeId);
       if (!prize) {
         return {
           segmentId,
@@ -92,12 +140,22 @@ export class ProbabilityEngine {
           reason: 'Lot introuvable'
         };
       }
-      
+
+      const isCalendar = prize.method === 'calendar';
+      const isActiveCalendar = isCalendar && PrizeValidation.isPrizeActive(prize);
+      const isAvailable = !isCalendar && true; // Les lots calendrier ne participent pas en mode normal
+
+      // Répartir la probabilité du lot par nombre de segments liés
+      const prizePercent = this.isProbabilityMethod(prize.method) ? this.getProbabilityPercent(prize) : 0;
+      const count = Math.max(1, segsByPrize.get(prizeId) || 0);
+      const perSegment = isCalendar ? 0 : prizePercent / count;
+
       return {
         segmentId,
         prizeId,
-        computedProbability: this.getProbabilityPercent(prize),
-        isAvailable: true
+        computedProbability: perSegment,
+        isAvailable,
+        reason: isCalendar && !isActiveCalendar ? 'Lot calendrier inactif' : undefined
       };
     });
   }
@@ -108,23 +166,29 @@ export class ProbabilityEngine {
   private static calculateGuaranteedWinProbabilities(
     segments: CampaignSegment[],
     mappings: SegmentPrizeMapping[],
-    guaranteed100Prizes: Prize[]
+    guaranteed100Prizes: Prize[],
+    segsByPrize: Map<string, number>
   ): ProbabilityCalculationResult {
-    const guaranteed100PrizeIds = new Set(guaranteed100Prizes.map(p => p.id));
-    
+    const guaranteedIds = guaranteed100Prizes.map((p) => p.id);
+    const perPrizeWeight = 100 / guaranteedIds.length;
+
     const resultSegments: WheelSegment[] = mappings.map((mapping, index) => {
       const segment = segments[index];
-      const hasGuaranteedPrize = mapping.prizeId && guaranteed100PrizeIds.has(mapping.prizeId);
-      
+      const prizeId = mapping.prizeId;
+      let probability = 0;
+      if (prizeId && guaranteedIds.includes(prizeId)) {
+        const count = Math.max(1, segsByPrize.get(prizeId) || 0);
+        probability = perPrizeWeight / count;
+      }
       return {
         id: mapping.segmentId,
         label: segment.label || `Segment ${index + 1}`,
         color: segment.color || '#ff6b6b',
         textColor: segment.textColor || '#ffffff',
-        prizeId: mapping.prizeId,
-        imageUrl: segment.imageUrl || segment.image,
-        probability: hasGuaranteedPrize ? 100 : 0,
-        isWinning: !!hasGuaranteedPrize
+        prizeId: prizeId,
+        imageUrl: (segment as any).imageUrl || (segment as any).image,
+        probability,
+        isWinning: probability > 0
       };
     });
 
@@ -144,47 +208,39 @@ export class ProbabilityEngine {
     segments: CampaignSegment[],
     mappings: SegmentPrizeMapping[]
   ): ProbabilityCalculationResult {
-    // Calculer le total des probabilités assignées
+    // Calculer le total des probabilités assignées (seulement pour les segments gagnants)
     let totalAssigned = 0;
-    mappings.forEach(mapping => {
-      if (mapping.isAvailable && mapping.computedProbability > 0) {
-        totalAssigned += mapping.computedProbability;
-      }
+    mappings.forEach((m) => {
+      if (m.isAvailable && m.computedProbability > 0) totalAssigned += m.computedProbability;
     });
 
-    // Gérer les débordements (>100%)
+    // Normaliser si dépasse 100
     if (totalAssigned > 100) {
       const factor = 100 / totalAssigned;
-      mappings.forEach(mapping => {
-        if (mapping.isAvailable) {
-          mapping.computedProbability *= factor;
-        }
+      mappings.forEach((m) => {
+        if (m.isAvailable && m.computedProbability > 0) m.computedProbability *= factor;
       });
       totalAssigned = 100;
     }
 
-    // Distribuer le résiduel aux segments perdants
+    // Distribuer le résiduel aux segments perdants (sans lot, lots calendrier, lots indisponibles)
     const residual = Math.max(0, 100 - totalAssigned);
-    const losingSegments = mappings.filter(m => !m.isAvailable || m.computedProbability === 0);
-    const residualPerLosing = losingSegments.length > 0 ? residual / losingSegments.length : 0;
-
-    losingSegments.forEach(mapping => {
-      mapping.computedProbability = residualPerLosing;
-    });
+    const losing = mappings.filter((m) => !m.isAvailable || m.computedProbability <= 0);
+    const perLosing = losing.length > 0 ? residual / losing.length : 0;
+    losing.forEach((m) => (m.computedProbability = perLosing));
 
     // Construire les segments finaux
-    const resultSegments: WheelSegment[] = mappings.map((mapping, index) => {
+    const resultSegments: WheelSegment[] = mappings.map((m, index) => {
       const segment = segments[index];
-      
       return {
-        id: mapping.segmentId,
+        id: m.segmentId,
         label: segment.label || `Segment ${index + 1}`,
         color: segment.color || '#ff6b6b',
         textColor: segment.textColor || '#ffffff',
-        prizeId: mapping.prizeId,
-        imageUrl: segment.imageUrl || segment.image,
-        probability: mapping.computedProbability,
-        isWinning: mapping.isAvailable && mapping.computedProbability > 0
+        prizeId: m.prizeId,
+        imageUrl: (segment as any).imageUrl || (segment as any).image,
+        probability: m.computedProbability,
+        isWinning: !!(m.prizeId && m.isAvailable && m.computedProbability > 0)
       };
     });
 
@@ -203,7 +259,7 @@ export class ProbabilityEngine {
   private static normalizePrizeId(prizeId: any): string | undefined {
     if (!prizeId) return undefined;
     if (typeof prizeId === 'string') return prizeId;
-    if (typeof prizeId === 'object' && prizeId.value !== 'undefined') {
+    if (typeof prizeId === 'object' && prizeId && typeof prizeId.value === 'string') {
       return prizeId.value;
     }
     return undefined;
@@ -213,16 +269,12 @@ export class ProbabilityEngine {
    * Extrait le pourcentage de probabilité d'un lot
    */
   private static getProbabilityPercent(prize: Prize): number {
-    const candidates = [
-      prize.probabilityPercent,
-    ];
-    
+    const candidates = [prize.probabilityPercent];
     for (const candidate of candidates) {
       if (typeof candidate === 'number' && Number.isFinite(candidate)) {
         return Math.max(0, Math.min(100, candidate));
       }
     }
-    
     return 0;
   }
 

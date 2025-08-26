@@ -39,9 +39,9 @@ const CampaignSettingsLayout: React.FC = () => {
         }}
       />
       {/* Sticky top banner + centered stepper (no action buttons) */}
-      <div className="sticky top-[1.16cm] z-30 -mt-px">
+      <div className="sticky top-[1.16cm] z-50 -mt-px">
         {/* Action band styled like DesignToolbar, tabs centered */}
-        <div className="bg-white border-b border-gray-200 px-4 py-1 flex items-center justify-center shadow-sm rounded-tl-[28px] rounded-tr-[28px] toolbar-compact mb-4 relative">
+        <div className="bg-white border-b border-gray-200 px-4 py-1 flex items-center justify-center shadow-sm rounded-tl-[28px] rounded-tr-[28px] toolbar-compact mb-4 relative overflow-hidden isolate">
           {/* Center: Tabs (reserve space on the right for the 'Mode édition' button) */}
           <div className="flex-1 min-w-0 px-3 pr-36 sm:pr-40 md:pr-52 max-w-6xl">
             <div className="flex overflow-x-auto no-scrollbar divide-x divide-gray-200">

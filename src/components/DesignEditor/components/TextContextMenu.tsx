@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Copy, Clipboard, Move, Trash2, AlignLeft, MoreHorizontal } from 'lucide-react';
+import { usePortalMenuPosition } from '../hooks/usePortalMenuPosition';
 
 interface TextContextMenuProps {
   element: any;
@@ -32,7 +34,13 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
     y: 0
   });
   const [showKebabMenu, setShowKebabMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  // Use shared hook to keep menu inside viewport
+  const { menuRef } = usePortalMenuPosition(
+    contextMenu.isOpen,
+    { x: contextMenu.x, y: contextMenu.y },
+    (p) => setContextMenu((cm) => ({ ...cm, ...p })),
+    8
+  );
   const kebabRef = useRef<HTMLButtonElement>(null);
 
   // Fermer le menu si on clique ailleurs
@@ -161,8 +169,8 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
         style={{ zIndex: 999 }}
       />
 
-      {/* Menu contextuel */}
-      {contextMenu.isOpen && (
+      {/* Menu contextuel - render in a portal to avoid parent transforms */}
+      {contextMenu.isOpen && createPortal(
         <div
           ref={menuRef}
           className="fixed bg-gray-800 text-white rounded-lg shadow-xl border border-gray-700 py-3 min-w-56 z-50"
@@ -219,7 +227,8 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
-import HybridSidebar from './HybridSidebar';
-import DesignToolbar from './DesignToolbar';
-import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+const HybridSidebar = lazy(() => import('./HybridSidebar'));
+const DesignToolbar = lazy(() => import('./DesignToolbar'));
+const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
-import DesignCanvas from './DesignCanvas';
+const DesignCanvas = lazy(() => import('./DesignCanvas'));
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -19,8 +19,8 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 
-import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
-import MobileStableEditor from './components/MobileStableEditor';
+const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
+const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
 
 interface DesignEditorLayoutProps {
   mode?: 'template' | 'campaign';

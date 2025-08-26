@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Gift, Calendar as CalendarIcon, Plus, GripVertical, Pencil, Copy, Trash2, Trophy, Image as ImageIcon } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';
 import ImageUpload from '../../common/ImageUpload';
+import Modal from '../../common/Modal';
 import { usePrizeLogic } from '../../../hooks/usePrizeLogic';
 import type { Prize, CampaignConfig } from '../../../types/PrizeSystem';
 
@@ -49,19 +50,18 @@ const GameLogicPanel: React.FC = () => {
 
   // Gestion des lots avec le nouveau système
   const handleAddPrize = () => {
-    const newPrizeId = addPrize({
+    const base = {
       name: 'Nouveau lot',
       totalUnits: 1,
       awardedUnits: 0,
-      method: 'probability',
+      method: 'probability' as Prize['method'],
       probabilityPercent: 100,
-    });
-    
-    const newPrize = getPrizeById(newPrizeId);
-    if (newPrize) {
-      setEditing(newPrize);
-      setIsModalOpen(true);
-    }
+    };
+    const newPrizeId = addPrize(base);
+    console.log('[GameLogicPanel] Ajouter un lot → id', newPrizeId);
+    // Ouvre la modale immédiatement avec l'objet local (l'état global se mettra à jour en parallèle)
+    setEditing({ id: newPrizeId, ...base } as Prize);
+    setIsModalOpen(true);
   };
 
   const handleUpdatePrize = (updated: Prize) => {
@@ -69,10 +69,12 @@ const GameLogicPanel: React.FC = () => {
   };
 
   const handleDuplicatePrize = (id: string) => {
+    const source = prizes.find((p) => p.id === id);
     const newPrizeId = duplicatePrize(id);
-    const newPrize = getPrizeById(newPrizeId);
-    if (newPrize) {
-      setEditing(newPrize);
+    console.log('[GameLogicPanel] Dupliquer un lot', id, '→', newPrizeId);
+    if (source) {
+      const duplicated: Prize = { ...source, id: newPrizeId, name: `${source.name} (copie)`, awardedUnits: 0 };
+      setEditing(duplicated);
       setIsModalOpen(true);
     }
   };
@@ -180,6 +182,19 @@ const GameLogicPanel: React.FC = () => {
     }
     newSegments[index] = { ...newSegments[index], imageUrl };
     updateWheelSegments(newSegments);
+  };
+
+  // Appliquer explicitement la configuration des segments à la roue
+  const [lastAppliedAt, setLastAppliedAt] = useState<number | null>(null);
+  const applySegmentsToWheel = () => {
+    const raw = getRawSegments();
+    // Re-sauvegarde défensive (clone) + bump _lastUpdate via updateWheelSegments
+    const applied = Array.isArray(raw) ? raw.map((s) => ({ ...s })) : [];
+    updateWheelSegments(applied);
+    setLastAppliedAt(Date.now());
+    try {
+      console.log('[GameLogicPanel] Segments appliqués à la roue', { count: applied.length });
+    } catch {}
   };
 
   // État de l'édition
@@ -342,7 +357,20 @@ const GameLogicPanel: React.FC = () => {
 
           {/* Affectation des lots aux segments */}
           <div className="space-y-3">
-            <div className="text-sm font-medium text-gray-700">Affectation des lots à la roue</div>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-gray-700">Affectation des lots à la roue</div>
+              <div className="flex items-center gap-2">
+                {lastAppliedAt && (
+                  <span className="text-xs text-green-600">Segments appliqués</span>
+                )}
+                <button
+                  onClick={applySegmentsToWheel}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[hsl(var(--primary))] text-white hover:opacity-90"
+                >
+                  Appliquer
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-4">
               {segments.map((s: WheelSegment, idx: number) => (
                 <div key={s.id || idx} className="border border-amber-200 rounded-lg p-3 bg-amber-50">
@@ -444,12 +472,15 @@ const GameLogicPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Modal d'édition */}
-      {isModalOpen && editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-5">
-            <div className="text-base font-semibold mb-4">Éditer le lot</div>
-            <div className="space-y-3">
+      {/* Modal d'édition (via Portal) */}
+      {isModalOpen && (
+        <Modal title="Éditer le lot" onClose={() => { setIsModalOpen(false); setEditing(null); console.log('Closing modal'); }}>
+          <div className="space-y-3" id="prize-edit-modal">
+            {!editing && (
+              <div className="text-sm text-gray-600">Initialisation du lot...</div>
+            )}
+            {editing && (
+            <>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Nom du lot</label>
                 <input
@@ -530,8 +561,9 @@ const GameLogicPanel: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
-            <div className="mt-5 flex items-center justify-end space-x-2">
+            </>
+            )}
+            <div className="mt-3 flex items-center justify-end space-x-2">
               <button
                 className="px-4 py-2 rounded border border-gray-300 text-gray-700"
                 onClick={() => { setIsModalOpen(false); setEditing(null); }}
@@ -560,7 +592,7 @@ const GameLogicPanel: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

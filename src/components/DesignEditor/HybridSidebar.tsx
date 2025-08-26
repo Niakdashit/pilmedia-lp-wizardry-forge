@@ -10,14 +10,21 @@ import {
 } from 'lucide-react';
 import AssetsPanel from './panels/AssetsPanel';
 import BackgroundPanel from './panels/BackgroundPanel';
-import GameLogicPanel from './panels/GameLogicPanel';
-import LayersPanel from './panels/LayersPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
-import PositionPanel from './panels/PositionPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
+
+
+// Lazy-loaded heavy panels
+const loadGameLogicPanel = () => import('./panels/GameLogicPanel');
+const loadPositionPanel = () => import('./panels/PositionPanel');
+const loadLayersPanel = () => import('./panels/LayersPanel');
+
+const LazyGameLogicPanel = React.lazy(loadGameLogicPanel);
+const LazyPositionPanel = React.lazy(loadPositionPanel);
+const LazyLayersPanel = React.lazy(loadLayersPanel);
 
 
 interface HybridSidebarProps {
@@ -159,6 +166,33 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     }
   }, [selectedElement, activeTab, onEffectsPanelChange]);
 
+  // Idle prefetch heavy panels to smooth first open without blocking initial render
+  React.useEffect(() => {
+    const win: any = typeof window !== 'undefined' ? window : undefined;
+    const schedule = (cb: () => void) =>
+      win && typeof win.requestIdleCallback === 'function'
+        ? win.requestIdleCallback(cb, { timeout: 2000 })
+        : setTimeout(cb, 1200);
+    const cancel = (id: any) =>
+      win && typeof win.cancelIdleCallback === 'function' ? win.cancelIdleCallback(id) : clearTimeout(id);
+
+    const id = schedule(() => {
+      try {
+        if (activeTab !== 'layers') {
+          loadLayersPanel();
+        }
+        if (activeTab !== 'gamelogic') {
+          loadGameLogicPanel();
+        }
+        // Position panel can be opened via toggles; prefetch proactively
+        loadPositionPanel();
+      } catch (e) {
+        // no-op: prefetch is best-effort
+      }
+    });
+    return () => cancel(id);
+  }, [activeTab]);
+
   const allTabs = [
     { 
       id: 'background', 
@@ -187,6 +221,17 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
     }
   ];
   const tabs = allTabs.filter(tab => !hiddenTabs.includes(tab.id));
+
+  // Prefetch on hover/touch to smooth first paint
+  const prefetchTab = (tabId: string) => {
+    if (tabId === 'gamelogic') {
+      loadGameLogicPanel();
+    } else if (tabId === 'position') {
+      loadPositionPanel();
+    } else if (tabId === 'layers') {
+      loadLayersPanel();
+    }
+  };
 
   const handleTabClick = (tabId: string) => {
     console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
@@ -244,15 +289,17 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         );
       case 'position':
         return (
-          <PositionPanel 
-            onBack={() => {
-              onPositionPanelChange?.(false);
-              setActiveTab('assets');
-            }}
-            selectedElement={selectedElement}
-            onElementUpdate={onElementUpdate}
-            canvasRef={canvasRef}
-          />
+          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement du panneau de position…</div>}>
+            <LazyPositionPanel 
+              onBack={() => {
+                onPositionPanelChange?.(false);
+                setActiveTab('assets');
+              }}
+              selectedElement={selectedElement}
+              onElementUpdate={onElementUpdate}
+              canvasRef={canvasRef}
+            />
+          </React.Suspense>
         );
       case 'wheel':
         return (
@@ -297,16 +344,22 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         );
       case 'layers':
         return (
-          <LayersPanel 
-            elements={elements} 
-            onElementsChange={onElementsChange || (() => {})} 
-            selectedElements={selectedElements}
-            onSelectedElementsChange={onSelectedElementsChange}
-            onAddToHistory={onAddToHistory}
-          />
+          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des calques…</div>}>
+            <LazyLayersPanel 
+              elements={elements} 
+              onElementsChange={onElementsChange || (() => {})} 
+              selectedElements={selectedElements}
+              onSelectedElementsChange={onSelectedElementsChange}
+              onAddToHistory={onAddToHistory}
+            />
+          </React.Suspense>
         );
       case 'gamelogic':
-        return <GameLogicPanel />;
+        return (
+          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement de la logique de jeu…</div>}>
+            <LazyGameLogicPanel />
+          </React.Suspense>
+        );
       default:
         return null;
     }
@@ -338,6 +391,8 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                   setIsCollapsed(false);
                   setActiveTab(tab.id);
                 }}
+                onMouseEnter={() => prefetchTab(tab.id)}
+                onTouchStart={() => prefetchTab(tab.id)}
                 onMouseDown={(e) => {
                   console.log('🗂️ MouseDown sur onglet réduit:', tab.id);
                   e.preventDefault();
@@ -391,6 +446,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                   e.stopPropagation();
                   handleTabClick(tab.id);
                 }}
+                onMouseEnter={() => prefetchTab(tab.id)}
                 onMouseDown={(e) => {
                   console.log('🗂️ Événement mouseDown sur bouton onglet:', tab.id);
                   e.preventDefault();
@@ -398,6 +454,7 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
                 }}
                 onTouchStart={(e) => {
                   console.log('🗂️ Événement touchStart sur bouton onglet:', tab.id);
+                  prefetchTab(tab.id);
                   e.preventDefault();
                   e.stopPropagation();
                 }}

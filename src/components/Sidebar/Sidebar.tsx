@@ -17,6 +17,22 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppContext();
 
+  // Prefetch map for lazy routes defined in App.tsx
+  const routePrefetchers: Record<string, () => Promise<any>> = {
+    '/dashboard': () => import('../../pages/Dashboard'),
+    '/campaigns': () => import('../../pages/Campaigns'),
+    '/gamification': () => import('../../pages/Gamification'),
+    '/statistics': () => import('../../pages/Statistics'),
+    // '/templates-editor': () => import('../../pages/TemplatesEditor'), // Add if linked in sidebar later
+  };
+
+  const prefetchRoute = (path: string) => {
+    const loader = routePrefetchers[path];
+    if (loader) {
+      try { loader(); } catch (_) { /* best-effort */ }
+    }
+  };
+
   const navItems = [
     { name: 'Tableau de bord', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Campagnes', path: '/campaigns', icon: <Target className="w-5 h-5" /> },
@@ -55,6 +71,8 @@ const Sidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
+                onMouseEnter={() => prefetchRoute(item.path)}
+                onTouchStart={() => prefetchRoute(item.path)}
                 className={`flex items-center px-3 py-2 rounded-xl transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
               >
                 <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>{item.icon}</div>

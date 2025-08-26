@@ -877,7 +877,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             return m ? parseFloat(m[1]) : fallback;
           };
 
-          const baseFontSize = (element.type === 'text' ? (deviceProps as any).fontSize : undefined) || element.fontSize || element.style?.fontSize || 16;
+          // Prefer per-element font size; fall back to device-specific only if missing
+          const baseFontSize = (element.fontSize ?? element.style?.fontSize ?? (element.type === 'text' ? (deviceProps as any).fontSize : undefined) ?? 16);
           // Do not scale per-element font size here; the whole canvas is already scaled via container transform
           const scaledFontSize = parsePx(baseFontSize, 16);
 

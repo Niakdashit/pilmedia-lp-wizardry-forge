@@ -13,9 +13,14 @@ import {
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
-import LayersPanel from '../panels/LayersPanel';
 import CampaignConfigPanel from '../panels/CampaignConfigPanel';
-import GameLogicPanel from '../panels/GameLogicPanel';
+
+// Lazy-loaded heavy panels
+const loadGameLogicPanel = () => import('../panels/GameLogicPanel');
+const loadLayersPanel = () => import('../panels/LayersPanel');
+
+const LazyGameLogicPanel = React.lazy(loadGameLogicPanel);
+const LazyLayersPanel = React.lazy(loadLayersPanel);
 
 interface MobileSidebarDrawerProps {
   onAddElement: (element: any) => void;
@@ -83,6 +88,40 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     }
   }, [selectedElement, disableAutoOpen]);
 
+  // Prefetch on hover/touch to smooth first render of heavy tabs
+  const prefetchTab = (tabId: string) => {
+    if (tabId === 'layers') {
+      loadLayersPanel();
+    } else if (tabId === 'gamelogic') {
+      loadGameLogicPanel();
+    }
+  };
+
+  // Idle prefetch for heavy tabs to reduce first-open delay without blocking startup
+  React.useEffect(() => {
+    const win: any = typeof window !== 'undefined' ? window : undefined;
+    const schedule = (cb: () => void) =>
+      win && typeof win.requestIdleCallback === 'function'
+        ? win.requestIdleCallback(cb, { timeout: 2000 })
+        : setTimeout(cb, 1200);
+    const cancel = (id: any) =>
+      win && typeof win.cancelIdleCallback === 'function' ? win.cancelIdleCallback(id) : clearTimeout(id);
+
+    const id = schedule(() => {
+      try {
+        if (activeTab !== 'layers') {
+          loadLayersPanel();
+        }
+        if (activeTab !== 'gamelogic') {
+          loadGameLogicPanel();
+        }
+      } catch (_) {
+        // best-effort
+      }
+    });
+    return () => cancel(id);
+  }, [activeTab]);
+
   const renderPanel = (tabId: string) => {
     switch (tabId) {
       case 'assets':
@@ -103,10 +142,12 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         );
       case 'layers':
         return (
-          <LayersPanel 
-            elements={elements} 
-            onElementsChange={onElementsChange || (() => {})} 
-          />
+          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des calques…</div>}>
+            <LazyLayersPanel 
+              elements={elements} 
+              onElementsChange={onElementsChange || (() => {})} 
+            />
+          </React.Suspense>
         );
       case 'campaign':
         return (
@@ -116,7 +157,11 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           />
         );
       case 'gamelogic':
-        return <GameLogicPanel />;
+        return (
+          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement de la logique de jeu…</div>}>
+            <LazyGameLogicPanel />
+          </React.Suspense>
+        );
       default:
         return null;
     }
@@ -255,6 +300,8 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                       setActiveTab(tab.id);
                       setIsMinimized(false);
                     }}
+                    onMouseEnter={() => prefetchTab(tab.id)}
+                    onTouchStart={() => prefetchTab(tab.id)}
                     onTouchEnd={() => {
                       setActiveTab(tab.id);
                       setIsMinimized(false);

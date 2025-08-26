@@ -106,10 +106,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
     outline: "none"
   });
 
-  const getFocusClass = () =>
-    inputFocusColor 
-      ? `focus:ring-2 focus:ring-[${inputFocusColor}]`
-      : "focus:ring-2 focus:ring-[#841b60]";
+  const getFocusClass = () => 'focus:ring-2';
 
   const renderField = (field: FieldConfig) => {
     const baseProps = {
@@ -117,7 +114,11 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
       name: field.id,
       required: field.required,
       autoComplete: field.autoComplete || "on",
-      style: getInputStyle(),
+      style: {
+        ...getInputStyle(),
+        // Override Tailwind ring color safely via CSS variable
+        ['--tw-ring-color' as any]: inputFocusColor || '#841b60',
+      },
       className: `w-full px-4 py-2 border rounded-[2px] ${getFocusClass()}`,
       onChange: handleChange
     };
@@ -152,10 +153,11 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
               name={field.id}
               checked={formData[field.id] === 'true'}
               onChange={handleChange}
-              className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded-[2px] focus:ring-[#841b60]"
+              className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded-[2px] ring-2 ring-[#841b60]"
               style={{
                 borderColor: inputBorderColor,
-                outline: "none"
+                outline: "none",
+                ['--tw-ring-color' as any]: inputFocusColor || '#841b60',
               }}
             />
             <label htmlFor={field.id} className="text-sm text-gray-700">

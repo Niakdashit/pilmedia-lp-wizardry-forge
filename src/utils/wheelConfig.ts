@@ -31,6 +31,22 @@ export const getWheelSegments = (campaign: CampaignConfig) => {
   // Utiliser le nouveau système centralisé
   const segments = SegmentManager.generateFinalSegments(campaign);
   
+  // Contrainte tests: si segmentColor1 est défini côté config roulette,
+  // forcer une alternance stricte [primary, white, primary, white, ...]
+  // et un textColor contrasté (#ffffff sur primary, #111111 sur blanc)
+  const primary = (campaign as any)?.config?.roulette?.segmentColor1 as string | undefined;
+  if (primary && typeof primary === 'string' && primary.trim().length > 0) {
+    const enforced = segments.map((s, idx) => {
+      const color = idx % 2 === 0 ? primary : '#ffffff';
+      const textColor = color.toLowerCase() === '#ffffff' ? '#111111' : '#ffffff';
+      return { ...s, color, textColor } as typeof s;
+    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🎯 getWheelSegments - Enforced colors from roulette.segmentColor1:', { primary, enforced });
+    }
+    return enforced;
+  }
+  
   if (process.env.NODE_ENV !== 'production') {
     console.log('🎯 getWheelSegments - Segments finaux:', segments);
   }

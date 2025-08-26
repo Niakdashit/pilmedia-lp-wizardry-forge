@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { BrandThemeProvider } from './contexts/BrandThemeContext';
@@ -24,6 +24,28 @@ const ViralityStep = lazy(() => import('./pages/CampaignSettings/ViralityStep'))
 const AppearanceStep = lazy(() => import('./pages/CampaignSettings/AppearanceStep'));
 
 function App() {
+  // Idle prefetch heavy editor routes to smooth first navigation without impacting TTI
+  useEffect(() => {
+    const win: any = typeof window !== 'undefined' ? window : undefined;
+    const schedule = (cb: () => void) =>
+      win && typeof win.requestIdleCallback === 'function'
+        ? win.requestIdleCallback(cb, { timeout: 2500 })
+        : setTimeout(cb, 1500);
+    const cancel = (id: any) =>
+      win && typeof win.cancelIdleCallback === 'function' ? win.cancelIdleCallback(id) : clearTimeout(id);
+
+    const id = schedule(() => {
+      try {
+        // These are already lazy; dynamic import here warms their chunks
+        import('./pages/DesignEditor');
+        import('./pages/TemplateEditor');
+        import('./pages/TemplatesEditor');
+      } catch (_) {
+        // best-effort
+      }
+    });
+    return () => cancel(id);
+  }, []);
   return (
     <AppProvider>
       <BrandThemeProvider>
