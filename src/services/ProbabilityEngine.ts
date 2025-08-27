@@ -59,7 +59,6 @@ export class ProbabilityEngine {
         return {
           id: segmentId,
           label: segment.label || `Segment ${index + 1}`,
-          value: segment.label || `Segment ${index + 1}`,
           color: segment.color || '#ff6b6b',
           textColor: segment.textColor || '#ffffff',
           prizeId: prizeId,
@@ -184,7 +183,6 @@ export class ProbabilityEngine {
       return {
         id: mapping.segmentId,
         label: segment.label || `Segment ${index + 1}`,
-        value: segment.label || `Segment ${index + 1}`,
         color: segment.color || '#ff6b6b',
         textColor: segment.textColor || '#ffffff',
         prizeId: prizeId,
@@ -269,7 +267,6 @@ export class ProbabilityEngine {
       return {
         id: m.segmentId,
         label: segment.label || `Segment ${index + 1}`,
-        value: segment.label || `Segment ${index + 1}`,
         color: segment.color || '#ff6b6b',
         textColor: segment.textColor || '#ffffff',
         prizeId: m.prizeId,

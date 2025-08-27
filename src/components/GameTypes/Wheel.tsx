@@ -126,34 +126,6 @@ const Wheel: React.FC<WheelProps> = ({
     console.groupEnd();
   }
   
-  
-  // Calculer les métadonnées des poids AVANT de les utiliser
-  const weightsMeta = React.useMemo(() => {
-    console.group('🎡 Wheel - Calcul des métadonnées des poids');
-    
-    const total = Array.isArray(segments)
-      ? segments.reduce((sum: number, s: WheelSegment) => {
-          const prob = s?.probability || 0;
-          console.log(`Segment ${s.id} (${s.label}): probabilité = ${prob}`);
-          return sum + prob;
-        }, 0)
-      : 0;
-    
-    const nonZeroSegments = Array.isArray(segments)
-      ? segments.filter(s => (s?.probability ?? 0) > 0)
-      : [];
-    
-    console.log(`Total des probabilités: ${total}`);
-    console.log(`Segments avec probabilité > 0: ${nonZeroSegments.length}`);
-    console.groupEnd();
-    
-    return {
-      total: parseFloat(total.toFixed(4)),
-      nonZero: nonZeroSegments.length,
-      segments: nonZeroSegments
-    };
-  }, [segments]);
-
   // Log initial des segments chargés
   useEffect(() => {
     const segmentsWithProbabilities = segments.filter(s => (s?.probability ?? 0) > 0);
@@ -276,10 +248,37 @@ const Wheel: React.FC<WheelProps> = ({
     (typeof config?.wheel?.winProbability === 'number') ? config.wheel.winProbability :
     (typeof config?.winProbability === 'number') ? config.winProbability : 0.5;
 
+  // Calculer les métadonnées des poids
+  const weightsMeta = React.useMemo(() => {
+    console.group('🎡 Wheel - Calcul des métadonnées des poids');
+    
+    const total = Array.isArray(segments)
+      ? segments.reduce((sum: number, s: WheelSegment) => {
+          const prob = s?.probability || 0;
+          console.log(`Segment ${s.id} (${s.label}): probabilité = ${prob}`);
+          return sum + prob;
+        }, 0)
+      : 0;
+    
+    const nonZeroSegments = Array.isArray(segments)
+      ? segments.filter(s => (s?.probability ?? 0) > 0)
+      : [];
+    
+    console.log(`Total des probabilités: ${total}`);
+    console.log(`Segments avec probabilité > 0: ${nonZeroSegments.length}`);
+    console.groupEnd();
+    
+    return { 
+      total: parseFloat(total.toFixed(4)),
+      nonZero: nonZeroSegments.length,
+      segments: nonZeroSegments
+    };
+  }, [segments]);
+
   // Log de la configuration finale - Utilisation d'un effet séparé pour les logs
   useEffect(() => {
     // Créer une copie des segments avec probabilités pour éviter les références directes
-    const segmentsInfo = weightsMeta.segments.map((s: WheelSegment) => ({
+    const segmentsInfo = weightsMeta.segments.map(s => ({
       label: s.label,
       probability: s.probability,
       percentage: s.probability ? (s.probability * 100).toFixed(2) + '%' : '0%'
@@ -294,7 +293,7 @@ const Wheel: React.FC<WheelProps> = ({
     
     if (weightsMeta.nonZero > 0) {
       console.group('Détail des probabilités');
-      segmentsInfo.forEach((s: any) => {
+      segmentsInfo.forEach(s => {
         console.log(`- ${s.label}: ${s.probability?.toFixed(4)} (${s.percentage})`);
       });
       console.groupEnd();
@@ -309,7 +308,7 @@ const Wheel: React.FC<WheelProps> = ({
     weightsMeta.nonZero, 
     weightsMeta.total, 
     // Utilisation d'une chaîne JSON comme dépendance pour éviter les rendus inutiles
-    JSON.stringify(weightsMeta.segments.map((s: WheelSegment) => ({
+    JSON.stringify(weightsMeta.segments.map(s => ({
       label: s.label,
       probability: s.probability
     })))

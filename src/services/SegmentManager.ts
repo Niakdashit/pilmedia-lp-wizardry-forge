@@ -61,7 +61,6 @@ export class SegmentManager {
       workingSegments.push({
         id: 'auto-spacer',
         label: '',
-        value: '',
         color: colors.secondary,
         textColor: colors.primary,
         probability: 0,
@@ -139,7 +138,6 @@ export class SegmentManager {
     const segment: WheelSegment = {
       id,
       label: newSegment.label || `Segment ${segments.length + 1}`,
-      value: newSegment.label || `Segment ${segments.length + 1}`,
       color: newSegment.color || '#ff6b6b',
       textColor: newSegment.textColor || '#ffffff',
       probability: newSegment.probability || 0,
@@ -180,7 +178,7 @@ export class SegmentManager {
     }
 
     // Vérifier les probabilités
-    const totalProbability = segments.reduce((sum, s) => sum + (s.probability || 0), 0);
+    const totalProbability = segments.reduce((sum, s) => sum + s.probability, 0);
     if (Math.abs(totalProbability - 100) > 0.01) {
       errors.push(`La somme des probabilités (${totalProbability.toFixed(2)}%) doit être égale à 100%`);
     }

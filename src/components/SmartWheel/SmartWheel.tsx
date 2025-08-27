@@ -131,7 +131,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     rotation = 0,
     targetRotation = 0,
     currentSegment = null,
-    spin
+    spin,
+    reset
   } = useWheelAnimation({
     segments,
     theme: resolvedTheme,

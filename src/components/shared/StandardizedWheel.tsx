@@ -173,7 +173,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
       >
         <SmartWheel
           key={wheelKey}
-          segments={segments.map(s => ({ ...s, value: s.label || s.id || 'Segment' }))}
+          segments={segments}
           theme="modern"
           size={wheelConfig.size}
           borderStyle={wheelConfig.borderStyle}

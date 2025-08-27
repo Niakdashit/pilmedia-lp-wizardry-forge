@@ -85,7 +85,7 @@ export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): Us
       isValid: prizeValidation.isValid && segmentValidation.isValid,
       errors: [...prizeValidation.errors, ...segmentValidation.errors],
       warnings: prizeValidation.warnings,
-      totalProbability: segments.reduce((sum, s) => sum + (s.probability || 0), 0)
+      totalProbability: segments.reduce((sum, s) => sum + s.probability, 0)
     };
   }, [segments, prizes]);
 
@@ -197,7 +197,7 @@ export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): Us
   }, [segments]);
 
   const getTotalProbability = useCallback((): number => {
-    return segments.reduce((sum, s) => sum + (s.probability || 0), 0);
+    return segments.reduce((sum, s) => sum + s.probability, 0);
   }, [segments]);
 
   return {
