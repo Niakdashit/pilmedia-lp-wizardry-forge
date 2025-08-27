@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Plus,
   Layers,
-  Gamepad2,
   Palette,
   FormInput
 } from 'lucide-react';
@@ -18,11 +17,9 @@ import { useEditorStore } from '../../stores/editorStore';
 
 
 // Lazy-loaded heavy panels
-const loadGameLogicPanel = () => import('./panels/GameLogicPanel');
 const loadPositionPanel = () => import('./panels/PositionPanel');
 const loadLayersPanel = () => import('./panels/LayersPanel');
 
-const LazyGameLogicPanel = React.lazy(loadGameLogicPanel);
 const LazyPositionPanel = React.lazy(loadPositionPanel);
 const LazyLayersPanel = React.lazy(loadLayersPanel);
 
@@ -68,7 +65,7 @@ interface HybridSidebarProps {
   onWheelShowBulbsChange?: (show: boolean) => void;
   onWheelPositionChange?: (pos: 'left' | 'right' | 'center') => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
-  // Tabs à masquer (par id: 'campaign', 'gamelogic', 'export', ...)
+  // Tabs à masquer (par id: 'campaign', 'export', ...)
   hiddenTabs?: string[];
 }
 
@@ -181,9 +178,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
         if (activeTab !== 'layers') {
           loadLayersPanel();
         }
-        if (activeTab !== 'gamelogic') {
-          loadGameLogicPanel();
-        }
         // Position panel can be opened via toggles; prefetch proactively
         loadPositionPanel();
       } catch (e) {
@@ -213,20 +207,13 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
       id: 'form', 
       label: 'Formulaire', 
       icon: FormInput
-    },
-    { 
-      id: 'gamelogic', 
-      label: 'Jeu', 
-      icon: Gamepad2
     }
   ];
   const tabs = allTabs.filter(tab => !hiddenTabs.includes(tab.id));
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
-    if (tabId === 'gamelogic') {
-      loadGameLogicPanel();
-    } else if (tabId === 'position') {
+    if (tabId === 'position') {
       loadPositionPanel();
     } else if (tabId === 'layers') {
       loadLayersPanel();
@@ -352,12 +339,6 @@ const HybridSidebar: React.FC<HybridSidebarProps> = React.memo(({
               onSelectedElementsChange={onSelectedElementsChange}
               onAddToHistory={onAddToHistory}
             />
-          </React.Suspense>
-        );
-      case 'gamelogic':
-        return (
-          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement de la logique de jeu…</div>}>
-            <LazyGameLogicPanel />
           </React.Suspense>
         );
       default:

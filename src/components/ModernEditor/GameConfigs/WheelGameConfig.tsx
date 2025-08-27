@@ -276,10 +276,30 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {segments.map((segment: any, index: number) => {
             const isLosingSegment = segment.isWinning === false || 
-                                   segment.label.toLowerCase().includes('dommage') || 
-                                   segment.label.toLowerCase().includes('perdu') || 
-                                   segment.label.toLowerCase().includes('essaie') || 
-                                   segment.label.toLowerCase().includes('rejouer');
+                                   (typeof segment.label === 'string' && (
+                                     segment.label.toLowerCase().includes('dommage') || 
+                                     segment.label.toLowerCase().includes('perdu') || 
+                                     segment.label.toLowerCase().includes('essaie') || 
+                                     segment.label.toLowerCase().includes('rejouer')
+                                   ));
+            const hasPrize = !!segment.prizeId; // si présent, segment gagnant par lot
+            const showManual = campaign.gameConfig?.wheel?.mode === 'probability' && !hasPrize;
+
+            const manualValue = typeof segment.manualProbabilityPercent === 'number'
+              ? segment.manualProbabilityPercent
+              : (typeof segment.chance === 'number' ? segment.chance : '');
+
+            const handleManualChange = (raw: string) => {
+              const n = Math.max(0, Math.min(100, Number(raw)));
+              // Met à jour le champ manuel et le champ legacy 'chance' pour compatibilité
+              const newSegments = [...segments];
+              newSegments[index] = {
+                ...newSegments[index],
+                manualProbabilityPercent: Number.isFinite(n) ? n : 0,
+                chance: Number.isFinite(n) ? n : 0
+              };
+              updateWheelConfig({ segments: newSegments });
+            };
 
             return (
               <div 
@@ -309,16 +329,21 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
                   title="Couleur du texte"
                   className="w-8 h-8 rounded border border-gray-300" 
                 />
-                {campaign.gameConfig?.wheel?.mode === 'probability' && (
-                  <input 
-                    type="number" 
-                    min="1"
-                    value={segment.probability || 1}
-                    onChange={e => updateSegment(index, 'probability', parseInt(e.target.value))}
-                    className="w-16 px-2 py-1 text-sm border border-gray-300 rounded" 
-                    title="Poids" 
-                  />
+                {showManual && (
+                  <div className="flex items-center gap-1">
+                    <input 
+                      type="number" 
+                      min={0}
+                      max={100}
+                      value={manualValue}
+                      onChange={e => handleManualChange(e.target.value)}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded" 
+                      title="Probabilité (%) - segments sans lot"
+                    />
+                    <span className="text-xs text-gray-600">%</span>
+                  </div>
                 )}
+                {/* Ne plus afficher l'ancien champ de 'poids' en mode probabilité pour éviter la confusion */}
                 <span className={`text-xs px-2 py-1 rounded-full ${
                   isLosingSegment ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                 }`}>

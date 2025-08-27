@@ -1,12 +1,17 @@
-
 export interface WheelSegment {
   id: string;
   label: string;
-  value?: string;
+  value: string;
   color?: string;
   textColor?: string;
-  icon?: string;
+  weight?: number;
   probability?: number;
+  isWinner?: boolean;
+  isWinning?: boolean;
+  prizeId?: string | number;
+  icon?: string;
+  imageUrl?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface WheelTheme {

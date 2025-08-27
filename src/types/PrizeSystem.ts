@@ -26,12 +26,13 @@ export interface Prize {
 export interface WheelSegment {
   id: string;
   label: string;
+  value: string;
   color: string;
   textColor: string;
   prizeId?: string;
   imageUrl?: string;
-  probability: number; // Probabilité calculée (0-100)
-  isWinning: boolean;  // Déterminé par la présence d'un lot valide
+  probability?: number; // Probabilité calculée (0-100)
+  isWinning?: boolean;  // Déterminé par la présence d'un lot valide
 }
 
 export interface ProbabilityCalculationResult {
@@ -64,6 +65,7 @@ export interface CampaignSegment {
   color?: string;
   textColor?: string;
   prizeId?: string | { _type: string; value: string };
+  manualProbabilityPercent?: number; // Manuel pour segments sans lot (0-100)
   imageUrl?: string;
   image?: string;
 }

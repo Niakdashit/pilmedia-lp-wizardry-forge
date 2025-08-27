@@ -208,26 +208,58 @@ export class ProbabilityEngine {
     segments: CampaignSegment[],
     mappings: SegmentPrizeMapping[]
   ): ProbabilityCalculationResult {
-    // Calculer le total des probabilités assignées (seulement pour les segments gagnants)
-    let totalAssigned = 0;
+    let residual = 0;
+    // 1) Calcul du total des probabilités gagnantes (segments liés à des lots probabilité/immediate)
+    let totalWinners = 0;
     mappings.forEach((m) => {
-      if (m.isAvailable && m.computedProbability > 0) totalAssigned += m.computedProbability;
+      if (m.isAvailable && m.computedProbability > 0) totalWinners += m.computedProbability;
     });
 
-    // Normaliser si dépasse 100
-    if (totalAssigned > 100) {
-      const factor = 100 / totalAssigned;
+    // 2) Récupérer les valeurs manuelles pour les segments perdants sans lot
+    const manualByIndex = new Map<number, number>();
+    mappings.forEach((m, index) => {
+      const hasPrize = !!m.prizeId;
+      const manual = (segments[index] as any)?.manualProbabilityPercent;
+      if (!hasPrize && typeof manual === 'number' && Number.isFinite(manual)) {
+        const clamped = Math.max(0, Math.min(100, manual));
+        if (clamped > 0) manualByIndex.set(index, clamped);
+      }
+    });
+
+    let manualSum = 0;
+    manualByIndex.forEach((v) => (manualSum += v));
+
+    // 3) Si winners + manual > 100, normaliser proportionnellement winners et manuel
+    const combined = totalWinners + manualSum;
+    if (combined > 100 && combined > 0) {
+      const factor = 100 / combined;
+      // scale winners
       mappings.forEach((m) => {
         if (m.isAvailable && m.computedProbability > 0) m.computedProbability *= factor;
       });
-      totalAssigned = 100;
-    }
+      // scale manual
+      manualByIndex.forEach((v, index) => {
+        mappings[index].computedProbability = v * factor;
+      });
+      // Tous les autres perdants sans manuel restent à 0
+      residual = 0;
+    } else {
+      // 4) Assigner d'abord les valeurs manuelles telles quelles
+      manualByIndex.forEach((v, index) => {
+        mappings[index].computedProbability = v;
+      });
 
-    // Distribuer le résiduel aux segments perdants (sans lot, lots calendrier, lots indisponibles)
-    const residual = Math.max(0, 100 - totalAssigned);
-    const losing = mappings.filter((m) => !m.isAvailable || m.computedProbability <= 0);
-    const perLosing = losing.length > 0 ? residual / losing.length : 0;
-    losing.forEach((m) => (m.computedProbability = perLosing));
+      // 5) Distribuer le résiduel aux perdants sans manuel
+      residual = Math.max(0, 100 - (totalWinners + manualSum));
+      const losingNoManual: SegmentPrizeMapping[] = mappings.filter((m, idx) => {
+        const hasPrize = !!m.prizeId;
+        const hasManual = manualByIndex.has(idx);
+        const isWinner = m.isAvailable && m.computedProbability > 0;
+        return !isWinner && !hasPrize && !hasManual; // perdants sans lot et sans manuel
+      });
+      const per = losingNoManual.length > 0 ? residual / losingNoManual.length : 0;
+      losingNoManual.forEach((m) => (m.computedProbability = per));
+    }
 
     // Construire les segments finaux
     const resultSegments: WheelSegment[] = mappings.map((m, index) => {

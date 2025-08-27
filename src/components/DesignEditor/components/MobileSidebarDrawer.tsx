@@ -7,7 +7,6 @@ import {
   Palette,
   Layers,
   Settings,
-  Gamepad2,
   RotateCcw,
   RotateCw
 } from 'lucide-react';
@@ -16,10 +15,8 @@ import BackgroundPanel from '../panels/BackgroundPanel';
 import CampaignConfigPanel from '../panels/CampaignConfigPanel';
 
 // Lazy-loaded heavy panels
-const loadGameLogicPanel = () => import('../panels/GameLogicPanel');
 const loadLayersPanel = () => import('../panels/LayersPanel');
 
-const LazyGameLogicPanel = React.lazy(loadGameLogicPanel);
 const LazyLayersPanel = React.lazy(loadLayersPanel);
 
 interface MobileSidebarDrawerProps {
@@ -63,8 +60,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     { id: 'assets', label: 'Éléments', icon: Plus, color: '#3B82F6' },
     { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
     { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
-    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' },
-    { id: 'gamelogic', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' }
+    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' }
   ];
 
   // Device detection: show bottom bar only on real mobile devices
@@ -92,8 +88,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   const prefetchTab = (tabId: string) => {
     if (tabId === 'layers') {
       loadLayersPanel();
-    } else if (tabId === 'gamelogic') {
-      loadGameLogicPanel();
     }
   };
 
@@ -111,9 +105,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       try {
         if (activeTab !== 'layers') {
           loadLayersPanel();
-        }
-        if (activeTab !== 'gamelogic') {
-          loadGameLogicPanel();
         }
       } catch (_) {
         // best-effort
@@ -155,12 +146,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             config={campaignConfig} 
             onConfigChange={onCampaignConfigChange || (() => {})} 
           />
-        );
-      case 'gamelogic':
-        return (
-          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement de la logique de jeu…</div>}>
-            <LazyGameLogicPanel />
-          </React.Suspense>
         );
       default:
         return null;

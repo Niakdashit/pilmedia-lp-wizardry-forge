@@ -86,7 +86,16 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
 
       // Alignment with other elements (guides verts plus fins)
       const otherElements = elements.filter(el => el.id !== elementId);
-      otherElements.forEach(element => {
+
+      // 1) Nearest center-to-center only (strict tolerance) — restrict to TEXT elements if type is provided
+      const hasTypeInfo = otherElements.some(el => el && typeof el === 'object' && 'type' in el);
+      const centerCandidates = hasTypeInfo
+        ? otherElements.filter(el => (el as any).type === 'text')
+        : otherElements;
+
+      let bestCenterX: { position: number; delta: number } | null = null;
+      let bestCenterY: { position: number; delta: number } | null = null;
+      centerCandidates.forEach(element => {
         const elX = element.x || 0;
         const elY = element.y || 0;
         const elWidth = element.width || 100;
@@ -94,26 +103,46 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         const elCenterX = elX + elWidth / 2;
         const elCenterY = elY + elHeight / 2;
 
-        // Center alignment with other elements
-        if (!centerXActive && Math.abs(elemCenterX - elCenterX) <= otherTolerance) {
-          guides.push({
-            type: 'vertical',
-            position: elCenterX,
-            color: '#10b981',
-            thickness: 1 / Math.max(zoom, 0.0001)
-          });
-        }
+        const dx = Math.abs(elemCenterX - elCenterX);
+        const dy = Math.abs(elemCenterY - elCenterY);
 
-        if (!centerYActive && Math.abs(elemCenterY - elCenterY) <= otherTolerance) {
-          guides.push({
-            type: 'horizontal',
-            position: elCenterY,
-            color: '#10b981',
-            thickness: 1 / Math.max(zoom, 0.0001)
-          });
+        if (!bestCenterX || dx < bestCenterX.delta) {
+          bestCenterX = { position: elCenterX, delta: dx };
         }
+        if (!bestCenterY || dy < bestCenterY.delta) {
+          bestCenterY = { position: elCenterY, delta: dy };
+        }
+      });
 
-        // Edge alignment
+      // Tolerance stricte pour centre-à-centre (px overlay)
+      // Réduite à 0.5px pour éviter les faux positifs
+      const elementCenterTolerance = 0.5 / Math.max(zoom, 0.0001);
+
+      if (!centerXActive && bestCenterX && bestCenterX.delta <= elementCenterTolerance) {
+        guides.push({
+          type: 'vertical',
+          position: bestCenterX.position,
+          color: '#10b981',
+          thickness: 1 / Math.max(zoom, 0.0001)
+        });
+      }
+
+      if (!centerYActive && bestCenterY && bestCenterY.delta <= elementCenterTolerance) {
+        guides.push({
+          type: 'horizontal',
+          position: bestCenterY.position,
+          color: '#10b981',
+          thickness: 1 / Math.max(zoom, 0.0001)
+        });
+      }
+
+      // 2) Edge alignment (inchangé, tolérance standard)
+      otherElements.forEach(element => {
+        const elX = element.x || 0;
+        const elY = element.y || 0;
+        const elWidth = element.width || 100;
+        const elHeight = element.height || 30;
+
         if (!centerXActive && Math.abs(x - elX) <= otherTolerance) {
           guides.push({
             type: 'vertical',
@@ -179,7 +208,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
   if (!isDragging || activeGuides.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-20">
+    <div className="absolute inset-0 pointer-events-none z-20" style={{ zIndex: 2000 }}>
       {activeGuides.map((guide, index) => (
         <div
           key={index}
@@ -200,7 +229,7 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
             opacity: 0.9,
             boxShadow: `0 0 8px ${guide.color}`,
             transition: 'opacity 0.2s ease-in-out',
-            zIndex: 25
+            zIndex: 2001
           }}
         />
       ))}

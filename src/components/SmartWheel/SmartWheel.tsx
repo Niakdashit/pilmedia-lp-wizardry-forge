@@ -44,6 +44,42 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     setCurrentBorderStyle(borderStyle);
   }, [borderStyle]);
 
+  // Log segment details when they change
+  useEffect(() => {
+    if (!segments || !Array.isArray(segments)) {
+      console.error('Invalid segments data:', segments);
+      return;
+    }
+
+    console.group('🎡 SmartWheel - Segments Update');
+    console.log('Number of segments:', segments.length);
+    console.log('Spin mode:', spinMode);
+    
+    const totalProbability = segments.reduce((sum, s) => {
+      if (!s) return sum;
+      return sum + (typeof s.probability === 'number' ? s.probability : 0);
+    }, 0);
+    
+    console.log('Total probability:', totalProbability);
+    
+    console.log('Segment details:');
+    segments.forEach((segment, index) => {
+      if (!segment) {
+        console.warn(`- [${index}] Segment is undefined or null`);
+        return;
+      }
+      
+      console.log(`- [${index}] ${segment.label || 'Unlabeled segment'}:`, {
+        probability: segment.probability,
+        isWinning: segment.isWinning,
+        prizeId: segment.prizeId,
+        type: typeof segment,
+        keys: Object.keys(segment)
+      });
+    });
+    console.groupEnd();
+  }, [segments, spinMode]);
+
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
 
@@ -91,8 +127,12 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Animation de la roue
   const {
-    wheelState,
-    spin
+    isSpinning = false,
+    rotation = 0,
+    targetRotation = 0,
+    currentSegment = null,
+    spin,
+    reset
   } = useWheelAnimation({
     segments,
     theme: resolvedTheme,
@@ -100,8 +140,16 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     disabled,
     spinMode,
     winProbability,
-    speed
-  });
+    speed: speed === 'medium' ? 'normal' : speed // Map 'medium' to 'normal' for compatibility
+  }) || {};
+
+  // Create a stable wheelState object
+  const wheelState = useMemo(() => ({
+    isSpinning,
+    rotation,
+    targetRotation,
+    currentSegment
+  }), [isSpinning, rotation, targetRotation, currentSegment]);
 
   // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
   const {

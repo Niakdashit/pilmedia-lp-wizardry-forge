@@ -156,7 +156,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   );
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
-    () => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export', 'form'] : []),
+    () => hiddenTabs ?? (mode === 'template' ? ['campaign', 'export', 'form'] : []),
     [hiddenTabs, mode]
   );
 

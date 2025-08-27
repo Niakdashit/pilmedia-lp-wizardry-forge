@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { WheelSegment, WheelTheme, WheelState } from '../types';
 import { getBorderStyle, createMetallicGradient, createNeonEffect, renderGoldBorder, createRoyalRouletteEffect, createRainbowGradient } from '../utils/borderStyles';
 
 interface UseSmartWheelRendererProps {
   segments: WheelSegment[];
   theme: WheelTheme;
-  wheelState: WheelState;
+  wheelState?: Partial<WheelState>;
   size: number;
   borderStyle?: string;
   customBorderColor?: string;
@@ -88,9 +88,23 @@ export const useSmartWheelRenderer = ({
   // Cache pour les icônes des segments (images par segment)
   const segmentIconCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
   
+  // Initialize with default wheel state if not provided
+  const safeWheelState: WheelState = useMemo(() => ({
+    isSpinning: false,
+    rotation: 0,
+    targetRotation: 0,
+    currentSegment: null,
+    ...(wheelState || {}) // Handle case where wheelState is undefined
+  }), [wheelState]);
+
   // Keep refs in sync without retriggering RAF setup
-  useEffect(() => { rotationRef.current = wheelState.rotation; }, [wheelState.rotation]);
-  useEffect(() => { spinningRef.current = wheelState.isSpinning; }, [wheelState.isSpinning]);
+  useEffect(() => { 
+    rotationRef.current = safeWheelState.rotation; 
+  }, [safeWheelState.rotation]);
+  
+  useEffect(() => { 
+    spinningRef.current = safeWheelState.isSpinning; 
+  }, [safeWheelState.isSpinning]);
   // Physics step uses invisible notches, not bulbs
   useEffect(() => {
     const count = Math.max(1, NOTCH_COUNT);
@@ -267,7 +281,7 @@ export const useSmartWheelRenderer = ({
     const startAngle = -Math.PI / 2; // aligné sur le pointeur en haut
 
     for (let i = 0; i < count; i++) {
-      const angle = startAngle + (i * 2 * Math.PI) / count + (wheelState.rotation * Math.PI / 180);
+      const angle = startAngle + (i * 2 * Math.PI) / count + (safeWheelState.rotation * Math.PI / 180);
       const x = centerX + ringRadius * Math.cos(angle);
       const y = centerY + ringRadius * Math.sin(angle);
 
@@ -330,7 +344,7 @@ export const useSmartWheelRenderer = ({
 
     // Dessiner les segments
     if (segments.length > 0) {
-      drawSegments(ctx, segments, centerX, centerY, maxRadius, wheelState, theme, !!isPatternStyle);
+      drawSegments(ctx, segments, centerX, centerY, maxRadius, safeWheelState, theme, !!isPatternStyle);
     }
 
     // Dessiner les bordures stylisées
@@ -350,7 +364,7 @@ export const useSmartWheelRenderer = ({
     // Dessiner le pointeur
     drawPointer(ctx, centerX, centerY, maxRadius);
 
-  }, [segments, theme, wheelState, size, borderStyle, animationTime, showBulbs, customBorderWidth]);
+  }, [segments, theme, safeWheelState, size, borderStyle, animationTime, showBulbs, customBorderWidth]);
 
 
 

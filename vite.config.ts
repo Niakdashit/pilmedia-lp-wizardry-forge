@@ -10,12 +10,37 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: [
+          // Add any Babel plugins here if needed
+        ],
+      },
+      // Enable Fast Refresh
+      fastRefresh: true,
+      // Use the new JSX runtime
+      jsxRuntime: 'automatic',
+    }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
+  build: {
+    target: 'es2020',
+    minify: 'terser',
+    sourcemap: mode === 'development',
   },
 }));
