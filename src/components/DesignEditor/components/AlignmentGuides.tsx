@@ -93,8 +93,10 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
         ? otherElements.filter(el => (el as any).type === 'text')
         : otherElements;
 
-      let bestCenterX: { position: number; delta: number } | null = null;
-      let bestCenterY: { position: number; delta: number } | null = null;
+      type CenterCandidate = { position: number; delta: number };
+      
+      let bestCenterX: CenterCandidate | null = null;
+      let bestCenterY: CenterCandidate | null = null;
       centerCandidates.forEach(element => {
         const elX = element.x || 0;
         const elY = element.y || 0;
@@ -118,22 +120,30 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
       // Réduite à 0.5px pour éviter les faux positifs
       const elementCenterTolerance = 0.5 / Math.max(zoom, 0.0001);
 
-      if (!centerXActive && bestCenterX && bestCenterX.delta <= elementCenterTolerance) {
-        guides.push({
-          type: 'vertical',
-          position: bestCenterX.position,
-          color: '#10b981',
-          thickness: 1 / Math.max(zoom, 0.0001)
-        });
+      // Check X alignment guide
+      if (!centerXActive && bestCenterX !== null) {
+        const alignmentX = bestCenterX as { position: number; delta: number };
+        if (alignmentX.delta <= elementCenterTolerance) {
+          guides.push({
+            type: 'vertical',
+            position: alignmentX.position,
+            color: '#10b981',
+            thickness: 1 / Math.max(zoom, 0.0001)
+          });
+        }
       }
 
-      if (!centerYActive && bestCenterY && bestCenterY.delta <= elementCenterTolerance) {
-        guides.push({
-          type: 'horizontal',
-          position: bestCenterY.position,
-          color: '#10b981',
-          thickness: 1 / Math.max(zoom, 0.0001)
-        });
+      // Check Y alignment guide
+      if (!centerYActive && bestCenterY !== null) {
+        const alignmentY = bestCenterY as { position: number; delta: number };
+        if (alignmentY.delta <= elementCenterTolerance) {
+          guides.push({
+            type: 'horizontal',
+            position: alignmentY.position,
+            color: '#10b981',
+            thickness: 1 / Math.max(zoom, 0.0001)
+          });
+        }
       }
 
       // 2) Edge alignment (inchangé, tolérance standard)
