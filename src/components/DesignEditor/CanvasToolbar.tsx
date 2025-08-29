@@ -138,7 +138,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         className="bg-gray-700 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm border-none outline-none min-w-[100px] sm:min-w-[120px] focus:bg-gray-600 transition-colors duration-150 hover:bg-gray-600 flex items-center justify-between whitespace-nowrap"
         title="Changer la police - Ouvre l'onglet Éléments"
       >
-        <span className="truncate">{fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Arial'))?.label || 'Canva Sans'}</span>
+        <span className="truncate">{fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Open Sans'))?.label || 'Open Sans'}</span>
         <ChevronDown className="w-3 h-3 ml-2 flex-shrink-0" />
       </button>
 

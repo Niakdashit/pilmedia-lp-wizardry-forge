@@ -884,7 +884,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
           const baseStyle: React.CSSProperties = {
             fontSize: scaledFontSize,
-            fontFamily: element.fontFamily || element.style?.fontFamily || 'Arial',
+            fontFamily: element.fontFamily || element.style?.fontFamily || 'Open Sans',
             color: element.color || element.style?.color || '#000000',
             fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
             fontStyle: element.fontStyle || element.style?.fontStyle || 'normal',
