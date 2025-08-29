@@ -118,19 +118,19 @@ const AlignmentGuides: React.FC<AlignmentGuidesProps> = ({
       // Réduite à 0.5px pour éviter les faux positifs
       const elementCenterTolerance = 0.5 / Math.max(zoom, 0.0001);
 
-      if (!centerXActive && bestCenterX && (bestCenterX as any).delta <= elementCenterTolerance) {
+      if (!centerXActive && bestCenterX && bestCenterX.delta <= elementCenterTolerance) {
         guides.push({
           type: 'vertical',
-          position: (bestCenterX as any).position,
+          position: bestCenterX.position,
           color: '#10b981',
           thickness: 1 / Math.max(zoom, 0.0001)
         });
       }
 
-      if (!centerYActive && bestCenterY && (bestCenterY as any).delta <= elementCenterTolerance) {
+      if (!centerYActive && bestCenterY && bestCenterY.delta <= elementCenterTolerance) {
         guides.push({
           type: 'horizontal',
-          position: (bestCenterY as any).position,
+          position: bestCenterY.position,
           color: '#10b981',
           thickness: 1 / Math.max(zoom, 0.0001)
         });

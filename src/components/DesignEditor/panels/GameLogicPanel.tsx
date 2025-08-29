@@ -30,7 +30,8 @@ const GameLogicPanel: React.FC = () => {
     updatePrize, 
     removePrize, 
     duplicatePrize,
-    updateSegmentPrize
+    updateSegmentPrize,
+    getPrizeById
   } = usePrizeLogic({ 
     campaign: campaign as CampaignConfig, 
     setCampaign 

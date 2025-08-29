@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => ({
           // Add any Babel plugins here if needed
         ],
       },
+      // Enable Fast Refresh
+      fastRefresh: true,
       // Use the new JSX runtime
       jsxRuntime: 'automatic',
     }),

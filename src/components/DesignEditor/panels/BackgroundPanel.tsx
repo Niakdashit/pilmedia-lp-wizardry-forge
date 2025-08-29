@@ -6,9 +6,6 @@ interface BackgroundPanelProps {
   onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
   currentBackground?: { type: 'color' | 'image'; value: string };
-  extractedColors?: string[];
-  selectedElement?: any;
-  onElementUpdate?: (updates: any) => void;
 }
 
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 

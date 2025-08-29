@@ -71,10 +71,7 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
 
   // Segments standardisés (dépend de l'empreinte et des couleurs de fallback)
   const segments = useMemo(
-    () => WheelConfigService.getStandardizedSegments(wheelConfig).map((segment: any) => ({
-      ...segment,
-      value: (segment as any).value || segment.label || segment.id
-    })),
+    () => WheelConfigService.getStandardizedSegments(wheelConfig),
     [
       segmentsFingerprint,
       wheelConfig.customColors?.primary,

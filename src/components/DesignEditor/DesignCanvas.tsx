@@ -52,7 +52,6 @@ export interface DesignCanvasProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
-  onShowDesignPanel?: () => void;
   onOpenElementsTab?: () => void;
   // Props pour la sidebar mobile
   onAddElement?: (element: any) => void;
