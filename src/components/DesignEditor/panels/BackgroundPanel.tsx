@@ -125,23 +125,10 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">COULEURS UNIES</h3>
         <div className="grid grid-cols-5 gap-2">
-          {backgroundColors.map((color, index) => (
-            <button
-              key={index}
-              onClick={() => onBackgroundChange({ type: 'color', value: color })}
-              className="w-10 h-10 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors relative"
-              style={{ backgroundColor: color }}
-              title={color}
-            >
-              {color === '#FFFFFF' && (
-                <div className="absolute inset-0 border border-gray-300 rounded"></div>
-              )}
-            </button>
-          ))}
-          {/* Sélecteur de couleur personnalisé */}
+          {/* Sélecteur de couleur personnalisé en première position */}
           <button
             onClick={triggerColorPicker}
-            className="w-10 h-10 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors relative overflow-hidden"
+            className="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors relative overflow-hidden"
             style={{
               background: `conic-gradient(from 0deg, #ff0000 0deg, #ffff00 60deg, #00ff00 120deg, #00ffff 180deg, #0000ff 240deg, #ff00ff 300deg, #ff0000 360deg)`
             }}
@@ -153,6 +140,20 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               </div>
             </div>
           </button>
+          
+          {backgroundColors.map((color, index) => (
+            <button
+              key={index}
+              onClick={() => onBackgroundChange({ type: 'color', value: color })}
+              className="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors relative"
+              style={{ backgroundColor: color }}
+              title={color}
+            >
+              {color === '#FFFFFF' && (
+                <div className="absolute inset-0 border border-gray-300 rounded-full"></div>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -165,11 +166,11 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               <button
                 key={index}
                 onClick={() => onBackgroundChange({ type: 'color', value: color })}
-                className="w-10 h-10 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors relative group"
+                className="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors relative group"
                 style={{ backgroundColor: color }}
                 title={color}
               >
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-opacity"></div>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-full transition-opacity"></div>
               </button>
             ))}
           </div>
@@ -195,7 +196,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           >
             <div className="flex items-center">
               <div 
-                className="w-8 h-8 rounded mr-3"
+                className="w-8 h-8 rounded-full mr-3"
                 style={{ background: '#4ECDC4' }}
               ></div>
               <span className="text-sm group-hover:text-white">Turquoise (défaut template)</span>
@@ -215,7 +216,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           >
             <div className="flex items-center">
               <div 
-                className="w-8 h-8 rounded mr-3"
+                className="w-8 h-8 rounded-full mr-3"
                 style={{ background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }}
               ></div>
               <span className="text-sm group-hover:text-white">Ciel avec nuages</span>
