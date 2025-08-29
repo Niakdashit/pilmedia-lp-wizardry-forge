@@ -102,6 +102,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
+  onShowDesignPanel,
   onOpenElementsTab,
   // Props pour la sidebar mobile
   onAddElement,
@@ -1475,6 +1476,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
+              onShowDesignPanel={onShowDesignPanel}
               onOpenElementsTab={onOpenElementsTab}
               canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
             />

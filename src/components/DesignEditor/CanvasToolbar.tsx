@@ -22,6 +22,7 @@ interface CanvasToolbarProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
+  onShowDesignPanel?: () => void;
   onOpenElementsTab?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
@@ -32,6 +33,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
+  onShowDesignPanel,
   onOpenElementsTab,
   canvasRef
 }) => {
@@ -177,23 +179,22 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
-      {/* Text Color */}
-      <div className="flex items-center space-x-2">
+      {/* Text Color - Single button that opens Design tab */}
+      <button 
+        onClick={() => {
+          if (onShowDesignPanel) {
+            onShowDesignPanel();
+          }
+        }}
+        className="flex items-center space-x-2 bg-gray-700 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm border-none outline-none focus:bg-gray-600 transition-colors duration-150 hover:bg-gray-600"
+        title="Couleur du texte - Ouvre l'onglet Design"
+      >
         <Type className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <div className="relative">
-          <input
-            type="color"
-            value={selectedElement.color || '#000000'}
-            onChange={(e) => onElementUpdate({ color: e.target.value })}
-            className="w-6 h-6 sm:w-8 sm:h-8 rounded cursor-pointer border-2 border-gray-500 hover:border-gray-400 transition-colors duration-150"
-            title="Couleur du texte"
-          />
-          <div 
-            className="absolute inset-0 rounded pointer-events-none border border-gray-400"
-            style={{ backgroundColor: selectedElement.color || '#000000' }}
-          />
-        </div>
-      </div>
+        <div 
+          className="w-4 h-4 sm:w-5 sm:h-5 rounded border border-gray-400"
+          style={{ backgroundColor: selectedElement.color || '#000000' }}
+        />
+      </button>
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
