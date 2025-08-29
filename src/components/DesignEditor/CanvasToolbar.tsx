@@ -8,7 +8,6 @@ import {
   AlignRight,
   AlignJustify,
   ChevronDown,
-  Type,
   Wand2,
   Play,
   Move3D
@@ -125,202 +124,186 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
     <div className="relative" data-canvas-ui="1">
       <div
         ref={toolbarRef}
-        className="canvas-toolbar z-10 sticky top-0 bg-gray-800 text-white px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-lg shadow-lg flex items-center space-x-1 mb-2 sm:mb-3 md:mb-4 overflow-x-auto whitespace-nowrap"
+        className="canvas-toolbar z-10 sticky top-0 bg-[#2c2c2c] text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 mb-4 overflow-x-auto"
         style={{ WebkitOverflowScrolling: 'touch' as const }}
       >
-      {/* Font Family - Button to open Elements tab */}
-      <button 
-        onClick={() => {
-          if (onOpenElementsTab) {
-            onOpenElementsTab();
-          }
-        }}
-        className="bg-gray-700 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm border-none outline-none min-w-[100px] sm:min-w-[120px] focus:bg-gray-600 transition-colors duration-150 hover:bg-gray-600 flex items-center justify-between whitespace-nowrap"
-        title="Changer la police - Ouvre l'onglet Éléments"
-      >
-        <span className="truncate">{fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Arial'))?.label || 'Canva Sans'}</span>
-        <ChevronDown className="w-3 h-3 ml-2 flex-shrink-0" />
-      </button>
-
-      <div className="h-5 sm:h-6 w-px bg-gray-500 mx-2 sm:mx-3" />
-
-      {/* Font Size */}
-      <button 
-        onClick={() => {
-          const newSize = Math.max(8, currentFontSize - 2);
-          onElementUpdate({ fontSize: newSize });
-        }}
-        className="text-white hover:bg-gray-700 p-1 rounded transition-colors duration-150 w-6 h-6 flex items-center justify-center text-xs sm:text-sm font-bold"
-        title="Diminuer la taille"
-      >
-        −
-      </button>
-      <select 
-        value={currentFontSize}
-        onChange={(e) => onElementUpdate({ fontSize: parseInt(e.target.value) })}
-        className="bg-gray-700 text-white px-2 py-1 rounded text-xs sm:text-sm border-none outline-none w-14 sm:w-16 focus:bg-gray-600 transition-colors duration-150"
-      >
-        {fontSizes.map(size => (
-          <option key={size} value={size}>{size}</option>
-        ))}
-      </select>
-      <button 
-        onClick={() => {
-          const newSize = Math.min(96, currentFontSize + 2);
-          onElementUpdate({ fontSize: newSize });
-        }}
-        className="text-white hover:bg-gray-700 p-1 rounded transition-colors duration-150 w-6 h-6 flex items-center justify-center text-sm font-bold"
-        title="Augmenter la taille"
-      >
-        +
-      </button>
-
-      <div className="h-6 w-px bg-gray-500 mx-3" />
-
-      {/* Text Color */}
-      <div className="flex items-center space-x-2">
-        <Type className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <div className="relative">
-          <input
-            type="color"
-            value={selectedElement.color || '#000000'}
-            onChange={(e) => onElementUpdate({ color: e.target.value })}
-            className="w-6 h-6 sm:w-8 sm:h-8 rounded cursor-pointer border-2 border-gray-500 hover:border-gray-400 transition-colors duration-150"
-            title="Couleur du texte"
-          />
-          <div 
-            className="absolute inset-0 rounded pointer-events-none border border-gray-400"
-            style={{ backgroundColor: selectedElement.color || '#000000' }}
-          />
-        </div>
-      </div>
-
-      <div className="h-6 w-px bg-gray-500 mx-3" />
-
-      {/* Text Formatting */}
-      <button 
-        onClick={() => onElementUpdate({ 
-          fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
-        })}
-        className={`p-1 rounded sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontWeight === 'bold' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
-        }`}
-        title="Gras (Ctrl+B)"
-      >
-        <Bold className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-      </button>
-      
-      <button 
-        onClick={() => onElementUpdate({ 
-          fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
-        })}
-        className={`p-1 rounded sm:p-1.5 hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontStyle === 'italic' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
-        }`}
-        title="Italique (Ctrl+I)"
-      >
-        <Italic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-      </button>
-      
-      <button 
-        onClick={() => onElementUpdate({ 
-          textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
-        })}
-        className={`p-1 rounded sm:p-1.5 hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.textDecoration === 'underline' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
-        }`}
-        title="Souligné (Ctrl+U)"
-      >
-        <Underline className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-      </button>
-
-      <div className="h-6 w-px bg-gray-500 mx-3" />
-
-      {/* Text Alignment - Single Button with Dropdown */}
-      <div className="relative">
+        {/* Font Family Dropdown */}
         <button 
-          onClick={() => setShowAlignmentMenu(!showAlignmentMenu)}
-          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-          title={`Alignement: ${currentAlignmentOption.label}`}
+          onClick={() => {
+            if (onOpenElementsTab) {
+              onOpenElementsTab();
+            }
+          }}
+          className="bg-[#3a3a3a] text-white px-3 py-1.5 rounded text-sm border-none outline-none min-w-[110px] focus:bg-[#454545] transition-colors hover:bg-[#454545] flex items-center justify-between"
+          title="Changer la police"
         >
-          <CurrentAlignIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <ChevronDown className="w-3 h-3" />
+          <span className="truncate">{fontFamilies.find(f => f.value === (selectedElement.fontFamily || 'Arial'))?.label || 'Open Sans'}</span>
+          <ChevronDown className="w-3 h-3 ml-2 flex-shrink-0" />
+        </button>
+
+        {/* Font Size Controls */}
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => {
+              const newSize = Math.max(8, currentFontSize - 2);
+              onElementUpdate({ fontSize: newSize });
+            }}
+            className="text-white hover:bg-[#454545] px-2 py-1 rounded transition-colors text-sm font-bold"
+            title="Diminuer la taille"
+          >
+            −
+          </button>
+          <select 
+            value={currentFontSize}
+            onChange={(e) => onElementUpdate({ fontSize: parseInt(e.target.value) })}
+            className="bg-[#3a3a3a] text-white px-2 py-1 rounded text-sm border-none outline-none w-14 focus:bg-[#454545] transition-colors"
+          >
+            {fontSizes.map(size => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
+          <button 
+            onClick={() => {
+              const newSize = Math.min(96, currentFontSize + 2);
+              onElementUpdate({ fontSize: newSize });
+            }}
+            className="text-white hover:bg-[#454545] px-2 py-1 rounded transition-colors text-sm font-bold"
+            title="Augmenter la taille"
+          >
+            +
+          </button>
+        </div>
+
+        {/* Separator */}
+        <div className="h-6 w-px bg-[#555]" />
+
+        {/* Text Formatting Buttons */}
+        <button 
+          onClick={() => onElementUpdate({ 
+            fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
+          })}
+          className={`px-2 py-1.5 rounded transition-colors ${
+            selectedElement.fontWeight === 'bold' 
+              ? 'bg-[#6366f1] text-white' 
+              : 'text-white hover:bg-[#454545]'
+          }`}
+          title="Gras (Ctrl+B)"
+        >
+          <Bold className="w-4 h-4" />
         </button>
         
-        {showAlignmentMenu && (
-          <div 
-            ref={alignmentMenuRef}
-            className="absolute top-full left-0 mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-50 min-w-[120px] animate-in slide-in-from-top-2 duration-200"
+        <button 
+          onClick={() => onElementUpdate({ 
+            fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
+          })}
+          className={`px-2 py-1.5 rounded transition-colors ${
+            selectedElement.fontStyle === 'italic' 
+              ? 'bg-[#6366f1] text-white' 
+              : 'text-white hover:bg-[#454545]'
+          }`}
+          title="Italique (Ctrl+I)"
+        >
+          <Italic className="w-4 h-4" />
+        </button>
+        
+        <button 
+          onClick={() => onElementUpdate({ 
+            textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
+          })}
+          className={`px-2 py-1.5 rounded transition-colors ${
+            selectedElement.textDecoration === 'underline' 
+              ? 'bg-[#6366f1] text-white' 
+              : 'text-white hover:bg-[#454545]'
+          }`}
+          title="Souligné (Ctrl+U)"
+        >
+          <Underline className="w-4 h-4" />
+        </button>
+
+        {/* Text Alignment Dropdown */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowAlignmentMenu(!showAlignmentMenu)}
+            className="px-2 py-1.5 rounded hover:bg-[#454545] transition-colors flex items-center gap-1 text-white"
+            title={`Alignement: ${currentAlignmentOption.label}`}
           >
-            {alignmentOptions.map(option => {
-              const IconComponent = option.icon;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    onElementUpdate({ textAlign: option.value });
-                    setShowAlignmentMenu(false);
-                  }}
-                  className={`w-full px-3 py-2 text-left hover:bg-gray-600 transition-colors duration-150 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg ${
-                    currentAlignment === option.value ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'text-gray-200'
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">{option.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+            <CurrentAlignIcon className="w-4 h-4" />
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          
+          {showAlignmentMenu && (
+            <div 
+              ref={alignmentMenuRef}
+              className="absolute top-full left-0 mt-1 bg-[#3a3a3a] border border-[#555] rounded-lg shadow-xl z-50 min-w-[120px]"
+            >
+              {alignmentOptions.map(option => {
+                const IconComponent = option.icon;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      onElementUpdate({ textAlign: option.value });
+                      setShowAlignmentMenu(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left hover:bg-[#454545] transition-colors flex items-center gap-2 first:rounded-t-lg last:rounded-b-lg ${
+                      currentAlignment === option.value ? 'bg-[#6366f1] text-white' : 'text-gray-200'
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    <span className="text-sm">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-      <div className="h-6 w-px bg-gray-500 mx-3" />
+        {/* Separator */}
+        <div className="h-6 w-px bg-[#555]" />
 
-      {/* Advanced Tools */}
-      <button 
-        onClick={() => {
-          if (onShowEffectsPanel) {
-            onShowEffectsPanel();
-          } else {
-            // Fallback pour compatibilité
-            setShowEffectsPanel(!showEffectsPanel);
-          }
-        }}
-        className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
-        title="Effets de texte"
-      >
-        <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden sm:inline text-sm">Effets</span>
-      </button>
-      
-      <button 
-        onClick={() => {
-          if (onShowAnimationsPanel) {
-            onShowAnimationsPanel();
-          }
-        }}
-        className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
-        title="Animations de texte"
-      >
-        <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden sm:inline text-sm">Animer</span>
-      </button>
-      
-      <button 
-        onClick={() => {
-          if (onShowPositionPanel) {
-            onShowPositionPanel();
-          } else {
-            // Fallback pour compatibilité
-            setShowPositionPanel(!showPositionPanel);
-          }
-        }}
-        className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
-        title="Position et transformation"
-      >
-        <Move3D className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden sm:inline text-sm">Position</span>
-      </button>
+        {/* Advanced Tools */}
+        <button 
+          onClick={() => {
+            if (onShowEffectsPanel) {
+              onShowEffectsPanel();
+            } else {
+              setShowEffectsPanel(!showEffectsPanel);
+            }
+          }}
+          className="px-3 py-1.5 rounded hover:bg-[#454545] transition-colors flex items-center gap-1 text-white"
+          title="Effets de texte"
+        >
+          <Wand2 className="w-4 h-4" />
+          <span className="text-sm">Effets</span>
+        </button>
+        
+        <button 
+          onClick={() => {
+            if (onShowAnimationsPanel) {
+              onShowAnimationsPanel();
+            }
+          }}
+          className="px-3 py-1.5 rounded hover:bg-[#454545] transition-colors flex items-center gap-1 text-white"
+          title="Animations de texte"
+        >
+          <Play className="w-4 h-4" />
+          <span className="text-sm">Animer</span>
+        </button>
+        
+        <button 
+          onClick={() => {
+            if (onShowPositionPanel) {
+              onShowPositionPanel();
+            } else {
+              setShowPositionPanel(!showPositionPanel);
+            }
+          }}
+          className="px-3 py-1.5 rounded hover:bg-[#454545] transition-colors flex items-center gap-1 text-white"
+          title="Position et transformation"
+        >
+          <Move3D className="w-4 h-4" />
+          <span className="text-sm">Position</span>
+        </button>
 
       </div>
       
