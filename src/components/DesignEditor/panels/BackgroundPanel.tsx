@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Upload } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Upload, Pipette } from 'lucide-react';
 import ColorThief from 'colorthief';
 
 interface BackgroundPanelProps {
@@ -18,6 +18,8 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   extractedColors = []
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
+  const [customColor, setCustomColor] = useState('#FF0000');
 
   // Détermination de la sélection courante (pour l'état "sélectionné" dans l'UI)
   const currentBgValue = currentBackground?.type === 'color' ? currentBackground.value : undefined;
@@ -29,7 +31,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
     '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529',
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98', '#F0E68C'
+    '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98' // Enlevé la dernière couleur
   ];
 
 
@@ -78,6 +80,16 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     fileInputRef.current?.click();
   };
 
+  const triggerColorPicker = () => {
+    colorInputRef.current?.click();
+  };
+
+  const handleCustomColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = event.target.value;
+    setCustomColor(newColor);
+    onBackgroundChange({ type: 'color', value: newColor });
+  };
+
   return (
     <div className="p-4 space-y-6">
       <input
@@ -85,6 +97,14 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         type="file"
         accept="image/*"
         onChange={handleFileUpload}
+        className="sr-only"
+      />
+      
+      <input
+        ref={colorInputRef}
+        type="color"
+        value={customColor}
+        onChange={handleCustomColorChange}
         className="sr-only"
       />
 
@@ -118,6 +138,21 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               )}
             </button>
           ))}
+          {/* Sélecteur de couleur personnalisé */}
+          <button
+            onClick={triggerColorPicker}
+            className="w-10 h-10 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors relative overflow-hidden"
+            style={{
+              background: `conic-gradient(from 0deg, #ff0000 0deg, #ffff00 60deg, #00ff00 120deg, #00ffff 180deg, #0000ff 240deg, #ff00ff 300deg, #ff0000 360deg)`
+            }}
+            title="Couleur personnalisée"
+          >
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+                <Pipette className="w-3 h-3 text-gray-700" />
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 
