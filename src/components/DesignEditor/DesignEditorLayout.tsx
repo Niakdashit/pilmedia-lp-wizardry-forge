@@ -114,6 +114,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
+  const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
+  const designPanelRequested = useRef(false); // Nouvelle référence pour suivre la demande d'ouverture
+  // Référence pour contrôler l'onglet actif dans HybridSidebar
+  const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Inline WheelConfigPanel visibility (controlled at layout level)
   const [showWheelPanel, setShowWheelPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
@@ -156,7 +160,11 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   );
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
-    () => hiddenTabs ?? (mode === 'template' ? ['campaign', 'export', 'form'] : []),
+    () => {
+      const result = hiddenTabs ?? (mode === 'template' ? ['campaign', 'export', 'form'] : []);
+      console.log('🔍 [DesignEditorLayout] effectiveHiddenTabs:', result, 'mode:', mode);
+      return result;
+    },
     [hiddenTabs, mode]
   );
 
@@ -713,33 +721,123 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [campaignState, navigate, setCampaign]);
 
-  // Fonction pour appliquer les couleurs extraites à la roue
+  // Fonction pour appliquer les couleurs extraites à la roue et aux segments
   const handleExtractedColorsChange = (colors: string[]) => {
+    if (!colors || !Array.isArray(colors) || colors.length === 0) return;
+    
+    console.log('🎨 handleExtractedColorsChange - Nouvelles couleurs extraites:', colors);
+    
+    // Mettre à jour les couleurs extraites dans l'état
     setExtractedColors(colors);
     
+    // Créer une copie profonde de la configuration actuelle
     setCampaignConfig((prev: any) => {
-      const currentWheelConfig = prev?.design?.wheelConfig;
+      if (!prev) return prev;
+      
+      // Créer une copie profonde de la configuration actuelle
+      const currentConfig = JSON.parse(JSON.stringify(prev));
+      
+      // Mettre à jour les couleurs extraites dans l'objet campaign pour le mode preview
+      if (!currentConfig.design) currentConfig.design = {};
+      currentConfig.design.extractedColors = [...colors];
+      
+      // Récupérer la configuration actuelle de la roue
+      const currentWheelConfig = currentConfig?.design?.wheelConfig || {};
       const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
       const shouldUpdateBorderColor = isClassicBorder && 
         (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
       
-      return {
-        ...prev,
+      // Couleurs principales à utiliser
+      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#841b60';
+      const secondaryColor = '#ffffff'; // Toujours blanc pour les segments secondaires
+      const accentColor = colors[2] || currentConfig?.design?.brandColors?.accent || '#45b7d1';
+      
+      // Mettre à jour les segments de la roue avec les nouvelles couleurs
+      const currentSegments = currentConfig?.gameConfig?.wheel?.segments || [];
+      const updatedSegments = currentSegments.map((segment: any, index: number) => {
+        // Déterminer si le segment est gagnant (alternance par défaut si non spécifié)
+        const isWinning = segment.isWinning ?? (index % 2 === 0);
+        
+        // Pour les segments gagnants, utiliser la couleur primaire, sinon blanc
+        const segmentColor = isWinning ? primaryColor : secondaryColor;
+        const textColor = isWinning ? secondaryColor : primaryColor;
+        
+        return {
+          ...segment,
+          // Forcer la mise à jour de la couleur
+          color: segmentColor,
+          // Définir la couleur du texte pour un bon contraste
+          textColor: textColor,
+          // S'assurer que la propriété value est définie pour chaque segment
+          value: segment.value || segment.label || `segment-${index + 1}`,
+          // Forcer la mise à jour en modifiant un timestamp
+          _updatedAt: Date.now()
+        };
+      });
+      
+      // Mettre à jour la configuration avec les nouvelles couleurs
+      const updatedConfig = {
+        ...currentConfig,
         design: {
-          ...prev?.design,
+          ...currentConfig.design,
+          // Mettre à jour la configuration de la roue
           wheelConfig: {
             ...currentWheelConfig,
+            // Mettre à jour la couleur de bordure si nécessaire
             ...(shouldUpdateBorderColor && {
-              borderColor: colors[0] || '#841b60'
+              borderColor: primaryColor,
+              // Forcer la mise à jour en modifiant un timestamp
+              _updatedAt: Date.now()
             })
           },
+          // Mettre à jour les couleurs de la marque
           brandColors: {
-            primary: colors[0] || '#841b60',
-            secondary: '#ffffff',
-            accent: colors[0] || '#45b7d1'
-          }
-        }
+            ...currentConfig.design?.brandColors,
+            primary: primaryColor,
+            secondary: secondaryColor,
+            accent: accentColor,
+            // Forcer la mise à jour
+            _updatedAt: Date.now()
+          },
+          // Mettre à jour les couleurs personnalisées
+          customColors: {
+            ...currentConfig.design?.customColors,
+            primary: primaryColor,
+            secondary: secondaryColor,
+            // Forcer la mise à jour
+            _updatedAt: Date.now()
+          },
+          // Forcer la mise à jour du design
+          _updatedAt: Date.now()
+        },
+        // Mettre à jour les segments de la roue avec les nouvelles couleurs
+        gameConfig: {
+          ...currentConfig.gameConfig,
+          wheel: {
+            ...currentConfig.gameConfig?.wheel,
+            segments: updatedSegments,
+            // Forcer la mise à jour
+            _updatedAt: Date.now()
+          },
+          // Forcer la mise à jour
+          _updatedAt: Date.now()
+        },
+        // Forcer la mise à jour globale
+        _updatedAt: Date.now()
       };
+      
+      console.log('🎨 Mise à jour des couleurs extraites:', {
+        colors,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        segmentsCount: updatedSegments.length,
+        firstSegment: updatedSegments[0],
+        config: updatedConfig.design.wheelConfig,
+        hasSegments: !!updatedConfig.gameConfig?.wheel?.segments?.length
+      });
+      
+      return updatedConfig;
     });
   };
 
@@ -1009,10 +1107,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
               <HybridSidebar
+                ref={sidebarRef}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
+                extractedColors={extractedColors} // Ajout des couleurs extraites
                 campaignConfig={campaignConfig}
                 onCampaignConfigChange={handleCampaignConfigChange}
                 elements={canvasElements}
@@ -1027,6 +1127,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onPositionPanelChange={setShowPositionInSidebar}
                 showWheelPanel={showWheelPanel}
                 onWheelPanelChange={setShowWheelPanel}
+                showDesignPanel={showDesignInSidebar}
+                onDesignPanelChange={(isOpen) => {
+                  if (!isOpen) {
+                    setShowDesignInSidebar(false);
+                  }
+                }}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
@@ -1042,6 +1148,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 wheelShowBulbs={campaignConfig?.design?.wheelConfig?.showBulbs}
                 wheelPosition={campaignConfig?.design?.wheelConfig?.position}
                 onWheelBorderStyleChange={setWheelBorderStyle}
+                onForceElementsTab={() => {
+                  // Utiliser la référence pour changer l'onglet actif
+                  if (sidebarRef.current) {
+                    sidebarRef.current.setActiveTab('assets');
+                  }
+                  // Fermer les autres panneaux
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
+                }}
                 onWheelBorderColorChange={setWheelBorderColor}
                 onWheelBorderWidthChange={setWheelBorderWidth}
                 onWheelScaleChange={setWheelScale}
@@ -1086,6 +1202,27 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 setShowPositionInSidebar(true);
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
+                setShowDesignInSidebar(false);
+              }}
+              onShowDesignPanel={() => {
+                if (!designPanelRequested.current) {
+                  designPanelRequested.current = true;
+                  // Toujours forcer l'affichage du panneau Design et activer l'onglet background
+                  setShowDesignInSidebar(true);
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
+                  
+                  // S'assurer que l'onglet background est actif dans HybridSidebar
+                  if (sidebarRef.current) {
+                    sidebarRef.current.setActiveTab('background');
+                  }
+                  
+                  // Réinitialiser après un court délai pour permettre la détection des clics suivants
+                  setTimeout(() => {
+                    designPanelRequested.current = false;
+                  }, 100);
+                }
               }}
               // Mobile sidebar integrations
               onAddElement={handleAddElement}

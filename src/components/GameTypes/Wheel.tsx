@@ -149,13 +149,21 @@ const Wheel: React.FC<WheelProps> = ({
     console.groupEnd();
   }, [segments]);
   
+  // Calcul des métadonnées des poids d'abord
+  const initialWeightsMeta = React.useMemo(() => {
+    const weights = segments.map((s: WheelSegment) => s.probability || 0);
+    const nonZero = weights.filter((w: number) => w > 0).length;
+    const total = weights.reduce((acc: number, w: number) => acc + w, 0);
+    return { weights, nonZero, total };
+  }, [segments]);
+
   // Déterminer le mode de spin effectif
-  const hasCustomProbabilities = weightsMeta.nonZero > 0;
+  const hasCustomProbabilities = initialWeightsMeta.nonZero > 0;
   const resolvedSpinMode = config?.spinMode || 'random';
   const effectiveSpinMode = hasCustomProbabilities ? 'probability' : resolvedSpinMode;
   
   console.group('🎡 Wheel - Détermination du mode de spin');
-  console.log('Segments avec probabilités > 0:', weightsMeta.nonZero);
+  console.log('Segments avec probabilités > 0:', initialWeightsMeta.nonZero);
   console.log('hasCustomProbabilities:', hasCustomProbabilities);
   console.log('resolvedSpinMode:', resolvedSpinMode);
   console.log('effectiveSpinMode:', effectiveSpinMode);
@@ -201,17 +209,17 @@ const Wheel: React.FC<WheelProps> = ({
     }
     
     // Vérifier que la somme des probabilités est > 0
-    if (weightsMeta.total <= 0) {
+    if (initialWeightsMeta.total <= 0) {
       console.warn('La somme des probabilités est <= 0, utilisation du mode aléatoire');
       console.groupEnd();
       return processedSegments;
     }
     
-    console.log(`Normalisation des probabilités (total avant normalisation: ${weightsMeta.total})`);
+    console.log(`Normalisation des probabilités (total avant normalisation: ${initialWeightsMeta.total})`);
     
     // Normaliser les probabilités pour s'assurer qu'elles somment à 1
     const normalizedSegments = processedSegments.map(s => {
-      const normalizedProb = s.probability ? s.probability / weightsMeta.total : 0;
+      const normalizedProb = s.probability ? s.probability / initialWeightsMeta.total : 0;
       console.log(`- ${s.id} (${s.label}): ${s.probability} -> ${normalizedProb.toFixed(4)}`);
       return {
         ...s,
@@ -236,7 +244,7 @@ const Wheel: React.FC<WheelProps> = ({
     
     console.groupEnd();
     return normalizedSegments;
-  }, [segments, hasCustomProbabilities, weightsMeta.total]);
+  }, [segments, hasCustomProbabilities]);
 
 
   // Configuration de la vitesse de rotation (non utilisée pour l'instant)

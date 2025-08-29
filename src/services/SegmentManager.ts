@@ -61,6 +61,7 @@ export class SegmentManager {
       workingSegments.push({
         id: 'auto-spacer',
         label: '',
+        value: '',
         color: colors.secondary,
         textColor: colors.primary,
         probability: 0,
@@ -138,6 +139,7 @@ export class SegmentManager {
     const segment: WheelSegment = {
       id,
       label: newSegment.label || `Segment ${segments.length + 1}`,
+      value: newSegment.label || `Segment ${segments.length + 1}`,
       color: newSegment.color || '#ff6b6b',
       textColor: newSegment.textColor || '#ffffff',
       probability: newSegment.probability || 0,
