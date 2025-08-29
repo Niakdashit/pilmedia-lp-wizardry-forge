@@ -1,1226 +1,624 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { HexColorPicker } from 'react-colorful';
+
+type MixBlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity';
+
+interface StyleUpdates {
+  style: React.CSSProperties;
+  advancedStyle: {
+    id: string;
+    name: string;
+    css: React.CSSProperties;
+  } | null;
+  // Ajout d'un index signature plus précis
+  [key: string]: React.CSSProperties | {
+    id: string;
+    name: string;
+    css: React.CSSProperties;
+  } | null | undefined;
+}
+
+interface EffectParams {
+  [key: string]: any; // Permet l'accès dynamique aux propriétés
+  color?: string;
+  intensity?: number;
+  distance?: number;
+  angle?: number;
+  blur?: number;
+  transparency?: number;
+  radius?: number;
+  spread?: number;
+  thickness?: number;
+}
+
+type CssFunction = (params: EffectParams) => React.CSSProperties;
+
+interface TextEffect {
+  id: string;
+  name: string;
+  css: CssFunction | React.CSSProperties;
+  defaultParams?: EffectParams;
+}
 
 interface TextEffectsPanelProps {
   onBack: () => void;
-  selectedElement?: any;
-  onElementUpdate?: (updates: any) => void;
+  selectedElement?: {
+    style?: React.CSSProperties & {
+      color?: string;
+    };
+    advancedStyle?: {
+      id: string;
+      name: string;
+      css: React.CSSProperties;
+    } | null;
+    type?: string;
+    id?: string;
+    // Autres propriétés connues de l'élément
+    [key: string]: unknown;
+  };
+  onElementUpdate?: (updates: StyleUpdates) => void;
+  onAddElement?: (element: any) => void;
 }
 
 const textEffects = [
   {
     id: 'none',
     name: 'Aucun',
-    css: {}
+    css: () => ({}),
+    defaultParams: {}
   },
   {
     id: 'shadow',
     name: 'Ombre',
-    css: {
-      textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-    }
+    css: ({ distance = 2, angle = 45, blur = 4, color = 'rgba(0,0,0,0.5)', transparency = 0.5 }) => ({
+      textShadow: `${Math.cos(angle * Math.PI / 180) * distance}px ${Math.sin(angle * Math.PI / 180) * distance}px ${blur}px ${color.replace('0.5', transparency.toString())}`
+    }),
+    defaultParams: { distance: 2, angle: 45, blur: 4, color: '#000000', transparency: 0.5 }
   },
   {
     id: 'lift',
     name: 'Relief',
-    css: {
+    css: () => ({
       textShadow: '0 2px 4px rgba(0,0,0,0.3)',
       transform: 'translateY(-1px)'
-    }
-  },
-  {
-    id: 'hollow',
-    name: 'Creux',
-    css: {
-      color: 'transparent',
-      WebkitTextStroke: '2px #000000',
-      textStroke: '2px #000000'
-    }
-  },
-  {
-    id: 'splice',
-    name: 'Découpe',
-    css: {
-      textShadow: '3px 3px 0px rgba(0,0,0,0.3)',
-      color: '#000000'
-    }
+    }),
+    defaultParams: {}
   },
   {
     id: 'outline',
     name: 'Contour',
-    css: {
-      color: '#000000',
-      textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff'
-    }
+    css: ({ color = '#000000', thickness = 1, offset = 1, fillColor = '#ffffff' }) => {
+      const offset1 = offset;
+      const offset2 = -offset1;
+      return {
+        color: fillColor,
+        textShadow: `${offset2}px ${offset2}px 0 ${color}, ${offset1}px ${offset2}px 0 ${color}, ${offset2}px ${offset1}px 0 ${color}, ${offset1}px ${offset1}px 0 ${color}`,
+        padding: `${thickness * 2}px ${thickness * 4}px`,
+        display: 'inline-block',
+        lineHeight: '1.2',
+        WebkitTextStroke: '0',
+        textStroke: '0'
+      };
+    },
+    defaultParams: { color: '#000000', thickness: 1, offset: 1, fillColor: '#ffffff' }
+  },
+  {
+    id: 'outline2',
+    name: 'Contour 2',
+    css: ({ color = '#000000', thickness = 1 }) => ({
+      color: 'transparent',
+      WebkitTextStroke: `${thickness}px ${color}`,
+      textShadow: 'none',
+      padding: '2px 4px',
+      display: 'inline-block',
+      lineHeight: '1.2',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      WebkitBackgroundClip: 'text',
+      backgroundColor: 'transparent'
+    }),
+    defaultParams: { color: '#000000', thickness: 1 }
   },
   {
     id: 'echo',
     name: 'Écho',
-    css: {
-      textShadow: '2px 2px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.2), 6px 6px 0px rgba(0,0,0,0.1)',
-      color: '#000000'
-    }
+    css: ({ distance = 2, angle = 45, color = 'rgba(0,0,0,0.3)', transparency = 0.3 }) => {
+      const x1 = Math.cos(angle * Math.PI / 180) * distance;
+      const y1 = Math.sin(angle * Math.PI / 180) * distance;
+      const x2 = x1 * 1.5;
+      const y2 = y1 * 1.5;
+      const x3 = x1 * 2;
+      const y3 = y1 * 2;
+      
+      // Extraire la couleur de base (sans l'opacité si elle existe)
+      const baseColor = color.includes('rgba') ? color.substring(0, color.lastIndexOf(',')) + ')' : color;
+      
+      // Créer les couleurs avec les niveaux de transparence
+      const color1 = baseColor.replace(')', `, ${transparency})`);
+      const color2 = baseColor.replace(')', `, ${transparency * 0.7})`);
+      const color3 = baseColor.replace(')', `, ${transparency * 0.3})`);
+      
+      return {
+        textShadow: `${x1}px ${y1}px 0 ${color1}, ${x2}px ${y2}px 0 ${color2}, ${x3}px ${y3}px 0 ${color3}`,
+        color: '#000000',
+        display: 'inline-block'
+      };
+    },
+    defaultParams: { distance: 5, angle: 45, color: 'rgba(0,0,0,0.3)', transparency: 0.3 }
   },
   {
     id: 'glitch',
     name: 'Glitch',
-    css: {
-      color: '#00ffff',
-      textShadow: '2px 0 #ff00ff, -2px 0 #ffff00'
-    }
+    css: ({ distance = 2, angle = 0, color = '#ff00ff' }) => {
+      const x = Math.cos(angle * Math.PI / 180) * distance;
+      const y = Math.sin(angle * Math.PI / 180) * distance;
+      return {
+        color: '#00ffff',
+        textShadow: `${x}px ${y}px 0 ${color}, ${-x}px ${-y}px 0 #ffff00`
+      };
+    },
+    defaultParams: { distance: 2, angle: 0, color: '#ff00ff' }
   },
   {
     id: 'neon',
     name: 'Néon',
-    css: {
-      color: '#ff00ff',
-      textShadow: '0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 15px #ff00ff, 0 0 20px #ff00ff'
-    }
+    css: ({ color = '#00ffff', intensity = 1 }) => {
+      const intensityFactor = Math.min(Math.max(intensity, 0.1), 2);
+      const blur1 = 5 * intensityFactor;
+      const blur2 = 10 * intensityFactor;
+      const blur3 = 20 * intensityFactor;
+      return {
+        color: '#ffffff',
+        textShadow: `0 0 ${blur1}px ${color}, 0 0 ${blur2}px ${color}, 0 0 ${blur3}px ${color}`,
+        fontWeight: 'bold',
+        letterSpacing: '1px'
+      };
+    },
+    defaultParams: { color: '#00ffff', intensity: 1 }
   },
   {
     id: 'gradient',
     name: 'Dégradé',
-    css: {
-      color: 'transparent',
-      WebkitTextFillColor: 'transparent',
-      WebkitBackgroundClip: 'text',
-      backgroundClip: 'text',
-      backgroundImage: 'linear-gradient(90deg, #ff00ff, #00ffff)'
+    css: ({ 
+      angle = 90, 
+      color1 = '#7F00FF', 
+      color2 = '#E100FF',
+      position1 = 0,
+      position2 = 100,
+      blendMode = 'normal' as MixBlendMode
+    } = {}) => {
+      // S'assurer que les positions sont des pourcentages valides
+      const pos1 = Math.min(100, Math.max(0, position1));
+      const pos2 = Math.min(100, Math.max(0, position2));
+      
+      return {
+        color: 'transparent',
+        background: `linear-gradient(${angle}deg, ${color1} ${pos1}%, ${color2} ${pos2}%)`,
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        display: 'inline-block',
+        mixBlendMode: blendMode
+      };
+    },
+    defaultParams: { 
+      angle: 90, 
+      color1: '#7F00FF', 
+      color2: '#E100FF',
+      position1: 0,
+      position2: 100,
+      blendMode: 'normal'
     }
+  },
+  {
+    id: 'border',
+    name: 'Bordure',
+    css: ({ color = '#000000', thickness = 1, radius = 0 }) => ({
+      border: `${thickness}px solid ${color}`,
+      borderRadius: `${radius}px`,
+      padding: '4px 8px',
+      display: 'inline-block'
+    }),
+    defaultParams: { color: '#000000', thickness: 1, radius: 0 }
   },
   {
     id: 'background',
     name: 'Fond',
-    css: {
-      backgroundColor: 'rgba(251,255,0,1)',
-      color: '#000000',
-      padding: '8px 16px',
-      borderRadius: '4px'
-    }
+    css: ({ color = 'rgba(245, 245, 245, 0.9)', radius = 4, spread = 8 }) => ({
+      backgroundColor: color,
+      padding: `${spread}px`,
+      borderRadius: `${radius}px`,
+      display: 'inline-block'
+    }),
+    defaultParams: { color: 'rgba(245, 245, 245, 0.9)', radius: 4, spread: 8 }
   }
 ];
 
 const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({ 
   onBack, 
   selectedElement, 
-  onElementUpdate 
-}) => {
-  const [selectedEffect, setSelectedEffect] = useState('none');
-  
-  // Shadow controls
-  const [shadowOffset, setShadowOffset] = useState(50);
-  const [shadowDirection, setShadowDirection] = useState(-45);
-  const [shadowBlur, setShadowBlur] = useState(0);
-  const [shadowTransparency, setShadowTransparency] = useState(40);
-  const [shadowColor, setShadowColor] = useState('#000000');
-  
-  // Outline controls
-  const [outlineThickness, setOutlineThickness] = useState(50);
-  const [outlineColor, setOutlineColor] = useState('#ffffff');
-  
-  // Background controls
-  const [backgroundRoundness, setBackgroundRoundness] = useState(50);
-  const [backgroundSpread, setBackgroundSpread] = useState(50);
-  const [backgroundTransparency, setBackgroundTransparency] = useState(100);
-  const [backgroundColor, setBackgroundColor] = useState('#fbff00');
-  
-  // General controls
-  const [effectColor, setEffectColor] = useState('#ff00ff');
+  onElementUpdate, 
+  onAddElement 
+}: TextEffectsPanelProps) => {
+  const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
+  const [selectedEffect, setSelectedEffect] = useState<string>('none');
+  const [effectParams, setEffectParams] = useState<EffectParams>({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Gradient controls
-  const [gradientStart, setGradientStart] = useState('#ff00ff');
-  const [gradientEnd, setGradientEnd] = useState('#00ffff');
-  // 0..100 mapped to 0..360deg
-  const [gradientAngle, setGradientAngle] = useState(25);
-
-  // Glitch dual colors
-  const [glitchColorA, setGlitchColorA] = useState('#00ffff');
-  const [glitchColorB, setGlitchColorB] = useState('#ff00ff');
-
-  // Lift controls (0..100 logical)
-  const [liftStrength, setLiftStrength] = useState(30);
-  const [liftBlur, setLiftBlur] = useState(20);
-  const [liftTransparency, setLiftTransparency] = useState(30);
-  const [liftColor, setLiftColor] = useState('#000000');
-
-  // Fonction utilitaire pour convertir hex en rgb
-  const hexToRgb = (hex: string): string => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
+  // Type pour le style avancé
+  type AdvancedStyle = {
+    id: string;
+    name: string;
+    css: React.CSSProperties;
   };
 
-
-  // Mettre à jour l'effet en temps réel quand les contrôles changent
+  // Initialisation de l'effet sélectionné basé sur l'élément actuel
   useEffect(() => {
-    if (selectedEffect !== 'none') {
-      const effect = textEffects.find(e => e.id === selectedEffect);
-      if (effect) {
-        updateEffectWithCurrentSettings(effect);
-      }
-    }
-  }, [selectedEffect, shadowOffset, shadowDirection, shadowBlur, shadowTransparency, shadowColor, 
-      outlineThickness, outlineColor, backgroundRoundness, backgroundSpread, backgroundTransparency, 
-      backgroundColor, effectColor, gradientStart, gradientEnd, gradientAngle, glitchColorA, glitchColorB,
-      liftStrength, liftBlur, liftTransparency, liftColor, selectedElement?.color, selectedElement?.fontSize]);
-
-  const applyEffect = (effect: any) => {
-    setSelectedEffect(effect.id);
-    updateEffectWithCurrentSettings(effect);
-  };
-
-  const updateEffectWithCurrentSettings = (effect: any) => {
-    let combinedCSS = { ...effect.css };
+    if (!selectedElement) return;
     
-    // Appliquer les ajustements spécifiques selon l'effet
-    switch (effect.id) {
-      case 'shadow':
-        const offsetX = Math.cos((shadowDirection * Math.PI) / 180) * (shadowOffset / 10);
-        const offsetY = Math.sin((shadowDirection * Math.PI) / 180) * (shadowOffset / 10);
-        combinedCSS = {
-          ...combinedCSS,
-          textShadow: `${offsetX}px ${offsetY}px ${Math.round((shadowBlur / 100) * 40)}px rgba(${hexToRgb(shadowColor)}, ${shadowTransparency / 100})`
-        };
-        break;
-        
-      case 'outline':
-        const thickness = outlineThickness / 50;
-        combinedCSS = {
-          ...combinedCSS,
-          textShadow: `${-thickness}px ${-thickness}px 0 ${outlineColor}, ${thickness}px ${-thickness}px 0 ${outlineColor}, ${-thickness}px ${thickness}px 0 ${outlineColor}, ${thickness}px ${thickness}px 0 ${outlineColor}`,
-          WebkitTextStroke: `${Math.max(1, thickness * 2)}px ${outlineColor}`
-        };
-        break;
-        
-      case 'background':
-        const fontSize = selectedElement?.fontSize ?? 24;
-        const vPadBase = Math.round(Math.max(6, fontSize * 0.34));
-        const spreadScale = Math.min(1, Math.max(0, backgroundSpread / 100));
-        // Canva-like balance: let horizontal follow vertical but stay a bit smaller
-        const vPadAug = vPadBase + Math.round(spreadScale * 40); // 0..40px extra vertically
-        const hPad = Math.round(vPadAug * 0.7 + fontSize * 0.08); // tie H to V for natural look
-        {
-          const progress = Math.min(100, Math.max(1, backgroundRoundness)) / 100; // 0.01..1
-          const parseNumber = (v: any, fb = 0) => {
-            if (v == null) return fb;
-            if (typeof v === 'number') return v;
-            const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
-            return m ? parseFloat(m[1]) : fb;
-          };
-          // Prefer actual element height if available, else estimate via fontSize & line-height
-          const actualH = parseNumber((selectedElement as any)?.height, 0);
-          const lh = parseNumber((selectedElement as any)?.lineHeight, 1.2);
-          const approxHeight = Math.max(1, (actualH || (fontSize * lh)) + vPadAug * 2); // px includes spread vertically
-          const maxRadius = approxHeight / 2; // perfect pill at 100%
-          // Linear mapping like Canva: 0% = 0px, 100% = height/2
-          const radiusPx = +(Math.min(maxRadius, Math.max(0, progress * maxRadius))).toFixed(2);
-          combinedCSS = {
-            ...combinedCSS,
-            backgroundColor: `rgba(${hexToRgb(backgroundColor)}, ${backgroundTransparency / 100})`,
-            color: selectedElement?.color ?? '#000000',
-            padding: `${vPadAug}px ${hPad}px`,
-            lineHeight: 1.1 as any,
-            display: 'inline-block',
-            boxSizing: 'border-box',
-            textShadow: 'none',
-            boxShadow: 'none',
-            border: 'none',
-            WebkitTextStroke: 'initial',
-            borderRadius: `${radiusPx}px`
-          };
-        }
-        ;
-        break;
-
-      case 'lift': {
-        const dy = -Math.round((liftStrength / 100) * 6); // up to -6px lift
-        const blurPx = Math.round((liftBlur / 100) * 20); // up to 20px blur
-        const alpha = Math.min(1, liftTransparency / 100);
-        combinedCSS = {
-          ...combinedCSS,
-          transform: `translateY(${dy}px)`,
-          textShadow: `0 ${Math.abs(dy)}px ${blurPx}px rgba(${hexToRgb(liftColor)}, ${alpha})`
-        };
-        break;
+    const advancedStyle = selectedElement.advancedStyle as AdvancedStyle | undefined;
+    if (advancedStyle?.id && !isInitialized) {
+      setSelectedEffect(advancedStyle.id);
+      setIsInitialized(true);
+      
+      // Initialiser les paramètres si disponibles
+      const effect = textEffects.find(e => e.id === advancedStyle.id);
+      if (effect && effect.id !== 'none') {
+        setEffectParams(effect.defaultParams || {});
       }
-        
-      case 'echo': {
-        // Multi-shadow extrude along direction
-        const steps = 5;
-        const distance = shadowOffset / 10; // 0..10
-        const angleRad = (shadowDirection * Math.PI) / 180;
-        const dx = Math.cos(angleRad) * distance;
-        const dy = Math.sin(angleRad) * distance;
-        const col = `rgba(${hexToRgb(shadowColor)}, ${Math.min(1, shadowTransparency / 100)})`;
-        const layers: string[] = [];
-        for (let i = 1; i <= steps; i++) {
-          layers.push(`${(dx * i).toFixed(2)}px ${(dy * i).toFixed(2)}px 0 ${col}`);
-        }
-        combinedCSS = {
-          ...combinedCSS,
-          textShadow: layers.join(', '),
-          color: selectedElement?.color || '#000000'
-        };
-        break;
-      }
-
-      case 'glitch': {
-        // RGB split using two colored shadows
-        const distance = shadowOffset / 8; // 0..12.5 approx
-        const angleRad = (shadowDirection * Math.PI) / 180;
-        const dx = Math.cos(angleRad) * distance;
-        const dy = Math.sin(angleRad) * distance;
-        const c1 = glitchColorA || '#00ffff';
-        const c2 = glitchColorB || '#ff00ff';
-        combinedCSS = {
-          ...combinedCSS,
-          textShadow: `${dx.toFixed(2)}px ${dy.toFixed(2)}px 0 ${c1}, ${(-dx).toFixed(2)}px ${(-dy).toFixed(2)}px 0 ${c2}`
-        };
-        break;
-      }
-
-      case 'splice': {
-        // 3D slice/extrude using multiple shadows with chosen color
-        const steps = Math.max(3, Math.round(outlineThickness / 10));
-        const distance = shadowOffset / 12; // 0..8.3
-        const angleRad = (shadowDirection * Math.PI) / 180;
-        const dx = Math.cos(angleRad) * distance;
-        const dy = Math.sin(angleRad) * distance;
-        const col = effectColor || 'rgba(0,0,0,0.3)';
-        const layers: string[] = [];
-        for (let i = 1; i <= steps; i++) {
-          layers.push(`${(dx * i).toFixed(2)}px ${(dy * i).toFixed(2)}px 0 ${col}`);
-        }
-        combinedCSS = {
-          ...combinedCSS,
-          textShadow: layers.join(', ')
-        };
-        break;
-      }
-
-      case 'hollow':
-        combinedCSS = {
-          ...combinedCSS,
-          WebkitTextStroke: `2px ${effectColor}`,
-          textStroke: `2px ${effectColor}`
-        };
-        break;
-        
-      case 'neon':
-        {
-          const intensity = Math.max(1, Math.round((shadowOffset / 100) * 4));
-          const layers: string[] = [];
-          for (let i = 1; i <= 4 + intensity; i++) {
-            const blur = i * 4;
-            layers.push(`0 0 ${blur}px ${effectColor}`);
-          }
-          combinedCSS = {
-            ...combinedCSS,
-            color: effectColor,
-            textShadow: layers.join(', ')
-          };
-        }
-        break;
-
-      case 'gradient':
-        combinedCSS = {
-          ...combinedCSS,
-          color: 'transparent',
-          WebkitTextFillColor: 'transparent' as any,
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          backgroundImage: `linear-gradient(${Math.round((gradientAngle / 100) * 360)}deg, ${gradientStart}, ${gradientEnd})`
-        } as any;
-        break;
-        
-      default:
-        break;
+    } else if (!advancedStyle?.id && isInitialized) {
+      setSelectedEffect('none');
+      setEffectParams({});
     }
+  }, [selectedElement, isInitialized]);
 
-    // Appliquer l'effet au texte sélectionné ou créer un nouveau texte
+  // Fonction utilitaire pour appliquer un style d'effet de manière sécurisée
+  const getEffectStyle = useCallback((eff: TextEffect, params: EffectParams = {}): React.CSSProperties => {
+    if (typeof eff.css === 'function') {
+      return eff.css(params);
+    }
+    return eff.css;
+  }, []);
+
+  const applyEffectStyle = useCallback((eff: TextEffect, params: EffectParams = {}): React.CSSProperties => {
+    try {
+      return getEffectStyle(eff, params);
+    } catch (error) {
+      console.error(`Error applying effect ${eff.id}:`, error);
+      return {};
+    }
+  }, [getEffectStyle]);
+
+  const applyEffect = useCallback((effect: TextEffect) => {
+    const effectId = effect.id;
+    setSelectedEffect(effectId);
+    
+    // Mettre à jour les paramètres avec les valeurs par défaut si nécessaire
+    if (effectId !== 'none' && (!effectParams || Object.keys(effectParams).length === 0)) {
+      const newParams = effect.defaultParams || {};
+      setEffectParams(newParams);
+    }
+    
+    // Créer une copie des paramètres pour l'application de l'effet
+    const effectParamsToApply = { ...effectParams };
+    
+    // Pour l'effet d'écho, s'assurer que la transparence est appliquée correctement
+    if (effectId === 'echo' && effectParamsToApply.transparency === undefined) {
+      effectParamsToApply.transparency = 0.3; // Valeur par défaut pour la rétrocompatibilité
+    }
+    
+    // Créer une copie des mises à jour à appliquer
+    const style = effectId === 'none' ? {} : applyEffectStyle(effect, effectId !== 'none' ? effectParamsToApply : {});
+    const updates = { 
+      style,
+      advancedStyle: effectId === 'none' ? null : {
+        id: effect.id,
+        name: effect.name,
+        css: style,
+        params: effectParamsToApply // Sauvegarder les paramètres pour une utilisation ultérieure
+      }
+    };
+
+    // Si on a un élément sélectionné, on l'utilise directement
     if (selectedElement && onElementUpdate) {
-      onElementUpdate({
-        customCSS: combinedCSS,
-        advancedStyle: {
-          id: effect.id,
-          name: effect.name,
-          category: 'effect',
-          css: combinedCSS
-        }
-      });
+      onElementUpdate(updates);
     } else {
-      // Chercher un texte sélectionné dans le DOM
+      // Sinon, on utilise la méthode DOM
       const selectedTextElement = document.querySelector('[data-selected="true"][data-type="text"]');
       if (selectedTextElement) {
-        const updateEvent = new CustomEvent('applyTextEffect', { 
-          detail: {
-            customCSS: combinedCSS,
-            advancedStyle: {
-              id: effect.id,
-              name: effect.name,
-              category: 'effect',
-              css: combinedCSS
-            }
-          }
-        });
+        const updateEvent = new CustomEvent('applyTextEffect', { detail: updates });
         window.dispatchEvent(updateEvent);
-      } else {
-        // Créer un nouveau texte avec l'effet
-        const newTextElement = {
-          id: `text-${Date.now()}`,
+        return;
+      }
+      
+      // Si aucun texte n'est sélectionné, on crée un nouveau texte
+      if (onAddElement) {
+        onAddElement({
           type: 'text',
-          content: 'Nouveau texte',
-          x: 100,
-          y: 100,
-          width: 200,
-          height: 40,
-          fontSize: 24,
-          fontFamily: 'Arial',
-          color: '#000000',
-          customCSS: combinedCSS,
-          advancedStyle: {
-            id: effect.id,
-            name: effect.name,
-            category: 'effect',
-            css: combinedCSS
-          }
-        };
-        
-        const addElementEvent = new CustomEvent('addElement', { detail: newTextElement });
-        window.dispatchEvent(addElementEvent);
+          content: 'Double-cliquez pour modifier',
+          style: { ...updates.style },
+          advancedStyle: updates.advancedStyle
+        });
       }
     }
-  };
+  }, [effectParams, onAddElement, onElementUpdate, selectedElement, applyEffectStyle]);
 
-  // Rendu des contrôles spécifiques selon l'effet sélectionné
-  const renderEffectControls = () => {
-    switch (selectedEffect) {
-      case 'shadow':
-        return (
-          <div className="space-y-4">
-            {/* Offset */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Décalage</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowOffset}
-                  onChange={(e) => setShadowOffset(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowOffset(Math.max(0, shadowOffset - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowOffset}</span>
-                  <button onClick={() => setShadowOffset(Math.min(100, shadowOffset + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
+  const clearEffects = useCallback(() => {
+    setSelectedEffect('none');
+    setEffectParams({});
+    
+    if (selectedElement && onElementUpdate) {
+      onElementUpdate({
+        style: {
+          transform: 'none',
+          color: selectedElement.style?.color || '#000000'
+        },
+        advancedStyle: null
+      });
+    }
+  }, [onElementUpdate, selectedElement]);
+
+  // Fonction pour afficher un sélecteur de couleur
+  const renderColorPicker = useCallback((paramName: string, label: string, value: string) => {
+    const effect = textEffects.find(e => e.id === selectedEffect);
+    
+    return (
+      <div key={paramName} className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className="flex items-center relative">
+          <div 
+            className="w-8 h-8 rounded border border-gray-300 cursor-pointer mr-2"
+            style={{ backgroundColor: value }}
+            onClick={() => setShowColorPicker(paramName === showColorPicker ? null : paramName)}
+          />
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => {
+              const newParams = { ...effectParams, [paramName]: e.target.value };
+              setEffectParams(newParams);
+              if (effect) {
+                applyEffect({ ...effect, defaultParams: newParams });
+              }
+            }}
+            className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+          />
+          {showColorPicker === paramName && (
+            <div className="absolute z-10 mt-1 top-full left-0">
+              <HexColorPicker
+                color={value}
+                onChange={(color) => {
+                  const newParams = { ...effectParams, [paramName]: color };
+                  setEffectParams(newParams);
+                  if (effect) {
+                    applyEffect({ ...effect, defaultParams: newParams });
+                  }
+                }}
+              />
             </div>
+          )}
+        </div>
+      </div>
+    );
+  }, [selectedEffect, effectParams, showColorPicker, applyEffect]);
 
-            {/* Direction */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Direction</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={((shadowDirection + 180) / 360) * 100}
-                  onChange={(e) => {
-                    const p = Number(e.target.value);
-                    setShadowDirection(Math.round((p / 100) * 360 - 180));
-                  }}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowDirection(Math.max(-180, shadowDirection - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowDirection}°</span>
-                  <button onClick={() => setShadowDirection(Math.min(180, shadowDirection + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
+  // Fonction pour afficher un sélecteur de mode de fusion
+  const renderBlendModeSelector = useCallback((paramName: string, label: string, value: string) => {
+    const effect = textEffects.find(e => e.id === selectedEffect);
+    
+    return (
+      <div key={paramName} className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <select
+          value={value}
+          onChange={(e) => {
+            const newParams = { ...effectParams, [paramName]: e.target.value };
+            setEffectParams(newParams);
+            if (effect) {
+              applyEffect({ ...effect, defaultParams: newParams });
+            }
+          }}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+        >
+          <option value="normal">Normal</option>
+          <option value="multiply">Multiplier</option>
+          <option value="screen">Superposition claire</option>
+          <option value="overlay">Superposition</option>
+          <option value="darken">Assombrir</option>
+          <option value="lighten">Éclaircir</option>
+          <option value="color-dodge">Densité couleur -</option>
+          <option value="color-burn">Densité couleur +</option>
+          <option value="hard-light">Lumière crue</option>
+          <option value="soft-light">Lumière tamisée</option>
+          <option value="difference">Différence</option>
+          <option value="exclusion">Exclusion</option>
+          <option value="hue">Teinte</option>
+          <option value="saturation">Saturation</option>
+          <option value="color">Couleur</option>
+          <option value="luminosity">Luminosité</option>
+        </select>
+      </div>
+    );
+  }, [selectedEffect, effectParams, applyEffect]);
 
-            {/* Blur */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Flou</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowBlur}
-                  onChange={(e) => setShadowBlur(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowBlur}%, #e5e7eb ${shadowBlur}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowBlur(Math.max(0, shadowBlur - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowBlur}</span>
-                  <button onClick={() => setShadowBlur(Math.min(100, shadowBlur + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
+  // Fonction pour afficher un curseur de réglage
+  const renderSlider = useCallback((paramName: string, label: string, min: number, max: number, step = 1) => {
+    const effect = textEffects.find(e => e.id === selectedEffect);
+    const value = effectParams[paramName] ?? min;
+    
+    return (
+      <div key={paramName} className="mb-4">
+        <div className="flex justify-between items-center mb-1">
+          <label className="block text-sm font-medium text-gray-700">
+            {label}: {value}
+          </label>
+        </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => {
+            const newValue = parseFloat(e.target.value);
+            const newParams = { ...effectParams, [paramName]: newValue };
+            setEffectParams(newParams);
+            if (effect) {
+              applyEffect({ ...effect, defaultParams: newParams });
+            }
+          }}
+          className="w-full"
+        />
+      </div>
+    );
+  }, [selectedEffect, effectParams, applyEffect]);
 
-            {/* Transparency */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Transparence</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowTransparency}
-                  onChange={(e) => setShadowTransparency(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowTransparency}%, #e5e7eb ${shadowTransparency}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowTransparency(Math.max(0, shadowTransparency - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowTransparency}</span>
-                  <button onClick={() => setShadowTransparency(Math.min(100, shadowTransparency + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
+  // Rendu des contrôles d'effet
+  const renderEffectControls = useCallback(() => {
+    if (!selectedEffect) return null;
+    
+    const effect = textEffects.find(e => e.id === selectedEffect);
+    if (!effect || effect.id === 'none') return null;
+    
+    const controls = [];
 
-            {/* Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={effectColor}
-                  onChange={(e) => setEffectColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{effectColor}</span>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'gradient':
-        return (
-          <div className="space-y-4">
-            {/* Angle */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Angle</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={gradientAngle}
-                  onChange={(e) => setGradientAngle(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${gradientAngle}%, #e5e7eb ${gradientAngle}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setGradientAngle(Math.max(0, gradientAngle - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{Math.round((gradientAngle / 100) * 360)}°</span>
-                  <button onClick={() => setGradientAngle(Math.min(100, gradientAngle + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Start Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur de début</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={gradientStart}
-                  onChange={(e) => setGradientStart(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{gradientStart}</span>
-              </div>
-            </div>
-
-            {/* End Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur de fin</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={gradientEnd}
-                  onChange={(e) => setGradientEnd(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{gradientEnd}</span>
-              </div>
-            </div>
-          </div>
-        );
-
+    // Contrôles spécifiques à chaque effet
+    switch (effect.id) {
       case 'outline':
-        return (
-          <div className="space-y-4">
-            {/* Thickness */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Épaisseur</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={outlineThickness}
-                  onChange={(e) => setOutlineThickness(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${outlineThickness}%, #e5e7eb ${outlineThickness}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setOutlineThickness(Math.max(0, outlineThickness - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{outlineThickness}</span>
-                  <button onClick={() => setOutlineThickness(Math.min(100, outlineThickness + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={outlineColor}
-                  onChange={(e) => setOutlineColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{outlineColor}</span>
-              </div>
-            </div>
-          </div>
+        controls.push(
+          renderSlider('thickness', 'Épaisseur', 1, 20, 1),
+          renderSlider('offset', 'Décalage', 1, 10, 0.5),
+          renderColorPicker('color', 'Couleur du contour', effectParams.color || '#000000'),
+          renderColorPicker('fillColor', 'Couleur de remplissage', effectParams.fillColor || '#ffffff')
         );
-
-      case 'background':
-        return (
-          <div className="space-y-4">
-            {/* Roundness */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Rondeur</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value={backgroundRoundness}
-                  onChange={(e) => setBackgroundRoundness(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${backgroundRoundness}%, #e5e7eb ${backgroundRoundness}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setBackgroundRoundness(Math.max(1, backgroundRoundness - 1))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{backgroundRoundness}</span>
-                  <button onClick={() => setBackgroundRoundness(Math.min(100, backgroundRoundness + 1))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Spread */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Étendue</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={backgroundSpread}
-                  onChange={(e) => setBackgroundSpread(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${backgroundSpread}%, #e5e7eb ${backgroundSpread}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setBackgroundSpread(Math.max(0, backgroundSpread - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{backgroundSpread}</span>
-                  <button onClick={() => setBackgroundSpread(Math.min(100, backgroundSpread + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Transparency */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Transparency</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={backgroundTransparency}
-                  onChange={(e) => setBackgroundTransparency(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${backgroundTransparency}%, #e5e7eb ${backgroundTransparency}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setBackgroundTransparency(Math.max(0, backgroundTransparency - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{backgroundTransparency}</span>
-                  <button onClick={() => setBackgroundTransparency(Math.min(100, backgroundTransparency + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Background Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur du fond</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{backgroundColor}</span>
-              </div>
-            </div>
-
-            {/* Text Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur du texte</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={selectedElement?.color || '#000000'}
-                  onChange={(e) => {
-                    if (onElementUpdate) {
-                      onElementUpdate({ color: e.target.value });
-                    }
-                  }}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
-              </div>
-            </div>
-          </div>
+        break;
+        
+      case 'gradient':
+        controls.push(
+          renderSlider('angle', 'Angle', 0, 360, 1),
+          renderColorPicker('color1', 'Couleur 1', effectParams.color1 || '#7F00FF'),
+          renderColorPicker('color2', 'Couleur 2', effectParams.color2 || '#E100FF'),
+          renderSlider('position1', 'Position couleur 1', 0, 100, 1),
+          renderSlider('position2', 'Position couleur 2', 0, 100, 1),
+          renderBlendModeSelector('blendMode', 'Mode de fusion', effectParams.blendMode || 'normal')
         );
+        break;
+        
+      case 'shadow':
+        controls.push(
+          renderSlider('distance', 'Distance', 0, 40, 1),
+          renderSlider('angle', 'Angle', 0, 360, 1),
+          renderSlider('blur', 'Flou', 0, 40, 1),
+          renderSlider('transparency', 'Opacité', 0, 1, 0.05),
+          renderColorPicker('color', 'Couleur', effectParams.color || '#000000')
+        );
+        break;
 
       case 'neon':
-        return (
-          <div className="space-y-4">
-            {/* Intensity */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Intensité</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowOffset}
-                  onChange={(e) => setShadowOffset(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowOffset(Math.max(0, shadowOffset - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowOffset}</span>
-                  <button onClick={() => setShadowOffset(Math.min(100, shadowOffset + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-          </div>
+        controls.push(
+          renderSlider('intensity', 'Intensité', 0.1, 5, 0.1),
+          renderColorPicker('color', 'Couleur', effectParams.color || '#00ffff')
         );
-
+        break;
+        
       case 'glitch':
-        return (
-          <div className="space-y-4">
-            {/* Offset */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Offset</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowOffset}
-                  onChange={(e) => setShadowOffset(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowOffset(Math.max(0, shadowOffset - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowOffset}</span>
-                  <button onClick={() => setShadowOffset(Math.min(100, shadowOffset + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Direction */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Direction</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={((shadowDirection + 180) / 360) * 100}
-                  onChange={(e) => {
-                    const p = Number(e.target.value);
-                    setShadowDirection(Math.round((p / 100) * 360 - 180));
-                  }}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowDirection(Math.max(-180, shadowDirection - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowDirection}</span>
-                  <button onClick={() => setShadowDirection(Math.min(180, shadowDirection + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Split Colors */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleurs séparées</label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="color"
-                    value={glitchColorA}
-                    onChange={(e) => setGlitchColorA(e.target.value)}
-                    className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-500 font-mono">{glitchColorA}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="color"
-                    value={glitchColorB}
-                    onChange={(e) => setGlitchColorB(e.target.value)}
-                    className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-500 font-mono">{glitchColorB}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Text Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Text Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={selectedElement?.color || '#000000'}
-                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
-              </div>
-            </div>
-          </div>
+        controls.push(
+          renderSlider('distance', 'Décalage', 0, 20, 0.5),
+          renderSlider('angle', 'Angle', 0, 360, 15),
+          renderColorPicker('color', 'Couleur secondaire', effectParams.color || '#ff00ff')
         );
-
+        break;
+        
+      case 'outline2':
+        controls.push(
+          renderSlider('thickness', 'Épaisseur', 0.5, 10, 0.5),
+          renderColorPicker('color', 'Couleur', effectParams.color || '#000000')
+        );
+        break;
+        
       case 'echo':
-        return (
-          <div className="space-y-4">
-            {/* Offset */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Offset</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowOffset}
-                  onChange={(e) => setShadowOffset(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowOffset(Math.max(0, shadowOffset - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowOffset}</span>
-                  <button onClick={() => setShadowOffset(Math.min(100, shadowOffset + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Direction */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Direction</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  value={shadowDirection}
-                  onChange={(e) => setShadowDirection(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowDirection(Math.max(-180, shadowDirection - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowDirection}°</span>
-                  <button onClick={() => setShadowDirection(Math.min(180, shadowDirection + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={shadowColor}
-                  onChange={(e) => setShadowColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{shadowColor}</span>
-              </div>
-            </div>
-
-            {/* Text Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Text Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={selectedElement?.color || '#000000'}
-                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
-              </div>
-            </div>
-          </div>
+        controls.push(
+          renderSlider('distance', 'Distance', 1, 30, 1),
+          renderSlider('angle', 'Angle', 0, 360, 15),
+          renderSlider('transparency', 'Dégradé', 0.1, 0.5, 0.05),
+          renderColorPicker('color', 'Couleur', effectParams.color || 'rgba(0,0,0,0.3)')
         );
-
-      case 'splice':
-        return (
-          <div className="space-y-4">
-            {/* Thickness */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Thickness</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={outlineThickness}
-                  onChange={(e) => setOutlineThickness(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${outlineThickness}%, #e5e7eb ${outlineThickness}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setOutlineThickness(Math.max(0, outlineThickness - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{outlineThickness}</span>
-                  <button onClick={() => setOutlineThickness(Math.min(100, outlineThickness + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Offset */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Offset</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadowOffset}
-                  onChange={(e) => setShadowOffset(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${shadowOffset}%, #e5e7eb ${shadowOffset}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowOffset(Math.max(0, shadowOffset - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowOffset}</span>
-                  <button onClick={() => setShadowOffset(Math.min(100, shadowOffset + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Direction */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Direction</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  value={shadowDirection}
-                  onChange={(e) => setShadowDirection(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb ${((shadowDirection + 180) / 360) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setShadowDirection(Math.max(-180, shadowDirection - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{shadowDirection}°</span>
-                  <button onClick={() => setShadowDirection(Math.min(180, shadowDirection + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={shadowColor}
-                  onChange={(e) => setShadowColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{shadowColor}</span>
-              </div>
-            </div>
-          </div>
+        break;
+        
+      case 'border':
+        controls.push(
+          renderSlider('thickness', 'Épaisseur', 0.5, 10, 0.5),
+          renderSlider('radius', 'Coins arrondis', 0, 50, 1),
+          renderColorPicker('color', 'Couleur', effectParams.color || '#000000')
         );
-
-      case 'hollow':
-        return (
-          <div className="space-y-4">
-            {/* Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={effectColor}
-                  onChange={(e) => setEffectColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{effectColor}</span>
-              </div>
-            </div>
-
-            {/* Text Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Text Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={selectedElement?.color || '#000000'}
-                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
-              </div>
-            </div>
-          </div>
+        break;
+        
+      case 'background':
+        controls.push(
+          renderSlider('radius', 'Coins arrondis', 0, 50, 1),
+          renderSlider('spread', 'Marge', 0, 40, 1),
+          renderSlider('transparency', 'Opacité', 0.1, 1, 0.05),
+          renderColorPicker('color', 'Couleur', effectParams.color || 'rgba(245, 245, 245, 0.9)')
         );
-
-      case 'lift':
-        return (
-          <div className="space-y-4">
-            {/* Strength */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Force</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={liftStrength}
-                  onChange={(e) => setLiftStrength(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftStrength}%, #e5e7eb ${liftStrength}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setLiftStrength(Math.max(0, liftStrength - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{liftStrength}</span>
-                  <button onClick={() => setLiftStrength(Math.min(100, liftStrength + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Blur */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Blur</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={liftBlur}
-                  onChange={(e) => setLiftBlur(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftBlur}%, #e5e7eb ${liftBlur}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setLiftBlur(Math.max(0, liftBlur - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{liftBlur}</span>
-                  <button onClick={() => setLiftBlur(Math.min(100, liftBlur + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Transparency */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Transparency</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={liftTransparency}
-                  onChange={(e) => setLiftTransparency(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftTransparency}%, #e5e7eb ${liftTransparency}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setLiftTransparency(Math.max(0, liftTransparency - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{liftTransparency}</span>
-                  <button onClick={() => setLiftTransparency(Math.min(100, liftTransparency + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Shadow Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur de l'ombre</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={liftColor}
-                  onChange={(e) => setLiftColor(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{liftColor}</span>
-              </div>
-            </div>
-
-            {/* Text Color */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Text Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={selectedElement?.color || '#000000'}
-                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
-              </div>
-            </div>
-          </div>
-        );
+        break;
 
       default:
         return null;
     }
-  };
 
-  // Clear any applied advancedStyle/customCSS on the selected text element
-  const clearEffects = () => {
-    setSelectedEffect('none');
-    if (selectedElement && onElementUpdate) {
-      onElementUpdate({ customCSS: undefined, advancedStyle: undefined });
-    } else {
-      const selectedTextElement = document.querySelector('[data-selected="true"][data-type="text"]');
-      if (selectedTextElement) {
-        const updateEvent = new CustomEvent('applyTextEffect', {
-          detail: { customCSS: undefined, advancedStyle: undefined }
-        });
-        window.dispatchEvent(updateEvent);
-      }
-    }
-  };
+    return <div className="space-y-4">{controls}</div>;
+  }, [selectedEffect, effectParams, showColorPicker, applyEffect, applyEffectStyle]);
 
   return (
-    <div className="h-full bg-white flex flex-col">
-
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Effets</h2>
+    <div className="h-full bg-white flex flex-col p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Effets de texte</h2>
         <button
           onClick={onBack}
-          className="text-gray-500 hover:text-gray-700 text-xl"
+          className="text-gray-500 hover:text-gray-700"
         >
           ×
         </button>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Clear Effects Quick Action */}
-        <div className="flex items-center justify-end">
+      
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {textEffects.map((effect) => (
+          <button
+            key={effect.id}
+            onClick={() => applyEffect(effect)}
+            className={`p-2 border rounded-lg transition-colors ${
+              selectedEffect === effect.id 
+                ? 'border-indigo-500 bg-indigo-50 text-indigo-900' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-10 flex items-center justify-center mb-1">
+                <span 
+                  className="text-lg font-bold"
+                  style={effect.id === 'none' ? {} : applyEffectStyle(effect, effect.defaultParams || {})}
+                >
+                  Aa
+                </span>
+              </div>
+              <span className="text-xs">{effect.name}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+      
+      {selectedEffect !== 'none' && (
+        <div className="mt-4 space-y-4">
+          <h3 className="text-sm font-medium text-gray-700">Ajustements</h3>
+          {renderEffectControls()}
           <button
             onClick={clearEffects}
-            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="w-full py-2 px-4 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
           >
             Effacer les effets
           </button>
         </div>
-        {/* Style Section */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Style</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {textEffects.map((effect) => (
-              <button
-                key={effect.id}
-                onClick={() => applyEffect(effect)}
-                className={`p-2 border rounded-lg transition-colors ${
-                  selectedEffect === effect.id 
-                    ? 'border-indigo-500 ring-2 ring-indigo-500 bg-indigo-50 text-indigo-900' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`rounded p-2 mb-2 h-12 flex items-center justify-center ${selectedEffect === effect.id ? 'bg-white' : 'bg-gray-100'}`}>
-                  <span 
-                    className="text-sm font-bold text-gray-800"
-                    style={{
-                      ...effect.css,
-                      // Ensure all CSS properties are properly formatted for React
-                      WebkitTextStroke: effect.css.WebkitTextStroke || undefined,
-                      textShadow: effect.css.textShadow || undefined
-                    }}
-                  >
-                    Ag
-                  </span>
-                </div>
-                <span className="text-xs text-gray-600">{effect.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Effect-specific Controls */}
-        {selectedEffect !== 'none' && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Ajustements</h4>
-            {renderEffectControls()}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
