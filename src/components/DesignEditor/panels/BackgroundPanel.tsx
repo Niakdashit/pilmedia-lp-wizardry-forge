@@ -15,25 +15,48 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   onBackgroundChange, 
   onExtractedColorsChange,
   currentBackground,
-  extractedColors = []
+  extractedColors = [],
+  selectedElement,
+  onElementUpdate
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [customColor, setCustomColor] = useState('#FF0000');
 
+  // Vérifier si un texte est sélectionné
+  const isTextSelected = selectedElement && selectedElement.type === 'text';
+  
+  // Déterminer la couleur actuelle en fonction de la sélection
+  const getCurrentColor = () => {
+    if (isTextSelected) {
+      return selectedElement.color || '#000000';
+    }
+    return currentBackground?.type === 'color' ? currentBackground.value : undefined;
+  };
+
+  // Fonction pour appliquer une couleur
+  const applyColor = (color: string) => {
+    if (isTextSelected && onElementUpdate) {
+      // Appliquer au texte sélectionné
+      onElementUpdate({ color });
+    } else {
+      // Appliquer à l'arrière-plan
+      onBackgroundChange({ type: 'color', value: color });
+    }
+  };
+
   // Détermination de la sélection courante (pour l'état "sélectionné" dans l'UI)
-  const currentBgValue = currentBackground?.type === 'color' ? currentBackground.value : undefined;
-  const isTurquoiseSelected = (currentBgValue || '').toLowerCase() === '#4ecdc4';
+  const currentValue = getCurrentColor();
+  const isTurquoiseSelected = (currentValue || '').toLowerCase() === '#4ecdc4';
   const cloudGradient = 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)';
-  const isCloudGradientSelected = currentBgValue === cloudGradient;
+  const isCloudGradientSelected = currentValue === cloudGradient;
 
   const backgroundColors = [
     '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
     '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529',
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98' // Enlevé la dernière couleur
+    '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98'
   ];
-
 
   const extractColorsFromImage = async (imageUrl: string) => {
     return new Promise<string[]>((resolve) => {
@@ -87,7 +110,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const handleCustomColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newColor = event.target.value;
     setCustomColor(newColor);
-    onBackgroundChange({ type: 'color', value: newColor });
+    applyColor(newColor);
   };
 
   return (
@@ -108,22 +131,47 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         className="sr-only"
       />
 
-      {/* Upload Background Image */}
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
-        <button
-          onClick={triggerFileUpload}
-          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group"
-        >
-          <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
-          <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image</span>
-          <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
-        </button>
+      {/* Indicateur de ce qui sera modifié */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p className="text-sm text-blue-800 font-medium">
+          {isTextSelected ? (
+            <>
+              📝 Modification du texte sélectionné
+              <span className="block text-xs text-blue-600 mt-1">
+                Les couleurs seront appliquées au texte "{selectedElement.text || 'Texte'}"
+              </span>
+            </>
+          ) : (
+            <>
+              🖼️ Modification de l'arrière-plan
+              <span className="block text-xs text-blue-600 mt-1">
+                Les couleurs seront appliquées à l'arrière-plan du design
+              </span>
+            </>
+          )}
+        </p>
       </div>
+
+      {/* Upload Background Image - Seulement si pas de texte sélectionné */}
+      {!isTextSelected && (
+        <div>
+          <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
+          <button
+            onClick={triggerFileUpload}
+            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group"
+          >
+            <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
+            <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image</span>
+            <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+          </button>
+        </div>
+      )}
 
       {/* Solid Colors */}
       <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">COULEURS UNIES</h3>
+        <h3 className="font-semibold text-sm text-gray-700 mb-3">
+          {isTextSelected ? 'COULEURS DE TEXTE' : 'COULEURS UNIES'}
+        </h3>
         <div className="grid grid-cols-5 gap-2">
           {/* Sélecteur de couleur personnalisé en première position */}
           <button
@@ -144,13 +192,22 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           {backgroundColors.map((color, index) => (
             <button
               key={index}
-              onClick={() => onBackgroundChange({ type: 'color', value: color })}
-              className="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors relative"
+              onClick={() => applyColor(color)}
+              className={`w-10 h-10 rounded-full border-2 transition-colors relative ${
+                getCurrentColor() === color 
+                  ? 'border-blue-500 ring-2 ring-blue-200' 
+                  : 'border-gray-200 hover:border-gray-400'
+              }`}
               style={{ backgroundColor: color }}
               title={color}
             >
               {color === '#FFFFFF' && (
                 <div className="absolute inset-0 border border-gray-300 rounded-full"></div>
+              )}
+              {getCurrentColor() === color && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                </div>
               )}
             </button>
           ))}
@@ -165,65 +222,69 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
             {extractedColors.map((color, index) => (
               <button
                 key={index}
-                onClick={() => onBackgroundChange({ type: 'color', value: color })}
-                className="w-10 h-10 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors relative group"
+                onClick={() => applyColor(color)}
+                className={`w-10 h-10 rounded-full border-2 transition-colors relative group ${
+                  getCurrentColor() === color 
+                    ? 'border-blue-500 ring-2 ring-blue-200' 
+                    : 'border-gray-200 hover:border-gray-400'
+                }`}
                 style={{ backgroundColor: color }}
                 title={color}
               >
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-full transition-opacity"></div>
+                {getCurrentColor() === color && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                )}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Predefined Backgrounds */
-      /* Affiche l'état sélectionné pour refléter la couleur actuelle */}
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">ARRIÈRE-PLANS PRÉDÉFINIS</h3>
-        <div className="space-y-2">
-          <button
-            onClick={() => onBackgroundChange({ 
-              type: 'color', 
-              value: '#4ECDC4'
-            })}
-            aria-selected={isTurquoiseSelected}
-            className={`w-full p-3 border rounded-lg transition-colors text-left group ${
-              isTurquoiseSelected
-                ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
-                : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
-            }`}
-          >
-            <div className="flex items-center">
-              <div 
-                className="w-8 h-8 rounded-full mr-3"
-                style={{ background: '#4ECDC4' }}
-              ></div>
-              <span className="text-sm group-hover:text-white">Turquoise (défaut template)</span>
-            </div>
-          </button>
-          <button
-            onClick={() => onBackgroundChange({ 
-              type: 'color', 
-              value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' 
-            })}
-            aria-selected={isCloudGradientSelected}
-            className={`w-full p-3 border rounded-lg transition-colors text-left group ${
-              isCloudGradientSelected
-                ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
-                : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
-            }`}
-          >
-            <div className="flex items-center">
-              <div 
-                className="w-8 h-8 rounded-full mr-3"
-                style={{ background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }}
-              ></div>
-              <span className="text-sm group-hover:text-white">Ciel avec nuages</span>
-            </div>
-          </button>
+      {/* Predefined Backgrounds - Seulement si pas de texte sélectionné */}
+      {!isTextSelected && (
+        <div>
+          <h3 className="font-semibold text-sm text-gray-700 mb-3">ARRIÈRE-PLANS PRÉDÉFINIS</h3>
+          <div className="space-y-2">
+            <button
+              onClick={() => applyColor('#4ECDC4')}
+              aria-selected={isTurquoiseSelected}
+              className={`w-full p-3 border rounded-lg transition-colors text-left group ${
+                isTurquoiseSelected
+                  ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                  : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+              }`}
+            >
+              <div className="flex items-center">
+                <div 
+                  className="w-8 h-8 rounded-full mr-3"
+                  style={{ background: '#4ECDC4' }}
+                ></div>
+                <span className="text-sm group-hover:text-white">Turquoise (défaut template)</span>
+              </div>
+            </button>
+            <button
+              onClick={() => applyColor('linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)')}
+              aria-selected={isCloudGradientSelected}
+              className={`w-full p-3 border rounded-lg transition-colors text-left group ${
+                isCloudGradientSelected
+                  ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                  : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+              }`}
+            >
+              <div className="flex items-center">
+                <div 
+                  className="w-8 h-8 rounded-full mr-3"
+                  style={{ background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }}
+                ></div>
+                <span className="text-sm group-hover:text-white">Ciel avec nuages</span>
+              </div>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
