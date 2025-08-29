@@ -1224,6 +1224,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   }, 100);
                 }
               }}
+              onOpenElementsTab={() => {
+                // Utiliser la même logique que onForceElementsTab
+                if (sidebarRef.current) {
+                  sidebarRef.current.setActiveTab('assets');
+                }
+                // Fermer les autres panneaux
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
+              }}
               // Mobile sidebar integrations
               onAddElement={handleAddElement}
               onBackgroundChange={handleBackgroundChange}
