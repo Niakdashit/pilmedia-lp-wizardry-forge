@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import BackgroundPanel from './panels/BackgroundPanel';
 import AssetsPanel from './panels/AssetsPanel';
-import TextEffectsPanel from './panels/TextEffectsPanel';
+import ModernTextEffectsPanel from './panels/ModernTextEffects/ModernTextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
@@ -399,7 +399,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     switch (tabId) {
       case 'effects':
         return (
-          <TextEffectsPanel 
+          <ModernTextEffectsPanel 
             onBack={() => {
               onEffectsPanelChange?.(false);
               setActiveTab('assets');

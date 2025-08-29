@@ -13,7 +13,7 @@ import {
   Play,
   Move3D
 } from 'lucide-react';
-import TextEffectsPanel from './panels/TextEffectsPanel';
+import ModernTextEffectsPanel from './panels/ModernTextEffects/ModernTextEffectsPanel';
 import PositionPanel from './panels/PositionPanel';
 
 interface CanvasToolbarProps {
@@ -333,10 +333,10 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1)'
           }}
         >
-          <TextEffectsPanel 
+          <ModernTextEffectsPanel 
             onBack={() => setShowEffectsPanel(false)}
             selectedElement={selectedElement}
-            onElementUpdate={(updates) => {
+            onElementUpdate={(updates: any) => {
               onElementUpdate(updates);
             }}
           />
