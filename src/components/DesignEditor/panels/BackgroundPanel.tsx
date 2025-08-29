@@ -14,7 +14,8 @@ interface BackgroundPanelProps {
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
   onBackgroundChange, 
   onExtractedColorsChange,
-  currentBackground
+  currentBackground,
+  extractedColors = []
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,16 +32,6 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98', '#F0E68C'
   ];
 
-  const gradients = [
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-    'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
-  ];
 
   const extractColorsFromImage = async (imageUrl: string) => {
     return new Promise<string[]>((resolve) => {
@@ -49,10 +40,12 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       img.onload = () => {
         try {
           const colorThief = new ColorThief();
-          // Extraire uniquement la couleur dominante
-          const dominantColor = colorThief.getColor(img);
-          const extractedColor = `rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`;
-          resolve([extractedColor]);
+          // Extraire une palette de 8 couleurs pour avoir un bon choix
+          const palette = colorThief.getPalette(img, 8);
+          const extractedColors = palette.map(color => 
+            `rgb(${color[0]}, ${color[1]}, ${color[2]})`
+          );
+          resolve(extractedColors);
         } catch (error) {
           console.error('Error extracting colors:', error);
           resolve([]);
@@ -128,21 +121,25 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         </div>
       </div>
 
-      {/* Gradients */}
-      <div>
-        <h3 className="font-semibold text-sm text-gray-700 mb-3">DÉGRADÉS</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {gradients.map((gradient, index) => (
-            <button
-              key={index}
-              onClick={() => onBackgroundChange({ type: 'color', value: gradient })}
-              className="w-full h-12 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors"
-              style={{ background: gradient }}
-              title={`Dégradé ${index + 1}`}
-            />
-          ))}
+      {/* Extracted Colors */}
+      {extractedColors.length > 0 && (
+        <div>
+          <h3 className="font-semibold text-sm text-gray-700 mb-3">COULEURS EXTRAITES</h3>
+          <div className="grid grid-cols-5 gap-2">
+            {extractedColors.map((color, index) => (
+              <button
+                key={index}
+                onClick={() => onBackgroundChange({ type: 'color', value: color })}
+                className="w-10 h-10 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors relative group"
+                style={{ backgroundColor: color }}
+                title={color}
+              >
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-opacity"></div>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Predefined Backgrounds */
       /* Affiche l'état sélectionné pour refléter la couleur actuelle */}
