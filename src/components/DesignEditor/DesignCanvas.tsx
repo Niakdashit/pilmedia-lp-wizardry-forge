@@ -4,15 +4,16 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
-import AlignmentGuides from './alignment/AlignmentGuides';
-import AlignmentToolbar from './alignment/AlignmentToolbar';
-import { useAlignmentEngine } from './alignment/useAlignmentEngine';
+import AlignmentGuides from './components/AlignmentGuides';
+import SmartAlignmentGuides from './components/SmartAlignmentGuides';
+import AlignmentToolbar from './components/AlignmentToolbar';
 import GridOverlay from './components/GridOverlay';
 import WheelSettingsButton from './components/WheelSettingsButton';
 import ZoomSlider from './components/ZoomSlider';
 import GroupSelectionFrame from './components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
+import { useAlignmentSystem } from './hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
@@ -299,12 +300,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
 
-  // Nouveau système d'alignement créé depuis zéro
-  const alignmentEngine = useAlignmentEngine({
+  // Nouveau système d'alignement simple et efficace
+  const alignmentSystem = useAlignmentSystem({
     elements,
     canvasSize: effectiveCanvasSize,
     zoom: localZoom,
-    snapTolerance: 10,
+    snapTolerance: 8,
     gridSize: 20,
     showGrid: showGridLines
   });
@@ -345,27 +346,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (workingUpdates.x !== undefined && workingUpdates.y !== undefined) {
       const element = elementById.get(id);
       if (element) {
-        // Utiliser le nouveau système d'alignement
-        console.log('🔥 DRAG DETECTED for element:', element.id, 'at position:', workingUpdates.x, workingUpdates.y);
-        alignmentEngine.startDragging();
-        const snapResult = alignmentEngine.applySnap({
-          id: element.id,
+        const snapResult = alignmentSystem.calculateSnap({
           x: workingUpdates.x,
           y: workingUpdates.y,
           width: element.width || 100,
-          height: element.height || 30
+          height: element.height || 100,
+          id
         });
-
-        console.log('🎯 SNAP RESULT:', snapResult);
+        
         workingUpdates.x = snapResult.x;
         workingUpdates.y = snapResult.y;
-        alignmentEngine.updateGuides(snapResult.guides);
-        console.log('📏 GUIDES UPDATED:', snapResult.guides.length, 'guides');
-        
-        // Arrêter le drag après un délai pour nettoyer les guides
-        setTimeout(() => {
-          alignmentEngine.stopDragging();
-        }, 150);
 
         // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
         const positionCacheKey = `snap-${id}-${Math.floor(workingUpdates.x/5)}-${Math.floor(workingUpdates.y/5)}`;
@@ -1594,41 +1584,33 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 zoom={localZoom}
               />
               
-              {/* Nouveau système d'alignement */}
+              {/* Alignment Guides */}
               <AlignmentGuides
-                guides={alignmentEngine.currentGuides}
                 canvasSize={effectiveCanvasSize}
+                elements={elementsWithAbsolute}
                 zoom={localZoom}
-                isDragging={alignmentEngine.isDragging}
               />
               
-              {/* Toolbar d'alignement */}
+              {/* Smart Alignment Guides */}
+              <SmartAlignmentGuides
+                guides={alignmentSystem.currentGuides}
+                canvasSize={effectiveCanvasSize}
+                zoom={localZoom}
+                isDragging={alignmentSystem.isDragging}
+              />
+              
+              {/* Alignment Toolbar */}
               {selectedElements && selectedElements.length > 0 && !readOnly && (
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
                   <AlignmentToolbar
                     selectedElements={selectedElements.map(el => el.id)}
-                    onAlignToCanvas={(elementId, type) => {
-                      const newPos = alignmentEngine.alignToCanvas(elementId, type);
-                      if (newPos) {
-                        handleElementUpdate(elementId, newPos);
-                      }
-                    }}
-                    onAlignToElement={(elementId, targetId, type) => {
-                      const newPos = alignmentEngine.alignToElement(elementId, targetId, type);
-                      if (newPos) {
-                        handleElementUpdate(elementId, newPos);
-                      }
-                    }}
-                    onDistribute={(elementIds, direction) => {
-                      const positions = alignmentEngine.distributeElements(elementIds, direction);
-                      positions.forEach(pos => {
-                        handleElementUpdate(pos.id, { x: pos.x, y: pos.y });
-                      });
-                    }}
+                    onElementUpdate={handleElementUpdate}
+                    elements={elements}
+                    canvasSize={effectiveCanvasSize}
+                    zoom={localZoom}
                   />
                 </div>
               )}
-              
               
               {/* Clouds */}
               
