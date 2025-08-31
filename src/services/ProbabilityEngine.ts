@@ -11,8 +11,10 @@ export class ProbabilityEngine {
   /**
    * Calcule les probabilités pour tous les segments
    * LOGIQUE PRINCIPALE : 
-   * 1. Si un lot a 100% -> ce segment a 100%, les autres 0%
-   * 2. Sinon, distribuer selon les % des lots + résiduel aux segments perdants
+   * 1. Calendrier actif -> 100% aux segments calendrier (si lots disponibles)
+   * 2. Sinon, si lot à 100% -> 100% à ce segment (si lots disponibles)
+   * 3. Sinon, distribuer selon les % des lots + résiduel aux segments perdants
+   * 4. CRITIQUE: Lots épuisés (totalUnits - awardedUnits = 0) -> probabilité = 0%
    */
   static calculateSegmentProbabilities(
     segments: CampaignSegment[],
@@ -41,21 +43,59 @@ export class ProbabilityEngine {
     // 3. Gating calendrier: si des lots calendrier sont actifs maintenant,
     //    répartir 100% uniquement entre ces lots (puis par segments de chaque lot)
     const activeCalendarPrizes = availablePrizes.filter(
-      (p) => p.method === 'calendar' && PrizeValidation.isPrizeActive(p) && PrizeValidation.isPrizeAvailable(p)
+      (p) => {
+        const method = p.method || (p as any).attributionMethod;
+        const isCalendar = method === 'calendar';
+        const isActive = PrizeValidation.isPrizeActive(p);
+        const isAvailable = PrizeValidation.isPrizeAvailable(p);
+        
+        console.log(`📅 Calendar prize check: ${p.name}`, {
+          method,
+          isCalendar,
+          isActive,
+          isAvailable,
+          startDate: p.startDate,
+          startTime: p.startTime,
+          endDate: p.endDate,
+          endTime: p.endTime,
+          currentTime: new Date().toISOString()
+        });
+        
+        return isCalendar && isActive && isAvailable;
+      }
     );
 
     const activeCalendarWithSegments = activeCalendarPrizes.filter((p) => (segsByPrize.get(p.id) || 0) > 0);
     if (activeCalendarWithSegments.length > 0) {
+      console.log(`🎯 CALENDAR MODE: ${activeCalendarWithSegments.length} active prizes`, 
+        activeCalendarWithSegments.map(p => ({ 
+          name: p.name, 
+          id: p.id, 
+          segments: segsByPrize.get(p.id),
+          totalUnits: p.totalUnits,
+          awardedUnits: p.awardedUnits,
+          remaining: p.totalUnits - p.awardedUnits
+        })));
+      
       const perPrizeWeight = 100 / activeCalendarWithSegments.length;
       const resultSegments: WheelSegment[] = segments.map((segment, index) => {
         const segmentId = segment.id || `segment-${index}`;
         const prizeId = this.normalizePrizeId((segment as any)?.prizeId);
         const activePrize = prizeId ? activeCalendarWithSegments.find((p) => p.id === prizeId) : undefined;
         let probability = 0;
+        
         if (activePrize) {
-          const count = Math.max(1, segsByPrize.get(activePrize.id) || 0);
-          probability = perPrizeWeight / count;
+          const remaining = activePrize.totalUnits - activePrize.awardedUnits;
+          
+          if (remaining > 0) {
+            const count = Math.max(1, segsByPrize.get(activePrize.id) || 0);
+            probability = perPrizeWeight / count;
+            console.log(`✅ Calendar segment ${segmentId} (prize: ${activePrize.name}): ${probability}% (${remaining} prizes left)`);
+          } else {
+            console.log(`❌ Calendar segment ${segmentId} (prize: ${activePrize.name}): 0% (EXHAUSTED - no prizes left)`);
+          }
         }
+        
         return {
           id: segmentId,
           label: segment.label || `Segment ${index + 1}`,
@@ -69,18 +109,38 @@ export class ProbabilityEngine {
         };
       });
 
+      const totalProb = resultSegments.reduce((sum, s) => sum + s.probability, 0);
+      console.log(`🏆 Calendar mode result: ${totalProb}% total probability distributed`, 
+        resultSegments.map(s => ({ id: s.id, probability: s.probability, isWinning: s.isWinning })));
+
       return {
         segments: resultSegments,
-        totalProbability: 100,
-        hasGuaranteedWin: true,
-        residualProbability: 0,
-        errors: []
+        totalProbability: totalProb,
+        hasGuaranteedWin: totalProb > 0,
+        residualProbability: Math.max(0, 100 - totalProb),
+        errors: totalProb === 0 ? ['Tous les lots calendrier sont épuisés'] : []
       };
     }
 
     // 4. Cas garantie: si un lot probabilité/immediate est à 100%, il prend 100% et les autres 0
     const guaranteed100Prizes = availablePrizes.filter(
-      (p) => this.isProbabilityMethod(p.method) && this.getProbabilityPercent(p) === 100
+      (p) => {
+        const method = p.method || (p as any).attributionMethod;
+        const isProbMethod = this.isProbabilityMethod(method);
+        const probability = this.getProbabilityPercent(p);
+        const isGuaranteed = probability === 100;
+        
+        console.log(`🎲 Probability prize check: ${p.name}`, {
+          method,
+          isProbMethod,
+          probability,
+          isGuaranteed,
+          totalUnits: p.totalUnits,
+          awardedUnits: p.awardedUnits
+        });
+        
+        return isProbMethod && isGuaranteed;
+      }
     );
     const guaranteedWithSegments = guaranteed100Prizes.filter((p) => (segsByPrize.get(p.id) || 0) > 0);
 
@@ -88,11 +148,14 @@ export class ProbabilityEngine {
     const mappings = this.createSegmentPrizeMappings(segments, availablePrizes, segsByPrize);
 
     if (guaranteedWithSegments.length > 0) {
+      console.log(`🎯 Guaranteed 100% prizes found: ${guaranteedWithSegments.length}`, 
+        guaranteedWithSegments.map(p => ({ name: p.name, id: p.id, segments: segsByPrize.get(p.id) })));
       return this.calculateGuaranteedWinProbabilities(segments, mappings, guaranteedWithSegments, segsByPrize);
     }
 
-    // 5. Calcul normal avec distribution proportionnelle par lot
-    return this.calculateNormalProbabilities(segments, mappings);
+    // 5. Cas normal: répartir selon les probabilités configurées
+    console.log(`📊 Normal probability mode - distributing based on configured percentages`);
+    return this.calculateNormalProbabilities(segments, mappings, availablePrizes, segsByPrize);
   }
 
   /**
@@ -100,13 +163,24 @@ export class ProbabilityEngine {
    */
   private static getAvailablePrizes(prizes: Prize[]): Prize[] {
     return (prizes || []).filter(prize => {
-      // Vérifier disponibilité
+      // Vérifier disponibilité - CRITIQUE: Un lot épuisé ne doit plus être disponible
       if (typeof prize.totalUnits === 'number' && typeof prize.awardedUnits === 'number') {
-        if (prize.totalUnits - prize.awardedUnits <= 0) return false;
+        const remaining = prize.totalUnits - prize.awardedUnits;
+        console.log(`🎁 Prize availability check: ${prize.name}`, {
+          totalUnits: prize.totalUnits,
+          awardedUnits: prize.awardedUnits,
+          remaining,
+          isAvailable: remaining > 0
+        });
+        if (remaining <= 0) {
+          console.log(`❌ Prize ${prize.name} is EXHAUSTED - no more units available`);
+          return false;
+        }
       }
       
-      // Vérifier méthode valide
-      return prize.method && ['probability', 'immediate', 'calendar'].includes(prize.method);
+      // Vérifier méthode valide - support both formats
+      const method = prize.method || (prize as any).attributionMethod;
+      return method && ['probability', 'immediate', 'calendar'].includes(method);
     });
   }
 
@@ -142,12 +216,13 @@ export class ProbabilityEngine {
         };
       }
 
-      const isCalendar = prize.method === 'calendar';
+      const method = prize.method || (prize as any).attributionMethod;
+      const isCalendar = method === 'calendar';
       const isActiveCalendar = isCalendar && PrizeValidation.isPrizeActive(prize);
       const isAvailable = !isCalendar && true; // Les lots calendrier ne participent pas en mode normal
 
       // Répartir la probabilité du lot par nombre de segments liés
-      const prizePercent = this.isProbabilityMethod(prize.method) ? this.getProbabilityPercent(prize) : 0;
+      const prizePercent = this.isProbabilityMethod(method) ? this.getProbabilityPercent(prize) : 0;
       const count = Math.max(1, segsByPrize.get(prizeId) || 0);
       const perSegment = isCalendar ? 0 : prizePercent / count;
 
@@ -163,6 +238,8 @@ export class ProbabilityEngine {
 
   /**
    * Calcul pour les lots à 100% (mode garantie)
+   * CRITIQUE: Les segments avec 100% de probabilité doivent TOUJOURS gagner
+   * tant qu'il reste des lots disponibles
    */
   private static calculateGuaranteedWinProbabilities(
     segments: CampaignSegment[],
@@ -173,14 +250,35 @@ export class ProbabilityEngine {
     const guaranteedIds = guaranteed100Prizes.map((p) => p.id);
     const perPrizeWeight = 100 / guaranteedIds.length;
 
+    console.log(`🎯 GUARANTEED MODE: ${guaranteedIds.length} prizes at 100%`, {
+      prizes: guaranteed100Prizes.map(p => ({
+        name: p.name,
+        id: p.id,
+        totalUnits: p.totalUnits,
+        awardedUnits: p.awardedUnits,
+        remaining: p.totalUnits - p.awardedUnits,
+        segments: segsByPrize.get(p.id)
+      }))
+    });
+
     const resultSegments: WheelSegment[] = mappings.map((mapping, index) => {
       const segment = segments[index];
       const prizeId = mapping.prizeId;
       let probability = 0;
+      
       if (prizeId && guaranteedIds.includes(prizeId)) {
-        const count = Math.max(1, segsByPrize.get(prizeId) || 0);
-        probability = perPrizeWeight / count;
+        const prize = guaranteed100Prizes.find(p => p.id === prizeId);
+        const remaining = prize ? (prize.totalUnits - prize.awardedUnits) : 0;
+        
+        if (remaining > 0) {
+          const count = Math.max(1, segsByPrize.get(prizeId) || 0);
+          probability = perPrizeWeight / count;
+          console.log(`✅ Guaranteed segment ${mapping.segmentId}: ${probability}% (${remaining} prizes left)`);
+        } else {
+          console.log(`❌ Guaranteed segment ${mapping.segmentId}: 0% (EXHAUSTED - no prizes left)`);
+        }
       }
+      
       return {
         id: mapping.segmentId,
         label: segment.label || `Segment ${index + 1}`,
@@ -194,12 +292,15 @@ export class ProbabilityEngine {
       };
     });
 
+    const totalProb = resultSegments.reduce((sum, s) => sum + s.probability, 0);
+    console.log(`🏆 Guaranteed mode result: ${totalProb}% total probability distributed`);
+
     return {
       segments: resultSegments,
-      totalProbability: 100,
-      hasGuaranteedWin: true,
-      residualProbability: 0,
-      errors: []
+      totalProbability: totalProb,
+      hasGuaranteedWin: totalProb > 0,
+      residualProbability: Math.max(0, 100 - totalProb),
+      errors: totalProb === 0 ? ['Tous les lots garantis sont épuisés'] : []
     };
   }
 
@@ -279,10 +380,15 @@ export class ProbabilityEngine {
       };
     });
 
+    const totalProb = resultSegments.reduce((sum, s) => sum + s.probability, 0);
+    const hasWin = resultSegments.some(s => s.isWinning);
+    
+    console.log(`📊 Normal mode final result: ${totalProb}% distributed, ${hasWin ? 'has' : 'no'} winning segments`);
+
     return {
       segments: resultSegments,
-      totalProbability: 100,
-      hasGuaranteedWin: false,
+      totalProbability: totalProb,
+      hasGuaranteedWin: hasWin,
       residualProbability: residual,
       errors: []
     };
@@ -304,7 +410,8 @@ export class ProbabilityEngine {
    * Extrait le pourcentage de probabilité d'un lot
    */
   private static getProbabilityPercent(prize: Prize): number {
-    const candidates = [prize.probabilityPercent];
+    // Support both formats: probabilityPercent and probability
+    const candidates = [prize.probabilityPercent, (prize as any).probability];
     for (const candidate of candidates) {
       if (typeof candidate === 'number' && Number.isFinite(candidate)) {
         return Math.max(0, Math.min(100, candidate));

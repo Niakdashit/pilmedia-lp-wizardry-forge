@@ -36,12 +36,16 @@ interface UsePrizeLogicReturn {
 
 // Fonctions utilitaires en dehors du hook
 const getRawSegments = (campaign: CampaignConfig) => {
-  return campaign?.gameConfig?.wheel?.segments || campaign?.config?.roulette?.segments || [];
+  return (campaign as any)?.wheelConfig?.segments || campaign?.gameConfig?.wheel?.segments || campaign?.config?.roulette?.segments || [];
 };
 
 const updateCampaignSegments = (campaign: CampaignConfig, segments: any[]) => {
   return {
     ...campaign,
+    wheelConfig: {
+      ...(campaign as any).wheelConfig,
+      segments
+    },
     gameConfig: {
       ...campaign.gameConfig,
       wheel: {
@@ -62,11 +66,80 @@ const updateCampaignSegments = (campaign: CampaignConfig, segments: any[]) => {
 
 export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): UsePrizeLogicReturn {
   
-  // État dérivé avec cache optimisé
+  // État dérivé avec cache optimisé - utilise le ProbabilityEngine pour calculer les probabilités
   const segments = useMemo(() => {
-    if (!campaign) return [];
-    return SegmentManager.generateFinalSegments(campaign);
+    if (!campaign) {
+      console.log('🔍 usePrizeLogic: No campaign provided');
+      return [];
+    }
+    
+    // Priorité aux segments du GameManagementPanel
+    const wheelConfigSegments = (campaign as any)?.wheelConfig?.segments;
+    console.log('🔍 usePrizeLogic: Processing segments', {
+      campaignId: campaign.id,
+      wheelConfigSegments,
+      segmentCount: wheelConfigSegments?.length || 0,
+      lastUpdate: campaign._lastUpdate
+    });
+    
+    if (wheelConfigSegments && wheelConfigSegments.length > 0) {
+      // Utiliser le ProbabilityEngine pour calculer les probabilités correctes
+      const probabilityResult = ProbabilityEngine.calculateSegmentProbabilities(
+        wheelConfigSegments,
+        campaign.prizes || []
+      );
+      
+      const finalSegments = probabilityResult.segments.map((segment: any, idx: number) => {
+        // Match by id (string-safe) or fallback by index
+        const wheelSegment = wheelConfigSegments.find((s: any) => String(s.id) === String(segment.id))
+          ?? wheelConfigSegments[idx];
+        const hasImage = !!wheelSegment?.imageUrl;
+        const resolvedContentType = wheelSegment?.contentType || (hasImage ? 'image' : 'text');
+        
+        // Appliquer les couleurs extraites si disponibles
+        const extractedColors = (campaign as any)?.design?.extractedColors || [];
+        const primaryColor = extractedColors[0];
+        let finalColor = wheelSegment?.color ?? segment.color;
+        
+        console.log(`🎨 usePrizeLogic: Segment ${segment.id} - originalColor: ${finalColor}, primaryColor: ${primaryColor}, extractedColors:`, extractedColors);
+        
+        // Remplacer la couleur par défaut violette par la couleur extraite
+        if (finalColor === '#841b60' && primaryColor) {
+          finalColor = primaryColor;
+          console.log(`🎨 usePrizeLogic: ✅ Updated segment ${segment.id} color from #841b60 to ${primaryColor}`);
+        } else if (primaryColor) {
+          console.log(`🎨 usePrizeLogic: ❌ NOT updating segment ${segment.id} - color is ${finalColor}, not #841b60`);
+        }
+        
+        return {
+          ...segment,
+          // Prefer the label/color from wheelConfig so UI stays in sync
+          label: wheelSegment?.label ?? segment.label,
+          color: finalColor,
+          textColor: wheelSegment?.textColor ?? segment.textColor,
+          contentType: resolvedContentType,
+          imageUrl: wheelSegment?.imageUrl,
+          // Assurer que l'icon est mappé pour la compatibilité
+          icon: resolvedContentType === 'image' && wheelSegment?.imageUrl ? wheelSegment.imageUrl : segment.icon
+        };
+      });
+      
+      console.log('🔍 usePrizeLogic: Final segments computed', finalSegments.map(s => ({
+        id: s.id,
+        label: s.label,
+        color: s.color,
+        contentType: s.contentType,
+        imageUrl: s.imageUrl ? 'HAS_IMAGE' : 'NO_IMAGE',
+        icon: s.icon ? 'HAS_ICON' : 'NO_ICON'
+      })));
+      return finalSegments;
+    }
+    
+    const fallbackSegments = SegmentManager.generateFinalSegments(campaign);
+    console.log('🔍 usePrizeLogic: Using fallback segments', fallbackSegments);
+    return fallbackSegments;
   }, [
+    (campaign as any)?.wheelConfig?.segments,
     campaign?.gameConfig?.wheel?.segments,
     campaign?.config?.roulette?.segments,
     campaign?.prizes,
@@ -85,7 +158,7 @@ export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): Us
       isValid: prizeValidation.isValid && segmentValidation.isValid,
       errors: [...prizeValidation.errors, ...segmentValidation.errors],
       warnings: prizeValidation.warnings,
-      totalProbability: segments.reduce((sum, s) => sum + s.probability, 0)
+      totalProbability: segments.reduce((sum: number, s: any) => sum + (s.probability || 0), 0)
     };
   }, [segments, prizes]);
 
@@ -130,7 +203,7 @@ export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): Us
       
       // Supprimer les références au lot dans les segments
       const rawSegments = getRawSegments(prev);
-      const cleanedSegments = rawSegments.map(segment => {
+      const cleanedSegments = rawSegments.map((segment: any) => {
         if (segment.prizeId === id) {
           const { prizeId: _, ...segmentWithoutPrize } = segment;
           return segmentWithoutPrize;
@@ -193,11 +266,11 @@ export function usePrizeLogic({ campaign, setCampaign }: UsePrizeLogicProps): Us
   }, [prizes]);
 
   const getSegmentById = useCallback((id: string): WheelSegment | undefined => {
-    return segments.find(s => s.id === id);
+    return segments.find((s: any) => s.id === id);
   }, [segments]);
 
   const getTotalProbability = useCallback((): number => {
-    return segments.reduce((sum, s) => sum + s.probability, 0);
+    return segments.reduce((sum: number, s: any) => sum + (s.probability || 0), 0);
   }, [segments]);
 
   return {

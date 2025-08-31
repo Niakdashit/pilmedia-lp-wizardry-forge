@@ -124,7 +124,7 @@ const FluidTextElement: React.FC<{
     top: `${(config.y ?? defaultY ?? 0)}px`,
     fontSize: config.fontSize ? `${config.fontSize}px` : (sizeMap[config.size || 'base'] || '14px'),
     color: config.color || '#000000',
-    fontFamily: config.fontFamily || 'Inter, sans-serif',
+    fontFamily: config.fontFamily || 'Open Sans, sans-serif',
     fontWeight: config.bold ? 'bold' : (config.fontWeight || 'normal'),
     fontStyle: config.italic ? 'italic' : (config.fontStyle || 'normal'),
     textDecoration: config.underline ? 'underline' : (config.textDecoration || 'none'),
@@ -252,7 +252,7 @@ const FluidTextElement: React.FC<{
           className="canvas-text-editor bg-transparent border-none outline-none w-full"
           style={{
             color: config.color || '#000000',
-            fontFamily: config.fontFamily || 'Inter, sans-serif',
+            fontFamily: config.fontFamily || 'Open Sans, sans-serif',
             fontSize: 'inherit',
             fontWeight: 'inherit',
             fontStyle: 'inherit',

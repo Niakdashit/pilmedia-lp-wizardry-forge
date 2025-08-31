@@ -27,7 +27,7 @@ export const useCanvasElements = (
       bold: false,
       italic: false,
       underline: false,
-      fontFamily: 'Inter',
+      fontFamily: 'Open Sans',
       showFrame: false,
       frameColor: '#ffffff',
       frameBorderColor: '#e5e7eb',

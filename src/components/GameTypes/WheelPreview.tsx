@@ -5,6 +5,7 @@ import { useGameSize } from '../../hooks/useGameSize';
 import { WheelConfigService } from '../../services/WheelConfigService';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
 import type { CampaignConfig } from '../../types/PrizeSystem';
+// Preview is read-only: avoid shared-store sync to prevent feedback loops
 
 interface WheelPreviewProps {
   campaign: any;
@@ -67,12 +68,28 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
 
   // Utiliser la même logique de calcul que StandardizedWheel pour la cohérence
   // Passer wheelModalConfig pour synchroniser les modifications en temps réel
+  // IMPORTANT: Utiliser les extractedColors du wheelModalConfig (mode édition) ou de campaign.design
+  const extractedColors = wheelModalConfig?.extractedColors || campaign?.design?.extractedColors || [];
+  
+  console.log('🎨 WheelPreview - Color extraction debug:', {
+    wheelModalConfigColors: wheelModalConfig?.extractedColors,
+    campaignDesignColors: campaign?.design?.extractedColors,
+    finalExtractedColors: extractedColors,
+    wheelModalConfig: wheelModalConfig
+  });
+  
   const wheelConfig = WheelConfigService.getCanonicalWheelConfig(
     campaign,
-    campaign?.design?.extractedColors || [],
+    extractedColors,
     wheelModalConfig,
     { device: previewDevice, shouldCropWheel: true }
   );
+  
+  console.log('🎡 WheelPreview - Final wheelConfig colors:', {
+    brandColors: wheelConfig.brandColors,
+    borderColor: wheelConfig.borderColor,
+    extractedColorsUsed: extractedColors
+  });
   
   // Utiliser le nouveau système centralisé via usePrizeLogic
   const { segments } = usePrizeLogic({
@@ -80,9 +97,15 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     setCampaign: () => {} // Read-only pour l'aperçu
   });
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('🎲 WheelPreview - Segments du nouveau système:', segments);
-  }
+  console.log('🎲 WheelPreview - Segments du nouveau système:', {
+    campaignId: campaign?.id,
+    segmentCount: segments.length,
+    segments,
+    segmentColors: segments.map((s: any) => s.color),
+    campaignWheelConfig: (campaign as any)?.wheelConfig?.segments,
+    lastUpdate: (campaign as any)?._lastUpdate
+  });
+  
   try {
     const ids = segments.map((s: any, i: number) => s.id ?? String(i + 1));
     console.log('🖥️ WheelPreview (desktop) - Segments du nouveau système:', {
@@ -139,6 +162,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     (typeof campaign?.gameConfig?.wheel?.winProbability === 'number' ? campaign?.gameConfig?.wheel?.winProbability :
     (typeof campaign?.config?.roulette?.winProbability === 'number' ? campaign?.config?.roulette?.winProbability : undefined))));
 
+  // Render directly from local segments in preview to avoid store feedback
+  const syncedSegments = segments;
+
   // Animation: après validation du formulaire, si la roue est en position centre,
   // remonter automatiquement la roue de 25% (une seule fois)
   const [lifted, setLifted] = React.useState(false);
@@ -162,7 +188,9 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
           <SmartWheel
             key={(() => {
               try {
-                const parts = segments.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}`).join('|');
+                const parts = segments.map((s: any, idx: number) => 
+                  `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
+                ).join('|');
                 const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
                 return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
               } catch {
@@ -170,7 +198,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
                 return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
               }
             })()}
-            segments={segments as any}
+            segments={syncedSegments as any}
             theme="modern"
             size={wheelSize}
             brandColors={{

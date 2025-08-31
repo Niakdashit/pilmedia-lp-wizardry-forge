@@ -90,89 +90,90 @@ const ChannelsStep: React.FC = () => {
   }, [campaignId, form]);
 
   return (
-    <div className="space-y-6">
-      <div aria-hidden className="h-[1.75rem]" />
-
+    <div className="space-y-4">
       {error && (
-        <div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>
+        <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>
       )}
 
-      <div>
-        <h2 className="font-semibold mb-2">Campagne</h2>
+      {/* Campagne */}
+      <div className="bg-white rounded-lg border border-[hsl(var(--sidebar-border))] shadow-sm p-4">
+        <h2 className="font-medium text-black mb-3">Campagne</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Nom de la campagne</label>
+            <label className="block text-sm font-medium text-black mb-2">Nom de la campagne</label>
             <input
               type="text"
               placeholder="Ex: Rentrée 2025 - Jeu Concours"
               value={(form.publication as any)?.name || ''}
               onChange={e => handleChange('publication.name', e.target.value)}
-              className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+              className="w-full px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
             />
           </div>
         </div>
       </div>
 
-      <div>
-        <h2 className="font-semibold mb-2">Dates et heures de publication</h2>
+      {/* Dates et heures */}
+      <div className="bg-white rounded-lg border border-[hsl(var(--sidebar-border))] shadow-sm p-4">
+        <h2 className="font-medium text-black mb-3">Dates et heures de publication</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Date de début</label>
+              <label className="block text-sm font-medium text-black mb-2">Date de début</label>
               <input
                 type="date"
                 value={(form.publication as any)?.startDate || ''}
                 onChange={e => handleChange('publication.startDate', e.target.value)}
-                className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                className="w-full px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Heure de début</label>
+              <label className="block text-sm font-medium text-black mb-2">Heure de début</label>
               <input
                 type="time"
                 value={(form.publication as any)?.startTime || ''}
                 onChange={e => handleChange('publication.startTime', e.target.value)}
-                className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                className="w-full px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Date de fin</label>
+              <label className="block text-sm font-medium text-black mb-2">Date de fin</label>
               <input
                 type="date"
                 value={(form.publication as any)?.endDate || ''}
                 onChange={e => handleChange('publication.endDate', e.target.value)}
-                className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                className="w-full px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Heure de fin</label>
+              <label className="block text-sm font-medium text-black mb-2">Heure de fin</label>
               <input
                 type="time"
                 value={(form.publication as any)?.endTime || ''}
                 onChange={e => handleChange('publication.endTime', e.target.value)}
-                className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                className="w-full px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div>
-        <h2 className="font-semibold mb-2">URL de la campagne</h2>
+      {/* URL de la campagne */}
+      <div className="bg-white rounded-lg border border-[hsl(var(--sidebar-border))] shadow-sm p-4">
+        <h2 className="font-medium text-black mb-3">URL de la campagne</h2>
         <div className="flex gap-2">
           <input
             type="text"
             placeholder="https://votre-campagne.example.com"
             value={(form.campaign_url as any)?.url || ''}
             onChange={e => handleChange('campaign_url.url', e.target.value)}
-            className="flex-1 px-3 py-2 border border-primary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+            className="flex-1 px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-glow))] focus:border-[hsl(var(--sidebar-glow))] bg-[hsl(var(--sidebar-surface))]"
           />
           <button
             type="button"
             onClick={() => window.open((form.campaign_url as any)?.url || '#', '_blank')}
-            className="px-3 py-2 border border-primary-200 rounded-lg text-sm text-primary-700 hover:bg-primary-50"
+            className="px-3 py-2 border border-[hsl(var(--sidebar-border))] rounded-lg text-sm text-black hover:bg-[hsl(var(--sidebar-hover))]"
           >
             Ouvrir
           </button>
@@ -209,7 +210,11 @@ const IntegrationsBlock: React.FC<{ campaignId: string; url: string }> = ({ camp
     <button
       type="button"
       onClick={() => setTab(id)}
-      className={`px-3 py-1.5 text-sm rounded-md border ${tab === id ? 'bg-brand/10 border-brand text-brand' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+      className={`px-3 py-1.5 rounded-md transition-all duration-200 text-sm ${
+        tab === id 
+          ? 'bg-white shadow-sm text-black ring-1 ring-[hsl(var(--sidebar-glow))]' 
+          : 'text-gray-600 hover:text-black hover:bg-[hsl(var(--sidebar-hover))]'
+      }`}
     >
       {label}
     </button>
@@ -217,11 +222,15 @@ const IntegrationsBlock: React.FC<{ campaignId: string; url: string }> = ({ camp
 
   const CodeBlock: React.FC<{ value: string }> = ({ value }) => (
     <div className="relative">
-      <textarea readOnly value={value} className="w-full font-mono text-xs leading-5 p-3 border rounded-lg bg-gray-50 text-gray-800 min-h-[140px]" />
+      <textarea 
+        readOnly 
+        value={value} 
+        className="w-full font-mono text-xs leading-5 p-3 border border-[hsl(var(--sidebar-border))] rounded-lg bg-[hsl(var(--sidebar-surface))] text-black min-h-[140px]" 
+      />
       <button
         type="button"
         onClick={() => copy(value)}
-        className="absolute top-2 right-2 px-2 py-1 text-xs rounded border border-gray-200 bg-white hover:bg-gray-50"
+        className="absolute top-2 right-2 px-2 py-1 text-xs rounded border border-[hsl(var(--sidebar-border))] bg-white hover:bg-[hsl(var(--sidebar-hover))] text-black"
       >
         Copier
       </button>
@@ -229,9 +238,9 @@ const IntegrationsBlock: React.FC<{ campaignId: string; url: string }> = ({ camp
   );
 
   return (
-    <div>
-      <h2 className="font-semibold mb-2">Intégrations</h2>
-      <div className="flex flex-wrap gap-2 mb-3">
+    <div className="bg-white rounded-lg border border-[hsl(var(--sidebar-border))] shadow-sm p-4">
+      <h2 className="font-medium text-black mb-3">Intégrations</h2>
+      <div className="flex items-center bg-[hsl(var(--sidebar-surface))] rounded-lg p-1 border border-[hsl(var(--sidebar-border))] mb-4">
         <TabBtn id="javascript" label="Javascript" />
         <TabBtn id="html" label="HTML" />
         <TabBtn id="webview" label="Webview" />

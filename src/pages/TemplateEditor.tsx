@@ -4,7 +4,7 @@ import DesignEditorLayout from '../components/DesignEditor/DesignEditorLayout';
 const TemplateEditor: React.FC = () => {
   useEffect(() => {
     const prev = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#eaf5f6';
+    document.body.style.backgroundColor = '#f9fafb';
     return () => {
       document.body.style.backgroundColor = prev;
     };

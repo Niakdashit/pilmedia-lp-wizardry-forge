@@ -264,8 +264,24 @@ export class PrizeValidation {
         ? new Date(`${prize.endDate}T${prize.endTime}`)
         : new Date(start.getTime() + 60000); // 1 minute par défaut
 
-      return currentDate >= start && currentDate <= end;
-    } catch {
+      const isActive = currentDate >= start && currentDate <= end;
+      
+      console.log(`📅 Calendar prize activity check: ${prize.name}`, {
+        startDate: prize.startDate,
+        startTime: prize.startTime,
+        endDate: prize.endDate,
+        endTime: prize.endTime,
+        startDateTime: start.toISOString(),
+        endDateTime: end.toISOString(),
+        currentDateTime: currentDate.toISOString(),
+        isActive,
+        timeUntilStart: start.getTime() - currentDate.getTime(),
+        timeUntilEnd: end.getTime() - currentDate.getTime()
+      });
+
+      return isActive;
+    } catch (error) {
+      console.error(`❌ Error checking calendar prize ${prize.name}:`, error);
       return false;
     }
   }

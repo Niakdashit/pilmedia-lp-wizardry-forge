@@ -176,7 +176,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             onStart={handleGameStartInternal}
             gameSize={'medium'}
             previewDevice={previewMode}
-            wheelModalConfig={wheelModalConfig}
+            wheelModalConfig={{
+              ...wheelModalConfig,
+              extractedColors: campaign?.design?.extractedColors || []
+            }}
             disabled={!formValidated}
             disableForm={false}
           />

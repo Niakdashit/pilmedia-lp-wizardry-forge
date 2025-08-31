@@ -13,6 +13,11 @@ interface UseSmartWheelRendererProps {
   showBulbs?: boolean;
   /** When true, disables pointer wobble/deflection animation */
   disablePointerAnimation?: boolean;
+  brandColors?: {
+    primary: string;
+    secondary: string;
+    accent?: string;
+  };
 }
 
 export const useSmartWheelRenderer = ({
@@ -25,6 +30,7 @@ export const useSmartWheelRenderer = ({
   customBorderWidth,
   showBulbs,
   disablePointerAnimation,
+  brandColors,
 
 }: UseSmartWheelRendererProps) => {
   // Central bulb count used for visuals and pointer collisions
@@ -402,10 +408,19 @@ export const useSmartWheelRenderer = ({
       const startAngle = (index * anglePerSegment) + (wheelState.rotation * Math.PI / 180);
       const endAngle = startAngle + anglePerSegment;
       
-      // Couleur du segment
-      const segmentColor = segment.color || 
-        (index % 2 === 0 ? theme.colors.primary : theme.colors.secondary);
+      // Couleur du segment - forcer l'utilisation de brandColors si le segment a la couleur par défaut
+      let segmentColor = segment.color;
+      
+      if (segment.color === '#841b60' && brandColors?.primary) {
+        segmentColor = brandColors.primary;
+        console.log(`🔧 useSmartWheelRenderer: FORCING segment ${segment.id} color from #841b60 to ${brandColors.primary}`);
+      } else if (!segmentColor) {
+        segmentColor = index % 2 === 0 ? theme.colors.primary : theme.colors.secondary;
+      }
+      
       if (DEBUG_SEGMENTS) usedColors.push(segmentColor);
+      
+      console.log(`🎨 useSmartWheelRenderer: Segment ${index} (id: ${segment.id}) - original: ${segment.color} -> final: ${segmentColor}`);
 
       // Dessiner le segment - utiliser le rayon complet
       ctx.beginPath();
@@ -452,53 +467,157 @@ export const useSmartWheelRenderer = ({
       ctx.restore();
 
       // Dessiner une icône par segment si disponible (imageUrl mappé vers segment.icon)
-      if (segment.icon && typeof segment.icon === 'string') {
-        const url = segment.icon;
+      const segmentWithImage = segment as any;
+      // Fallback: considérer qu'un segment est image si imageUrl OU icon existent
+      const hasImageUrl = typeof segmentWithImage.imageUrl === 'string' && segmentWithImage.imageUrl.length > 0;
+      const hasIcon = typeof segmentWithImage.icon === 'string' && segmentWithImage.icon.length > 0;
+      const isImageSegment = (segmentWithImage.contentType === 'image') || hasImageUrl || hasIcon;
+      const imageUrl = hasImageUrl ? segmentWithImage.imageUrl : (hasIcon ? segmentWithImage.icon : undefined);
+      
+      if (isImageSegment) {
+        console.log('🖼️ Image segment debug:', {
+          id: segmentWithImage.id,
+          label: segmentWithImage.label,
+          contentType: segmentWithImage.contentType,
+          imageUrl: segmentWithImage.imageUrl ? segmentWithImage.imageUrl.substring(0, 50) + '...' : 'NONE',
+          icon: segmentWithImage.icon ? segmentWithImage.icon.substring(0, 50) + '...' : 'NONE',
+          finalImageUrl: imageUrl ? imageUrl.substring(0, 50) + '...' : 'NONE',
+          willRenderImage: !!(imageUrl && typeof imageUrl === 'string')
+        });
+      }
+      
+      if (imageUrl && typeof imageUrl === 'string' && isImageSegment) {
+        console.log('🎯 Processing image for segment:', segmentWithImage.id, 'URL length:', imageUrl.length);
+        
         const cache = segmentIconCacheRef.current;
-        let entry = cache.get(url);
+        let entry = cache.get(imageUrl);
         if (!entry) {
+          console.log('🆕 Creating new image cache entry for segment:', segmentWithImage.id);
           const img = new Image();
           img.crossOrigin = 'anonymous';
           entry = { img, ready: false, loading: true };
-          cache.set(url, entry);
+          cache.set(imageUrl, entry);
           img.onload = () => {
-            const e = cache.get(url);
+            const e = cache.get(imageUrl);
             if (e) {
               e.ready = true;
               e.loading = false;
+              console.log('✅ Image loaded successfully for segment:', segmentWithImage.id);
             }
           };
           img.onerror = () => {
-            const e = cache.get(url);
+            const e = cache.get(imageUrl);
             if (e) {
               e.ready = false;
               e.loading = false;
               e.failed = true;
             }
+            console.error('❌ Failed to load segment image for:', segmentWithImage.id, imageUrl.substring(0, 100));
           };
-          img.src = url;
+          img.src = imageUrl;
+        } else {
+          console.log('📋 Using cached image entry for segment:', segmentWithImage.id, 'ready:', entry.ready, 'loading:', entry.loading, 'failed:', entry.failed);
         }
-        if (entry && entry.ready) {
-          // Positionner l'icône vers l'extérieur mais avant le texte pour éviter le chevauchement
+        
+        if (entry && entry.ready && !entry.failed) {
+          console.log('🎨 Rendering image for segment:', segmentWithImage.id);
+          
+          // Positionner l'image au centre du segment
           const midAngle = startAngle + anglePerSegment / 2;
-          const iconRadius = Math.max(10, size * 0.06);
-          const dist = radius * 0.52; // légèrement plus proche du centre que le texte (0.7)
+          const iconRadius = Math.max(20 * 0.75, size * 0.12 * 0.75); // Réduction de 25% du conteneur d'image
+          const dist = radius * 0.65; // Position centrale dans le segment
           const iconX = centerX + dist * Math.cos(midAngle);
           const iconY = centerY + dist * Math.sin(midAngle);
 
           ctx.save();
-          // Dessin en disque (clip circulaire)
+          
+          // Créer un clip circulaire SANS bordure ni fond
           ctx.beginPath();
           ctx.arc(iconX, iconY, iconRadius, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.clip();
-          ctx.drawImage(entry.img, iconX - iconRadius, iconY - iconRadius, iconRadius * 2, iconRadius * 2);
+
+          // Remplissage interne avec la couleur du segment pour éviter l'effet de halo noir
+          // (non visible comme bordure car totalement sous l'image et dans le clip)
+          ctx.fillStyle = segmentColor;
+          ctx.beginPath();
+          ctx.arc(iconX, iconY, iconRadius, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Dessiner l'image en maintenant le ratio d'aspect
+          const imgAspect = entry.img.width / entry.img.height;
+          let drawWidth = iconRadius * 2;
+          let drawHeight = iconRadius * 2;
+          
+          if (imgAspect > 1) {
+            drawHeight = drawWidth / imgAspect;
+          } else {
+            drawWidth = drawHeight * imgAspect;
+          }
+          // Anti-fringe: activer un lissage de haute qualité et agrandir légèrement l'image
+          ctx.imageSmoothingEnabled = true;
+          try { (ctx as any).imageSmoothingQuality = 'high'; } catch {}
+          const antiFringeScale = 1.02; // +2% plus doux pour éviter toute coupe visible
+          drawWidth *= antiFringeScale;
+          drawHeight *= antiFringeScale;
+
+          ctx.drawImage(
+            entry.img, 
+            iconX - drawWidth / 2, 
+            iconY - drawHeight / 2, 
+            drawWidth, 
+            drawHeight
+          );
+          
+          ctx.restore();
+        } else if (entry && entry.loading) {
+          console.log('⏳ Image loading for segment:', segmentWithImage.id);
+        } else if (entry && entry.failed) {
+          console.log('❌ Image failed to load for segment:', segmentWithImage.id);
+        } else {
+          console.log('🔍 No cache entry for image segment:', segmentWithImage.id, 'imageUrl:', imageUrl);
+        }
+      } else {
+        console.log('⚠️ Image segment without valid imageUrl:', {
+          id: segmentWithImage.id,
+          contentType: segmentWithImage.contentType,
+          hasImageUrl: !!segmentWithImage.imageUrl,
+          hasIcon: !!segmentWithImage.icon,
+          finalImageUrl: imageUrl
+        });
+      }
+      
+      // Gestion de l'indicateur de chargement pour les segments image
+      if (isImageSegment && imageUrl && typeof imageUrl === 'string') {
+        const cache = segmentIconCacheRef.current;
+        const entry = cache.get(imageUrl);
+        
+        if (entry && entry.loading) {
+          // Afficher un indicateur de chargement
+          const midAngle = startAngle + anglePerSegment / 2;
+          const iconRadius = Math.max(20 * 0.75, size * 0.12 * 0.75);
+          const dist = radius * 0.65;
+          const iconX = centerX + dist * Math.cos(midAngle);
+          const iconY = centerY + dist * Math.sin(midAngle);
+
+          ctx.save();
+          // Indicateur de chargement minimal sans fond blanc
+          ctx.strokeStyle = '#ccc';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(iconX, iconY, iconRadius * 0.7, 0, Math.PI);
+          ctx.stroke();
           ctx.restore();
         }
       }
 
-      // Dessiner le texte
-      drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);
+      // Dessiner le texte seulement si ce n'est pas un segment image
+      const shouldDrawText = !isImageSegment;
+      console.log('📝 Text rendering decision for segment:', segmentWithImage.id, 'shouldDrawText:', shouldDrawText, 'contentType:', segmentWithImage.contentType);
+      
+      if (shouldDrawText) {
+        drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);
+      }
     });
 
     if (DEBUG_SEGMENTS) {
@@ -750,11 +869,23 @@ export const useSmartWheelRenderer = ({
   };
 
   const drawSegmentText = (ctx: CanvasRenderingContext2D, segment: WheelSegment, centerX: number, centerY: number, radius: number, startAngle: number, anglePerSegment: number, theme: WheelTheme) => {
+    const segmentAny = segment as any;
+    
+    // Ne pas dessiner le texte si c'est un segment image
+    if (segmentAny.contentType === 'image') {
+      return;
+    }
+    
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(startAngle + anglePerSegment / 2);
     
-    ctx.fillStyle = segment.textColor || theme.colors.text;
+    // Utiliser la couleur de texte du segment ou calculer automatiquement
+    const textColor = segmentAny.textColor || segment.textColor || 
+      (segmentAny.color === '#ffffff' ? '#000000' : '#ffffff') || 
+      theme.colors.text;
+    
+    ctx.fillStyle = textColor;
     ctx.font = `bold ${Math.max(12, size * 0.03)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -766,7 +897,9 @@ export const useSmartWheelRenderer = ({
       ctx.shadowOffsetY = 1;
     }
     
-    ctx.fillText(segment.label, radius * 0.7, 0);
+    // Utiliser le label du segment
+    const label = segmentAny.label || segment.label || '';
+    ctx.fillText(label, radius * 0.7, 0);
     ctx.restore();
   };
 

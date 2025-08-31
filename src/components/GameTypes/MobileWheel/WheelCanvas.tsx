@@ -76,7 +76,22 @@ const WheelCanvas: React.FC<WheelCanvasProps> = ({
           ctx.beginPath();
           ctx.arc(x + imgSize / 2, y + imgSize / 2, imgSize / 2, 0, 2 * Math.PI);
           ctx.clip();
-          ctx.drawImage(img, x, y, imgSize, imgSize);
+
+          // Anti-fringe: remplir sous l'image avec la couleur du segment et activer le lissage
+          const segmentColor = seg.color || themeColors[i % themeColors.length];
+          ctx.fillStyle = segmentColor;
+          ctx.beginPath();
+          ctx.arc(x + imgSize / 2, y + imgSize / 2, imgSize / 2, 0, 2 * Math.PI);
+          ctx.fill();
+
+          ctx.imageSmoothingEnabled = true;
+          try { (ctx as any).imageSmoothingQuality = 'high'; } catch {}
+          const scale = 1.02;
+          const w = imgSize * scale;
+          const h = imgSize * scale;
+          const dx = x - (w - imgSize) / 2;
+          const dy = y - (h - imgSize) / 2;
+          ctx.drawImage(img, dx, dy, w, h);
           ctx.restore();
         };
         img.src = URL.createObjectURL(seg.image);

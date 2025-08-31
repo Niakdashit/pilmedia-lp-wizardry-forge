@@ -32,6 +32,19 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   winProbability,
   speed
 }) => {
+  // Forcer la mise à jour des couleurs des segments avec brandColors
+  const updatedSegments = useMemo(() => {
+    if (!segments || !Array.isArray(segments)) return segments;
+    
+    return segments.map((segment, index) => {
+      // Si le segment a la couleur par défaut et qu'on a des brandColors, utiliser brandColors.primary
+      if (segment.color === '#841b60' && brandColors?.primary) {
+        console.log(`🔧 SmartWheel: Forcing segment ${segment.id} color from #841b60 to ${brandColors.primary}`);
+        return { ...segment, color: brandColors.primary };
+      }
+      return segment;
+    });
+  }, [segments, brandColors?.primary]);
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
   
@@ -50,7 +63,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
       console.error('Invalid segments data:', segments);
       return;
     }
-
+    console.log('🎯 SmartWheel - Segments received:', segments.map(s => ({
+      id: s.id,
+      label: s.label,
+      color: s.color,
+      probability: s.probability
+    })));
+    console.log('🎯 SmartWheel - Brand colors received:', brandColors);
     console.group('🎡 SmartWheel - Segments Update');
     console.log('Number of segments:', segments.length);
     console.log('Spin mode:', spinMode);
@@ -151,19 +170,17 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   }), [isSpinning, rotation, targetRotation, currentSegment]);
 
   // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
-  const {
-    canvasRef,
-    centerImgReady
-  } = useSmartWheelRenderer({
-    segments,
+  const { canvasRef, centerImgReady } = useSmartWheelRenderer({
+    segments: updatedSegments,
     theme: resolvedTheme,
     wheelState,
     size: actualSize,
     borderStyle: currentBorderStyle,
-    customBorderColor: customBorderColor || brandColors?.primary,
+    customBorderColor,
     customBorderWidth,
     showBulbs,
-    disablePointerAnimation
+    disablePointerAnimation,
+    brandColors
   });
   
   const handleSpin = () => {
@@ -212,7 +229,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   };
 
   const finalButtonPosition = getOptimalButtonPosition();
-  console.log('🔵 Position finale du bouton:', finalButtonPosition);
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {

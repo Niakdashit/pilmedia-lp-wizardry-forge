@@ -224,9 +224,13 @@ export class WheelConfigService {
         accent: campaign?.design?.brandColors?.accent || '#45b7d1'
       },
 
-      // Segments provenant de la campagne (nouvelle priorité)
-      segments: (campaign as any)?.gameConfig?.wheel?.segments
-        || (campaign as any)?.config?.roulette?.segments,
+      // Segments provenant de la campagne avec couleurs mises à jour
+      segments: WheelConfigService.updateSegmentColors(
+        (campaign as any)?.wheelConfig?.segments
+          || (campaign as any)?.gameConfig?.wheel?.segments
+          || (campaign as any)?.config?.roulette?.segments,
+        extractedColors
+      ),
 
       // Taille responsive
       size: this.getResponsiveSize(options.device, modalConfig.scale || designConfig.scale || defaults.scale)
@@ -240,7 +244,8 @@ export class WheelConfigService {
         output: {
           ...finalConfig,
           segmentsCount: Array.isArray(outSegs) ? outSegs.length : 0,
-          segmentIds: outSegIds
+          segmentIds: outSegIds,
+          segmentColors: Array.isArray(outSegs) ? outSegs.map((s: any) => s?.color) : []
         }
       });
     } catch (e) {
@@ -430,5 +435,39 @@ export class WheelConfigService {
         }
       }) : null);
     };
+  }
+
+  /**
+   * Met à jour les couleurs des segments avec les couleurs extraites
+   */
+  static updateSegmentColors(segments: any[], extractedColors: string[] = []): any[] {
+    if (!segments || !Array.isArray(segments)) {
+      console.log('🔧 updateSegmentColors: No segments provided, returning empty array');
+      return [];
+    }
+    
+    if (extractedColors.length === 0) {
+      console.log('🔧 updateSegmentColors: No extracted colors, returning original segments');
+      return segments;
+    }
+
+    const primaryColor = extractedColors[0];
+    console.log('🔧 updateSegmentColors: Updating segments', {
+      originalSegments: segments,
+      extractedColors,
+      primaryColor
+    });
+    
+    const updatedSegments = segments.map((segment, index) => {
+      // Mettre à jour uniquement les segments avec la couleur par défaut violette
+      if (segment.color === '#841b60') {
+        console.log(`🔧 updateSegmentColors: Updating segment ${segment.id} from ${segment.color} to ${primaryColor}`);
+        return { ...segment, color: primaryColor };
+      }
+      return segment;
+    });
+    
+    console.log('🔧 updateSegmentColors: Final segments', updatedSegments);
+    return updatedSegments;
   }
 }

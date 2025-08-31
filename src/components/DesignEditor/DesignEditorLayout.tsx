@@ -115,9 +115,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
-  const designPanelRequested = useRef(false); // Nouvelle référence pour suivre la demande d'ouverture
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
+  // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
+  const [designColorContext, setDesignColorContext] = useState<'fill' | 'border' | 'text'>('fill');
   // Inline WheelConfigPanel visibility (controlled at layout level)
   const [showWheelPanel, setShowWheelPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
@@ -498,6 +499,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     // Prefer central editor store (campaignState) updated by panels/modals,
     // then fallback to local campaignConfig, else generate by count
     const configuredSegments = (
+      (campaignState as any)?.wheelConfig?.segments ||
+      (campaignConfig as any)?.wheelConfig?.segments ||
       (campaignState as any)?.gameConfig?.wheel?.segments ||
       (campaignState as any)?.config?.roulette?.segments ||
       (campaignConfig as any)?.gameConfig?.wheel?.segments ||
@@ -525,8 +528,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         source,
         count: Array.isArray(wheelSegments) ? wheelSegments.length : 0,
         ids: segIds,
+        haveCampaignStateWheelConfig: Boolean((campaignState as any)?.wheelConfig?.segments),
+        haveCampaignConfigWheelConfig: Boolean((campaignConfig as any)?.wheelConfig?.segments),
         haveCampaignState: Boolean((campaignState as any)?.gameConfig?.wheel?.segments || (campaignState as any)?.config?.roulette?.segments),
         haveCampaignConfig: Boolean((campaignConfig as any)?.gameConfig?.wheel?.segments || (campaignConfig as any)?.config?.roulette?.segments),
+        campaignStateSegments: (campaignState as any)?.wheelConfig?.segments,
+        campaignConfigSegments: (campaignConfig as any)?.wheelConfig?.segments,
         device: selectedDevice
       });
     } catch (e) {
@@ -1151,7 +1158,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onForceElementsTab={() => {
                   // Utiliser la référence pour changer l'onglet actif
                   if (sidebarRef.current) {
-                    sidebarRef.current.setActiveTab('assets');
+                    sidebarRef.current.setActiveTab('elements');
                   }
                   // Fermer les autres panneaux
                   setShowEffectsInSidebar(false);
@@ -1165,6 +1172,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onWheelPositionChange={setWheelPosition}
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
+                colorEditingContext={designColorContext}
               />
             )}
             {/* Main Canvas Area */}
@@ -1186,7 +1194,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               // Wheel sync props
               wheelModalConfig={wheelModalConfig}
               extractedColors={extractedColors}
-              containerClassName={mode === 'template' ? 'bg-[#eaf5f6]' : undefined}
+              containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
@@ -1204,30 +1212,25 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 setShowAnimationsInSidebar(false);
                 setShowDesignInSidebar(false);
               }}
-              onShowDesignPanel={() => {
-                if (!designPanelRequested.current) {
-                  designPanelRequested.current = true;
-                  // Toujours forcer l'affichage du panneau Design et activer l'onglet background
-                  setShowDesignInSidebar(true);
-                  setShowEffectsInSidebar(false);
-                  setShowAnimationsInSidebar(false);
-                  setShowPositionInSidebar(false);
-                  
-                  // S'assurer que l'onglet background est actif dans HybridSidebar
-                  if (sidebarRef.current) {
-                    sidebarRef.current.setActiveTab('background');
-                  }
-                  
-                  // Réinitialiser après un court délai pour permettre la détection des clics suivants
-                  setTimeout(() => {
-                    designPanelRequested.current = false;
-                  }, 100);
+              onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                if (context) {
+                  setDesignColorContext(context);
+                }
+                // Toujours ouvrir/forcer l'onglet Design
+                setShowDesignInSidebar(true);
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
+
+                if (sidebarRef.current) {
+                  sidebarRef.current.setActiveTab('background');
                 }
               }}
               onOpenElementsTab={() => {
                 // Utiliser la même logique que onForceElementsTab
                 if (sidebarRef.current) {
-                  sidebarRef.current.setActiveTab('assets');
+                  sidebarRef.current.setActiveTab('elements');
                 }
                 // Fermer les autres panneaux
                 setShowEffectsInSidebar(false);

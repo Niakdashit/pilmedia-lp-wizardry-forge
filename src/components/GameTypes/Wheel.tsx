@@ -4,20 +4,7 @@ import React, { useEffect } from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
-import type { CampaignConfig } from '../../types/PrizeSystem';
-
-interface WheelSegment {
-  id: string;
-  label: string;
-  value: string;
-  color: string;
-  textColor?: string;
-  probability?: number;
-  isWinning?: boolean;
-  prizeId?: string;
-  imageUrl?: string;
-  [key: string]: any; // Pour les propriétés dynamiques supplémentaires
-}
+import type { CampaignConfig, WheelSegment } from '../../types/PrizeSystem';
 
 interface WheelProps {
   config: any;
@@ -53,6 +40,7 @@ const Wheel: React.FC<WheelProps> = ({
       label: 'Prix 1',
       value: 'prix-1',
       color: '#ff6b6b',
+      textColor: '#ffffff',
       probability: 1, // 100% de probabilité pour les tests
       isWinning: true
     },
@@ -61,6 +49,7 @@ const Wheel: React.FC<WheelProps> = ({
       label: 'Prix 2',
       value: 'prix-2',
       color: '#4ecdc4',
+      textColor: '#ffffff',
       probability: 0,
       isWinning: true
     },
@@ -69,6 +58,7 @@ const Wheel: React.FC<WheelProps> = ({
       label: 'Prix 3',
       value: 'prix-3',
       color: '#45b7d1',
+      textColor: '#ffffff',
       probability: 0,
       isWinning: true
     },
@@ -77,6 +67,7 @@ const Wheel: React.FC<WheelProps> = ({
       label: 'Prix 4',
       value: 'prix-4',
       color: '#96ceb4',
+      textColor: '#ffffff',
       probability: 0,
       isWinning: true
     },
@@ -85,6 +76,7 @@ const Wheel: React.FC<WheelProps> = ({
       label: 'Dommage',
       value: 'dommage',
       color: '#feca57',
+      textColor: '#000000',
       probability: 0,
       isWinning: false
     },
@@ -93,6 +85,7 @@ const Wheel: React.FC<WheelProps> = ({
       label: 'Rejouer',
       value: 'rejouer',
       color: '#ff9ff3',
+      textColor: '#000000',
       probability: 0,
       isWinning: false
     }
@@ -104,27 +97,24 @@ const Wheel: React.FC<WheelProps> = ({
     setCampaign: () => {} // Read-only
   });
 
-  let segments = computedSegments.length > 0 ? [...computedSegments] : [...defaultSegments];
+  // Priorité absolue aux segments du GameManagementPanel
+  let segments = computedSegments.length > 0 ? [...computedSegments] : [];
   
-  // Test mode: Set first segment to 100% probability and others to 0%
-  const TEST_MODE = true; // Set to false to disable test mode
-  if (TEST_MODE && segments.length > 0) {
-    console.group('🎡 Wheel - TEST MODE ACTIVATED');
-    console.log('Setting first segment to 100% probability');
-    
-    segments = segments.map((segment, index) => ({
-      ...segment,
-      probability: index === 0 ? 1 : 0,
-      isWinning: index === 0
-    }));
-    
-    console.log('Test Segments:', segments.map(s => ({
-      label: s.label,
-      probability: s.probability,
-      isWinning: s.isWinning
-    })));
-    console.groupEnd();
+  console.log('🎡 Wheel component: Segments received', {
+    campaignId: campaign?.id,
+    computedSegments,
+    segmentCount: segments.length,
+    campaignSegments: (campaign as any)?.wheelConfig?.segments,
+    lastUpdate: (campaign as any)?._lastUpdate
+  });
+  
+  // Si aucun segment configuré, utiliser les segments par défaut uniquement en dernier recours
+  if (segments.length === 0) {
+    console.warn('🎡 Wheel - Aucun segment configuré, utilisation des segments par défaut');
+    segments = [...defaultSegments];
   }
+  
+  // Removed TEST_MODE to use actual GameManagementPanel configuration
   
   // Log initial des segments chargés
   useEffect(() => {
@@ -177,12 +167,12 @@ const Wheel: React.FC<WheelProps> = ({
     
     // Process segments to ensure they match the WheelSegment type
     const processedSegments = segments.map(segment => {
-      const baseSegment = {
+      const baseSegment: WheelSegment = {
         id: segment.id || Math.random().toString(36).substr(2, 9),
         label: segment.label || 'Segment',
         value: segment.value || segment.id || segment.label || 'default-value',
         color: segment.color || '#000000',
-        textColor: segment.textColor || '#ffffff',
+        textColor: segment.textColor ?? '#ffffff',
         probability: segment.probability || 0,
         isWinning: segment.isWinning || false,
         prizeId: segment.prizeId,
@@ -379,21 +369,31 @@ const Wheel: React.FC<WheelProps> = ({
       )}
       
       <SmartWheel
+        key={(() => {
+          try {
+            const parts = segmentsWithWeights.map((s: any, idx: number) => 
+              `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
+            ).join('|');
+            return `${segmentsWithWeights.length}-${parts}-${gameDimensions.width}`;
+          } catch {
+            return `${segmentsWithWeights.length}-${gameDimensions.width}`;
+          }
+        })()}
         segments={segmentsWithWeights}
         onResult={(segment) => {
           if (onComplete) onComplete(segment.label);
-          if (onFinish) onFinish(segment.isWinning ? 'win' : 'lose');
         }}
-        onSpin={onStart}
-        disabled={disabled}
-        spinMode={effectiveSpinMode as 'random' | 'instant_winner' | 'probability'}
-        winProbability={resolvedWinProbability}
-        size={Math.min(gameDimensions.width, gameDimensions.height)}
+        size={gameDimensions.width}
+        theme="modern"
         brandColors={{
-          primary: '#6366f1',
-          secondary: '#8b5cf6',
-          accent: '#06b6d4'
+          primary: (campaign as any)?.design?.customColors?.primary || '#841b60',
+          secondary: (campaign as any)?.design?.customColors?.secondary || '#4ecdc4'
         }}
+        disabled={disabled}
+        disablePointerAnimation={disabled}
+        spinMode={effectiveSpinMode}
+        speed="medium"
+        winProbability={resolvedWinProbability}
       />
       
       {config?.showDebug && (

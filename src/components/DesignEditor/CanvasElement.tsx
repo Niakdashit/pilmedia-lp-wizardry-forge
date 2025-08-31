@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { RotateCw } from 'lucide-react';
+import ShapeRenderer from './components/ShapeRenderer';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';
@@ -10,6 +11,8 @@ import { getCanvasViewport } from './core/Transform';
 import { createPreciseDrag } from './core/Drag';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { usePinchResize } from './hooks/usePinchResize';
+import { usePrizeLogic } from '../../hooks/usePrizeLogic';
+import type { CampaignConfig } from '../../types/PrizeSystem';
 
 // Professional drag & drop implementation - Excalidraw/Canva precision
 
@@ -30,6 +33,10 @@ export interface CanvasElementProps {
   isGroupSelecting?: boolean;
   // Currently active group ID (if any). When set, children of this group are locked from direct manipulation
   activeGroupId?: string | null;
+  // Campaign data for wheel elements
+  campaign?: CampaignConfig;
+  // Extracted colors from background image
+  extractedColors?: string[];
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -45,9 +52,27 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   onMeasureBounds,
   isMultiSelecting,
   isGroupSelecting,
-  activeGroupId
+  activeGroupId,
+  campaign,
+  extractedColors
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
+  
+  // Get wheel segments from campaign for wheel elements
+  const { segments: campaignSegments } = usePrizeLogic({
+    campaign: campaign as CampaignConfig,
+    setCampaign: () => {} // Read-only
+  });
+  
+  console.log('🎨 CanvasElement: Campaign segments for wheel', {
+    elementType: element.type,
+    campaignId: campaign?.id,
+    campaignSegments,
+    segmentCount: campaignSegments.length,
+    campaignWheelConfig: (campaign as any)?.wheelConfig?.segments,
+    lastUpdate: (campaign as any)?._lastUpdate,
+    extractedColors: extractedColors
+  });
   
   // 📱 Hook d'optimisation tactile pour mobile/tablette
   const touchOptimization = useTouchOptimization({
@@ -149,6 +174,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const dragSystemRef = useRef<ReturnType<typeof createPreciseDrag> | null>(null);
   const [isRotating, setIsRotating] = React.useState(false);
   const [tempRotation, setTempRotation] = React.useState<number | null>(null);
+  // Temporary hide flag triggered by UI adjustments (e.g., border radius slider)
+  const [tempHideControls, setTempHideControls] = React.useState(false);
 
   // Determine if the element is inside a designated zone/container (e.g., group)
   // We check common fields used for nesting/containerization.
@@ -156,6 +183,24 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   // Centralized flag to hide controls based on context
   const shouldHideControls = Boolean(isInZone || isMultiSelecting || isGroupSelecting);
+  const hideControls = shouldHideControls || tempHideControls;
+
+  // Listen to toolbar events to hide/show selection while adjusting values
+  React.useEffect(() => {
+    const onAdjust = (e: Event) => {
+      const anyEvt = e as CustomEvent<{ hide?: boolean; reason?: string }>;
+      const reason = anyEvt.detail?.reason;
+      if (reason === 'borderRadius' || reason === 'border' || reason === 'generic') {
+        setTempHideControls(Boolean(anyEvt.detail?.hide));
+      }
+    };
+    document.addEventListener('uiAdjustingSelection', onAdjust as EventListener);
+    return () => {
+      document.removeEventListener('uiAdjustingSelection', onAdjust as EventListener);
+      // Ensure controls are restored on unmount
+      setTempHideControls(false);
+    };
+  }, []);
 
   // Normalize angle to [-180, 180] inclusive (keep -180 and 180 as is)
   const normalize180 = useCallback((deg: number) => {
@@ -351,7 +396,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
     if (readOnly) return; // Disable entering edit mode in read-only
-    if (element.type === 'text') {
+    if (element.type === 'text' || element.type === 'shape') {
       setIsEditing(true);
     }
   }, [element.type, readOnly]);
@@ -535,12 +580,25 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     
     // Detect if it's a corner handle (for proportional scaling with font size change)
     const isCornerHandle = ['nw', 'ne', 'sw', 'se'].includes(direction);
+    
+    // For uploaded images, corner handles should only allow proportional resizing
+    const isImageElement = element.type === 'image';
+    const shouldForceProportional = isImageElement && isCornerHandle;
 
     // Stage updates for text to avoid jittery re-renders during resize
     let pendingUpdate: any = null;
 
     const handleResizePointerMove = (e: PointerEvent) => {
+      // 🚀 Performance optimization: Throttle resize updates to 60fps
+      if (Date.now() - (handleResizePointerMove as any).lastUpdate < 16) return;
+      (handleResizePointerMove as any).lastUpdate = Date.now();
+      
       requestAnimationFrame(() => {
+        // 🎯 Professional keyboard modifiers (Canva/Figma/Photoshop standard)
+        const isShiftPressed = e.shiftKey;
+        const isAltPressed = e.altKey;
+        // Note: isCtrlPressed reserved for future snap-to-grid functionality
+        
         // 📱 Appliquer la sensibilité tactile aux deltas (en viewport px)
         const rawDeltaX = e.clientX - startX;
         const rawDeltaY = e.clientY - startY;
@@ -557,8 +615,15 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         const rectNow = canvasEl?.getBoundingClientRect();
         const canvasW = rectNow ? rectNow.width / z : Number.POSITIVE_INFINITY;
         const canvasH = rectNow ? rectNow.height / z : Number.POSITIVE_INFINITY;
-        const deltaX = adjustedDeltas.deltaX / z;
-        const deltaY = adjustedDeltas.deltaY / z;
+        let deltaX = adjustedDeltas.deltaX / z;
+        let deltaY = adjustedDeltas.deltaY / z;
+        
+        // 🎯 Shift modifier: Force proportional scaling for all handles
+        if (isShiftPressed && isImageElement) {
+          const maxDelta = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+          deltaX = deltaX >= 0 ? maxDelta : -maxDelta;
+          deltaY = deltaY >= 0 ? maxDelta : -maxDelta;
+        }
 
         let newWidth = startWidth;
         let newHeight = startHeight;
@@ -625,15 +690,90 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           return;
           }
           // For edge handles or non-text elements: change dimensions only
-          switch (direction) {
-            case 'n': newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
-            case 's': newHeight = Math.max(20, startHeight + deltaY); break;
-            case 'w': newWidth = Math.max(20, startWidth - deltaX); newX = startPosX + (startWidth - newWidth); break;
-            case 'e': newWidth = Math.max(20, startWidth + deltaX); break;
-            case 'se': newWidth = Math.max(20, startWidth + deltaX); newHeight = Math.max(20, startHeight + deltaY); break;
-            case 'sw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight + deltaY); newX = startPosX + (startWidth - newWidth); break;
-            case 'ne': newWidth = Math.max(20, startWidth + deltaX); newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
-            case 'nw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight - deltaY); newX = startPosX + (startWidth - newWidth); newY = startPosY + (startHeight - newHeight); break;
+          if (shouldForceProportional) {
+            // For uploaded images using corner handles, force proportional scaling
+            let targetW, targetH;
+            
+            // Calculate the scale factor based on the diagonal movement
+            // Use the delta that would result in the smaller scale to maintain proportions
+            let scaleX, scaleY, scale;
+            
+            switch (direction) {
+              case 'se': 
+                scaleX = (startWidth + deltaX) / startWidth;
+                scaleY = (startHeight + deltaY) / startHeight;
+                scale = Math.max(0.1, Math.min(scaleX, scaleY)); // Use smaller scale for proportional
+                targetW = Math.max(20, startWidth * scale);
+                targetH = Math.max(20, startHeight * scale);
+                break;
+              case 'sw': 
+                scaleX = (startWidth - deltaX) / startWidth;
+                scaleY = (startHeight + deltaY) / startHeight;
+                scale = Math.max(0.1, Math.min(scaleX, scaleY));
+                targetW = Math.max(20, startWidth * scale);
+                targetH = Math.max(20, startHeight * scale);
+                newX = startPosX + (startWidth - targetW);
+                break;
+              case 'ne': 
+                scaleX = (startWidth + deltaX) / startWidth;
+                scaleY = (startHeight - deltaY) / startHeight;
+                scale = Math.max(0.1, Math.min(scaleX, scaleY));
+                targetW = Math.max(20, startWidth * scale);
+                targetH = Math.max(20, startHeight * scale);
+                newY = startPosY + (startHeight - targetH);
+                break;
+              case 'nw': 
+                scaleX = (startWidth - deltaX) / startWidth;
+                scaleY = (startHeight - deltaY) / startHeight;
+                scale = Math.max(0.1, Math.min(scaleX, scaleY));
+                targetW = Math.max(20, startWidth * scale);
+                targetH = Math.max(20, startHeight * scale);
+                newX = startPosX + (startWidth - targetW);
+                newY = startPosY + (startHeight - targetH);
+                break;
+              default:
+                targetW = startWidth;
+                targetH = startHeight;
+                break;
+            }
+            
+            newWidth = targetW;
+            newHeight = targetH;
+          } else if (isImageElement && (!isCornerHandle || isShiftPressed)) {
+            // For images: edge handles OR Shift+corner handles = cropping behavior
+            // Alt modifier: resize from center (professional standard)
+            const centerResize = isAltPressed;
+            
+            switch (direction) {
+              case 'n': 
+                newHeight = Math.max(20, startHeight - deltaY); 
+                newY = centerResize ? startPosY + deltaY/2 : startPosY + (startHeight - newHeight); 
+                break;
+              case 's': 
+                newHeight = Math.max(20, startHeight + deltaY); 
+                newY = centerResize ? startPosY - deltaY/2 : startPosY; 
+                break;
+              case 'w': 
+                newWidth = Math.max(20, startWidth - deltaX); 
+                newX = centerResize ? startPosX + deltaX/2 : startPosX + (startWidth - newWidth); 
+                break;
+              case 'e': 
+                newWidth = Math.max(20, startWidth + deltaX); 
+                newX = centerResize ? startPosX - deltaX/2 : startPosX; 
+                break;
+            }
+          } else {
+            // Original behavior for non-image elements
+            switch (direction) {
+              case 'n': newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
+              case 's': newHeight = Math.max(20, startHeight + deltaY); break;
+              case 'w': newWidth = Math.max(20, startWidth - deltaX); newX = startPosX + (startWidth - newWidth); break;
+              case 'e': newWidth = Math.max(20, startWidth + deltaX); break;
+              case 'se': newWidth = Math.max(20, startWidth + deltaX); newHeight = Math.max(20, startHeight + deltaY); break;
+              case 'sw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight + deltaY); newX = startPosX + (startWidth - newWidth); break;
+              case 'ne': newWidth = Math.max(20, startWidth + deltaX); newHeight = Math.max(20, startHeight - deltaY); newY = startPosY + (startHeight - newHeight); break;
+              case 'nw': newWidth = Math.max(20, startWidth - deltaX); newHeight = Math.max(20, startHeight - deltaY); newX = startPosX + (startWidth - newWidth); newY = startPosY + (startHeight - newHeight); break;
+            }
           }
 
           // Clamp dimensions/position to stay within canvas bounds
@@ -659,6 +799,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             elementRef.current.style.transform = `translate3d(${newX}px, ${newY}px, 0) rotate(${angle}deg)`;
             elementRef.current.style.width = `${Math.round(newWidth)}px`;
             elementRef.current.style.height = `${Math.round(newHeight)}px`;
+            
+            // Force immediate visual update with will-change for smoother rendering
+            elementRef.current.style.willChange = 'transform, width, height';
+            
             // Update inner content size as well to reflect visual change immediately
             const contentEl = elementRef.current.firstElementChild as HTMLElement | null;
             if (contentEl) {
@@ -666,6 +810,64 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
                 // Edge-resize for text should affect width; height auto
                 contentEl.style.width = `${Math.round(newWidth)}px`;
                 contentEl.style.height = '';
+              } else if (element.type === 'image') {
+                // For images, ensure the img element scales properly
+                contentEl.style.width = `${Math.round(newWidth)}px`;
+                contentEl.style.height = `${Math.round(newHeight)}px`;
+                contentEl.style.overflow = 'hidden';
+                contentEl.style.position = 'relative';
+                contentEl.style.willChange = 'width, height';
+                
+                // Also update any nested img elements directly
+                const imgEl = contentEl.querySelector('img') as HTMLImageElement | null;
+                if (imgEl) {
+                  // For edge handles, implement professional directional cropping
+                  if (!isCornerHandle) {
+                    // Keep image at original size for true cropping behavior
+                    imgEl.style.width = `${Math.round(startWidth)}px`;
+                    imgEl.style.height = `${Math.round(startHeight)}px`;
+                    imgEl.style.objectFit = 'none';
+                    imgEl.style.position = 'absolute';
+                    imgEl.style.transform = 'none';
+                    imgEl.style.maxWidth = 'none';
+                    imgEl.style.maxHeight = 'none';
+                    imgEl.style.pointerEvents = 'none';
+                    
+                    // Professional directional anchoring like Canva/Figma
+                    switch (direction) {
+                      case 'n': // Top handle - anchor image to bottom of container
+                        imgEl.style.top = `${Math.round(newHeight - startHeight)}px`;
+                        imgEl.style.left = '0';
+                        break;
+                      case 's': // Bottom handle - anchor image to top (no movement)
+                        imgEl.style.top = '0';
+                        imgEl.style.left = '0';
+                        break;
+                      case 'w': // Left handle - anchor image to right of container
+                        imgEl.style.top = '0';
+                        imgEl.style.left = `${Math.round(newWidth - startWidth)}px`;
+                        break;
+                      case 'e': // Right handle - anchor image to left (no movement)
+                        imgEl.style.top = '0';
+                        imgEl.style.left = '0';
+                        break;
+                      default:
+                        imgEl.style.top = '0';
+                        imgEl.style.left = '0';
+                        break;
+                    }
+                  } else {
+                    // For corner handles, scale the image proportionally
+                    imgEl.style.width = '100%';
+                    imgEl.style.height = '100%';
+                    imgEl.style.objectFit = 'cover';
+                    imgEl.style.position = 'relative';
+                    imgEl.style.top = '';
+                    imgEl.style.left = '';
+                    imgEl.style.transform = '';
+                  }
+                  imgEl.style.willChange = 'width, height';
+                }
               } else {
                 contentEl.style.width = `${Math.round(newWidth)}px`;
                 contentEl.style.height = `${Math.round(newHeight)}px`;
@@ -715,6 +917,17 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         if (elementRef.current) {
           elementRef.current.style.width = '';
           elementRef.current.style.height = '';
+          elementRef.current.style.willChange = '';
+          
+          // Clear will-change on content elements too
+          const contentEl = elementRef.current.firstElementChild as HTMLElement | null;
+          if (contentEl) {
+            contentEl.style.willChange = '';
+            const imgEl = contentEl.querySelector('img') as HTMLImageElement | null;
+            if (imgEl) {
+              imgEl.style.willChange = '';
+            }
+          }
         }
         liveRectRef.current = null;
         setIsResizing(false);
@@ -1001,35 +1214,59 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             <SmartWheel
               key={(() => {
                 try {
-                  const segs = element.segments || [];
-                  const parts = segs.map((s: any, idx: number) => `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}`).join('|');
+                  // Use campaign segments instead of element segments
+                  const segs = campaignSegments.length > 0 ? campaignSegments : (element.segments || []);
+                  const parts = segs.map((s: any, idx: number) => 
+                    `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
+                  ).join('|');
                   const size = Math.min(element.width || 300, element.height || 300);
                   return `${segs.length}-${parts}-${size}`;
                 } catch {
-                  return `${(element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}`;
+                  return `${campaignSegments.length || (element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}`;
                 }
               })()}
-              segments={element.segments || []}
+              segments={campaignSegments.length > 0 ? campaignSegments : (element.segments || [])}
               size={Math.min(element.width || 300, element.height || 300)}
               disabled={true}
               disablePointerAnimation={true}
+              theme="modern"
               brandColors={{
-                primary: '#FF6B6B',
-                secondary: '#4ECDC4'
+                primary: extractedColors?.[0] || (campaign as any)?.design?.customColors?.primary || '#841b60',
+                secondary: extractedColors?.[1] || (campaign as any)?.design?.customColors?.secondary || '#ffffff',
+                accent: extractedColors?.[2] || (campaign as any)?.design?.customColors?.accent || '#4ecdc4'
               }}
             />
           </div>
         );
       case 'shape':
         return (
-          <div
-            className={`${readOnly ? '' : 'cursor-move'}`}
-            style={{
-              ...elementStyle,
-              backgroundColor: element.backgroundColor || element.style?.backgroundColor || '#3B82F6',
-              borderRadius: element.borderRadius || element.style?.borderRadius || (element.shapeType === 'circle' ? '50%' : '0'),
-            }}
-          />
+          <div className={`${readOnly ? '' : 'cursor-move'}`} style={elementStyle}>
+            <ShapeRenderer
+              shapeType={element.shapeType || 'rectangle'}
+              width={element.width || 100}
+              height={element.height || 100}
+              color={element.backgroundColor || element.style?.backgroundColor || '#3B82F6'}
+              borderRadius={element.borderRadius || element.style?.borderRadius}
+              borderStyle={element.borderStyle || 'none'}
+              borderWidth={element.borderWidth || '0px'}
+              borderColor={element.borderColor || '#000000'}
+              isEditing={isEditing}
+              content={element.content || ''}
+              onContentChange={(content: string) => {
+                editingTextRef.current = content;
+              }}
+              onKeyDown={handleTextKeyDown}
+              onBlur={handleTextBlur}
+              textRef={textRef}
+              fontSize={element.fontSize || 16}
+              fontFamily={element.fontFamily || 'Inter'}
+              fontWeight={element.fontWeight || 'normal'}
+              fontStyle={element.fontStyle || 'normal'}
+              textDecoration={element.textDecoration || 'none'}
+              textAlign={element.textAlign || 'center'}
+              textColor={element.textColor || element.color || '#000000'}
+            />
+          </div>
         );
       default:
         return <div className={`w-20 h-20 bg-gray-300 ${readOnly ? '' : 'cursor-move'}`} style={elementStyle} />;
@@ -1041,8 +1278,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       ref={elementRef}
       className={`absolute ${
         isSelected && !readOnly
-          ? (shouldHideControls
-              ? 'ring-2 ring-[hsl(var(--primary))] ring-opacity-60'
+          ? (hideControls
+              ? ''
               : 'ring-2 ring-[hsl(var(--primary))]')
           : ''
       }`}
@@ -1063,45 +1300,51 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       {renderElement}
 
       {/* Selection handles - masqués pendant le drag */}
-      {isSelected && !isDragging && !isResizing && !readOnly && !shouldHideControls && !isEditing && (
+      {isSelected && !isDragging && !isResizing && !readOnly && !hideControls && !isEditing && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 
-            className="absolute -top-1 -left-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-nw-resize shadow-lg" 
+            className="absolute -top-1 -left-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-nw-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'nw')}
             style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -top-1 -right-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-ne-resize shadow-lg" 
+            className="absolute -top-1 -right-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-ne-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'ne')}
             style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -bottom-1 -left-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-sw-resize shadow-lg" 
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-sw-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'sw')}
             style={{ zIndex: 1001 }}
           />
           <div 
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-[hsl(var(--primary))] border border-white rounded-full cursor-se-resize shadow-lg" 
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-se-resize shadow-lg" 
             onPointerDown={(e) => handleResizePointerDown(e, 'se')}
             style={{ zIndex: 1001 }}
           />
           
-          {/* Edge handles - only left and right (w, e) */}
-          {element.type === 'text' && (
-            <>
-              <div 
-                className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-[hsl(var(--primary))] border border-white rounded cursor-w-resize shadow-lg" 
-                onPointerDown={(e) => handleResizePointerDown(e, 'w')}
-                style={{ zIndex: 1001 }}
-              />
-              <div 
-                className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-2 h-3 bg-[hsl(var(--primary))] border border-white rounded cursor-e-resize shadow-lg" 
-                onPointerDown={(e) => handleResizePointerDown(e, 'e')}
-                style={{ zIndex: 1001 }}
-              />
-            </>
-          )}
+          {/* Edge handles - for all elements */}
+          <div 
+            className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-w-resize shadow-lg" 
+            onPointerDown={(e) => handleResizePointerDown(e, 'w')}
+            style={{ zIndex: 1001 }}
+          />
+          <div 
+            className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-e-resize shadow-lg" 
+            onPointerDown={(e) => handleResizePointerDown(e, 'e')}
+            style={{ zIndex: 1001 }}
+          />
+          <div 
+            className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-n-resize shadow-lg" 
+            onPointerDown={(e) => handleResizePointerDown(e, 'n')}
+            style={{ zIndex: 1001 }}
+          />
+          <div 
+            className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-s-resize shadow-lg" 
+            onPointerDown={(e) => handleResizePointerDown(e, 's')}
+            style={{ zIndex: 1001 }}
+          />
           
           {/* Delete button */}
           <button
@@ -1112,10 +1355,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             ×
           </button>
 
-          {/* Rotate handle button */}
+          {/* Rotate handle button - positioned below the shape */}
           <button
             onPointerDown={handleRotatePointerDown}
-            className="absolute -top-8 left-1/2 -translate-x-1/2 w-6 h-6 bg-white text-gray-800 border border-gray-300 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50"
+            className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-6 h-6 bg-white text-gray-800 border-2 border-blue-500 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50"
             style={{ zIndex: 1001 }}
             aria-label="Rotate"
             title="Rotate (hold Shift to snap)"

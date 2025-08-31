@@ -156,9 +156,16 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
     
     let targetIndex = 0;
     
-    // Determine target segment based on spin mode
-    if (spinMode === 'probability') {
-      // In probability mode, use the provided win probability
+    // Vérifier d'abord si un segment a une probabilité de 100%
+    const guaranteedWinSegment = segments.find(segment => segment.probability === 100);
+    
+    if (guaranteedWinSegment) {
+      // Si un segment a 100% de probabilité, le sélectionner systématiquement
+      targetIndex = segments.indexOf(guaranteedWinSegment);
+    } 
+    // Si aucun segment n'a 100% de probabilité, utiliser la logique normale
+    else if (spinMode === 'probability') {
+      // En mode probabilité, utiliser la probabilité de gain fournie
       const isWin = Math.random() < (winProbability || 0.5);
       const winningSegments = segments.filter(segment => !isLosingLabel(segment.label));
       const losingSegments = segments.filter(segment => isLosingLabel(segment.label));
@@ -169,13 +176,13 @@ export const useWheelAnimation = (props: UseWheelAnimationProps) => {
         targetIndex = segments.indexOf(losingSegments[Math.floor(Math.random() * losingSegments.length)]);
       }
     } else if (spinMode === 'instant_winner') {
-      // In instant winner mode, always select a winning segment if available
+      // En mode gagnant instantané, toujours sélectionner un segment gagnant s'il est disponible
       const winningSegments = segments.filter(segment => !isLosingLabel(segment.label));
       if (winningSegments.length > 0) {
         targetIndex = segments.indexOf(winningSegments[Math.floor(Math.random() * winningSegments.length)]);
       }
     } else {
-      // In random mode, select any segment
+      // En mode aléatoire, sélectionner n'importe quel segment
       targetIndex = Math.floor(Math.random() * segments.length);
     }
     

@@ -33,8 +33,9 @@ export class SegmentManager {
    * Extrait les segments depuis les différentes sources possibles
    */
   private static extractRawSegments(campaign: CampaignConfig): CampaignSegment[] {
-    // Prioriser gameConfig.wheel.segments puis config.roulette.segments
+    // Prioriser wheelConfig.segments (GameManagementPanel) puis gameConfig.wheel.segments puis config.roulette.segments
     const segments = 
+      (campaign as any)?.wheelConfig?.segments || 
       campaign?.gameConfig?.wheel?.segments || 
       campaign?.config?.roulette?.segments || 
       [];

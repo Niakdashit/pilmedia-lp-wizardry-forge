@@ -14,6 +14,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
+import GameManagementPanel from './panels/GameManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -77,6 +78,8 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onForceElementsTab?: () => void;
   // Tabs à masquer (par id: 'campaign', 'export', ...)
   hiddenTabs?: string[];
+  // Propagate color editing context from toolbar -> layout -> sidebar -> background panel
+  colorEditingContext?: 'fill' | 'border' | 'text';
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
@@ -119,7 +122,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onWheelPositionChange,
   selectedDevice = 'desktop',
   hiddenTabs = [],
-  onForceElementsTab
+  onForceElementsTab,
+  colorEditingContext
 }: HybridSidebarProps, ref) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -140,7 +144,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, []);
-  const [activeTab, _setActiveTab] = useState<string | null>('assets');
+  const [activeTab, _setActiveTab] = useState<string | null>('elements');
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
@@ -203,9 +207,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         newActiveTab = activatedPanel.key;
         shouldUpdate = true;
       } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'assets'
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'elements'
       else if (panelStates.some(p => p.key === activeTab && !p.active && p.prevActive)) {
-        newActiveTab = 'assets';
+        newActiveTab = 'elements';
         shouldUpdate = true;
       }
     }
@@ -249,7 +253,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   React.useEffect(() => {
     if (activeTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
       onEffectsPanelChange?.(false);
-      setActiveTab('assets');
+      setActiveTab('elements');
     }
   }, [selectedElement, activeTab, onEffectsPanelChange]);
 
@@ -285,7 +289,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       debug: 'Onglet Design (background)'
     },
     { 
-      id: 'assets', 
+      id: 'elements', 
       label: 'Éléments', 
       icon: Plus
     },
@@ -365,6 +369,31 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   };
 
+  // Theme variables to align with Home sidebar colors
+  // Approximations in HSL for:
+  // - background: #2c2c34 -> hsl(240 8% 19%)
+  // - border: #4b5563 -> hsl(220 10% 34%)
+  // - hover: #3f3f46 -> hsl(240 5% 26%)
+  // - icon default: #d1d5db -> hsl(220 9% 72%)
+  // - icon active/text primary: #ffffff -> hsl(0 0% 100%)
+  // - active background (approx mid of gradient #841b60 -> #b41b60): use #9e1b60 -> hsl(326 70% 37%)
+  // - active accent/border: #b41b60 -> hsl(336 75% 41%)
+  const themeVars: React.CSSProperties = {
+    // Container/backgrounds
+    ['--sidebar-bg' as any]: '240 8% 19%',
+    ['--sidebar-surface' as any]: '240 8% 16%',
+    // Borders and hover
+    ['--sidebar-border' as any]: '220 10% 34%',
+    ['--sidebar-hover' as any]: '240 5% 26%',
+    // Icons/text
+    ['--sidebar-icon' as any]: '220 9% 72%',
+    ['--sidebar-icon-active' as any]: '0 0% 100%',
+    ['--sidebar-text-primary' as any]: '0 0% 100%',
+    // Active states
+    ['--sidebar-active-bg' as any]: '326 70% 37%',
+    ['--sidebar-active' as any]: '336 75% 41%'
+  } as React.CSSProperties;
+
   const handleTabClick = (tabId: string) => {
     console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
     
@@ -402,7 +431,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <TextEffectsPanel 
             onBack={() => {
               onEffectsPanelChange?.(false);
-              setActiveTab('assets');
+              setActiveTab('elements');
             }}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
@@ -413,7 +442,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <TextAnimationsPanel 
             onBack={() => {
               onAnimationsPanelChange?.(false);
-              setActiveTab('assets');
+              setActiveTab('elements');
             }}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
@@ -425,7 +454,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             <LazyPositionPanel 
               onBack={() => {
                 onPositionPanelChange?.(false);
-                setActiveTab('assets');
+                setActiveTab('elements');
               }}
               selectedElement={selectedElement}
               onElementUpdate={onElementUpdate}
@@ -438,7 +467,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <WheelConfigPanel
             onBack={() => {
               onWheelPanelChange?.(false);
-              setActiveTab('assets');
+              setActiveTab('elements');
             }}
             wheelBorderStyle={wheelBorderStyle || 'solid'}
             wheelBorderColor={wheelBorderColor || '#000000'}
@@ -465,11 +494,27 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               extractedColors={extractedColors}
               selectedElement={selectedElement}
               onElementUpdate={onElementUpdate}
+              colorEditingContext={colorEditingContext}
             />
           </div>
         );
-      case 'assets':
+      case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
+      case 'game':
+        return (
+          <div className="p-4">
+            <GameManagementPanel 
+              campaign={campaign || campaignConfig}
+              setCampaign={(updatedCampaign) => {
+                // Mettre à jour l'état global ET local
+                setCampaign(updatedCampaign);
+                if (onCampaignConfigChange) {
+                  onCampaignConfigChange(updatedCampaign);
+                }
+              }}
+            />
+          </div>
+        );
       case 'form':
         return (
           <div className="p-4">
@@ -498,14 +543,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   if (isCollapsed) {
     return (
-      <div className="w-16 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
         {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(false)}
-          className="p-4 hover:bg-gray-100 border-b border-gray-200"
+          className="p-4 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))]"
           title="Développer la sidebar"
         >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
+          <ChevronRight className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
         
         {/* Collapsed Icons */}
@@ -532,7 +577,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
                 style={{ 
@@ -550,9 +595,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-h-0">
       {/* Vertical Tab Sidebar */}
-      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm">
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0" style={themeVars}>
         {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
@@ -614,7 +659,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
       {/* Panel Content */}
       {activeTab && (
-        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full shadow-sm">
+        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
@@ -627,7 +672,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           </div>
 
           {/* Panel Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
             {renderPanel(activeTab)}
           </div>
         </div>

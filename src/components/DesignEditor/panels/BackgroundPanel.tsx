@@ -9,6 +9,8 @@ interface BackgroundPanelProps {
   extractedColors?: string[];
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
+  // 'fill' applies text color or shape background; 'border' applies shape borderColor
+  colorEditingContext?: 'fill' | 'border' | 'text';
 }
 
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
@@ -17,19 +19,34 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   currentBackground,
   extractedColors = [],
   selectedElement,
-  onElementUpdate
+  onElementUpdate,
+  colorEditingContext = 'fill'
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [customColor, setCustomColor] = useState('#FF0000');
 
-  // Vérifier si un texte est sélectionné
+  // Vérifier si un élément est sélectionné
   const isTextSelected = selectedElement && selectedElement.type === 'text';
+  const isShapeSelected = selectedElement && selectedElement.type === 'shape';
   
-  // Déterminer la couleur actuelle en fonction de la sélection
+  // Déterminer la couleur actuelle en fonction de la sélection et du contexte
   const getCurrentColor = () => {
     if (isTextSelected) {
+      if (colorEditingContext === 'border') {
+        // Texte peut ne pas avoir de bordure; fallback à la couleur du texte si absent
+        return selectedElement.borderColor || selectedElement.color || '#000000';
+      }
       return selectedElement.color || '#000000';
+    }
+    if (isShapeSelected) {
+      if (colorEditingContext === 'border') {
+        return selectedElement.borderColor || '#000000';
+      }
+      if (colorEditingContext === 'text') {
+        return selectedElement.textColor || '#000000';
+      }
+      return selectedElement.backgroundColor || '#3B82F6';
     }
     return currentBackground?.type === 'color' ? currentBackground.value : undefined;
   };
@@ -37,19 +54,28 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   // Fonction pour appliquer une couleur
   const applyColor = (color: string) => {
     if (isTextSelected && onElementUpdate) {
-      // Appliquer au texte sélectionné
-      onElementUpdate({ color });
+      // Texte: bordure optionnelle, sinon couleur du texte
+      if (colorEditingContext === 'border') {
+        onElementUpdate({ borderColor: color });
+      } else {
+        onElementUpdate({ color });
+      }
+    } else if (isShapeSelected && onElementUpdate) {
+      // Forme: selon le contexte
+      if (colorEditingContext === 'border') {
+        onElementUpdate({ borderColor: color });
+      } else if (colorEditingContext === 'text') {
+        onElementUpdate({ textColor: color });
+      } else {
+        onElementUpdate({ backgroundColor: color });
+      }
     } else {
-      // Appliquer à l'arrière-plan
+      // Appliquer à l'arrière-plan (toujours fill)
       onBackgroundChange({ type: 'color', value: color });
     }
   };
 
-  // Détermination de la sélection courante (pour l'état "sélectionné" dans l'UI)
-  const currentValue = getCurrentColor();
-  const isTurquoiseSelected = (currentValue || '').toLowerCase() === '#4ecdc4';
-  const cloudGradient = 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)';
-  const isCloudGradientSelected = currentValue === cloudGradient;
+  // La fonction getCurrentColor() est utilisée directement dans le rendu
 
   const backgroundColors = [
     '#FFFFFF', '#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA',
@@ -138,14 +164,20 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
             <>
               📝 Modification du texte sélectionné
               <span className="block text-xs text-blue-600 mt-1">
-                Les couleurs seront appliquées au texte "{selectedElement.text || 'Texte'}"
+                {colorEditingContext === 'border' 
+                  ? 'Les couleurs seront appliquées à la bordure du texte (si supportée)'
+                  : `Les couleurs seront appliquées au texte "${selectedElement.text || 'Texte'}"`}
               </span>
             </>
           ) : (
             <>
-              🖼️ Modification de l'arrière-plan
+              {isShapeSelected ? '⬛ Modification de la forme sélectionnée' : '🖼️ Modification de l\'arrière-plan'}
               <span className="block text-xs text-blue-600 mt-1">
-                Les couleurs seront appliquées à l'arrière-plan du design
+                {isShapeSelected
+                  ? (colorEditingContext === 'border' 
+                      ? 'Les couleurs seront appliquées à la bordure de la forme'
+                      : 'Les couleurs seront appliquées au remplissage de la forme')
+                  : 'Les couleurs seront appliquées à l\'arrière-plan du design'}
               </span>
             </>
           )}
@@ -170,7 +202,11 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       {/* Solid Colors */}
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">
-          {isTextSelected ? 'COULEURS DE TEXTE' : 'COULEURS UNIES'}
+          {isShapeSelected
+            ? (colorEditingContext === 'border' ? 'COULEURS DE BORDURE' : 'COULEURS DE REMPLISSAGE')
+            : (isTextSelected
+                ? (colorEditingContext === 'border' ? 'COULEURS DE BORDURE (TEXTE)' : 'COULEURS DE TEXTE')
+                : 'COULEURS UNIES')}
         </h3>
         <div className="grid grid-cols-5 gap-2">
           {/* Sélecteur de couleur personnalisé en première position */}
@@ -239,49 +275,6 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
                 )}
               </button>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Predefined Backgrounds - Seulement si pas de texte sélectionné */}
-      {!isTextSelected && (
-        <div>
-          <h3 className="font-semibold text-sm text-gray-700 mb-3">ARRIÈRE-PLANS PRÉDÉFINIS</h3>
-          <div className="space-y-2">
-            <button
-              onClick={() => applyColor('#4ECDC4')}
-              aria-selected={isTurquoiseSelected}
-              className={`w-full p-3 border rounded-lg transition-colors text-left group ${
-                isTurquoiseSelected
-                  ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
-                  : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
-              }`}
-            >
-              <div className="flex items-center">
-                <div 
-                  className="w-8 h-8 rounded-full mr-3"
-                  style={{ background: '#4ECDC4' }}
-                ></div>
-                <span className="text-sm group-hover:text-white">Turquoise (défaut template)</span>
-              </div>
-            </button>
-            <button
-              onClick={() => applyColor('linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)')}
-              aria-selected={isCloudGradientSelected}
-              className={`w-full p-3 border rounded-lg transition-colors text-left group ${
-                isCloudGradientSelected
-                  ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
-                  : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
-              }`}
-            >
-              <div className="flex items-center">
-                <div 
-                  className="w-8 h-8 rounded-full mr-3"
-                  style={{ background: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }}
-                ></div>
-                <span className="text-sm group-hover:text-white">Ciel avec nuages</span>
-              </div>
-            </button>
           </div>
         </div>
       )}

@@ -4,7 +4,9 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
-import AlignmentGuides from './components/AlignmentGuides';
+import AlignmentGuides from './alignment/AlignmentGuides';
+import AlignmentToolbar from './alignment/AlignmentToolbar';
+import { useAlignmentEngine } from './alignment/useAlignmentEngine';
 import GridOverlay from './components/GridOverlay';
 import WheelSettingsButton from './components/WheelSettingsButton';
 import ZoomSlider from './components/ZoomSlider';
@@ -154,6 +156,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Precise DOM-measured bounds per element (canvas-space units)
   const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
+  
 
   // Stable origin bounds for resize interactions to prevent drift
   const multiResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -293,6 +296,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     snapTolerance: 3 // Réduit pour plus de précision
   });
 
+  // Store centralisé pour la grille
+  const { showGridLines, setShowGridLines } = useEditorStore();
+
+  // Nouveau système d'alignement créé depuis zéro
+  const alignmentEngine = useAlignmentEngine({
+    elements,
+    canvasSize: effectiveCanvasSize,
+    zoom: localZoom,
+    snapTolerance: 10,
+    gridSize: 20,
+    showGrid: showGridLines
+  });
+
+
   // Handlers optimisés avec snapping et cache intelligent (moved earlier)
   const handleElementUpdate = useCallback((id: string, updates: any) => {
     // Utiliser la fonction externe si disponible
@@ -324,19 +341,31 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const workingUpdates: Record<string, any> = { ...updates };
     const devicePatch: Record<string, any> = {};
 
-    // Appliquer le snapping si c'est un déplacement (avant de répartir par device)
+    // Appliquer le nouveau système d'alignement si c'est un déplacement
     if (workingUpdates.x !== undefined && workingUpdates.y !== undefined) {
       const element = elementById.get(id);
       if (element) {
-        const snappedPosition = applySnapping(
-          workingUpdates.x,
-          workingUpdates.y,
-          element.width || 100,
-          element.height || 100,
-          id
-        );
-        workingUpdates.x = snappedPosition.x;
-        workingUpdates.y = snappedPosition.y;
+        // Utiliser le nouveau système d'alignement
+        console.log('🔥 DRAG DETECTED for element:', element.id, 'at position:', workingUpdates.x, workingUpdates.y);
+        alignmentEngine.startDragging();
+        const snapResult = alignmentEngine.applySnap({
+          id: element.id,
+          x: workingUpdates.x,
+          y: workingUpdates.y,
+          width: element.width || 100,
+          height: element.height || 30
+        });
+
+        console.log('🎯 SNAP RESULT:', snapResult);
+        workingUpdates.x = snapResult.x;
+        workingUpdates.y = snapResult.y;
+        alignmentEngine.updateGuides(snapResult.guides);
+        console.log('📏 GUIDES UPDATED:', snapResult.guides.length, 'guides');
+        
+        // Arrêter le drag après un délai pour nettoyer les guides
+        setTimeout(() => {
+          alignmentEngine.stopDragging();
+        }, 150);
 
         // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
         const positionCacheKey = `snap-${id}-${Math.floor(workingUpdates.x/5)}-${Math.floor(workingUpdates.y/5)}`;
@@ -1212,9 +1241,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [elementById, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
 
-  // Store centralisé pour la grille
-  const { showGridLines, setShowGridLines } = useEditorStore();
-
   // (removed) calculateAbsolutePosition was unused after adopting DOM-measured bounds exclusively for group frames
 
   // Les fonctions de configuration de la roue sont maintenant fournies par le composant parent
@@ -1464,8 +1490,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Clear selection when clicking outside canvas/toolbars on mobile
         onClearSelection={handleClearSelection}
       >
-        {/* Canvas Toolbar - Only show when text element is selected */}
-        {(!readOnly) && selectedElementData && selectedElementData.type === 'text' && (
+        {/* Canvas Toolbar - Show for text and shape elements */}
+        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
               selectedElement={{
@@ -1568,12 +1594,41 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 zoom={localZoom}
               />
               
-              {/* Alignment Guides */}
+              {/* Nouveau système d'alignement */}
               <AlignmentGuides
+                guides={alignmentEngine.currentGuides}
                 canvasSize={effectiveCanvasSize}
-                elements={elementsWithAbsolute}
                 zoom={localZoom}
+                isDragging={alignmentEngine.isDragging}
               />
+              
+              {/* Toolbar d'alignement */}
+              {selectedElements && selectedElements.length > 0 && !readOnly && (
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+                  <AlignmentToolbar
+                    selectedElements={selectedElements.map(el => el.id)}
+                    onAlignToCanvas={(elementId, type) => {
+                      const newPos = alignmentEngine.alignToCanvas(elementId, type);
+                      if (newPos) {
+                        handleElementUpdate(elementId, newPos);
+                      }
+                    }}
+                    onAlignToElement={(elementId, targetId, type) => {
+                      const newPos = alignmentEngine.alignToElement(elementId, targetId, type);
+                      if (newPos) {
+                        handleElementUpdate(elementId, newPos);
+                      }
+                    }}
+                    onDistribute={(elementIds, direction) => {
+                      const positions = alignmentEngine.distributeElements(elementIds, direction);
+                      positions.forEach(pos => {
+                        handleElementUpdate(pos.id, { x: pos.x, y: pos.y });
+                      });
+                    }}
+                  />
+                </div>
+              )}
+              
               
               {/* Clouds */}
               
@@ -1725,6 +1780,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   isMultiSelecting={Boolean(selectedElements && selectedElements.length > 1)}
                   isGroupSelecting={Boolean(selectedGroupId)}
                   activeGroupId={selectedGroupId || null}
+                  // Pass campaign data for wheel elements
+                  campaign={campaign}
+                  // Pass extracted colors for wheel customization
+                  extractedColors={extractedColors}
                 />
               );
             })}
