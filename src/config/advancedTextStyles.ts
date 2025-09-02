@@ -18,8 +18,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #ff6b35, #ff9068, #ffb347)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       fontWeight: 'bold'
     }
   },
@@ -30,8 +30,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #0077be, #00a8cc, #40e0d0)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       fontWeight: 'bold'
     }
   },
@@ -42,8 +42,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #ff7f50, #ff6347, #ffd700)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       fontWeight: 'bold'
     }
   },
@@ -54,8 +54,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #8a2be2, #9932cc, #da70d6)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       fontWeight: 'bold'
     }
   },
@@ -66,8 +66,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       fontWeight: 'bold'
     }
   },
@@ -141,8 +141,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #b8860b, #ffd700, #ffff00, #ffd700, #b8860b)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
       fontWeight: 'bold'
     }
@@ -154,8 +154,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #708090, #c0c0c0, #ffffff, #c0c0c0, #708090)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
       fontWeight: 'bold'
     }
@@ -165,7 +165,7 @@ export const advancedTextStyles: TextStyleEffect[] = [
     name: 'Contour Épais',
     category: 'outline',
     css: {
-      webkitTextStroke: '3px #000000',
+      WebkitTextStroke: '3px #000000',
       fontWeight: 'bold'
     }
   },
@@ -175,7 +175,7 @@ export const advancedTextStyles: TextStyleEffect[] = [
     name: 'Contour Coloré',
     category: 'outline',
     css: {
-      webkitTextStroke: '2px #ff6b35',
+      WebkitTextStroke: '2px #ff6b35',
       fontWeight: 'bold'
     }
   },
@@ -227,8 +227,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #ff00ff, #00ffff)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 30px #ff00ff',
       fontWeight: 'bold',
       letterSpacing: '3px'
@@ -243,7 +243,7 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'rgba(255, 255, 255, 0.1)',
       backdropFilter: 'blur(10px)',
-      webkitTextStroke: '1px rgba(255, 255, 255, 0.3)',
+      WebkitTextStroke: '1px rgba(255, 255, 255, 0.3)',
       fontWeight: 'bold'
     }
   },
@@ -254,8 +254,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0, #ff0080)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '0 0 30px rgba(255, 0, 128, 0.5)',
       fontWeight: 'bold',
       letterSpacing: '2px'
@@ -280,8 +280,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #00ff41, #0080ff)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41',
       fontWeight: 'bold'
     }
@@ -295,8 +295,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #ffffff, #e0e0e0, #ffffff, #f0f0f0)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15)',
       fontWeight: 'bold'
     }
@@ -308,8 +308,8 @@ export const advancedTextStyles: TextStyleEffect[] = [
     css: {
       background: 'linear-gradient(45deg, #4b0082, #8a2be2, #9932cc)',
       backgroundClip: 'text',
-      webkitBackgroundClip: 'text',
-      webkitTextFillColor: 'transparent',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
       textShadow: '0 0 10px #8a2be2, 0 0 20px #8a2be2',
       fontWeight: 'bold',
       letterSpacing: '1px'

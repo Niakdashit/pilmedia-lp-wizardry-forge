@@ -1,28 +1,28 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import CanvasElement from './CanvasElement';
+import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
-import StandardizedWheel from '../shared/StandardizedWheel';
-import SmartAlignmentGuides from './components/SmartAlignmentGuides';
-import AlignmentToolbar from './components/AlignmentToolbar';
-import GridOverlay from './components/GridOverlay';
-import WheelSettingsButton from './components/WheelSettingsButton';
-import ZoomSlider from './components/ZoomSlider';
-import GroupSelectionFrame from './components/GroupSelectionFrame';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
+import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
+import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
+import GridOverlay from '../DesignEditor/components/GridOverlay';
+import QuizSettingsButton from './components/QuizSettingsButton';
+import ZoomSlider from '../DesignEditor/components/ZoomSlider';
+import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
-import { useAlignmentSystem } from './hooks/useAlignmentSystem';
+import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
-import CanvasContextMenu from './components/CanvasContextMenu';
+import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 
-import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
+import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
-import MobileResponsiveLayout from './components/MobileResponsiveLayout';
+import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 
@@ -67,14 +67,14 @@ export interface DesignCanvasProps {
   canRedo?: boolean;
   // Optionally enable internal one-time auto-fit (disabled by default; parent should manage auto-fit)
   enableInternalAutoFit?: boolean;
-  // Wheel configuration sync props
-  wheelModalConfig?: any;
+  // Quiz configuration sync props
+  quizModalConfig?: any;
   extractedColors?: string[];
-  updateWheelConfig?: (updates: any) => void;
-  getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
-  // Inline wheel panel controls
-  showWheelPanel?: boolean;
-  onWheelPanelChange?: (show: boolean) => void;
+  updateQuizConfig?: (updates: any) => void;
+  getCanonicalConfig?: (options?: { device?: string; shouldCropQuiz?: boolean }) => any;
+  // Inline quiz panel controls
+  showQuizPanel?: boolean;
+  onQuizPanelChange?: (show: boolean) => void;
   // Read-only mode to disable interactions
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
@@ -117,12 +117,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   canRedo,
   enableInternalAutoFit = false,
   onContentBoundsChange,
-  onWheelPanelChange,
+  onQuizPanelChange,
   readOnly = false,
   containerClassName,
-  updateWheelConfig,
+  updateQuizConfig,
   getCanonicalConfig,
-  wheelModalConfig,
+  quizModalConfig,
   extractedColors
 }, ref) => {
 
@@ -1179,7 +1179,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Calculer le facteur de zoom basé sur le delta (plus lent)
         const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
         const newZoom = Math.max(0.1, Math.min(1, localZoom * zoomFactor));
-        // Manual wheel/trackpad zoom disables auto-fit temporarily
+        // Manual trackpad zoom disables auto-fit temporarily
         autoFitEnabledRef.current = false;
         
         setLocalZoom(newZoom);
@@ -1476,7 +1476,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [background, onBackgroundChange, onExtractedColorsChange]);
   const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;
 
-  // Les segments et tailles sont maintenant gérés par StandardizedWheel
+  // Les questions et réponses sont maintenant gérées par StandardizedQuiz
   return (
     <DndProvider backend={HTML5Backend}>
       <MobileResponsiveLayout
@@ -1673,24 +1673,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               
               
               {(() => {
-                // Debug: log just before the wheel renders to trace segment source and canonical config
+                // Debug: log just before the quiz renders to trace questions source and canonical config
                 try {
-                  const segs = (campaign as any)?.gameConfig?.wheel?.segments 
-                    || (campaign as any)?.config?.roulette?.segments 
+                  const questions = (campaign as any)?.gameConfig?.quiz?.questions 
                     || [];
-                  const campaignSegIds = Array.isArray(segs) ? segs.map((s: any) => s?.id ?? '?') : [];
+                  const campaignQuestionIds = Array.isArray(questions) ? questions.map((q: any) => q?.id ?? '?') : [];
                   const canonical = typeof getCanonicalConfig === 'function' 
-                    ? getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true }) 
+                    ? getCanonicalConfig({ device: selectedDevice, shouldCropQuiz: true }) 
                     : null;
-                  const canonicalSegs = (canonical as any)?.segments || [];
-                  const canonicalSegIds = Array.isArray(canonicalSegs) ? canonicalSegs.map((s: any) => s?.id ?? '?') : [];
-                  console.log('🧭 [DesignCanvas] Pre-render wheel debug:', {
+                  const canonicalQuestions = (canonical as any)?.questions || [];
+                  const canonicalQuestionIds = Array.isArray(canonicalQuestions) ? canonicalQuestions.map((q: any) => q?.id ?? '?') : [];
+                  console.log('🧭 [DesignCanvas] Pre-render quiz debug:', {
                     device: selectedDevice,
-                    campaignSegCount: Array.isArray(segs) ? segs.length : 0,
-                    campaignSegIds,
+                    campaignQuestionCount: Array.isArray(questions) ? questions.length : 0,
+                    campaignQuestionIds,
                     hasGetCanonicalConfig: typeof getCanonicalConfig === 'function',
-                    canonicalSegCount: Array.isArray(canonicalSegs) ? canonicalSegs.length : 0,
-                    canonicalSegIds
+                    canonicalQuestionCount: Array.isArray(canonicalQuestions) ? canonicalQuestions.length : 0,
+                    canonicalQuestionIds
                   });
                 } catch (e) {
                   console.warn('🧭 [DesignCanvas] pre-render log error', e);
@@ -1698,30 +1697,47 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Roue standardisée avec découpage cohérent */}
-              <StandardizedWheel
-                campaign={campaign}
-                device={selectedDevice}
-                shouldCropWheel={true}
-                disabled={readOnly}
-                getCanonicalConfig={getCanonicalConfig}
-                updateWheelConfig={updateWheelConfig}
-                extractedColors={extractedColors}
-                wheelModalConfig={wheelModalConfig}
-                onClick={() => {
-                  if (readOnly) return;
-                  console.log('🔘 Clic sur la roue détecté');
-                  onWheelPanelChange?.(true);
-                }}
-              />
+              {/* Quiz avec template sélectionné */}
+              {(() => {
+                // Créer un objet campaign temporaire avec le templateId depuis l'état local
+                const tempCampaign = campaign || {
+                  gameConfig: {
+                    quiz: {
+                      templateId: quizModalConfig?.templateId || 'image-quiz',
+                      questions: []
+                    }
+                  },
+                  design: {
+                    quizConfig: {
+                      templateId: quizModalConfig?.templateId || 'image-quiz'
+                    }
+                  }
+                };
+                
+                console.log('🎯 Campaign object for TemplatedQuiz:', tempCampaign);
+                
+                return (
+                  <TemplatedQuiz
+                    campaign={tempCampaign}
+                    device={selectedDevice}
+                    disabled={readOnly}
+                    templateId={quizModalConfig?.templateId || tempCampaign?.gameConfig?.quiz?.templateId || tempCampaign?.design?.quizConfig?.templateId || 'image-quiz'}
+                    onClick={() => {
+                      if (readOnly) return;
+                      console.log('🔘 Clic sur le quiz détecté');
+                      onQuizPanelChange?.(true);
+                    }}
+                  />
+                );
+              })()}
 
-              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+              {/* Bouton configuration quiz ABSOLU dans le canvas d'aperçu */}
               {!readOnly && (
                 <div className="absolute bottom-2 right-2 z-50">
-                  <WheelSettingsButton
+                  <QuizSettingsButton
                     onClick={() => {
-                      console.log('🔘 Clic sur WheelSettingsButton détecté');
-                      onWheelPanelChange?.(true);
+                      console.log('🔘 Clic sur QuizSettingsButton détecté');
+                      onQuizPanelChange?.(true);
                     }}
                   />
                 </div>
@@ -1816,9 +1832,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   isMultiSelecting={Boolean(selectedElements && selectedElements.length > 1)}
                   isGroupSelecting={Boolean(selectedGroupId)}
                   activeGroupId={selectedGroupId || null}
-                  // Pass campaign data for wheel elements
+                  // Pass campaign data for quiz elements
                   campaign={campaign}
-                  // Pass extracted colors for wheel customization
+                  // Pass extracted colors for quiz customization
                   extractedColors={extractedColors}
                   // Pass alignment system for new snapping logic
                   alignmentSystem={{
