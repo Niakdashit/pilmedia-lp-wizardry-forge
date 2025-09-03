@@ -93,7 +93,7 @@ const DashboardHeader: React.FC = () => {
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'forwards'
                 }}>
-                      <div className="w-[4.75rem] h-[4.75rem] bg-transparent rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300">
+                      <div className="w-[4.75rem] h-[4.75rem] bg-transparent rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 ring-1 ring-white/30 group-hover:ring-white/50">
                         <img src={iconByType[game.type]} alt={game.label} className="w-[3.7rem] h-[3.7rem] object-contain" />
                       </div>
                       <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
@@ -124,7 +124,7 @@ const DashboardHeader: React.FC = () => {
                     animationDelay: `${index * 0.1}s`,
                     animationFillMode: 'forwards'
                   }}>
-                        <div className="w-[4.75rem] h-[4.75rem] bg-transparent rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300">
+                        <div className="w-[4.75rem] h-[4.75rem] bg-transparent rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 ring-1 ring-white/30 group-hover:ring-white/50">
                           <img src={iconByType[game.type]} alt={game.label} className="w-[3.7rem] h-[3.7rem] object-contain" />
                         </div>
                         <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
