@@ -31,42 +31,65 @@ const DEVICE_DIMENSIONS = {
 export const useAutoResponsive = (baseDevice: DeviceType = 'desktop') => {
   const universalResponsive = useUniversalResponsive(baseDevice);
 
+  // Route-based guard: disable auto-appearance recognition inside editors only
+  const disabled = typeof window !== 'undefined' && (() => {
+    try {
+      const p = window.location?.pathname || '';
+      return p.startsWith('/design-editor') || p.startsWith('/template-editor') || p.startsWith('/quiz-editor');
+    } catch {
+      return false;
+    }
+  })();
+
   // Legacy compatibility wrapper
   const calculateResponsiveProperties = useMemo(() => {
     return (
       element: ResponsiveElement,
       targetDevice: DeviceType
     ): ResponsiveElement => {
+      if (disabled) {
+        // passthrough without auto adjustments
+        return element;
+      }
       const result = universalResponsive.calculateResponsiveProperties(element as any, targetDevice);
       return result as ResponsiveElement;
     };
-  }, [universalResponsive]);
+  }, [universalResponsive, disabled]);
 
   // Legacy compatibility wrappers
   const applyAutoResponsive = useMemo(() => {
     return (elements: ResponsiveElement[]): ResponsiveElement[] => {
+      if (disabled) {
+        // passthrough; do not generate per-device configs automatically
+        return elements;
+      }
       const result = universalResponsive.applyAutoResponsive(elements as any);
       return result.map(el => el as ResponsiveElement);
     };
-  }, [universalResponsive]);
+  }, [universalResponsive, disabled]);
 
   const getPropertiesForDevice = useMemo(() => {
     return (element: ResponsiveElement, device: DeviceType): ResponsiveElement => {
+      if (disabled) {
+        return element;
+      }
       return universalResponsive.getPropertiesForDevice(element as any, device) as ResponsiveElement;
     };
-  }, [universalResponsive]);
+  }, [universalResponsive, disabled]);
 
   const needsAdaptation = useMemo(() => {
     return (element: ResponsiveElement, device: DeviceType): boolean => {
+      if (disabled) return false;
       return universalResponsive.needsAdaptation(element as any, device);
     };
-  }, [universalResponsive]);
+  }, [universalResponsive, disabled]);
 
   const getAdaptationSuggestions = useMemo(() => {
     return (_elements: ResponsiveElement[]) => {
-      return []; // Return empty array for now to fix type error
+      // When disabled, provide no suggestions; otherwise defer to universal hook in future
+      return [];
     };
-  }, [universalResponsive]);
+  }, [universalResponsive, disabled]);
 
   return {
     applyAutoResponsive,
