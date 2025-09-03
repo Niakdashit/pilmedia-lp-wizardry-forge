@@ -1,0 +1,11 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <circle cx="32" cy="32" r="32" fill="#9EC9DA"/>
+  <!-- larger bubble -->
+  <g transform="translate(10,12)">
+    <!-- speech bubble -->
+    <path d="M8 4h28c3.314 0 6 2.686 6 6v14c0 3.314-2.686 6-6 6H20l-6 6v-6H8c-3.314 0-6-2.686-6-6V10c0-3.314 2.686-6 6-6Z" fill="#fff"/>
+    <!-- question mark in brand blue to match negative effect -->
+    <path d="M22 12c0-3.866 3.134-7 7-7s7 3.134 7 7c0 2.6-1.37 4.24-3.68 5.56C30.7 18.4 30 19.6 30 21" fill="none" stroke="#9EC9DA" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="29" cy="26" r="2" fill="#9EC9DA"/>
+  </g>
+</svg>
