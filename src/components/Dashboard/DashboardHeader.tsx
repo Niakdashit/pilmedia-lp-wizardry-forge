@@ -7,7 +7,7 @@ import { GameType } from './types';
 const DashboardHeader: React.FC = () => {
   const gameTypes: GameType[] = [{
     type: 'wheel',
-    label: 'Roue de la fortune'
+    label: 'Roue'
   }, {
     type: 'quiz',
     label: 'Quiz'
