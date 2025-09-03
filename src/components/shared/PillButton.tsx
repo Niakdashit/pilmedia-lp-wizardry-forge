@@ -20,7 +20,7 @@ const PillButton: React.FC<PillButtonProps> = ({
   type = 'button',
   disabled = false,
 }) => {
-  const baseClasses = 'inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-lg hover:from-[#841b60] hover:to-[#6d164f] transition-all duration-300 shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30 transform hover:-translate-y-0.5 border border-white/20 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20';
+  const baseClasses = 'inline-flex items-center px-4 py-2 bg-[#fafafa] text-[#841b61] font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border-2 border-[#bca0b2] text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
   
   if (to) {
     return (
