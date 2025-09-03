@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import PillButton from '../shared/PillButton';
 import { ChevronRight, Calendar, MoreVertical } from 'lucide-react';
 import { getCampaignTypeIcon, getCampaignTypeText, CampaignType } from '../../utils/campaignTypes';
 import { RecentCampaign } from './types';
@@ -88,13 +89,12 @@ const RecentCampaigns: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Galerie des créations</h2>
             <p className="text-gray-600">Vos dernières campagnes avec style</p>
           </div>
-          <Link to="/campaigns" className="group relative overflow-hidden inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-lg border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20" aria-label="Voir toutes les campagnes">
+          <PillButton to="/campaigns" className="group">
             <span className="relative z-10 flex items-center">
               Voir toutes
               <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
             </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#841b60] to-[#6d164f] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </Link>
+          </PillButton>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

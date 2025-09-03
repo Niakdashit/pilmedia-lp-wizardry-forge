@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import PillButton from '../shared/PillButton';
 import { FolderOpen, Layers } from 'lucide-react';
 import { getCampaignTypeIcon } from '../../utils/campaignTypes';
 import { GameType } from './types';
@@ -89,15 +90,8 @@ const QuickCreationSection: React.FC = () => {
           </div>
 
           <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-            <Link to="/campaigns" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#841b60]/90 to-[#6d164f]/90 backdrop-blur-sm text-white font-medium rounded-lg hover:from-[#841b60] hover:to-[#6d164f] transition-all duration-300 shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30 transform hover:-translate-y-0.5 border border-white/20 text-sm">
-              <FolderOpen className="w-4 h-4 mr-2 drop-shadow-sm" />
-              <span className="drop-shadow-sm">Mes campagnes</span>
-            </Link>
-            
-            <Link to="/templates-editor" className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#841b60]/90 to-[#6d164f]/90 backdrop-blur-sm text-white font-medium rounded-lg hover:from-[#841b60] hover:to-[#6d164f] transition-all duration-300 shadow-lg shadow-[#841b60]/20 hover:shadow-xl hover:shadow-[#841b60]/30 transform hover:-translate-y-0.5 border border-white/20 text-sm">
-              <Layers className="w-4 h-4 mr-2 drop-shadow-sm" />
-              <span className="drop-shadow-sm">Modèles</span>
-            </Link>
+            <PillButton to="/campaigns" icon={<FolderOpen className="w-4 h-4" />}>Mes campagnes</PillButton>
+            <PillButton to="/templates-editor" icon={<Layers className="w-4 h-4" />}>Modèles</PillButton>
           </div>
         </div>
 
