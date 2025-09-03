@@ -64,10 +64,12 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   quizQuestionCount?: number;
   quizTimeLimit?: number;
   quizDifficulty?: 'easy' | 'medium' | 'hard';
+  quizBorderRadius?: number;
   selectedQuizTemplate?: string;
   onQuizQuestionCountChange?: (count: number) => void;
   onQuizTimeLimitChange?: (time: number) => void;
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   // Callback pour forcer l'ouverture de l'onglet Elements
@@ -96,6 +98,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onAnimationsPanelChange,
   showPositionPanel = false,
   onPositionPanelChange,
+  quizBorderRadius,
+  onQuizBorderRadiusChange,
   showQuizPanel = false,
   onQuizPanelChange,
   showDesignPanel = false,
@@ -464,10 +468,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             quizQuestionCount={quizQuestionCount || 5}
             quizTimeLimit={quizTimeLimit || 30}
             quizDifficulty={quizDifficulty || 'medium'}
+            quizBorderRadius={quizBorderRadius}
             selectedTemplate={selectedQuizTemplate}
             onQuestionCountChange={(c) => onQuizQuestionCountChange?.(c)}
             onTimeLimitChange={(t) => onQuizTimeLimitChange?.(t)}
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
+            onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
             selectedDevice={selectedDevice}
           />

@@ -4,6 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
+import { quizTemplates } from '../../types/quizTemplates';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
@@ -337,6 +338,29 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       // Appeler le handler externe pour la synchronisation/side-effects,
       // mais continuer la mise à jour locale pour garantir le re-render (ex: zIndex)
       try { externalOnElementUpdate(updates); } catch {}
+    }
+
+    // 🎯 Gérer les mises à jour de style pour les templates de quiz
+    if (updates.borderRadius !== undefined && id === 'quiz-template') {
+      console.log('🔄 Mise à jour du borderRadius du template quiz:', updates.borderRadius);
+      
+      // Mettre à jour la campagne
+      if (onCampaignChange && campaign) {
+        const updatedCampaign = { ...campaign };
+        updatedCampaign.design = updatedCampaign.design || {};
+        updatedCampaign.design.quizConfig = updatedCampaign.design.quizConfig || {};
+        updatedCampaign.design.quizConfig.style = {
+          ...(updatedCampaign.design.quizConfig.style || {}),
+          borderRadius: updates.borderRadius
+        };
+        onCampaignChange(updatedCampaign);
+      }
+      
+      // Forcer le re-render du TemplatedQuiz
+      const event = new CustomEvent('quizStyleUpdate', { 
+        detail: { borderRadius: updates.borderRadius } 
+      });
+      window.dispatchEvent(event);
     }
 
     // 🔒 Blocage des déplacements des enfants quand leur groupe parent est sélectionné
@@ -1200,6 +1224,41 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [localZoom, activeCanvasRef, onZoomChange]);
 
+  // Recenter existing quiz-template once per device to fix legacy top-centered items
+  const hasAutoCenteredRef = useRef<string | null>(null);
+  useEffect(() => {
+    const hasQuiz = elements.some(el => el.id === 'quiz-template');
+    if (!hasQuiz) return;
+    const key = `${selectedDevice}`;
+    if (hasAutoCenteredRef.current === key) return;
+    // Delay to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const el = document.querySelector('[data-element-id="quiz-template"]') as HTMLElement | null;
+      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current;
+      if (!el || !canvasEl) return;
+      const elRect = el.getBoundingClientRect();
+      const canvasRect = canvasEl.getBoundingClientRect();
+      const zoom = localZoom || 1;
+      const elCenterX = elRect.left - canvasRect.left + elRect.width / 2;
+      const elCenterY = elRect.top - canvasRect.top + elRect.height / 2;
+      const canvasCenterX = canvasRect.width / 2;
+      const canvasCenterY = canvasRect.height / 2;
+      const dx = (canvasCenterX - elCenterX) / zoom;
+      const dy = (canvasCenterY - elCenterY) / zoom;
+      const measuredW = Math.max(10, Math.round(elRect.width / zoom));
+      const measuredH = Math.max(10, Math.round(elRect.height / zoom));
+      const existing = elements.find(e => e.id === 'quiz-template');
+      if (!existing) return;
+      handleElementUpdate('quiz-template', {
+        x: Math.round((existing.x || 0) + dx),
+        y: Math.round((existing.y || 0) + dy),
+        width: measuredW,
+        height: measuredH
+      });
+      hasAutoCenteredRef.current = key;
+    });
+  }, [elements, selectedDevice, localZoom, activeCanvasRef]);
+
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
     console.log('🔥 handleElementSelect called with:', {
@@ -1714,20 +1773,85 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   }
                 };
                 
-                console.log('🎯 Campaign object for TemplatedQuiz:', tempCampaign);
+                // Utiliser la vraie campagne si disponible pour avoir les styles mis à jour
+                const campaignToUse = campaign || tempCampaign;
+                
+                console.log('🎯 Campaign object for TemplatedQuiz:', campaignToUse);
                 
                 return (
-                  <TemplatedQuiz
-                    campaign={tempCampaign}
-                    device={selectedDevice}
-                    disabled={readOnly}
-                    templateId={quizModalConfig?.templateId || tempCampaign?.gameConfig?.quiz?.templateId || tempCampaign?.design?.quizConfig?.templateId || 'image-quiz'}
+                  <div
                     onClick={() => {
                       if (readOnly) return;
-                      console.log('🔘 Clic sur le quiz détecté');
+                      console.log('🔘 Clic sur le quiz détecté - sélection du template');
+                      // Créer un élément virtuel pour le template
+                      const selectedTemplateId = quizModalConfig?.templateId || campaignToUse?.gameConfig?.quiz?.templateId || campaignToUse?.design?.quizConfig?.templateId || 'image-quiz';
+                      const tpl = quizTemplates.find(t => t.id === selectedTemplateId) || quizTemplates[1];
+                      const tplWidth = Math.min(Math.max(tpl.style.containerWidth, 280), Math.floor(effectiveCanvasSize.width * 0.95));
+                      // Estimation de hauteur: non-grid: 1.2x, grid: 1.3x
+                      const estimatedHeight = Math.round(tplWidth * (tpl.hasGrid ? 1.3 : 1.2));
+                      const clampedHeight = Math.min(estimatedHeight, Math.floor(effectiveCanvasSize.height * 0.9));
+                      const centerX = Math.floor((effectiveCanvasSize.width - tplWidth) / 2);
+                      const centerY = Math.floor((effectiveCanvasSize.height - clampedHeight) / 2);
+                      const templateElement = {
+                        id: 'quiz-template',
+                        type: 'quiz-template',
+                        borderRadius: campaignToUse?.design?.quizConfig?.style?.borderRadius || '20px',
+                        // Dimensions basées sur le template
+                        width: tplWidth,
+                        height: clampedHeight,
+                        x: centerX,
+                        y: centerY
+                      };
+                      onSelectedElementChange?.(templateElement.id);
+                      setSelectedElement(templateElement.id);
+                      
+                      // Ajouter l'élément virtuel aux éléments si pas déjà présent
+                      const hasTemplate = elements.some(el => el.id === 'quiz-template');
+                      if (!hasTemplate) {
+                        onElementsChange([...elements, templateElement]);
+                        // Recentrage après rendu effectif selon la taille mesurée (compense les écarts d'estimation)
+                        requestAnimationFrame(() => {
+                          const el = document.querySelector('[data-element-id="quiz-template"]') as HTMLElement | null;
+                          const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current;
+                          if (el && canvasEl) {
+                            const elRect = el.getBoundingClientRect();
+                            const canvasRect = canvasEl.getBoundingClientRect();
+                            const zoom = localZoom || 1;
+                            // Centres visuels dans le viewport
+                            const elCenterX = elRect.left - canvasRect.left + elRect.width / 2;
+                            const elCenterY = elRect.top - canvasRect.top + elRect.height / 2;
+                            const canvasCenterX = canvasRect.width / 2;
+                            const canvasCenterY = canvasRect.height / 2;
+                            // Delta à appliquer en coordonnées canvas (compensation zoom)
+                            const dx = (canvasCenterX - elCenterX) / zoom;
+                            const dy = (canvasCenterY - elCenterY) / zoom;
+                            // Mesures en coordonnées canvas
+                            const measuredW = Math.max(10, Math.round(elRect.width / zoom));
+                            const measuredH = Math.max(10, Math.round(elRect.height / zoom));
+                            handleElementUpdate('quiz-template', {
+                              x: Math.round((templateElement as any).x + dx),
+                              y: Math.round((templateElement as any).y + dy),
+                              width: measuredW,
+                              height: measuredH
+                            });
+                          }
+                        });
+                      }
+                      
                       onQuizPanelChange?.(true);
                     }}
-                  />
+                    className="cursor-pointer"
+                  >
+                    {/* Afficher l'aperçu inline uniquement si l'élément positionné n'existe pas encore */}
+                    {(!elements.some(el => el.id === 'quiz-template')) && (
+                      <TemplatedQuiz
+                        campaign={campaignToUse}
+                        device={selectedDevice}
+                        disabled={readOnly}
+                        templateId={quizModalConfig?.templateId || campaignToUse?.gameConfig?.quiz?.templateId || campaignToUse?.design?.quizConfig?.templateId || 'image-quiz'}
+                      />
+                    )}
+                  </div>
                 );
               })()}
 
@@ -1783,16 +1907,30 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               // (plus de calcul absolu ici pour éviter les décalages en mobile)
               
               // Fusionner les propriétés responsive avec l'élément original (utiliser directement les props responsive pour éviter les décalages)
-              const elementWithResponsive = {
-                ...element,
-                x: responsiveProps.x,
-                y: responsiveProps.y,
-                width: responsiveProps.width,
-                height: responsiveProps.height,
-                fontSize: responsiveProps.fontSize,
-                // Appliquer l'alignement de texte responsive si disponible
-                textAlign: responsiveProps.textAlign || element.textAlign
-              };
+              let elementWithResponsive: any;
+              if (element.type === 'quiz-template') {
+                // Ne pas écraser les coordonnées/tailles calculées pour le template quiz
+                elementWithResponsive = {
+                  ...element,
+                  x: element.x,
+                  y: element.y,
+                  width: element.width,
+                  height: element.height,
+                  fontSize: element.fontSize,
+                  textAlign: element.textAlign
+                };
+              } else {
+                elementWithResponsive = {
+                  ...element,
+                  x: (responsiveProps.x ?? element.x),
+                  y: (responsiveProps.y ?? element.y),
+                  width: (responsiveProps.width ?? element.width),
+                  height: (responsiveProps.height ?? element.height),
+                  fontSize: (responsiveProps.fontSize ?? element.fontSize),
+                  // Appliquer l'alignement de texte responsive si disponible
+                  textAlign: responsiveProps.textAlign || element.textAlign
+                };
+              }
 
               // Ajouter l'offset du groupe pour fournir des coordonnées ABSOLUES au composant CanvasElement
               let elementForCanvas = elementWithResponsive;

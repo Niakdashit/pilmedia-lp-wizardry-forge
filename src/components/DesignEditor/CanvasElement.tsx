@@ -13,6 +13,7 @@ import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { usePinchResize } from './hooks/usePinchResize';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
 import type { CampaignConfig } from '../../types/PrizeSystem';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
 
 // Professional drag & drop implementation - Excalidraw/Canva precision
 
@@ -1235,6 +1236,17 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
                 secondary: extractedColors?.[1] || (campaign as any)?.design?.customColors?.secondary || '#ffffff',
                 accent: extractedColors?.[2] || (campaign as any)?.design?.customColors?.accent || '#4ecdc4'
               }}
+            />
+          </div>
+        );
+      case 'quiz-template':
+        return (
+          <div className={`${readOnly ? '' : 'cursor-move'}`} style={elementStyle} data-element-type="quiz-template">
+            <TemplatedQuiz 
+              campaign={campaign}
+              device={selectedDevice}
+              disabled={readOnly}
+              // The templateId is expected to be in campaign config; fallback kept inside component
             />
           </div>
         );

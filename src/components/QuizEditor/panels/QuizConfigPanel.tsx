@@ -8,9 +8,11 @@ interface QuizConfigPanelProps {
   quizQuestionCount: number;
   quizTimeLimit: number;
   quizDifficulty: 'easy' | 'medium' | 'hard';
+  quizBorderRadius?: number;
   onQuestionCountChange: (count: number) => void;
   onTimeLimitChange: (time: number) => void;
   onDifficultyChange: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  onBorderRadiusChange?: (radius: number) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   selectedTemplate?: string;
   onTemplateChange?: (template: QuizTemplate) => void;
@@ -21,9 +23,11 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   quizQuestionCount,
   quizTimeLimit,
   quizDifficulty,
+  quizBorderRadius = 12,
   onQuestionCountChange,
   onTimeLimitChange,
   onDifficultyChange,
+  onBorderRadiusChange,
   selectedDevice = 'desktop',
   selectedTemplate,
   onTemplateChange
@@ -100,25 +104,45 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
           <label className="block text-sm font-medium text-gray-300">
             Difficulté
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex space-x-2">
             {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
               <button
                 key={difficulty}
                 onClick={() => onDifficultyChange(difficulty)}
-                className={`p-3 rounded-lg border transition-all ${
+                className={`flex-1 py-2 px-3 text-sm rounded-md transition-colors ${
                   quizDifficulty === difficulty
-                    ? 'bg-purple-600 border-purple-500 text-white'
-                    : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                <div className="text-sm font-medium capitalize">
-                  {difficulty === 'easy' ? 'Facile' : 
-                   difficulty === 'medium' ? 'Moyen' : 'Difficile'}
-                </div>
+                {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Border Radius */}
+        {onBorderRadiusChange && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-300">
+              Arrondi des coins
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={quizBorderRadius}
+                onChange={(e) => onBorderRadiusChange(parseInt(e.target.value))}
+                className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="bg-gray-700 px-2 py-1 rounded text-sm text-white min-w-[40px] text-center">
+                {quizBorderRadius}px
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Device-specific note */}
         {selectedDevice !== 'desktop' && (

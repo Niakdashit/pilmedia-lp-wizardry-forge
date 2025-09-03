@@ -135,21 +135,24 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     questionCount: 5,
     timeLimit: 30,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-    templateId: 'image-quiz'
+    templateId: 'image-quiz',
+    borderRadius: 12 // Valeur par défaut pour le border radius
   });
 
   // Quiz modal config - synchronisé avec quizConfig
   const [quizModalConfig, setQuizModalConfig] = useState<any>({
-    templateId: quizConfig.templateId
+    templateId: quizConfig.templateId,
+    borderRadius: quizConfig.borderRadius
   });
 
   // Synchroniser quizModalConfig avec quizConfig
   React.useEffect(() => {
     setQuizModalConfig((prev: any) => ({
       ...prev,
-      templateId: quizConfig.templateId
+      templateId: quizConfig.templateId,
+      borderRadius: quizConfig.borderRadius
     }));
-  }, [quizConfig.templateId]);
+  }, [quizConfig.templateId, quizConfig.borderRadius]);
 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
@@ -319,14 +322,59 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     }
   };
 
+  // Mettre à jour les éléments du canvas avec le nouveau border radius
+  const updateCanvasElementsBorderRadius = useCallback((borderRadius: number) => {
+    console.log('🔄 updateCanvasElementsBorderRadius appelé avec:', borderRadius);
+    
+    // Mettre à jour campaignConfig avec le nouveau border radius
+    setCampaignConfig((currentConfig: any) => {
+      const updatedConfig = { ...currentConfig };
+      updatedConfig.design = updatedConfig.design || {};
+      updatedConfig.design.quizConfig = updatedConfig.design.quizConfig || {};
+      updatedConfig.design.quizConfig.style = {
+        ...(updatedConfig.design.quizConfig.style || {}),
+        borderRadius: `${borderRadius}px`
+      };
+      console.log('🎯 CampaignConfig mise à jour avec borderRadius:', updatedConfig.design.quizConfig.style);
+      return updatedConfig;
+    });
+    
+    // Émettre un événement pour forcer le re-render du TemplatedQuiz
+    const event = new CustomEvent('quizStyleUpdate', { 
+      detail: { borderRadius: `${borderRadius}px` } 
+    });
+    window.dispatchEvent(event);
+    
+    // Mettre à jour les éléments du canvas (pour compatibilité)
+    setCanvasElements(currentElements => 
+      currentElements.map(element => {
+        if (element?.type === 'quiz' || element?.id === 'quiz-template') {
+          return {
+            ...element,
+            borderRadius: `${borderRadius}px`,
+            style: {
+              ...(element.style || {}),
+              borderRadius: `${borderRadius}px`
+            }
+          };
+        }
+        return element;
+      })
+    );
+  }, [setCampaignConfig]);
+
   // Quiz Editor doesn't need wheel config sync - using quiz config instead
   const wheelModalConfig = null;
-  const setWheelBorderStyle = () => {};
-  const setWheelBorderColor = () => {};
-  const setWheelBorderWidth = () => {};
-  const setWheelScale = () => {};
-  const setShowBulbs = () => {};
-  const setWheelPosition = () => {};
+  // Ces fonctions sont nécessaires pour la compatibilité mais ne sont pas utilisées dans le quiz
+  // Elles sont utilisées dans d'autres parties de l'application
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const setWheelBorderStyle = useCallback((_: string) => {}, []);
+  const setWheelBorderColor = useCallback((_: string) => {}, []);
+  const setWheelBorderWidth = useCallback((_: number) => {}, []);
+  const setWheelScale = useCallback((_: number) => {}, []);
+  const setShowBulbs = useCallback((_: boolean) => {}, []);
+  const setWheelPosition = useCallback((_: { x: number; y: number }) => {}, []);
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   // Système d'historique pour undo/redo avec le nouveau hook
   const {
@@ -1122,10 +1170,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
                 quizDifficulty={quizConfig.difficulty}
+                quizBorderRadius={quizConfig.borderRadius}
                 selectedQuizTemplate={quizConfig.templateId}
                 onQuizQuestionCountChange={(count) => setQuizConfig(prev => ({ ...prev, questionCount: count }))}
                 onQuizTimeLimitChange={(time) => setQuizConfig(prev => ({ ...prev, timeLimit: time }))}
                 onQuizDifficultyChange={(difficulty) => setQuizConfig(prev => ({ ...prev, difficulty }))}
+                onQuizBorderRadiusChange={(borderRadius) => {
+                  setQuizConfig(prev => ({ ...prev, borderRadius }));
+                  updateCanvasElementsBorderRadius(borderRadius);
+                }}
                 onQuizTemplateChange={(templateId) => {
                   console.log('🎯 Template change in layout:', templateId);
                   setQuizConfig(prev => ({ ...prev, templateId }));
