@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <circle cx="32" cy="32" r="32" fill="#9EC9DA"/>
+  <g transform="translate(10,12)">
+    <!-- bigger rounded card -->
+    <rect x="6" y="6" width="36" height="28" rx="8" fill="#fff"/>
+    <!-- header lines -->
+    <path d="M12 14h16" stroke="#9EC9DA" stroke-width="4" stroke-linecap="round"/>
+    <path d="M12 20h10" stroke="#9EC9DA" stroke-width="4" stroke-linecap="round"/>
+    <!-- scratch wavy separator inside card bottom area -->
+    <path d="M12 28c3-2 6 2 9 0s6-2 9 0" stroke="#9EC9DA" stroke-width="4" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

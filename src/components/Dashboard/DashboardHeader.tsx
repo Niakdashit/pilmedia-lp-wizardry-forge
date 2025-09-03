@@ -80,21 +80,21 @@ const DashboardHeader: React.FC = () => {
               <div className="hidden md:flex items-center justify-center space-x-6 max-w-5xl mx-auto mb-8">
                 {gameTypes.map((game, index) => {
                 const iconByType: Record<string, string> = {
-                  wheel: '/gamification/neo/wheel.svg',
-                  quiz: '/gamification/neo/quiz.svg',
-                  scratch: '/gamification/neo/scratch.svg',
-                  dice: '/gamification/neo/dice.svg',
-                  jackpot: '/gamification/neo/jackpot.svg',
-                  memory: '/gamification/neo/memory.svg',
-                  puzzle: '/gamification/neo/puzzle.svg',
-                  form: '/gamification/neo/form.svg'
+                  wheel: '/gamification/shortcuts/wheel.svg',
+                  quiz: '/gamification/shortcuts/quiz.svg',
+                  scratch: '/gamification/shortcuts/scratch.svg',
+                  dice: '/gamification/shortcuts/dice.svg',
+                  jackpot: '/gamification/shortcuts/jackpot.svg',
+                  memory: '/gamification/shortcuts/memory.svg',
+                  puzzle: '/gamification/shortcuts/puzzle.svg',
+                  form: '/gamification/shortcuts/form.svg'
                 };
                 return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'forwards'
                 }}>
                       <div className="w-14 h-14 bg-white/85 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/95">
-                        <img src={iconByType[game.type]} alt={game.label} className="w-7 h-7 object-contain" />
+                        <img src={iconByType[game.type]} alt={game.label} className="w-9 h-9 object-contain" />
                       </div>
                       <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                         {game.label}
@@ -111,21 +111,21 @@ const DashboardHeader: React.FC = () => {
               }}>
                   {gameTypes.map((game, index) => {
                   const iconByType: Record<string, string> = {
-                    wheel: '/gamification/neo/wheel.svg',
-                    quiz: '/gamification/neo/quiz.svg',
-                    scratch: '/gamification/neo/scratch.svg',
-                    dice: '/gamification/neo/dice.svg',
-                    jackpot: '/gamification/neo/jackpot.svg',
-                    memory: '/gamification/neo/memory.svg',
-                    puzzle: '/gamification/neo/puzzle.svg',
-                    form: '/gamification/neo/form.svg'
+                    wheel: '/gamification/shortcuts/wheel.svg',
+                    quiz: '/gamification/shortcuts/quiz.svg',
+                    scratch: '/gamification/shortcuts/scratch.svg',
+                    dice: '/gamification/shortcuts/dice.svg',
+                    jackpot: '/gamification/shortcuts/jackpot.svg',
+                    memory: '/gamification/shortcuts/memory.svg',
+                    puzzle: '/gamification/shortcuts/puzzle.svg',
+                    form: '/gamification/shortcuts/form.svg'
                   };
                   return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
                     animationDelay: `${index * 0.1}s`,
                     animationFillMode: 'forwards'
                   }}>
                         <div className="w-14 h-14 bg-white/85 backdrop-blur-sm rounded-full shadow-xl shadow-purple-500/15 flex items-center justify-center group-hover:shadow-2xl group-hover:shadow-purple-500/25 transform group-hover:scale-110 transition-all duration-300 border border-white/50 group-hover:bg-white/95">
-                          <img src={iconByType[game.type]} alt={game.label} className="w-7 h-7 object-contain" />
+                          <img src={iconByType[game.type]} alt={game.label} className="w-9 h-9 object-contain" />
                         </div>
                         <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
                           {game.label}

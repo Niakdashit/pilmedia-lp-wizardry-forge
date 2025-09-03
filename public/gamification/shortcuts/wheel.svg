@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <circle cx="32" cy="32" r="32" fill="#9EC9DA"/>
+  <!-- inner scaled ~25% larger -->
+  <g transform="translate(6,6)">
+    <circle cx="26" cy="26" r="22" stroke="#fff" stroke-width="4" fill="none"/>
+    <circle cx="26" cy="26" r="3" fill="#fff"/>
+    <!-- spokes -->
+    <path d="M26 8 L26 18" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M26 34 L26 44" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M8 26 L18 26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M34 26 L44 26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M14 14 L20 20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M32 32 L38 38" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M14 38 L20 32" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M32 20 L38 14" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <!-- pointer -->
+    <path d="M26 0 L31 10 L21 10 Z" fill="#fff"/>
+  </g>
+</svg>
