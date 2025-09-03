@@ -2,6 +2,12 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { WheelSegment, WheelTheme, WheelState } from '../types';
 import { getBorderStyle, createMetallicGradient, createNeonEffect, renderGoldBorder, createRoyalRouletteEffect, createRainbowGradient } from '../utils/borderStyles';
 
+ // Calibration for image-based pattern rings to compensate for asset margins/inner hole
+ const RING_CALIBRATION: Record<string, { scale: number; offsetX: number; offsetY: number }> = {
+   goldRing: { scale: 0.992, offsetX: 0, offsetY: 0 },
+   silverRing: { scale: 1.004, offsetX: 0, offsetY: 0 }
+ };
+
 interface UseSmartWheelRendererProps {
   segments: WheelSegment[];
   theme: WheelTheme;
@@ -89,6 +95,10 @@ export const useSmartWheelRenderer = ({
   const centerLoadingRef = useRef(true);
 
   // (Removed) Image-based ring cache eliminated to avoid any deferred loading
+  // Ring image (pattern styles like goldRing / silverRing)
+  const ringImgRef = useRef<HTMLImageElement | null>(null);
+  const ringImgReadyRef = useRef(false);
+  const ringLoadingRef = useRef(false);
   
   // Cache pour les icônes des segments (images par segment)
   const segmentIconCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
@@ -144,6 +154,41 @@ export const useSmartWheelRenderer = ({
       if (!canceled) {
         pointerImgReadyRef.current = false;
         pointerLoadingRef.current = false; // finished loading attempt, but not available
+      }
+    })();
+    return () => { canceled = true; };
+  }, [borderStyle]);
+
+  // Preload ring image for pattern styles (e.g., goldRing, silverRing)
+  useEffect(() => {
+    let canceled = false;
+    (async () => {
+      try {
+        ringLoadingRef.current = true;
+        ringImgRef.current = null;
+        ringImgReadyRef.current = false;
+        // Determine if style is a pattern with imageSrc
+        const styleCfg = getBorderStyle(borderStyle);
+        const imageSrc = (styleCfg as any)?.imageSrc as string | undefined;
+        const isPattern = (styleCfg as any)?.type === 'pattern' && !!imageSrc;
+        if (!isPattern || !imageSrc) {
+          ringLoadingRef.current = false;
+          return;
+        }
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const ok = await new Promise<boolean>((resolve) => {
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = imageSrc!;
+        });
+        if (canceled) return;
+        if (ok) {
+          ringImgRef.current = img;
+          ringImgReadyRef.current = true;
+        }
+      } finally {
+        ringLoadingRef.current = false;
       }
     })();
     return () => { canceled = true; };
@@ -339,8 +384,9 @@ export const useSmartWheelRenderer = ({
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Dessiner toujours l'arrière-plan (suppression du traitement spécial des styles 'pattern')
-    const isPatternStyle = false;
+    // Déterminer dynamiquement si le style courant est de type 'pattern' avec image
+    const currentBorderStyleCfg = getBorderStyle(borderStyle);
+    const isPatternStyle = (currentBorderStyleCfg as any)?.type === 'pattern' && !!(currentBorderStyleCfg as any)?.imageSrc;
     drawBackground(ctx, centerX, centerY, borderRadius, theme);
 
     // Dessiner les segments
@@ -669,20 +715,35 @@ export const useSmartWheelRenderer = ({
     } 
     // Gestion des styles 'pattern' sans chargement d'images: rendu statique immédiat
     else if (borderStyleConfig.type === 'pattern') {
-      const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctx.strokeStyle = metallicGradient;
-      ctx.lineWidth = borderWidth;
-      ctx.lineJoin = 'miter';
-      ctx.lineCap = 'square';
-      if (borderStyleConfig.effects.shadow) {
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-        ctx.shadowBlur = 12;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 2;
+      const img = ringImgRef.current;
+      const hasImg = !!img && ringImgReadyRef.current && (borderStyleConfig as any)?.imageSrc;
+      if (hasImg) {
+        // Draw the ring image with per-style calibration (scale/offset)
+        const calib = RING_CALIBRATION[borderStyleName] || { scale: 1, offsetX: 0, offsetY: 0 };
+        // Slight adaptive inflation based on borderWidth so the ring covers the white contour precisely
+        const adaptive = Math.max(0, (borderWidth || 0) / Math.max(1, radius * 8));
+        const effectiveScale = calib.scale + adaptive;
+        const sizePx = radius * 2 * effectiveScale;
+        const x = centerX - sizePx / 2 + calib.offsetX;
+        const y = centerY - sizePx / 2 + calib.offsetY;
+        ctx.drawImage(img as HTMLImageElement, x, y, sizePx, sizePx);
+      } else {
+        // Fallback: metallic gradient ring (no image available)
+        const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = metallicGradient;
+        ctx.lineWidth = borderWidth;
+        ctx.lineJoin = 'miter';
+        ctx.lineCap = 'square';
+        if (borderStyleConfig.effects.shadow) {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2;
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
     } else {
       switch (borderStyleConfig.type) {
         case 'solid':
