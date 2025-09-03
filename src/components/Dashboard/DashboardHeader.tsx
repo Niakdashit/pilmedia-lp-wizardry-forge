@@ -15,17 +15,8 @@ const DashboardHeader: React.FC = () => {
     type: 'scratch',
     label: 'Grattage'
   }, {
-    type: 'dice',
-    label: 'Dés'
-  }, {
     type: 'jackpot',
     label: 'Jackpot'
-  }, {
-    type: 'memory',
-    label: 'Memory'
-  }, {
-    type: 'puzzle',
-    label: 'Puzzle'
   }, {
     type: 'form',
     label: 'Formulaire'
@@ -83,10 +74,7 @@ const DashboardHeader: React.FC = () => {
                   wheel: '/gamification/shortcuts/wheel.svg',
                   quiz: '/gamification/shortcuts/quiz.svg',
                   scratch: '/gamification/shortcuts/scratch.svg',
-                  dice: '/gamification/shortcuts/dice.svg',
                   jackpot: '/gamification/shortcuts/jackpot.svg',
-                  memory: '/gamification/shortcuts/memory.svg',
-                  puzzle: '/gamification/shortcuts/puzzle.svg',
                   form: '/gamification/shortcuts/form.svg'
                 };
                 return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
@@ -114,10 +102,7 @@ const DashboardHeader: React.FC = () => {
                     wheel: '/gamification/shortcuts/wheel.svg',
                     quiz: '/gamification/shortcuts/quiz.svg',
                     scratch: '/gamification/shortcuts/scratch.svg',
-                    dice: '/gamification/shortcuts/dice.svg',
                     jackpot: '/gamification/shortcuts/jackpot.svg',
-                    memory: '/gamification/shortcuts/memory.svg',
-                    puzzle: '/gamification/shortcuts/puzzle.svg',
                     form: '/gamification/shortcuts/form.svg'
                   };
                   return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
