@@ -16,6 +16,11 @@ interface QuizConfigPanelProps {
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   selectedTemplate?: string;
   onTemplateChange?: (template: QuizTemplate) => void;
+  // New: style overrides
+  backgroundColor?: string;
+  textColor?: string;
+  onBackgroundColorChange?: (color: string) => void;
+  onTextColorChange?: (color: string) => void;
 }
 
 const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
@@ -30,7 +35,11 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   onBorderRadiusChange,
   selectedDevice = 'desktop',
   selectedTemplate,
-  onTemplateChange
+  onTemplateChange,
+  backgroundColor,
+  textColor,
+  onBackgroundColorChange,
+  onTextColorChange
 }) => {
   return (
     <div className="h-full flex flex-col">
@@ -118,6 +127,53 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Colors */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Couleur de fond du quiz
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={backgroundColor || '#ffffff'}
+                onChange={(e) => onBackgroundColorChange?.(e.target.value)}
+                className="w-10 h-10 rounded-md border border-gray-600 bg-gray-700 p-0"
+                aria-label="Couleur de fond"
+              />
+              <input
+                type="text"
+                value={backgroundColor || ''}
+                onChange={(e) => onBackgroundColorChange?.(e.target.value)}
+                placeholder="#ffffff"
+                className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Couleur du texte du quiz
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={textColor || '#111111'}
+                onChange={(e) => onTextColorChange?.(e.target.value)}
+                className="w-10 h-10 rounded-md border border-gray-600 bg-gray-700 p-0"
+                aria-label="Couleur du texte"
+              />
+              <input
+                type="text"
+                value={textColor || ''}
+                onChange={(e) => onTextColorChange?.(e.target.value)}
+                placeholder="#111111"
+                className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              />
+            </div>
           </div>
         </div>
 

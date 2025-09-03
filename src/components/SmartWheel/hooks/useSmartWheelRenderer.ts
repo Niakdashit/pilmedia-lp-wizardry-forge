@@ -88,8 +88,7 @@ export const useSmartWheelRenderer = ({
   const [centerImgReady, setCenterImgReady] = useState(false);
   const centerLoadingRef = useRef(true);
 
-  // Cache pour les anneaux image-based (styles 'pattern')
-  const ringImageCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
+  // (Removed) Image-based ring cache eliminated to avoid any deferred loading
   
   // Cache pour les icônes des segments (images par segment)
   const segmentIconCacheRef = useRef<Map<string, { img: HTMLImageElement; ready: boolean; loading: boolean; failed?: boolean }>>(new Map());
@@ -340,21 +339,17 @@ export const useSmartWheelRenderer = ({
     // Effacer le canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Dessiner l'arrière-plan sauf pour les styles 'pattern'
-    // (les templates anneau doivent remplacer toute la couronne blanche autour)
-    const currentStyle = getBorderStyle(borderStyle);
-    const isPatternStyle = currentStyle.type === 'pattern' && (currentStyle as any).imageSrc;
-    if (!isPatternStyle) {
-      drawBackground(ctx, centerX, centerY, borderRadius, theme);
-    }
+    // Dessiner toujours l'arrière-plan (suppression du traitement spécial des styles 'pattern')
+    const isPatternStyle = false;
+    drawBackground(ctx, centerX, centerY, borderRadius, theme);
 
     // Dessiner les segments
     if (segments.length > 0) {
       drawSegments(ctx, segments, centerX, centerY, maxRadius, safeWheelState, theme, !!isPatternStyle);
     }
 
-    // Dessiner les bordures stylisées
-    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, animationTime, customBorderWidth);
+    // Dessiner les bordures stylisées (bordures statiques, pas d'animation)
+    drawStyledBorder(ctx, centerX, centerY, borderRadius, borderStyle, 0, customBorderWidth);
 
     // Dessiner l'ombre intérieure AVANT les ampoules pour ne pas les assombrir
     drawInnerShadow(ctx, centerX, centerY, maxRadius);
@@ -672,85 +667,22 @@ export const useSmartWheelRenderer = ({
         createNeonEffect(ctx, centerX, centerY, radius, '#C0C0C0', 0.6);
       }
     } 
-    // Gestion des styles image-based ('pattern'): dessiner un anneau image si disponible
-    else if (borderStyleConfig.type === 'pattern' && (borderStyleConfig as any).imageSrc) {
-      const imageSrc = (borderStyleConfig as any).imageSrc as string | undefined;
-      if (imageSrc) {
-        const cache = ringImageCacheRef.current;
-        let entry = cache.get(imageSrc);
-        if (!entry) {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          entry = { img, ready: false, loading: true };
-          cache.set(imageSrc, entry);
-          img.onload = () => {
-            const e = cache.get(imageSrc);
-            if (e) {
-              e.ready = true;
-              e.loading = false;
-            }
-          };
-          img.onerror = () => {
-            const e = cache.get(imageSrc);
-            if (e) {
-              e.ready = false;
-              e.loading = false;
-              e.failed = true;
-            }
-          };
-          img.src = imageSrc;
-        }
-
-        // Eviter tout rendu temporaire avant que l'image ne soit prête (pas de fallback pendant le chargement)
-        if (entry.loading) {
-          ctx.restore();
-          return;
-        }
-
-        if (entry.ready) {
-          // Optionnel: ombre douce si demandée
-          if (borderStyleConfig.effects.shadow) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-            ctx.shadowBlur = 12;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 2;
-          }
-          // Dessiner l'image centrée et découper en anneau avec marges ajustables
-          // Calcul des rayons de découpe
-          const cfg: any = borderStyleConfig;
-          const innerInsetPx = (typeof cfg.imageInnerInsetPx === 'number' ? cfg.imageInnerInsetPx : 0) * scaleFactor;
-          const outerInsetPx = (typeof cfg.imageOuterInsetPx === 'number' ? cfg.imageOuterInsetPx : 0) * scaleFactor;
-          const innerBase = radius - borderWidth / 2;
-          // Assurer une épaisseur minimale visible pour les templates (pour 12px et moins)
-          const minThicknessPx = (typeof cfg.imageMinThicknessPx === 'number' ? cfg.imageMinThicknessPx : 20) * scaleFactor;
-          const effectiveThickness = Math.max(borderWidth, minThicknessPx);
-          const innerR = Math.max(0, innerBase + innerInsetPx);
-          const outerR = Math.max(innerR + effectiveThickness + outerInsetPx, 0);
-          const destSize = outerR * 2;
-
-          // Clip en anneau: externe (outerR), interne (innerR)
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, outerR, 0, 2 * Math.PI, false);
-          ctx.arc(centerX, centerY, innerR, 0, 2 * Math.PI, true);
-          ctx.closePath();
-          ctx.clip();
-
-          // Dessiner l'image à l'échelle du diamètre externe
-          ctx.drawImage(entry.img, centerX - outerR, centerY - outerR, destSize, destSize);
-          ctx.restore();
-        } else {
-          // Fallback si l'image a échoué à charger: utiliser un gradient métallique avec les couleurs fournies
-          const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-          ctx.strokeStyle = metallicGradient;
-          ctx.lineWidth = borderWidth;
-          ctx.lineJoin = 'miter';
-          ctx.lineCap = 'square';
-          ctx.stroke();
-        }
+    // Gestion des styles 'pattern' sans chargement d'images: rendu statique immédiat
+    else if (borderStyleConfig.type === 'pattern') {
+      const metallicGradient = createMetallicGradient(ctx, borderStyleConfig.colors, centerX, centerY, radius);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = metallicGradient;
+      ctx.lineWidth = borderWidth;
+      ctx.lineJoin = 'miter';
+      ctx.lineCap = 'square';
+      if (borderStyleConfig.effects.shadow) {
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
       }
+      ctx.stroke();
     } else {
       switch (borderStyleConfig.type) {
         case 'solid':

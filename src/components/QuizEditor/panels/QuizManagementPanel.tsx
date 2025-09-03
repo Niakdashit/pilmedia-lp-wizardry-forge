@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit3, Clock, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, Edit3, Clock, HelpCircle, Image as ImageIcon } from 'lucide-react';
+import { quizTemplates } from '../../../types/quizTemplates';
 
 interface Question {
   id: string;
@@ -7,12 +8,14 @@ interface Question {
   answers: Answer[];
   correctAnswerId: string;
   timeLimit?: number;
+  image?: string; // optional question image for image-based templates
 }
 
 interface Answer {
   id: string;
   text: string;
   isCorrect: boolean;
+  image?: string; // optional answer image for grid/image-option templates
 }
 
 interface QuizManagementPanelProps {
@@ -26,6 +29,15 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'questions' | 'settings'>('questions');
   const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
+  
+  // Detect selected quiz template to decide if we show image uploaders
+  // Prefer design.quizConfig as the source of truth to stay consistent with preview
+  const selectedTemplateId: string = campaign?.design?.quizConfig?.templateId
+    || campaign?.gameConfig?.quiz?.templateId
+    || 'image-quiz';
+  const selectedTemplate = quizTemplates.find(t => t.id === selectedTemplateId) || quizTemplates[1];
+  const showQuestionImageUploader = !!selectedTemplate.hasImage && !selectedTemplate.hasGrid;
+  const showAnswerImageUploader = !!selectedTemplate.hasGrid;
 
   // Get quiz config from campaign
   const quizConfig = campaign?.gameConfig?.quiz || {
@@ -124,8 +136,14 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
       correctAnswerId = updatedAnswers[0].id;
     }
 
+    // Sync isCorrect flags
+    const syncedAnswers = updatedAnswers.map((a: Answer) => ({
+      ...a,
+      isCorrect: a.id === correctAnswerId
+    }));
+
     updateQuestion(questionId, {
-      answers: updatedAnswers,
+      answers: syncedAnswers,
       correctAnswerId
     });
   };
@@ -142,7 +160,46 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
   };
 
   const setCorrectAnswer = (questionId: string, answerId: string) => {
-    updateQuestion(questionId, { correctAnswerId: answerId });
+    const question = quizConfig.questions.find((q: Question) => q.id === questionId);
+    if (!question) return;
+    const updatedAnswers = question.answers.map((a: Answer) => ({
+      ...a,
+      isCorrect: a.id === answerId
+    }));
+    updateQuestion(questionId, { correctAnswerId: answerId, answers: updatedAnswers });
+  };
+
+  // Image upload helpers
+  const readFileAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleQuestionImageUpload = async (questionId: string, file: File) => {
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      updateQuestion(questionId, { image: dataUrl });
+    } catch (e) {
+      console.error('Failed to read question image', e);
+    }
+  };
+
+  const handleAnswerImageUpload = async (questionId: string, answerId: string, file: File) => {
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const question = quizConfig.questions.find((q: Question) => q.id === questionId);
+      if (!question) return;
+      const updatedAnswers = question.answers.map((a: Answer) =>
+        a.id === answerId ? { ...a, image: dataUrl } : a
+      );
+      updateQuestion(questionId, { answers: updatedAnswers });
+    } catch (e) {
+      console.error('Failed to read answer image', e);
+    }
   };
 
   return (
@@ -227,6 +284,34 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                   ) : (
                     <p className="mt-2 text-white text-sm">{question.question}</p>
                   )}
+                  {/* Question image uploader: only for templates with a single question image */}
+                  {showQuestionImageUploader && (
+                    <div className="mt-3 flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
+                        <ImageIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-xs text-gray-400">Image de la question</span>
+                      </div>
+                      <label className="inline-flex items-center px-2 py-1 text-xs rounded bg-gray-700 border border-gray-600 cursor-pointer hover:bg-gray-600">
+                        Choisir un fichier
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleQuestionImageUpload(question.id, file);
+                          }}
+                        />
+                      </label>
+                      {question.image && (
+                        <img
+                          src={question.image}
+                          alt="Question"
+                          className="h-10 w-16 object-cover rounded border border-gray-600"
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Answers */}
@@ -254,6 +339,31 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
                         }`}>
                           {answer.text}
                         </span>
+                      )}
+                      {/* Per-answer image uploader: only for grid/image-per-answer templates */}
+                      {showAnswerImageUploader && (
+                        <div className="flex items-center space-x-2 ml-2">
+                          <label className="inline-flex items-center px-2 py-1 text-xs rounded bg-gray-700 border border-gray-600 cursor-pointer hover:bg-gray-600">
+                            <ImageIcon className="w-3 h-3 mr-1" />
+                            Image
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleAnswerImageUpload(question.id, answer.id, file);
+                              }}
+                            />
+                          </label>
+                          {answer.image && (
+                            <img
+                              src={answer.image}
+                              alt="Réponse"
+                              className="h-9 w-12 object-cover rounded border border-gray-600"
+                            />
+                          )}
+                        </div>
                       )}
                       {editingQuestion === question.id && question.answers.length > 2 && (
                         <button

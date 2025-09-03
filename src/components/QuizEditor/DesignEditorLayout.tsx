@@ -4,6 +4,7 @@ import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
@@ -580,7 +581,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       },
       gameConfig: {
         quiz: {
-          questions: [],
+          questions: configuredQuestions,
           timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
           templateId: quizConfig.templateId,
           buttonLabel: buttonElement?.content || 'Commencer le quiz'
@@ -1124,11 +1125,18 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             >
               Mode édition
             </button>
-            <FunnelUnlockedGame
-              campaign={campaignData}
-              previewMode={selectedDevice}
-              wheelModalConfig={wheelModalConfig}
-            />
+            {campaignData?.type === 'quiz' ? (
+              <FunnelQuizParticipate
+                campaign={campaignData}
+                previewMode={selectedDevice}
+              />
+            ) : (
+              <FunnelUnlockedGame
+                campaign={campaignData}
+                previewMode={selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
+            )}
           </div>
         ) : (
           /* Design Editor Mode */

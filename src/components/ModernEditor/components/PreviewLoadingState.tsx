@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { Monitor, Smartphone, Tablet } from 'lucide-react';
 
 interface PreviewLoadingStateProps {
   device: 'desktop' | 'tablet' | 'mobile';
@@ -23,36 +23,28 @@ const PreviewLoadingState: React.FC<PreviewLoadingStateProps> = ({
   const getSkeletonClasses = () => {
     switch (device) {
       case 'mobile':
-        return 'w-[260px] h-[550px] bg-gray-900 rounded-[2rem] p-2 shadow-2xl';
+        return 'w-[260px] h-[550px] bg-gray-100 rounded-[2rem] p-2 shadow';
       case 'tablet':
-        return 'w-[340px] h-[480px] bg-gray-800 rounded-xl p-3 shadow-2xl';
+        return 'w-[340px] h-[480px] bg-gray-100 rounded-xl p-3 shadow';
       default:
-        return 'w-full h-full bg-white rounded-xl shadow-lg border border-gray-200';
+        return 'w-full h-full bg-white rounded-xl shadow border border-gray-200';
     }
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center animate-fade-in">
+    <div className="w-full h-full flex items-center justify-center">
       <div className="text-center space-y-6">
-        {/* Device Skeleton */}
-        <div className={`${getSkeletonClasses()} flex items-center justify-center mx-auto animate-pulse`}>
+        {/* Static device frame (no loading animation) */}
+        <div className={`${getSkeletonClasses()} flex items-center justify-center mx-auto`}>
           <div className="bg-gray-200 rounded-lg w-full h-full flex items-center justify-center">
             {showIcon && getDeviceIcon()}
           </div>
         </div>
         
-        {/* Loading Message */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-center space-x-2">
-            <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
+        {/* Static message (no spinner or pulse) */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-center">
             <span className="text-gray-600 text-sm font-medium">{message}</span>
-          </div>
-          
-          {/* Progress dots */}
-          <div className="flex justify-center space-x-1">
-            <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse delay-75"></div>
-            <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse delay-150"></div>
           </div>
         </div>
       </div>

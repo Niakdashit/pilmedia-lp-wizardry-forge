@@ -7,6 +7,7 @@ interface TemplatedQuizProps {
   disabled?: boolean;
   onClick?: () => void;
   templateId?: string;
+  onAnswerSelected?: (isCorrect: boolean) => void;
 }
 
 const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
@@ -14,7 +15,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   device = 'desktop',
   disabled = false,
   onClick,
-  templateId = 'image-quiz' // Default to the image template as requested
+  templateId = 'image-quiz', // Default to the image template as requested
+  onAnswerSelected
 }) => {
   const [forceUpdate, setForceUpdate] = useState(0);
   
@@ -73,7 +75,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   
   const containerStyle: React.CSSProperties = {
     width: `${template.style.containerWidth}px`,
-    background: template.style.backgroundColor,
+    background: (campaignStyle as any).backgroundColor || template.style.backgroundColor,
     borderRadius: unifiedBorderRadius,
     padding: typeof template.style.padding === 'number'
       ? `${template.style.padding}px`
@@ -82,6 +84,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     fontFamily: template.style.fontFamily,
     margin: 'auto',
     overflow: 'hidden',
+    ...(campaignStyle as any).textColor ? { color: (campaignStyle as any).textColor } : {},
     ...(disabled && { pointerEvents: 'none', opacity: 0.5 })
   };
 
@@ -90,7 +93,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     fontSize: `${template.questionStyle.fontSize}px`,
     fontWeight: template.questionStyle.fontWeight,
     marginBottom: `${template.questionStyle.marginBottom}px`,
-    color: template.questionStyle.color,
+    color: (campaignStyle as any).textColor || template.questionStyle.color,
     ...(template.questionStyle.background && { background: template.questionStyle.background }),
     ...(template.questionStyle.border && { border: template.questionStyle.border }),
     ...(template.questionStyle.borderRadius && { 
@@ -174,6 +177,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 ...template.cardStyle
               }}
               onClick={onClick}
+              onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
               }}
@@ -242,6 +246,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
               backgroundColor: 'transparent',
             }}
             onClick={onClick}
+            onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
             onMouseEnter={(e) => {
               if ('hoverBackground' in template.optionStyle) {
                 (e.currentTarget as HTMLElement).style.backgroundColor = template.optionStyle.hoverBackground as string;

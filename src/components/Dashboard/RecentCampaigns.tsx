@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import PillButton from '../shared/PillButton';
 import { ChevronRight, Calendar, MoreVertical } from 'lucide-react';
 import { getCampaignTypeIcon, getCampaignTypeText, CampaignType } from '../../utils/campaignTypes';
@@ -100,10 +99,7 @@ const RecentCampaigns: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {duplicatedCampaigns.map((campaign, index) => {
           const IconComponent = getCampaignTypeIcon(campaign.type);
-          return <div key={campaign.id} className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] opacity-0 animate-fade-in" style={{
-            animationDelay: `${index * 0.15}s`,
-            animationFillMode: 'forwards'
-          }}>
+          return <div key={campaign.id} className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02]">
                 {/* Main Campaign Card */}
                 <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-900 to-gray-700">
                   {/* Background Image with Parallax Effect */}
@@ -135,7 +131,7 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute top-4 right-4 z-20">
                     <div className={`relative overflow-hidden rounded-full px-2.5 py-1 text-xs font-bold border backdrop-blur-sm shadow-lg transition-all duration-300 group-hover:scale-110 ${getStatusColor(campaign.status)} ${getStatusGlow(campaign.status)} group-hover:shadow-lg`}>
                       <span className="relative z-10 flex items-center">
-                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
                         {getStatusText(campaign.status)}
                       </span>
                       {/* Status Badge Glow Animation */}
@@ -182,22 +178,7 @@ const RecentCampaigns: React.FC = () => {
         </div>
       </div>
 
-      <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-      `}</style>
+      
     </div>;
 };
 export default RecentCampaigns;

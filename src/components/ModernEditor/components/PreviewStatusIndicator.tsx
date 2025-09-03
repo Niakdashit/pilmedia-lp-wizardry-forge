@@ -17,9 +17,9 @@ const PreviewStatusIndicator: React.FC<PreviewStatusIndicatorProps> = ({
   const getStatusIcon = () => {
     switch (status) {
       case 'loading':
-        return <Activity className="w-3 h-3 animate-pulse" />;
+        return <Activity className="w-3 h-3" />;
       case 'playing':
-        return <Zap className="w-3 h-3 animate-pulse" />;
+        return <Zap className="w-3 h-3" />;
       case 'completed':
         return <CheckCircle2 className="w-3 h-3" />;
       case 'error':
@@ -75,7 +75,7 @@ const PreviewStatusIndicator: React.FC<PreviewStatusIndicatorProps> = ({
   if (status === 'idle') return null;
 
   return (
-    <div className={`absolute ${getPosition()} z-20 animate-fade-in`}>
+    <div className={`absolute ${getPosition()} z-20`}>
       <div className={`${getStatusColor()} backdrop-blur-sm rounded-full px-2 py-1 flex items-center space-x-1.5 text-xs font-medium shadow-lg`}>
         {getStatusIcon()}
         <span>{getStatusText()}</span>

@@ -1552,8 +1552,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
-        // Props pour la sidebar mobile
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
@@ -1562,12 +1561,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onCampaignConfigChange={onCampaignChange}
         elements={elements}
         onElementsChange={onElementsChange}
-        // Props pour la toolbar mobile
         onUndo={onUndo}
         onRedo={onRedo}
         canUndo={canUndo}
         canRedo={canRedo}
-        // Clear selection when clicking outside canvas/toolbars on mobile
         onClearSelection={handleClearSelection}
       >
         {/* Canvas Toolbar - Show for text and shape elements */}
@@ -1619,15 +1616,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               }
             }
           }}
-          style={{
-          // Padding fixe (indépendant du zoom) pour garantir un centrage stable
-          paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
-          paddingLeft: selectedDevice === 'tablet' ? 32 : 20,
-          paddingRight: selectedDevice === 'tablet' ? 32 : 20,
-          paddingBottom: (isRealMobile() ? `calc(${mobileToolbarHeight}px + env(safe-area-inset-bottom))` : (selectedDevice === 'tablet' ? 48 : 32)),
-          transition: 'padding 0.2s ease-in-out',
-          minHeight: '100%'
-        }}>
+        >
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
             className="flex justify-center items-center"
@@ -1840,7 +1829,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       
                       onQuizPanelChange?.(true);
                     }}
-                    className="cursor-pointer"
+                    className="w-full h-full flex items-center justify-center cursor-pointer"
                   >
                     {/* Afficher l'aperçu inline uniquement si l'élément positionné n'existe pas encore */}
                     {(!elements.some(el => el.id === 'quiz-template')) && (

@@ -18,7 +18,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     ? 'text-2xl font-bold mb-4 text-[#841b60] drop-shadow-sm'
     : 'text-3xl md:text-4xl font-bold mb-6 text-[#841b60] drop-shadow-sm';
   const actionsClass = size === 'sm'
-    ? 'flex flex-wrap justify-center gap-3 [&_a]:px-4 [&_a]:py-2.5 [&_a]:text-sm [&_a]:rounded-xl [&_a]:shadow [&_button]:px-4 [&_button]:py-2.5 [&_button]:text-sm [&_button]:rounded-xl [&_button]:shadow'
+    ? 'flex flex-wrap justify-center gap-3'
     : 'flex flex-wrap justify-center gap-4';
 
   if (variant === 'default') {

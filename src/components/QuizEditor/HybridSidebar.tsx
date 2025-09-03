@@ -475,6 +475,50 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
+            // New color controls
+            backgroundColor={campaign?.design?.quizConfig?.style?.backgroundColor}
+            textColor={campaign?.design?.quizConfig?.style?.textColor}
+            onBackgroundColorChange={(color) => {
+              setCampaign((prev) => {
+                if (!prev) return prev;
+                const next = {
+                  ...prev,
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...(prev.design as any).quizConfig,
+                      style: {
+                        ...((prev.design as any).quizConfig?.style || {}),
+                        backgroundColor: color
+                      }
+                    }
+                  }
+                } as typeof prev;
+                return next;
+              });
+              // Notify preview to re-render
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { backgroundColor: color } }));
+            }}
+            onTextColorChange={(color) => {
+              setCampaign((prev) => {
+                if (!prev) return prev;
+                const next = {
+                  ...prev,
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...(prev.design as any).quizConfig,
+                      style: {
+                        ...((prev.design as any).quizConfig?.style || {}),
+                        textColor: color
+                      }
+                    }
+                  }
+                } as typeof prev;
+                return next;
+              });
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { textColor: color } }));
+            }}
             selectedDevice={selectedDevice}
           />
         );
