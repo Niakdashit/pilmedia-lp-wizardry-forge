@@ -137,7 +137,12 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     timeLimit: 30,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     templateId: 'image-quiz',
-    borderRadius: 12 // Valeur par défaut pour le border radius
+    borderRadius: 12, // Valeur par défaut pour le border radius
+    // Couleurs par défaut des boutons
+    buttonBackgroundColor: '#4f46e5',
+    buttonTextColor: '#ffffff',
+    buttonHoverBackgroundColor: '#4338ca',
+    buttonActiveBackgroundColor: '#3730a3'
   });
 
   // Quiz modal config - synchronisé avec quizConfig
@@ -334,15 +339,25 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       updatedConfig.design.quizConfig = updatedConfig.design.quizConfig || {};
       updatedConfig.design.quizConfig.style = {
         ...(updatedConfig.design.quizConfig.style || {}),
-        borderRadius: `${borderRadius}px`
+        borderRadius: `${borderRadius}px`,
+        buttonBackgroundColor: quizConfig.buttonBackgroundColor,
+        buttonTextColor: quizConfig.buttonTextColor,
+        buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
+        buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor
       };
-      console.log('🎯 CampaignConfig mise à jour avec borderRadius:', updatedConfig.design.quizConfig.style);
+      console.log('🎯 CampaignConfig mise à jour avec les styles:', updatedConfig.design.quizConfig.style);
       return updatedConfig;
     });
     
     // Émettre un événement pour forcer le re-render du TemplatedQuiz
     const event = new CustomEvent('quizStyleUpdate', { 
-      detail: { borderRadius: `${borderRadius}px` } 
+      detail: { 
+        borderRadius: `${borderRadius}px`,
+        buttonBackgroundColor: quizConfig.buttonBackgroundColor,
+        buttonTextColor: quizConfig.buttonTextColor,
+        buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
+        buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor
+      } 
     });
     window.dispatchEvent(event);
     
@@ -366,16 +381,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Quiz Editor doesn't need wheel config sync - using quiz config instead
   const wheelModalConfig = null;
-  // Ces fonctions sont nécessaires pour la compatibilité mais ne sont pas utilisées dans le quiz
-  // Elles sont utilisées dans d'autres parties de l'application
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  const setWheelBorderStyle = useCallback((_: string) => {}, []);
-  const setWheelBorderColor = useCallback((_: string) => {}, []);
-  const setWheelBorderWidth = useCallback((_: number) => {}, []);
-  const setWheelScale = useCallback((_: number) => {}, []);
-  const setShowBulbs = useCallback((_: boolean) => {}, []);
-  const setWheelPosition = useCallback((_: { x: number; y: number }) => {}, []);
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   // Système d'historique pour undo/redo avec le nouveau hook
   const {
@@ -576,7 +581,24 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         quizConfig: {
           questionCount: campaignConfig?.design?.quizConfig?.questionCount || quizConfig.questionCount || 5,
           timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId
+          templateId: quizConfig.templateId,
+          style: {
+            ...campaignConfig?.design?.quizConfig?.style,
+            buttonBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonBackgroundColor || quizConfig.buttonBackgroundColor,
+            buttonTextColor: campaignConfig?.design?.quizConfig?.style?.buttonTextColor || quizConfig.buttonTextColor,
+            buttonHoverBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonHoverBackgroundColor || quizConfig.buttonHoverBackgroundColor,
+            buttonActiveBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonActiveBackgroundColor || quizConfig.buttonActiveBackgroundColor,
+            borderRadius: campaignConfig?.design?.quizConfig?.style?.borderRadius || `${quizConfig.borderRadius}px` || '8px',
+            // Styles pour le texte
+            textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
+            questionTextWrap: 'break-word',
+            answerTextWrap: 'break-word',
+            // Mise en page responsive
+            questionPadding: '12px',
+            answerPadding: '12px 16px',
+            answerMargin: '8px 0',
+            answerMinHeight: 'auto'
+          }
         }
       },
       gameConfig: {
@@ -1191,6 +1213,96 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   console.log('🎯 Template change in layout:', templateId);
                   setQuizConfig(prev => ({ ...prev, templateId }));
                 }}
+                onButtonBackgroundColorChange={(color) => {
+                  setQuizConfig(prev => ({
+                    ...prev,
+                    buttonBackgroundColor: color,
+                    // Mettre à jour automatiquement la couleur de survol si elle n'a pas été personnalisée
+                    buttonHoverBackgroundColor: prev.buttonHoverBackgroundColor === prev.buttonBackgroundColor 
+                      ? color 
+                      : prev.buttonHoverBackgroundColor,
+                    buttonActiveBackgroundColor: prev.buttonActiveBackgroundColor === prev.buttonBackgroundColor
+                      ? color
+                      : prev.buttonActiveBackgroundColor
+                  }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonBackgroundColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                onButtonTextColorChange={(color) => {
+                  setQuizConfig(prev => ({ ...prev, buttonTextColor: color }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonTextColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                onButtonHoverBackgroundColorChange={(color) => {
+                  setQuizConfig(prev => ({
+                    ...prev,
+                    buttonHoverBackgroundColor: color,
+                    // Mettre à jour automatiquement la couleur active si elle n'a pas été personnalisée
+                    buttonActiveBackgroundColor: prev.buttonActiveBackgroundColor === prev.buttonHoverBackgroundColor
+                      ? color
+                      : prev.buttonActiveBackgroundColor
+                  }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonHoverBackgroundColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                onButtonActiveBackgroundColorChange={(color) => {
+                  setQuizConfig(prev => ({ ...prev, buttonActiveBackgroundColor: color }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonActiveBackgroundColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                // Passer les couleurs actuelles
+                buttonBackgroundColor={quizConfig.buttonBackgroundColor}
+                buttonTextColor={quizConfig.buttonTextColor}
+                buttonHoverBackgroundColor={quizConfig.buttonHoverBackgroundColor}
+                buttonActiveBackgroundColor={quizConfig.buttonActiveBackgroundColor}
                 onForceElementsTab={() => {
                   // Utiliser la référence pour changer l'onglet actif
                   if (sidebarRef.current) {

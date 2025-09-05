@@ -21,18 +21,61 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   const [forceUpdate, setForceUpdate] = useState(0);
   
   // Écouter les mises à jour de style du quiz
+  const [currentStyles, setCurrentStyles] = useState({
+    backgroundColor: '',
+    textColor: '',
+    borderRadius: '',
+    buttonBackgroundColor: '',
+    buttonTextColor: '',
+    buttonHoverBackgroundColor: '',
+    buttonActiveBackgroundColor: ''
+  });
+  
+  // État local pour suivre le style actuel des boutons
+  const [buttonStyles, setButtonStyles] = useState<{
+    normal: React.CSSProperties;
+    hover: React.CSSProperties;
+    active: React.CSSProperties;
+  }>({
+    normal: {},
+    hover: {},
+    active: {}
+  });
+
   useEffect(() => {
     const handleQuizStyleUpdate = (event: CustomEvent) => {
       console.log('🔄 TemplatedQuiz reçoit mise à jour de style:', event.detail);
-      setForceUpdate((prev: number) => prev + 1);
+      
+      setCurrentStyles(prev => ({
+        ...prev,
+        ...event.detail
+      }));
+      
+      // Forcer un re-render pour s'assurer que les styles sont appliqués
+      setForceUpdate(prev => prev + 1);
     };
     
     window.addEventListener('quizStyleUpdate', handleQuizStyleUpdate as EventListener);
     return () => window.removeEventListener('quizStyleUpdate', handleQuizStyleUpdate as EventListener);
   }, []);
   
+  // Mettre à jour les styles lorsque la campagne change
+  useEffect(() => {
+    if (campaign?.design?.quizConfig?.style) {
+      setCurrentStyles(prev => ({
+        ...prev,
+        ...campaign.design.quizConfig.style
+      }));
+    }
+  }, [campaign]);
+  
   // Debug logs
-  console.log('🎯 TemplatedQuiz render:', { templateId, campaign: campaign?.gameConfig?.quiz?.templateId, forceUpdate });
+  console.log('🎯 TemplatedQuiz render:', { 
+    templateId, 
+    currentStyles,
+    campaignStyles: campaign?.design?.quizConfig?.style,
+    forceUpdate 
+  });
   
   // Get the selected template
   const template = quizTemplates.find(t => t.id === templateId) || quizTemplates[1]; // Fallback to image-quiz
@@ -59,23 +102,153 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   const answers = currentQuestion.answers || [];
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  // Generate styles based on template with campaign overrides
-  const campaignStyle = campaign?.design?.quizConfig?.style || {};
-  console.log('🔍 [TemplatedQuiz] Style overrides:', {
-    campaignBorderRadius: campaignStyle.borderRadius,
-    templateBorderRadius: template.style.borderRadius,
-    appliedBorderRadius: campaignStyle.borderRadius || template.style.borderRadius
-  });
-  console.log('🎨 Campaign style overrides:', campaignStyle);
+  // Debug log pour vérifier les valeurs actuelles
+  useEffect(() => {
+    console.log('🎨 [TemplatedQuiz] Current styles:', {
+      currentStyles,
+      campaignStyles: campaign?.design?.quizConfig?.style,
+      templateStyles: template.style
+    });
+  }, [currentStyles, campaign, template]);
   
   // Calculer le borderRadius uniforme pour tous les éléments
-  const unifiedBorderRadius = campaignStyle.borderRadius || (typeof template.style.borderRadius === 'number' 
-    ? `${template.style.borderRadius}px` 
-    : template.style.borderRadius);
+  const unifiedBorderRadius = 
+    currentStyles.borderRadius || 
+    campaign?.design?.quizConfig?.style?.borderRadius ||
+    (typeof template.style.borderRadius === 'number' 
+      ? `${template.style.borderRadius}px` 
+      : template.style.borderRadius || '8px');
+      
+  // Mettre à jour les styles des boutons lorsque les couleurs changent
+  useEffect(() => {
+    console.log('🔄 Mise à jour des styles des boutons', {
+      currentStyles,
+      campaignStyles: campaign?.design?.quizConfig?.style,
+      templateStyles: template.optionStyle
+    });
+    
+    // Récupérer les couleurs en respectant l'ordre de priorité :
+    // 1. currentStyles (mis à jour par les événements)
+    // 2. campaign.design.quizConfig.style
+    // 3. template.optionStyle
+    const bgColor = currentStyles.buttonBackgroundColor || 
+                   campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
+                   template.optionStyle?.backgroundColor || 
+                   '#4f46e5';
+                   
+    const textColor = currentStyles.buttonTextColor || 
+                     campaign?.design?.quizConfig?.style?.buttonTextColor || 
+                     template.optionStyle?.color || 
+                     '#ffffff';
+                     
+    const hoverBgColor = currentStyles.buttonHoverBackgroundColor || 
+                        campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor || 
+                        getHoverColor(bgColor);
+                        
+    const activeBgColor = currentStyles.buttonActiveBackgroundColor || 
+                         campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor || 
+                         getActiveColor(bgColor);
+    
+    // Styles de base pour les réponses
+    const answerStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      width: '100%',
+      minHeight: campaign?.design?.quizConfig?.style?.answerMinHeight || 'auto',
+      padding: campaign?.design?.quizConfig?.style?.answerPadding || '12px 16px',
+      margin: campaign?.design?.quizConfig?.style?.answerMargin || '8px 0',
+      backgroundColor: bgColor,
+      color: textColor,
+      border: template.optionStyle?.border || '1px solid #e5e7eb',
+      borderRadius: unifiedBorderRadius,
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      outline: 'none',
+      boxSizing: 'border-box',
+      whiteSpace: 'normal',
+      overflow: 'visible',
+      // Ajout pour assurer la compatibilité avec le texte long
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word'
+    };
+                        
+    console.log('🎨 Mise à jour des styles de bouton:', {
+      bgColor,
+      textColor,
+      hoverBgColor,
+      activeBgColor,
+      source: {
+        currentStyles,
+        campaign: campaign?.design?.quizConfig?.style,
+        template: template.optionStyle
+      }
+    });
+    
+    // Mettre à jour les styles des boutons avec les couleurs personnalisées
+    const newButtonStyles = {
+      normal: {
+        ...answerStyle,
+        backgroundColor: bgColor,
+        color: textColor
+      },
+      hover: {
+        ...answerStyle,
+        transform: 'translateY(-1px)',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        backgroundColor: hoverBgColor,
+        color: textColor
+      },
+      active: {
+        ...answerStyle,
+        transform: 'translateY(0)',
+        boxShadow: 'none',
+        backgroundColor: activeBgColor,
+        color: textColor
+      }
+    };
+    
+    console.log('🎨 Nouveaux styles de bouton:', newButtonStyles);
+    setButtonStyles(newButtonStyles);
+  }, [
+    currentStyles.buttonBackgroundColor,
+    currentStyles.buttonTextColor,
+    currentStyles.buttonHoverBackgroundColor,
+    currentStyles.buttonActiveBackgroundColor,
+    campaign?.design?.quizConfig?.style,
+    template.optionStyle,
+    unifiedBorderRadius
+  ]);
+
+  // Définir les styles d'option avant de les utiliser
+  const optionStyle: React.CSSProperties = {
+    display: template.optionStyle.display || 'flex',
+    alignItems: template.optionStyle.alignItems || 'center',
+    border: template.optionStyle.border || '1px solid #e5e7eb',
+    borderRadius: unifiedBorderRadius,
+    padding: template.optionStyle.padding || '12px 16px',
+    margin: template.optionStyle.margin || '8px 0',
+    backgroundColor: currentStyles.buttonBackgroundColor || 
+                   campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
+                   template.optionStyle.backgroundColor || 
+                   'transparent',
+    color: currentStyles.buttonTextColor || 
+           campaign?.design?.quizConfig?.style?.buttonTextColor || 
+           template.optionStyle.color || 
+           'inherit',
+    cursor: template.optionStyle.cursor || 'pointer',
+    transition: template.optionStyle.transition || 'all 0.2s ease',
+    width: '100%',
+    fontSize: typeof template.optionStyle.fontSize === 'number' ? `${template.optionStyle.fontSize}px` : template.optionStyle.fontSize,
+    fontWeight: template.optionStyle.fontWeight
+  };
   
+  // Appliquer les styles avec les surcharges de campagne
   const containerStyle: React.CSSProperties = {
     width: `${template.style.containerWidth}px`,
-    background: (campaignStyle as any).backgroundColor || template.style.backgroundColor,
+    background: currentStyles.backgroundColor || 
+               campaign?.design?.quizConfig?.style?.backgroundColor || 
+               template.style.backgroundColor || 
+               '#ffffff',
     borderRadius: unifiedBorderRadius,
     padding: typeof template.style.padding === 'number'
       ? `${template.style.padding}px`
@@ -84,22 +257,84 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     fontFamily: template.style.fontFamily,
     margin: 'auto',
     overflow: 'hidden',
-    ...(campaignStyle as any).textColor ? { color: (campaignStyle as any).textColor } : {},
+    color: currentStyles.textColor || 
+           campaign?.design?.quizConfig?.style?.textColor || 
+           template.questionStyle.color || 
+           '#000000',
     ...(disabled && { pointerEvents: 'none', opacity: 0.5 })
   };
 
+  // Utiliser les styles de bouton mis en cache
+  const { normal: buttonBaseStyle, hover: buttonHoverStyle, active: buttonActiveStyle } = buttonStyles;
+  
+  /**
+   * Assombrit une couleur pour l'état hover
+   * @param color Couleur au format hexadécimal (#RRGGBB)
+   * @returns Couleur assombrie au format rgba()
+   */
+  function getHoverColor(color: string): string {
+    // Si la couleur est invalide ou n'est pas en hexadécimal, retourner une valeur par défaut
+    if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.05)';
+    
+    try {
+      // Convertir la couleur hexadécimale en valeurs RGB
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      
+      // Assombrir de 10% pour l'état hover
+      return `rgba(${Math.max(0, r - 25)}, ${Math.max(0, g - 25)}, ${Math.max(0, b - 25)}, 0.9)`;
+    } catch (e) {
+      console.error('Erreur lors du calcul de la couleur hover:', e);
+      return color || 'rgba(0,0,0,0.05)';
+    }
+  }
+  
+  /**
+   * Assombrit une couleur pour l'état actif (plus foncé que hover)
+   * @param color Couleur au format hexadécimal (#RRGGBB)
+   * @returns Couleur assombrie au format rgba()
+   */
+  function getActiveColor(color: string): string {
+    // Si la couleur est invalide ou n'est pas en hexadécimal, retourner une valeur par défaut
+    if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.1)';
+    
+    try {
+      // Convertir la couleur hexadécimale en valeurs RGB
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      
+      // Assombrir de 20% pour l'état actif (plus foncé que hover)
+      return `rgba(${Math.max(0, r - 50)}, ${Math.max(0, g - 50)}, ${Math.max(0, b - 50)}, 0.9)`;
+    } catch (e) {
+      console.error('Erreur lors du calcul de la couleur active:', e);
+      return color || 'rgba(0,0,0,0.1)';
+    }
+  }
+
   const questionStyle: React.CSSProperties = {
-    textAlign: template.questionStyle.textAlign,
-    fontSize: `${template.questionStyle.fontSize}px`,
-    fontWeight: template.questionStyle.fontWeight,
-    marginBottom: `${template.questionStyle.marginBottom}px`,
-    color: (campaignStyle as any).textColor || template.questionStyle.color,
-    ...(template.questionStyle.background && { background: template.questionStyle.background }),
-    ...(template.questionStyle.border && { border: template.questionStyle.border }),
-    ...(template.questionStyle.borderRadius && { 
-      borderRadius: unifiedBorderRadius
+    textAlign: template.questionStyle.textAlign || 'left',
+    fontSize: `${template.questionStyle.fontSize || 16}px`,
+    fontWeight: template.questionStyle.fontWeight || 600,
+    margin: '0 0 16px 0',
+    padding: campaign?.design?.quizConfig?.style?.questionPadding || '12px',
+    color: currentStyles.textColor || 
+           campaign?.design?.quizConfig?.style?.textColor || 
+           template.questionStyle.color || 
+           '#000000',
+    wordWrap: campaign?.design?.quizConfig?.style?.questionTextWrap || 'break-word',
+    overflowWrap: 'break-word',
+    whiteSpace: 'normal',
+    width: '100%',
+    ...(template.questionStyle.background && { 
+      background: template.questionStyle.background 
     }),
-    ...(template.questionStyle.padding && { padding: template.questionStyle.padding })
+    ...(template.questionStyle.border && { 
+      border: template.questionStyle.border 
+    }),
+    borderRadius: unifiedBorderRadius,
+    boxSizing: 'border-box'
   };
 
   const imageStyle: React.CSSProperties = template.imageStyle ? {
@@ -112,38 +347,20 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     height: 'auto'
   } : {};
 
-  const optionStyle: React.CSSProperties = {
-    display: template.optionStyle.display,
-    alignItems: template.optionStyle.alignItems,
-    border: template.optionStyle.border,
-    borderRadius: unifiedBorderRadius,
-    padding: template.optionStyle.padding,
-    margin: template.optionStyle.margin,
-    fontSize: `${template.optionStyle.fontSize}px`,
-    fontWeight: template.optionStyle.fontWeight,
-    cursor: template.optionStyle.cursor,
-    transition: template.optionStyle.transition,
-    ...(template.optionStyle.hoverBackground && { 
-      '&:hover': { 
-        backgroundColor: template.optionStyle.hoverBackground 
-      } 
-    })
-  };
-
-  // Clean up unused style variables since we're using them inline
-
+  // Styles pour les lettres (badges) des options
   const letterStyle: React.CSSProperties = {
-    border: template.letterStyle.border,
+    border: template.letterStyle.border || 'none',
     borderRadius: unifiedBorderRadius,
-    width: `${template.letterStyle.width}px`,
-    height: `${template.letterStyle.height}px`,
-    display: template.letterStyle.display,
-    alignItems: template.letterStyle.alignItems,
-    justifyContent: template.letterStyle.justifyContent,
-    marginRight: `${template.letterStyle.marginRight}px`,
-    fontWeight: template.letterStyle.fontWeight,
-    backgroundColor: template.letterStyle.backgroundColor,
-    color: template.letterStyle.color
+    minWidth: `${template.letterStyle.width || 24}px`,
+    height: `${template.letterStyle.height || 24}px`,
+    display: template.letterStyle.display || 'flex',
+    alignItems: template.letterStyle.alignItems || 'center',
+    justifyContent: template.letterStyle.justifyContent || 'center',
+    marginRight: `${template.letterStyle.marginRight || 12}px`,
+    fontWeight: template.letterStyle.fontWeight || 'bold',
+    backgroundColor: template.letterStyle.backgroundColor || 'rgba(0,0,0,0.1)',
+    color: template.letterStyle.color || '#000000',
+    flexShrink: 0
   };
 
   // Render grid layout for City of Light template
@@ -173,16 +390,20 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 padding: 0,
                 cursor: 'pointer',
                 textAlign: 'left',
-                transition: 'transform 0.15s ease',
+                transition: 'all 0.2s ease',
                 ...template.cardStyle
               }}
               onClick={onClick}
               onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = 'translateY(-2px)';
+                target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                const target = e.currentTarget as HTMLElement;
+                target.style.transform = '';
+                target.style.boxShadow = '';
               }}
             >
               <div style={{
@@ -206,8 +427,14 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 />
               </div>
               <div style={{
-                background: template.captionStyle?.background || '#F0C96A',
-                color: template.captionStyle?.color || '#111',
+                background: currentStyles.buttonBackgroundColor || 
+                          campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
+                          template.captionStyle?.background || 
+                          '#F0C96A',
+                color: currentStyles.buttonTextColor || 
+                       campaign?.design?.quizConfig?.style?.buttonTextColor || 
+                       template.captionStyle?.color || 
+                       '#111',
                 borderRadius: unifiedBorderRadius,
                 padding: template.captionStyle?.padding || '8px 10px',
                 fontWeight: 800,
@@ -217,9 +444,13 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 marginTop: '8px',
                 fontSize: '14px',
                 letterSpacing: '0.2px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                whiteSpace: 'normal',
+                overflow: 'visible',
+                wordWrap: 'break-word',
+                minHeight: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}>
                 {letters[index]}. {answer.text || `Option ${index + 1}`}
               </div>
@@ -234,38 +465,119 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   const renderStandardOptions = () => {
     if (template.hasGrid) return null;
     
+    // Récupérer les couleurs personnalisées
+    const bgColor = currentStyles.buttonBackgroundColor || 
+                   campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
+                   template.optionStyle?.backgroundColor || 
+                   '#4f46e5';
+    const textColor = currentStyles.buttonTextColor || 
+                     campaign?.design?.quizConfig?.style?.buttonTextColor || 
+                     template.optionStyle?.color || 
+                     '#ffffff';
+    const hoverBgColor = currentStyles.buttonHoverBackgroundColor || 
+                        campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor || 
+                        getHoverColor(bgColor);
+    
     return (
       <div>
-        {answers.map((answer: any, index: number) => (
-          <div
-            key={index}
-            style={{
-              ...optionStyle,
-              display: 'flex',
-              alignItems: 'center',
-              backgroundColor: 'transparent',
-            }}
-            onClick={onClick}
-            onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
-            onMouseEnter={(e) => {
-              if ('hoverBackground' in template.optionStyle) {
-                (e.currentTarget as HTMLElement).style.backgroundColor = template.optionStyle.hoverBackground as string;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if ('hoverBackground' in template.optionStyle) {
-                (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            {template.letterStyle.display !== 'none' && (
-              <span style={letterStyle}>
-                {letters[index]}.
-              </span>
-            )}
-            <span>{answer.text || `Option ${index + 1}`}</span>
-          </div>
-        ))}
+        {answers.map((answer: any, index: number) => {
+          // Styles pour la lettre
+          const letterButtonStyle = {
+            ...letterStyle,
+            backgroundColor: bgColor,
+            color: textColor,
+            marginRight: '8px',
+            // Assurer que la lettre est bien centrée
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          };
+
+          return (
+            <div
+              key={index}
+              style={{
+                ...buttonBaseStyle,
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 0.2s ease',
+                // S'assurer que le texte est correctement aligné et peut s'étendre
+                alignItems: 'center',
+                textAlign: 'left',
+                // Permettre le retour à la ligne
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                // Appliquer les styles personnalisés
+                backgroundColor: bgColor,
+                color: textColor,
+                border: template.optionStyle?.border || '1px solid #e5e7eb',
+                borderRadius: unifiedBorderRadius,
+                // Espacement interne pour le texte
+                padding: campaign?.design?.quizConfig?.style?.answerPadding || '12px 16px',
+                // Marge entre les réponses
+                margin: campaign?.design?.quizConfig?.style?.answerMargin || '8px 0',
+                // Hauteur minimale pour les réponses
+                minHeight: campaign?.design?.quizConfig?.style?.answerMinHeight || 'auto',
+                // Assurer que le contenu est bien affiché
+                display: 'flex',
+                flexDirection: 'row',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+              onMouseEnter={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                // Appliquer l'effet de survol avec la couleur personnalisée
+                target.style.transform = 'translateY(-1px)';
+                target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                target.style.backgroundColor = hoverBgColor;
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                // Réinitialiser à l'état normal avec les couleurs personnalisées
+                target.style.transform = '';
+                target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                target.style.backgroundColor = bgColor;
+              }}
+              onMouseDown={(e) => {
+                const target = e.currentTarget as HTMLElement;
+                // Appliquer l'effet d'enfoncement avec la couleur active personnalisée
+                const activeBgColor = currentStyles.buttonActiveBackgroundColor || 
+                                   campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor || 
+                                   getActiveColor(bgColor);
+                target.style.transform = 'translateY(1px)';
+                target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+                target.style.backgroundColor = activeBgColor;
+                
+                // Gérer le relâchement de la souris
+                const onMouseUp = () => {
+                  document.removeEventListener('mouseup', onMouseUp);
+                  // Revenir à l'état survolé
+                  target.style.transform = 'translateY(-1px)';
+                  target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                  target.style.backgroundColor = hoverBgColor;
+                };
+                document.addEventListener('mouseup', onMouseUp, { once: true });
+              }}
+              onClick={onClick}
+              onMouseUp={() => onAnswerSelected?.(!!answer.isCorrect)}
+              role="button"
+              tabIndex={0}
+            >
+              {template.letterStyle.display !== 'none' && (
+                <span style={letterButtonStyle}>
+                  {letters[index]}
+                </span>
+              )}
+              <div className="flex-1 min-w-0" style={{ marginLeft: template.letterStyle.display === 'none' ? 0 : '8px', padding: '8px 0' }}>
+                <span className="block w-full break-words whitespace-normal">
+                  {answer.text || `Option ${index + 1}`}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };

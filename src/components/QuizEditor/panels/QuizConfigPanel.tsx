@@ -16,11 +16,19 @@ interface QuizConfigPanelProps {
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   selectedTemplate?: string;
   onTemplateChange?: (template: QuizTemplate) => void;
-  // New: style overrides
+  // Style overrides
   backgroundColor?: string;
   textColor?: string;
+  buttonBackgroundColor?: string;
+  buttonTextColor?: string;
+  buttonHoverBackgroundColor?: string;
+  buttonActiveBackgroundColor?: string;
   onBackgroundColorChange?: (color: string) => void;
   onTextColorChange?: (color: string) => void;
+  onButtonBackgroundColorChange?: (color: string) => void;
+  onButtonTextColorChange?: (color: string) => void;
+  onButtonHoverBackgroundColorChange?: (color: string) => void;
+  onButtonActiveBackgroundColorChange?: (color: string) => void;
 }
 
 const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
@@ -38,8 +46,16 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   onTemplateChange,
   backgroundColor,
   textColor,
+  buttonBackgroundColor = '#4f46e5',
+  buttonTextColor = '#ffffff',
+  buttonHoverBackgroundColor = '#4338ca',
+  buttonActiveBackgroundColor = '#3730a3',
   onBackgroundColorChange,
-  onTextColorChange
+  onTextColorChange,
+  onButtonBackgroundColorChange,
+  onButtonTextColorChange,
+  onButtonHoverBackgroundColorChange,
+  onButtonActiveBackgroundColorChange
 }) => {
   return (
     <div className="h-full flex flex-col">
@@ -171,6 +187,98 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 value={textColor || ''}
                 onChange={(e) => onTextColorChange?.(e.target.value)}
                 placeholder="#111111"
+                className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Bouton - Couleur de fond */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Couleur des boutons
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={buttonBackgroundColor}
+                onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
+                className="w-10 h-10 rounded-md border border-gray-600 bg-gray-700 p-0"
+                aria-label="Couleur de fond des boutons"
+              />
+              <input
+                type="text"
+                value={buttonBackgroundColor || ''}
+                onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
+                placeholder="#4f46e5"
+                className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Bouton - Couleur du texte */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Couleur du texte des boutons
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={buttonTextColor}
+                onChange={(e) => onButtonTextColorChange?.(e.target.value)}
+                className="w-10 h-10 rounded-md border border-gray-600 bg-gray-700 p-0"
+                aria-label="Couleur du texte des boutons"
+              />
+              <input
+                type="text"
+                value={buttonTextColor || ''}
+                onChange={(e) => onButtonTextColorChange?.(e.target.value)}
+                placeholder="#ffffff"
+                className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Bouton - Couleur de survol */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Couleur de survol des boutons
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={buttonHoverBackgroundColor}
+                onChange={(e) => onButtonHoverBackgroundColorChange?.(e.target.value)}
+                className="w-10 h-10 rounded-md border border-gray-600 bg-gray-700 p-0"
+                aria-label="Couleur de survol des boutons"
+              />
+              <input
+                type="text"
+                value={buttonHoverBackgroundColor || ''}
+                onChange={(e) => onButtonHoverBackgroundColorChange?.(e.target.value)}
+                placeholder="#4338ca"
+                className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Bouton - Couleur active */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Couleur active des boutons
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="color"
+                value={buttonActiveBackgroundColor}
+                onChange={(e) => onButtonActiveBackgroundColorChange?.(e.target.value)}
+                className="w-10 h-10 rounded-md border border-gray-600 bg-gray-700 p-0"
+                aria-label="Couleur active des boutons"
+              />
+              <input
+                type="text"
+                value={buttonActiveBackgroundColor || ''}
+                onChange={(e) => onButtonActiveBackgroundColorChange?.(e.target.value)}
+                placeholder="#3730a3"
                 className="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
               />
             </div>
