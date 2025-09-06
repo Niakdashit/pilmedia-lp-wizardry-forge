@@ -1536,7 +1536,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = activeCanvasRef.current;
+            const canvasEl = activeCanvasRef && typeof activeCanvasRef === 'object' && 'current' in activeCanvasRef ? activeCanvasRef.current : null;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom

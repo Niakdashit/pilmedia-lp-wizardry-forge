@@ -1,6 +1,5 @@
 import React from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
+
 
 interface WheelConfigPanelProps {
   onBack: () => void;
@@ -129,15 +128,30 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
             </div>
           </div>
 
-          {/* Styles de bordure */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Style de bordure
             </label>
-            <BorderStyleSelector
-              currentStyle={wheelBorderStyle}
-              onStyleChange={onBorderStyleChange}
-            />
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => onBorderStyleChange('solid')}
+                className={`p-3 border rounded-md text-center ${wheelBorderStyle === 'solid' ? 'border-primary bg-primary/10' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                Solide
+              </button>
+              <button
+                onClick={() => onBorderStyleChange('dashed')}
+                className={`p-3 border rounded-md text-center ${wheelBorderStyle === 'dashed' ? 'border-primary bg-primary/10' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                Tirets
+              </button>
+              <button
+                onClick={() => onBorderStyleChange('dotted')}
+                className={`p-3 border rounded-md text-center ${wheelBorderStyle === 'dotted' ? 'border-primary bg-primary/10' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                Points
+              </button>
+            </div>
           </div>
 
           {/* Position de la roue - uniquement sur Desktop */}
