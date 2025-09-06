@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { quizTemplates } from '../../types/quizTemplates';
+import type { QuizStyleProps } from '../../types/quiz-style';
+
+// Les types globaux sont maintenant définis dans src/types/global.d.ts
 
 interface TemplatedQuizProps {
   campaign?: any;
@@ -20,15 +23,34 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 }) => {
   const [forceUpdate, setForceUpdate] = useState(0);
   
+  // Interface pour les styles actuels du quiz
+  interface CurrentStyles {
+    backgroundColor?: string;
+    backgroundOpacity?: number;
+    textColor?: string;
+    borderRadius?: string;
+    buttonBackgroundColor?: string;
+    buttonTextColor?: string;
+    buttonHoverBackgroundColor?: string;
+    buttonActiveBackgroundColor?: string;
+    width?: string;
+    mobileWidth?: string;
+    height?: string;
+  }
+
   // Écouter les mises à jour de style du quiz
-  const [currentStyles, setCurrentStyles] = useState({
+  const [currentStyles, setCurrentStyles] = useState<CurrentStyles>({
     backgroundColor: '',
+    backgroundOpacity: 100,
     textColor: '',
     borderRadius: '',
     buttonBackgroundColor: '',
     buttonTextColor: '',
     buttonHoverBackgroundColor: '',
-    buttonActiveBackgroundColor: ''
+    buttonActiveBackgroundColor: '',
+    width: '',
+    mobileWidth: '',
+    height: ''
   });
   
   // État local pour suivre le style actuel des boutons
@@ -42,30 +64,80 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     active: {}
   });
 
-  useEffect(() => {
-    const handleQuizStyleUpdate = (event: CustomEvent) => {
-      console.log('🔄 TemplatedQuiz reçoit mise à jour de style:', event.detail);
-      
-      setCurrentStyles(prev => ({
+  // Fonction utilitaire pour mettre à jour les styles
+  const updateQuizStyles = (styles: Partial<QuizStyleProps>) => {
+    if (!styles || Object.keys(styles).length === 0) return;
+    
+    console.log('🎨 [TemplatedQuiz] Mise à jour des styles:', styles);
+    
+    setCurrentStyles(prev => {
+      const newStyles = {
         ...prev,
-        ...event.detail
-      }));
+        ...styles
+      };
       
-      // Forcer un re-render pour s'assurer que les styles sont appliqués
-      setForceUpdate(prev => prev + 1);
+      console.log('🎨 [TemplatedQuiz] Nouveaux styles après mise à jour:', newStyles);
+      return newStyles;
+    });
+    
+    // Forcer un re-render pour s'assurer que les styles sont appliqués
+    setForceUpdate(prev => {
+      const newValue = prev + 1;
+      console.log('🔄 [TemplatedQuiz] Forçage du re-render #' + newValue);
+      return newValue;
+    });
+  };
+
+  // Effet pour gérer les événements de style
+  useEffect(() => {
+    const handleStyleUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<QuizStyleProps>;
+      
+      console.log(`🔄 [TemplatedQuiz] Réception d'un événement ${event.type}:`, {
+        detail: customEvent.detail,
+        timestamp: new Date().toISOString(),
+        eventType: event.type,
+        eventTarget: event.target
+      });
+      
+      if (customEvent.detail) {
+        updateQuizStyles(customEvent.detail);
+      }
     };
     
-    window.addEventListener('quizStyleUpdate', handleQuizStyleUpdate as EventListener);
-    return () => window.removeEventListener('quizStyleUpdate', handleQuizStyleUpdate as EventListener);
+    // Ajouter les écouteurs d'événements
+    const eventTypes = ['quizStyleUpdate', 'quizStyleUpdateFallback'];
+    
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleStyleUpdate as EventListener);
+      console.log(`👂 [TemplatedQuiz] Écouteur d'événement ${eventType} ajouté`);
+    });
+    
+    // Nettoyer les écouteurs d'événements lors du démontage du composant
+    return () => {
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleStyleUpdate as EventListener);
+        console.log(`👋 [TemplatedQuiz] Écouteur d'événement ${eventType} supprimé`);
+      });
+    };
   }, []);
   
   // Mettre à jour les styles lorsque la campagne change
   useEffect(() => {
     if (campaign?.design?.quizConfig?.style) {
-      setCurrentStyles(prev => ({
-        ...prev,
-        ...campaign.design.quizConfig.style
-      }));
+      console.log('🔄 [TemplatedQuiz] Mise à jour des styles depuis la campagne:', campaign.design.quizConfig.style);
+      
+      setCurrentStyles(prev => {
+        const newStyles: QuizStyleProps = {
+          ...prev,
+          ...campaign.design.quizConfig.style
+        };
+        console.log('🎨 [TemplatedQuiz] Nouveaux styles appliqués depuis la campagne:', newStyles);
+        return newStyles;
+      });
+      
+      // Forcer un re-render pour s'assurer que les styles sont appliqués
+      setForceUpdate(prev => prev + 1);
     }
   }, [campaign]);
   
@@ -131,23 +203,29 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     // 1. currentStyles (mis à jour par les événements)
     // 2. campaign.design.quizConfig.style
     // 3. template.optionStyle
+    // Couleurs par défaut des boutons (peuvent être surchargées par le panneau)
+    const DEFAULT_BTN_BG = '#f3f4f6';
+    const DEFAULT_BTN_TEXT = '#000000';
+    const DEFAULT_BTN_HOVER = '#9fa4a4';
+    const DEFAULT_BTN_ACTIVE = '#a7acb5';
+
     const bgColor = currentStyles.buttonBackgroundColor || 
                    campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
-                   template.optionStyle?.backgroundColor || 
-                   '#4f46e5';
+                   (template.optionStyle as any)?.background || 
+                   DEFAULT_BTN_BG;
                    
     const textColor = currentStyles.buttonTextColor || 
                      campaign?.design?.quizConfig?.style?.buttonTextColor || 
-                     template.optionStyle?.color || 
-                     '#ffffff';
+                     (template.optionStyle as any)?.color || 
+                     DEFAULT_BTN_TEXT;
                      
     const hoverBgColor = currentStyles.buttonHoverBackgroundColor || 
                         campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor || 
-                        getHoverColor(bgColor);
+                        DEFAULT_BTN_HOVER;
                         
     const activeBgColor = currentStyles.buttonActiveBackgroundColor || 
                          campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor || 
-                         getActiveColor(bgColor);
+                         DEFAULT_BTN_ACTIVE;
     
     // Styles de base pour les réponses
     const answerStyle: React.CSSProperties = {
@@ -159,7 +237,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
       margin: campaign?.design?.quizConfig?.style?.answerMargin || '8px 0',
       backgroundColor: bgColor,
       color: textColor,
-      border: template.optionStyle?.border || '1px solid #e5e7eb',
+      border: template.optionStyle?.border || 'none',
       borderRadius: unifiedBorderRadius,
       cursor: 'pointer',
       transition: 'all 0.2s ease',
@@ -177,6 +255,9 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
       textColor,
       hoverBgColor,
       activeBgColor,
+      width: `${template.style.containerWidth}px`,
+      scale,
+      device,
       source: {
         currentStyles,
         campaign: campaign?.design?.quizConfig?.style,
@@ -219,41 +300,92 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     unifiedBorderRadius
   ]);
 
-  // Définir les styles d'option avant de les utiliser
-  const optionStyle: React.CSSProperties = {
-    display: template.optionStyle.display || 'flex',
-    alignItems: template.optionStyle.alignItems || 'center',
-    border: template.optionStyle.border || '1px solid #e5e7eb',
-    borderRadius: unifiedBorderRadius,
-    padding: template.optionStyle.padding || '12px 16px',
-    margin: template.optionStyle.margin || '8px 0',
-    backgroundColor: currentStyles.buttonBackgroundColor || 
-                   campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
-                   template.optionStyle.backgroundColor || 
-                   'transparent',
-    color: currentStyles.buttonTextColor || 
-           campaign?.design?.quizConfig?.style?.buttonTextColor || 
-           template.optionStyle.color || 
-           'inherit',
-    cursor: template.optionStyle.cursor || 'pointer',
-    transition: template.optionStyle.transition || 'all 0.2s ease',
-    width: '100%',
-    fontSize: typeof template.optionStyle.fontSize === 'number' ? `${template.optionStyle.fontSize}px` : template.optionStyle.fontSize,
-    fontWeight: template.optionStyle.fontWeight
-  };
+  // Les styles d'option sont maintenant gérés directement dans le rendu
   
   // Appliquer les styles avec les surcharges de campagne
+  const getResponsiveScale = () => {
+    // Calculer le facteur d'échelle basé sur la largeur
+    const baseWidth = template.style.containerWidth;
+    let targetWidth: string;
+    
+    if (device === 'mobile') {
+      targetWidth = currentStyles.mobileWidth || 
+                   campaign?.design?.quizConfig?.style?.mobileWidth || 
+                   currentStyles.width || 
+                   campaign?.design?.quizConfig?.style?.width || 
+                   `${baseWidth}px`;
+    } else {
+      targetWidth = currentStyles.width || 
+                   campaign?.design?.quizConfig?.style?.width || 
+                   `${baseWidth}px`;
+    }
+    
+    // Extraire la valeur numérique de la largeur cible
+    const targetWidthValue = parseInt(targetWidth.replace(/px|%/, ''));
+    const scale = isNaN(targetWidthValue) ? 1 : targetWidthValue / baseWidth;
+    
+    console.log('🔍 Scale calculation:', {
+      device,
+      baseWidth,
+      targetWidth,
+      targetWidthValue,
+      scale
+    });
+    
+    return scale;
+  };
+
+  const scale = getResponsiveScale();
+
+  // Calculer la couleur de fond avec opacité
+  const getBackgroundWithOpacity = () => {
+    const bgColor = currentStyles.backgroundColor || 
+                   campaign?.design?.quizConfig?.style?.backgroundColor || 
+                   template.style.backgroundColor || 
+                   '#ffffff';
+    
+    const opacityValue = currentStyles.backgroundOpacity ?? 
+                        campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 
+                        100;
+    
+    // Les valeurs 0 et 1 doivent être complètement transparentes
+    const opacity = (opacityValue === 0 || opacityValue === 1) ? 0 : opacityValue / 100;
+    
+    // Convertir la couleur hex en rgba avec opacité
+    if (bgColor.startsWith('#')) {
+      const r = parseInt(bgColor.slice(1, 3), 16);
+      const g = parseInt(bgColor.slice(3, 5), 16);
+      const b = parseInt(bgColor.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    
+    // Si c'est déjà une couleur rgba ou autre format, l'utiliser tel quel
+    return bgColor;
+  };
+
   const containerStyle: React.CSSProperties = {
-    width: `${template.style.containerWidth}px`,
-    background: currentStyles.backgroundColor || 
-               campaign?.design?.quizConfig?.style?.backgroundColor || 
-               template.style.backgroundColor || 
-               '#ffffff',
+    width: `${template.style.containerWidth}px`, // Largeur de base
+    transform: `scale(${scale})`, // Appliquer l'échelle proportionnelle
+    transformOrigin: 'center center', // Centrer la transformation
+    position: 'relative', // Assurer un contexte d'empilement propre
+    zIndex: 20, // Au-dessus du CanvasContextMenu (z-index: 1)
+    height: currentStyles.height === 'auto' || !currentStyles.height
+      ? 'auto'
+      : currentStyles.height || 
+        campaign?.design?.quizConfig?.style?.height || 
+        'auto',
+    background: getBackgroundWithOpacity(),
     borderRadius: unifiedBorderRadius,
     padding: typeof template.style.padding === 'number'
       ? `${template.style.padding}px`
       : template.style.padding,
-    boxShadow: template.style.boxShadow,
+    // Supprimer l'ombre si le fond est transparent (opacité 0 ou 1)
+    boxShadow: (() => {
+      const opacityValue = currentStyles.backgroundOpacity ?? 
+                          campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 
+                          100;
+      return (opacityValue === 0 || opacityValue === 1) ? 'none' : template.style.boxShadow;
+    })(),
     fontFamily: template.style.fontFamily,
     margin: 'auto',
     overflow: 'hidden',
@@ -261,11 +393,16 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
            campaign?.design?.quizConfig?.style?.textColor || 
            template.questionStyle.color || 
            '#000000',
-    ...(disabled && { pointerEvents: 'none', opacity: 0.5 })
+    ...(disabled && { pointerEvents: 'none', opacity: 0.5 }),
+    // Assurer que le contenu est bien contenu et défilable si nécessaire
+    display: 'flex',
+    flexDirection: 'column',
+    maxWidth: '100%',
+    maxHeight: '100vh',
+    boxSizing: 'border-box'
   };
 
-  // Utiliser les styles de bouton mis en cache
-  const { normal: buttonBaseStyle, hover: buttonHoverStyle, active: buttonActiveStyle } = buttonStyles;
+  // Les styles de bouton sont maintenant utilisés directement via buttonStyles.normal, .hover, .active
   
   /**
    * Assombrit une couleur pour l'état hover
@@ -465,27 +602,14 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   const renderStandardOptions = () => {
     if (template.hasGrid) return null;
     
-    // Récupérer les couleurs personnalisées
-    const bgColor = currentStyles.buttonBackgroundColor || 
-                   campaign?.design?.quizConfig?.style?.buttonBackgroundColor || 
-                   template.optionStyle?.backgroundColor || 
-                   '#4f46e5';
-    const textColor = currentStyles.buttonTextColor || 
-                     campaign?.design?.quizConfig?.style?.buttonTextColor || 
-                     template.optionStyle?.color || 
-                     '#ffffff';
-    const hoverBgColor = currentStyles.buttonHoverBackgroundColor || 
-                        campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor || 
-                        getHoverColor(bgColor);
-    
     return (
       <div>
         {answers.map((answer: any, index: number) => {
           // Styles pour la lettre
-          const letterButtonStyle = {
+          const letterButtonStyle: React.CSSProperties = {
             ...letterStyle,
-            backgroundColor: bgColor,
-            color: textColor,
+            background: buttonStyles.normal.backgroundColor as string,
+            color: buttonStyles.normal.color as string,
             marginRight: '8px',
             // Assurer que la lettre est bien centrée
             display: 'flex',
@@ -498,7 +622,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
             <div
               key={index}
               style={{
-                ...buttonBaseStyle,
+                ...buttonStyles.normal,
                 position: 'relative',
                 overflow: 'hidden',
                 transition: 'all 0.2s ease',
@@ -509,54 +633,31 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 whiteSpace: 'normal',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
-                // Appliquer les styles personnalisés
-                backgroundColor: bgColor,
-                color: textColor,
-                border: template.optionStyle?.border || '1px solid #e5e7eb',
-                borderRadius: unifiedBorderRadius,
-                // Espacement interne pour le texte
-                padding: campaign?.design?.quizConfig?.style?.answerPadding || '12px 16px',
-                // Marge entre les réponses
-                margin: campaign?.design?.quizConfig?.style?.answerMargin || '8px 0',
-                // Hauteur minimale pour les réponses
-                minHeight: campaign?.design?.quizConfig?.style?.answerMinHeight || 'auto',
                 // Assurer que le contenu est bien affiché
                 display: 'flex',
                 flexDirection: 'row',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                cursor: 'pointer'
               }}
               onMouseEnter={(e) => {
                 const target = e.currentTarget as HTMLElement;
                 // Appliquer l'effet de survol avec la couleur personnalisée
-                target.style.transform = 'translateY(-1px)';
-                target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-                target.style.backgroundColor = hoverBgColor;
+                Object.assign(target.style, buttonStyles.hover);
               }}
               onMouseLeave={(e) => {
                 const target = e.currentTarget as HTMLElement;
                 // Réinitialiser à l'état normal avec les couleurs personnalisées
-                target.style.transform = '';
-                target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                target.style.backgroundColor = bgColor;
+                Object.assign(target.style, buttonStyles.normal);
               }}
               onMouseDown={(e) => {
                 const target = e.currentTarget as HTMLElement;
                 // Appliquer l'effet d'enfoncement avec la couleur active personnalisée
-                const activeBgColor = currentStyles.buttonActiveBackgroundColor || 
-                                   campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor || 
-                                   getActiveColor(bgColor);
-                target.style.transform = 'translateY(1px)';
-                target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
-                target.style.backgroundColor = activeBgColor;
+                Object.assign(target.style, buttonStyles.active);
                 
                 // Gérer le relâchement de la souris
                 const onMouseUp = () => {
                   document.removeEventListener('mouseup', onMouseUp);
                   // Revenir à l'état survolé
-                  target.style.transform = 'translateY(-1px)';
-                  target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-                  target.style.backgroundColor = hoverBgColor;
+                  Object.assign(target.style, buttonStyles.hover);
                 };
                 document.addEventListener('mouseup', onMouseUp, { once: true });
               }}
@@ -584,7 +685,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
-      <div style={containerStyle}>
+      <div id="quiz-preview-container" style={containerStyle}>
         {/* Optional header/banner */}
         {template.header && (
           <div
@@ -600,7 +701,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                   ? 'flex-end'
                   : 'center',
               padding: '0 16px',
-              borderRadius: '18px 18px 0 0',
+              // Suivre exactement l'arrondi du conteneur pour couvrir parfaitement les coins
+              borderRadius: `${unifiedBorderRadius} ${unifiedBorderRadius} 0 0`,
               margin: '-16px -16px 16px -16px',
               width: 'calc(100% + 32px)'
             }}

@@ -42,8 +42,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Détection de l'appareil physique réel (pour l'interface)
   const [actualDevice, setActualDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
 
-  // Zoom par défaut selon l'appareil
+  // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
+    try {
+      const saved = localStorage.getItem(`editor-zoom-${device}`);
+      if (saved) {
+        const v = parseFloat(saved);
+        if (!Number.isNaN(v) && v >= 0.1 && v <= 1) return v;
+      }
+    } catch {}
     if (device === 'mobile' && typeof window !== 'undefined') {
       const { width, height } = getDeviceDimensions('mobile');
       const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
@@ -51,11 +58,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     }
     switch (device) {
       case 'desktop':
-        return 0.7; // 70%
+        return 0.7;
       case 'tablet':
-        return 0.55; // 55%
+        return 0.55;
       case 'mobile':
-        return 0.45; // 45% pour une meilleure visibilité sur mobile
+        return 0.45;
       default:
         return 0.7;
     }
@@ -80,6 +87,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // Gestionnaire de changement d'appareil avec ajustement automatique du zoom
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
     setSelectedDevice(device);
+    // Utiliser le zoom sauvegardé si présent
     setCanvasZoom(getDefaultZoom(device));
   };
 
@@ -91,6 +99,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+
+  // Sauvegarder le zoom à chaque changement pour persistance entre modes
+  useEffect(() => {
+    try {
+      localStorage.setItem(`editor-zoom-${selectedDevice}`, String(canvasZoom));
+    } catch {}
+  }, [canvasZoom, selectedDevice]);
 
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
@@ -138,11 +153,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     templateId: 'image-quiz',
     borderRadius: 12, // Valeur par défaut pour le border radius
+    // Taille par défaut du quiz
+    width: '800px',
+    mobileWidth: '400px',
+    height: 'auto',
     // Couleurs par défaut des boutons
-    buttonBackgroundColor: '#4f46e5',
-    buttonTextColor: '#ffffff',
-    buttonHoverBackgroundColor: '#4338ca',
-    buttonActiveBackgroundColor: '#3730a3'
+    buttonBackgroundColor: '#f3f4f6',
+    buttonTextColor: '#000000',
+    buttonHoverBackgroundColor: '#9fa4a4',
+    buttonActiveBackgroundColor: '#a7acb5'
   });
 
   // Quiz modal config - synchronisé avec quizConfig
@@ -206,6 +225,55 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     } catch {}
   }, [previewButtonSide]);
 
+  // Activer la saisie directe sur double-clic pour tous les curseurs (input[type="range"]) de l'éditeur
+  useEffect(() => {
+    const handleDblClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // Rechercher l'input range le plus proche (utile si on double-clique sur le track personnalisé)
+      const range = target.closest('input[type="range"]') as HTMLInputElement | null;
+      if (!range) return;
+
+      // Empêcher les comportements par défaut, puis demander une saisie
+      e.preventDefault();
+
+      const min = Number(range.min || '0');
+      const max = Number(range.max || '100');
+      const step = Number(range.step || '1');
+      const current = range.value || String((min + max) / 2);
+
+      const suffixFromAria = /%/.test(range.getAttribute('aria-label') || '') ? '%' : '';
+      const suffix = range.dataset.suffix || suffixFromAria;
+
+      const label = `Entrer une valeur (${min} - ${max})${suffix ? ' ' + suffix : ''}`;
+      const raw = window.prompt(label, current);
+      if (raw == null) return; // annulé
+
+      // Supporter virgule décimale et espaces
+      const normalized = raw.replace(/\s+/g, '').replace(',', '.');
+      let val = Number(normalized);
+      if (Number.isNaN(val)) return;
+
+      // Clamp min/max
+      val = Math.min(max, Math.max(min, val));
+
+      // Respecter le pas si applicable
+      if (!Number.isNaN(step) && step > 0) {
+        val = Math.round(val / step) * step;
+      }
+
+      // Appliquer la valeur et émettre les événements React
+      range.value = String(val);
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+      range.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    // Utiliser la capture pour attraper le double-clic même sur des éléments enfants stylisés
+    document.addEventListener('dblclick', handleDblClick, true);
+    return () => document.removeEventListener('dblclick', handleDblClick, true);
+  }, []);
+
   // Chargement d'un modèle transmis via navigation state
   const location = useLocation();
   useEffect(() => {
@@ -267,6 +335,97 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         canvasBackground: { ...bg }
       }, 'background_update');
     }, 0);
+
+    // Auto-theme quiz + form based on solid background color
+    try {
+      if (bg?.type === 'color' && typeof bg.value === 'string') {
+        const base = bg.value as string;
+
+        const toRgb = (color: string): { r: number; g: number; b: number } | null => {
+          if (!color) return null;
+          const hex = color.trim();
+          const rgbMatch = hex.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+          if (rgbMatch) {
+            return { r: +rgbMatch[1], g: +rgbMatch[2], b: +rgbMatch[3] };
+          }
+          const h = hex.replace('#', '');
+          if (h.length === 3) {
+            const r = parseInt(h[0] + h[0], 16);
+            const g = parseInt(h[1] + h[1], 16);
+            const b = parseInt(h[2] + h[2], 16);
+            return { r, g, b };
+          }
+          if (h.length === 6) {
+            const r = parseInt(h.slice(0, 2), 16);
+            const g = parseInt(h.slice(2, 4), 16);
+            const b = parseInt(h.slice(4, 6), 16);
+            return { r, g, b };
+          }
+          return null;
+        };
+        const toHex = (rgb: { r: number; g: number; b: number }): string => {
+          const c = (n: number) => n.toString(16).padStart(2, '0');
+          return `#${c(Math.max(0, Math.min(255, Math.round(rgb.r))))}${c(Math.max(0, Math.min(255, Math.round(rgb.g))))}${c(Math.max(0, Math.min(255, Math.round(rgb.b))))}`;
+        };
+        const luminance = (rgb: { r: number; g: number; b: number }) => {
+          const a = [rgb.r, rgb.g, rgb.b].map((v) => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+          });
+          return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+        };
+        const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({
+          r: rgb.r * (1 - pct),
+          g: rgb.g * (1 - pct),
+          b: rgb.b * (1 - pct)
+        });
+        const lighten = (rgb: { r: number; g: number; b: number }, pct: number) => ({
+          r: rgb.r + (255 - rgb.r) * pct,
+          g: rgb.g + (255 - rgb.g) * pct,
+          b: rgb.b + (255 - rgb.b) * pct
+        });
+        const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
+
+        const baseRgb = toRgb(base);
+        if (baseRgb) {
+          // Choose a primary accent that contrasts with background
+          const primaryRgb = luminance(baseRgb) > 0.6 ? darken(baseRgb, 0.35) : lighten(baseRgb, 0.35);
+          const primaryHex = toHex(primaryRgb);
+          const buttonText = getTextOn(primaryRgb);
+          const hoverHex = toHex(darken(primaryRgb, 0.12));
+          const activeHex = toHex(darken(primaryRgb, 0.24));
+
+          setCampaignConfig((prev: any) => {
+            const next = {
+              ...(prev || {}),
+              design: {
+                ...(prev?.design || {}),
+                // expose brand colors for forms + other UIs
+                customColors: {
+                  ...(prev?.design?.customColors || {}),
+                  primary: primaryHex,
+                  secondary: '#ffffff',
+                  _updatedAt: Date.now()
+                },
+                quizConfig: {
+                  ...(prev?.design?.quizConfig || {}),
+                  style: {
+                    ...(prev?.design?.quizConfig?.style || {}),
+                    buttonBackgroundColor: primaryHex,
+                    buttonTextColor: buttonText,
+                    buttonHoverBackgroundColor: hoverHex,
+                    buttonActiveBackgroundColor: activeHex
+                  }
+                }
+              }
+            };
+            return next;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Auto-theme from background color failed:', e);
+    }
   };
 
   // Ajoute à l'historique lors du changement de config (granulaire)
@@ -337,26 +496,19 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       const updatedConfig = { ...currentConfig };
       updatedConfig.design = updatedConfig.design || {};
       updatedConfig.design.quizConfig = updatedConfig.design.quizConfig || {};
+      // Ne pas écraser les couleurs; ne mettre à jour que borderRadius
       updatedConfig.design.quizConfig.style = {
         ...(updatedConfig.design.quizConfig.style || {}),
-        borderRadius: `${borderRadius}px`,
-        buttonBackgroundColor: quizConfig.buttonBackgroundColor,
-        buttonTextColor: quizConfig.buttonTextColor,
-        buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
-        buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor
+        borderRadius: `${borderRadius}px`
       };
-      console.log('🎯 CampaignConfig mise à jour avec les styles:', updatedConfig.design.quizConfig.style);
+      console.log('🎯 CampaignConfig mise à jour (borderRadius uniquement):', updatedConfig.design.quizConfig.style);
       return updatedConfig;
     });
     
     // Émettre un événement pour forcer le re-render du TemplatedQuiz
     const event = new CustomEvent('quizStyleUpdate', { 
       detail: { 
-        borderRadius: `${borderRadius}px`,
-        buttonBackgroundColor: quizConfig.buttonBackgroundColor,
-        buttonTextColor: quizConfig.buttonTextColor,
-        buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
-        buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor
+        borderRadius: `${borderRadius}px`
       } 
     });
     window.dispatchEvent(event);
@@ -546,9 +698,43 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
 
-    const primaryColor = canvasBackground.type === 'image' && extractedColors[0]
-      ? extractedColors[0]
-      : '#841b60';
+    // Primary color used by quiz buttons and participation form
+    const toRgb = (color: string): { r: number; g: number; b: number } | null => {
+      if (!color) return null;
+      const m = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+      if (m) return { r: +m[1], g: +m[2], b: +m[3] };
+      const h = color.replace('#', '');
+      if (h.length === 3) return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
+      if (h.length === 6) return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+      return null;
+    };
+    const toHex = (rgb: { r: number; g: number; b: number }): string => {
+      const c = (n: number) => n.toString(16).padStart(2, '0');
+      return `#${c(Math.max(0, Math.min(255, Math.round(rgb.r))))}${c(Math.max(0, Math.min(255, Math.round(rgb.g))))}${c(Math.max(0, Math.min(255, Math.round(rgb.b))))}`;
+    };
+    const luminance = (rgb: { r: number; g: number; b: number }) => {
+      const a = [rgb.r, rgb.g, rgb.b].map((v) => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+    };
+    const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
+    const lighten = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r + (255 - rgb.r) * pct, g: rgb.g + (255 - rgb.g) * pct, b: rgb.b + (255 - rgb.b) * pct });
+
+    const configuredPrimary = campaignConfig?.design?.customColors?.primary as string | undefined;
+    const primaryColor = (() => {
+      if (configuredPrimary) return configuredPrimary;
+      if (canvasBackground.type === 'image' && extractedColors[0]) return extractedColors[0];
+      if (canvasBackground.type === 'color' && typeof canvasBackground.value === 'string') {
+        const baseRgb = toRgb(canvasBackground.value);
+        if (baseRgb) {
+          const accentRgb = luminance(baseRgb) > 0.6 ? darken(baseRgb, 0.35) : lighten(baseRgb, 0.35);
+          return toHex(accentRgb);
+        }
+      }
+      return '#841b60';
+    })();
     const secondaryColor = '#ffffff';
 
     // Build dynamic quiz questions for preview:
@@ -593,6 +779,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
             questionTextWrap: 'break-word',
             answerTextWrap: 'break-word',
+            // Zoom/largeur - respecter les valeurs ajustées par le panel
+            width: campaignConfig?.design?.quizConfig?.style?.width || `${quizConfig.width ?? '800px'}`,
+            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || `${quizConfig.mobileWidth ?? '400px'}`,
+            // Opacité de fond si définie
+            backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
             // Mise en page responsive
             questionPadding: '12px',
             answerPadding: '12px 16px',
@@ -828,6 +1019,34 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       });
       
       // Mettre à jour la configuration avec les nouvelles couleurs
+      const toRgb = (color: string): { r: number; g: number; b: number } | null => {
+        if (!color) return null;
+        const m = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+        if (m) return { r: +m[1], g: +m[2], b: +m[3] };
+        const h = color.replace('#', '');
+        if (h.length === 3) return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
+        if (h.length === 6) return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+        return null;
+      };
+      const toHex = (rgb: { r: number; g: number; b: number }): string => {
+        const c = (n: number) => n.toString(16).padStart(2, '0');
+        return `#${c(Math.max(0, Math.min(255, Math.round(rgb.r))))}${c(Math.max(0, Math.min(255, Math.round(rgb.g))))}${c(Math.max(0, Math.min(255, Math.round(rgb.b))))}`;
+      };
+      const luminance = (rgb: { r: number; g: number; b: number }) => {
+        const a = [rgb.r, rgb.g, rgb.b].map((v) => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+      };
+      const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
+      const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
+
+      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #841b60
+      const buttonText = getTextOn(primaryRgb);
+      const hoverHex = toHex(darken(primaryRgb, 0.12));
+      const activeHex = toHex(darken(primaryRgb, 0.24));
+
       const updatedConfig = {
         ...currentConfig,
         design: {
@@ -858,6 +1077,17 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             secondary: secondaryColor,
             // Forcer la mise à jour
             _updatedAt: Date.now()
+          },
+          // Appliquer aussi aux styles du quiz
+          quizConfig: {
+            ...(currentConfig.design?.quizConfig || {}),
+            style: {
+              ...(currentConfig.design?.quizConfig?.style || {}),
+              buttonBackgroundColor: (primaryColor.startsWith('#') ? primaryColor : toHex(primaryRgb)),
+              buttonTextColor: buttonText,
+              buttonHoverBackgroundColor: hoverHex,
+              buttonActiveBackgroundColor: activeHex
+            }
           },
           // Forcer la mise à jour du design
           _updatedAt: Date.now()
@@ -1210,9 +1440,146 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   updateCanvasElementsBorderRadius(borderRadius);
                 }}
                 onQuizTemplateChange={(templateId) => {
-                  console.log('🎯 Template change in layout:', templateId);
+                  console.log('🎯 Changement de template quiz:', templateId);
                   setQuizConfig(prev => ({ ...prev, templateId }));
+                  
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        templateId
+                      }
+                    }
+                  }));
                 }}
+                // Gestion de la largeur du quiz
+                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
+                onQuizWidthChange={(width) => {
+                  // S'assurer que width est une chaîne avec 'px' à la fin
+                  const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
+                  console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
+                  
+                  setQuizConfig(prev => ({ ...prev, width: normalizedWidth }));
+                  
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => {
+                    const updated = {
+                      ...current,
+                      design: {
+                        ...current.design,
+                        quizConfig: {
+                          ...current.design.quizConfig,
+                          style: {
+                            ...(current.design.quizConfig?.style || {}),
+                            width: normalizedWidth
+                          }
+                        }
+                      }
+                    };
+                    console.log('📝 Nouvelle configuration de campagne (width):', updated);
+                    return updated;
+                  });
+                  
+                  // Créer et dispatcher l'événement personnalisé
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { width }
+                    });
+                    
+                    const logData = {
+                      type: 'quizStyleUpdate',
+                      detail: { width },
+                      timestamp: new Date().toISOString(),
+                      target: 'window',
+                      bubbles: true,
+                      cancelable: true,
+                      composed: true
+                    };
+                    
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (width):', logData);
+                    
+                    // Émettre l'événement de manière synchrone
+                    const target = document.getElementById('quiz-preview-container') || window;
+                    const eventDispatched = target.dispatchEvent(event);
+                    
+                    console.log('📤 [DesignEditorLayout] Événement émis avec succès:', {
+                      eventDispatched,
+                      target: target === window ? 'window' : 'quiz-preview-container'
+                    });
+                    
+                    // Si l'événement n'a pas été traité, émettre un événement de secours
+                    if (!eventDispatched) {
+                      console.warn('⚠️ [DesignEditorLayout] L\'événement n\'a pas été traité, tentative avec un événement de secours');
+                      const fallbackEvent = new CustomEvent('quizStyleUpdateFallback', {
+                        detail: { width },
+                        bubbles: true,
+                        cancelable: true
+                      });
+                      target.dispatchEvent(fallbackEvent);
+                    }
+                  } catch (error) {
+                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate:', error);
+                  }
+                }}
+                // Gestion de la largeur mobile du quiz
+                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
+                onQuizMobileWidthChange={(width) => {
+                  // S'assurer que width est une chaîne avec 'px' à la fin
+                  const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
+                  console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);
+                  
+                  setQuizConfig(prev => ({ ...prev, mobileWidth: normalizedWidth }));
+                  
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => {
+                    const updated = {
+                      ...current,
+                      design: {
+                        ...current.design,
+                        quizConfig: {
+                          ...current.design.quizConfig,
+                          style: {
+                            ...(current.design.quizConfig?.style || {}),
+                            mobileWidth: normalizedWidth
+                          }
+                        }
+                      }
+                    };
+                    console.log('📝 Nouvelle configuration de campagne (mobileWidth):', updated);
+                    return updated;
+                  });
+                  
+                  // Créer et dispatcher l'événement personnalisé
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { mobileWidth: width }
+                    });
+                    
+                    const logData = {
+                      type: 'quizStyleUpdate',
+                      detail: { mobileWidth: width },
+                      timestamp: new Date().toISOString(),
+                      target: 'window',
+                      bubbles: true,
+                      cancelable: true,
+                      composed: true
+                    };
+                    
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (mobileWidth):', logData);
+                    
+                    // Émettre l'événement de manière synchrone
+                    const target = document.getElementById('quiz-preview-container') || window;
+                    const eventDispatched = target.dispatchEvent(event);
+                    
+                    console.log('✅ [DesignEditorLayout] Événement quizStyleUpdate (mobileWidth) émis avec succès:', eventDispatched);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate (mobileWidth):', error);
+                  }
+                }}
+                // Gestion des couleurs des boutons
                 onButtonBackgroundColorChange={(color) => {
                   setQuizConfig(prev => ({
                     ...prev,

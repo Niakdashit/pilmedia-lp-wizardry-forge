@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Type, Shapes, Upload, Search } from 'lucide-react';
 import TextPanel from './TextPanel';
 import ShapePanel from './ShapePanel';
@@ -14,6 +14,8 @@ interface AssetsPanelProps {
 const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate, selectedDevice = 'desktop' }) => {
   // Preview color for shapes in the sub-tab "Formes"
   const SHAPE_PREVIEW_COLOR = '#b1b1b1';
+  // Visually disable the "Formes" sub-tab
+  const SHAPES_TAB_DISABLED = true;
   const [activeTab, setActiveTab] = useState('text');
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImages, setUploadedImages] = useState<any[]>([]);
@@ -23,6 +25,13 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
     { id: 'shapes', label: 'Formes', icon: Shapes },
     { id: 'uploads', label: 'Uploads', icon: Upload }
   ];
+
+  // If shapes are disabled and currently active, fallback to text
+  useEffect(() => {
+    if (SHAPES_TAB_DISABLED && activeTab === 'shapes') {
+      setActiveTab('text');
+    }
+  }, [activeTab]);
 
   const handleAddShape = (shape: ShapeDefinition) => {
     const element = {
@@ -196,19 +205,32 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
     <div className="p-4">
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-4">
-        {categories.map((category) => {
+        {categories
+          .filter((c) => !(SHAPES_TAB_DISABLED && c.id === 'shapes'))
+          .map((category) => {
           const Icon = category.icon;
+          const isShapes = category.id === 'shapes';
+          const isDisabled = isShapes && SHAPES_TAB_DISABLED;
+          const handleClick = () => {
+            if (isDisabled) return; // Prevent activating disabled tab
+            setActiveTab(category.id);
+          };
           return (
             <button
               key={category.id}
-              onClick={() => setActiveTab(category.id)}
+              onClick={handleClick}
+              disabled={isDisabled}
+              aria-disabled={isDisabled}
               className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 ${
-                activeTab === category.id
-                  ? 'text-[hsl(var(--primary))] border-b-2 border-[hsl(var(--primary))]'
-                  : 'text-gray-500 hover:text-gray-700'
+                isDisabled
+                  ? 'text-gray-400 cursor-not-allowed opacity-60'
+                  : activeTab === category.id
+                    ? 'text-[hsl(var(--primary))] border-b-2 border-[hsl(var(--primary))]'
+                    : 'text-gray-500 hover:text-gray-700'
               }`}
+              title={isDisabled ? 'Désactivé' : category.label}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${isDisabled ? 'opacity-60' : ''}`} />
               <span>{category.label}</span>
             </button>
           );
@@ -216,7 +238,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
       </div>
 
       {/* Search - Seulement affiché pour les formes */}
-      {activeTab === 'shapes' && (
+      {activeTab === 'shapes' && !SHAPES_TAB_DISABLED && (
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -230,7 +252,8 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
       )}
 
       {/* Content */}
-      {renderContent()}
+      {/* Prevent rendering of disabled tab content */}
+      {activeTab === 'shapes' && SHAPES_TAB_DISABLED ? null : renderContent()}
     </div>
   );
 };

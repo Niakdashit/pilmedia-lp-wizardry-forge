@@ -29,7 +29,7 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium text-gray-300">Templates de Quiz</h4>
+        <h4 className="text-sm font-medium text-gray-700">Templates de Quiz</h4>
         <span className="text-xs text-gray-500">{quizTemplates.length} disponibles</span>
       </div>
 
@@ -39,10 +39,10 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
             key={template.id}
             className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
               selectedTemplate === template.id
-                ? 'border-purple-500 bg-purple-900/20'
+                ? 'border-[#841b60] bg-white shadow-lg'
                 : hoveredTemplate === template.id
-                ? 'border-gray-500 bg-gray-700/50'
-                : 'border-gray-600 bg-gray-800/50 hover:border-gray-500'
+                ? 'border-gray-300 bg-gray-50'
+                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
             }`}
             onClick={() => onTemplateSelect(template)}
             onMouseEnter={() => setHoveredTemplate(template.id)}
@@ -50,7 +50,7 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
           >
             {/* Selection indicator */}
             {selectedTemplate === template.id && (
-              <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+              <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)' }}>
                 <Check className="w-4 h-4 text-white" />
               </div>
             )}
@@ -59,37 +59,34 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
               {/* Icon */}
               <div className={`p-2 rounded-lg ${
                 selectedTemplate === template.id
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-gray-700 text-gray-400'
-              }`}>
+                  ? 'text-white'
+                  : 'bg-gray-100 text-gray-600'
+              }`} style={selectedTemplate === template.id ? {
+                background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)'
+              } : {}}>
                 {getTemplateIcon(template)}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
-                  <h5 className="font-medium text-white truncate">
+                  <h5 className="font-medium text-gray-900 truncate">
                     {template.name}
                   </h5>
                   {template.hasImage && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-900/50 text-blue-300 border border-blue-700/50">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs text-white border" style={{
+                      background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)',
+                      borderColor: '#841b60'
+                    }}>
                       <Image className="w-3 h-3 mr-1" />
                       Image
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                   {template.description}
                 </p>
 
-                {/* Template preview info */}
-                <div className="flex items-center space-x-4 mt-3 text-xs text-gray-500">
-                  <span>Largeur: {template.style.containerWidth}px</span>
-                  <span>Bordure: {template.style.borderRadius}px</span>
-                  {template.hasImage && (
-                    <span className="text-blue-400">+ Image support</span>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -114,27 +111,7 @@ const QuizTemplateSelector: React.FC<QuizTemplateSelectorProps> = ({
         ))}
       </div>
 
-      {/* Template info */}
-      {selectedTemplate && (
-        <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-3">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-medium text-green-400">Template sélectionné</span>
-          </div>
-          {(() => {
-            const template = quizTemplates.find(t => t.id === selectedTemplate);
-            return template ? (
-              <div className="space-y-1 text-xs text-gray-400">
-                <p><strong className="text-gray-300">Style:</strong> {template.name}</p>
-                <p><strong className="text-gray-300">Taille:</strong> {template.style.containerWidth}px de large</p>
-                {template.hasImage && (
-                  <p><strong className="text-gray-300">Support:</strong> Images intégrées</p>
-                )}
-              </div>
-            ) : null;
-          })()}
-        </div>
-      )}
+      {/* Bloc d'information "Template sélectionné" supprimé */}
     </div>
   );
 };

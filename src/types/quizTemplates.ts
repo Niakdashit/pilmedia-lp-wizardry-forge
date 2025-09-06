@@ -118,7 +118,7 @@ export const quizTemplates: QuizTemplate[] = [
     },
     header: {
       height: 52,
-      backgroundColor: '#9C7A5B',
+      backgroundColor: '#0b1014',
       textColor: '#ffffff',
       fontSize: 16,
       fontWeight: 700,
@@ -134,7 +134,7 @@ export const quizTemplates: QuizTemplate[] = [
     optionStyle: {
       display: 'flex',
       alignItems: 'center',
-      border: '2px solid #000000',
+      border: 'none',
       borderRadius: 30,
       padding: '16px 24px',
       margin: '16px 0',
@@ -145,7 +145,7 @@ export const quizTemplates: QuizTemplate[] = [
       hoverBackground: '#f5f5f5'
     },
     letterStyle: {
-      border: '2px solid #9C7A5B',
+      border: '2px solid #0b1014',
       borderRadius: '50%',
       width: 36,
       height: 36,
@@ -154,7 +154,7 @@ export const quizTemplates: QuizTemplate[] = [
       justifyContent: 'center',
       marginRight: 16,
       fontWeight: 'bold',
-      color: '#9C7A5B'
+      color: '#0b1014'
     }
   },
   {
@@ -187,7 +187,7 @@ export const quizTemplates: QuizTemplate[] = [
     optionStyle: {
       display: 'flex',
       alignItems: 'center',
-      border: '2px solid #000000',
+      border: 'none',
       borderRadius: 30,
       padding: '15px 20px',
       margin: '12px 0',
@@ -234,7 +234,7 @@ export const quizTemplates: QuizTemplate[] = [
     optionStyle: {
       display: 'flex',
       alignItems: 'center',
-      border: '1px solid #e5e7eb',
+      border: 'none',
       borderRadius: 12,
       padding: '12px 16px',
       margin: '8px 0',

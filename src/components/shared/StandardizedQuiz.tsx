@@ -64,8 +64,8 @@ const StandardizedQuiz: React.FC<StandardizedQuizProps> = ({
       >
       {/* En-tête */}
       <div 
-        className="bg-[#9C7A5B] text-white text-center py-5 px-6 text-lg font-medium"
-        style={{ backgroundColor: '#9C7A5B' }}
+        className="bg-[#0b1014] text-white text-center py-5 px-6 text-lg font-medium"
+        style={{ backgroundColor: '#0b1014' }}
       >
         {currentQuestion.question || "Question du quiz"}
       </div>
@@ -75,10 +75,10 @@ const StandardizedQuiz: React.FC<StandardizedQuizProps> = ({
         {answers.map((answer: any, index: number) => (
           <div 
             key={index}
-            className="flex items-center border-2 border-black rounded-full py-4 px-6 mb-4 cursor-pointer hover:bg-gray-50 transition-colors"
+            className="flex items-center rounded-full py-4 px-6 mb-4 cursor-pointer hover:bg-gray-50 transition-colors"
             onClick={onClick}
           >
-            <span className="flex-shrink-0 flex items-center justify-center border-2 border-[#9C7A5B] text-[#9C7A5B] rounded-full w-9 h-9 font-bold mr-4">
+            <span className="flex-shrink-0 flex items-center justify-center border-2 border-[#0b1014] text-[#0b1014] rounded-full w-9 h-9 font-bold mr-4">
               {letters[index]}
             </span>
             <span className="text-gray-900">{answer.text || `Option ${index + 1}`}</span>

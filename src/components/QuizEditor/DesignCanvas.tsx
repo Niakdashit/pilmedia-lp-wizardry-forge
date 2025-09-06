@@ -1769,64 +1769,27 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 
                 return (
                   <div
-                    onClick={() => {
-                      if (readOnly) return;
-                      console.log('🔘 Clic sur le quiz détecté - sélection du template');
-                      // Créer un élément virtuel pour le template
-                      const selectedTemplateId = quizModalConfig?.templateId || campaignToUse?.gameConfig?.quiz?.templateId || campaignToUse?.design?.quizConfig?.templateId || 'image-quiz';
-                      const tpl = quizTemplates.find(t => t.id === selectedTemplateId) || quizTemplates[1];
-                      const tplWidth = Math.min(Math.max(tpl.style.containerWidth, 280), Math.floor(effectiveCanvasSize.width * 0.95));
-                      // Estimation de hauteur: non-grid: 1.2x, grid: 1.3x
-                      const estimatedHeight = Math.round(tplWidth * (tpl.hasGrid ? 1.3 : 1.2));
-                      const clampedHeight = Math.min(estimatedHeight, Math.floor(effectiveCanvasSize.height * 0.9));
-                      const centerX = Math.floor((effectiveCanvasSize.width - tplWidth) / 2);
-                      const centerY = Math.floor((effectiveCanvasSize.height - clampedHeight) / 2);
-                      const templateElement = {
-                        id: 'quiz-template',
-                        type: 'quiz-template',
-                        borderRadius: campaignToUse?.design?.quizConfig?.style?.borderRadius || '20px',
-                        // Dimensions basées sur le template
-                        width: tplWidth,
-                        height: clampedHeight,
-                        x: centerX,
-                        y: centerY
-                      };
-                      onSelectedElementChange?.(templateElement.id);
-                      setSelectedElement(templateElement.id);
-                      
-                      // Ajouter l'élément virtuel aux éléments si pas déjà présent
-                      const hasTemplate = elements.some(el => el.id === 'quiz-template');
-                      if (!hasTemplate) {
-                        onElementsChange([...elements, templateElement]);
-                        // Recentrage après rendu effectif selon la taille mesurée (compense les écarts d'estimation)
-                        requestAnimationFrame(() => {
-                          const el = document.querySelector('[data-element-id="quiz-template"]') as HTMLElement | null;
-                          const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current;
-                          if (el && canvasEl) {
-                            const elRect = el.getBoundingClientRect();
-                            const canvasRect = canvasEl.getBoundingClientRect();
-                            const zoom = localZoom || 1;
-                            // Centres visuels dans le viewport
-                            const elCenterX = elRect.left - canvasRect.left + elRect.width / 2;
-                            const elCenterY = elRect.top - canvasRect.top + elRect.height / 2;
-                            const canvasCenterX = canvasRect.width / 2;
-                            const canvasCenterY = canvasRect.height / 2;
-                            // Delta à appliquer en coordonnées canvas (compensation zoom)
-                            const dx = (canvasCenterX - elCenterX) / zoom;
-                            const dy = (canvasCenterY - elCenterY) / zoom;
-                            // Mesures en coordonnées canvas
-                            const measuredW = Math.max(10, Math.round(elRect.width / zoom));
-                            const measuredH = Math.max(10, Math.round(elRect.height / zoom));
-                            handleElementUpdate('quiz-template', {
-                              x: Math.round((templateElement as any).x + dx),
-                              y: Math.round((templateElement as any).y + dy),
-                              width: measuredW,
-                              height: measuredH
-                            });
-                          }
-                        });
+                    role="button"
+                    tabIndex={0}
+                    onPointerDown={(e) => {
+                      // Empêcher toute interaction de déplacement/redimensionnement depuis la preview
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onQuizPanelChange?.(true);
                       }
-                      
+                    }}
+                    onClick={(e) => {
+                      if (readOnly) return;
+                      e.stopPropagation();
+                      console.log('🔘 Clic sur le quiz: ouverture du panneau Configuration (sans déplacement/redimensionnement)');
                       onQuizPanelChange?.(true);
                     }}
                     className="w-full h-full flex items-center justify-center cursor-pointer"
