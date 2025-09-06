@@ -23,6 +23,7 @@ import CanvasContextMenu from './components/CanvasContextMenu';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
+// import MobileStableEditor from '../QuizEditor/components/MobileStableEditor';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 

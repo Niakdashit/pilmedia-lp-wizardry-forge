@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+// import { Prize } from '../../types/PrizeSystem';
 import { 
   Plus, 
   Trash2, 
@@ -27,11 +28,16 @@ interface WheelSegment {
   imageUrl?: string;
 }
 
+// Remove local Prize interface since we're importing from types
 interface Prize {
   id: string;
   name: string;
-  description: string;
-  attributionMethod: 'calendar' | 'probability';
+  totalUnits: number;
+  awardedUnits: number;
+  method: 'probability' | 'calendar' | 'immediate';
+  probabilityPercent?: number;
+  // Legacy properties for compatibility
+  attributionMethod?: 'calendar' | 'probability';
   calendarDate?: string;
   calendarTime?: string;
   probability?: number;

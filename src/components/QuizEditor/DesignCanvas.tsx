@@ -24,6 +24,7 @@ import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
+// import MobileStableEditor from './components/MobileStableEditor';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 
