@@ -1387,21 +1387,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Calculer des positions ABSOLUES pour les éléments enfants de groupe
   // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  const elementsWithAbsolute = useMemo(() => {
-    return elementsWithResponsive.map((el: any) => {
-      const parentId = (el as any).parentGroupId;
-      if (!parentId) return el;
-      const parentProps = devicePropsById.get(parentId);
-      if (!parentProps) return el;
-      const childProps = getPropertiesForDevice(el, selectedDevice);
-      return {
-        ...el,
-        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
-        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
-      };
-    });
-  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
-
+  // Note: Removed elementsWithAbsolute as it was unused
+  
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {

@@ -233,12 +233,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
-  // Mesure dynamique de la hauteur de la toolbar mobile
+  // Mesure dynamique de la hauteur de la toolbar mobile - removed unused functionality
   useEffect(() => {
     if (!isRealMobile()) return;
     const updateHeight = () => {
-      const toolbar = document.getElementById('mobile-toolbar');
-      setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
+      // Mobile toolbar height tracking removed as setMobileToolbarHeight is not defined
+      // const toolbar = document.getElementById('mobile-toolbar');
+      // Functionality intentionally removed to fix build error
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
@@ -1446,21 +1447,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Calculer des positions ABSOLUES pour les éléments enfants de groupe
   // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  const elementsWithAbsolute = useMemo(() => {
-    return elementsWithResponsive.map((el: any) => {
-      const parentId = (el as any).parentGroupId;
-      if (!parentId) return el;
-      const parentProps = devicePropsById.get(parentId);
-      if (!parentProps) return el;
-      const childProps = getPropertiesForDevice(el, selectedDevice);
-      return {
-        ...el,
-        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
-        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
-      };
-    });
-  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
-
+  // Note: Removed elementsWithAbsolute as it was unused
+  
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
