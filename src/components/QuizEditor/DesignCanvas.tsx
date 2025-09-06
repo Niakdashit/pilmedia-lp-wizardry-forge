@@ -4,6 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
+import { quizTemplates } from '../../types/quizTemplates';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
@@ -145,8 +146,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  // Mobile detection and responsive handling
-  // Note: mobileToolbarHeight variable removed as unused
+  const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -233,13 +233,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
-  // Mesure dynamique de la hauteur de la toolbar mobile - removed unused functionality
+  // Mesure dynamique de la hauteur de la toolbar mobile
   useEffect(() => {
     if (!isRealMobile()) return;
     const updateHeight = () => {
-      // Mobile toolbar height tracking removed as setMobileToolbarHeight is not defined
-      // const toolbar = document.getElementById('mobile-toolbar');
-      // Functionality intentionally removed to fix build error
+      const toolbar = document.getElementById('mobile-toolbar');
+      setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
@@ -1447,8 +1446,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Calculer des positions ABSOLUES pour les éléments enfants de groupe
   // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  // Note: Removed elementsWithAbsolute as it was unused
-  
+  const elementsWithAbsolute = useMemo(() => {
+    return elementsWithResponsive.map((el: any) => {
+      const parentId = (el as any).parentGroupId;
+      if (!parentId) return el;
+      const parentProps = devicePropsById.get(parentId);
+      if (!parentProps) return el;
+      const childProps = getPropertiesForDevice(el, selectedDevice);
+      return {
+        ...el,
+        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
+        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
+      };
+    });
+  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
+
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
@@ -1580,7 +1592,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = activeCanvasRef && typeof activeCanvasRef === 'object' && 'current' in activeCanvasRef ? activeCanvasRef.current : null;
+            const canvasEl = activeCanvasRef.current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom

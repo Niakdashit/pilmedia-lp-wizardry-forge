@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Type, Shapes, Upload, Search } from 'lucide-react';
 import TextPanel from './TextPanel';
+import ShapePanel from './ShapePanel';
 import { shapes, ShapeDefinition } from '../shapes/shapeLibrary';
 
 interface AssetsPanelProps {

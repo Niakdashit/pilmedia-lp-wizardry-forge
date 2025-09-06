@@ -27,23 +27,16 @@ interface WheelSegment {
   imageUrl?: string;
 }
 
-interface GamePrize {
+interface Prize {
   id: string;
   name: string;
-  totalUnits: number;
-  awardedUnits: number;
-  description?: string;
+  description: string;
   attributionMethod: 'calendar' | 'probability';
   calendarDate?: string;
   calendarTime?: string;
   probability?: number;
   segmentId?: string;
-  method?: 'probability' | 'calendar' | 'immediate';
-  probabilityPercent?: number;
 }
-
-// For compatibility with existing code
-type Prize = GamePrize;
 
 const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   campaign,
@@ -112,7 +105,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     });
   };
 
-  const updatePrizes = (newPrizes: GamePrize[]) => {
+  const updatePrizes = (newPrizes: Prize[]) => {
     setCampaign({
       ...campaign,
       prizes: newPrizes.map(prize => ({
@@ -195,12 +188,11 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   };
 
   const addPrize = () => {
-    const newPrize: GamePrize = {
+    const newPrize: Prize = {
       id: Date.now().toString(),
       name: 'Nouveau lot',
       totalUnits: 1,
       awardedUnits: 0,
-      attributionMethod: 'probability',
       method: 'probability',
       probabilityPercent: 10
     };
@@ -211,7 +203,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     updatePrizes(prizes.filter(p => p.id !== prizeId));
   };
 
-  const updatePrize = (prizeId: string, updates: Partial<GamePrize>) => {
+  const updatePrize = (prizeId: string, updates: Partial<Prize>) => {
     updatePrizes(prizes.map(p => 
       p.id === prizeId ? { ...p, ...updates } : p
     ));
