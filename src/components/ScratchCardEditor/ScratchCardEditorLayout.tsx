@@ -596,7 +596,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
           </div>
         </div>
       )}
-      </div>
     </MobileStableEditor>
   );
 };
