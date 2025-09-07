@@ -201,7 +201,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
               ]).map((c: any, index: number) => (
                 <div key={c.id} className="bg-gray-50 p-4 rounded-lg border overflow-hidden">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-semibold text-gray-900">Segment {index + 1}</span>
+                    <span className="text-lg font-semibold text-gray-900">Carte {index + 1}</span>
                     <button onClick={() => removeCard(c.id)} className="text-red-500 hover:text-red-700 transition-colors" title="Supprimer la carte">
                       <Trash2 className="w-4 h-4" />
                     </button>
