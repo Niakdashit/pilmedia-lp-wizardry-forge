@@ -283,7 +283,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
 
         {/* Section Lots */}
         {activeSection === 'prizes' && (
-          <div className="p-4 space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-900">Lots à gagner ({prizes.length || 0})</h3>
               <button

@@ -148,9 +148,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   }, [prizeSegments, campaign]);
 
   const assignRound = useCallback(() => {
-    const segs = probability?.segments || [];
-    const winners = segs.filter((s: any) => s.prizeId && (s.probability || 0) > 0);
-    const losers = segs.filter((s: any) => !s.prizeId || (s.probability || 0) <= 0);
+    const segments = probability?.segments || [];
+    const winners = segments.filter((s: any) => s.prizeId && (s.probability || 0) > 0);
+    const losers = segments.filter((s: any) => !s.prizeId || (s.probability || 0) <= 0);
     const totalWin = winners.reduce((sum: number, s: any) => sum + (s.probability || 0), 0);
     let chosen: any = null;
     if (totalWin > 0) {
@@ -162,7 +162,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       }
     }
     if (!chosen) {
-      const pool = losers.length > 0 ? losers : segs;
+      const pool = losers.length > 0 ? losers : segments;
       chosen = pool[Math.floor(Math.random() * (pool.length || 1))] || null;
     }
     setAssignment(chosen ? { cardId: chosen.id, prizeId: chosen.prizeId } : { cardId: undefined, prizeId: undefined });
@@ -170,9 +170,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 
   // Helper to synchronously sample an assignment (without setting state)
   const sampleAssignment = useCallback(() => {
-    const segs = probability?.segments || [];
-    const winners = segs.filter((s: any) => s.prizeId && (s.probability || 0) > 0);
-    const losers = segs.filter((s: any) => !s.prizeId || (s.probability || 0) <= 0);
+    const segments = probability?.segments || [];
+    const winners = segments.filter((s: any) => s.prizeId && (s.probability || 0) > 0);
+    const losers = segments.filter((s: any) => !s.prizeId || (s.probability || 0) <= 0);
     const totalWin = winners.reduce((sum: number, s: any) => sum + (s.probability || 0), 0);
     let chosen: any = null;
     if (totalWin > 0) {
@@ -184,7 +184,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       }
     }
     if (!chosen) {
-      const pool = losers.length > 0 ? losers : segs;
+      const pool = losers.length > 0 ? losers : segments;
       chosen = pool[Math.floor(Math.random() * (pool.length || 1))] || null;
     }
     return chosen ? { cardId: chosen.id, prizeId: chosen.prizeId } : { cardId: undefined, prizeId: undefined };
