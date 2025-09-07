@@ -4,6 +4,7 @@ import { useScratchCard } from './useScratchCard';
 import ScratchCanvas from './ScratchCanvas';
 import ScratchCardContent from './ScratchCardContent';
 import ScratchCardOverlays from './ScratchCardOverlays';
+import type { Prize } from '../../types/PrizeSystem';
 
 interface ScratchCardProps {
   card: any;
@@ -19,6 +20,7 @@ interface ScratchCardProps {
   isSelected: boolean;
   config: any;
   isModal?: boolean;
+  prizes?: Prize[]; // Ajout des lots pour l'attribution
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -34,7 +36,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   canScratch,
   isSelected,
   config,
-  isModal = false
+  isModal = false,
+  prizes = []
 }) => {
   // Dimensions selon la taille avec adaptation pour modal
   const getDimensions = () => {
@@ -73,7 +76,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     card,
     width,
     height,
-    index
+    index,
+    prizes // Pass prizes to the hook for attribution logic
   });
 
   const handleCardClick = () => {

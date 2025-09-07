@@ -1,5 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
+import { ScratchPrizeAttribution } from '../../services/ScratchPrizeAttribution';
+import type { Prize } from '../../types/PrizeSystem';
 
 interface UseScratchCardProps {
   gameStarted: boolean;
@@ -11,6 +13,7 @@ interface UseScratchCardProps {
   width: number;
   height: number;
   index: number;
+  prizes?: Prize[]; // Ajout des lots pour l'attribution
 }
 
 export const useScratchCard = ({
@@ -22,7 +25,8 @@ export const useScratchCard = ({
   card,
   width,
   height,
-  index
+  index,
+  prizes = []
 }: UseScratchCardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -32,13 +36,30 @@ export const useScratchCard = ({
   const [hasScratchStarted, setHasScratchStarted] = useState(false);
   const [showRevealContent, setShowRevealContent] = useState(false);
 
-  // Calculate result when game starts
+  // Calculate result when game starts using new attribution system
   useEffect(() => {
     if (gameStarted && !result) {
-      const gameResult = Math.random() > 0.7 ? 'win' : 'lose';
+      console.log('🎫 ScratchCard - Determining win condition', {
+        cardIndex: index,
+        prizesCount: prizes.length,
+        currentTime: new Date().toISOString()
+      });
+
+      // Use the new attribution system following the specified rules
+      const attributionResult = ScratchPrizeAttribution.determineWin(prizes);
+      
+      const gameResult = attributionResult.isWinner ? 'win' : 'lose';
       setResult(gameResult);
+
+      console.log('🎫 ScratchCard - Attribution result', {
+        cardIndex: index,
+        isWinner: attributionResult.isWinner,
+        reason: attributionResult.reason,
+        prize: attributionResult.prize?.name,
+        details: attributionResult.details
+      });
     }
-  }, [gameStarted, result]);
+  }, [gameStarted, result, prizes, index]);
 
   // Setup canvas and scratch functionality
   useEffect(() => {

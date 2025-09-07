@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ScratchGameGrid from './ScratchGameGrid';
+import type { Prize } from '../../types/PrizeSystem';
 
 interface ScratchPreviewProps {
   config?: any;
@@ -13,6 +14,7 @@ interface ScratchPreviewProps {
   gamePosition?: 'top' | 'center' | 'bottom' | 'left' | 'right';
   autoStart?: boolean;
   isModal?: boolean;
+  prizes?: Prize[]; // Ajout des lots pour l'attribution
 }
 
 const STORAGE_KEY = 'scratch_session_card';
@@ -27,7 +29,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   buttonColor = '#841b60',
   gameSize = 'medium',
   autoStart = false,
-  isModal = false
+  isModal = false,
+  prizes = []
 }) => {
   // ✅ LOGIQUE FUNNEL UNLOCKED : le jeu ne démarre que si disabled=false (formulaire validé)
   const [gameStarted, setGameStarted] = useState(false);
@@ -126,6 +129,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
             scratchStarted={false}
             config={config}
             isModal={isModal}
+            prizes={prizes}
           />
         </div>
 
@@ -173,6 +177,7 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           scratchStarted={scratchStarted}
           config={config}
           isModal={isModal}
+          prizes={prizes}
         />
       </div>
 

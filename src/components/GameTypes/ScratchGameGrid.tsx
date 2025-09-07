@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ScratchCard from './ScratchCard';
+import type { Prize } from '../../types/PrizeSystem';
 
 interface ScratchGameGridProps {
   cards: any[];
@@ -13,6 +14,7 @@ interface ScratchGameGridProps {
   scratchStarted: boolean;
   config: any;
   isModal?: boolean;
+  prizes?: Prize[]; // Ajout des lots pour l'attribution
 }
 
 const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
@@ -25,7 +27,8 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   selectedCard,
   scratchStarted,
   config,
-  isModal = false
+  isModal = false,
+  prizes = []
 }) => {
   // Configuration pour une grille responsive qui s'adapte au nombre de cartes
   const getGridContainerClasses = () => {
@@ -99,6 +102,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
                 isSelected={isThisCardSelected}
                 config={config}
                 isModal={isModal}
+                prizes={prizes}
               />
             </div>
           );
