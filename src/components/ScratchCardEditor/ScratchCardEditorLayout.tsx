@@ -329,168 +329,252 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         />
       </GradientBand>
 
-      {/* Toolbar haut: même style (Desktop/Mobile, Aperçu, Paramétrage) */}
-      <DesignToolbar
-        selectedDevice={selectedDevice}
-        onDeviceChange={handleDeviceChange}
-        onPreviewToggle={() => setShowFunnel(v => !v)}
-        isPreviewMode={showFunnel}
-        canUndo={false}
-        canRedo={false}
-        previewButtonSide={previewButtonSide}
-        onPreviewButtonSideChange={setPreviewButtonSide}
-        mode={mode}
-        onSave={handleSaveAndContinue}
-        showSaveCloseButtons={false}
-        onNavigateToSettings={() => {
-          let campaignId = (campaign as any)?.id as string | undefined;
-          if (!campaignId) {
-            campaignId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
-              ? (crypto as any).randomUUID()
-              : `draft-${Date.now()}`;
-            try {
-              const draft = { ...(campaign || {}), id: campaignId, _source: 'localStorage' };
-              localStorage.setItem(`campaign:draft:${campaignId}`, JSON.stringify(draft));
-            } catch {}
-            setCampaign((prev: any) => ({ ...prev, id: campaignId }));
-          }
-          if (campaignId) navigate(`/campaign/${campaignId}/settings`);
-        }}
-      />
-
-      <div className="flex-1 bg-gray-50 overflow-hidden flex">
-      {/* Sidebar */}
-      <HybridSidebar
-        ref={sidebarRef}
-        onAddElement={handleAddElement}
-        onBackgroundChange={handleBackgroundChange}
-        onExtractedColorsChange={handleExtractedColorsChange}
-        currentBackground={currentBackground}
-        extractedColors={extractedColors}
-        elements={elements}
-        onElementsChange={handleElementsChange}
-        selectedElement={selectedElement}
-        onElementUpdate={handleElementUpdate}
-        selectedElements={selectedElements}
-        onSelectedElementsChange={setSelectedElements}
-        showEffectsPanel={showEffectsPanel}
-        onEffectsPanelChange={setShowEffectsPanel}
-        showAnimationsPanel={showAnimationsPanel}
-        onAnimationsPanelChange={setShowAnimationsPanel}
-        showPositionPanel={showPositionPanel}
-        onPositionPanelChange={setShowPositionPanel}
-        showDesignPanel={showDesignPanel}
-        onDesignPanelChange={setShowDesignPanel}
-        showScratchPanel={showScratchPanel}
-        onScratchPanelChange={setShowScratchPanel}
-        canvasRef={canvasRef}
-        selectedDevice={selectedDevice}
-        scratchConfig={scratchConfig}
-        onScratchConfigChange={handleScratchConfigChange}
-      />
+      {/* Toolbar haut: masqué en mode preview comme les autres éditeurs */}
+      {!showFunnel && (
+        <DesignToolbar
+          selectedDevice={selectedDevice}
+          onDeviceChange={handleDeviceChange}
+          onPreviewToggle={() => setShowFunnel(v => !v)}
+          isPreviewMode={showFunnel}
+          canUndo={false}
+          canRedo={false}
+          previewButtonSide={previewButtonSide}
+          onPreviewButtonSideChange={setPreviewButtonSide}
+          mode={mode}
+          onSave={handleSaveAndContinue}
+          showSaveCloseButtons={false}
+          onNavigateToSettings={() => {
+            let campaignId = (campaign as any)?.id as string | undefined;
+            if (!campaignId) {
+              campaignId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+                ? (crypto as any).randomUUID()
+                : `draft-${Date.now()}`;
+              try {
+                const draft = { ...(campaign || {}), id: campaignId, _source: 'localStorage' };
+                localStorage.setItem(`campaign:draft:${campaignId}`, JSON.stringify(draft));
+              } catch {}
+              setCampaign((prev: any) => ({ ...prev, id: campaignId }));
+            }
+            if (campaignId) navigate(`/campaign/${campaignId}/settings`);
+          }}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Canvas / Game area */}
-        <div className="flex-1 overflow-auto flex items-start justify-center py-6">
-            <ScratchGrid
-              key={roundKey}
-              overlayColor={scratchConfig.overlayColor}
-              brushSize={scratchConfig.brushSize}
-              revealThreshold={scratchConfig.revealThreshold}
-              zoom={canvasZoom}
-              device={selectedDevice}
-              background={currentBackground}
-              cards={scratchConfig.cards?.map((c: any) => {
-                console.log(`Card ${c.id}: imageUrl=${!!c.imageUrl}, cardColor=${c.coverColor}, globalColor=${scratchConfig.overlayColor}`);
-                return {
-                  id: c.id,
-                  // Use per-card color if available, else global color
-                  overlayColor: c.coverColor || scratchConfig.overlayColor || '#E3C6B7',
-                  overlayImage: c.imageUrl,
-                  // Revealed content based on card type
-                  contentBg: c.contentType === 'text' ? '#ffffff' : '#ffffff',
-                  content: (() => {
-                    // Text cards: white bg + black text
-                    if (c.contentType === 'text') {
+      <div className="flex-1 flex overflow-hidden relative">
+        {showFunnel ? (
+          /* Mode Preview - Funnel complet comme les autres éditeurs */
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+            {/* Bouton Mode Edition flottant */}
+            <div className="absolute top-4 left-4 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => setShowFunnel(false)}
+                className="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 transition-colors"
+              >
+                Mode édition
+              </button>
+            </div>
+            
+            {/* Contenu Preview centré */}
+            <div className="flex-1 flex items-center justify-center bg-gray-100">
+              <div className="max-w-md w-full mx-4">
+                <ScratchGrid
+                  key={roundKey}
+                  overlayColor={scratchConfig.overlayColor}
+                  brushSize={scratchConfig.brushSize}
+                  revealThreshold={scratchConfig.revealThreshold}
+                  zoom={0.8}
+                  device={selectedDevice}
+                  background={currentBackground}
+                  cards={scratchConfig.cards?.map((c: any) => ({
+                    id: c.id,
+                    overlayColor: c.coverColor || scratchConfig.overlayColor || '#E3C6B7',
+                    overlayImage: c.imageUrl,
+                    contentBg: c.contentType === 'text' ? '#ffffff' : '#ffffff',
+                    content: (() => {
+                      if (c.contentType === 'text') {
+                        return (
+                          <span style={{ color: '#000000', fontSize: '18px', fontWeight: 600, textAlign: 'center' }}>
+                            {c.text || '🎉 Surprise'}
+                          </span>
+                        );
+                      }
+                      const isWinningCard = assignment?.cardId === c.id;
+                      if (isWinningCard && (scratchConfig as any).prizeImage) {
+                        return (
+                          <img
+                            src={(scratchConfig as any).prizeImage}
+                            alt="Prize won!"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        );
+                      }
                       return (
-                        <span style={{ color: '#000000', fontSize: '18px', fontWeight: 600, textAlign: 'center' }}>
-                          {c.text || '🎉 Surprise'}
+                        <span style={{ color: '#333', fontSize: '18px', textAlign: 'center' }}>
+                          {c.text || '🎁 Prize'}
                         </span>
                       );
+                    })()
+                  }))}
+                  onReveal={(id) => {
+                    let current = assignment || sampleAssignment();
+                    const isWin = current && current.cardId === id && current.prizeId;
+                    setScratchResult(isWin ? 'win' : 'lose');
+                    if (isWin && current?.prizeId) {
+                      const wonId = current.prizeId;
+                      setCampaign((prev: any) => {
+                        if (!prev) return prev;
+                        const updatedPrizes = (prev.prizes || []).map((prize: any) => {
+                          if (String(prize.id) === String(wonId)) {
+                            const remaining = (prize.totalUnits || 0) - (prize.awardedUnits || 0);
+                            if (remaining <= 0) return prize;
+                            return { ...prize, awardedUnits: (prize.awardedUnits || 0) + 1 };
+                          }
+                          return prize;
+                        });
+                        return { ...prev, prizes: updatedPrizes, _lastUpdate: Date.now() };
+                      });
                     }
-                    // Check if this card is a winning card and should show prize image
-                    const isWinningCard = assignment?.cardId === c.id;
-                    if (isWinningCard && (scratchConfig as any).prizeImage) {
-                      return (
-                        <img
-                          src={(scratchConfig as any).prizeImage}
-                          alt="Prize won!"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      );
-                    }
-                    // Default cards: show text content
-                    return (
-                      <span style={{ color: '#333', fontSize: '18px', textAlign: 'center' }}>
-                        {c.text || '🎁 Prize'}
-                      </span>
-                    );
-                  })()
-                };
-              })}
-              onReveal={(id) => {
-                // setRevealedCardId(id); // unused for now
-                let current = assignment || sampleAssignment();
-                const isWin = current && current.cardId === id && current.prizeId;
-                setScratchResult(isWin ? 'win' : 'lose');
-                if (isWin && current?.prizeId) {
-                  const wonId = current.prizeId;
-                  setCampaign((prev: any) => {
-                    if (!prev) return prev;
-                    const updatedPrizes = (prev.prizes || []).map((prize: any) => {
-                      if (String(prize.id) === String(wonId)) {
-                        const remaining = (prize.totalUnits || 0) - (prize.awardedUnits || 0);
-                        if (remaining <= 0) return prize;
-                        return { ...prize, awardedUnits: (prize.awardedUnits || 0) + 1 };
-                      }
-                      return prize;
-                    });
-                    return { ...prev, prizes: updatedPrizes, _lastUpdate: Date.now() };
-                  });
-                }
-              }}
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Mode Edition - Interface normale */
+          <>
+            {/* Sidebar */}
+            <HybridSidebar
+              ref={sidebarRef}
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              currentBackground={currentBackground}
+              extractedColors={extractedColors}
+              elements={elements}
+              onElementsChange={handleElementsChange}
+              selectedElement={selectedElement}
+              onElementUpdate={handleElementUpdate}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
+              showEffectsPanel={showEffectsPanel}
+              onEffectsPanelChange={setShowEffectsPanel}
+              showAnimationsPanel={showAnimationsPanel}
+              onAnimationsPanelChange={setShowAnimationsPanel}
+              showPositionPanel={showPositionPanel}
+              onPositionPanelChange={setShowPositionPanel}
+              showDesignPanel={showDesignPanel}
+              onDesignPanelChange={setShowDesignPanel}
+              showScratchPanel={showScratchPanel}
+              onScratchPanelChange={setShowScratchPanel}
+              canvasRef={canvasRef}
+              selectedDevice={selectedDevice}
+              scratchConfig={scratchConfig}
+              onScratchConfigChange={handleScratchConfigChange}
             />
+
+            {/* Zone principale d'édition */}
+            <div className="flex-1 flex flex-col min-w-0">
+              {/* Canvas / Game area */}
+              <div className="flex-1 overflow-auto flex items-start justify-center py-6">
+                  <ScratchGrid
+                    key={roundKey}
+                    overlayColor={scratchConfig.overlayColor}
+                    brushSize={scratchConfig.brushSize}
+                    revealThreshold={scratchConfig.revealThreshold}
+                    zoom={canvasZoom}
+                    device={selectedDevice}
+                    background={currentBackground}
+                    cards={scratchConfig.cards?.map((c: any) => {
+                      console.log(`Card ${c.id}: imageUrl=${!!c.imageUrl}, cardColor=${c.coverColor}, globalColor=${scratchConfig.overlayColor}`);
+                      return {
+                        id: c.id,
+                        overlayColor: c.coverColor || scratchConfig.overlayColor || '#E3C6B7',
+                        overlayImage: c.imageUrl,
+                        contentBg: c.contentType === 'text' ? '#ffffff' : '#ffffff',
+                        content: (() => {
+                          if (c.contentType === 'text') {
+                            return (
+                              <span style={{ color: '#000000', fontSize: '18px', fontWeight: 600, textAlign: 'center' }}>
+                                {c.text || '🎉 Surprise'}
+                              </span>
+                            );
+                          }
+                          const isWinningCard = assignment?.cardId === c.id;
+                          if (isWinningCard && (scratchConfig as any).prizeImage) {
+                            return (
+                              <img
+                                src={(scratchConfig as any).prizeImage}
+                                alt="Prize won!"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            );
+                          }
+                          return (
+                            <span style={{ color: '#333', fontSize: '18px', textAlign: 'center' }}>
+                              {c.text || '🎁 Prize'}
+                            </span>
+                          );
+                        })()
+                      };
+                    })}
+                    onReveal={(id) => {
+                      let current = assignment || sampleAssignment();
+                      const isWin = current && current.cardId === id && current.prizeId;
+                      setScratchResult(isWin ? 'win' : 'lose');
+                      if (isWin && current?.prizeId) {
+                        const wonId = current.prizeId;
+                        setCampaign((prev: any) => {
+                          if (!prev) return prev;
+                          const updatedPrizes = (prev.prizes || []).map((prize: any) => {
+                            if (String(prize.id) === String(wonId)) {
+                              const remaining = (prize.totalUnits || 0) - (prize.awardedUnits || 0);
+                              if (remaining <= 0) return prize;
+                              return { ...prize, awardedUnits: (prize.awardedUnits || 0) + 1 };
+                            }
+                            return prize;
+                          });
+                          return { ...prev, prizes: updatedPrizes, _lastUpdate: Date.now() };
+                        });
+                      }
+                    }}
+                  />
+              </div>
+              <ZoomSlider 
+                zoom={canvasZoom}
+                onZoomChange={setCanvasZoom}
+                minZoom={0.1}
+                maxZoom={1}
+                step={0.05}
+                defaultZoom={getDefaultZoom(selectedDevice)}
+              />
+            </div>
+          </>
+        )}
+      </div>
+      
+      {/* Floating bottom-right actions - masqués en mode preview */}
+      {!showFunnel && (
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
+            title="Fermer"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Fermer
+          </button>
+          <button
+            onClick={handleSaveAndContinue}
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            title="Sauvegarder et continuer"
+          >
+            <Save className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Sauvegarder et continuer</span>
+            <span className="sm:hidden">Sauvegarder</span>
+          </button>
         </div>
-        <ZoomSlider 
-          zoom={canvasZoom}
-          onZoomChange={setCanvasZoom}
-          minZoom={0.1}
-          maxZoom={1}
-          step={0.05}
-          defaultZoom={getDefaultZoom(selectedDevice)}
-        />
-      </div>
-      {/* Floating bottom-right actions (parity with other editors) */}
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
-          title="Fermer"
-        >
-          <X className="w-4 h-4 mr-1" />
-          Fermer
-        </button>
-        <button
-          onClick={handleSaveAndContinue}
-          className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
-          title="Sauvegarder et continuer"
-        >
-          <Save className="w-4 h-4 mr-1" />
-          <span className="hidden sm:inline">Sauvegarder et continuer</span>
-          <span className="sm:hidden">Sauvegarder</span>
-        </button>
-      </div>
+      )}
       {/* Simple result modal */}
       {scratchResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
