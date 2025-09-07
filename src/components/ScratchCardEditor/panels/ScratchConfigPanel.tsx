@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Upload, Palette, Settings, Target } from 'lucide-react';
+import { ArrowLeft, Upload, Gift, Type, Image as ImageIcon, Trash2, Plus, RotateCcw } from 'lucide-react';
 import { useEditorStore } from '@/stores/editorStore';
 
 interface ScratchConfigPanelProps {
@@ -15,7 +15,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
   onScratchConfigChange,
   selectedDevice = 'desktop'
 }) => {
-  const [activeSection, setActiveSection] = useState<'area' | 'content' | 'texture'>('area');
+  const [activeSection, setActiveSection] = useState<'cards' | 'prizes'>('cards');
   const campaign = useEditorStore((s) => s.campaign);
   const prizes = (campaign as any)?.prizes || [];
 
@@ -32,36 +32,56 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
     handleConfigChange({ cards });
   };
 
-  const handleScratchAreaChange = (field: string, value: any) => {
-    const newArea = { ...scratchConfig.scratchArea, [field]: value };
-    handleConfigChange({ scratchArea: newArea });
-  };
+  // (zone de grattage précise non utilisée dans la vue Grille)
 
-  const handleRevealedContentChange = (field: string, value: any) => {
-    const newContent = { ...scratchConfig.revealedContent, [field]: value };
-    handleConfigChange({ revealedContent: newContent });
+  // Cards helpers
+  const addCard = () => {
+    const cards = Array.isArray(scratchConfig.cards) ? [...scratchConfig.cards] : [];
+    if (cards.length >= 8) return; // small guard
+    const id = `card-${Date.now().toString().slice(-6)}`;
+    cards.push({ id, text: `Carte ${cards.length + 1}`, contentType: 'text', coverColor: '' });
+    handleConfigChange({ cards });
   };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const imageUrl = event.target?.result as string;
-        handleRevealedContentChange('type', 'image');
-        handleRevealedContentChange('value', imageUrl);
-      };
-      reader.readAsDataURL(file);
+  const removeCard = (id: string) => {
+    const cards = Array.isArray(scratchConfig.cards) ? [...scratchConfig.cards] : [];
+    handleConfigChange({ cards: cards.filter((c: any) => c.id !== id) });
+  };
+  const updateCard = (id: string, updates: any) => {
+    const cards = Array.isArray(scratchConfig.cards) ? [...scratchConfig.cards] : [];
+    const idx = cards.findIndex((c: any) => c.id === id);
+    if (idx >= 0) {
+      cards[idx] = { ...cards[idx], ...updates };
+      handleConfigChange({ cards });
     }
   };
+  // Couverture globale (image/couleur) appliquée visuellement à toutes les cartes
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      handleConfigChange({ coverImage: url, coverColor: undefined });
+    };
+    reader.readAsDataURL(file);
+    e.currentTarget.value = '';
+  };
+  const clearCoverImage = () => handleConfigChange({ coverImage: undefined });
+  const handleCoverColorChange = (value: string) => handleConfigChange({ overlayColor: value, coverColor: value });
+  const handleCardImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      updateCard(id, { contentType: 'image', imageUrl: url });
+    };
+    reader.readAsDataURL(file);
+    // reset input
+    e.currentTarget.value = '';
+  };
 
-  const scratchTextures = [
-    { id: 'silver', label: 'Argent', color: '#C0C0C0' },
-    { id: 'gold', label: 'Or', color: '#FFD700' },
-    { id: 'bronze', label: 'Bronze', color: '#CD7F32' },
-    { id: 'gray', label: 'Gris', color: '#808080' },
-    { id: 'black', label: 'Noir', color: '#000000' }
-  ];
+  // textures pré-définies non utilisées dans cette version de l'onglet
 
   return (
     <div className="h-full flex flex-col">
@@ -78,374 +98,255 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
       )}
 
       <div className="flex-1 overflow-y-auto">
-        {/* Section Tabs */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex space-x-2">
-            {[
-              { id: 'area', label: 'Zone', icon: Target },
-              { id: 'content', label: 'Contenu', icon: Upload },
-              { id: 'texture', label: 'Texture', icon: Palette }
-            ].map((section) => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id as any)}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeSection === section.id
-                      ? 'bg-[#841b60] text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 mr-2" />
-                  {section.label}
-                </button>
-              );
-            })}
+        {/* En-tête (parité avec GameManagementPanel) */}
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Gestion du jeu</h2>
+            <p className="text-gray-600 text-sm">Configurez les cartes et gérez les lots à gagner</p>
+          </div>
+
+          {/* Navigation des sections */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveSection('cards')}
+              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeSection === 'cards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4 inline mr-2" />
+              Cartes
+            </button>
+            <button
+              onClick={() => setActiveSection('prizes')}
+              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeSection === 'prizes' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Gift className="w-4 h-4 inline mr-2" />
+              Lots
+            </button>
+          </div>
+          {/* Contrôles de couverture globale (appliqués visuellement à toutes les cartes) */}
+          <div className="mt-3 grid grid-cols-1 gap-3">
+            <div className="border rounded-lg p-3 bg-gray-50">
+              <label className="block text-xs font-medium text-gray-600 mb-2">Image lot</label>
+              {scratchConfig.prizeImage ? (
+                <div className="space-y-2">
+                  <img src={scratchConfig.prizeImage} alt="Image lot" className="w-full max-h-32 object-contain rounded" />
+                  <div className="flex gap-2">
+                    <button onClick={() => handleConfigChange({ prizeImage: undefined })} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-100">Supprimer</button>
+                    <label className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-100 cursor-pointer">
+                      Remplacer
+                      <input type="file" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const url = ev.target?.result as string;
+                          handleConfigChange({ prizeImage: url });
+                        };
+                        reader.readAsDataURL(file);
+                        e.currentTarget.value = '';
+                      }} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <label className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer inline-flex items-center justify-center gap-2">
+                  <Upload className="w-4 h-4" /> Choisir une image
+                  <input type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      const url = ev.target?.result as string;
+                      handleConfigChange({ prizeImage: url });
+                    };
+                    reader.readAsDataURL(file);
+                    e.currentTarget.value = '';
+                  }} className="hidden" />
+                </label>
+              )}
+            </div>
+            <div className="border rounded-lg p-3 bg-gray-50">
+              <label className="block text-xs font-medium text-gray-600 mb-2">Couleur de couverture</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={scratchConfig.overlayColor || '#E3C6B7'} onChange={(e) => handleCoverColorChange(e.target.value)} className="w-10 h-10 p-0 border border-gray-300 rounded" />
+                <input type="text" value={scratchConfig.overlayColor || '#E3C6B7'} onChange={(e) => handleCoverColorChange(e.target.value)} className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Zone de grattage */}
-        {activeSection === 'area' && (
-          <div className="p-4 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Zone de grattage</h3>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Position X
-                    </label>
-                    <input
-                      type="number"
-                      value={scratchConfig.scratchArea?.x || 50}
-                      onChange={(e) => handleScratchAreaChange('x', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Position Y
-                    </label>
-                    <input
-                      type="number"
-                      value={scratchConfig.scratchArea?.y || 50}
-                      onChange={(e) => handleScratchAreaChange('y', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Largeur
-                    </label>
-                    <input
-                      type="number"
-                      value={scratchConfig.scratchArea?.width || 300}
-                      onChange={(e) => handleScratchAreaChange('width', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hauteur
-                    </label>
-                    <input
-                      type="number"
-                      value={scratchConfig.scratchArea?.height || 200}
-                      onChange={(e) => handleScratchAreaChange('height', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Épaisseur du grattage
-                  </label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="50"
-                    value={scratchConfig.scratchThickness || 20}
-                    onChange={(e) => handleConfigChange({ scratchThickness: parseInt(e.target.value) })}
-                    className="w-full"
-                  />
-                  <div className="text-sm text-gray-500 mt-1">
-                    {scratchConfig.scratchThickness || 20}px
-                  </div>
-                </div>
-              </div>
+        {/* Section Cartes */}
+        {activeSection === 'cards' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Cartes ({(scratchConfig.cards || []).length || 0})</h3>
+              <button onClick={addCard} className="flex items-center px-3 py-2 bg-[#841b60] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors">
+                <Plus className="w-4 h-4 mr-1" /> Ajouter
+              </button>
             </div>
-          </div>
-        )}
 
-        {/* Contenu révélé */}
-        {activeSection === 'content' && (
-          <div className="p-4 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Contenu révélé</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Type de contenu
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="contentType"
-                        value="text"
-                        checked={scratchConfig.revealedContent?.type === 'text'}
-                        onChange={() => handleRevealedContentChange('type', 'text')}
-                        className="mr-2"
-                      />
-                      Texte
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="contentType"
-                        value="image"
-                        checked={scratchConfig.revealedContent?.type === 'image'}
-                        onChange={() => handleRevealedContentChange('type', 'image')}
-                        className="mr-2"
-                      />
-                      Image
-                    </label>
+            <div className="space-y-3">
+              {(scratchConfig.cards || [
+                { id: 'card-1', text: '🎉 Surprise 1' },
+                { id: 'card-2', text: '💎 Bonus 2' },
+                { id: 'card-3', text: '🏆 Prix 3' },
+                { id: 'card-4', text: '🎁 Cadeau 4' }
+              ]).map((c: any, index: number) => (
+                <div key={c.id} className="bg-gray-50 p-4 rounded-lg border overflow-hidden">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-lg font-semibold text-gray-900">Segment {index + 1}</span>
+                    <button onClick={() => removeCard(c.id)} className="text-red-500 hover:text-red-700 transition-colors" title="Supprimer la carte">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
 
-                {scratchConfig.revealedContent?.type === 'text' ? (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Texte à révéler
-                    </label>
-                    <textarea
-                      value={scratchConfig.revealedContent?.value || 'Félicitations!'}
-                      onChange={(e) => handleRevealedContentChange('value', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                      rows={3}
-                      placeholder="Entrez le texte à révéler..."
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Image à révéler
-                    </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      {scratchConfig.revealedContent?.value ? (
-                        <div className="space-y-2">
-                          <img
-                            src={scratchConfig.revealedContent.value}
-                            alt="Contenu révélé"
-                            className="max-w-full h-32 object-contain mx-auto"
-                          />
-                          <button
-                            onClick={() => handleRevealedContentChange('value', '')}
-                            className="text-sm text-red-600 hover:text-red-800"
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            className="hidden"
-                            id="content-upload"
-                          />
-                          <label
-                            htmlFor="content-upload"
-                            className="inline-block px-4 py-2 bg-[#841b60] text-white rounded-md text-sm font-medium cursor-pointer hover:bg-[#6d1650] transition-colors"
-                          >
-                            Parcourir
-                          </label>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Texture de grattage */}
-        {activeSection === 'texture' && (
-          <div className="p-4 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Texture de grattage</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Couleur de la surface (overlay)
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {scratchTextures.map((texture) => (
-                      <button
-                        key={texture.id}
-                        onClick={() => handleConfigChange({ scratchTexture: texture.id })}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          scratchConfig.scratchTexture === texture.id
-                            ? 'border-[#841b60] ring-2 ring-[#841b60]/20'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div
-                          className="w-full h-8 rounded mb-2"
-                          style={{ backgroundColor: texture.color }}
-                        />
-                        <div className="text-xs font-medium text-gray-700">
-                          {texture.label}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Opacité de la surface
-                  </label>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="1"
-                    step="0.1"
-                    value={scratchConfig.scratchOpacity || 0.8}
-                    onChange={(e) => handleConfigChange({ scratchOpacity: parseFloat(e.target.value) })}
-                    className="w-full"
-                  />
-                  <div className="text-sm text-gray-500 mt-1">
-                    {Math.round((scratchConfig.scratchOpacity || 0.8) * 100)}%
-                  </div>
-                </div>
-
-                {/* Options pour la mécanique Grille 2x2 */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h4 className="text-md font-semibold text-gray-800 mb-4">Options du jeu (Grille 2×2)</h4>
-                  <div className="space-y-4">
-                    {/* Édition rapide des libellés */}
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Libellés des 4 cartes</label>
-                      <div className="space-y-2">
-                        {(scratchConfig.cards || [
-                          { id: 'card-1', text: '🎉 Surprise 1' },
-                          { id: 'card-2', text: '💎 Bonus 2' },
-                          { id: 'card-3', text: '🏆 Prix 3' },
-                          { id: 'card-4', text: '🎁 Cadeau 4' }
-                        ]).map((c: any) => (
-                          <div key={c.id} className="flex items-center gap-2">
-                            <span className="text-xs w-16 text-gray-500">{c.id}</span>
-                            <input
-                              type="text"
-                              value={c.text || ''}
-                              onChange={(e) => handleCardTextChange(c.id, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                            />
-                          </div>
-                        ))}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Type de contenu</label>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center">
+                          <input type="radio" name={`ctype-${c.id}`} value="text" checked={(c.contentType || 'text') === 'text'} onChange={() => updateCard(c.id, { contentType: 'text' })} className="mr-2 w-4 h-4 text-blue-600" />
+                          <Type className="w-5 h-5 mr-1 text-gray-900" />
+                          <span className="text-base text-gray-900">Texte</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="radio" name={`ctype-${c.id}`} value="image" checked={c.contentType === 'image'} onChange={() => updateCard(c.id, { contentType: 'image' })} className="mr-2 w-4 h-4 text-gray-400" />
+                          <ImageIcon className="w-5 h-5 mr-1 text-gray-900" />
+                          <span className="text-base text-gray-900">Image</span>
+                        </label>
                       </div>
                     </div>
 
-                    {/* La carte gagnante est tirée selon les probabilités/stock. Pas de forçage manuel ici. */}
-                    {/* Attribution des lots par carte */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Attribuer un lot à chaque carte</label>
-                      <div className="space-y-2">
-                        {(scratchConfig.cards || [
-                          { id: 'card-1', text: '🎉 Surprise 1' },
-                          { id: 'card-2', text: '💎 Bonus 2' },
-                          { id: 'card-3', text: '🏆 Prix 3' },
-                          { id: 'card-4', text: '🎁 Cadeau 4' }
-                        ]).map((c: any) => (
-                          <div key={c.id} className="flex items-center gap-2">
-                            <span className="text-xs w-16 text-gray-500">{c.id}</span>
-                            <select
-                              value={c.prizeId || ''}
-                              onChange={(e) => {
-                                const prizeId = e.target.value || undefined;
-                                const cards = Array.isArray(scratchConfig.cards) ? [...scratchConfig.cards] : [];
-                                const idx = cards.findIndex((x: any) => x.id === c.id);
-                                if (idx >= 0) {
-                                  cards[idx] = { ...cards[idx], prizeId };
-                                  handleConfigChange({ cards });
-                                }
-                              }}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                            >
-                              <option value="">— Aucun (perdant)</option>
-                              {prizes.map((p: any) => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                              ))}
-                            </select>
+                    <div className="grid grid-cols-2 gap-3 items-start">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">{(c.contentType || 'text') === 'text' ? 'Texte' : 'Image'}</label>
+                        {(c.contentType || 'text') === 'text' ? (
+                          <input type="text" value={c.text || ''} onChange={(e) => handleCardTextChange(c.id, e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+                        ) : (
+                          <div className="space-y-2">
+                            <input type="file" accept="image/*" onChange={(e) => handleCardImageUpload(c.id, e)} className="hidden" id={`upload-${c.id}`} />
+                            <button onClick={() => document.getElementById(`upload-${c.id}`)?.click()} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
+                              <Upload className="w-4 h-4 inline mr-2" /> Choisir une image
+                            </button>
+                            {c.imageUrl && <img src={c.imageUrl} alt="aperçu" className="w-full max-h-28 object-contain rounded" />}
                           </div>
-                        ))}
-                        {prizes.length === 0 && (
-                          <p className="text-xs text-gray-500">Aucun lot configuré pour la campagne. Ajoutez des lots dans Paramétrage → Lots.</p>
                         )}
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Couleur de l'overlay</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={scratchConfig.overlayColor || '#E3C6B7'}
-                          onChange={(e) => handleConfigChange({ overlayColor: e.target.value })}
-                          className="w-10 h-10 p-0 border border-gray-300 rounded"
-                          aria-label="Couleur de l'overlay"
-                        />
-                        <input
-                          type="text"
-                          value={scratchConfig.overlayColor || '#E3C6B7'}
-                          onChange={(e) => handleConfigChange({ overlayColor: e.target.value })}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                        />
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="relative w-7 h-7 shrink-0">
+                            <div
+                              className="absolute inset-0 rounded-full border border-gray-300 shadow-sm"
+                              style={{ background: (c.coverColor || '#841b60') as string }}
+                            />
+                            <input
+                              type="color"
+                              value={c.coverColor || '#841b60'}
+                              onChange={(e) => updateCard(c.id, { coverColor: e.target.value })}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              aria-label={`Couleur de la carte ${index + 1}`}
+                            />
+                          </div>
+                          <input
+                            type="text"
+                            value={c.coverColor || '#841b60'}
+                            onChange={(e) => updateCard(c.id, { coverColor: e.target.value })}
+                            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                          />
+                        </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Taille de la brosse</label>
-                      <input
-                        type="range"
-                        min="10"
-                        max="120"
-                        step="2"
-                        value={scratchConfig.brushSize ?? 40}
-                        onChange={(e) => handleConfigChange({ brushSize: parseInt(e.target.value) })}
-                        className="w-full"
-                      />
-                      <div className="text-sm text-gray-500 mt-1">{scratchConfig.brushSize ?? 40}px</div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Seuil de révélation</label>
-                      <input
-                        type="range"
-                        min="0.2"
-                        max="1"
-                        step="0.05"
-                        value={scratchConfig.revealThreshold ?? 0.6}
-                        onChange={(e) => handleConfigChange({ revealThreshold: parseFloat(e.target.value) })}
-                        className="w-full"
-                      />
-                      <div className="text-sm text-gray-500 mt-1">{Math.round(100 * (scratchConfig.revealThreshold ?? 0.6))}%</div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Lot attribué</label>
+                      <select value={c.prizeId || ''} onChange={(e) => updateCard(c.id, { prizeId: e.target.value || undefined })} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent">
+                        <option value="">Aucun lot</option>
+                        {prizes.map((p: any) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Section Lots */}
+        {activeSection === 'prizes' && (
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Lots à gagner ({prizes.length || 0})</h3>
+              <button
+                onClick={() => {
+                  const newPrize = { id: Date.now().toString(), name: 'Nouveau lot', totalUnits: 1, awardedUnits: 0, attributionMethod: 'probability', probability: 10 } as any;
+                  const next = [...prizes, newPrize];
+                  (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: next }));
+                }}
+                className="flex items-center px-3 py-2 bg-[#841b60] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Créer un lot
+              </button>
+            </div>
+
+            {prizes.length === 0 && (
+              <div className="text-center text-gray-500 py-12">Aucun lot configuré</div>
+            )}
+
+            <div className="space-y-3">
+              {prizes.map((prize: any) => (
+                <div key={prize.id} className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-3">
+                    <input type="text" value={prize.name || ''} onChange={(e) => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.map((p: any) => p.id === prize.id ? { ...p, name: e.target.value } : p) }))} className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+                    <button onClick={() => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.filter((p: any) => p.id !== prize.id) }))} className="text-red-500 hover:text-red-700 transition-colors" title="Supprimer le lot">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Méthode d'attribution</label>
+                      <div className="flex space-x-3">
+                        <label className="flex items-center">
+                          <input type="radio" name={`attr-${prize.id}`} value="probability" checked={(prize.attributionMethod || prize.method) === 'probability'} onChange={() => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.map((p: any) => p.id === prize.id ? { ...p, attributionMethod: 'probability' } : p) }))} className="mr-2" />
+                          <span className="text-sm">Probabilité</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="radio" name={`attr-${prize.id}`} value="calendar" checked={(prize.attributionMethod || prize.method) === 'calendar'} onChange={() => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.map((p: any) => p.id === prize.id ? { ...p, attributionMethod: 'calendar' } : p) }))} className="mr-2" />
+                          <span className="text-sm">Calendrier</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Carte associée</label>
+                      <select value={prize.cardId || ''} onChange={(e) => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.map((p: any) => p.id === prize.id ? { ...p, cardId: e.target.value } : p) }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent">
+                        <option value="">Aucune carte</option>
+                        {(scratchConfig.cards || []).map((c: any) => (
+                          <option key={c.id} value={c.id}>{c.text || c.id}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {(prize.attributionMethod || prize.method) === 'probability' && (
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Probabilité (%)</label>
+                        <input type="number" min="0" max="100" value={prize.probability || 0} onChange={(e) => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.map((p: any) => p.id === prize.id ? { ...p, probability: Number(e.target.value) } : p) }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Unités totales</label>
+                        <input type="number" min="0" value={prize.totalUnits || 0} onChange={(e) => (useEditorStore.getState().setCampaign as any)((prev: any) => ({ ...prev, prizes: prizes.map((p: any) => p.id === prize.id ? { ...p, totalUnits: Number(e.target.value) } : p) }))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

@@ -212,6 +212,12 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
           extractedColors,
           elements
         },
+        // Champs de formulaire par défaut (parité avec les autres éditeurs)
+        formFields: [
+          { id: 'prenom', label: 'Prénom', type: 'text', required: true },
+          { id: 'nom', label: 'Nom', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true }
+        ],
         gameConfig: {
           scratch: scratchConfig
         },
@@ -224,6 +230,20 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       setCampaign(newCampaign as any);
     }
   }, [campaign, setCampaign, currentBackground, extractedColors, elements, scratchConfig]);
+
+  // Harmoniser les champs par défaut si la campagne existe déjà sans formFields
+  useEffect(() => {
+    if (campaign && (!Array.isArray((campaign as any).formFields) || (campaign as any).formFields.length === 0)) {
+      setCampaign((prev: any) => (prev ? {
+        ...prev,
+        formFields: [
+          { id: 'prenom', label: 'Prénom', type: 'text', required: true },
+          { id: 'nom', label: 'Nom', type: 'text', required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true }
+        ]
+      } : prev));
+    }
+  }, [campaign, setCampaign]);
 
   // Handle element operations
   const handleAddElement = useCallback((element: any) => {
@@ -380,8 +400,45 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               revealThreshold={scratchConfig.revealThreshold}
               zoom={canvasZoom}
               device={selectedDevice}
-              background={{ type: 'color', value: '#000000' }}
-              cards={scratchConfig.cards?.map((c: any) => ({ id: c.id, content: c.text }))}
+              background={currentBackground}
+              cards={scratchConfig.cards?.map((c: any) => {
+                console.log(`Card ${c.id}: imageUrl=${!!c.imageUrl}, cardColor=${c.coverColor}, globalColor=${scratchConfig.overlayColor}`);
+                return {
+                  id: c.id,
+                  // Use per-card color if available, else global color
+                  overlayColor: c.coverColor || scratchConfig.overlayColor || '#E3C6B7',
+                  overlayImage: c.imageUrl,
+                  // Revealed content based on card type
+                  contentBg: c.contentType === 'text' ? '#ffffff' : '#ffffff',
+                  content: (() => {
+                    // Text cards: white bg + black text
+                    if (c.contentType === 'text') {
+                      return (
+                        <span style={{ color: '#000000', fontSize: '18px', fontWeight: 600, textAlign: 'center' }}>
+                          {c.text || '🎉 Surprise'}
+                        </span>
+                      );
+                    }
+                    // Check if this card is a winning card and should show prize image
+                    const isWinningCard = assignment?.cardId === c.id;
+                    if (isWinningCard && (scratchConfig as any).prizeImage) {
+                      return (
+                        <img
+                          src={(scratchConfig as any).prizeImage}
+                          alt="Prize won!"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      );
+                    }
+                    // Default cards: show text content
+                    return (
+                      <span style={{ color: '#333', fontSize: '18px', textAlign: 'center' }}>
+                        {c.text || '🎁 Prize'}
+                      </span>
+                    );
+                  })()
+                };
+              })}
               onReveal={(id) => {
                 setRevealedCardId(id);
                 let current = assignment || sampleAssignment();
