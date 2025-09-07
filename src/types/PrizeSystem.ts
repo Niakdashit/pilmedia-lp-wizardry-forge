@@ -16,11 +16,25 @@ export interface Prize {
   // Propriétés spécifiques à la méthode probabilité
   probabilityPercent?: number; // 0-100
   
-  // Propriétés spécifiques à la méthode calendrier
+  // Propriétés spécifiques à la méthode calendaire  
+  scheduledDate?: string; // YYYY-MM-DD
+  scheduledTime?: string; // HH:MM
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
   startTime?: string; // HH:MM
   endTime?: string;   // HH:MM
+  
+  // Propriétés pour état et gestion
+  isActive?: boolean;
+  remainingQuantity?: number;
+  probability?: number; // Alias pour probabilityPercent
+  
+  // Compatibility properties
+  description?: string;
+  attributionMethod?: 'calendar' | 'probability';
+  calendarDate?: string;
+  calendarTime?: string;
+  segmentId?: string;
 }
 
 export interface WheelSegment {

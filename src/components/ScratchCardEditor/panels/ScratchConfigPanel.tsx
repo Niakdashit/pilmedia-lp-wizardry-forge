@@ -55,6 +55,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
     }
   };
   // Couverture globale (image/couleur) appliquée visuellement à toutes les cartes
+  /*
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -66,7 +67,10 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
     reader.readAsDataURL(file);
     e.currentTarget.value = '';
   };
+  
   const clearCoverImage = () => handleConfigChange({ coverImage: undefined });
+  */
+  
   const handleCoverColorChange = (value: string) => handleConfigChange({ overlayColor: value, coverColor: value });
   const handleCardImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

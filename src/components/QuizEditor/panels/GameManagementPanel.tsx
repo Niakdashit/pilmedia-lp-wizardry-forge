@@ -31,6 +31,8 @@ interface Prize {
   id: string;
   name: string;
   description: string;
+  totalUnits: number;
+  awardedUnits: number;
   attributionMethod: 'calendar' | 'probability';
   calendarDate?: string;
   calendarTime?: string;
@@ -191,9 +193,10 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     const newPrize: Prize = {
       id: Date.now().toString(),
       name: 'Nouveau lot',
+      description: '',
       totalUnits: 1,
       awardedUnits: 0,
-      method: 'probability',
+      attributionMethod: 'probability',
       probabilityPercent: 10
     };
     updatePrizes([...prizes, newPrize]);

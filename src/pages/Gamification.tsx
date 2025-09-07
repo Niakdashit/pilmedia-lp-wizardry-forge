@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import PillButton from '../components/shared/PillButton';
 import PageHeader from '../components/Layout/PageHeader';
 import { CampaignType, getCampaignTypeIcon } from '../utils/campaignTypes';
+import DesignEditorLayout from '../components/DesignEditor/DesignEditorLayout';
 
 const Gamification: React.FC = () => {
   const gamificationTypes = [
