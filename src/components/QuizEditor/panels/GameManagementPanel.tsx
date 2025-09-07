@@ -197,7 +197,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       totalUnits: 1,
       awardedUnits: 0,
       attributionMethod: 'probability',
-      probabilityPercent: 10
+      probability: 10
     };
     updatePrizes([...prizes, newPrize]);
   };

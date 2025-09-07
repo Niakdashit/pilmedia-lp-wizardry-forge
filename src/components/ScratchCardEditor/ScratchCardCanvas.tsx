@@ -44,7 +44,7 @@ const ScratchCardCanvas = forwardRef<HTMLDivElement, ScratchCardCanvasProps>(({
     scratch,
     stopScratching,
     resetScratch,
-    getProgress
+    // getProgress - currently unused
   } = useScratchCanvas({
     onProgressChange: setScratchProgress,
     scratchRadius: scratchConfig.scratchThickness || 20

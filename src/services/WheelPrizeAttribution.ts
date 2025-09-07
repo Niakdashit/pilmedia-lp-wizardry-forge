@@ -87,7 +87,7 @@ export class WheelPrizeAttribution {
     // 2. Vérification de la probabilité de gain
     console.log('🎲 Vérification de la probabilité...');
     
-    const eligiblePrizes = prizes.filter(p => p.isActive && p.remainingQuantity > 0);
+    const eligiblePrizes = prizes.filter(p => p.isActive && (p.remainingQuantity || 0) > 0);
     
     if (eligiblePrizes.length === 0) {
       console.log('❌ Aucun lot éligible disponible');
