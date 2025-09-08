@@ -15,6 +15,7 @@ import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { renderScratchGamePanel } from '../../plugins/scratchcard/integration';
+import ScratchConfigPanel from '../ScratchCardEditor/panels/ScratchConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 

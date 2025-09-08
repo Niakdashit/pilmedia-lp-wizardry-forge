@@ -1,5 +1,4 @@
 // ScratchCard Game Plugin Integration
-import React from 'react';
 import { isFeatureEnabled } from '@/config/features';
 import { ScratchCardCanvas } from './components/ScratchCardCanvas';
 import { ScratchGamePanel } from './components/ScratchGamePanel';
@@ -12,12 +11,11 @@ import { ScratchCardState } from './types';
 export const renderScratchCardSystem = (props: {
   campaign?: any;
   previewDevice?: string;
-  background?: any;
   canvasZoom?: number;
   mode?: 'edit' | 'preview';
   onStateChange?: (state: ScratchCardState) => void;
 }) => {
-  const { campaign, previewDevice, background, mode = 'preview', onStateChange } = props;
+  const { campaign, previewDevice, mode = 'preview', onStateChange } = props;
   
   // Check feature flag
   if (!isFeatureEnabled('scratchcardGame')) {
@@ -31,7 +29,7 @@ export const renderScratchCardSystem = (props: {
     <ScratchCardCanvas
       mode={mode}
       state={scratchCardState}
-      device={previewDevice || 'desktop'}
+      device={(previewDevice as 'desktop' | 'tablet' | 'mobile') || 'desktop'}
       onStateChange={onStateChange}
       onCardProgress={(cardId: string, progress: number) => {
         console.log(`[ScratchCard] Card ${cardId} progress: ${Math.round(progress * 100)}%`);
