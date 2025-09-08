@@ -4,6 +4,8 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
+import { isFeatureEnabled } from '@/config/features';
+import { renderScratchCardSystem } from '@/plugins/scratchcard/integration';
 import ScratchGrid from '../ScratchCardEditor/ScratchGrid';
 import SmartAlignmentGuides from './components/SmartAlignmentGuides';
 import AlignmentToolbar from './components/AlignmentToolbar';
@@ -1705,14 +1707,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 (() => {
                   console.log('[DesignCanvas] Chargement du système de cartes à gratter...');
                   try {
-                    // Importer le système de feature flag
-                    const { isFeatureEnabled } = require('@/config/features');
                     const isNewSystemEnabled = isFeatureEnabled('scratchcardGame');
                     console.log('[DesignCanvas] Feature scratchcardGame enabled:', isNewSystemEnabled);
                     
                     if (isNewSystemEnabled) {
-                      // Nouveau système de cartes à gratter
-                      const { renderScratchCardSystem } = require('@/plugins/scratchcard/integration');
                       console.log('[DesignCanvas] Using NEW ScratchCard system');
                       return renderScratchCardSystem({
                         campaign,
@@ -1748,7 +1746,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       revealThreshold={campaign?.gameConfig?.scratch?.revealThreshold || 0.6}
                       device={selectedDevice}
                       background={background}
-                      onReveal={(cardId) => {
+                      onReveal={(cardId: string) => {
                         console.log('🎯 Carte révélée:', cardId);
                       }}
                     />
