@@ -7,8 +7,10 @@ import {
   Palette,
   Layers,
   Settings,
-  RotateCcw,
-  RotateCw
+  Gamepad2,
+  FormInput,
+  Smartphone,
+  Sliders
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
@@ -60,7 +62,11 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     { id: 'assets', label: 'Éléments', icon: Plus, color: '#3B82F6' },
     { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
     { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
-    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' }
+    { id: 'general', label: 'Général', icon: Settings, color: '#6366F1' },
+    { id: 'game', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' },
+    { id: 'gameconfig', label: 'Mise en page', icon: Sliders, color: '#06B6D4' },
+    { id: 'form', label: 'Formulaire', icon: FormInput, color: '#EF4444' },
+    { id: 'mobile', label: 'Mobile', icon: Smartphone, color: '#10B981' }
   ];
 
   // Device detection: show bottom bar only on real mobile devices
@@ -140,12 +146,40 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             />
           </React.Suspense>
         );
-      case 'campaign':
+      case 'general':
         return (
           <CampaignConfigPanel 
             config={campaignConfig} 
             onConfigChange={onCampaignConfigChange || (() => {})} 
           />
+        );
+      case 'game':
+        return (
+          <div className="p-4">
+            <h3 className="text-sm font-semibold mb-2">Configuration du jeu</h3>
+            <p className="text-xs text-gray-500">Paramètres de jeu à venir...</p>
+          </div>
+        );
+      case 'gameconfig':
+        return (
+          <div className="p-4">
+            <h3 className="text-sm font-semibold mb-2">Mise en page</h3>
+            <p className="text-xs text-gray-500">Options de mise en page à venir...</p>
+          </div>
+        );
+      case 'form':
+        return (
+          <div className="p-4">
+            <h3 className="text-sm font-semibold mb-2">Formulaire</h3>
+            <p className="text-xs text-gray-500">Champs de formulaire à venir...</p>
+          </div>
+        );
+      case 'mobile':
+        return (
+          <div className="p-4">
+            <h3 className="text-sm font-semibold mb-2">Vue mobile</h3>
+            <p className="text-xs text-gray-500">Optimisations mobile à venir...</p>
+          </div>
         );
       default:
         return null;
@@ -252,29 +286,9 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
           }}
           data-canvas-ui="1"
         >
-          <div className="flex items-center justify-between px-2 py-2 gap-2">
-            {/* Undo/Redo controls */}
-            <div className="flex items-center gap-2">
-              <button
-                aria-label="Annuler"
-                disabled={!canUndo}
-                onClick={() => canUndo && onUndo && onUndo()}
-                className={`p-2 rounded-md border ${canUndo ? 'text-gray-700 border-gray-300 active:scale-95' : 'text-gray-400 border-gray-200'} bg-white`}
-              >
-                <RotateCcw className="w-5 h-5" />
-              </button>
-              <button
-                aria-label="Rétablir"
-                disabled={!canRedo}
-                onClick={() => canRedo && onRedo && onRedo()}
-                className={`p-2 rounded-md border ${canRedo ? 'text-gray-700 border-gray-300 active:scale-95' : 'text-gray-400 border-gray-200'} bg-white`}
-              >
-                <RotateCw className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center justify-around flex-1">
+        <div className="flex items-center justify-center px-2 py-2">
+            {/* Tabs - centered */}
+            <div className="flex items-center justify-around w-full">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
