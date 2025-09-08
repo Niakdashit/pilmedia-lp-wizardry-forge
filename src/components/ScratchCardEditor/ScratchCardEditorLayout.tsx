@@ -402,9 +402,13 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               device={selectedDevice}
               background={currentBackground}
               cards={scratchConfig.cards?.map((c: any) => {
-                console.log(`Card ${c.id}: imageUrl=${!!c.imageUrl}, cardColor=${c.coverColor}, globalColor=${scratchConfig.overlayColor}`);
+                console.log(`Card ${c.id}: imageUrl=${!!c.imageUrl}, cardColor=${c.color}, globalColor=${scratchConfig.overlayColor}`);
+                const hasCover = !!(c.overlayImage || c.imageUrl || c.cover);
                 return {
                   id: c.id,
+                  // Background color for cards without covers
+                  color: c.color || scratchConfig.overlayColor || '#E3C0B7',
+                  hasCover,
                   // Use per-card color if available, else global color
                   overlayColor: c.coverColor || scratchConfig.overlayColor || '#E3C6B7',
                   overlayImage: c.overlayImage || c.imageUrl,
