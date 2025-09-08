@@ -66,7 +66,6 @@ if (typeof window !== 'undefined') {
     }
     
     if (msg?.t === 'SET_CARD_COLOR') {
-      console.log('[ScratchGrid] Received SET_CARD_COLOR message:', { cardId: msg.cardId, color: msg.color });
       const { cardId, color } = msg;
       applyColorToCard(cardId, color);
     }
@@ -111,20 +110,15 @@ function applyCoverToCard(cardId: string, url: string) {
 }
 
 function applyColorToCard(cardId: string, color: string) {
-  console.log('[ScratchGrid] applyColorToCard called:', { cardId, color });
   const cardEl = document.querySelector(`[data-id="${cardId}"]`) as HTMLElement;
-  console.log('[ScratchGrid] Found card element:', !!cardEl, cardEl);
   if (cardEl) {
     // Check if card has a cover - if so, color should not override
     const hasCover = cardEl.getAttribute('data-has-cover') === 'true';
-    console.log('[ScratchGrid] Card has cover:', hasCover);
     if (hasCover) {
-      console.log('[ScratchGrid] Card has cover, not applying color');
       return; // Don't apply color if there's a cover
     }
     
     // Set background color directly on the card element
-    console.log('[ScratchGrid] Applying background color:', color);
     cardEl.style.backgroundColor = color;
     // Mark that this card has no cover
     cardEl.setAttribute('data-has-cover', 'false');

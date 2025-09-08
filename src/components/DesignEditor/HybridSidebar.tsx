@@ -14,7 +14,6 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import { renderScratchGamePanel } from '../../plugins/scratchcard/integration';
 import ScratchConfigPanel from '../ScratchCardEditor/panels/ScratchConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
@@ -306,8 +305,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: FormInput
     },
     { 
-      id: 'game', 
-      label: 'Jeu', 
+      id: 'scratch', 
+      label: 'Grattage', 
       icon: Gamepad2
     }
   ];
@@ -511,34 +510,25 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
-      case 'game':
+      case 'scratch':
         return (
-          renderScratchGamePanel({
-            campaign,
-            onCampaignChange: (newCampaign) => {
-              console.log('[Game Panel] Campaign updated:', newCampaign);
-              setCampaign(newCampaign);
-            },
-            mode: 'edit'
-          }) || (
-            <ScratchConfigPanel 
-              scratchConfig={(campaign as any)?.gameConfig?.scratch || (campaignConfig as any)?.gameConfig?.scratch || {}}
-              onScratchConfigChange={(config: any) => {
-                const updatedCampaign = {
-                  ...(campaign || campaignConfig),
-                  gameConfig: {
-                    ...((campaign || campaignConfig)?.gameConfig || {}),
-                    scratch: config
-                  }
-                };
-                setCampaign(updatedCampaign);
-                if (onCampaignConfigChange) {
-                  onCampaignConfigChange(updatedCampaign);
+          <ScratchConfigPanel 
+            scratchConfig={(campaign as any)?.gameConfig?.scratch || (campaignConfig as any)?.gameConfig?.scratch || {}}
+            onScratchConfigChange={(config: any) => {
+              const updatedCampaign = {
+                ...(campaign || campaignConfig),
+                gameConfig: {
+                  ...((campaign || campaignConfig)?.gameConfig || {}),
+                  scratch: config
                 }
-              }}
-              selectedDevice={selectedDevice}
-            />
-          )
+              };
+              setCampaign(updatedCampaign);
+              if (onCampaignConfigChange) {
+                onCampaignConfigChange(updatedCampaign);
+              }
+            }}
+            selectedDevice={selectedDevice}
+          />
         );
       case 'form':
         return (
