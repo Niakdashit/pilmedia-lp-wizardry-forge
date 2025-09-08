@@ -1700,9 +1700,26 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Roue standardisée avec découpage cohérent */}
+              {/* Nouveau système de cartes à gratter */}
               {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
-                <ScratchGrid
+                (() => {
+                  // Feature flag pour le nouveau système
+                  const { isFeatureEnabled } = require('@/config/features');
+                  if (isFeatureEnabled('scratchcardGame')) {
+                    const { ScratchCardCanvas } = require('@/plugins/scratchcard/components/ScratchCardCanvas');
+                    const { createDefaultState } = require('@/plugins/scratchcard/store');
+                    const state = campaign?.plugins?.scratchcardGame || createDefaultState();
+                    return (
+                      <ScratchCardCanvas
+                        mode="preview"
+                        state={state}
+                        device={previewDevice || 'desktop'}
+                      />
+                    );
+                  }
+                  // Fallback vers l'ancien système
+                  return (
+                    <ScratchGrid
                   cards={(campaign?.gameConfig?.scratch?.cards || [
                     { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', color: '#E3C0B7' },
                     { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', color: '#E3C0B7' },
