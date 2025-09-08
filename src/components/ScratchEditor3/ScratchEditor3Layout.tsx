@@ -1130,6 +1130,7 @@ const ScratchEditor3Layout: React.FC<ScratchEditor3LayoutProps> = ({ mode = 'cam
             />
           </div>
         ) : (
+          /* Design Editor Mode */
           <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
@@ -1194,33 +1195,6 @@ const ScratchEditor3Layout: React.FC<ScratchEditor3LayoutProps> = ({ mode = 'cam
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
               />
-            )}
-
-            {/* Mobile Sidebar Drawer - only on mobile devices */}
-            {actualDevice === 'mobile' && (
-              <React.Suspense fallback={null}>
-                {(() => {
-                  const MobileSidebarDrawer = React.lazy(() => import('../QuizEditor/components/MobileSidebarDrawer'));
-                  return (
-                    <MobileSidebarDrawer
-                      onAddElement={handleAddElement}
-                      onBackgroundChange={handleBackgroundChange}
-                      onExtractedColorsChange={handleExtractedColorsChange}
-                      currentBackground={canvasBackground}
-                      campaignConfig={campaignConfig}
-                      onCampaignConfigChange={handleCampaignConfigChange}
-                      elements={canvasElements}
-                      onElementsChange={setCanvasElements}
-                      selectedElement={selectedElement}
-                      onElementUpdate={handleElementUpdate}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                    />
-                  );
-                })()}
-              </React.Suspense>
             )}
             {/* Main Canvas Area */}
             <DesignCanvas
