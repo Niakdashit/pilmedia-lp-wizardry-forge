@@ -154,7 +154,7 @@ const ScratchCardsManager: React.FC<ScratchCardsManagerProps> = ({
             <label className="text-sm font-medium text-gray-700">Image spécifique</label>
             <ImageUpload
               value={card.revealImage || ''}
-              onChange={(value) => onUpdateCard(index, 'revealMessage', value)}
+              onChange={(value) => onUpdateCard(index, 'revealImage', value)}
               label=""
             />
           </div>

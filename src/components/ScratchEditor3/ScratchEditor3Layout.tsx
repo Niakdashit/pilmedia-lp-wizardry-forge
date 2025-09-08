@@ -125,20 +125,23 @@ const ScratchEditor3Layout: React.FC<ScratchEditor3LayoutProps> = ({ mode = 'cam
     id: 'scratch-campaign-' + Date.now(),
     name: 'Nouvelle Campagne Scratch',
     gameType: 'scratch',
-    scratchConfig: {
-      gridSize: 20,
-      scratchRadius: 15,
-      revealThreshold: 0.6,
-      backgroundColor: '#C0C0C0',
-      foregroundColor: '#FFD700',
-      showGrid: true,
-      enablePreview: true,
-      cards: [
-        { id: 'card-1', content: '🎉 Surprise 1' },
-        { id: 'card-2', content: '💎 Bonus 2' },
-        { id: 'card-3', content: '🏆 Prix 3' },
-        { id: 'card-4', content: '🎁 Cadeau 4' }
-      ]
+    gameConfig: {
+      scratch: {
+        gridSize: 20,
+        scratchRadius: 15,
+        revealThreshold: 0.6,
+        backgroundColor: '#C0C0C0',
+        foregroundColor: '#FFD700',
+        showGrid: true,
+        enablePreview: true,
+        scratchColor: '#C0C0C0',
+        cards: [
+          { id: 'card-1', revealMessage: '🎉 Surprise 1', color: '#E3C0B7', scratchColor: '#C0C0C0' },
+          { id: 'card-2', revealMessage: '💎 Bonus 2', color: '#E3C0B7', scratchColor: '#C0C0C0' },
+          { id: 'card-3', revealMessage: '🏆 Prix 3', color: '#E3C0B7', scratchColor: '#C0C0C0' },
+          { id: 'card-4', revealMessage: '🎁 Cadeau 4', color: '#E3C0B7', scratchColor: '#C0C0C0' }
+        ]
+      }
     },
     design: {
       wheelConfig: {

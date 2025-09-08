@@ -20,16 +20,21 @@ const ScratchGameConfig: React.FC<ScratchGameConfigProps> = ({
   const MAX_CARDS = 6;
 
   const handleScratchChange = (field: string, value: any) => {
-    setCampaign((prev: any) => ({
-      ...prev,
-      gameConfig: {
-        ...prev.gameConfig,
-        scratch: {
-          ...prev.gameConfig?.scratch,
-          [field]: value
+    console.log('[ScratchGameConfig] Updating field:', field, 'with value:', value);
+    setCampaign((prev: any) => {
+      const updated = {
+        ...prev,
+        gameConfig: {
+          ...prev.gameConfig,
+          scratch: {
+            ...prev.gameConfig?.scratch,
+            [field]: value
+          }
         }
-      }
-    }));
+      };
+      console.log('[ScratchGameConfig] Updated campaign:', updated);
+      return updated;
+    });
   };
 
   // Ensure cards are properly typed as ScratchCard[]
@@ -61,7 +66,8 @@ const ScratchGameConfig: React.FC<ScratchGameConfigProps> = ({
   // Debug logging for color changes
   useEffect(() => {
     console.log('[ScratchGameConfig] Cards state:', cards);
-  }, [cards]);
+    console.log('[ScratchGameConfig] Full campaign state:', campaign);
+  }, [cards, campaign]);
 
   // Simplified direct color application
   const handleColorChangeDirect = useCallback((cardId: string, color: string) => {
