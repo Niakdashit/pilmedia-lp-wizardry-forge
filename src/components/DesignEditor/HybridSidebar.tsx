@@ -513,11 +513,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'scratch':
         return (
           <ScratchConfigPanel 
-            scratchConfig={(campaign as any)?.scratchConfig || (campaignConfig as any)?.scratchConfig}
+            scratchConfig={(campaign as any)?.gameConfig?.scratch || (campaignConfig as any)?.gameConfig?.scratch || {}}
             onScratchConfigChange={(config: any) => {
               const updatedCampaign = {
                 ...(campaign || campaignConfig),
-                scratchConfig: config
+                gameConfig: {
+                  ...((campaign || campaignConfig)?.gameConfig || {}),
+                  scratch: config
+                }
               };
               setCampaign(updatedCampaign);
               if (onCampaignConfigChange) {

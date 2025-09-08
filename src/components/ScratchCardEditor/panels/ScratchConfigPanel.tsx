@@ -84,7 +84,17 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
   const clearCoverImage = () => handleConfigChange({ coverImage: undefined });
   */
   
-  const handleCoverColorChange = (value: string) => handleConfigChange({ overlayColor: value, coverColor: value });
+  const handleCoverColorChange = (value: string) => {
+    handleConfigChange({ overlayColor: value, coverColor: value });
+    // Mettre à jour aussi la couleur de toutes les cartes
+    if (scratchConfig.cards && Array.isArray(scratchConfig.cards)) {
+      const updatedCards = scratchConfig.cards.map((card: any) => ({
+        ...card,
+        color: value
+      }));
+      handleConfigChange({ cards: updatedCards });
+    }
+  };
   const handleCardImageUpload = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
