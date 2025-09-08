@@ -14,7 +14,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import ScratchGameConfig from '../ModernEditor/GameConfigs/ScratchGameConfig';
+import ScratchConfigPanel from '../ScratchCardEditor/panels/ScratchConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -512,14 +512,19 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'scratch':
         return (
-          <ScratchGameConfig 
-            campaign={campaign || campaignConfig}
-            setCampaign={(updatedCampaign: any) => {
+          <ScratchConfigPanel 
+            scratchConfig={(campaign as any)?.scratchConfig || (campaignConfig as any)?.scratchConfig}
+            onScratchConfigChange={(config: any) => {
+              const updatedCampaign = {
+                ...(campaign || campaignConfig),
+                scratchConfig: config
+              };
               setCampaign(updatedCampaign);
               if (onCampaignConfigChange) {
                 onCampaignConfigChange(updatedCampaign);
               }
             }}
+            selectedDevice={selectedDevice}
           />
         );
       case 'form':

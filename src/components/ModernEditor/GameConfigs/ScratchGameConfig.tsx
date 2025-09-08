@@ -72,14 +72,11 @@ const ScratchGameConfig: React.FC<ScratchGameConfigProps> = ({
   // Simplified direct color application
   const handleColorChangeDirect = useCallback((cardId: string, color: string) => {
     console.log('[ScratchGameConfig] Direct color change:', { cardId, color });
-    console.log('[ScratchGameConfig] Campaign before update:', campaign);
     updateCardById(cardId, { color });
 
-    // Force re-render après mise à jour de la couleur
-    setTimeout(() => {
-      console.log('[ScratchGameConfig] Campaign after color update:', campaign);
-    }, 100);
-  }, [updateCardById, campaign]);
+    // Assure-toi d'envoyer la couleur à chaque changement (selon le patch)
+    // Note: Comme on n'a pas d'iframe, on utilise les mises à jour directes du state
+  }, [updateCardById]);
 
   const handleCoverSelectedDirect = useCallback(async (cardId: string, file: File) => {
     try {
