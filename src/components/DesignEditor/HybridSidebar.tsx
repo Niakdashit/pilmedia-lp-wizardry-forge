@@ -515,7 +515,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return (
           renderScratchGamePanel({
             campaign,
-            onCampaignChange: setCampaign,
+            onCampaignChange: (newCampaign) => {
+              console.log('[Game Panel] Campaign updated:', newCampaign);
+              setCampaign(newCampaign);
+            },
             mode: 'edit'
           }) || (
             <ScratchConfigPanel 

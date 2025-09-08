@@ -1700,33 +1700,60 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Système de cartes à gratter ou roue */}
+              {/* Système de cartes à gratter avec feature flag */}
               {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
-                <ScratchGrid
-                  cards={(campaign?.gameConfig?.scratch?.cards || [
-                    { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', color: '#E3C0B7' },
-                    { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', color: '#E3C0B7' },
-                    { id: 'card-3', text: '🏆 Prix 3', contentType: 'text', color: '#E3C0B7' },
-                    { id: 'card-4', text: '🎁 Cadeau 4', contentType: 'text', color: '#E3C0B7' }
-                  ]).map((card: any) => ({
-                    id: card.id,
-                    content: card.contentType === 'image' && card.imageUrl ? (
-                      <img src={card.imageUrl} alt={card.revealMessage || 'Carte'} className="w-full h-full object-cover" />
-                    ) : (
-                      card.revealMessage || card.text || card.content || 'Carte'
-                    ),
-                    overlayColor: card.color || campaign?.gameConfig?.scratch?.overlayColor || '#E3C0B7',
-                    contentBg: '#ffffff'
-                  }))}
-                  overlayColor={campaign?.gameConfig?.scratch?.overlayColor || '#E3C0B7'}
-                  brushSize={campaign?.gameConfig?.scratch?.scratchRadius || 15}
-                  revealThreshold={campaign?.gameConfig?.scratch?.revealThreshold || 0.6}
-                  device={selectedDevice}
-                  background={background}
-                  onReveal={(cardId) => {
-                    console.log('🎯 Carte révélée:', cardId);
-                  }}
-                />
+                (() => {
+                  console.log('[DesignCanvas] Chargement du système de cartes à gratter...');
+                  try {
+                    // Importer le système de feature flag
+                    const { isFeatureEnabled } = require('@/config/features');
+                    const isNewSystemEnabled = isFeatureEnabled('scratchcardGame');
+                    console.log('[DesignCanvas] Feature scratchcardGame enabled:', isNewSystemEnabled);
+                    
+                    if (isNewSystemEnabled) {
+                      // Nouveau système de cartes à gratter
+                      const { renderScratchCardSystem } = require('@/plugins/scratchcard/integration');
+                      console.log('[DesignCanvas] Using NEW ScratchCard system');
+                      return renderScratchCardSystem({
+                        campaign,
+                        previewDevice: selectedDevice,
+                        mode: 'preview'
+                      });
+                    }
+                  } catch (error) {
+                    console.warn('[DesignCanvas] Failed to load new system, falling back:', error);
+                  }
+                  
+                  // Fallback vers l'ancien système
+                  console.log('[DesignCanvas] Using OLD ScratchGrid system');
+                  return (
+                    <ScratchGrid
+                      cards={(campaign?.gameConfig?.scratch?.cards || [
+                        { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', color: '#E3C0B7' },
+                        { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', color: '#E3C0B7' },
+                        { id: 'card-3', text: '🏆 Prix 3', contentType: 'text', color: '#E3C0B7' },
+                        { id: 'card-4', text: '🎁 Cadeau 4', contentType: 'text', color: '#E3C0B7' }
+                      ]).map((card: any) => ({
+                        id: card.id,
+                        content: card.contentType === 'image' && card.imageUrl ? (
+                          <img src={card.imageUrl} alt={card.revealMessage || 'Carte'} className="w-full h-full object-cover" />
+                        ) : (
+                          card.revealMessage || card.text || card.content || 'Carte'
+                        ),
+                        overlayColor: card.color || campaign?.gameConfig?.scratch?.overlayColor || '#E3C0B7',
+                        contentBg: '#ffffff'
+                      }))}
+                      overlayColor={campaign?.gameConfig?.scratch?.overlayColor || '#E3C0B7'}
+                      brushSize={campaign?.gameConfig?.scratch?.scratchRadius || 15}
+                      revealThreshold={campaign?.gameConfig?.scratch?.revealThreshold || 0.6}
+                      device={selectedDevice}
+                      background={background}
+                      onReveal={(cardId) => {
+                        console.log('🎯 Carte révélée:', cardId);
+                      }}
+                    />
+                  );
+                })()
               ) : (
                 <StandardizedWheel
                   campaign={campaign}

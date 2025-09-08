@@ -19,18 +19,27 @@ export const renderScratchCardSystem = (props: {
   
   // Check feature flag
   if (!isFeatureEnabled('scratchcardGame')) {
+    console.log('[ScratchCardIntegration] Feature disabled, returning null');
     return null; // Return null to use fallback system
   }
 
   // Get scratch card state from campaign store
   const scratchCardState = campaign?.plugins?.scratchcardGame || createDefaultState();
+  
+  console.log('[ScratchCardIntegration] Rendering with state:', scratchCardState);
+  console.log('[ScratchCardIntegration] Campaign has plugin data:', !!campaign?.plugins?.scratchcardGame);
 
   return (
     <ScratchCardCanvas
       mode={mode}
       state={scratchCardState}
       device={(previewDevice as 'desktop' | 'tablet' | 'mobile') || 'desktop'}
-      onStateChange={onStateChange}
+      onStateChange={(newState) => {
+        console.log('[ScratchCardIntegration] State changed:', newState);
+        if (onStateChange) {
+          onStateChange(newState);
+        }
+      }}
       onCardProgress={(cardId: string, progress: number) => {
         console.log(`[ScratchCard] Card ${cardId} progress: ${Math.round(progress * 100)}%`);
       }}
