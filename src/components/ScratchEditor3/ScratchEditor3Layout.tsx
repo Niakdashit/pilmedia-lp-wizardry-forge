@@ -1102,8 +1102,6 @@ const ScratchEditor3Layout: React.FC<ScratchEditor3LayoutProps> = ({ mode = 'cam
             onSave={handleSaveAndContinue}
             showSaveCloseButtons={false}
             onNavigateToSettings={handleNavigateToSettings}
-            showUndoRedo={false}
-            showSettingsButton={false}
           />
 
           {/* Bouton d'aide des raccourcis clavier */}

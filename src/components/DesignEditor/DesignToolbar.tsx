@@ -23,10 +23,6 @@ interface DesignToolbarProps {
   showSaveCloseButtons?: boolean;
   // Navigation directe vers l'écran Paramétrage (même chemin que "Sauvegarder et continuer")
   onNavigateToSettings?: () => void;
-  // Contrôle l'affichage des boutons undo/redo
-  showUndoRedo?: boolean;
-  // Contrôle l'affichage du bouton paramétrage
-  showSettingsButton?: boolean;
 }
 
 const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
@@ -43,9 +39,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
   mode = 'campaign',
   onSave,
   showSaveCloseButtons = true,
-  onNavigateToSettings,
-  showUndoRedo = true,
-  showSettingsButton = true
+  onNavigateToSettings
 }) => {
   const navigate = useNavigate();
   const saveDesktopLabel = mode === 'template' ? 'Enregistrer template' : 'Sauvegarder et continuer';
@@ -55,34 +49,32 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
       {/* Left Section - Logo/Title */}
       <div className="flex items-center space-x-3">
         <h1 className="text-lg font-bold text-gray-900 font-inter hidden">Design Editor</h1>
-        {showUndoRedo && (
-          <div className="flex items-center space-x-1">
-            <button 
-              onClick={onUndo}
-              disabled={!canUndo}
-              className={`p-1.5 rounded-lg transition-all duration-200 ${
-                canUndo 
-                  ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
-                  : 'text-gray-400 cursor-not-allowed'
-              }`}
-              title={`Annuler (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+Z)`}
-            >
-              <Undo className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={onRedo}
-              disabled={!canRedo}
-              className={`p-1.5 rounded-lg transition-all duration-200 ${
-                canRedo 
-                  ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
-                  : 'text-gray-400 cursor-not-allowed'
-              }`}
-              title={`Rétablir (${navigator.platform.includes('Mac') ? 'Cmd+Shift' : 'Ctrl+Y'}+Z)`}
-            >
-              <Redo className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center space-x-1">
+          <button 
+            onClick={onUndo}
+            disabled={!canUndo}
+            className={`p-1.5 rounded-lg transition-all duration-200 ${
+              canUndo 
+                ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
+            title={`Annuler (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+Z)`}
+          >
+            <Undo className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={onRedo}
+            disabled={!canRedo}
+            className={`p-1.5 rounded-lg transition-all duration-200 ${
+              canRedo 
+                ? 'hover:bg-[hsl(var(--sidebar-hover))] text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]' 
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
+            title={`Rétablir (${navigator.platform.includes('Mac') ? 'Cmd+Shift' : 'Ctrl+Y'}+Z)`}
+          >
+            <Redo className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Center Section - Device Selector */}
@@ -159,14 +151,12 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <Eye className="w-4 h-4 mr-1" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
-        {showSettingsButton && (
-          <button
-            onClick={onNavigateToSettings}
-            className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Paramétrage
-          </button>
-        )}
+        <button
+          onClick={onNavigateToSettings}
+          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Paramétrage
+        </button>
         {showSaveCloseButtons && (
           <>
             <button 
