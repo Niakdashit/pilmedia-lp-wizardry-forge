@@ -402,7 +402,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               device={selectedDevice}
               background={currentBackground}
               cards={scratchConfig.cards?.map((c: any) => {
-                console.log(`Card ${c.id}: imageUrl=${!!c.imageUrl}, cardColor=${c.color}, globalColor=${scratchConfig.overlayColor}`);
+                console.log(`[ScratchCardEditorLayout] Mapping card ${c.id}: color=${c.color}, hasCover=${!!(c.overlayImage || c.imageUrl || c.cover)}`);
                 const hasCover = !!(c.overlayImage || c.imageUrl || c.cover);
                 return {
                   id: c.id,

@@ -34,13 +34,16 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
   };
 
   const handleCardColorChange = (id: string, color: string) => {
+    console.log('[ScratchConfigPanel] handleCardColorChange called:', { id, color });
     const cards = Array.isArray(scratchConfig.cards) ? [...scratchConfig.cards] : [];
     const idx = cards.findIndex((c: any) => c.id === id);
     if (idx >= 0) {
       cards[idx] = { ...cards[idx], color };
+      console.log('[ScratchConfigPanel] Updated card:', { id, color, card: cards[idx] });
       handleConfigChange({ cards });
 
       // Send color change to canvas via postMessage
+      console.log('[ScratchConfigPanel] Sending postMessage SET_CARD_COLOR:', { cardId: id, color });
       window.postMessage({ t: 'SET_CARD_COLOR', cardId: id, color }, '*');
     }
   };
