@@ -1703,24 +1703,24 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               {/* Roue standardisée avec découpage cohérent */}
               {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
                 <ScratchGrid
-                  cards={(campaign?.scratchConfig?.cards || [
-                    { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', coverColor: '#841b60' },
-                    { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', coverColor: '#841b60' },
-                    { id: 'card-3', text: '🏆 Prix 3', contentType: 'text', coverColor: '#841b60' },
-                    { id: 'card-4', text: '🎁 Cadeau 4', contentType: 'text', coverColor: '#841b60' }
+                  cards={(campaign?.gameConfig?.scratch?.cards || [
+                    { id: 'card-1', revealMessage: '🎉 Surprise 1', color: '#E3C0B7', scratchColor: '#C0C0C0' },
+                    { id: 'card-2', revealMessage: '💎 Bonus 2', color: '#E3C0B7', scratchColor: '#C0C0C0' },
+                    { id: 'card-3', revealMessage: '🏆 Prix 3', color: '#E3C0B7', scratchColor: '#C0C0C0' },
+                    { id: 'card-4', revealMessage: '🎁 Cadeau 4', color: '#E3C0B7', scratchColor: '#C0C0C0' }
                   ]).map((card: any) => ({
                     id: card.id,
-                    content: card.contentType === 'image' && card.imageUrl ? (
-                      <img src={card.imageUrl} alt={card.text || 'Carte'} className="w-full h-full object-cover" />
+                    content: card.cover ? (
+                      <img src={card.cover.value} alt={card.revealMessage || 'Carte'} className="w-full h-full object-cover" />
                     ) : (
-                      card.text || card.content || 'Carte'
+                      card.revealMessage || card.content || 'Carte'
                     ),
-                    overlayColor: card.coverColor || campaign?.scratchConfig?.overlayColor || '#C0C0C0',
+                    overlayColor: card.color || '#E3C0B7',
                     contentBg: '#ffffff'
                   }))}
-                  overlayColor={campaign?.scratchConfig?.overlayColor || '#C0C0C0'}
-                  brushSize={campaign?.scratchConfig?.scratchRadius || 15}
-                  revealThreshold={campaign?.scratchConfig?.revealThreshold || 0.6}
+                  overlayColor={campaign?.gameConfig?.scratch?.scratchColor || '#C0C0C0'}
+                  brushSize={campaign?.gameConfig?.scratch?.scratchRadius || 15}
+                  revealThreshold={campaign?.gameConfig?.scratch?.revealThreshold || 0.6}
                   device={selectedDevice}
                   background={background}
                   onReveal={(cardId) => {
