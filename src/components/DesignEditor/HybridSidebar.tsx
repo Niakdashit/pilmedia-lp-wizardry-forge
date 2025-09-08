@@ -14,7 +14,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import ScratchConfigPanel from '../ScratchCardEditor/panels/ScratchConfigPanel';
+import { renderScratchGamePanel } from '../../plugins/scratchcard/integration';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -305,8 +305,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: FormInput
     },
     { 
-      id: 'scratch', 
-      label: 'Grattage', 
+      id: 'game', 
+      label: 'Jeu', 
       icon: Gamepad2
     }
   ];
@@ -510,25 +510,31 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
-      case 'scratch':
+      case 'game':
         return (
-          <ScratchConfigPanel 
-            scratchConfig={(campaign as any)?.gameConfig?.scratch || (campaignConfig as any)?.gameConfig?.scratch || {}}
-            onScratchConfigChange={(config: any) => {
-              const updatedCampaign = {
-                ...(campaign || campaignConfig),
-                gameConfig: {
-                  ...((campaign || campaignConfig)?.gameConfig || {}),
-                  scratch: config
+          renderScratchGamePanel({
+            campaign,
+            onCampaignChange: setCampaign,
+            mode: 'edit'
+          }) || (
+            <ScratchConfigPanel 
+              scratchConfig={(campaign as any)?.gameConfig?.scratch || (campaignConfig as any)?.gameConfig?.scratch || {}}
+              onScratchConfigChange={(config: any) => {
+                const updatedCampaign = {
+                  ...(campaign || campaignConfig),
+                  gameConfig: {
+                    ...((campaign || campaignConfig)?.gameConfig || {}),
+                    scratch: config
+                  }
+                };
+                setCampaign(updatedCampaign);
+                if (onCampaignConfigChange) {
+                  onCampaignConfigChange(updatedCampaign);
                 }
-              };
-              setCampaign(updatedCampaign);
-              if (onCampaignConfigChange) {
-                onCampaignConfigChange(updatedCampaign);
-              }
-            }}
-            selectedDevice={selectedDevice}
-          />
+              }}
+              selectedDevice={selectedDevice}
+            />
+          )
         );
       case 'form':
         return (

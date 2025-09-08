@@ -1700,26 +1700,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Nouveau système de cartes à gratter */}
+              {/* Système de cartes à gratter ou roue */}
               {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
-                (() => {
-                  // Feature flag pour le nouveau système
-                  const { isFeatureEnabled } = require('@/config/features');
-                  if (isFeatureEnabled('scratchcardGame')) {
-                    const { ScratchCardCanvas } = require('@/plugins/scratchcard/components/ScratchCardCanvas');
-                    const { createDefaultState } = require('@/plugins/scratchcard/store');
-                    const state = campaign?.plugins?.scratchcardGame || createDefaultState();
-                    return (
-                      <ScratchCardCanvas
-                        mode="preview"
-                        state={state}
-                        device={previewDevice || 'desktop'}
-                      />
-                    );
-                  }
-                  // Fallback vers l'ancien système
-                  return (
-                    <ScratchGrid
+                <ScratchGrid
                   cards={(campaign?.gameConfig?.scratch?.cards || [
                     { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', color: '#E3C0B7' },
                     { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', color: '#E3C0B7' },
@@ -1742,7 +1725,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   background={background}
                   onReveal={(cardId) => {
                     console.log('🎯 Carte révélée:', cardId);
-                    // Ici on pourrait déclencher des actions spécifiques
                   }}
                 />
               ) : (
@@ -1762,8 +1744,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   }}
                 />
               )}
-
-              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu - masqué pour ScratchEditor3 */}
               {!readOnly && !window.location.pathname.includes('scratch-editor3') && (campaign?.gameType !== 'scratch') && (
                 <div className="absolute bottom-2 right-2 z-50">
                   <WheelSettingsButton
