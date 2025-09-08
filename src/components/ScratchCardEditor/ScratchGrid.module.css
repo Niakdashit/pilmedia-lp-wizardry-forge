@@ -1,0 +1,52 @@
+/* Styles pour ScratchGrid - Gestion des couleurs et images avec priorité */
+
+.scratch-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  /* Base background - will be overridden by color or image */
+  background: #ffffff;
+  box-shadow: none;
+}
+
+/* Cartes sans couverture (couleur seulement) */
+.scratch-card[data-has-cover="false"] {
+  background-image: none !important;
+  /* background-color will be set dynamically via JavaScript */
+}
+
+/* Cartes avec couverture (image) - prend priorité */
+.scratch-card[data-has-cover="true"] {
+  background-image: var(--card-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent !important;
+}
+
+/* Masque de grattage - toujours au-dessus */
+.scratch-card canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  touch-action: none;
+  cursor: crosshair;
+  background: transparent;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Contenu de la carte (texte/image révélée) */
+.scratch-card .content {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #333;
+  border-radius: 20px;
+  overflow: hidden;
+  z-index: 1;
+}

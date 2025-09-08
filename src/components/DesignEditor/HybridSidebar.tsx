@@ -14,7 +14,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import GameManagementPanel from './panels/GameManagementPanel';
+import ScratchConfigPanel from '../ScratchCardEditor/panels/ScratchConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -305,8 +305,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: FormInput
     },
     { 
-      id: 'game', 
-      label: 'Jeu', 
+      id: 'scratch', 
+      label: 'Grattage', 
       icon: Gamepad2
     }
   ];
@@ -510,20 +510,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
-      case 'game':
+      case 'scratch':
         return (
-          <div className="p-4">
-            <GameManagementPanel 
-              campaign={campaign || campaignConfig}
-              setCampaign={(updatedCampaign) => {
-                // Mettre à jour l'état global ET local
-                setCampaign(updatedCampaign);
-                if (onCampaignConfigChange) {
-                  onCampaignConfigChange(updatedCampaign);
-                }
-              }}
-            />
-          </div>
+          <ScratchConfigPanel 
+            scratchConfig={(campaign as any)?.scratchConfig || (campaignConfig as any)?.scratchConfig}
+            onScratchConfigChange={(config: any) => {
+              const updatedCampaign = {
+                ...(campaign || campaignConfig),
+                scratchConfig: config
+              };
+              setCampaign(updatedCampaign);
+              if (onCampaignConfigChange) {
+                onCampaignConfigChange(updatedCampaign);
+              }
+            }}
+            selectedDevice={selectedDevice}
+          />
         );
       case 'form':
         return (

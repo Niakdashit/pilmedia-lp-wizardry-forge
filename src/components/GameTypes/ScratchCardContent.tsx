@@ -1,10 +1,12 @@
 
 import React from 'react';
+import type { ScratchCard } from '../../types/ScratchCard';
+import '../../styles/scratchCard.css';
 
 interface ScratchCardContentProps {
   showRevealContent: boolean;
   result: 'win' | 'lose' | null;
-  card: any;
+  card: ScratchCard;
   config: any;
   index: number;
   scratchColor?: string;
@@ -75,15 +77,38 @@ const ScratchCardContent: React.FC<ScratchCardContentProps> = ({
     );
   };
 
+  console.log('[ScratchCardContent] Card data:', { id: card.id, color: card.color, cover: card.cover });
+
   return (
-    <>
-      {showRevealContent && (
-        <div className="absolute inset-0">
-          {getResultContent()}
+    <div className="card relative w-full h-full" data-card-id={card.id}>
+      {/* Card cover - background color or image */}
+      <div
+        className="card-cover absolute inset-0"
+        data-has-cover={card.cover ? 'true' : 'false'}
+        data-card-color={card.color || '#E3C0B7'}
+        style={{
+          backgroundColor: !card.cover ? (card.color || '#E3C0B7') : 'transparent',
+          backgroundImage: card.cover ? `url(${card.cover.value})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 1
+        }}
+      >
+        {showRevealContent && (
+          <div className="absolute inset-0">
+            {getResultContent()}
+          </div>
+        )}
+      </div>
+
+      {/* Scratch mask - always on top */}
+      {!showRevealContent && (
+        <div className="scratch-mask">
+          {getScratchSurface()}
         </div>
       )}
-      {!showRevealContent && getScratchSurface()}
-    </>
+    </div>
   );
 };
 

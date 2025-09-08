@@ -1,7 +1,17 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { getDeviceDimensions } from '@/utils/deviceDimensions';
+import styles from './ScratchGrid.module.css';
 
-type CardDef = { id: string; content?: React.ReactNode; contentBg?: string; overlayColor?: string; overlayImage?: string };
+type CardDef = {
+  id: string;
+  content?: React.ReactNode;
+  contentBg?: string;
+  overlayColor?: string;
+  overlayImage?: string;
+  // Extended model for color management
+  color?: string; // Background color when no image is present
+  hasCover?: boolean; // Whether card has an uploaded image
+};
 
 interface ScratchGridProps {
   cards?: CardDef[];
@@ -21,7 +31,99 @@ interface ScratchGridProps {
  * - Chaque carte possède un canvas overlay qui s'efface via destination-out
  * - HiDPI aware (devicePixelRatio)
  * - ResizeObserver pour recalibrer les canvas
+ * - Support pour couvertures d'images via blob URLs (postMessage)
  */
+
+// Global object URL management for card covers
+const cardObjectUrls = new Map<string, string>();
+
+// Message handler for receiving card covers and colors from parent
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    
+    if (msg?.t === 'SET_CARD_COVER') {
+      const { cardId, mime, ab } = msg;
+      
+      // Revoke previous URL if exists
+      const prevUrl = cardObjectUrls.get(cardId);
+      if (prevUrl) {
+        URL.revokeObjectURL(prevUrl);
+      }
+      
+      // Create new blob URL
+      const blob = new Blob([ab], { type: mime });
+      const url = URL.createObjectURL(blob);
+      cardObjectUrls.set(cardId, url);
+      
+      // Apply cover to card element
+      applyCoverToCard(cardId, url);
+      
+      // Send acknowledgment
+      if (e.source && 'postMessage' in e.source) {
+        (e.source as any).postMessage({ t: 'CARD_COVER_APPLIED', cardId }, '*');
+      }
+    }
+    
+    if (msg?.t === 'SET_CARD_COLOR') {
+      const { cardId, color } = msg;
+      applyColorToCard(cardId, color);
+    }
+    
+    if (msg?.t === 'SYNC_STATE') {
+      const { cards } = msg;
+      // Apply colors for cards without covers
+      cards.forEach((card: any) => {
+        if (!card.hasCover && card.color) {
+          applyColorToCard(card.id, card.color);
+        }
+      });
+    }
+  });
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => {
+    for (const url of cardObjectUrls.values()) {
+      URL.revokeObjectURL(url);
+    }
+    cardObjectUrls.clear();
+  });
+}
+
+function applyCoverToCard(cardId: string, url: string) {
+  const cardEl = document.querySelector(`[data-id="${cardId}"]`) as HTMLElement;
+  if (cardEl) {
+    // Store the blob URL for use in canvas painting
+    cardEl.dataset.blobCoverUrl = url;
+    // Mark that this card has a cover (takes priority over color)
+    cardEl.setAttribute('data-has-cover', 'true');
+    // Set CSS custom property for background image
+    cardEl.style.setProperty('--card-bg-image', `url("${url}")`);
+    
+    // Trigger canvas repaint if the card is already set up
+    const canvas = cardEl.querySelector('canvas') as HTMLCanvasElement;
+    if (canvas) {
+      const event = new CustomEvent('repaint-cover');
+      canvas.dispatchEvent(event);
+    }
+  }
+}
+
+function applyColorToCard(cardId: string, color: string) {
+  const cardEl = document.querySelector(`[data-id="${cardId}"]`) as HTMLElement;
+  if (cardEl) {
+    // Check if card has a cover - if so, color should not override
+    const hasCover = cardEl.getAttribute('data-has-cover') === 'true';
+    if (hasCover) {
+      return; // Don't apply color if there's a cover
+    }
+    
+    // Set background color directly on the card element
+    cardEl.style.backgroundColor = color;
+    // Mark that this card has no cover
+    cardEl.setAttribute('data-has-cover', 'false');
+  }
+}
 const ScratchGrid: React.FC<ScratchGridProps> = ({
   cards,
   overlayColor = '#E3C6B7',
@@ -36,19 +138,18 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const activeCardIdRef = useRef<string | null>(null); // verrouiller la 1ère carte utilisée
 
-  const fourCards: CardDef[] = useMemo(() => {
-    if (cards && cards.length === 4) return cards;
-    const base: CardDef[] = [
-      { id: 'card-1', content: '🎉 Surprise 1' },
-      { id: 'card-2', content: '💎 Bonus 2' },
-      { id: 'card-3', content: '🏆 Prix 3' },
-      { id: 'card-4', content: '🎁 Cadeau 4' }
-    ];
-    if (!cards) return base;
-    // Fill or slice to ensure 4 cards
-    const merged = [...cards];
-    while (merged.length < 4) merged.push(base[merged.length]);
-    return merged.slice(0, 4);
+  const displayCards: CardDef[] = useMemo(() => {
+    if (!cards || cards.length === 0) {
+      return [
+        { id: 'card-1', content: '🎉 Surprise 1' },
+        { id: 'card-2', content: '💎 Bonus 2' },
+        { id: 'card-3', content: '🏆 Prix 3' },
+        { id: 'card-4', content: '🎁 Cadeau 4' }
+      ];
+    }
+    
+    // Support pour un nombre variable de cartes (pas seulement 4)
+    return cards;
   }, [cards]);
 
   useEffect(() => {
@@ -69,13 +170,32 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
       let lastPt: { x: number; y: number } | null = null;
       let img: HTMLImageElement | null = null;
       const cardOverlayImage = (cardEl as HTMLElement).dataset.overlayImage || overlayImage;
-      if (cardOverlayImage) {
+      const blobCoverUrl = (cardEl as HTMLElement).dataset.blobCoverUrl;
+      
+      // Priority: blob URL > overlayImage > global overlayImage
+      const imageSource = blobCoverUrl || cardOverlayImage;
+      
+      if (imageSource) {
         img = new Image();
-        img.src = cardOverlayImage;
+        img.src = imageSource;
         img.onload = () => {
           try { paintOverlay(); } catch {}
         };
       }
+      
+      // Listen for cover repaint events
+      const onRepaintCover = () => {
+        const newBlobUrl = (cardEl as HTMLElement).dataset.blobCoverUrl;
+        if (newBlobUrl && (!img || img.src !== newBlobUrl)) {
+          img = new Image();
+          img.src = newBlobUrl;
+          img.onload = () => {
+            try { paintOverlay(); } catch {}
+          };
+        }
+      };
+      
+      canvas.addEventListener('repaint-cover', onRepaintCover);
 
       const dpr = () => Math.max(1, Math.floor(window.devicePixelRatio || 1));
 
@@ -113,7 +233,7 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
           ctx.drawImage(img, dx, dy, dw, dh);
         } else {
           // Fallback to solid color foil
-          const cardOverlayColor = (cardEl as HTMLElement).dataset.overlay;
+          const cardOverlayColor = (cardEl as HTMLElement).dataset.overlay || overlayColor;
           const finalColor = cardOverlayColor || overlayColor || '#E3C6B7';
           console.log(`Drawing overlay color: ${finalColor} for card ${(cardEl as HTMLElement).dataset.id}, from dataset: ${cardOverlayColor}`);
           ctx.fillStyle = finalColor;
@@ -309,6 +429,7 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
         cancelAnimationFrame(rafId);
         canvas.removeEventListener('pointerdown', onPointerDown);
         canvas.removeEventListener('pointermove', onPointerMove);
+        canvas.removeEventListener('repaint-cover', onRepaintCover);
         window.removeEventListener('pointerup', onPointerUp);
       };
     };
@@ -325,7 +446,7 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
     return () => {
       disposers.forEach((d) => d && d());
     };
-  }, [fourCards, overlayColor, overlayImage, brushSize, revealThreshold]);
+  }, [displayCards, overlayColor, overlayImage, brushSize, revealThreshold]);
 
   const dims = getDeviceDimensions(device);
 
@@ -344,19 +465,25 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
     margin: '0 auto'
   };
 
-  // Layout responsive avec contrainte d'aspect 3/4 et respect de la hauteur visible
+  // Layout responsive dynamique basé sur le nombre de cartes
   const gap = device === 'desktop' ? 48 : 24;
   const verticalPadding = device === 'desktop' ? 64 : 24;
-  const maxGridWidth = Math.floor(dims.width * (device === 'desktop' ? 0.6 : 0.9));
-  const widthConstraint = Math.floor((maxGridWidth - gap) / 2);
-  const heightConstraint = Math.floor(((dims.height - 2 * verticalPadding - gap) * 3) / 8); // from 2*h + gap <= H-2P and h=w*4/3
+  const maxGridWidth = Math.floor(dims.width * (device === 'desktop' ? 0.8 : 0.9));
+  
+  // Calcul dynamique des colonnes selon le nombre de cartes
+  const cardCount = displayCards.length;
+  const cols = cardCount <= 4 ? 2 : Math.ceil(Math.sqrt(cardCount));
+  const rows = Math.ceil(cardCount / cols);
+  
+  const widthConstraint = Math.floor((maxGridWidth - gap * (cols - 1)) / cols);
+  const heightConstraint = Math.floor(((dims.height - 2 * verticalPadding - gap * (rows - 1)) * 3) / (4 * rows));
   const cardW = Math.max(120, Math.min(widthConstraint, heightConstraint));
   const cardH = Math.floor((cardW * 4) / 3);
-  const gridW = cardW * 2 + gap;
+  const gridW = cardW * cols + gap * (cols - 1);
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: `repeat(2, ${cardW}px)`,
+    gridTemplateColumns: `repeat(${cols}, ${cardW}px)`,
     gridAutoRows: `${cardH}px`,
     gap,
     width: gridW,
@@ -369,13 +496,14 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
       <div ref={containerRef} style={frameStyle}>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={gridStyle}>
-            {fourCards.map((c) => (
+            {displayCards.map((c: CardDef) => (
               <div
                 key={c.id}
-                className="scratch-card"
+                className={`scratch-card ${styles.scratchCard}`}
                 data-id={c.id}
                 data-overlay={c.overlayColor || ''}
                 data-overlay-image={c.overlayImage || ''}
+                data-has-cover={c.hasCover ? 'true' : 'false'}
                 style={{
                   position: 'relative',
                   // Single source of truth for radius
@@ -385,9 +513,11 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
                   overflow: 'hidden',
                   width: cardW,
                   height: cardH,
-                  // Always keep base card background white; overlay is drawn on canvas above
+                  // Base background - will be overridden by color or image
                   background: '#ffffff',
-                  boxShadow: 'none'
+                  boxShadow: 'none',
+                  // Apply color if no cover
+                  ...(c.color && !c.hasCover && { backgroundColor: c.color })
                 }}
               >
                 <div className="content" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontWeight: 700, color: '#333', borderRadius: 20, background: c.contentBg || '#ffffff', overflow: 'hidden', zIndex: 1 }}>

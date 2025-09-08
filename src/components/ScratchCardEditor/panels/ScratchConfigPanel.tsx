@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Upload, Gift, Type, Image as ImageIcon, Trash2, Plus, RotateCcw } from 'lucide-react';
 import { useEditorStore } from '@/stores/editorStore';
+import { toDataURL, isValidImageFile, CardCover } from '@/utils/imageUtils';
 
 interface ScratchConfigPanelProps {
   onBack?: () => void;
@@ -30,6 +31,18 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
       cards[idx] = { ...cards[idx], text: value };
     }
     handleConfigChange({ cards });
+  };
+
+  const handleCardColorChange = (id: string, color: string) => {
+    const cards = Array.isArray(scratchConfig.cards) ? [...scratchConfig.cards] : [];
+    const idx = cards.findIndex((c: any) => c.id === id);
+    if (idx >= 0) {
+      cards[idx] = { ...cards[idx], color };
+      handleConfigChange({ cards });
+
+      // Send color change to canvas via postMessage
+      window.postMessage({ t: 'SET_CARD_COLOR', cardId: id, color }, '*');
+    }
   };
 
   // (zone de grattage précise non utilisée dans la vue Grille)
@@ -72,17 +85,48 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
   */
   
   const handleCoverColorChange = (value: string) => handleConfigChange({ overlayColor: value, coverColor: value });
-  const handleCardImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCardImageUpload = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      updateCard(id, { contentType: 'image', imageUrl: url });
-    };
-    reader.readAsDataURL(file);
-    // reset input
+    
+    // Reset input immediately
     e.currentTarget.value = '';
+    
+    if (!isValidImageFile(file)) {
+      console.error('Invalid image file format or size too large');
+      return;
+    }
+
+    try {
+      // 1) Generate thumbnail for UI display
+      const thumbDataUrl = await toDataURL(file, 256, 0.85);
+      
+      // 2) Send ArrayBuffer to canvas via postMessage (direct to window since no iframe)
+      const arrayBuffer = await file.arrayBuffer();
+      window.postMessage(
+        { 
+          t: 'SET_CARD_COVER', 
+          cardId: id, 
+          mime: file.type, 
+          ab: arrayBuffer 
+        },
+        '*',
+        [arrayBuffer] // transferable
+      );
+      
+      // 3) Update card state with thumbnail and cover data
+      updateCard(id, { 
+        contentType: 'image', 
+        thumbDataUrl,
+        cover: { kind: 'data', mime: file.type, value: thumbDataUrl } as CardCover,
+        // Keep legacy fields for backward compatibility
+        imageUrl: thumbDataUrl, 
+        overlayImage: thumbDataUrl 
+      });
+      
+    } catch (error) {
+      console.error('Failed to process image upload:', error);
+    }
   };
 
   // textures pré-définies non utilisées dans cette version de l'onglet
@@ -239,30 +283,30 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                           </div>
                         )}
                       </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="relative w-7 h-7 shrink-0">
-                            <div
-                              className="absolute inset-0 rounded-full border border-gray-300 shadow-sm"
-                              style={{ background: (c.coverColor || '#841b60') as string }}
-                            />
-                            <input
-                              type="color"
-                              value={c.coverColor || '#841b60'}
-                              onChange={(e) => updateCard(c.id, { coverColor: e.target.value })}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                              aria-label={`Couleur de la carte ${index + 1}`}
-                            />
-                          </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Couleur de carte</label>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="relative w-7 h-7 shrink-0">
+                          <div
+                            className="absolute inset-0 rounded-full border border-gray-300 shadow-sm"
+                            style={{ background: (c.color || '#841b60') as string }}
+                          />
                           <input
-                            type="text"
-                            value={c.coverColor || '#841b60'}
-                            onChange={(e) => updateCard(c.id, { coverColor: e.target.value })}
-                            className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                            type="color"
+                            value={c.color || '#841b60'}
+                            onChange={(e) => handleCardColorChange(c.id, e.target.value)}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            aria-label={`Couleur de carte ${index + 1}`}
                           />
                         </div>
+                        <input
+                          type="text"
+                          value={c.color || '#841b60'}
+                          onChange={(e) => handleCardColorChange(c.id, e.target.value)}
+                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                        />
                       </div>
+                    </div>
                     </div>
 
                     <div>

@@ -282,23 +282,23 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setScratchConfig(prev => ({ ...prev, ...config }));
   }, []);
 
-  // Update campaign when state changes (excluding campaign itself to avoid infinite loop)
+  // Sync state to canvas when scratchConfig changes
   useEffect(() => {
-    if (campaign) {
-      const updatedCampaign = {
-        ...campaign,
-        design: {
-          ...campaign.design,
-          background: currentBackground.value,
-          extractedColors,
-          elements
-        },
-        scratchConfig,
-        updatedAt: new Date().toISOString()
-      };
-      setCampaign(updatedCampaign as any);
-    }
-  }, [currentBackground, extractedColors, elements, scratchConfig, setCampaign]);
+    const syncStateToCanvas = () => {
+      window.postMessage({
+        t: 'SYNC_STATE',
+        cards: (scratchConfig.cards || []).map((card: any) => ({
+          id: card.id,
+          color: card.color,
+          hasCover: !!(card.imageUrl || card.overlayImage)
+        }))
+      }, '*');
+    };
+
+    // Sync immediately and when cards change
+    const timeoutId = setTimeout(syncStateToCanvas, 100);
+    return () => clearTimeout(timeoutId);
+  }, [scratchConfig.cards]);
 
   // Handler: save and continue to settings (keep parity with other editors)
   const handleSaveAndContinue = React.useCallback(() => {
@@ -392,7 +392,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Canvas / Game area */}
-        <div className="flex-1 overflow-auto flex items-start justify-center py-6">
+        <div className="flex-1 overflow-auto flex items-start justify-center py-6" data-scratch-canvas>
             <ScratchGrid
               key={roundKey}
               overlayColor={scratchConfig.overlayColor}
@@ -407,18 +407,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   id: c.id,
                   // Use per-card color if available, else global color
                   overlayColor: c.coverColor || scratchConfig.overlayColor || '#E3C6B7',
-                  overlayImage: c.imageUrl,
+                  overlayImage: c.overlayImage || c.imageUrl,
                   // Revealed content based on card type
                   contentBg: c.contentType === 'text' ? '#ffffff' : '#ffffff',
                   content: (() => {
-                    // Text cards: white bg + black text
-                    if (c.contentType === 'text') {
-                      return (
-                        <span style={{ color: '#000000', fontSize: '18px', fontWeight: 600, textAlign: 'center' }}>
-                          {c.text || '🎉 Surprise'}
-                        </span>
-                      );
-                    }
                     // Check if this card is a winning card and should show prize image
                     const isWinningCard = assignment?.cardId === c.id;
                     if (isWinningCard && (scratchConfig as any).prizeImage) {
@@ -430,7 +422,19 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                         />
                       );
                     }
-                    // Default cards: show text content
+
+                    // For image cards, show the uploaded image as revealed content
+                    if (c.contentType === 'image' && c.imageUrl) {
+                      return (
+                        <img
+                          src={c.imageUrl}
+                          alt="Card content"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      );
+                    }
+
+                    // Default: show text content
                     return (
                       <span style={{ color: '#333', fontSize: '18px', textAlign: 'center' }}>
                         {c.text || '🎁 Prize'}

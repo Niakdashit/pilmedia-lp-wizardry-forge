@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ColorPaletteSelector from './ColorPaletteSelector';
 import ScratchSurfaceConfig from './ScratchConfig/ScratchSurfaceConfig';
 import ScratchRevealConfig from './ScratchConfig/ScratchRevealConfig';
 import ScratchCardsManager from './ScratchConfig/ScratchCardsManager';
 import ScratchHelpSection from './ScratchConfig/ScratchHelpSection';
+import type { ScratchCard } from '../../../types/ScratchCard';
 
 interface ScratchGameConfigProps {
   campaign: any;
@@ -31,30 +32,100 @@ const ScratchGameConfig: React.FC<ScratchGameConfigProps> = ({
     }));
   };
 
+  // Ensure cards are properly typed as ScratchCard[]
+  const cards: ScratchCard[] = campaign.gameConfig?.scratch?.cards && campaign.gameConfig.scratch.cards.length > 0
+    ? campaign.gameConfig.scratch.cards.map((card: any, index: number) => ({
+        id: card.id || `card-${index + 1}`,
+        color: card.color || '#E3C0B7',
+        cover: card.cover,
+        revealMessage: card.revealMessage || 'Félicitations !',
+        revealImage: card.revealImage || '',
+        scratchColor: card.scratchColor || '#C0C0C0'
+      }))
+    : [{ 
+        id: 'card-1', 
+        revealImage: '', 
+        revealMessage: 'Félicitations !', 
+        scratchColor: '#C0C0C0',
+        color: '#E3C0B7' // Default card color
+      }];
+
+  // Update card function that works with ScratchCard type
+  const updateCardById = (cardId: string, updates: Partial<ScratchCard>) => {
+    const updatedCards = cards.map(card => 
+      card.id === cardId ? { ...card, ...updates } : card
+    );
+    handleScratchChange('cards', updatedCards);
+  };
+
+  // Debug logging for color changes
+  useEffect(() => {
+    console.log('[ScratchGameConfig] Cards state:', cards);
+  }, [cards]);
+
+  // Simplified direct color application
+  const handleColorChangeDirect = useCallback((cardId: string, color: string) => {
+    console.log('[ScratchGameConfig] Direct color change:', { cardId, color });
+    updateCardById(cardId, { color });
+
+    // Assure-toi d'envoyer la couleur à chaque changement (selon le patch)
+    // Note: Comme on n'a pas d'iframe, on utilise les mises à jour directes du state
+  }, [updateCardById]);
+
+  const handleCoverSelectedDirect = useCallback(async (cardId: string, file: File) => {
+    try {
+      // Update store with cover info
+      updateCardById(cardId, {
+        cover: {
+          kind: 'blob',
+          mime: file.type,
+          value: URL.createObjectURL(file) // Temporary URL for display
+        }
+      });
+    } catch (error) {
+      console.error('Error handling cover selection:', error);
+    }
+  }, [updateCardById]);
+
+  const handleCoverRemovedDirect = useCallback((cardId: string) => {
+    console.log('[ScratchGameConfig] Cover removed for card:', cardId);
+    updateCardById(cardId, {
+      cover: undefined,
+      thumbDataUrl: undefined
+    });
+  }, [updateCardById]);
+
+  // Au montage / changement de mode : re-synchroniser (selon le patch)
+  useEffect(() => {
+    console.log('[ScratchGameConfig] Sync state to canvas:', cards);
+    // Dans notre cas, la synchronisation se fait via les props React directes
+    // plutôt que via postMessage à un iframe
+  }, [cards]);
+
   const addCard = () => {
-    const cards = campaign.gameConfig?.scratch?.cards || [];
     if (cards.length >= MAX_CARDS) return;
     
-    const newCard = { 
-      id: Date.now(), 
+    const newCard: ScratchCard = { 
+      id: `card-${Date.now()}`, 
       revealImage: '', 
       revealMessage: 'Félicitations !',
-      scratchColor: campaign.gameConfig?.scratch?.scratchColor || '#C0C0C0'
+      scratchColor: campaign.gameConfig?.scratch?.scratchColor || '#C0C0C0',
+      color: '#E3C0B7' // Default card color
     };
     handleScratchChange('cards', [...cards, newCard]);
   };
 
   const removeCard = (index: number) => {
-    const cards = [...(campaign.gameConfig?.scratch?.cards || [])];
-    if (cards.length <= 1) return;
-    cards.splice(index, 1);
-    handleScratchChange('cards', cards);
+    const updatedCards = [...cards];
+    if (updatedCards.length <= 1) return;
+    updatedCards.splice(index, 1);
+    handleScratchChange('cards', updatedCards);
   };
 
   const updateCard = (index: number, field: string, value: string) => {
-    const cards = [...(campaign.gameConfig?.scratch?.cards || [])];
-    cards[index] = { ...cards[index], [field]: value };
-    handleScratchChange('cards', cards);
+    const updatedCards = [...cards];
+    updatedCards[index] = { ...updatedCards[index], [field]: value };
+    handleScratchChange('cards', updatedCards);
   };
 
   const handlePaletteSelect = (palette: any) => {
@@ -72,11 +143,6 @@ const ScratchGameConfig: React.FC<ScratchGameConfigProps> = ({
       }
     }));
   };
-
-  // S'assurer qu'il y a au moins une carte par défaut
-  const cards = campaign.gameConfig?.scratch?.cards && campaign.gameConfig.scratch.cards.length > 0
-    ? campaign.gameConfig.scratch.cards
-    : [{ id: 1, revealImage: '', revealMessage: 'Félicitations !', scratchColor: '#C0C0C0' }];
 
   return (
     <div className="space-y-6">
@@ -111,6 +177,9 @@ const ScratchGameConfig: React.FC<ScratchGameConfigProps> = ({
         onAddCard={addCard}
         onRemoveCard={removeCard}
         onUpdateCard={updateCard}
+        onColorChange={handleColorChangeDirect}
+        onCoverSelected={handleCoverSelectedDirect}
+        onCoverRemoved={handleCoverRemovedDirect}
         maxCards={MAX_CARDS}
       />
 

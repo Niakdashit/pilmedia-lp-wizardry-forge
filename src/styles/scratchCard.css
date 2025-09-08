@@ -1,0 +1,49 @@
+/* Patch CSS (éviter les recouvrements) */
+.card { 
+  position: relative; 
+}
+.card-cover {
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Quand pas d'image, on s'assure que rien ne masque la couleur */
+.card-cover[data-has-cover="false"] {
+  background-image: none !important;
+}
+
+/* Le masque scratch au-dessus mais non bloquant */
+.scratch-mask {
+  position: absolute; 
+  inset: 0; 
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Éviter les placeholders gris qui masqueraient la couleur */
+.card-cover::before,
+.card-cover::after {
+  display: none !important;
+}
+
+/* Assurer que les couleurs de fond s'affichent correctement */
+.card-cover[data-has-cover="false"] {
+  background-color: var(--card-color, #cfcfcf) !important;
+  background-image: none !important;
+}
+
+/* Styles pour le mode édition - masque semi-transparent */
+.scratch-mask.edit-mode {
+  background: rgba(128, 128, 128, 0.3);
+  pointer-events: none;
+}
+
+/* Styles pour le mode aperçu - masque opaque */
+.scratch-mask.preview-mode {
+  background: #888;
+  pointer-events: auto;
+}

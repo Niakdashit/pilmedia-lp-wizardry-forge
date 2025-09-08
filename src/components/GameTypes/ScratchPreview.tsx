@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ScratchGameGrid from './ScratchGameGrid';
 import type { Prize } from '../../types/PrizeSystem';
+import { ScratchCardCanvasHandlers } from '../../utils/scratchCardCanvasHandlers';
 
 interface ScratchPreviewProps {
   config?: any;
@@ -40,10 +41,17 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   const [scratchStarted, setScratchStarted] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
-  // Clear any previous session data on component mount to ensure fresh start
+  // Initialize canvas handlers for color system
   useEffect(() => {
+    const canvasHandlers = new ScratchCardCanvasHandlers();
+    
+    // Clear any previous session data on component mount to ensure fresh start
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(SCRATCH_STARTED_KEY);
+    
+    return () => {
+      canvasHandlers.cleanup();
+    };
   }, []);
 
   // ✅ CORRECTION : Pas d'autostart si disabled=true (formulaire non validé)
@@ -104,13 +112,23 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
     }
   };
 
-  // Ensure we have at least one card with proper defaults
-  const cards = config?.cards && config.cards.length > 0 ? config.cards : [{
-    id: 1,
-    revealImage: config?.revealImage || '',
-    revealMessage: config?.revealMessage || 'Félicitations !',
-    scratchColor: config?.scratchColor || '#C0C0C0'
-  }];
+  // Ensure we have at least one card with proper defaults and IDs
+  const cards = config?.cards && config.cards.length > 0
+    ? config.cards.map((card: any, index: number) => ({
+        id: card.id || `card-${index + 1}`,
+        color: card.color || '#E3C0B7',
+        cover: card.cover,
+        revealMessage: card.revealMessage || 'Félicitations !',
+        revealImage: card.revealImage || '',
+        scratchColor: card.scratchColor || '#C0C0C0'
+      }))
+    : [{ 
+        id: 'card-1', 
+        revealImage: config?.revealImage || '', 
+        revealMessage: config?.revealMessage || 'Félicitations !',
+        scratchColor: config?.scratchColor || '#C0C0C0',
+        color: '#E3C0B7' // Default card color
+      }];
 
   // ✅ INTERFACE DE DÉMARRAGE : respecte le funnel unlocked
   if (!gameStarted) {

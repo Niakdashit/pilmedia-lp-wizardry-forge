@@ -12,6 +12,7 @@ const Statistics = lazy(() => import('./pages/Statistics'));
 const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
+const ScratchEditor3 = lazy(() => import('./pages/ScratchEditor3'));
 const TemplateEditor = lazy(() => import('./pages/TemplateEditor'));
 const TemplatesEditor = lazy(() => import('./pages/TemplatesEditor'));
 const CampaignSettingsLayout = lazy(() => import('./pages/CampaignSettings/CampaignSettingsLayout'));
@@ -68,6 +69,7 @@ function App() {
               <Route path="/design-editor" element={<DesignEditor />} />
               <Route path="/quiz-editor" element={<QuizEditor />} />
               <Route path="/scratch-editor" element={<ScratchCardEditor />} />
+              <Route path="/scratch-editor3" element={<ScratchEditor3 />} />
               <Route path="/template-editor" element={<TemplateEditor />} />
               <Route path="/campaign/:id/settings/*" element={<CampaignSettingsLayout />}>
                 <Route index element={<ChannelsStep />} />

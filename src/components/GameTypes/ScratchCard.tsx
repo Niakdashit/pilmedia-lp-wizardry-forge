@@ -5,9 +5,10 @@ import ScratchCanvas from './ScratchCanvas';
 import ScratchCardContent from './ScratchCardContent';
 import ScratchCardOverlays from './ScratchCardOverlays';
 import type { Prize } from '../../types/PrizeSystem';
+import type { ScratchCard as ScratchCardType } from '../../types/ScratchCard';
 
 interface ScratchCardProps {
-  card: any;
+  card: ScratchCardType;
   index: number;
   gameSize: string;
   gameStarted: boolean;

@@ -4,6 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
+import ScratchGrid from '../ScratchCardEditor/ScratchGrid';
 import SmartAlignmentGuides from './components/SmartAlignmentGuides';
 import AlignmentToolbar from './components/AlignmentToolbar';
 import GridOverlay from './components/GridOverlay';
@@ -1700,24 +1701,53 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               })()}
 
               {/* Roue standardisée avec découpage cohérent */}
-              <StandardizedWheel
-                campaign={campaign}
-                device={selectedDevice}
-                shouldCropWheel={true}
-                disabled={readOnly}
-                getCanonicalConfig={getCanonicalConfig}
-                updateWheelConfig={updateWheelConfig}
-                extractedColors={extractedColors}
-                wheelModalConfig={wheelModalConfig}
-                onClick={() => {
-                  if (readOnly) return;
-                  console.log('🔘 Clic sur la roue détecté');
-                  onWheelPanelChange?.(true);
-                }}
-              />
+              {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
+                <ScratchGrid
+                  cards={(campaign?.scratchConfig?.cards || [
+                    { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', coverColor: '#841b60' },
+                    { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', coverColor: '#841b60' },
+                    { id: 'card-3', text: '🏆 Prix 3', contentType: 'text', coverColor: '#841b60' },
+                    { id: 'card-4', text: '🎁 Cadeau 4', contentType: 'text', coverColor: '#841b60' }
+                  ]).map((card: any) => ({
+                    id: card.id,
+                    content: card.contentType === 'image' && card.imageUrl ? (
+                      <img src={card.imageUrl} alt={card.text || 'Carte'} className="w-full h-full object-cover" />
+                    ) : (
+                      card.text || card.content || 'Carte'
+                    ),
+                    overlayColor: card.coverColor || campaign?.scratchConfig?.overlayColor || '#C0C0C0',
+                    contentBg: '#ffffff'
+                  }))}
+                  overlayColor={campaign?.scratchConfig?.overlayColor || '#C0C0C0'}
+                  brushSize={campaign?.scratchConfig?.scratchRadius || 15}
+                  revealThreshold={campaign?.scratchConfig?.revealThreshold || 0.6}
+                  device={selectedDevice}
+                  background={background}
+                  onReveal={(cardId) => {
+                    console.log('🎯 Carte révélée:', cardId);
+                    // Ici on pourrait déclencher des actions spécifiques
+                  }}
+                />
+              ) : (
+                <StandardizedWheel
+                  campaign={campaign}
+                  device={selectedDevice}
+                  shouldCropWheel={true}
+                  disabled={readOnly}
+                  getCanonicalConfig={getCanonicalConfig}
+                  updateWheelConfig={updateWheelConfig}
+                  extractedColors={extractedColors}
+                  wheelModalConfig={wheelModalConfig}
+                  onClick={() => {
+                    if (readOnly) return;
+                    console.log('🔘 Clic sur la roue détecté');
+                    onWheelPanelChange?.(true);
+                  }}
+                />
+              )}
 
-              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-              {!readOnly && (
+              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu - masqué pour ScratchEditor3 */}
+              {!readOnly && !window.location.pathname.includes('scratch-editor3') && (campaign?.gameType !== 'scratch') && (
                 <div className="absolute bottom-2 right-2 z-50">
                   <WheelSettingsButton
                     onClick={() => {
