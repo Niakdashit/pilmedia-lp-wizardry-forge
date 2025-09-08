@@ -85,13 +85,16 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
   */
   
   const handleCoverColorChange = (value: string) => {
+    console.log('[ScratchConfigPanel] Changement couleur couverture:', value);
     handleConfigChange({ overlayColor: value, coverColor: value });
     // Mettre à jour aussi la couleur de toutes les cartes
     if (scratchConfig.cards && Array.isArray(scratchConfig.cards)) {
       const updatedCards = scratchConfig.cards.map((card: any) => ({
         ...card,
-        color: value
+        color: value,
+        coverColor: value // Garder la compatibilité
       }));
+      console.log('[ScratchConfigPanel] Cartes mises à jour:', updatedCards);
       handleConfigChange({ cards: updatedCards });
     }
   };
