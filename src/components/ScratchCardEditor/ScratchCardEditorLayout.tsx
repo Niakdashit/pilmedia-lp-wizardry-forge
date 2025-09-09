@@ -104,7 +104,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   });
   // Scratch result state and prize assignment for current round
   const [scratchResult, setScratchResult] = useState<null | 'win' | 'lose'>(null);
-  const [revealedCardId, setRevealedCardId] = useState<string | null>(null);
+  // const [revealedCardId, setRevealedCardId] = useState<string | null>(null);
   const [assignment, setAssignment] = useState<{ cardId?: string; prizeId?: string } | null>(null);
   const [roundKey, setRoundKey] = useState(0);
   
@@ -383,7 +383,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               background={{ type: 'color', value: '#000000' }}
               cards={scratchConfig.cards?.map((c: any) => ({ id: c.id, content: c.text }))}
               onReveal={(id) => {
-                setRevealedCardId(id);
+                // setRevealedCardId(id);  // Commented out unused variable
                 let current = assignment || sampleAssignment();
                 const isWin = current && current.cardId === id && current.prizeId;
                 setScratchResult(isWin ? 'win' : 'lose');

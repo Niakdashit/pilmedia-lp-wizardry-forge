@@ -404,34 +404,27 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   // Les styles de bouton sont maintenant utilisés directement via buttonStyles.normal, .hover, .active
   
-  /**
-   * Assombrit une couleur pour l'état hover
-   * @param color Couleur au format hexadécimal (#RRGGBB)
-   * @returns Couleur assombrie au format rgba()
+   // Unused helper functions (commented out to avoid build warnings)
+   /*
+   function getHoverColor(color: string): string {
+     if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.05)';
+     try {
+       const r = parseInt(color.slice(1, 3), 16);
+       const g = parseInt(color.slice(3, 5), 16);
+       const b = parseInt(color.slice(5, 7), 16);
+       return `rgba(${Math.max(0, r - 25)}, ${Math.max(0, g - 25)}, ${Math.max(0, b - 25)}, 0.9)`;
+     } catch (e) {
+       return color || 'rgba(0,0,0,0.05)';
+     }
+   }
    */
-  function getHoverColor(color: string): string {
-    // Si la couleur est invalide ou n'est pas en hexadécimal, retourner une valeur par défaut
-    if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.05)';
-    
-    try {
-      // Convertir la couleur hexadécimale en valeurs RGB
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
-      
-      // Assombrir de 10% pour l'état hover
-      return `rgba(${Math.max(0, r - 25)}, ${Math.max(0, g - 25)}, ${Math.max(0, b - 25)}, 0.9)`;
-    } catch (e) {
-      console.error('Erreur lors du calcul de la couleur hover:', e);
-      return color || 'rgba(0,0,0,0.05)';
-    }
-  }
   
   /**
    * Assombrit une couleur pour l'état actif (plus foncé que hover)
-   * @param color Couleur au format hexadécimal (#RRGGBB)
+   * @param color Couleur au format hexadécimal (#RRGGBB) 
    * @returns Couleur assombrie au format rgba()
    */
+  /*
   function getActiveColor(color: string): string {
     // Si la couleur est invalide ou n'est pas en hexadécimal, retourner une valeur par défaut
     if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.1)';
@@ -449,6 +442,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
       return color || 'rgba(0,0,0,0.1)';
     }
   }
+  */
 
   const questionStyle: React.CSSProperties = {
     textAlign: template.questionStyle.textAlign || 'left',
