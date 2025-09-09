@@ -45,7 +45,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   onBackgroundChange,
   onExtractedColorsChange,
   currentBackground,
-  campaignConfig,
   elements = [],
   onElementsChange,
   selectedElement,
@@ -57,11 +56,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 }) => {
   const campaign = useEditorStore((s: any) => s.campaign);
   const setCampaign = useEditorStore((s: any) => s.setCampaign);
-  useEffect(() => {
-    if (!campaign && campaignConfig) {
-      setCampaign(campaignConfig);
-    }
-  }, [campaign, campaignConfig, setCampaign]);
   const [activeTab, setActiveTab] = useState<string>('elements');
   const [isMinimized, setIsMinimized] = useState(true);
 

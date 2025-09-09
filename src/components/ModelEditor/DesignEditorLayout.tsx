@@ -1397,28 +1397,17 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             {actualDevice !== 'mobile' && (
               <HybridSidebar
                 ref={sidebarRef}
-                campaign={campaignConfig}
-                setCampaign={handleCampaignConfigChange}
-                activeTab="design"
-                setActiveTab={() => {}}
-                isCollapsed={false}
-                setIsCollapsed={() => {}}
-                selectedDevice={selectedDevice}
-                elements={canvasElements}
-                selectedElements={selectedElement ? [selectedElement.id] : []}
-                onSelectedElementsChange={() => {}}
-                selectedElement={selectedElement}
-                onElementsChange={setCanvasElements}
-                onElementUpdate={handleElementUpdate}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
-                extractedColors={extractedColors}
-                onAddToHistory={() => {}}
+                extractedColors={extractedColors} // Ajout des couleurs extraites
                 campaignConfig={campaignConfig}
                 onCampaignConfigChange={handleCampaignConfigChange}
-                canvasRef={canvasRef}
+                elements={canvasElements}
+                onElementsChange={setCanvasElements}
+                selectedElement={selectedElement}
+                onElementUpdate={handleElementUpdate}
                 showEffectsPanel={showEffectsInSidebar}
                 onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
@@ -1433,6 +1422,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     setShowDesignInSidebar(false);
                   }
                 }}
+                canvasRef={canvasRef}
+                selectedElements={selectedElements}
+                onSelectedElementsChange={setSelectedElements}
+                onAddToHistory={addToHistory}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
@@ -1687,6 +1680,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   setShowAnimationsInSidebar(false);
                   setShowPositionInSidebar(false);
                 }}
+                selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext === 'text' ? 'fill' : designColorContext}
               />
