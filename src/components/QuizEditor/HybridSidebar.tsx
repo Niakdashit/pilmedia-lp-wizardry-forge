@@ -15,6 +15,8 @@ import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
+import JackpotGamePanel from '../JackpotEditor/panels/JackpotGamePanel';
+import FormGamePanel from '../FormEditor/panels/FormGamePanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -751,20 +753,55 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
-        return (
-          <div className="p-4">
-            <QuizManagementPanel 
-              campaign={campaign || campaignConfig}
-              setCampaign={(updatedCampaign) => {
-                // Mettre à jour l'état global ET local
-                setCampaign(updatedCampaign);
-                if (onCampaignConfigChange) {
-                  onCampaignConfigChange(updatedCampaign);
-                }
-              }}
-            />
-          </div>
-        );
+        const campaignType = (campaign || campaignConfig)?.type;
+        
+        if (campaignType === 'jackpot') {
+          return (
+            <div className="p-4">
+              <JackpotGamePanel 
+                config={campaign || campaignConfig}
+                onConfigUpdate={(updates) => {
+                  const updatedCampaign = { ...(campaign || campaignConfig), ...updates };
+                  setCampaign(updatedCampaign);
+                  if (onCampaignConfigChange) {
+                    onCampaignConfigChange(updatedCampaign);
+                  }
+                }}
+              />
+            </div>
+          );
+        } else if (campaignType === 'form') {
+          return (
+            <div className="p-4">
+              <FormGamePanel 
+                config={campaign || campaignConfig}
+                onConfigUpdate={(updates) => {
+                  const updatedCampaign = { ...(campaign || campaignConfig), ...updates };
+                  setCampaign(updatedCampaign);
+                  if (onCampaignConfigChange) {
+                    onCampaignConfigChange(updatedCampaign);
+                  }
+                }}
+              />
+            </div>
+          );
+        } else {
+          // Default to Quiz panel for quiz type or unknown types
+          return (
+            <div className="p-4">
+              <QuizManagementPanel 
+                campaign={campaign || campaignConfig}
+                setCampaign={(updatedCampaign) => {
+                  // Mettre à jour l'état global ET local
+                  setCampaign(updatedCampaign);
+                  if (onCampaignConfigChange) {
+                    onCampaignConfigChange(updatedCampaign);
+                  }
+                }}
+              />
+            </div>
+          );
+        }
       case 'form':
         return (
           <div className="p-4">

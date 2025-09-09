@@ -8,7 +8,6 @@ export const gameTypeLabels: Record<CampaignType, string> = {
   puzzle: 'Puzzle',
   quiz: 'Quiz Interactif',
   dice: 'Dés Magiques',
-  scratch: 'Carte à Gratter',
   swiper: 'Swiper',
   form: 'Formulaire Dynamique'
 };

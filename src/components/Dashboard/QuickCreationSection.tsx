@@ -12,9 +12,6 @@ const QuickCreationSection: React.FC = () => {
     type: 'quiz',
     label: 'Quiz'
   }, {
-    type: 'scratch',
-    label: 'Grattage'
-  }, {
     type: 'dice',
     label: 'Dés'
   }, {
@@ -50,7 +47,16 @@ const QuickCreationSection: React.FC = () => {
             <div className="hidden md:flex items-center justify-center space-x-8 max-w-5xl">
               {gameTypes.map((game, index) => {
               const IconComponent = getCampaignTypeIcon(game.type);
-              return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
+              const getEditorRoute = (type: string) => {
+                switch (type) {
+                  case 'quiz': return '/quiz-editor';
+                  case 'wheel': return '/design-editor';
+                  case 'jackpot': return '/jackpot-editor';
+                  case 'form': return '/form-editor';
+                  default: return `/quick-campaign?type=${type}`;
+                }
+              };
+              return <Link key={game.type} to={getEditorRoute(game.type)} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
                 animationDelay: `${index * 0.1}s`,
                 animationFillMode: 'forwards'
               }}>
@@ -73,7 +79,16 @@ const QuickCreationSection: React.FC = () => {
             }}>
                 {gameTypes.map((game, index) => {
                 const IconComponent = getCampaignTypeIcon(game.type);
-                return <Link key={game.type} to={`/quick-campaign?type=${game.type}`} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
+                const getEditorRoute = (type: string) => {
+                  switch (type) {
+                    case 'quiz': return '/quiz-editor';
+                    case 'wheel': return '/design-editor';
+                    case 'jackpot': return '/jackpot-editor';
+                    case 'form': return '/form-editor';
+                    default: return `/quick-campaign?type=${type}`;
+                  }
+                };
+                return <Link key={game.type} to={getEditorRoute(game.type)} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'forwards'
                 }}>

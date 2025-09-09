@@ -14,7 +14,6 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import ScratchConfigPanel from '../ScratchCardEditor/panels/ScratchConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -510,6 +509,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
+<<<<<<< HEAD
       case 'scratch':
         return (
           <ScratchConfigPanel 
@@ -530,6 +530,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedDevice={selectedDevice}
           />
         );
+=======
+>>>>>>> 15a60355 (feat: Unify canvas dimensions, zoom scale and visual consistency across all editors)
       case 'form':
         return (
           <div className="p-4">

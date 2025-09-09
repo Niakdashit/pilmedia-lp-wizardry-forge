@@ -1763,7 +1763,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               onQuizPanelChange={setShowQuizPanel}
             />
             {/* Zoom Slider - Always visible in bottom center */}
-            {selectedDevice === 'mobile' && (
+            {selectedDevice !== 'mobile' && (
               <ZoomSlider 
                 zoom={canvasZoom}
                 onZoomChange={setCanvasZoom}

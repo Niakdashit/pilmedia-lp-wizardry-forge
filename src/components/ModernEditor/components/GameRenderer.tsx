@@ -2,7 +2,6 @@ import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import QuizPreview from '../../GameTypes/QuizPreview';
-import ScratchPreview from '../../GameTypes/ScratchPreview';
 import Jackpot from '../../GameTypes/Jackpot';
 import DicePreview from '../../GameTypes/DicePreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
@@ -71,10 +70,9 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         
       case 'scratch':
         return (
-          <ScratchPreview
-            {...commonProps}
-            key={`scratch-${campaign._lastUpdate || Date.now()}`}
-          />
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">Scratch card game is no longer available</p>
+          </div>
         );
         
       case 'jackpot':

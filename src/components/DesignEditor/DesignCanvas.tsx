@@ -4,7 +4,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
-import ScratchGrid from '../ScratchCardEditor/ScratchGrid';
 import SmartAlignmentGuides from './components/SmartAlignmentGuides';
 import AlignmentToolbar from './components/AlignmentToolbar';
 import GridOverlay from './components/GridOverlay';
@@ -256,14 +255,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
-  // Forcer un format mobile 9:16 sans bordures ni encoches
+  // Utiliser les dimensions standardisées pour tous les appareils
   const effectiveCanvasSize = useMemo(() => {
-    if (selectedDevice === 'mobile') {
-      // 9:16 exact ratio
-      return { width: 360, height: 640 };
-    }
     return canvasSize;
-  }, [selectedDevice, canvasSize]);
+  }, [canvasSize]);
 
   // Memoized maps for fast lookups during interactions
   const elementById = useMemo(() => {
@@ -1700,6 +1695,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
+<<<<<<< HEAD
               {/* Roue standardisée avec découpage cohérent */}
               {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
                 <ScratchGrid
@@ -1728,34 +1724,66 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     // Ici on pourrait déclencher des actions spécifiques
                   }}
                 />
+=======
+              {/* Affichage conditionnel selon le type de campagne */}
+              {campaign?.type === 'scratch' ? (
+                /* Cartes à gratter pour les campagnes scratch */
+                <div className="w-full h-full flex items-center justify-center p-8">
+                  <div className="grid grid-cols-2 gap-6 max-w-md">
+                    {[1, 2, 3, 4].map((cardIndex) => (
+                      <div
+                        key={cardIndex}
+                        className="w-24 h-32 bg-gradient-to-br from-orange-200 to-orange-300 rounded-lg shadow-lg border-2 border-orange-400 flex items-center justify-center cursor-pointer hover:shadow-xl transition-shadow"
+                        onClick={() => {
+                          if (readOnly) return;
+                          console.log(`🎯 Clic sur la carte ${cardIndex} détecté`);
+                          onWheelPanelChange?.(true);
+                        }}
+                      >
+                        <div className="text-center">
+                          <div className="text-xs text-orange-800 font-semibold mb-1">
+                            Carte {cardIndex}
+                          </div>
+                          <div className="w-16 h-20 bg-orange-100 rounded border border-orange-300 flex items-center justify-center">
+                            <span className="text-orange-600 text-xs">Gratter</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+>>>>>>> 15a60355 (feat: Unify canvas dimensions, zoom scale and visual consistency across all editors)
               ) : (
-                <StandardizedWheel
-                  campaign={campaign}
-                  device={selectedDevice}
-                  shouldCropWheel={true}
-                  disabled={readOnly}
-                  getCanonicalConfig={getCanonicalConfig}
-                  updateWheelConfig={updateWheelConfig}
-                  extractedColors={extractedColors}
-                  wheelModalConfig={wheelModalConfig}
-                  onClick={() => {
-                    if (readOnly) return;
-                    console.log('🔘 Clic sur la roue détecté');
-                    onWheelPanelChange?.(true);
-                  }}
-                />
-              )}
-
-              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu - masqué pour ScratchEditor3 */}
-              {!readOnly && !window.location.pathname.includes('scratch-editor3') && (campaign?.gameType !== 'scratch') && (
-                <div className="absolute bottom-2 right-2 z-50">
-                  <WheelSettingsButton
+                /* Roue standardisée pour les autres types de campagne */
+                <>
+                  <StandardizedWheel
+                    campaign={campaign}
+                    device={selectedDevice}
+                    shouldCropWheel={true}
+                    disabled={readOnly}
+                    getCanonicalConfig={getCanonicalConfig}
+                    updateWheelConfig={updateWheelConfig}
+                    extractedColors={extractedColors}
+                    wheelModalConfig={wheelModalConfig}
                     onClick={() => {
-                      console.log('🔘 Clic sur WheelSettingsButton détecté');
+                      if (readOnly) return;
+                      console.log('🔘 Clic sur la roue détecté');
                       onWheelPanelChange?.(true);
                     }}
                   />
-                </div>
+
+                  {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+                  {!readOnly && (
+                    <div className="absolute bottom-2 right-2 z-50">
+                      <WheelSettingsButton
+                        onClick={() => {
+                          console.log('🔘 Clic sur WheelSettingsButton détecté');
+                          onWheelPanelChange?.(true);
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

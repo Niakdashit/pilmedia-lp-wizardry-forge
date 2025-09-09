@@ -6,7 +6,6 @@ import {
   Puzzle, 
   Brain, 
   Dice6, 
-  Cookie, 
   ArrowRight, 
   FileText,
   DollarSign
@@ -19,7 +18,6 @@ export type CampaignType =
   | 'puzzle'
   | 'quiz'
   | 'dice'
-  | 'scratch'
   | 'swiper'
   | 'form';
 
@@ -30,7 +28,6 @@ export interface GameConfig {
   puzzle: PuzzleConfig;
   quiz: QuizConfig;
   dice: DiceConfig;
-  scratch: ScratchConfig;
   swiper: SwiperConfig;
   form: FormConfig;
 }
@@ -64,19 +61,6 @@ interface JackpotConfig extends BaseConfig {
   slotBorderColor: string;
   slotBorderWidth: number;
   slotBackgroundColor: string;
-}
-
-interface ScratchConfig extends BaseConfig {
-  instantWin: InstantWinConfig;
-  scratchArea: number;
-  revealMessage: string;
-  cards?: ScratchCard[];
-}
-
-interface ScratchCard {
-  id: number;
-  revealImage: string;
-  revealMessage: string;
 }
 
 interface MemoryConfig extends BaseConfig {
@@ -155,21 +139,6 @@ export const getDefaultGameConfig = (type: CampaignType) => {
       slotBorderWidth: 2,
       slotBackgroundColor: '#ffffff'
     },
-    scratch: {
-      instantWin: {
-        mode: 'instant_winner' as const,
-        winProbability: 0.1,
-        maxWinners: 10,
-        winnersCount: 0
-      },
-      scratchArea: 70,
-      revealMessage: 'Félicitations !',
-      cards: [
-        { id: 1, revealImage: '', revealMessage: 'Félicitations !' }
-      ],
-      buttonLabel: 'Gratter',
-      buttonColor: '#841b60'
-    },
     memory: {
       pairs: 8,
       difficulty: 'medium',
@@ -223,8 +192,6 @@ export const getCampaignTypeIcon = (type: string) => {
       return HelpCircle;
     case 'dice':
       return Dice6;
-    case 'scratch':
-      return Cookie;
     case 'swiper':
       return ArrowRight;
     case 'form':
@@ -252,8 +219,6 @@ export const getCampaignTypeText = (type: string) => {
       return 'Quiz';
     case 'dice':
       return 'Dés';
-    case 'scratch':
-      return 'Grattage';
     case 'swiper':
       return 'Swiper';
     case 'form':
