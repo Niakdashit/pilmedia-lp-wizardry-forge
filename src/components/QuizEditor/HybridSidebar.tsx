@@ -653,7 +653,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 detail: { buttonHoverBackgroundColor: color } 
               }));
             }}
-            onButtonActiveBackgroundColorChange={(color: string) => {
+            onButtonActiveBackgroundColorChange={(color) => {
               setCampaign((prev: any) => ({
                 ...prev,
                 design: {

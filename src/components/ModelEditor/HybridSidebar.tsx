@@ -64,32 +64,18 @@ interface HybridSidebarProps {
   // History
   onAddToHistory: (action: string) => void;
   
-  // Campaign config (for ModelEditor compatibility)
-  campaignConfig?: any;
-  onCampaignConfigChange?: (config: any) => void;
-  
   // Quiz specific props
   quizQuestionCount?: number;
   quizTimeLimit?: number;
   quizDifficulty?: 'easy' | 'medium' | 'hard';
   quizBorderRadius?: number;
   selectedQuizTemplate?: string;
-  quizWidth?: string;
   onQuizQuestionCountChange?: (count: number) => void;
   onQuizTimeLimitChange?: (time: number) => void;
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
-  showQuizPanel?: boolean;
-  // Additional panel visibility props
-  showEffectsPanel?: boolean;
-  onEffectsPanelChange?: (show: boolean) => void;
-  showPositionPanel?: boolean;
-  onPositionPanelChange?: (show: boolean) => void;
-  showDesignPanel?: boolean;
-  onDesignPanelChange?: (show: boolean) => void;
-  showAnimationsPanel?: boolean;
-  onAnimationsPanelChange?: (show: boolean) => void;
+  onQuizPanelChange?: (show: boolean) => void;
 }
 
 export interface HybridSidebarRef {
