@@ -351,14 +351,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         updatedCampaign.design.quizConfig.style = {
           ...(updatedCampaign.design.quizConfig.style || {}),
           borderRadius: updates.borderRadius
-        }
-      }
-    };
+        };
         onCampaignChange(updatedCampaign);
-      }
-      
-      // Forcer le re-render du TemplatedQuiz
-      if (updates.borderRadius !== undefined) {
+        
+        // Forcer le re-render du TemplatedQuiz
         const event = new CustomEvent('quizStyleUpdate', { 
           detail: { borderRadius: updates.borderRadius } 
         });
@@ -366,12 +362,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       }
     }
   
-    // Store performance metrics for optimization
-    const updateAutoSaveData = useCallback((campaign: any, activityType: string, intensity: number) => {
-      // Auto-save logic placeholder
-    }, []);
-
-    // 🔒 Blocage des déplacements des enfants quand leur groupe parent est sélectionné
+  // 🔒 Blocage des déplacements des enfants quand leur groupe parent est sélectionné
     // Si l'élément a un parentGroupId, et que ce groupe est actuellement sélectionné,
     // on ignore toute mise à jour de position (x/y) pour empêcher le déplacement indépendant.
     try {
@@ -518,14 +509,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     elementCache.set(cacheKey, { elements: updatedElements, timestamp: Date.now() });
 
     onElementsChange(updatedElements);
-
-    // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
-    const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
-    const intensity = activityType === 'drag' ? 0.8 : 0.5;
-  // Store performance metrics for optimization
-  const updateAutoSaveData = useCallback((campaign: any, activityType: string, intensity: number) => {
-    // Auto-save logic placeholder
-  }, []);
+  }, [
+    elements, onElementsChange, applySnapping, elementCache,
+    campaign, externalOnElementUpdate, selectedElement, 
+    selectedDevice, selectedGroupId
+  ]);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -2239,5 +2227,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     </DndProvider>
   );
 });
+
+DesignCanvas.displayName = 'DesignCanvas';
 
 export default DesignCanvas;
