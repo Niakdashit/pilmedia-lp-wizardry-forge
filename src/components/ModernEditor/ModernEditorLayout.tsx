@@ -6,7 +6,6 @@ import AIAssistantSidebar from './AIAssistantSidebar';
 import EditorHeader from './components/EditorHeader';
 import OptimizedGameCanvasPreview from './components/OptimizedGameCanvasPreview';
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
-// import MobileStableEditor from '../QuizEditor/components/MobileStableEditor';
 
 import { useEditorStore } from '@/stores/editorStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';

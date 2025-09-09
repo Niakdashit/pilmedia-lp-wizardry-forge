@@ -5,14 +5,12 @@ import type { TextEffectModel, EffectLayer, Fill } from '../../types/TextEffectM
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-/*
 const parsePx = (v: string | number | undefined | null, fallback = 0): number => {
   if (typeof v === 'number') return v;
   if (!v) return fallback;
   const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
   return m ? parseFloat(m[1]) : fallback;
 };
-*/
 
 const parseColor = (v: string | undefined): string | null => {
   if (!v) return null;

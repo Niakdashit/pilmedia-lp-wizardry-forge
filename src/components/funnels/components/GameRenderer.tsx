@@ -5,6 +5,7 @@ import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import { Jackpot } from '../../GameTypes';
 import QuizPreview from '../../GameTypes/QuizPreview';
+import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
 import { GAME_SIZES, GameSize } from '../../configurators/GameSizeSelector';
 // Removed legacy CampaignEditor dependency: inline position calculator
@@ -41,6 +42,10 @@ const GameRenderer: React.FC<GameRendererProps> = ({
     ? campaign.gameSize as GameSize 
     : 'medium';
   const gamePosition = campaign.gamePosition || 'center';
+
+  // Détecter si on est dans une modal (pour ajuster l'affichage)
+  const isModal = previewMode !== 'desktop' || window.location.pathname.includes('preview');
+
   const { containerStyle, wrapperStyle } = useCenteredStyles();
   const getPositionStyles = () => {
     const dims = GAME_SIZES[gameSize];
@@ -103,11 +108,18 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         );
       
       case 'scratch':
-        // Scratch card game has been removed
         return (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">Scratch card game is no longer available</p>
-          </div>
+          <ScratchPreview 
+            config={campaign.gameConfig?.scratch || {}}
+            buttonLabel={buttonLabel}
+            buttonColor={buttonColor}
+            gameSize={gameSize}
+            disabled={!formValidated}
+            onFinish={handleGameComplete}
+            onStart={handleGameStartInternal}
+            isModal={isModal}
+            autoStart={false}
+          />
         );
       
       case 'jackpot':
@@ -199,7 +211,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         </ContrastBackground>
       </div>
       
-      {!formValidated && ['wheel', 'jackpot'].includes(campaign.type) && (
+      {!formValidated && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
         <div 
           onClick={() => {
             console.log('Game overlay clicked - triggering form');

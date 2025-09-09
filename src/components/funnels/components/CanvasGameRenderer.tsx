@@ -187,16 +187,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         </div>
       );
     }
-    if (campaign.type === 'scratch') {
-      return (
-        <div className="absolute inset-0 z-10 flex items-center justify-center p-8">
-          <div className="text-center">
-            <p className="text-gray-500">Scratch card game is no longer available.</p>
-            <p className="text-sm text-gray-400 mt-2">Please select another game type.</p>
-          </div>
-        </div>
-      );
-    }
     if (campaign.type === 'quiz') {
       return (
         <div className="absolute inset-0 z-10 flex items-center justify-center">

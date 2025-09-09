@@ -11,10 +11,9 @@ const Gamification = lazy(() => import('./pages/Gamification'));
 const Statistics = lazy(() => import('./pages/Statistics'));
 const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
+const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
 const TemplateEditor = lazy(() => import('./pages/TemplateEditor'));
 const TemplatesEditor = lazy(() => import('./pages/TemplatesEditor'));
-const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
-const FormEditor = lazy(() => import('./pages/FormEditor'));
 const CampaignSettingsLayout = lazy(() => import('./pages/CampaignSettings/CampaignSettingsLayout'));
 const ChannelsStep = lazy(() => import('./pages/CampaignSettings/ChannelsStep'));
 const HomeStep = lazy(() => import('./pages/CampaignSettings/HomeStep'));
@@ -43,8 +42,6 @@ function App() {
         import('./pages/DesignEditor');
         import('./pages/TemplateEditor');
         import('./pages/TemplatesEditor');
-        import('./pages/JackpotEditor');
-        import('./pages/FormEditor');
       } catch (_) {
         // best-effort
       }
@@ -70,8 +67,7 @@ function App() {
               {/* Routes éditeur en plein écran */}
               <Route path="/design-editor" element={<DesignEditor />} />
               <Route path="/quiz-editor" element={<QuizEditor />} />
-              <Route path="/jackpot-editor" element={<JackpotEditor />} />
-              <Route path="/form-editor" element={<FormEditor />} />
+              <Route path="/scratch-editor" element={<ScratchCardEditor />} />
               <Route path="/template-editor" element={<TemplateEditor />} />
               <Route path="/campaign/:id/settings/*" element={<CampaignSettingsLayout />}>
                 <Route index element={<ChannelsStep />} />

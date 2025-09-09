@@ -23,7 +23,6 @@ import CanvasContextMenu from './components/CanvasContextMenu';
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
-// import MobileStableEditor from '../QuizEditor/components/MobileStableEditor';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 
@@ -255,10 +254,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
-  // Utiliser les dimensions standardisées pour tous les appareils
+  // Forcer un format mobile 9:16 sans bordures ni encoches
   const effectiveCanvasSize = useMemo(() => {
+    if (selectedDevice === 'mobile') {
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
+    }
     return canvasSize;
-  }, [canvasSize]);
+  }, [selectedDevice, canvasSize]);
 
   // Memoized maps for fast lookups during interactions
   const elementById = useMemo(() => {
@@ -1384,20 +1387,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Calculer des positions ABSOLUES pour les éléments enfants de groupe
   // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  // const elementsWithAbsolute = useMemo(() => {
-  //   return elementsWithResponsive.map((el: any) => {
-  //     const parentId = (el as any).parentGroupId;
-  //     if (!parentId) return el;
-  //     const parentProps = devicePropsById.get(parentId);
-  //     if (!parentProps) return el;
-  //     const childProps = getPropertiesForDevice(el, selectedDevice);
-  //     return {
-  //       ...el,
-  //       x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
-  //       y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
-  //     };
-  //   });
-  // }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
+  const elementsWithAbsolute = useMemo(() => {
+    return elementsWithResponsive.map((el: any) => {
+      const parentId = (el as any).parentGroupId;
+      if (!parentId) return el;
+      const parentProps = devicePropsById.get(parentId);
+      if (!parentProps) return el;
+      const childProps = getPropertiesForDevice(el, selectedDevice);
+      return {
+        ...el,
+        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
+        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
+      };
+    });
+  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
 
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
@@ -1533,7 +1536,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' && activeCanvasRef ? activeCanvasRef.current : null;
+            const canvasEl = activeCanvasRef.current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -1695,95 +1698,33 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-<<<<<<< HEAD
               {/* Roue standardisée avec découpage cohérent */}
-              {(campaign?.gameType === 'scratch' || window.location.pathname.includes('scratch-editor3')) ? (
-                <ScratchGrid
-                  cards={(campaign?.gameConfig?.scratch?.cards || [
-                    { id: 'card-1', text: '🎉 Surprise 1', contentType: 'text', color: '#E3C0B7' },
-                    { id: 'card-2', text: '💎 Bonus 2', contentType: 'text', color: '#E3C0B7' },
-                    { id: 'card-3', text: '🏆 Prix 3', contentType: 'text', color: '#E3C0B7' },
-                    { id: 'card-4', text: '🎁 Cadeau 4', contentType: 'text', color: '#E3C0B7' }
-                  ]).map((card: any) => ({
-                    id: card.id,
-                    content: card.contentType === 'image' && card.imageUrl ? (
-                      <img src={card.imageUrl} alt={card.revealMessage || 'Carte'} className="w-full h-full object-cover" />
-                    ) : (
-                      card.revealMessage || card.text || card.content || 'Carte'
-                    ),
-                    overlayColor: card.color || campaign?.gameConfig?.scratch?.overlayColor || '#E3C0B7',
-                    contentBg: '#ffffff'
-                  }))}
-                  overlayColor={campaign?.gameConfig?.scratch?.overlayColor || '#E3C0B7'}
-                  brushSize={campaign?.gameConfig?.scratch?.scratchRadius || 15}
-                  revealThreshold={campaign?.gameConfig?.scratch?.revealThreshold || 0.6}
-                  device={selectedDevice}
-                  background={background}
-                  onReveal={(cardId) => {
-                    console.log('🎯 Carte révélée:', cardId);
-                    // Ici on pourrait déclencher des actions spécifiques
-                  }}
-                />
-=======
-              {/* Affichage conditionnel selon le type de campagne */}
-              {campaign?.type === 'scratch' ? (
-                /* Cartes à gratter pour les campagnes scratch */
-                <div className="w-full h-full flex items-center justify-center p-8">
-                  <div className="grid grid-cols-2 gap-6 max-w-md">
-                    {[1, 2, 3, 4].map((cardIndex) => (
-                      <div
-                        key={cardIndex}
-                        className="w-24 h-32 bg-gradient-to-br from-orange-200 to-orange-300 rounded-lg shadow-lg border-2 border-orange-400 flex items-center justify-center cursor-pointer hover:shadow-xl transition-shadow"
-                        onClick={() => {
-                          if (readOnly) return;
-                          console.log(`🎯 Clic sur la carte ${cardIndex} détecté`);
-                          onWheelPanelChange?.(true);
-                        }}
-                      >
-                        <div className="text-center">
-                          <div className="text-xs text-orange-800 font-semibold mb-1">
-                            Carte {cardIndex}
-                          </div>
-                          <div className="w-16 h-20 bg-orange-100 rounded border border-orange-300 flex items-center justify-center">
-                            <span className="text-orange-600 text-xs">Gratter</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
->>>>>>> 15a60355 (feat: Unify canvas dimensions, zoom scale and visual consistency across all editors)
-              ) : (
-                /* Roue standardisée pour les autres types de campagne */
-                <>
-                  <StandardizedWheel
-                    campaign={campaign}
-                    device={selectedDevice}
-                    shouldCropWheel={true}
-                    disabled={readOnly}
-                    getCanonicalConfig={getCanonicalConfig}
-                    updateWheelConfig={updateWheelConfig}
-                    extractedColors={extractedColors}
-                    wheelModalConfig={wheelModalConfig}
+              <StandardizedWheel
+                campaign={campaign}
+                device={selectedDevice}
+                shouldCropWheel={true}
+                disabled={readOnly}
+                getCanonicalConfig={getCanonicalConfig}
+                updateWheelConfig={updateWheelConfig}
+                extractedColors={extractedColors}
+                wheelModalConfig={wheelModalConfig}
+                onClick={() => {
+                  if (readOnly) return;
+                  console.log('🔘 Clic sur la roue détecté');
+                  onWheelPanelChange?.(true);
+                }}
+              />
+
+              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+              {!readOnly && (
+                <div className="absolute bottom-2 right-2 z-50">
+                  <WheelSettingsButton
                     onClick={() => {
-                      if (readOnly) return;
-                      console.log('🔘 Clic sur la roue détecté');
+                      console.log('🔘 Clic sur WheelSettingsButton détecté');
                       onWheelPanelChange?.(true);
                     }}
                   />
-
-                  {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-                  {!readOnly && (
-                    <div className="absolute bottom-2 right-2 z-50">
-                      <WheelSettingsButton
-                        onClick={() => {
-                          console.log('🔘 Clic sur WheelSettingsButton détecté');
-                          onWheelPanelChange?.(true);
-                        }}
-                      />
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
 

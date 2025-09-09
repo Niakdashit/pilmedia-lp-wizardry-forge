@@ -14,6 +14,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
+import GameManagementPanel from './panels/GameManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -304,8 +305,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: FormInput
     },
     { 
-      id: 'scratch', 
-      label: 'Grattage', 
+      id: 'game', 
+      label: 'Jeu', 
       icon: Gamepad2
     }
   ];
@@ -509,29 +510,21 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
-<<<<<<< HEAD
-      case 'scratch':
+      case 'game':
         return (
-          <ScratchConfigPanel 
-            scratchConfig={(campaign as any)?.gameConfig?.scratch || (campaignConfig as any)?.gameConfig?.scratch || {}}
-            onScratchConfigChange={(config: any) => {
-              const updatedCampaign = {
-                ...(campaign || campaignConfig),
-                gameConfig: {
-                  ...((campaign || campaignConfig)?.gameConfig || {}),
-                  scratch: config
+          <div className="p-4">
+            <GameManagementPanel 
+              campaign={campaign || campaignConfig}
+              setCampaign={(updatedCampaign) => {
+                // Mettre à jour l'état global ET local
+                setCampaign(updatedCampaign);
+                if (onCampaignConfigChange) {
+                  onCampaignConfigChange(updatedCampaign);
                 }
-              };
-              setCampaign(updatedCampaign);
-              if (onCampaignConfigChange) {
-                onCampaignConfigChange(updatedCampaign);
-              }
-            }}
-            selectedDevice={selectedDevice}
-          />
+              }}
+            />
+          </div>
         );
-=======
->>>>>>> 15a60355 (feat: Unify canvas dimensions, zoom scale and visual consistency across all editors)
       case 'form':
         return (
           <div className="p-4">

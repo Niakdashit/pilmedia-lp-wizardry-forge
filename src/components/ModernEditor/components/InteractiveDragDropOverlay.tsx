@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import { useInteractiveDragDrop } from '../hooks/useInteractiveDragDrop';
 import InteractiveCustomElementsRenderer from './InteractiveCustomElementsRenderer';
-// import AlignmentGuides from '../../DesignEditor/components/AlignmentGuides';
+import AlignmentGuides from '../../DesignEditor/components/AlignmentGuides';
 import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 // Composant mémoïsé pour éviter les rendus inutiles
@@ -43,7 +43,7 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const deviceDims = useMemo(() => getDeviceDimensions(previewDevice), [previewDevice]);
-  // const [measuredElements, setMeasuredElements] = useState<Array<{ id: string; x: number; y: number; width: number; height: number; type?: string }>>([]);
+  const [measuredElements, setMeasuredElements] = useState<Array<{ id: string; x: number; y: number; width: number; height: number; type?: string }>>([]);
   
   // Measure canvas and compute zoom (CSS px per logical unit)
   useEffect(() => {
@@ -107,7 +107,7 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
         type
       });
     });
-    // setMeasuredElements(list);
+    setMeasuredElements(list);
   }, [campaign?.design?.customTexts, campaign?.design?.customImages, previewDevice, canvasSize.width, canvasSize.height]);
   
   const {
@@ -168,12 +168,13 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
         position: 'relative'
       }}
     >
-      {/* Alignment guides overlay - commented out for now */}
-      {/* <AlignmentGuides
+      {/* Alignment guides overlay */}
+      <AlignmentGuides
         canvasSize={canvasSize}
         elements={measuredElements}
+        // Coordinates are already in CSS pixels, use zoom=1 for tolerance math
         zoom={1}
-      /> */}
+      />
 
 
       {/* Overlay des éléments interactifs fluides */}

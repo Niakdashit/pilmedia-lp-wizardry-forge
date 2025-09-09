@@ -12,6 +12,9 @@ const DashboardHeader: React.FC = () => {
     type: 'quiz',
     label: 'Quiz'
   }, {
+    type: 'scratch',
+    label: 'Grattage'
+  }, {
     type: 'jackpot',
     label: 'Jackpot'
   }, {
@@ -74,16 +77,7 @@ const DashboardHeader: React.FC = () => {
                   jackpot: '/gamification/shortcuts/jackpot.svg',
                   form: '/gamification/shortcuts/form.svg'
                 };
-                const getEditorRoute = (type: string) => {
-                  switch (type) {
-                    case 'quiz': return '/quiz-editor';
-                    case 'wheel': return '/design-editor';
-                    case 'jackpot': return '/jackpot-editor';
-                    case 'form': return '/form-editor';
-                    default: return `/quick-campaign?type=${type}`;
-                  }
-                };
-                return <Link key={game.type} to={getEditorRoute(game.type)} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
+                return <Link key={game.type} to={game.type === 'quiz' ? '/quiz-editor' : (game.type === 'wheel' ? '/design-editor' : (game.type === 'scratch' ? '/scratch-editor' : `/quick-campaign?type=${game.type}`))} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in" style={{
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'forwards'
                 }}>
@@ -111,16 +105,7 @@ const DashboardHeader: React.FC = () => {
                     jackpot: '/gamification/shortcuts/jackpot.svg',
                     form: '/gamification/shortcuts/form.svg'
                   };
-                  const getEditorRoute = (type: string) => {
-                    switch (type) {
-                      case 'quiz': return '/quiz-editor';
-                      case 'wheel': return '/design-editor';
-                      case 'jackpot': return '/jackpot-editor';
-                      case 'form': return '/form-editor';
-                      default: return `/quick-campaign?type=${type}`;
-                    }
-                  };
-                  return <Link key={game.type} to={getEditorRoute(game.type)} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
+                  return <Link key={game.type} to={game.type === 'quiz' ? '/quiz-editor' : (game.type === 'wheel' ? '/design-editor' : (game.type === 'scratch' ? '/scratch-editor' : `/quick-campaign?type=${game.type}`))} className="flex flex-col items-center group cursor-pointer opacity-0 animate-fade-in flex-shrink-0" style={{
                     animationDelay: `${index * 0.1}s`,
                     animationFillMode: 'forwards'
                   }}>

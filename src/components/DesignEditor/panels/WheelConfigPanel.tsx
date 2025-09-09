@@ -1,5 +1,5 @@
 import React from 'react';
-// import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 
 interface WheelConfigPanelProps {

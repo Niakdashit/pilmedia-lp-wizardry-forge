@@ -17,6 +17,6 @@ export interface RecentCampaign {
 }
 
 export interface GameType {
-  type: 'wheel' | 'quiz' | 'dice' | 'jackpot' | 'memory' | 'puzzle' | 'form' | 'swiper';
+  type: string;
   label: string;
 }

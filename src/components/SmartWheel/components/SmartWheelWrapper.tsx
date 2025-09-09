@@ -2,7 +2,6 @@
 import React from 'react';
 import SmartWheel from '../SmartWheel';
 import { useWheelSync } from '../../../hooks/useWheelSync';
-import { useEditorStore } from '../../../stores/editorStore';
 
 interface SmartWheelWrapperProps {
   // Props de compatibilité avec l'ancienne roue
@@ -127,8 +126,7 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
       campaign?.prizes?.find((prize: any) => prize.id === segment.prizeId) : null;
 
     // Attribution du lot: incrémenter awardedUnits si un lot est gagné
-    if (assignedPrize) {
-      const setCampaign = useEditorStore.getState().setCampaign;
+    if (assignedPrize && setCampaign) {
       console.log('🏆 Prize won! Incrementing awardedUnits for prize:', assignedPrize.name);
       setCampaign((prevCampaign: any) => {
         if (!prevCampaign) return prevCampaign;

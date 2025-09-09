@@ -4,8 +4,7 @@ import React, { useEffect } from 'react';
 import { SmartWheel } from '../SmartWheel';
 import { useGameSize } from '../../hooks/useGameSize';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
-import { WheelPrizeAttribution } from '../../services/WheelPrizeAttribution';
-import type { CampaignConfig, WheelSegment, Prize } from '../../types/PrizeSystem';
+import type { CampaignConfig, WheelSegment } from '../../types/PrizeSystem';
 
 interface WheelProps {
   config: any;
@@ -18,8 +17,7 @@ interface WheelProps {
   winRate?: number;
   disabled?: boolean;
   gameSize?: 'small' | 'medium' | 'large' | 'xlarge';
-  campaign?: any;
-  prizes?: Prize[]; // Ajout des lots pour l'attribution
+  campaign?: any; // Ajouter le campaign pour récupérer le style de bordure
 }
 
 const Wheel: React.FC<WheelProps> = ({ 
@@ -30,8 +28,7 @@ const Wheel: React.FC<WheelProps> = ({
   onStart,
   disabled = false,
   gameSize = 'small',
-  campaign,
-  prizes = [] // Récupérer les lots pour l'attribution
+  campaign
 }) => {
   const { getGameDimensions } = useGameSize(gameSize);
   const gameDimensions = getGameDimensions();
@@ -276,28 +273,6 @@ const Wheel: React.FC<WheelProps> = ({
     };
   }, [segments]);
 
-  // Système d'attribution des lots selon les règles spécifiées
-  // Toutes les rotations sont perdantes par défaut, sauf si les conditions d'attribution sont remplies
-  const attributionResult = React.useMemo(() => {
-    if (!isPreview || prizes.length === 0) {
-      return null; // Pas d'attribution en mode non-preview ou sans lots
-    }
-    
-    return WheelPrizeAttribution.determineWin(prizes);
-  }, [isPreview, prizes]);
-
-  // Appliquer le forcing des segments si nécessaire
-  const finalSegmentsWithWeights = React.useMemo(() => {
-    let processedSegments = [...segmentsWithWeights];
-    
-    if (attributionResult && attributionResult.forceWinningSegment) {
-      console.log('🎯 Wheel - Application du forcing d\'attribution des lots');
-      processedSegments = WheelPrizeAttribution.forceWheelResult(processedSegments, attributionResult);
-    }
-    
-    return processedSegments;
-  }, [segmentsWithWeights, attributionResult]);
-
   // Log de la configuration finale - Utilisation d'un effet séparé pour les logs
   useEffect(() => {
     // Créer une copie des segments avec probabilités pour éviter les références directes
@@ -404,33 +379,9 @@ const Wheel: React.FC<WheelProps> = ({
             return `${segmentsWithWeights.length}-${gameDimensions.width}`;
           }
         })()}
-        segments={finalSegmentsWithWeights}
+        segments={segmentsWithWeights}
         onResult={(segment) => {
-          // Vérifier si c'est un gain selon l'attribution ou selon le segment
-          const isWinBasedOnAttribution = attributionResult?.isWinner ?? false;
-          const isWinBasedOnSegment = segment.isWinning ?? false;
-          
-          // L'attribution prime sur le contenu du segment
-          const finalResult = attributionResult ? isWinBasedOnAttribution : isWinBasedOnSegment;
-          
-          console.log('🎡 Wheel - Résultat final:', {
-            segmentTouched: segment.label,
-            segmentIsWinning: isWinBasedOnSegment,
-            attributionResult: attributionResult?.isWinner,
-            attributionReason: attributionResult?.reason,
-            finalResult,
-            prizeName: attributionResult?.prize?.name
-          });
-          
-          if (onComplete) {
-            // Si attribution spécifique d'un lot, utiliser le nom du lot
-            const resultLabel = attributionResult?.prize?.name ?? segment.label;
-            onComplete(resultLabel);
-          }
-          
-          if (onFinish) {
-            onFinish(finalResult ? 'win' : 'lose');
-          }
+          if (onComplete) onComplete(segment.label);
         }}
         size={gameDimensions.width}
         theme="modern"

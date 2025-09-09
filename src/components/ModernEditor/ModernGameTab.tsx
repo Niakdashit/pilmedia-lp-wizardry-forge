@@ -6,6 +6,7 @@ import MemoryGameConfig from './GameConfigs/MemoryGameConfig';
 import PuzzleGameConfig from './GameConfigs/PuzzleGameConfig';
 import QuizGameConfig from './GameConfigs/QuizGameConfig';
 import DiceGameConfig from './GameConfigs/DiceGameConfig';
+import ScratchGameConfig from './GameConfigs/ScratchGameConfig';
 
 interface ModernGameTabProps {
   campaign: any;
@@ -31,7 +32,7 @@ const ModernGameTab: React.FC<ModernGameTabProps> = ({
       case 'dice':
         return <DiceGameConfig campaign={campaign} setCampaign={setCampaign} />;
       case 'scratch':
-        return <div className="p-4 text-gray-500">Scratch card game is no longer available. Please select another game type.</div>;
+        return <ScratchGameConfig campaign={campaign} setCampaign={setCampaign} />;
       default:
         return <div className="text-gray-500">Configuration non disponible pour ce type de jeu</div>;
     }
