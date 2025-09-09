@@ -23,7 +23,7 @@ import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
-import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
+import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 
