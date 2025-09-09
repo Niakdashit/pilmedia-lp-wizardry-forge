@@ -80,10 +80,6 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
-  quizWidth?: string;
-  onQuizWidthChange?: (width: string) => void;
-  quizMobileWidth?: string;
-  onQuizMobileWidthChange?: (width: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   // Callback pour forcer l'ouverture de l'onglet Elements
   onForceElementsTab?: () => void;
@@ -562,7 +558,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onBackgroundOpacityChange={(opacity) => {
-              setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -582,8 +578,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 } 
               }));
             }}
-            onTextColorChange={(color: string) => {
-              setCampaign((prev: any) => ({
+            onTextColorChange={(color) => {
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -604,7 +600,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonBackgroundColorChange={(color) => {
-              setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -622,7 +618,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonTextColorChange={(color) => {
-              setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -640,7 +636,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonHoverBackgroundColorChange={(color) => {
-              setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -657,8 +653,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 detail: { buttonHoverBackgroundColor: color } 
               }));
             }}
-            onButtonActiveBackgroundColorChange={(color: string) => {
-              setCampaign((prev: any) => ({
+            onButtonActiveBackgroundColorChange={(color) => {
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -675,7 +671,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 detail: { buttonActiveBackgroundColor: color } 
               }));
             }}
-            onTextColorChange={(color: string) => {
+            onTextColorChange={(color) => {
               setCampaign((prev: any) => {
                 if (!prev) return prev;
                 const next = {

@@ -17,7 +17,26 @@ interface GameManagementPanelProps {
   setCampaign: (campaign: any) => void;
 }
 
-import { Prize, WheelSegment } from '../../../types/PrizeSystem';
+interface WheelSegment {
+  id: string;
+  label: string;
+  color: string;
+  probability?: number;
+  prizeId?: string;
+  contentType: 'text' | 'image';
+  imageUrl?: string;
+}
+
+interface Prize {
+  id: string;
+  name: string;
+  description: string;
+  attributionMethod: 'calendar' | 'probability';
+  calendarDate?: string;
+  calendarTime?: string;
+  probability?: number;
+  segmentId?: string;
+}
 
 const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   campaign,
@@ -58,12 +77,12 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   const primaryColor = extractedColors[0] || '#841b60';
   
   const defaultSegments: WheelSegment[] = [
-    { id: '1', label: 'Segment 1', color: primaryColor, contentType: 'text' as const, value: 'Segment 1', textColor: '#ffffff', probability: 16.66 },
-    { id: '2', label: 'Segment 2', color: '#ffffff', contentType: 'text' as const, value: 'Segment 2', textColor: '#000000', probability: 16.66 },
-    { id: '3', label: 'Segment 3', color: primaryColor, contentType: 'text' as const, value: 'Segment 3', textColor: '#ffffff', probability: 16.66 },
-    { id: '4', label: 'Segment 4', color: '#ffffff', contentType: 'text' as const, value: 'Segment 4', textColor: '#000000', probability: 16.66 },
-    { id: '5', label: 'Segment 5', color: primaryColor, contentType: 'text' as const, value: 'Segment 5', textColor: '#ffffff', probability: 16.66 },
-    { id: '6', label: 'Segment 6', color: '#ffffff', contentType: 'text' as const, value: 'Segment 6', textColor: '#000000', probability: 16.70 },
+    { id: '1', label: 'Segment 1', color: primaryColor, contentType: 'text' },
+    { id: '2', label: 'Segment 2', color: '#ffffff', contentType: 'text' },
+    { id: '3', label: 'Segment 3', color: primaryColor, contentType: 'text' },
+    { id: '4', label: 'Segment 4', color: '#ffffff', contentType: 'text' },
+    { id: '5', label: 'Segment 5', color: primaryColor, contentType: 'text' },
+    { id: '6', label: 'Segment 6', color: '#ffffff', contentType: 'text' },
   ];
 
   const segments: WheelSegment[] = campaign?.wheelConfig?.segments || defaultSegments;
@@ -112,10 +131,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       id: Date.now().toString(),
       label: `Segment ${segments.length + 1}`,
       color: isEven ? primaryColor : '#ffffff',
-      contentType: 'text' as const,
-      value: `Segment ${segments.length + 1}`,
-      textColor: isEven ? '#ffffff' : '#000000',
-      probability: 10
+      contentType: 'text'
     };
     updateSegments([...segments, newSegment]);
   };
@@ -177,8 +193,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       name: 'Nouveau lot',
       method: 'probability',
       probabilityPercent: 10,
-        awardedUnits: 0,
-        totalUnits: 100,
+      awardedUnits: 0
     };
     updatePrizes([...prizes, newPrize]);
   };
