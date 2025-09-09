@@ -17,26 +17,7 @@ interface GameManagementPanelProps {
   setCampaign: (campaign: any) => void;
 }
 
-interface WheelSegment {
-  id: string;
-  label: string;
-  color: string;
-  probability?: number;
-  prizeId?: string;
-  contentType: 'text' | 'image';
-  imageUrl?: string;
-}
-
-interface Prize {
-  id: string;
-  name: string;
-  description: string;
-  attributionMethod: 'calendar' | 'probability';
-  calendarDate?: string;
-  calendarTime?: string;
-  probability?: number;
-  segmentId?: string;
-}
+import { Prize, WheelSegment } from '../../../types/PrizeSystem';
 
 const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   campaign,
@@ -193,7 +174,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       name: 'Nouveau lot',
       method: 'probability',
       probabilityPercent: 10,
-      awardedUnits: 0
+        awardedUnits: 0,
+        totalUnits: 100,
     };
     updatePrizes([...prizes, newPrize]);
   };

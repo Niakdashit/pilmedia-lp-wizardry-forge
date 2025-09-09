@@ -13,6 +13,14 @@ export interface Prize {
   imageUrl?: string;
   method: PrizeMethod;
   
+  // Legacy properties for backward compatibility
+  description?: string;
+  attributionMethod?: 'calendar' | 'probability';
+  probability?: number;
+  segmentId?: string;
+  calendarDate?: string;
+  calendarTime?: string;
+  
   // Propriétés spécifiques à la méthode probabilité
   probabilityPercent?: number; // 0-100
   
