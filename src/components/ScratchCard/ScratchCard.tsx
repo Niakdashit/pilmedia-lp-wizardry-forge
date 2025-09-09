@@ -30,24 +30,31 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
 
   const {
     initCanvas,
-    handleScratch,
-    getScratchPercentage
+    startScratching,
+    scratch,
+    stopScratching,
+    resetScratch,
+    getProgress
   } = useScratchCanvas({
-    canvasRef,
-    scratchColor,
-    brushSize,
-    threshold,
+    width,
+    height,
+    scratchTexture: scratchColor,
+    opacity: 1,
     onComplete: useCallback((percentage: number) => {
       setState(prev => ({ ...prev, isCompleted: true, scratchPercentage: percentage }));
       onComplete?.(percentage);
     }, [onComplete])
   });
 
+  // Create proxy functions for compatibility
+  const handleScratch = scratch;
+  const getScratchPercentage = getProgress;
+
   useEffect(() => {
     if (canvasRef.current) {
-      initCanvas(width, height);
+      initCanvas(canvasRef.current, { width, height, scratchTexture: scratchColor });
     }
-  }, [width, height, initCanvas]);
+  }, [width, height, scratchColor, initCanvas]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;

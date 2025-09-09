@@ -1,5 +1,4 @@
 import React from 'react';
-import type { ElementBounds } from '../core/AlignmentSystem';
 import { useAlignmentSystem } from '../hooks/useAlignmentSystem';
 
 interface AlignmentToolbarProps {
