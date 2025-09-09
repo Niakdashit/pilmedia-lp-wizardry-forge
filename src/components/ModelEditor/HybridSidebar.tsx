@@ -14,7 +14,6 @@ import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -711,20 +710,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
-        return (
-          <div className="p-4">
-            <QuizManagementPanel 
-              campaign={campaign || campaignConfig}
-              setCampaign={(updatedCampaign) => {
-                // Mettre à jour l'état global ET local
-                setCampaign(updatedCampaign);
-                if (onCampaignConfigChange) {
-                  onCampaignConfigChange(updatedCampaign);
-                }
-              }}
-            />
-          </div>
-        );
+        return <div className="p-4" />;
       case 'form':
         return (
           <div className="p-4">
