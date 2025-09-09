@@ -233,7 +233,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
-  // Note: Mobile toolbar height calculation removed - not used
+  // Mesure dynamique de la hauteur de la toolbar mobile
+  useEffect(() => {
+    if (!isRealMobile()) return;
+    const updateHeight = () => {
+      const toolbar = document.getElementById('mobile-toolbar');
+      setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   // Optimisation mobile pour une expérience tactile parfaite
 
