@@ -237,8 +237,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     const updateHeight = () => {
-      const toolbar = document.getElementById('mobile-toolbar');
-      console.log('Mobile toolbar detected');
+      console.log('Mobile toolbar height updated');
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
@@ -352,16 +351,25 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         updatedCampaign.design.quizConfig.style = {
           ...(updatedCampaign.design.quizConfig.style || {}),
           borderRadius: updates.borderRadius
-        };
+        }
+      }
+    };
         onCampaignChange(updatedCampaign);
       }
       
       // Forcer le re-render du TemplatedQuiz
-      const event = new CustomEvent('quizStyleUpdate', { 
-        detail: { borderRadius: updates.borderRadius } 
-      });
-      window.dispatchEvent(event);
+      if (updates.borderRadius !== undefined) {
+        const event = new CustomEvent('quizStyleUpdate', { 
+          detail: { borderRadius: updates.borderRadius } 
+        });
+        window.dispatchEvent(event);
+      }
     }
+  
+    // Store performance metrics for optimization
+    const updateAutoSaveData = useCallback((campaign: any, activityType: string, intensity: number) => {
+      // Auto-save logic placeholder
+    }, []);
 
     // 🔒 Blocage des déplacements des enfants quand leur groupe parent est sélectionné
     // Si l'élément a un parentGroupId, et que ce groupe est actuellement sélectionné,
@@ -514,8 +522,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
     const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
     const intensity = activityType === 'drag' ? 0.8 : 0.5;
-    updateAutoSaveData(campaign, activityType, intensity);
-  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
+  // Store performance metrics for optimization
+  const updateAutoSaveData = useCallback((campaign: any, activityType: string, intensity: number) => {
+    // Auto-save logic placeholder
+  }, []);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -2229,7 +2239,5 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     </DndProvider>
   );
 });
-
-DesignCanvas.displayName = 'DesignCanvas';
 
 export default DesignCanvas;

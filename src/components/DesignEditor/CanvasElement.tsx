@@ -1403,7 +1403,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             onBringForward={bringForward}
             onSendBackward={sendBackward}
             onSendToBack={sendToBack}
-            canPaste={canPaste()}
+            canPaste={canPaste}
           />
         </div>
       )}
