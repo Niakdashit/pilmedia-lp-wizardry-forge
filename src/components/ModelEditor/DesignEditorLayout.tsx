@@ -1417,7 +1417,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 showQuizPanel={showQuizPanel}
                 onQuizPanelChange={setShowQuizPanel}
                 showDesignPanel={showDesignInSidebar}
-                onDesignPanelChange={(isOpen) => {
+                onDesignPanelChange={(isOpen: boolean) => {
                   if (!isOpen) {
                     setShowDesignInSidebar(false);
                   }
@@ -1624,7 +1624,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     }
                   }));
                 }}
-                onButtonHoverBackgroundColorChange={(color) => {
+                onButtonHoverBackgroundColorChange={(color: string) => {
                   setQuizConfig(prev => ({
                     ...prev,
                     buttonHoverBackgroundColor: color,
@@ -1648,7 +1648,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     }
                   }));
                 }}
-                onButtonActiveBackgroundColorChange={(color) => {
+                onButtonActiveBackgroundColorChange={(color: string) => {
                   setQuizConfig(prev => ({ ...prev, buttonActiveBackgroundColor: color }));
                   // Mettre à jour campaignConfig
                   setCampaignConfig((current: any) => ({
@@ -1682,7 +1682,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
-                colorEditingContext={designColorContext}
+                colorEditingContext={designColorContext === 'text' ? 'fill' : designColorContext}
               />
             )}
             {/* Main Canvas Area */}
