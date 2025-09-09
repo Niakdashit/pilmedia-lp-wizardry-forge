@@ -80,6 +80,10 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
+  quizWidth?: string;
+  onQuizWidthChange?: (width: string) => void;
+  quizMobileWidth?: string;
+  onQuizMobileWidthChange?: (width: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   // Callback pour forcer l'ouverture de l'onglet Elements
   onForceElementsTab?: () => void;
@@ -578,7 +582,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 } 
               }));
             }}
-            onTextColorChange={(color) => {
+            onTextColorChange={(color: string) => {
               setCampaign((prev: any) => ({
                 ...prev,
                 design: {
