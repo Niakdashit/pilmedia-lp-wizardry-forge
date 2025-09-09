@@ -489,21 +489,25 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
             // Zoom controls wiring
-            quizConfig={campaign?.design?.quizConfig || {}}
+            quizWidth={campaign?.design?.quizConfig?.style?.width ?? `${(campaign as any)?.design?.quizConfig?.style?.containerWidth || 800}px`}
+            quizMobileWidth={campaign?.design?.quizConfig?.style?.mobileWidth ?? `${(campaign as any)?.design?.quizConfig?.style?.mobileContainerWidth || 400}px`}
+            // Color controls (with safe defaults for panel display)
+            backgroundColor={campaign?.design?.quizConfig?.style?.backgroundColor ?? '#ffffff'}
+            backgroundOpacity={campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 100}
+            textColor={campaign?.design?.quizConfig?.style?.textColor ?? '#000000'}
+            buttonBackgroundColor={campaign?.design?.quizConfig?.style?.buttonBackgroundColor ?? '#f3f4f6'}
+            buttonTextColor={campaign?.design?.quizConfig?.style?.buttonTextColor ?? '#000000'}
+            buttonHoverBackgroundColor={campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
+            buttonActiveBackgroundColor={campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
             onQuizWidthChange={(width) => {
-              setCampaign((prev) => prev ? ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
-                  ...prev.design,
+                  ...prev?.design,
                   quizConfig: {
-                    ...(prev.design as any)?.quizConfig,
+                    ...(prev?.design as any)?.quizConfig,
                     style: {
-                      ...((prev.design as any)?.quizConfig?.style || {}),
-                      width
-                    }
-                  }
-                }
-              }) : null);
+                      ...((prev?.design as any)?.quizConfig?.style || {}),
                       width
                     }
                   }

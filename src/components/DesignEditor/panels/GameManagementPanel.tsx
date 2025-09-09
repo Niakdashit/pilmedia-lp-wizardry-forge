@@ -30,12 +30,11 @@ interface WheelSegment {
 interface Prize {
   id: string;
   name: string;
-  totalUnits: number;
-  awardedUnits: number;
-  method: 'probability' | 'calendar' | 'immediate';
-  probabilityPercent?: number;
+  description: string;
+  attributionMethod: 'calendar' | 'probability';
   calendarDate?: string;
   calendarTime?: string;
+  probability?: number;
   segmentId?: string;
 }
 
@@ -112,8 +111,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       prizes: newPrizes.map(prize => ({
         ...prize,
         // Map GameManagementPanel format to ProbabilityEngine format
-        method: prize.method,
-        probabilityPercent: prize.probabilityPercent,
+        method: prize.attributionMethod,
+        probabilityPercent: prize.probability,
         calendarDateTime: prize.calendarDate && prize.calendarTime ? 
           `${prize.calendarDate}T${prize.calendarTime}` : undefined
       }))
@@ -505,8 +504,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             type="radio"
                             name={`attribution-${prize.id}`}
                             value="probability"
-                            checked={prize.method === 'probability'}
-                            onChange={(e) => updatePrize(prize.id, { method: 'probability' })}
+                            checked={prize.attributionMethod === 'probability'}
+                            onChange={(e) => updatePrize(prize.id, { attributionMethod: 'probability' })}
                             className="mr-2"
                           />
                           <Percent className="w-4 h-4 mr-1" />
@@ -517,8 +516,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             type="radio"
                             name={`attribution-${prize.id}`}
                             value="calendar"
-                            checked={prize.method === 'calendar'}
-                            onChange={(e) => updatePrize(prize.id, { method: 'calendar' })}
+                            checked={prize.attributionMethod === 'calendar'}
+                            onChange={(e) => updatePrize(prize.id, { attributionMethod: 'calendar' })}
                             className="mr-2"
                           />
                           <Calendar className="w-4 h-4 mr-1" />
@@ -528,7 +527,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                     </div>
 
                     {/* Configuration selon la méthode */}
-                    {prize.method === 'probability' && (
+                    {prize.attributionMethod === 'probability' && (
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -538,8 +537,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                             type="number"
                             min="0"
                             max="100"
-                            value={prize.probabilityPercent || 0}
-                            onChange={(e) => updatePrize(prize.id, { probabilityPercent: Number(e.target.value) })}
+                            value={prize.probability || 0}
+                            onChange={(e) => updatePrize(prize.id, { probability: Number(e.target.value) })}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                           />
                         </div>
@@ -563,7 +562,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                       </div>
                     )}
 
-                    {prize.method === 'calendar' && (
+                    {prize.attributionMethod === 'calendar' && (
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">
