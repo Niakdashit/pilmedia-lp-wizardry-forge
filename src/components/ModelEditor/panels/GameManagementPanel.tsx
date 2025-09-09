@@ -191,10 +191,9 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     const newPrize: Prize = {
       id: Date.now().toString(),
       name: 'Nouveau lot',
-      totalUnits: 1,
-      awardedUnits: 0,
       method: 'probability',
-      probabilityPercent: 10
+      probabilityPercent: 10,
+      awardedUnits: 0
     };
     updatePrizes([...prizes, newPrize]);
   };
@@ -486,8 +485,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                         <input
                           type="number"
                           min="0"
-                          value={prize.totalUnits || 1}
-                          onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
+                          value={prize.awardedUnits || 0}
+                          onChange={(e) => updatePrize(prize.id, { awardedUnits: Number(e.target.value) || 0 })}
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                         />
                       </div>

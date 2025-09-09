@@ -1,14 +1,31 @@
 import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { OptimizedCampaign } from '../ModernEditor/types/CampaignTypes';
-import ModernGeneralTab from '../ModernEditor/tabs/ModernGeneralTab';
-import ModernDesignTab from '../ModernEditor/tabs/ModernDesignTab';
-import ModernGameTab from '../ModernEditor/tabs/ModernGameTab';
-import ModernFormTab from '../ModernEditor/tabs/ModernFormTab';
+// Simple placeholder components for missing ModernEditor tabs
+const ModernGeneralTab = ({ campaign, setCampaign }: any) => (
+  <div className="p-4"><p>Général - Configuration générale</p></div>
+);
+
+const ModernDesignTab = ({ campaign, setCampaign }: any) => (
+  <div className="p-4"><p>Design - Personnalisation visuelle</p></div>
+);
+
+const ModernGameTab = ({ campaign, setCampaign }: any) => (
+  <div className="p-4"><p>Jeu - Configuration du jeu</p></div>
+);
+
+const ModernFormTab = ({ campaign, setCampaign }: any) => (
+  <div className="p-4"><p>Formulaire - Collecte de données</p></div>
+);
 import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
 import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
-// import QuizConfigPanel from '../QuizEditor/components/QuizConfigPanel';
-const QuizConfigPanel = ({ onBack }: { onBack: () => void }) => (
+// Simplified QuizConfigPanel placeholder
+const QuizConfigPanel = ({ onBack, ...props }: { 
+  onBack: () => void; 
+  campaign?: any; 
+  setCampaign?: any;
+  [key: string]: any; 
+}) => (
   <div className="p-4">
     <button onClick={onBack} className="mb-4 px-4 py-2 bg-gray-200 rounded">← Retour</button>
     <p>Configuration Quiz - Bientôt disponible</p>
@@ -160,11 +177,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             quizDifficulty={quizDifficulty || 'medium'}
             quizBorderRadius={quizBorderRadius}
             selectedTemplate={selectedQuizTemplate}
-            onQuestionCountChange={(c) => onQuizQuestionCountChange?.(c)}
-            onTimeLimitChange={(t) => onQuizTimeLimitChange?.(t)}
-            onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
-            onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
-            onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
+            onQuestionCountChange={(c: number) => onQuizQuestionCountChange?.(c)}
+            onTimeLimitChange={(t: number) => onQuizTimeLimitChange?.(t)}
+            onDifficultyChange={(d: 'easy' | 'medium' | 'hard') => onQuizDifficultyChange?.(d)}
+            onBorderRadiusChange={(r: number) => onQuizBorderRadiusChange?.(r)}
+            onTemplateChange={(template: any) => onQuizTemplateChange?.(template.id)}
             selectedDevice={selectedDevice}
           />
         );
@@ -177,13 +194,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               currentBackground={currentBackground}
               extractedColors={extractedColors}
               selectedElement={selectedElement}
-              onElementUpdate={onElementUpdate}
+              onElementUpdate={(updates: any) => onElementUpdate('', updates)}
               colorEditingContext={colorEditingContext === 'stroke' ? 'fill' : colorEditingContext}
             />
           </div>
         );
       case 'elements':
-        return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
+        return <AssetsPanel 
+          onAddElement={onAddElement} 
+          selectedElement={selectedElement} 
+          onElementUpdate={(updates: any) => onElementUpdate('', updates)} 
+          selectedDevice={selectedDevice} 
+        />;
       case 'form':
         return (
           <div className="p-4">

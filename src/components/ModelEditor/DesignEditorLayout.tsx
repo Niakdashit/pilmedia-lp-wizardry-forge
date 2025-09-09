@@ -1457,7 +1457,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 // Gestion de la largeur du quiz
                 quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
-                onQuizWidthChange={(width) => {
+                onQuizWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
@@ -1526,7 +1526,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 // Gestion de la largeur mobile du quiz
                 quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
-                onQuizMobileWidthChange={(width) => {
+                onQuizMobileWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);
@@ -1580,7 +1580,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   }
                 }}
                 // Gestion des couleurs des boutons
-                onButtonBackgroundColorChange={(color) => {
+                onButtonBackgroundColorChange={(color: string) => {
                   setQuizConfig(prev => ({
                     ...prev,
                     buttonBackgroundColor: color,
@@ -1607,7 +1607,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     }
                   }));
                 }}
-                onButtonTextColorChange={(color) => {
+                onButtonTextColorChange={(color: string) => {
                   setQuizConfig(prev => ({ ...prev, buttonTextColor: color }));
                   // Mettre à jour campaignConfig
                   setCampaignConfig((current: any) => ({
