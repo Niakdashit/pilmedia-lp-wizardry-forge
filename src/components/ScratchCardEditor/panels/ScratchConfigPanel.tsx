@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Upload, Palette, Settings, Target } from 'lucide-react';
+import { ArrowLeft, Upload, Palette, Target } from 'lucide-react';
 import { useEditorStore } from '@/stores/editorStore';
 
 interface ScratchConfigPanelProps {

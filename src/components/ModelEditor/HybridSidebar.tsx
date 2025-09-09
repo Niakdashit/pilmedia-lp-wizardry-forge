@@ -64,18 +64,57 @@ interface HybridSidebarProps {
   // History
   onAddToHistory: (action: string) => void;
   
+  // Campaign config (for ModelEditor compatibility)
+  campaignConfig?: any;
+  onCampaignConfigChange?: (config: any) => void;
+  
   // Quiz specific props
   quizQuestionCount?: number;
   quizTimeLimit?: number;
   quizDifficulty?: 'easy' | 'medium' | 'hard';
   quizBorderRadius?: number;
   selectedQuizTemplate?: string;
+  quizWidth?: string;
   onQuizQuestionCountChange?: (count: number) => void;
   onQuizTimeLimitChange?: (time: number) => void;
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
+  showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
+  // Additional panel visibility props
+  showEffectsPanel?: boolean;
+  onEffectsPanelChange?: (show: boolean) => void;
+  showPositionPanel?: boolean;
+  onPositionPanelChange?: (show: boolean) => void;
+  showDesignPanel?: boolean;
+  onDesignPanelChange?: (show: boolean) => void;
+  showAnimationsPanel?: boolean;
+  onAnimationsPanelChange?: (show: boolean) => void;
+  
+  // Canvas reference for ModelEditor compatibility
+  canvasRef?: React.RefObject<any>;
+  
+  // Force elements tab function
+  onForceElementsTab?: () => void;
+  
+  // Hidden tabs configuration
+  hiddenTabs?: string[];
+  
+  // Quiz width handling
+  onQuizWidthChange?: (width: string) => void;
+  quizMobileWidth?: string;
+  onQuizMobileWidthChange?: (width: string) => void;
+  
+  // Button color handlers for quiz styling
+  buttonBackgroundColor?: string;
+  buttonTextColor?: string;
+  buttonHoverBackgroundColor?: string;
+  buttonActiveBackgroundColor?: string;
+  onButtonBackgroundColorChange?: (color: string) => void;
+  onButtonTextColorChange?: (color: string) => void;
+  onButtonHoverBackgroundColorChange?: (color: string) => void;
+  onButtonActiveBackgroundColorChange?: (color: string) => void;
 }
 
 export interface HybridSidebarRef {

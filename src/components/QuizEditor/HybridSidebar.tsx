@@ -13,7 +13,7 @@ import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
 import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
-import ModernFormTab from '../ModernEditor/ModernFormTab';
+import ModernFormTab from './ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
@@ -80,6 +80,10 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
+  quizWidth?: string;
+  onQuizWidthChange?: (width: string) => void;
+  quizMobileWidth?: string;
+  onQuizMobileWidthChange?: (width: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
   // Callback pour forcer l'ouverture de l'onglet Elements
   onForceElementsTab?: () => void;
@@ -558,7 +562,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onBackgroundOpacityChange={(opacity) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -578,8 +582,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 } 
               }));
             }}
-            onTextColorChange={(color) => {
-              setCampaign((prev) => ({
+            onTextColorChange={(color: string) => {
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -600,7 +604,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -618,7 +622,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonTextColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -636,7 +640,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonHoverBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -653,8 +657,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 detail: { buttonHoverBackgroundColor: color } 
               }));
             }}
-            onButtonActiveBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+            onButtonActiveBackgroundColorChange={(color: string) => {
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -668,28 +672,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 }
               }));
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonActiveBackgroundColor: color } 
               }));
-            }}
-            onTextColorChange={(color) => {
-              setCampaign((prev: any) => {
-                if (!prev) return prev;
-                const next = {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        textColor: color
-                      }
-                    }
-                  }
-                } as typeof prev;
-                return next;
-              });
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { textColor: color } }));
             }}
             selectedDevice={selectedDevice}
           />

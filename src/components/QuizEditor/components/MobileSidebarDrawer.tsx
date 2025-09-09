@@ -15,7 +15,7 @@ import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from '../panels/QuizManagementPanel';
-import { useEditorStore } from '../../stores/editorStore';
+import { useEditorStore } from '../../../stores/editorStore';
 
 // Lazy-loaded heavy panels
 const loadLayersPanel = () => import('../panels/LayersPanel');
@@ -45,6 +45,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   onBackgroundChange,
   onExtractedColorsChange,
   currentBackground,
+  campaignConfig,
   elements = [],
   onElementsChange,
   selectedElement,
@@ -54,8 +55,13 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   canUndo,
   canRedo
 }) => {
-  const campaign = useEditorStore((s) => s.campaign);
-  const setCampaign = useEditorStore((s) => s.setCampaign);
+  const campaign = useEditorStore((s: any) => s.campaign);
+  const setCampaign = useEditorStore((s: any) => s.setCampaign);
+  useEffect(() => {
+    if (!campaign && campaignConfig) {
+      setCampaign(campaignConfig);
+    }
+  }, [campaign, campaignConfig, setCampaign]);
   const [activeTab, setActiveTab] = useState<string>('elements');
   const [isMinimized, setIsMinimized] = useState(true);
 

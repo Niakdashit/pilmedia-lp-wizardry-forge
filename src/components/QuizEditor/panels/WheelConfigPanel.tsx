@@ -1,6 +1,16 @@
 import React from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
+
+// Simple placeholder for BorderStyleSelector
+const BorderStyleSelector = ({ currentStyle, onStyleChange }: any) => (
+  <select 
+    value={currentStyle} 
+    onChange={(e) => onStyleChange(e.target.value)}
+    className="w-full p-2 border rounded"
+  >
+    <option value="classic">Classic</option>
+    <option value="modern">Modern</option>
+  </select>
+);
 
 interface WheelConfigPanelProps {
   onBack: () => void;
