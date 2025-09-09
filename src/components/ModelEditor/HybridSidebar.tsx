@@ -95,12 +95,6 @@ interface HybridSidebarProps {
   // Canvas reference for ModelEditor compatibility
   canvasRef?: React.RefObject<any>;
   
-  // Force elements tab function
-  onForceElementsTab?: () => void;
-  
-  // Hidden tabs configuration
-  hiddenTabs?: string[];
-  
   // Quiz width handling
   onQuizWidthChange?: (width: string) => void;
   quizMobileWidth?: string;
