@@ -81,7 +81,6 @@ interface HybridSidebarProps {
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
   showQuizPanel?: boolean;
-  onQuizPanelChange?: (show: boolean) => void;
   // Additional panel visibility props
   showEffectsPanel?: boolean;
   onEffectsPanelChange?: (show: boolean) => void;
@@ -91,24 +90,6 @@ interface HybridSidebarProps {
   onDesignPanelChange?: (show: boolean) => void;
   showAnimationsPanel?: boolean;
   onAnimationsPanelChange?: (show: boolean) => void;
-  
-  // Canvas reference for ModelEditor compatibility
-  canvasRef?: React.RefObject<any>;
-  
-  // Quiz width handling
-  onQuizWidthChange?: (width: string) => void;
-  quizMobileWidth?: string;
-  onQuizMobileWidthChange?: (width: string) => void;
-  
-  // Button color handlers for quiz styling
-  buttonBackgroundColor?: string;
-  buttonTextColor?: string;
-  buttonHoverBackgroundColor?: string;
-  buttonActiveBackgroundColor?: string;
-  onButtonBackgroundColorChange?: (color: string) => void;
-  onButtonTextColorChange?: (color: string) => void;
-  onButtonHoverBackgroundColorChange?: (color: string) => void;
-  onButtonActiveBackgroundColorChange?: (color: string) => void;
 }
 
 export interface HybridSidebarRef {

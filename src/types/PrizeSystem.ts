@@ -39,7 +39,6 @@ export interface WheelSegment {
   textColor: string;
   prizeId?: string;
   imageUrl?: string;
-  contentType?: 'text' | 'image';
   probability: number; // Probabilité calculée (0-100) - required
   isWinning?: boolean;  // Déterminé par la présence d'un lot valide
 }
