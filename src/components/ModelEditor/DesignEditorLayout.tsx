@@ -1415,10 +1415,13 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
                 extractedColors={extractedColors}
+                colorEditingContext="fill"
                 onAddToHistory={() => {}}
                 campaignConfig={campaignConfig}
                 onCampaignConfigChange={handleCampaignConfigChange}
                 canvasRef={canvasRef}
+                onForceElementsTab={() => {}}
+                hiddenTabs={[]}
                 showEffectsPanel={showEffectsInSidebar}
                 onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
@@ -1687,6 +1690,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   setShowAnimationsInSidebar(false);
                   setShowPositionInSidebar(false);
                 }}
+                selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext === 'text' ? 'fill' : designColorContext}
               />
