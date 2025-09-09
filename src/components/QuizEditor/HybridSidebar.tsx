@@ -501,7 +501,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             buttonHoverBackgroundColor={campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
             buttonActiveBackgroundColor={campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
             onQuizWidthChange={(width) => {
-            setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev?.design,
@@ -517,7 +517,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { width } }));
             }}
             onQuizMobileWidthChange={(width) => {
-            setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev?.design,
@@ -533,7 +533,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
             }}
             onBackgroundColorChange={(color) => {
-            setCampaign((prev: any) => ({
+              setCampaign((prev) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -672,7 +672,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onTextColorChange={(color) => {
-              setCampaign((prev: any) => {
+              setCampaign((prev) => {
                 if (!prev) return prev;
                 const next = {
                   ...prev,

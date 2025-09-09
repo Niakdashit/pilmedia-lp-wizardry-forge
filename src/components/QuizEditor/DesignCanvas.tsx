@@ -4,7 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
-
+import { quizTemplates } from '../../types/quizTemplates';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
@@ -146,7 +146,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  
+  const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -238,7 +238,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (!isRealMobile()) return;
     const updateHeight = () => {
       const toolbar = document.getElementById('mobile-toolbar');
-      console.log('Mobile toolbar detected');
+      setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
@@ -1446,7 +1446,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Calculer des positions ABSOLUES pour les éléments enfants de groupe
   // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  useMemo(() => {
+  const elementsWithAbsolute = useMemo(() => {
     return elementsWithResponsive.map((el: any) => {
       const parentId = (el as any).parentGroupId;
       if (!parentId) return el;
@@ -1592,7 +1592,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+            const canvasEl = activeCanvasRef.current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom

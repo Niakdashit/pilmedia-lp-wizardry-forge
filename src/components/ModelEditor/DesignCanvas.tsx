@@ -4,6 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
+import { quizTemplates } from '../../types/quizTemplates';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
@@ -24,6 +25,7 @@ import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopu
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
+import { isRealMobile } from '../../utils/isRealMobile';
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
