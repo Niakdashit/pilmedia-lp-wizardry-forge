@@ -30,69 +30,104 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     const viewportWidth = windowSize.width;
     const viewportHeight = windowSize.height;
 
-    // Detect mobile device
-    const isMobile = viewportWidth < 768;
-    const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
+    // Detect mobile device - also consider selectedDevice prop for preview mode
+    const isMobile = selectedDevice === 'mobile' || viewportWidth < 768;
+    const isTablet = selectedDevice === 'tablet' || (viewportWidth >= 768 && viewportWidth < 1024);
 
-    // Calculate available space (accounting for UI elements and mobile considerations)
-    let headerHeight = 120; // Header + navigation
-    let sidebarWidth = 320; // Sidebar width
-    let padding = 60; // Total padding
+    // Create a local copy of grid to modify
+    const localGrid = { ...grid };
 
-    // Adjust for mobile/tablet
+    // Calculate available space more accurately
+    let headerHeight = 80;
+    let sidebarWidth = 280;
+    let containerPadding = 40;
+    let gridGap = grid.gap;
+
+    // Adjust for mobile/tablet with more conservative values
     if (isMobile) {
-      headerHeight = 80; // Smaller header on mobile
-      sidebarWidth = 0; // No sidebar on mobile (overlay)
-      padding = 20; // Less padding on mobile
-
-      // Account for mobile browser UI (address bar, etc.)
-      // Use visual viewport if available (more accurate on mobile)
-      if (window.visualViewport) {
-        const visualViewport = window.visualViewport;
-        console.log(`📱 Mobile visual viewport: ${visualViewport.width}x${visualViewport.height}`);
-      }
+      headerHeight = 60;
+      sidebarWidth = 0;
+      containerPadding = 20;
+      gridGap = 12;
+      
+      // Force single column on mobile
+      localGrid.cols = 1;
+      localGrid.rows = Math.ceil(cards.length / localGrid.cols);
     } else if (isTablet) {
-      sidebarWidth = 280; // Smaller sidebar on tablet
-      padding = 40;
+      sidebarWidth = 260;
+      containerPadding = 30;
+      gridGap = 16;
+      // Limit to 2 columns on tablet
+      localGrid.cols = Math.min(localGrid.cols, 2);
+      localGrid.rows = Math.ceil(cards.length / localGrid.cols);
     }
 
-    const availableWidth = Math.min(viewportWidth - sidebarWidth - padding, 1200); // Max width constraint
-    const availableHeight = viewportHeight - headerHeight - padding;
+    // Calculate truly available space with margins
+    const availableWidth = viewportWidth - sidebarWidth - (containerPadding * 2);
+    const availableHeight = viewportHeight - headerHeight - (containerPadding * 2);
 
-    console.log(`📐 Viewport: ${viewportWidth}x${viewportHeight}, Available: ${availableWidth}x${availableHeight}, Device: ${isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'}`);
+    // Calculate space for gaps
+    const totalGapWidth = gridGap * Math.max(0, localGrid.cols - 1);
+    const totalGapHeight = gridGap * Math.max(0, localGrid.rows - 1);
 
-    // Calculate card dimensions to fit all cards within available space
-    const totalGapWidth = grid.gap * (grid.cols - 1);
-    const totalGapHeight = grid.gap * (grid.rows - 1);
+    // Calculate card dimensions that actually fit
+    const cardSpaceWidth = availableWidth - totalGapWidth;
+    const cardSpaceHeight = availableHeight - totalGapHeight;
 
-    // Calculate maximum card size that fits all cards
-    const maxCardWidth = (availableWidth - (isMobile ? totalGapWidth * 0.7 : totalGapWidth)) / grid.cols;
-    const maxCardHeight = (availableHeight - (isMobile ? totalGapHeight * 0.7 : totalGapHeight)) / grid.rows;
+    // For mobile, use a more reasonable card width (not the full available width)
+    let maxCardWidth, maxCardHeight;
+    if (isMobile) {
+      // Limit card width to a reasonable size on mobile (60-80% of available width)
+      const mobileCardWidth = Math.min(cardSpaceWidth * 0.7, 280);
+      maxCardWidth = Math.floor(mobileCardWidth);
+      maxCardHeight = Math.floor(cardSpaceHeight / localGrid.rows);
+    } else {
+      maxCardWidth = Math.floor(cardSpaceWidth / localGrid.cols);
+      maxCardHeight = Math.floor(cardSpaceHeight / localGrid.rows);
+    }
+
+    console.log(`📐 Viewport: ${viewportWidth}x${viewportHeight}`);
+    console.log(`📐 Available space: ${availableWidth}x${availableHeight}`);
+    console.log(`📐 Card space after gaps: ${cardSpaceWidth}x${cardSpaceHeight}`);
+    console.log(`📐 Max card size: ${maxCardWidth}x${maxCardHeight}`);
+    console.log(`📱 Device detection: isMobile=${isMobile}, isTablet=${isTablet}, selectedDevice=${selectedDevice}`);
 
     let cardWidth: number;
     let cardHeight: number;
 
     if (grid.cardShape === 'vertical-rectangle') {
-      // Rectangle vertical: prioritize height, adjust width accordingly
-      cardHeight = Math.min(maxCardHeight, maxCardWidth * 1.5);
-      cardWidth = cardHeight / 1.5;
+      // Rectangle vertical (3:2 ratio)
+      const widthBasedHeight = maxCardWidth * 1.5;
+      const heightBasedWidth = maxCardHeight / 1.5;
+      
+      if (widthBasedHeight <= maxCardHeight) {
+        cardWidth = maxCardWidth;
+        cardHeight = widthBasedHeight;
+      } else {
+        cardWidth = heightBasedWidth;
+        cardHeight = maxCardHeight;
+      }
     } else {
-      // Carré: use the smaller dimension to ensure square fits
-      const maxSquareSize = Math.min(maxCardWidth, maxCardHeight);
-      cardWidth = maxSquareSize;
-      cardHeight = maxSquareSize;
+      // Square: use the smaller dimension
+      const squareSize = Math.min(maxCardWidth, maxCardHeight);
+      cardWidth = squareSize;
+      cardHeight = squareSize;
     }
 
-    // Adjust minimum size for mobile
-    const minSize = isMobile ? 60 : 80;
-    cardWidth = Math.max(cardWidth, minSize);
-    cardHeight = Math.max(cardHeight, minSize);
+    // Ensure minimum usable size
+    const minSize = isMobile ? 120 : 150;
+    if (cardWidth < minSize || cardHeight < minSize) {
+      const scale = minSize / Math.min(cardWidth, cardHeight);
+      cardWidth *= scale;
+      cardHeight *= scale;
+    }
 
     // Calculate final container dimensions
-    const containerWidth = cardWidth * grid.cols + totalGapWidth;
-    const containerHeight = cardHeight * grid.rows + totalGapHeight;
+    const containerWidth = (cardWidth * localGrid.cols) + totalGapWidth;
+    const containerHeight = (cardHeight * localGrid.rows) + totalGapHeight;
 
-    console.log(`🎴 Card dimensions: ${cardWidth.toFixed(1)}x${cardHeight.toFixed(1)} | Container: ${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}`);
+    console.log(`🎴 Final card: ${cardWidth.toFixed(1)}x${cardHeight.toFixed(1)}`);
+    console.log(`🎴 Final container: ${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}`);
 
     return {
       containerWidth,
@@ -100,9 +135,11 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       cardWidth,
       cardHeight,
       isMobile,
-      isTablet
+      isTablet,
+      localGrid,
+      gridGap
     };
-  }, [windowSize, grid.cols, grid.rows, grid.gap, grid.cardShape]);
+  }, [windowSize, grid, cards.length, selectedDevice]);
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -203,12 +240,14 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       ref={containerRef}
       className="sc-canvas-container"
       style={{
-        width: containerDimensions.containerWidth,
-        height: containerDimensions.containerHeight,
+        width: '100%',
+        height: '100%',
         position: 'relative',
-        margin: '0 auto',
-        padding: containerDimensions.isMobile ? '10px' : '20px',
-        background: 'transparent'
+        background: 'transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0
       }}
     >
       {/* Reset button (visible only in edit mode) */}
@@ -239,14 +278,20 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
-          gridTemplateRows: `repeat(${grid.rows}, 1fr)`,
-          gap: containerDimensions.isMobile ? `${Math.max(grid.gap * 0.5, 4)}px` : `${grid.gap}px`,
-          width: '100%',
-          height: '100%'
+          gridTemplateColumns: `repeat(${containerDimensions.localGrid.cols}, ${containerDimensions.cardWidth}px)`,
+          gridTemplateRows: `repeat(${containerDimensions.localGrid.rows}, ${containerDimensions.cardHeight}px)`,
+          gap: `${containerDimensions.gridGap}px`,
+          justifyContent: 'center',
+          alignContent: 'center',
+          ...(containerDimensions.isMobile && {
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)'
+          })
         }}
       >
-        {cards.slice(0, grid.rows * grid.cols).map(renderScratchCard)}
+        {cards.slice(0, containerDimensions.localGrid.rows * containerDimensions.localGrid.cols).map(renderScratchCard)}
       </div>
     </div>
   );
