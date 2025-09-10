@@ -21,32 +21,131 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
   console.log(`🔧 ScratchCardCanvas render - threshold: ${(threshold * 100).toFixed(1)}%`);
   console.log(`🔧 ScratchCardCanvas render - updateCardProgress function:`, typeof updateCardProgress);
 
-  // Responsive dimensions
+  // State to force re-render on window resize
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  // Responsive dimensions - ensure all cards fit completely without being cut off
   const containerDimensions = useMemo(() => {
-    const baseWidth = selectedDevice === 'mobile' ? 320 : selectedDevice === 'tablet' ? 768 : 1024;
-    const padding = 40;
-    const availableWidth = baseWidth - padding * 2;
-    
+    // Get actual viewport dimensions
+    const viewportWidth = windowSize.width;
+    const viewportHeight = windowSize.height;
+
+    // Detect mobile device
+    const isMobile = viewportWidth < 768;
+    const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
+
+    // Calculate available space (accounting for UI elements and mobile considerations)
+    let headerHeight = 120; // Header + navigation
+    let sidebarWidth = 320; // Sidebar width
+    let padding = 60; // Total padding
+
+    // Adjust for mobile/tablet
+    if (isMobile) {
+      headerHeight = 80; // Smaller header on mobile
+      sidebarWidth = 0; // No sidebar on mobile (overlay)
+      padding = 20; // Less padding on mobile
+
+      // Account for mobile browser UI (address bar, etc.)
+      // Use visual viewport if available (more accurate on mobile)
+      if (window.visualViewport) {
+        const visualViewport = window.visualViewport;
+        console.log(`📱 Mobile visual viewport: ${visualViewport.width}x${visualViewport.height}`);
+      }
+    } else if (isTablet) {
+      sidebarWidth = 280; // Smaller sidebar on tablet
+      padding = 40;
+    }
+
+    const availableWidth = Math.min(viewportWidth - sidebarWidth - padding, 1200); // Max width constraint
+    const availableHeight = viewportHeight - headerHeight - padding;
+
+    console.log(`📐 Viewport: ${viewportWidth}x${viewportHeight}, Available: ${availableWidth}x${availableHeight}, Device: ${isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'}`);
+
+    // Calculate card dimensions to fit all cards within available space
+    const totalGapWidth = grid.gap * (grid.cols - 1);
+    const totalGapHeight = grid.gap * (grid.rows - 1);
+
+    // Calculate maximum card size that fits all cards
+    const maxCardWidth = (availableWidth - (isMobile ? totalGapWidth * 0.7 : totalGapWidth)) / grid.cols;
+    const maxCardHeight = (availableHeight - (isMobile ? totalGapHeight * 0.7 : totalGapHeight)) / grid.rows;
+
     let cardWidth: number;
     let cardHeight: number;
-    
+
     if (grid.cardShape === 'vertical-rectangle') {
-      // Rectangle vertical: largeur fixe, hauteur 1.5x plus grande
-      cardWidth = (availableWidth - grid.gap * (grid.cols - 1)) / grid.cols;
-      cardHeight = cardWidth * 1.5; // Ratio 3:2 vertical
+      // Rectangle vertical: prioritize height, adjust width accordingly
+      cardHeight = Math.min(maxCardHeight, maxCardWidth * 1.5);
+      cardWidth = cardHeight / 1.5;
     } else {
-      // Carré (par défaut): dimensions égales
-      cardWidth = (availableWidth - grid.gap * (grid.cols - 1)) / grid.cols;
-      cardHeight = cardWidth; // Ratio 1:1 carré
+      // Carré: use the smaller dimension to ensure square fits
+      const maxSquareSize = Math.min(maxCardWidth, maxCardHeight);
+      cardWidth = maxSquareSize;
+      cardHeight = maxSquareSize;
     }
-    
+
+    // Adjust minimum size for mobile
+    const minSize = isMobile ? 60 : 80;
+    cardWidth = Math.max(cardWidth, minSize);
+    cardHeight = Math.max(cardHeight, minSize);
+
+    // Calculate final container dimensions
+    const containerWidth = cardWidth * grid.cols + totalGapWidth;
+    const containerHeight = cardHeight * grid.rows + totalGapHeight;
+
+    console.log(`🎴 Card dimensions: ${cardWidth.toFixed(1)}x${cardHeight.toFixed(1)} | Container: ${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}`);
+
     return {
-      containerWidth: availableWidth,
-      containerHeight: cardHeight * grid.rows + grid.gap * (grid.rows - 1),
+      containerWidth,
+      containerHeight,
       cardWidth,
-      cardHeight
+      cardHeight,
+      isMobile,
+      isTablet
     };
-  }, [selectedDevice, grid.cols, grid.rows, grid.gap, grid.cardShape]);
+  }, [windowSize, grid.cols, grid.rows, grid.gap, grid.cardShape]);
+
+  // Handle window resize for mobile responsiveness
+  useEffect(() => {
+    const handleResize = () => {
+      const newSize = { width: window.innerWidth, height: window.innerHeight };
+      setWindowSize(newSize);
+      console.log('🔄 Window resized, recalculating card dimensions');
+    };
+
+    const handleOrientationChange = () => {
+      // Delay to allow viewport to settle after orientation change
+      setTimeout(() => {
+        const newSize = { width: window.innerWidth, height: window.innerHeight };
+        setWindowSize(newSize);
+        console.log('📱 Orientation changed, recalculating card dimensions');
+      }, 100);
+    };
+
+    const handleVisualViewportChange = () => {
+      if (window.visualViewport) {
+        const visualViewport = window.visualViewport;
+        console.log(`📱 Visual viewport changed: ${visualViewport.width}x${visualViewport.height}`);
+        // Force re-render on visual viewport changes (mobile keyboard, etc.)
+        setWindowSize(prev => ({ ...prev })); // Trigger re-render
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    // Listen to visual viewport changes if available (better mobile support)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+      }
+    };
+  }, []);
 
   // Initialize scratch cards
   useEffect(() => {
@@ -108,7 +207,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
         height: containerDimensions.containerHeight,
         position: 'relative',
         margin: '0 auto',
-        padding: '20px',
+        padding: containerDimensions.isMobile ? '10px' : '20px',
         background: 'transparent'
       }}
     >
@@ -119,15 +218,15 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           className="sc-reset-button"
           style={{
             position: 'absolute',
-            top: -10,
-            right: -10,
+            top: containerDimensions.isMobile ? -5 : -10,
+            right: containerDimensions.isMobile ? -5 : -10,
             zIndex: 20,
-            padding: '8px 12px',
+            padding: containerDimensions.isMobile ? '6px 8px' : '8px 12px',
             background: '#ff6b6b',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
-            fontSize: '12px',
+            fontSize: containerDimensions.isMobile ? '11px' : '12px',
             cursor: 'pointer',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}
@@ -137,7 +236,18 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       )}
       
       {/* Scratch cards grid */}
-      {cards.slice(0, grid.rows * grid.cols).map(renderScratchCard)}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${grid.cols}, 1fr)`,
+          gridTemplateRows: `repeat(${grid.rows}, 1fr)`,
+          gap: containerDimensions.isMobile ? `${Math.max(grid.gap * 0.5, 4)}px` : `${grid.gap}px`,
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        {cards.slice(0, grid.rows * grid.cols).map(renderScratchCard)}
+      </div>
     </div>
   );
 };
