@@ -27,7 +27,7 @@ export type ScratchCard = {
   revealed?: boolean;     // lecture seule
 };
 
-export type CardShape = 'square' | 'vertical-rectangle';
+export type CardShape = 'vertical-rectangle';
 
 export type GridSettings = { 
   rows: number; 
@@ -44,6 +44,16 @@ export type BrushSettings = {
   intensity?: number 
 };
 
+export type Prize = {
+  id: string;
+  name: string;
+  quantity: number;
+  attributionMethod: 'probability' | 'calendar';
+  probability?: number;           // pour méthode probabilité
+  calendarDate?: string;          // pour méthode calendrier
+  calendarTime?: string;          // pour méthode calendrier
+};
+
 export type LogicSettings = {
   mode: 'fixed' | 'probability' | 'weighted';
   winnersCount?: number;          // fixed
@@ -52,6 +62,9 @@ export type LogicSettings = {
   allowMultipleWins?: boolean;
   maxAttempts?: number;           // 0 = illimité
   seed?: string;                  // déterminisme
+  winnerReveal?: Reveal;          // contenu révélé pour les cartes gagnantes
+  loserReveal?: Reveal;           // contenu révélé pour les cartes perdantes
+  prizes?: Prize[];               // lots à gagner
 };
 
 export type EffectsSettings = { 
@@ -66,6 +79,8 @@ export type ScratchCardState = {
   threshold: number;              // global 0..1
   globalCover?: Cover;
   globalReveal?: Reveal;
+  // Limitation stricte du nombre de cartes rendues
+  maxCards: 3 | 4 | 6;
   logic: LogicSettings;
   effects: EffectsSettings;
 };
@@ -91,7 +106,7 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     cols: 2,
     gap: 20,
     borderRadius: 24,
-    cardShape: 'square' // Default to square
+    cardShape: 'vertical-rectangle' // Default to rectangle
   },
   brush: {
     radius: 25, // Increased from 10 to 25 - larger brush for easier scratching
@@ -99,6 +114,7 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     intensity: 1
   },
   threshold: 0.15, // Adjusted from 75% to 15% - much more reasonable for user experience
+  maxCards: 4,
   globalCover: {
     type: 'color',
     value: '#D9B7A4',
@@ -118,7 +134,27 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     mode: 'fixed',
     winnersCount: 1,
     allowMultipleWins: false,
-    maxAttempts: 0
+    maxAttempts: 0,
+    winnerReveal: {
+      type: 'text',
+      value: 'Gagné !',
+      style: {
+        fontSize: 18,
+        fontWeight: 700,
+        color: '#22c55e',
+        align: 'center'
+      }
+    },
+    loserReveal: {
+      type: 'text',
+      value: 'Perdu',
+      style: {
+        fontSize: 16,
+        fontWeight: 600,
+        color: '#ef4444',
+        align: 'center'
+      }
+    }
   },
   effects: {
     confetti: true

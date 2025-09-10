@@ -15,6 +15,7 @@ interface ScratchCardStore {
   updateGlobalReveal: (reveal: ScratchCardState['globalReveal']) => void;
   updateLogic: (logic: Partial<ScratchCardState['logic']>) => void;
   updateEffects: (effects: Partial<ScratchCardState['effects']>) => void;
+  updateMaxCards: (max: 3 | 4 | 6) => void;
   
   // Actions sur les cartes
   addCard: () => void;
@@ -95,6 +96,33 @@ export const useScratchCardStore = create<ScratchCardStore>()(
         globalReveal: reveal
       }
     })),
+
+    updateMaxCards: (max) => set((state) => {
+      const normalizedMax: 3 | 4 | 6 = max === 6 ? 6 : max === 3 ? 3 : 4;
+      let cards = state.config.cards.slice(0, normalizedMax);
+      // If increasing cap, auto-pad with new empty cards up to max
+      while (cards.length < normalizedMax) {
+        const newId = (cards.length + 1).toString();
+        cards = [
+          ...cards,
+          { id: newId, isWinner: false, progress: 0, revealed: false } as ScratchCard
+        ];
+      }
+      // Normalize grid layout for a nice default based on cap
+      const normalizedGrid = {
+        ...state.config.grid,
+        rows: normalizedMax === 6 ? 2 : normalizedMax === 4 ? 2 : 1,
+        cols: normalizedMax === 6 ? 3 : normalizedMax === 4 ? 2 : 3
+      };
+      return {
+        config: {
+          ...state.config,
+          maxCards: normalizedMax,
+          cards,
+          grid: normalizedGrid
+        }
+      };
+    }),
     
     updateLogic: (logic) => set((state) => ({
       config: {
@@ -112,6 +140,9 @@ export const useScratchCardStore = create<ScratchCardStore>()(
     
     // Actions sur les cartes
     addCard: () => set((state) => {
+      if (state.config.cards.length >= state.config.maxCards) {
+        return { config: { ...state.config } };
+      }
       const newId = (state.config.cards.length + 1).toString();
       const newCard: ScratchCard = {
         id: newId,
