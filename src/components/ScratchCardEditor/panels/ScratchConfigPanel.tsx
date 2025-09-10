@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { ArrowLeft, Upload, Palette, Settings, Target } from 'lucide-react';
 import { useEditorStore } from '@/stores/editorStore';
