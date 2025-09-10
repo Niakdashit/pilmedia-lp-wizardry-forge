@@ -31,7 +31,11 @@ interface Prize {
   id: string;
   name: string;
   description: string;
+  totalUnits: number;
+  awardedUnits: number;
+  method: 'calendar' | 'probability';
   attributionMethod: 'calendar' | 'probability';
+  probabilityPercent?: number;
   calendarDate?: string;
   calendarTime?: string;
   probability?: number;
