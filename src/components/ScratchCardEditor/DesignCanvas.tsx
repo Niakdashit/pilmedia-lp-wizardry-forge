@@ -145,6 +145,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
