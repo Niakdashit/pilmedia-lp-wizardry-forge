@@ -13,7 +13,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Store state
   const { config, updateCardProgress, revealCard, resetAllCards } = useScratchCardStore();
   const { cards, grid, brush, threshold, globalCover, globalReveal } = config;
@@ -26,58 +26,56 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 
   // Responsive dimensions - ensure all cards fit completely without being cut off
   const containerDimensions = useMemo(() => {
-    // Get actual viewport dimensions
     const viewportWidth = windowSize.width;
     const viewportHeight = windowSize.height;
 
-    // Detect mobile device - also consider selectedDevice prop for preview mode
     const isMobile = selectedDevice === 'mobile' || viewportWidth < 768;
     const isTablet = selectedDevice === 'tablet' || (viewportWidth >= 768 && viewportWidth < 1024);
 
-    // Create a local copy of grid to modify
+    // Local copy que l'on peut modifier
     const localGrid = { ...grid };
 
-    // Calculate available space more accurately
+    // Mise à l'échelle des marges/espaces par device
     let headerHeight = 80;
     let sidebarWidth = 280;
     let containerPadding = 40;
     let gridGap = grid.gap;
 
-    // Adjust for mobile/tablet with more conservative values
     if (isMobile) {
       headerHeight = 60;
       sidebarWidth = 0;
       containerPadding = 20;
       gridGap = 12;
-      
-      // Force single column on mobile
+
+      // Forcer 1 colonne sur mobile
       localGrid.cols = 1;
       localGrid.rows = Math.ceil(cards.length / localGrid.cols);
     } else if (isTablet) {
       sidebarWidth = 260;
       containerPadding = 30;
       gridGap = 16;
-      // Limit to 2 columns on tablet
+
+      // Limiter à 2 colonnes sur tablette
       localGrid.cols = Math.min(localGrid.cols, 2);
       localGrid.rows = Math.ceil(cards.length / localGrid.cols);
     }
 
-    // Calculate truly available space with margins
-    const availableWidth = viewportWidth - sidebarWidth - (containerPadding * 2);
-    const availableHeight = viewportHeight - headerHeight - (containerPadding * 2);
+    // Espace réellement disponible
+    const availableWidth = viewportWidth - sidebarWidth - containerPadding * 2;
+    const availableHeight = viewportHeight - headerHeight - containerPadding * 2;
 
-    // Calculate space for gaps
+    // Espace pris par les gaps
     const totalGapWidth = gridGap * Math.max(0, localGrid.cols - 1);
     const totalGapHeight = gridGap * Math.max(0, localGrid.rows - 1);
 
-    // Calculate card dimensions that actually fit
     const cardSpaceWidth = availableWidth - totalGapWidth;
     const cardSpaceHeight = availableHeight - totalGapHeight;
 
-    // For mobile, use a more reasonable card width (not the full available width)
-    let maxCardWidth, maxCardHeight;
+    // Bornes max par carte
+    let maxCardWidth: number;
+    let maxCardHeight: number;
+
     if (isMobile) {
-      // Limit card width to a reasonable size on mobile (60-80% of available width)
       const mobileCardWidth = Math.min(cardSpaceWidth * 0.7, 280);
       maxCardWidth = Math.floor(mobileCardWidth);
       maxCardHeight = Math.floor(cardSpaceHeight / localGrid.rows);
@@ -92,14 +90,15 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     console.log(`📐 Max card size: ${maxCardWidth}x${maxCardHeight}`);
     console.log(`📱 Device detection: isMobile=${isMobile}, isTablet=${isTablet}, selectedDevice=${selectedDevice}`);
 
+    // Dimensions finales d'une carte
     let cardWidth: number;
     let cardHeight: number;
 
     if (grid.cardShape === 'vertical-rectangle') {
-      // Rectangle vertical (3:2 ratio)
+      // 3:2 (vertical)
       const widthBasedHeight = maxCardWidth * 1.5;
       const heightBasedWidth = maxCardHeight / 1.5;
-      
+
       if (widthBasedHeight <= maxCardHeight) {
         cardWidth = maxCardWidth;
         cardHeight = widthBasedHeight;
@@ -108,13 +107,13 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
         cardHeight = maxCardHeight;
       }
     } else {
-      // Square: use the smaller dimension
+      // Carré
       const squareSize = Math.min(maxCardWidth, maxCardHeight);
       cardWidth = squareSize;
       cardHeight = squareSize;
     }
 
-    // Ensure minimum usable size
+    // Taille mini utilisable
     const minSize = isMobile ? 120 : 150;
     if (cardWidth < minSize || cardHeight < minSize) {
       const scale = minSize / Math.min(cardWidth, cardHeight);
@@ -122,9 +121,9 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       cardHeight *= scale;
     }
 
-    // Calculate final container dimensions
-    const containerWidth = (cardWidth * localGrid.cols) + totalGapWidth;
-    const containerHeight = (cardHeight * localGrid.rows) + totalGapHeight;
+    // Dimensions finales du conteneur/grille
+    const containerWidth = cardWidth * localGrid.cols + totalGapWidth;
+    const containerHeight = cardHeight * localGrid.rows + totalGapHeight;
 
     console.log(`🎴 Final card: ${cardWidth.toFixed(1)}x${cardHeight.toFixed(1)}`);
     console.log(`🎴 Final container: ${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}`);
@@ -144,16 +143,13 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
   // Handle window resize for mobile responsiveness
   useEffect(() => {
     const handleResize = () => {
-      const newSize = { width: window.innerWidth, height: window.innerHeight };
-      setWindowSize(newSize);
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
       console.log('🔄 Window resized, recalculating card dimensions');
     };
 
     const handleOrientationChange = () => {
-      // Delay to allow viewport to settle after orientation change
       setTimeout(() => {
-        const newSize = { width: window.innerWidth, height: window.innerHeight };
-        setWindowSize(newSize);
+        setWindowSize({ width: window.innerWidth, height: window.innerHeight });
         console.log('📱 Orientation changed, recalculating card dimensions');
       }, 100);
     };
@@ -162,15 +158,12 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       if (window.visualViewport) {
         const visualViewport = window.visualViewport;
         console.log(`📱 Visual viewport changed: ${visualViewport.width}x${visualViewport.height}`);
-        // Force re-render on visual viewport changes (mobile keyboard, etc.)
         setWindowSize(prev => ({ ...prev })); // Trigger re-render
       }
     };
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
-
-    // Listen to visual viewport changes if available (better mobile support)
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleVisualViewportChange);
     }
@@ -193,15 +186,16 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 
   // Render individual scratch card
   const renderScratchCard = useCallback((card: ScratchCard, index: number) => {
-    const row = Math.floor(index / grid.cols);
-    const col = index % grid.cols;
-    
-    const x = col * (containerDimensions.cardWidth + grid.gap);
-    const y = row * (containerDimensions.cardHeight + grid.gap);
-    
+    // ⚠️ Utiliser les colonnes/espaces recalculés (localGrid + gridGap)
+    const row = Math.floor(index / containerDimensions.localGrid.cols);
+    const col = index % containerDimensions.localGrid.cols;
+
+    const x = col * (containerDimensions.cardWidth + containerDimensions.gridGap);
+    const y = row * (containerDimensions.cardHeight + containerDimensions.gridGap);
+
     const cardCover = card.cover || globalCover;
     const cardReveal = card.reveal || globalReveal;
-    
+
     return (
       <ScratchCardItem
         key={card.id}
@@ -224,19 +218,19 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       />
     );
   }, [
-    grid, 
-    containerDimensions, 
-    globalCover, 
-    globalReveal, 
-    brush.radius, 
-    threshold, 
-    updateCardProgress, 
-    revealCard, 
+    containerDimensions,
+    globalCover,
+    globalReveal,
+    grid.borderRadius,
+    brush.radius,
+    threshold,
+    updateCardProgress,
+    revealCard,
     previewMode
   ]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="sc-canvas-container"
       style={{
@@ -273,25 +267,27 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           Reset
         </button>
       )}
-      
+
       {/* Scratch cards grid */}
       <div
         style={{
+          // ✅ Ce wrapper devient le “containing block” des cartes absoutes
+          position: 'relative',
+          width: `${containerDimensions.containerWidth}px`,
+          height: `${containerDimensions.containerHeight}px`,
+
+          // On peut garder grid (esthétique/outils), mais les cartes sont positionnées en absolu
           display: 'grid',
           gridTemplateColumns: `repeat(${containerDimensions.localGrid.cols}, ${containerDimensions.cardWidth}px)`,
           gridTemplateRows: `repeat(${containerDimensions.localGrid.rows}, ${containerDimensions.cardHeight}px)`,
           gap: `${containerDimensions.gridGap}px`,
-          justifyContent: 'center',
-          alignContent: 'center',
-          ...(containerDimensions.isMobile && {
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)'
-          })
+
+          // ❌ Ne plus centrer en absolu sur mobile, le parent flex le fait déjà
         }}
       >
-        {cards.slice(0, containerDimensions.localGrid.rows * containerDimensions.localGrid.cols).map(renderScratchCard)}
+        {cards
+          .slice(0, containerDimensions.localGrid.rows * containerDimensions.localGrid.cols)
+          .map(renderScratchCard)}
       </div>
     </div>
   );
@@ -333,85 +329,84 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isScratching, setIsScratching] = useState(false);
   const [lastProgress, setLastProgress] = useState(0);
-  // Baseline count of initially opaque (scratchable) pixels for this card
   const initialOpaquePixelsRef = useRef<number>(0);
-  
+
   // Initialize canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     const overlayCanvas = overlayCanvasRef.current;
-    
+
     if (!canvas || !overlayCanvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     const overlayCtx = overlayCanvas.getContext('2d');
-    
+
     if (!ctx || !overlayCtx) return;
-    
+
     // Set canvas dimensions
     canvas.width = width;
     canvas.height = height;
     overlayCanvas.width = width;
     overlayCanvas.height = height;
-    
-    // Optimize for frequent read operations (fixes console warning)
+
+    // Optimize for frequent read operations
     if ('willReadFrequently' in ctx) {
       (ctx as any).willReadFrequently = true;
     }
     if ('willReadFrequently' in overlayCtx) {
       (overlayCtx as any).willReadFrequently = true;
     }
-    
+
     // Draw reveal content (background)
     drawRevealContent(ctx, reveal, width, height);
-    
+
     // Draw cover (overlay) - only if not revealed and not currently scratching
     if (!card.revealed && !isScratching) {
       drawCoverContent(overlayCtx, cover, width, height);
-      
-      // Establish baseline ONLY if not already established
+
       if (initialOpaquePixelsRef.current === 0) {
         try {
           const baselinePixels = countOpaquePixels(overlayCtx, width, height, 10);
-          console.log(`🎯 Establishing baseline for card ${card.id}: ${baselinePixels} opaque pixels out of ${width * height} total (${((baselinePixels / (width * height)) * 100).toFixed(1)}%)`);
+          console.log(
+            `🎯 Establishing baseline for card ${card.id}: ${baselinePixels} opaque pixels out of ${width * height} total (${(
+              (baselinePixels / (width * height)) *
+              100
+            ).toFixed(1)}%)`
+          );
           initialOpaquePixelsRef.current = baselinePixels;
         } catch (err) {
           console.warn(`⚠️ Failed to establish baseline for card ${card.id}:`, err);
         }
       }
     }
-    
-  }, [card.id, cover, reveal, width, height]); // Removed card.revealed and isScratching to prevent baseline reset
-  
+  }, [card.id, cover, reveal, width, height]); // OK
+
   // Draw reveal content
   const drawRevealContent = (ctx: CanvasRenderingContext2D, reveal?: Reveal, w?: number, h?: number) => {
     if (!ctx || !w || !h) return;
-    
+
     ctx.clearRect(0, 0, w, h);
-    
+
     if (reveal?.type === 'image' && reveal.url) {
       const img = new Image();
       img.onload = () => {
-        // Calculate dimensions to center image without deformation
         const imgAspectRatio = img.width / img.height;
         const canvasAspectRatio = w / h;
-        
+
         let drawWidth, drawHeight, drawX, drawY;
-        
+
         if (imgAspectRatio > canvasAspectRatio) {
-          // Image is wider than canvas - fit by width
           drawWidth = w;
           drawHeight = w / imgAspectRatio;
           drawX = 0;
           drawY = (h - drawHeight) / 2;
         } else {
-          // Image is taller than canvas - fit by height
           drawHeight = h;
           drawWidth = h * imgAspectRatio;
           drawX = (w - drawWidth) / 2;
           drawY = 0;
         }
-        
+
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
       };
       img.src = reveal.url;
@@ -420,44 +415,41 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       ctx.fillStyle = style.color || '#333333';
       ctx.font = `${style.fontWeight || 400} ${style.fontSize || 16}px Inter, sans-serif`;
       ctx.textAlign = (style.align || 'center') as CanvasTextAlign;
-      
+
       const textX = style.align === 'left' ? 10 : style.align === 'right' ? w - 10 : w / 2;
       const textY = h / 2;
-      
+
       ctx.fillText(reveal.value, textX, textY);
     }
   };
-  
+
   // Draw cover content
   const drawCoverContent = (ctx: CanvasRenderingContext2D, cover?: Cover, w?: number, h?: number) => {
     if (!ctx || !w || !h) return;
-    
+
     if (cover?.type === 'image' && cover.url) {
       const img = new Image();
       img.onload = () => {
         const opacity = (cover as any).opacity || 1;
         ctx.globalAlpha = opacity;
-        
-        // Calculate dimensions to center image without deformation
+
         const imgAspectRatio = img.width / img.height;
         const canvasAspectRatio = w / h;
-        
+
         let drawWidth, drawHeight, drawX, drawY;
-        
+
         if (imgAspectRatio > canvasAspectRatio) {
-          // Image is wider than canvas - fit by width
           drawWidth = w;
           drawHeight = w / imgAspectRatio;
           drawX = 0;
           drawY = (h - drawHeight) / 2;
         } else {
-          // Image is taller than canvas - fit by height
           drawHeight = h;
           drawWidth = h * imgAspectRatio;
           drawX = (w - drawWidth) / 2;
           drawY = 0;
         }
-        
+
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1;
       };
@@ -470,15 +462,14 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       ctx.globalAlpha = 1;
     }
   };
-  
+
   // Scratch functionality
   const handlePointerDown = (e: React.PointerEvent) => {
     if (card.revealed || previewMode) return;
-    
-    // Prevent event bubbling to avoid canvas selection conflicts
+
     e.stopPropagation();
     e.preventDefault();
-    
+
     setIsScratching(true);
     const canvas = overlayCanvasRef.current;
     if (canvas) {
@@ -486,122 +477,113 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       scratch(e);
     }
   };
-  
+
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isScratching || card.revealed) return;
-    
-    // Prevent event bubbling during scratching
+
     e.stopPropagation();
     e.preventDefault();
-    
+
     scratch(e);
   };
-  
+
   const handlePointerUp = (e: React.PointerEvent) => {
-    // Prevent event bubbling when finishing scratch
     e.stopPropagation();
     e.preventDefault();
-    
+
     setIsScratching(false);
   };
-  
+
   const scratch = (e: React.PointerEvent) => {
     const canvas = overlayCanvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
-    // Get canvas bounds
+
     const rect = canvas.getBoundingClientRect();
-    
-    // Convert screen coordinates to canvas coordinates
-    // Account for CSS transforms (zoom, pan) applied to parent elements
+
     let canvasX = e.clientX - rect.left;
     let canvasY = e.clientY - rect.top;
-    
-    // Find parent DesignCanvas and get its transform values
+
+    // Recherche des transform du parent
     let parentElement = canvas.parentElement;
     let cumulativeScale = 1;
     let cumulativeTranslateX = 0;
     let cumulativeTranslateY = 0;
-    
+
     while (parentElement && parentElement !== document.body) {
       const style = window.getComputedStyle(parentElement);
-      const transform = style.transform || style.webkitTransform;
-      
+      const transform = style.transform || (style as any).webkitTransform;
+
       if (transform && transform !== 'none') {
-        // Extract scale from transform matrix
         const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
         if (matrixMatch) {
           const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()));
           if (values.length >= 6) {
-            cumulativeScale *= values[0]; // scaleX
-            cumulativeTranslateX += values[4]; // translateX
-            cumulativeTranslateY += values[5]; // translateY
+            cumulativeScale *= values[0];
+            cumulativeTranslateX += values[4];
+            cumulativeTranslateY += values[5];
           }
         }
-        
-        // Handle scale() transform
+
         const scaleMatch = transform.match(/scale\(([^)]+)\)/);
         if (scaleMatch) {
           const scaleValue = parseFloat(scaleMatch[1]);
           cumulativeScale *= scaleValue;
         }
       }
-      
-      // Check for zoom/pan via CSS custom properties or inline styles
-      const zoomValue = parentElement.style.getPropertyValue('--zoom') || 
-                       parentElement.dataset.zoom || 
-                       style.getPropertyValue('zoom');
+
+      const zoomValue =
+        (parentElement as HTMLElement).style.getPropertyValue('--zoom') ||
+        (parentElement as any).dataset?.zoom ||
+        style.getPropertyValue('zoom');
+
       if (zoomValue && zoomValue !== '1' && zoomValue !== 'normal') {
-        cumulativeScale *= parseFloat(zoomValue);
+        const parsed = parseFloat(zoomValue);
+        if (!Number.isNaN(parsed)) cumulativeScale *= parsed;
       }
-      
+
       parentElement = parentElement.parentElement;
     }
-    
-    // Apply inverse transformations to get correct canvas coordinates
+
     if (cumulativeScale !== 1) {
       canvasX = canvasX / cumulativeScale;
       canvasY = canvasY / cumulativeScale;
     }
-    
+
     if (cumulativeTranslateX !== 0 || cumulativeTranslateY !== 0) {
       canvasX = canvasX - cumulativeTranslateX;
       canvasY = canvasY - cumulativeTranslateY;
     }
-    
-    console.log(`🎨 Scratch coords: screen(${e.clientX}, ${e.clientY}) -> canvas(${canvasX.toFixed(1)}, ${canvasY.toFixed(1)}) | Scale: ${cumulativeScale.toFixed(2)}`);
-    
-    // Ensure coordinates are within canvas bounds
+
+    console.log(
+      `🎨 Scratch coords: screen(${e.clientX}, ${e.clientY}) -> canvas(${canvasX.toFixed(
+        1
+      )}, ${canvasY.toFixed(1)}) | Scale: ${cumulativeScale.toFixed(2)}`
+    );
+
     canvasX = Math.max(0, Math.min(canvasX, width));
     canvasY = Math.max(0, Math.min(canvasY, height));
-    
-    // Erase with circular brush
+
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     ctx.arc(canvasX, canvasY, brushRadius, 0, Math.PI * 2);
     ctx.fill();
-    
-    // Calculate progress
+
     requestAnimationFrame(() => {
       const progress = calculateScratchProgress(ctx, overlayCanvasRef.current!, width, height);
-      
+
       console.log(`🎯 Scratch progress: ${(progress * 100).toFixed(1)}% | Threshold: ${(threshold * 100).toFixed(1)}%`);
-      
-      if (Math.abs(progress - lastProgress) > 0.01) { // Reduced to 1% for more frequent updates
+
+      if (Math.abs(progress - lastProgress) > 0.01) {
         setLastProgress(progress);
         console.log(`📤 Calling onProgressUpdate with progress: ${(progress * 100).toFixed(1)}%`);
         onProgressUpdate(progress);
-        
-        // Let the store handle revelation logic - removed duplicate check here
-        // The store's updateCardProgress will handle threshold comparison and revelation
       }
     });
   };
-  
-  // Count number of pixels with alpha above a threshold (considered opaque/scratchable)
+
   const countOpaquePixels = (ctx: CanvasRenderingContext2D, w: number, h: number, alphaThreshold: number): number => {
     const { data } = ctx.getImageData(0, 0, w, h);
     let count = 0;
@@ -611,19 +593,16 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
     return count;
   };
 
-  // Calculate scratch progress using a fixed baseline measured at cover draw time
   const calculateScratchProgress = (
     ctx: CanvasRenderingContext2D,
     overlayEl: HTMLCanvasElement,
     w: number,
     h: number
   ): number => {
-    // Ensure baseline exists - measure from original overlay if needed
     if (!initialOpaquePixelsRef.current || initialOpaquePixelsRef.current <= 0) {
       try {
         const overlayCtx = overlayEl.getContext('2d');
         if (overlayCtx) {
-          // Measure from the original state before any scratching
           const baselinePixels = countOpaquePixels(overlayCtx, w, h, 10);
           console.log(`🎯 Measuring baseline for card ${card.id}: ${baselinePixels} pixels`);
           initialOpaquePixelsRef.current = baselinePixels;
@@ -640,15 +619,14 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       return 0;
     }
 
-    // Count currently opaque pixels (remaining to scratch)
     const remainingOpaque = countOpaquePixels(ctx, w, h, 10);
     const scratched = Math.max(0, baseline - remainingOpaque);
-    const progress = Math.min(1, scratched / baseline); // Cap at 100%
-    
+    const progress = Math.min(1, scratched / baseline);
+
     console.log(`📊 Card ${card.id}: scratched=${scratched}, baseline=${baseline}, progress=${(progress * 100).toFixed(1)}%`);
     return progress;
   };
-  
+
   return (
     <div
       className="sc-card"
@@ -660,7 +638,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
         height,
         borderRadius,
         overflow: 'hidden',
-        background: 'white', // Changed from transparent to white
+        background: 'white',
         cursor: card.revealed || previewMode ? 'default' : 'crosshair'
       }}
     >
@@ -675,7 +653,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
           height: '100%'
         }}
       />
-      
+
       {/* Cover overlay */}
       {!card.revealed && (
         <canvas
@@ -694,7 +672,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
           onPointerLeave={handlePointerUp}
         />
       )}
-      
+
       {/* Winner indicator */}
       {card.revealed && card.isWinner && (
         <div
