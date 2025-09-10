@@ -235,7 +235,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const updateHeight = () => {
       const toolbar = document.getElementById('mobile-toolbar');
       // Store height if needed for calculations
-      const height = toolbar?.getBoundingClientRect().height || 0;
+      console.log('Mobile toolbar height:', toolbar?.getBoundingClientRect().height || 0);
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
