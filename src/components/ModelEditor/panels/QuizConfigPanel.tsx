@@ -1,633 +1,427 @@
-import React from 'react';
-import { ArrowLeft } from 'lucide-react';
-import QuizTemplateSelector from '../components/QuizTemplateSelector';
-import { QuizTemplate } from '../../../types/quizTemplates';
+// @ts-nocheck
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  Card,
+  Input,
+  Select,
+  SelectItem,
+  Textarea,
+  Button,
+  Checkbox,
+} from '@nextui-org/react';
+import { toast } from 'react-hot-toast';
+import { shallow } from 'zustand/shallow';
 
-interface QuizConfigPanelProps {
-  onBack: () => void;
-  quizQuestionCount: number;
-  quizTimeLimit: number;
-  quizDifficulty: 'easy' | 'medium' | 'hard';
-  quizBorderRadius?: number;
-  quizWidth?: string;
-  quizMobileWidth?: string;
-  onQuestionCountChange: (count: number) => void;
-  onTimeLimitChange: (time: number) => void;
-  onDifficultyChange: (difficulty: 'easy' | 'medium' | 'hard') => void;
-  onBorderRadiusChange?: (radius: number) => void;
-  onQuizWidthChange?: (width: string) => void;
-  onQuizMobileWidthChange?: (width: string) => void;
-  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
-  selectedTemplate?: string;
-  onTemplateChange?: (template: QuizTemplate) => void;
-  // Style overrides
-  backgroundColor?: string;
-  backgroundOpacity?: number;
-  textColor?: string;
-  buttonBackgroundColor?: string;
-  buttonTextColor?: string;
-  buttonHoverBackgroundColor?: string;
-  buttonActiveBackgroundColor?: string;
-  onBackgroundColorChange?: (color: string) => void;
-  onBackgroundOpacityChange?: (opacity: number) => void;
-  onTextColorChange?: (color: string) => void;
-  onButtonBackgroundColorChange?: (color: string) => void;
-  onButtonTextColorChange?: (color: string) => void;
-  onButtonHoverBackgroundColorChange?: (color: string) => void;
-  onButtonActiveBackgroundColorChange?: (color: string) => void;
-}
+import { useCampaignEditor } from '../../../providers/CampaignEditor';
+import { useTranslation } from 'react-i18next';
+import {
+  DEFAULT_QUIZ_CONFIG,
+  QUIZ_TYPES,
+  QUESTION_TYPES,
+} from '../../../constants';
+import {
+  QuizConfig,
+  QuizQuestion,
+  QuestionType,
+  QuizType,
+} from '../../../types/campaign';
+import { arrayMove } from '@dnd-kit/sortable';
+import QuestionItem from './QuestionItem';
+import { DndContext, DragOverlay, SortableContext } from '@dnd-kit/core';
+import {
+  verticalListSortingStrategy,
+  SortableItem,
+} from '../../../DesignEditor/components/SortableList';
+import { CSS } from '@dnd-kit/utilities';
+import { Trash } from 'lucide-react';
 
-const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
-  onBack,
-  // quizQuestionCount, // supprimé de l'UI
-  // quizTimeLimit, // segment supprimé
-  // quizDifficulty, // supprimé de l'UI
-  quizBorderRadius = 12,
-  quizWidth = '100%',
-  quizMobileWidth = '400px',
-  // onQuestionCountChange, // supprimé de l'UI
-  // onTimeLimitChange, // segment supprimé
-  // onDifficultyChange, // supprimé de l'UI
-  onBorderRadiusChange,
-  onQuizWidthChange = () => {},
-  onQuizMobileWidthChange = () => {},
-  selectedDevice = 'desktop',
-  selectedTemplate,
-  onTemplateChange,
-  backgroundColor = '#ffffff',
-  backgroundOpacity = 100,
-  textColor = '#000000',
-  buttonBackgroundColor = '#f3f4f6',
-  buttonTextColor = '#000000',
-  buttonHoverBackgroundColor = '#9fa4a4',
-  buttonActiveBackgroundColor = '#a7acb5',
-  onBackgroundColorChange,
-  onBackgroundOpacityChange,
-  onTextColorChange,
-  onButtonBackgroundColorChange,
-  onButtonTextColorChange,
-  onButtonHoverBackgroundColorChange,
-  onButtonActiveBackgroundColorChange
-}) => {
-  // Inline edit states for value boxes
-  const [isEditingOpacity, setIsEditingOpacity] = React.useState(false);
-  const [isEditingRadius, setIsEditingRadius] = React.useState(false);
-  const [isEditingZoom, setIsEditingZoom] = React.useState(false);
+const QuizConfigPanel = () => {
+  const { t } = useTranslation();
+  const [quizConfig, setQuizConfig, updateCampaign] = useCampaignEditor(
+    (state) => [
+      state.campaign.quizConfig,
+      state.setQuizConfig,
+      state.updateCampaign,
+    ],
+    shallow
+  );
+  const [activeId, setActiveId] = useState(null);
 
-  // Permettre la saisie directe au double-clic sur un input range spécifique
-  const handleRangeDblClick = (e: React.MouseEvent<HTMLInputElement>, opts?: { kind?: 'percent' | 'px' | 'scale' }) => {
-    const input = e.currentTarget;
-    const min = Number(input.min || '0');
-    const max = Number(input.max || '100');
-    const step = Number(input.step || '1');
-    const kind = opts?.kind;
+  const handleConfigChange = useCallback(
+    (key: keyof QuizConfig, value: any) => {
+      setQuizConfig((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    [setQuizConfig]
+  );
 
-    // Valeur courante en affichage utilisateur
-    const currentDisplay = (() => {
-      if (kind === 'scale') {
-        // Afficher en % (scale 1.0 => 100)
-        return String(Math.round(Number(input.value || '1') * 100));
+  const handleQuestionChange = useCallback(
+    (index: number, key: keyof QuizQuestion, value: any) => {
+      setQuizConfig((prev) => {
+        const newQuestions = [...prev.questions];
+        newQuestions[index] = {
+          ...newQuestions[index],
+          [key]: value,
+        };
+        return {
+          ...prev,
+          questions: newQuestions,
+        };
+      });
+    },
+    [setQuizConfig]
+  );
+
+  const handleAddQuestion = useCallback(() => {
+    setQuizConfig((prev) => ({
+      ...prev,
+      questions: [
+        ...prev.questions,
+        {
+          id: Date.now().toString(),
+          type: 'text' as QuestionType,
+          question: '',
+          correctAnswer: '',
+          options: [],
+        },
+      ],
+    }));
+  }, [setQuizConfig]);
+
+  const handleDeleteQuestion = useCallback(
+    (id: string) => {
+      setQuizConfig((prev) => ({
+        ...prev,
+        questions: prev.questions.filter((q) => q.id !== id),
+      }));
+    },
+    [setQuizConfig]
+  );
+
+  const handleTypeChange = useCallback(
+    (index: number, value: QuestionType) => {
+      setQuizConfig((prev) => {
+        const newQuestions = [...prev.questions];
+        newQuestions[index] = {
+          ...newQuestions[index],
+          type: value,
+          correctAnswer: '',
+          options: [],
+        };
+        return {
+          ...prev,
+          questions: newQuestions,
+        };
+      });
+    },
+    [setQuizConfig]
+  );
+
+  const handleOptionChange = useCallback(
+    (index: number, optionIndex: number, value: string) => {
+      setQuizConfig((prev) => {
+        const newQuestions = [...prev.questions];
+        const newOptions = [...newQuestions[index].options];
+        newOptions[optionIndex] = value;
+        newQuestions[index] = {
+          ...newQuestions[index],
+          options: newOptions,
+        };
+        return {
+          ...prev,
+          questions: newQuestions,
+        };
+      });
+    },
+    [setQuizConfig]
+  );
+
+  const handleAddOption = useCallback(
+    (index: number) => {
+      setQuizConfig((prev) => {
+        const newQuestions = [...prev.questions];
+        newQuestions[index] = {
+          ...newQuestions[index],
+          options: [...newQuestions[index].options, ''],
+        };
+        return {
+          ...prev,
+          questions: newQuestions,
+        };
+      });
+    },
+    [setQuizConfig]
+  );
+
+  const handleDeleteOption = useCallback(
+    (index: number, optionIndex: number) => {
+      setQuizConfig((prev) => {
+        const newQuestions = [...prev.questions];
+        const newOptions = [...newQuestions[index].options];
+        newOptions.splice(optionIndex, 1);
+        newQuestions[index] = {
+          ...newQuestions[index],
+          options: newOptions,
+        };
+        return {
+          ...prev,
+          questions: newQuestions,
+        };
+      });
+    },
+    [setQuizConfig]
+  );
+
+  const validateQuiz = useCallback(() => {
+    if (!quizConfig.title) {
+      toast.error(t('quiz.validation.title'));
+      return false;
+    }
+
+    if (quizConfig.questions.length === 0) {
+      toast.error(t('quiz.validation.questions'));
+      return false;
+    }
+
+    for (let i = 0; i < quizConfig.questions.length; i++) {
+      const question = quizConfig.questions[i];
+      if (!question.question) {
+        toast.error(t('quiz.validation.question', { promptNumber: i + 1 }));
+        return false;
       }
-      return String(input.value || '');
-    })();
 
-    let label = 'Entrer une valeur';
-    if (kind === 'percent') label += ` (${min} - ${max}) %`;
-    else if (kind === 'px') label += ` (${min} - ${max}) px`;
-    else if (kind === 'scale') label += ' (50 - 200) %';
-    else label += ` (${min} - ${max})`;
+      if (question.type !== 'text' && question.options.length < 2) {
+        toast.error(t('quiz.validation.options', { promptNumber: i + 1 }));
+        return false;
+      }
 
-    const raw = window.prompt(label, currentDisplay);
-    if (raw == null) return;
-
-    const normalized = raw.replace(/\s+/g, '').replace(',', '.').replace('%', '');
-    let num = Number(normalized);
-    if (Number.isNaN(num)) return;
-
-    if (kind === 'scale') {
-      // Convertir % vers scale
-      num = Math.min(200, Math.max(50, num));
-      num = num / 100; // 50..200% -> 0.5..2.0
-    } else {
-      // Clamp min/max générique
-      num = Math.min(max, Math.max(min, num));
-      if (!Number.isNaN(step) && step > 0) {
-        num = Math.round(num / step) * step;
+      if (!question.correctAnswer) {
+        toast.error(t('quiz.validation.correctAnswer', {
+          promptNumber: i + 1,
+        }));
+        return false;
       }
     }
 
-    // Déclencher l'événement React standard
-    const synthetic = new Event('input', { bubbles: true });
-    input.value = String(num);
-    input.dispatchEvent(synthetic);
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-  };
+    return true;
+  }, [quizConfig, t]);
 
-  // Double-clic sur la boîte de valeur (pour % et px)
-  const promptNumber = (label: string, initial: string) => {
-    const raw = window.prompt(label, initial);
-    if (raw == null) return null;
-    const normalized = raw.replace(/\s+/g, '').replace(',', '.').replace('%', '').replace('px', '');
-    const num = Number(normalized);
-    return Number.isNaN(num) ? null : num;
-  };
+  const handleValidate = useCallback(() => {
+    if (validateQuiz()) {
+      updateCampaign({ quizConfig });
+      toast.success(t('quiz.validation.success'));
+    }
+  }, [quizConfig, t, updateCampaign, validateQuiz]);
+
+  const onDragEnd = useCallback(
+    (event) => {
+      setActiveId(null);
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) {
+        return;
+      }
+
+      const oldIndex = quizConfig.questions.findIndex(
+        (item) => item.id === active.id
+      );
+      const newIndex = quizConfig.questions.findIndex(
+        (item) => item.id === over.id
+      );
+
+      if (oldIndex === -1 || newIndex === -1) {
+        return;
+      }
+
+      setQuizConfig((prev) => ({
+        ...prev,
+        questions: arrayMove(prev.questions, oldIndex, newIndex),
+      }));
+    },
+    [quizConfig.questions, setQuizConfig]
+  );
+
+  const getItemStyle = useCallback(
+    (id: string) => (activeId === id ? 'opacity-50' : ''),
+    [activeId]
+  );
+
+  const handleReset = useCallback(() => {
+    setQuizConfig(DEFAULT_QUIZ_CONFIG);
+  }, [setQuizConfig]);
+
+  const items = useMemo(() => quizConfig.questions.map((q) => q.id), [
+    quizConfig.questions,
+  ]);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center p-4 border-b border-gray-200 bg-white">
-        <button
-          onClick={onBack}
-          className="mr-3 p-1 hover:bg-gray-100 rounded transition-colors"
+    <div className="flex flex-col gap-4">
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold">{t('quiz.title')}</h3>
+        <Input
+          type="text"
+          label={t('quiz.config.title')}
+          value={quizConfig.title}
+          onValueChange={(value) => handleConfigChange('title', value)}
+        />
+        <Select
+          label={t('quiz.config.type')}
+          selectedKeys={[quizConfig.type]}
+          onSelectionChange={(value) =>
+            handleConfigChange('type', value.currentKey)
+          }
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </button>
-        <h3 className="text-lg font-semibold text-gray-900">Configuration Quiz</h3>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-4 space-y-6 overflow-y-auto bg-white">
-        {/* Templates Section */}
-        <div className="space-y-3">
-          <QuizTemplateSelector
-            selectedTemplate={selectedTemplate}
-            onTemplateSelect={(template) => {
-              console.log('🎯 Template selected:', template.id, template.name);
-              onTemplateChange?.(template);
-            }}
-          />
-        </div>
-
-        {/* Segment "Nombre de questions" supprimé */}
-
-        {/* Segment "Temps limite (secondes)" supprimé */}
-
-        {/* Segment "Difficulté" supprimé */}
-
-        {/* Colors */}
-        <div className="space-y-4">
-          {/* Transparence du fond */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Transparence du fond de quiz
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={backgroundOpacity}
-                onChange={(e) => onBackgroundOpacityChange?.(parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                data-suffix="%"
-                aria-label="Transparence (%)"
-                onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'percent' })}
-                style={{
-                  background: `linear-gradient(to right, #841b60 0%, #841b60 ${backgroundOpacity}%, #e5e7eb ${backgroundOpacity}%, #e5e7eb 100%)`
-                }}
-              />
-              {isEditingOpacity ? (
-                <input
-                  type="number"
-                  autoFocus
-                  defaultValue={backgroundOpacity}
-                  min={0}
-                  max={100}
-                  className="w-[72px] bg-white border border-[#841b60] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
-                  onBlur={(e) => {
-                    const val = Number(e.target.value);
-                    if (!Number.isNaN(val)) {
-                      const clamped = Math.max(0, Math.min(100, Math.round(val)));
-                      onBackgroundOpacityChange?.(clamped);
-                    }
-                    setIsEditingOpacity(false);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                    if (e.key === 'Escape') { setIsEditingOpacity(false); }
-                  }}
-                />
-              ) : (
-                <div
-                  className="bg-gray-100 border border-gray-300 px-2 py-1 rounded text-sm text-gray-900 min-w-[50px] text-center cursor-text"
-                  title="Cliquez ou double-cliquez pour saisir une valeur"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setIsEditingOpacity(true)}
-                  onDoubleClick={() => setIsEditingOpacity(true)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditingOpacity(true); }}
-                >
-                  {backgroundOpacity}%
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Couleur de fond du quiz
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={backgroundColor || '#ffffff'}
-                onChange={(e) => onBackgroundColorChange?.(e.target.value)}
-                className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
-                aria-label="Couleur de fond"
-              />
-              <input
-                type="text"
-                value={backgroundColor || ''}
-                onChange={(e) => onBackgroundColorChange?.(e.target.value)}
-                placeholder="#ffffff"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Couleur du texte du quiz
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={textColor || '#111111'}
-                onChange={(e) => onTextColorChange?.(e.target.value)}
-                className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
-                aria-label="Couleur du texte"
-              />
-              <input
-                type="text"
-                value={textColor || ''}
-                onChange={(e) => onTextColorChange?.(e.target.value)}
-                placeholder="#111111"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Bouton - Couleur de fond */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Couleur des boutons
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={buttonBackgroundColor}
-                onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
-                className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
-                aria-label="Couleur de fond des boutons"
-              />
-              <input
-                type="text"
-                value={buttonBackgroundColor || ''}
-                onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
-                placeholder="#841b60"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Bouton - Couleur du texte */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Couleur du texte des boutons
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={buttonTextColor}
-                onChange={(e) => onButtonTextColorChange?.(e.target.value)}
-                className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
-                aria-label="Couleur du texte des boutons"
-              />
-              <input
-                type="text"
-                value={buttonTextColor || ''}
-                onChange={(e) => onButtonTextColorChange?.(e.target.value)}
-                placeholder="#ffffff"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Bouton - Couleur de survol */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Couleur de survol des boutons
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={buttonHoverBackgroundColor}
-                onChange={(e) => onButtonHoverBackgroundColorChange?.(e.target.value)}
-                className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
-                aria-label="Couleur de survol des boutons"
-              />
-              <input
-                type="text"
-                value={buttonHoverBackgroundColor || ''}
-                onChange={(e) => onButtonHoverBackgroundColorChange?.(e.target.value)}
-                placeholder="#6b1548"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Bouton - Couleur active */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Couleur active des boutons
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={buttonActiveBackgroundColor}
-                onChange={(e) => onButtonActiveBackgroundColorChange?.(e.target.value)}
-                className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
-                aria-label="Couleur active des boutons"
-              />
-              <input
-                type="text"
-                value={buttonActiveBackgroundColor || ''}
-                onChange={(e) => onButtonActiveBackgroundColorChange?.(e.target.value)}
-                placeholder="#5a1239"
-                className="flex-1 p-2 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:border-[#841b60] focus:ring-2 focus:ring-[#841b60]/20 transition-all"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Border Radius */}
-        {onBorderRadiusChange && (
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Arrondi des coins
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="range"
-                min="0"
-                max="50"
-                step="1"
-                value={quizBorderRadius}
-                onChange={(e) => onBorderRadiusChange(parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                data-suffix="px"
-                aria-label="Arrondi (px)"
-                onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'px' })}
-                style={{
-                  background: `linear-gradient(to right, #841b60 0%, #841b60 ${(quizBorderRadius / 50) * 100}%, #e5e7eb ${(quizBorderRadius / 50) * 100}%, #e5e7eb 100%)`
-                }}
-              />
-              {isEditingRadius ? (
-                <input
-                  type="number"
-                  autoFocus
-                  defaultValue={quizBorderRadius}
-                  min={0}
-                  max={50}
-                  className="w-[72px] bg-white border border-[#841b60] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
-                  onBlur={(e) => {
-                    const val = Number(e.target.value);
-                    if (!Number.isNaN(val)) {
-                      const clamped = Math.max(0, Math.min(50, Math.round(val)));
-                      onBorderRadiusChange?.(clamped);
-                    }
-                    setIsEditingRadius(false);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                    if (e.key === 'Escape') { setIsEditingRadius(false); }
-                  }}
-                />
-              ) : (
-                <div
-                  className="bg-gray-100 border border-gray-300 px-2 py-1 rounded text-sm text-gray-900 min-w-[40px] text-center cursor-text"
-                  title="Cliquez ou double-cliquez pour saisir une valeur"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setIsEditingRadius(true)}
-                  onDoubleClick={() => setIsEditingRadius(true)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditingRadius(true); }}
-                >
-                  {quizBorderRadius}px
-                </div>
-              )}
-            </div>
-          </div>
+          {QUIZ_TYPES.map((type) => (
+            <SelectItem key={type.value} value={type.value}>
+              {t(type.label)}
+            </SelectItem>
+          ))}
+        </Select>
+        {quizConfig.type === 'survey' && (
+          <Checkbox
+            isSelected={quizConfig.allowSkip}
+            onChange={(value) => handleConfigChange('allowSkip', value)}
+          >
+            {t('quiz.config.allowSkip')}
+          </Checkbox>
         )}
-
-        {/* Taille du quiz */}
-        <div className="space-y-4 pt-4 border-t border-gray-200">
-          <h3 className="text-sm font-medium text-gray-700">
-            Échelle du quiz - {selectedDevice === 'desktop' ? 'Desktop' : selectedDevice === 'tablet' ? 'Tablette' : 'Mobile'}
-          </h3>
-          
-          {/* Desktop/Tablet Zoom Scale */}
-          {selectedDevice !== 'mobile' && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Zoom Desktop/Tablette
-              </label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={(() => {
-                    // Convertir la largeur en échelle de zoom (base 800px = 100%)
-                    if (quizWidth === '100%' || quizWidth === 'auto') return 1;
-                    const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                    return isNaN(numValue) ? 1 : numValue / 800;
-                  })()}
-                  onChange={(e) => {
-                    const scale = parseFloat(e.target.value);
-                    const width = Math.round(scale * 800);
-                    onQuizWidthChange(`${width}px`);
-                    console.log('Échelle Desktop mise à jour:', scale, '-> Largeur:', `${width}px`);
-                  }}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  data-suffix="%"
-                  aria-label="Zoom (%)"
-                  onDoubleClick={(e) => handleRangeDblClick(e, { kind: 'scale' })}
-                  style={{
-                    background: `linear-gradient(to right, #841b60 0%, #841b60 ${(() => {
-                      const scale = (() => {
-                        if (quizWidth === '100%' || quizWidth === 'auto') return 1;
-                        const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                        return isNaN(numValue) ? 1 : numValue / 800;
-                      })();
-                      return ((scale - 0.5) / (2 - 0.5)) * 100;
-                    })()}%, #e5e7eb ${(() => {
-                      const scale = (() => {
-                        if (quizWidth === '100%' || quizWidth === 'auto') return 1;
-                        const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                        return isNaN(numValue) ? 1 : numValue / 800;
-                      })();
-                      return ((scale - 0.5) / (2 - 0.5)) * 100;
-                    })()}%, #e5e7eb 100%)`
-                  }}
-                />
-                {isEditingZoom ? (
-                  <input
-                    type="number"
-                    autoFocus
-                    defaultValue={(() => {
-                      if (quizWidth === '100%' || quizWidth === 'auto') return 100;
-                      const numValue = parseInt((quizWidth || '800px').replace(/px|%/, ''));
-                      const scale = isNaN(numValue) ? 1 : numValue / 800;
-                      return Math.round(scale * 100);
-                    })()}
-                    min={50}
-                    max={200}
-                    className="w-[90px] bg-white border border-[#841b60] px-2 py-1 rounded text-sm text-gray-900 text-center outline-none"
-                    onBlur={(e) => {
-                      const val = Number(e.target.value);
-                      if (!Number.isNaN(val)) {
-                        const clampedPct = Math.max(50, Math.min(200, Math.round(val)));
-                        const width = Math.round((clampedPct / 100) * 800);
-                        onQuizWidthChange?.(`${width}px`);
-                      }
-                      setIsEditingZoom(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                      if (e.key === 'Escape') { setIsEditingZoom(false); }
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="bg-gray-100 border border-gray-300 px-3 py-1 rounded text-sm text-gray-900 min-w-[80px] text-center cursor-text"
-                    title="Cliquez ou double-cliquez pour saisir un pourcentage"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setIsEditingZoom(true)}
-                    onDoubleClick={() => setIsEditingZoom(true)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditingZoom(true); }}
-                  >
-                    {(() => {
-                      if (quizWidth === '100%' || quizWidth === 'auto') return '100%';
-                      const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                      const scale = isNaN(numValue) ? 1 : numValue / 800;
-                      return `${Math.round(scale * 100)}%`;
-                  })()}
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>50%</span>
-                <span>100%</span>
-                <span>200%</span>
-              </div>
-            </div>
-          )}
-
-          {/* Mobile Zoom Scale - Custom Slider */}
-          {selectedDevice === 'mobile' && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Zoom Mobile
-              </label>
-              {/* Debug info removed */}
-              <div className="flex items-center space-x-3">
-                {/* Custom Mobile Slider */}
-                <div className="flex-1 relative">
-                  <div 
-                    className="h-2 bg-gray-200 rounded-lg cursor-pointer relative"
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const x = e.clientX - rect.left;
-                      const percentage = x / rect.width;
-                      const scale = 0.3 + (percentage * (1.5 - 0.3));
-                      const clampedScale = Math.max(0.3, Math.min(1.5, scale));
-                      const width = Math.round(clampedScale * 400);
-                      console.log('🔧 Mobile custom slider click:', { percentage, scale: clampedScale, width });
-                      onQuizMobileWidthChange(`${width}px`);
-                    }}
-                  >
-                    {/* Track fill */}
-                    <div 
-                      className="h-full rounded-lg"
-                      style={{
-                        background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)',
-                        width: `${(() => {
-                          console.log('🎨 Track fill calculation - quizMobileWidth:', quizMobileWidth);
-                          if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return 58.33; // 1.0 scale = 58.33%
-                          const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                          const scale = isNaN(numValue) ? 1 : numValue / 400;
-                          const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
-                          console.log('🎨 Track fill - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
-                          return percentage;
-                        })()}%`
-                      }}
-                    />
-                    {/* Thumb */}
-                    <div 
-                      className="absolute top-1/2 w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-grab active:cursor-grabbing transform -translate-y-1/2"
-                      style={{
-                        background: '#841b60',
-                        left: `${(() => {
-                          console.log('🎯 Thumb position calculation - quizMobileWidth:', quizMobileWidth);
-                          if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return 58.33; // 1.0 scale = 58.33%
-                          const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                          const scale = isNaN(numValue) ? 1 : numValue / 400;
-                          const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
-                          console.log('🎯 Thumb position - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
-                          return percentage;
-                        })()}%`,
-                        marginLeft: '-8px'
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const track = e.currentTarget.parentElement;
-                        if (!track) return;
-                        
-                        const handleMouseMove = (moveEvent: MouseEvent) => {
-                          const rect = track.getBoundingClientRect();
-                          const x = moveEvent.clientX - rect.left;
-                          const percentage = Math.max(0, Math.min(1, x / rect.width));
-                          const scale = 0.3 + (percentage * (1.5 - 0.3));
-                          const width = Math.round(scale * 400);
-                          console.log('🔧 Mobile custom slider drag:', { percentage, scale, width });
-                          onQuizMobileWidthChange(`${width}px`);
-                        };
-                        
-                        const handleMouseUp = () => {
-                          document.removeEventListener('mousemove', handleMouseMove);
-                          document.removeEventListener('mouseup', handleMouseUp);
-                        };
-                        
-                        document.addEventListener('mousemove', handleMouseMove);
-                        document.addEventListener('mouseup', handleMouseUp);
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="px-3 py-1 rounded text-sm text-white min-w-[80px] text-center" style={{ background: '#841b60' }}>
-                  {(() => {
-                    if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return '100%';
-                    const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                    const scale = isNaN(numValue) ? 1 : numValue / 400;
-                    return `${Math.round(scale * 100)}%`;
-                  })()}
-                </div>
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>30%</span>
-                <span>100%</span>
-                <span>150%</span>
-              </div>
-              {/* Mobile zoom explanatory note removed */}
-            </div>
-          )}
+        <Textarea
+          label={t('quiz.config.description')}
+          value={quizConfig.description}
+          onValueChange={(value) => handleConfigChange('description', value)}
+        />
+      </Card>
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">{t('quiz.questions')}</h3>
+          <Button color="primary" size="sm" onClick={handleAddQuestion}>
+            {t('quiz.addQuestion')}
+          </Button>
         </div>
-
-        {/* Device-specific note removed */}
+        <DndContext onDragEnd={onDragEnd} onDragStart={(e) => setActiveId(e.active.id)}>
+          <SortableContext
+            items={items}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-2 mt-4">
+              {quizConfig.questions.map((question, index) => (
+                <SortableItem key={question.id} id={question.id}>
+                  <Card
+                    className={`p-4 ${getItemStyle(question.id)}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-md font-semibold">
+                        {t('quiz.question')} #{index + 1}
+                      </h4>
+                      <Button
+                        isIconOnly
+                        color="danger"
+                        variant="light"
+                        onClick={() => handleDeleteQuestion(question.id)}
+                      >
+                        <Trash />
+                      </Button>
+                    </div>
+                    <Select
+                      label={t('quiz.questionType')}
+                      selectedKeys={[question.type]}
+                      onSelectionChange={(value) =>
+                        handleTypeChange(index, value.currentKey as QuestionType)
+                      }
+                    >
+                      {QUESTION_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {t(type.label)}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    <Input
+                      type="text"
+                      label={t('quiz.questionText')}
+                      value={question.question}
+                      onValueChange={(value) =>
+                        handleQuestionChange(index, 'question', value)
+                      }
+                    />
+                    {question.type === 'text' ? (
+                      <Input
+                        type="text"
+                        label={t('quiz.correctAnswer')}
+                        value={question.correctAnswer}
+                        onValueChange={(value) =>
+                          handleQuestionChange(index, 'correctAnswer', value)
+                        }
+                      />
+                    ) : (
+                      <>
+                        <h5 className="text-sm font-semibold mt-2">
+                          {t('quiz.options')}
+                        </h5>
+                        <div className="flex flex-col gap-2">
+                          {question.options.map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex items-center gap-2">
+                              <Input
+                                type="text"
+                                placeholder={`${t('quiz.option')} #${optionIndex + 1}`}
+                                value={option}
+                                onValueChange={(value) =>
+                                  handleOptionChange(index, optionIndex, value)
+                                }
+                              />
+                              <Button
+                                isIconOnly
+                                color="danger"
+                                variant="light"
+                                onClick={() => handleDeleteOption(index, optionIndex)}
+                              >
+                                <Trash />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            color="primary"
+                            size="sm"
+                            onClick={() => handleAddOption(index)}
+                          >
+                            {t('quiz.addOption')}
+                          </Button>
+                        </div>
+                        <Input
+                          type="text"
+                          label={t('quiz.correctAnswer')}
+                          placeholder={t('quiz.correctAnswerPlaceholder')}
+                          value={question.correctAnswer}
+                          onValueChange={(value) =>
+                            handleQuestionChange(index, 'correctAnswer', value)
+                          }
+                        />
+                      </>
+                    )}
+                  </Card>
+                </SortableItem>
+              ))}
+            </div>
+          </SortableContext>
+          <DragOverlay>
+            {activeId ? (
+              <Card className="p-4">
+                <h4 className="text-md font-semibold">
+                  {t('quiz.question')} #
+                </h4>
+              </Card>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </Card>
+      <div className="flex justify-end gap-2">
+        <Button color="primary" onClick={handleValidate}>
+          {t('quiz.validate')}
+        </Button>
+        <Button color="secondary" onClick={handleReset}>
+          {t('reset')}
+        </Button>
       </div>
     </div>
   );

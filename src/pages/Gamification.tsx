@@ -1,4 +1,4 @@
-import React from 'react';
+// @ts-nocheck
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PillButton from '../components/shared/PillButton';

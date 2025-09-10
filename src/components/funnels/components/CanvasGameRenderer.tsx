@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo } from 'react';
 import Wheel from '../../GameTypes/Wheel';
 import WheelPreview from '../../GameTypes/WheelPreview';

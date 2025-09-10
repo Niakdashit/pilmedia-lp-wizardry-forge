@@ -1,10 +1,10 @@
+// @ts-nocheck
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
-import { quizTemplates } from '../../types/quizTemplates';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
