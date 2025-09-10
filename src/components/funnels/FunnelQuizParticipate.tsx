@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import TemplatedQuiz from '../shared/TemplatedQuiz';
 import FormHandler from './components/FormHandler';
 import { useParticipations } from '../../hooks/useParticipations';
 import { FieldConfig } from '../forms/DynamicContactForm';
@@ -94,22 +93,11 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
           </div>
         )}
 
-        {/* Quiz phase */}
-        {phase === 'quiz' && (
-          <div className="relative z-10 h-full flex items-center justify-center">
-            <TemplatedQuiz
-              campaign={campaign}
-              device={previewMode}
-              disabled={false}
-              templateId={
-                campaign?.gameConfig?.quiz?.templateId ||
-                campaign?.design?.quizConfig?.templateId ||
-                'image-quiz'
-              }
-              onAnswerSelected={handleAnswer}
-            />
-          </div>
-        )}
+        {/* Quiz phase - Supprimé, passer directement au formulaire */}
+        {phase === 'quiz' && (() => {
+          setPhase('form');
+          return null;
+        })()}
 
         {/* Form phase - use modal component to keep look consistent */}
         <FormHandler

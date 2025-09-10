@@ -8,6 +8,7 @@ import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
 import ZoomSlider from '../DesignEditor/components/ZoomSlider';
 import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
+import ScratchCardCanvas from './ScratchCardCanvas';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';
@@ -620,6 +621,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Begin marquee when clicking empty background
   const handleBackgroundPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (readOnly) return;
+    
+    // Check if the click is on a scratch card - if so, don't start marquee selection
+    const target = e.target as HTMLElement;
+    if (target.closest('.sc-card') || target.closest('[class*="sc-"]')) {
+      return;
+    }
+    
     // Allow marquee on all devices; treat touch specially
     // Only react to primary mouse button, but allow touch regardless of e.button
     if (e.pointerType !== 'touch' && e.button !== 0) return;
@@ -1667,6 +1675,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
               onPointerDown={(e) => {
+                // Don't handle background events if clicking on scratch cards
+                const target = e.target as HTMLElement;
+                if (target.closest('.sc-card') || target.closest('[class*="sc-"]')) {
+                  return;
+                }
                 e.stopPropagation();
                 handleBackgroundPointerDown(e);
               }}
@@ -1681,6 +1694,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   hasStyleToCopy={selectedElement !== null}
                 />
               )}
+              
+              {/* Scratch Card Game Canvas - MUST BE ABOVE ALL OTHER ELEMENTS */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                style={{ zIndex: 10000 }}
+              >
+                <div className="pointer-events-auto">
+                  <ScratchCardCanvas 
+                    previewMode={false}
+                    selectedDevice={selectedDevice}
+                  />
+                </div>
+              </div>
+              
               <GridOverlay 
                 canvasSize={effectiveCanvasSize}
                 showGrid={selectedDevice !== 'mobile' && showGridLines}
@@ -1923,7 +1950,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   top: marqueeRect.y,
                   width: marqueeRect.w,
                   height: marqueeRect.h,
-                  zIndex: 2000,
+                  zIndex: 5000, // Above scratch cards
                   boxShadow: '0 0 0 1px rgba(59,130,246,0.4) inset'
                 }}
               />
@@ -2027,8 +2054,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })()}
 
-            </div>
-
             {/* Selection overlay (visual layer, not interactive yet) */}
             <div 
               className="pointer-events-none absolute"
@@ -2047,8 +2072,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
         {/* Canvas Info - desktop only */}
         {selectedDevice === 'desktop' && (
-          <div className="text-center mt-4 text-sm text-gray-500">
-            {selectedDevice} • {effectiveCanvasSize.width} × {effectiveCanvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
+          <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
+            {selectedDevice} • {effectiveCanvasSize.width} × {effectiveCanvasSize.height}px • Jeu de cartes à gratter
           </div>
         )}
 
@@ -2170,10 +2195,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           })()
         )}
         
-        
-
-        
-        
         {/* Barre d'échelle de zoom (overlay bas-centre) */}
         {selectedDevice !== 'mobile' && (
           <ZoomSlider
@@ -2185,8 +2206,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             defaultZoom={deviceDefaultZoom}
           />
         )}
-        
-
         
         {/* Popup contextuel d'animation */}
         {showAnimationPopup && selectedAnimation && (
@@ -2203,6 +2222,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             visible={showAnimationPopup}
           />
         )}
+        </div>
       </MobileResponsiveLayout>
     </DndProvider>
   );

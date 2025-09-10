@@ -133,7 +133,7 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
           style={{
             left: Math.min(contextMenu.x, window.innerWidth - 240), // Éviter le débordement
             top: Math.min(contextMenu.y, window.innerHeight - 200),
-            zIndex: 15000 // Above scratch cards and marquee selection
+            zIndex: 9999
           }}
         >
           {menuItems.map((item, index) => (
