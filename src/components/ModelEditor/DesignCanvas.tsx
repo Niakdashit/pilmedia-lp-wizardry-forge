@@ -17,6 +17,8 @@ import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDr
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
+import SlotJackpot from '../SlotJackpot/SlotJackpot';
+import { isFeatureEnabled } from '../../utils/features';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
@@ -1696,6 +1698,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 zoom={localZoom}
                 isDragging={isDragging}
               />
+              
+              {/* Slot Jackpot Game - Feature flagged */}
+              {isFeatureEnabled('slotJackpot') && (
+                <SlotJackpot
+                  onWin={(prize) => console.log('🎰 Jackpot Win:', prize)}
+                  onLose={() => console.log('🎰 Try again!')}
+                />
+              )}
               
               {/* Alignment Toolbar */}
               {selectedElements && selectedElements.length > 0 && !readOnly && (
