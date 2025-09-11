@@ -1,9 +1,8 @@
-// @ts-nocheck
 import React, { memo, useMemo, useRef } from 'react';
 import { useEditorStore } from '@/stores/editorStore';
 import { useOptimizedDragDrop } from '../hooks/useOptimizedDragDrop';
 import { useSmartSnapping } from '../hooks/useSmartSnapping';
-import { InteractiveDragDropOverlay } from './InteractiveDragDropOverlay';
+import InteractiveDragDropOverlay from './InteractiveDragDropOverlay';
 import GameCanvasPreview from './GameCanvasPreview';
 
 interface OptimizedGameCanvasPreviewProps {

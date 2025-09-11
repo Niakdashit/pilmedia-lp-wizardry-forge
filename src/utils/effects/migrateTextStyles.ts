@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { TextStyleEffect } from '../../config/advancedTextStyles';
 import type { TextEffectModel, EffectLayer, Fill } from '../../types/TextEffectModel';
 

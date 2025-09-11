@@ -1,5 +1,4 @@
 
-// @ts-nocheck
 import React, { useCallback, memo, useState, useMemo } from 'react';
 import DeviceFrame from './DeviceFrame';
 import GameRenderer from './GameRenderer';
@@ -8,7 +7,7 @@ import GameConfigProvider from './GameConfigProvider';
 import PreviewErrorBoundary from './ErrorBoundary';
 import PreviewFeedback from './PreviewFeedback';
 import DeviceTransition from './DeviceTransition';
-import { InteractiveDragDropOverlay } from './InteractiveDragDropOverlay';
+import InteractiveDragDropOverlay from './InteractiveDragDropOverlay';
 import CustomElementsRenderer from './CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 

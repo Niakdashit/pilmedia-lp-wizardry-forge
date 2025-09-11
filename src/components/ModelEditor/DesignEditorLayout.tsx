@@ -1449,7 +1449,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 // Gestion de la largeur du quiz
                 quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
-                onQuizWidthChange={(width: string) => {
+                onQuizWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
@@ -1518,7 +1518,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 // Gestion de la largeur mobile du quiz
                 quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
-                onQuizMobileWidthChange={(width: string) => {
+                onQuizMobileWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);

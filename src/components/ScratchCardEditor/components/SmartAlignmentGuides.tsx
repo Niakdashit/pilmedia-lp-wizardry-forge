@@ -1,4 +1,4 @@
-// @ts-nocheck
+import React, { useMemo } from 'react';
 import type { AlignmentGuide } from '../core/AlignmentSystem';
 
 interface SmartAlignmentGuidesProps {

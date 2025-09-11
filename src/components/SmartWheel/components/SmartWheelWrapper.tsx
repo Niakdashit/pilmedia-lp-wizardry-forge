@@ -1,6 +1,4 @@
 
-// @ts-nocheck
-
 import React from 'react';
 import SmartWheel from '../SmartWheel';
 import { useWheelSync } from '../../../hooks/useWheelSync';

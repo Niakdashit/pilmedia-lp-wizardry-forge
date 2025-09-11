@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import FormHandler from './components/FormHandler';

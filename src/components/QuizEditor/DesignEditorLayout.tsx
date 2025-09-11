@@ -1456,8 +1456,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   }));
                 }}
                 // Gestion de la largeur du quiz
-                // quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
-                /*onQuizWidthChange={(width: any) => {
+                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
+                onQuizWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
@@ -1481,52 +1481,52 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     };
                     console.log('📝 Nouvelle configuration de campagne (width):', updated);
                     return updated;
-                   });
-                   
-                   // Créer et dispatcher l'événement personnalisé
-                   try {
-                     const event = new CustomEvent('quizStyleUpdate', {
-                       detail: { width }
-                     });
-                     
-                     const logData = {
-                       type: 'quizStyleUpdate',
-                       detail: { width },
-                       timestamp: new Date().toISOString(),
-                       target: 'window',
-                       bubbles: true,
-                       cancelable: true,
-                       composed: true
-                     };
-                     
-                     console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (width):', logData);
-                     
-                     // Émettre l'événement de manière synchrone
-                     const target = document.getElementById('quiz-preview-container') || window;
-                     const eventDispatched = target.dispatchEvent(event);
-                     
-                     console.log('📤 [DesignEditorLayout] Événement émis avec succès:', {
-                       eventDispatched,
-                       target: target === window ? 'window' : 'quiz-preview-container'
-                     });
-                     
-                     // Si l'événement n'a pas été traité, émettre un événement de secours
-                     if (!eventDispatched) {
-                       console.warn('⚠️ [DesignEditorLayout] L\'événement n\'a pas été traité, tentative avec un événement de secours');
-                       const fallbackEvent = new CustomEvent('quizStyleUpdateFallback', {
-                         detail: { width },
-                         bubbles: true,
-                         cancelable: true
-                       });
-                       target.dispatchEvent(fallbackEvent);
-                     }
-                   } catch (error) {
-                     console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate:', error);
-                   }
-                 }}*/
+                  });
+                  
+                  // Créer et dispatcher l'événement personnalisé
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { width }
+                    });
+                    
+                    const logData = {
+                      type: 'quizStyleUpdate',
+                      detail: { width },
+                      timestamp: new Date().toISOString(),
+                      target: 'window',
+                      bubbles: true,
+                      cancelable: true,
+                      composed: true
+                    };
+                    
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (width):', logData);
+                    
+                    // Émettre l'événement de manière synchrone
+                    const target = document.getElementById('quiz-preview-container') || window;
+                    const eventDispatched = target.dispatchEvent(event);
+                    
+                    console.log('📤 [DesignEditorLayout] Événement émis avec succès:', {
+                      eventDispatched,
+                      target: target === window ? 'window' : 'quiz-preview-container'
+                    });
+                    
+                    // Si l'événement n'a pas été traité, émettre un événement de secours
+                    if (!eventDispatched) {
+                      console.warn('⚠️ [DesignEditorLayout] L\'événement n\'a pas été traité, tentative avec un événement de secours');
+                      const fallbackEvent = new CustomEvent('quizStyleUpdateFallback', {
+                        detail: { width },
+                        bubbles: true,
+                        cancelable: true
+                      });
+                      target.dispatchEvent(fallbackEvent);
+                    }
+                  } catch (error) {
+                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate:', error);
+                  }
+                }}
                 // Gestion de la largeur mobile du quiz
-                // quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
-                /*onQuizMobileWidthChange={(width) => {
+                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
+                onQuizMobileWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);
@@ -1574,11 +1574,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     const target = document.getElementById('quiz-preview-container') || window;
                     const eventDispatched = target.dispatchEvent(event);
                     
-                   console.log('✅ [DesignEditorLayout] Événement quizStyleUpdate (mobileWidth) émis avec succès:', eventDispatched);
-                   } catch (error) {
-                     console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate (mobileWidth):', error);
-                   }
-                 }}*/
+                    console.log('✅ [DesignEditorLayout] Événement quizStyleUpdate (mobileWidth) émis avec succès:', eventDispatched);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate (mobileWidth):', error);
+                  }
+                }}
                 // Gestion des couleurs des boutons
                 onButtonBackgroundColorChange={(color) => {
                   setQuizConfig(prev => ({

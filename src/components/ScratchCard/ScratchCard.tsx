@@ -30,40 +30,37 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
 
   const {
     initCanvas,
-    scratch
+    handleScratch,
+    getScratchPercentage
   } = useScratchCanvas({
-    onProgressChange: useCallback((percentage: number) => {
-      setState(prev => ({ ...prev, scratchPercentage: percentage }));
-      if (percentage >= threshold / 100) {
-        setState(prev => ({ ...prev, isCompleted: true }));
-        onComplete?.(percentage);
-      }
-    }, [onComplete, threshold]),
-    scratchRadius: brushSize
+    canvasRef,
+    scratchColor,
+    brushSize,
+    threshold,
+    onComplete: useCallback((percentage: number) => {
+      setState(prev => ({ ...prev, isCompleted: true, scratchPercentage: percentage }));
+      onComplete?.(percentage);
+    }, [onComplete])
   });
 
   useEffect(() => {
     if (canvasRef.current) {
-      initCanvas(canvasRef.current, { width, height, scratchTexture: scratchColor });
+      initCanvas(width, height);
     }
-  }, [width, height, scratchColor, initCanvas]);
+  }, [width, height, initCanvas]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
     setState(prev => ({ ...prev, isScratching: true, hasStarted: true }));
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      scratch(e.clientX - rect.left, e.clientY - rect.top);
-    }
-  }, [disabled, scratch]);
+    handleScratch(e.nativeEvent);
+  }, [disabled, handleScratch]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!state.isScratching || disabled) return;
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      scratch(e.clientX - rect.left, e.clientY - rect.top);
-    }
-  }, [state.isScratching, disabled, scratch]);
+    handleScratch(e.nativeEvent);
+    const percentage = getScratchPercentage();
+    setState(prev => ({ ...prev, scratchPercentage: percentage }));
+  }, [state.isScratching, disabled, handleScratch, getScratchPercentage]);
 
   const handleMouseUp = useCallback(() => {
     setState(prev => ({ ...prev, isScratching: false }));
@@ -76,9 +73,13 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
     const touch = e.touches[0];
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      handleScratch(mouseEvent);
     }
-  }, [disabled, scratch]);
+  }, [disabled, handleScratch]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!state.isScratching || disabled) return;
@@ -86,9 +87,15 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
     const touch = e.touches[0];
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+      const mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      handleScratch(mouseEvent);
+      const percentage = getScratchPercentage();
+      setState(prev => ({ ...prev, scratchPercentage: percentage }));
     }
-  }, [state.isScratching, disabled, scratch]);
+  }, [state.isScratching, disabled, handleScratch, getScratchPercentage]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();

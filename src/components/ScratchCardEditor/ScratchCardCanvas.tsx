@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useScratchCardStore } from './state/scratchcard.store';
 import { ScratchCard, Cover, Reveal } from './state/types';
@@ -52,6 +51,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       sidebarWidth = 0;
       containerPadding = 20;
       gridGap = 12;
+
       // Forcer 2 colonnes sur mobile; lignes basées sur le nombre effectif de cartes (cap inclus)
       localGrid.cols = 2;
       localGrid.rows = Math.max(2, Math.ceil(effectiveCards.length / localGrid.cols));
@@ -320,6 +320,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           gridTemplateColumns: `repeat(${containerDimensions.localGrid.cols}, ${containerDimensions.cardWidth}px)`,
           gridTemplateRows: `repeat(${containerDimensions.localGrid.rows}, ${containerDimensions.cardHeight}px)`,
           gap: `${containerDimensions.gridGap}px`,
+
           // Dézoom non destructif pour FIT
           transform: `scale(${containerDimensions.zoomScale})`,
           transformOrigin: 'center center',
@@ -468,6 +469,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       img.onload = () => {
         const opacity = (cover as any).opacity || 1;
         ctx.globalAlpha = opacity;
+
         // COVER: image must fill the entire canvas, cropping overflow while keeping aspect ratio
         const scale = Math.max(w / img.width, h / img.height);
         const drawWidth = img.width * scale;
@@ -490,6 +492,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
   // Scratch functionality
   const handlePointerDown = (e: React.PointerEvent) => {
     if (card.revealed || previewMode) return;
+
     // If card is not scratchable, select it but don't allow scratching
     if (!isScratchable) {
       onCardSelect();
@@ -503,6 +506,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
     if (!isSelected) {
       onCardSelect();
     }
+
     setIsScratching(true);
     const canvas = overlayCanvasRef.current;
     if (canvas) {

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React, { useState, useCallback, useMemo } from 'react';
+import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import QuizTemplateSelector from '../components/QuizTemplateSelector';
 import { QuizTemplate } from '../../../types/quizTemplates';

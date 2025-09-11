@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import { Settings, HelpCircle } from 'lucide-react';
 
 interface QuizSettingsButtonProps {
   onClick: () => void;

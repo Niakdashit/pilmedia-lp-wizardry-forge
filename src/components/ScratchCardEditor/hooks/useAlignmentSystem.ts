@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { useState, useCallback, useMemo } from 'react';
 import { AlignmentSystem, type ElementBounds, type CanvasInfo, type AlignmentGuide } from '../core/AlignmentSystem';
 
 interface UseAlignmentSystemProps {
