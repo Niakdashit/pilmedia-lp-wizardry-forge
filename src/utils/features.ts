@@ -1,14 +1,9 @@
 // Feature flags configuration
 export const features = {
-  // Slot Jackpot game integration
-  slotJackpot: true,
-  
-  // Other feature flags can be added here
-  // experimentalFeature: false,
-} as const;
+  slotJackpot: true, // Enable/disable Slot Jackpot game in JackpotEditor
+  // Add other feature flags here as needed
+};
 
-export type FeatureFlag = keyof typeof features;
-
-export const isFeatureEnabled = (flag: FeatureFlag): boolean => {
-  return features[flag] ?? false;
+export const isFeatureEnabled = (featureName: keyof typeof features): boolean => {
+  return features[featureName] ?? false;
 };

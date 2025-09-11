@@ -17,14 +17,14 @@ import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDr
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
-import SlotJackpot from '../SlotJackpot/SlotJackpot';
-import { isFeatureEnabled } from '../../utils/features';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
+import SlotJackpot from '../SlotJackpot';
+import { isFeatureEnabled } from '../../utils/features';
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
@@ -1699,14 +1699,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 isDragging={isDragging}
               />
               
-              {/* Slot Jackpot Game - Feature flagged */}
-              {isFeatureEnabled('slotJackpot') && (
-                <SlotJackpot
-                  onWin={(prize) => console.log('🎰 Jackpot Win:', prize)}
-                  onLose={() => console.log('🎰 Try again!')}
-                />
-              )}
-              
               {/* Alignment Toolbar */}
               {selectedElements && selectedElements.length > 0 && !readOnly && (
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
@@ -2037,6 +2029,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })()}
 
+            {/* Slot Jackpot Game - Feature Flag Controlled */}
+            {isFeatureEnabled('slotJackpot') && (
+              <SlotJackpot
+                onWin={(result) => {
+                  console.log('🎰 Jackpot Win!', result);
+                }}
+                onLose={() => {
+                  console.log('🎰 Try again!');
+                }}
+                disabled={readOnly}
+              />
+            )}
+
             </div>
 
             {/* Selection overlay (visual layer, not interactive yet) */}
@@ -2064,18 +2069,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
         {/* Multi-Selection Debug Display */}
         {selectedElements && selectedElements.length > 0 && (
-          <div className="absolute top-2 left-2 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">
-            🎯 Multi-Selection: {selectedElements.length} elements
-            <div className="text-xs mt-1">
-              {selectedElements.map((el: any, i: number) => (
-                <div key={el.id}>{i + 1}. {el.id}</div>
-              ))}
-            </div>
-          </div>
-        )}
         
-        {/* Cadre de sélection pour les groupes */}
-        {selectedGroupId && groups && !readOnly && (
+        const groupBounds = {
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY
+        };
           (() => {
             const selectedGroup = groups.find(g => g.id === selectedGroupId);
             if (selectedGroup && selectedGroup.groupChildren) {
