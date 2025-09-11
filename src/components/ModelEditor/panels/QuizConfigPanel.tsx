@@ -27,9 +27,9 @@ import {
 } from '../../../types/campaign';
 import { arrayMove } from '@dnd-kit/sortable';
 import QuestionItem from './QuestionItem';
-import { DndContext, DragOverlay, SortableContext } from '@dnd-kit/core';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import {
-  verticalListSortingStrategy,
   SortableItem,
 } from '../../DesignEditor/components/SortableList';
 import { CSS } from '@dnd-kit/utilities';
