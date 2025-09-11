@@ -2228,7 +2228,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       </MobileResponsiveLayout>
     </DndProvider>
   );
-});
 
 DesignCanvas.displayName = 'DesignCanvas';
 
