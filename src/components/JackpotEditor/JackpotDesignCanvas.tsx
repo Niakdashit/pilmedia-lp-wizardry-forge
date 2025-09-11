@@ -298,6 +298,12 @@ const JackpotDesignCanvas = React.forwardRef<HTMLDivElement, JackpotDesignCanvas
       <MobileResponsiveLayout
         selectedDevice={selectedDevice}
         containerClassName={containerClassName}
+        canvasRef={activeCanvasRef}
+        zoom={localZoom}
+        onZoomChange={onZoomChange}
+        selectedElement={selectedElement}
+        onElementUpdate={handleElementUpdate}
+        onClearSelection={handleClearSelection}
       >
         {/* Canvas Background */}
         <div 
