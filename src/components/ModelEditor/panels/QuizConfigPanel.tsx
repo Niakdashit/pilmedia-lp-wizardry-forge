@@ -31,7 +31,7 @@ import { DndContext, DragOverlay, SortableContext } from '@dnd-kit/core';
 import {
   verticalListSortingStrategy,
   SortableItem,
-} from '../../../DesignEditor/components/SortableList';
+} from '../../DesignEditor/components/SortableList';
 import { CSS } from '@dnd-kit/utilities';
 import { Trash } from 'lucide-react';
 
