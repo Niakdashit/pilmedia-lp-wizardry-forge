@@ -2034,6 +2034,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               <SlotJackpot
                 onWin={(result) => {
                   console.log('🎰 Jackpot Win!', result);
+                  alert(`🎉 JACKPOT! ${result.join(' ')}`);
                 }}
                 onLose={() => {
                   console.log('🎰 Try again!');

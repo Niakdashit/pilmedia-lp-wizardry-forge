@@ -1,0 +1,23 @@
+@keyframes spin-reel-0 {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(1800deg); }
+}
+
+@keyframes spin-reel-1 {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(2160deg); }
+}
+
+@keyframes spin-reel-2 {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(2520deg); }
+}
+
+.slot-spinning {
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+.slot-spin-button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
