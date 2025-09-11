@@ -14,23 +14,35 @@ const SlotJackpot: React.FC<SlotJackpotProps> = ({ onWin, onLose }) => {
 
   const symbols = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
   
-  // ResizeObserver pour contraindre la taille
+  // ResizeObserver pour contraindre la taille avec debounce
   useEffect(() => {
     if (!containerRef.current) return;
     
+    let timeoutId: number;
+    
     const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        const { width, height } = entry.contentRect;
-        const maxSize = Math.min(width * 0.8, height * 0.8, 400);
-        
-        document.documentElement.style.setProperty('--slot-w', `${maxSize}px`);
-        document.documentElement.style.setProperty('--slot-h', `${maxSize * 0.8}px`);
-      }
+      // Debounce pour éviter les boucles ResizeObserver
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        const entry = entries[0];
+        if (entry) {
+          const { width, height } = entry.contentRect;
+          const maxSize = Math.min(width * 0.8, height * 0.8, 400);
+          
+          // Utiliser requestAnimationFrame pour éviter les conflits de layout
+          requestAnimationFrame(() => {
+            document.documentElement.style.setProperty('--slot-w', `${maxSize}px`);
+            document.documentElement.style.setProperty('--slot-h', `${maxSize * 0.8}px`);
+          });
+        }
+      }, 16); // ~60fps debounce
     });
     
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const spin = () => {
