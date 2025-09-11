@@ -1,90 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 
 interface JackpotGameProps {
-  // Configuration des couleurs
-  containerColor?: string;
+  // Personnalisation des couleurs
+  primaryColor?: string;
+  secondaryColor?: string;
+  backgroundColor?: string;
   slotBackgroundColor?: string;
-  slotBorderColor?: string;
-  buttonColor?: string;
-  
-  // Configuration des bordures
-  borderStyle?: 'classic' | 'neon' | 'metallic' | 'luxury';
-  borderWidth?: number;
   
   // Configuration du jeu
   symbols?: string[];
   winProbability?: number;
+  rollDuration?: number;
   
-  // Image de fond
-  backgroundImage?: string;
+  // Style et apparence
+  borderRadius?: number;
+  slotSize?: number;
+  containerPadding?: number;
   
   // Callbacks
   onWin?: () => void;
   onLose?: () => void;
-  
-  // Mode preview
-  isPreview?: boolean;
+  onGameStart?: () => void;
 }
 
-const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '🔔', '💎', '⭐', '🎰'];
+const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '🍀'];
 
 const JackpotGame: React.FC<JackpotGameProps> = ({
-  containerColor = '#1f2937',
+  primaryColor = '#ec4899',
+  secondaryColor = '#8b5cf6',
+  backgroundColor = '#1f2937',
   slotBackgroundColor = '#ffffff',
-  slotBorderColor = '#e5e7eb',
-  buttonColor = '#ec4899',
-  borderStyle = 'classic',
-  borderWidth = 3,
   symbols = DEFAULT_SYMBOLS,
-  winProbability = 0.3,
-  backgroundImage,
+  winProbability = 0.15,
+  rollDuration = 2000,
+  borderRadius = 16,
+  slotSize = 80,
+  containerPadding = 20,
   onWin,
   onLose,
-  isPreview = true
+  onGameStart
 }) => {
-  const [slots, setSlots] = useState<string[]>(['🍒', '🍋', '🍊']);
+  const [slots, setSlots] = useState<string[]>([
+    symbols[0], symbols[1], symbols[2]
+  ]);
   const [isRolling, setIsRolling] = useState(false);
-  const [result, setResult] = useState<'win' | 'lose' | null>(null);
+  const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
+  const [hasPlayed, setHasPlayed] = useState(false);
 
-  const getBorderStyles = (): React.CSSProperties => {
-    const baseStyles: React.CSSProperties = {
-      borderWidth: `${borderWidth}px`,
-      borderStyle: 'solid',
-    };
-
-    switch (borderStyle) {
-      case 'neon':
-        baseStyles.borderColor = '#00ffff';
-        baseStyles.boxShadow = `
-          0 0 20px #00ffff60, 
-          0 0 40px #00ffff40, 
-          inset 0 2px 4px rgba(255, 255, 255, 0.1)
-        `;
-        break;
-      case 'metallic':
-        baseStyles.borderColor = '#c0c0c0';
-        baseStyles.background = `linear-gradient(135deg, #e6e6e6, #b3b3b3, #cccccc)`;
-        baseStyles.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
-        break;
-      case 'luxury':
-        baseStyles.borderColor = '#ffd700';
-        baseStyles.background = `linear-gradient(135deg, #ffd700, #ffed4e, #fbbf24)`;
-        baseStyles.boxShadow = '0 8px 32px rgba(255, 215, 0, 0.4)';
-        break;
-      default: // classic
-        baseStyles.borderColor = slotBorderColor;
-        baseStyles.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
-    }
-
-    return baseStyles;
-  };
-
-  const rollSlots = () => {
-    if (isRolling || !isPreview) return;
+  const rollSlots = useCallback(() => {
+    if (isRolling) return;
 
     setIsRolling(true);
-    setResult(null);
+    setGameResult(null);
+    setHasPlayed(true);
+    onGameStart?.();
 
     // Animation de roulement
     const rollInterval = setInterval(() => {
@@ -95,19 +65,21 @@ const JackpotGame: React.FC<JackpotGameProps> = ({
       ]);
     }, 100);
 
-    // Arrêter après 2 secondes et déterminer le résultat
+    // Arrêter après la durée spécifiée
     setTimeout(() => {
       clearInterval(rollInterval);
       
-      const isWin = Math.random() < winProbability;
+      // Déterminer le résultat
+      const shouldWin = Math.random() < winProbability;
       
-      if (isWin) {
-        // Forcer 3 symboles identiques pour une victoire
+      let finalSlots: string[];
+      if (shouldWin) {
+        // Forcer une combinaison gagnante
         const winSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-        setSlots([winSymbol, winSymbol, winSymbol]);
-        setResult('win');
+        finalSlots = [winSymbol, winSymbol, winSymbol];
+        setGameResult('win');
         
-        // Animation confetti
+        // Effet confetti
         confetti({
           particleCount: 100,
           spread: 70,
@@ -116,163 +88,144 @@ const JackpotGame: React.FC<JackpotGameProps> = ({
         
         onWin?.();
       } else {
-        // S'assurer que les symboles ne sont pas tous identiques
-        const finalSlots = [
+        // Combinaison perdante
+        finalSlots = [
           symbols[Math.floor(Math.random() * symbols.length)],
           symbols[Math.floor(Math.random() * symbols.length)],
           symbols[Math.floor(Math.random() * symbols.length)]
         ];
-        
-        // Vérifier qu'ils ne sont pas tous identiques
+        // S'assurer que ce n'est pas une combinaison gagnante par accident
         while (finalSlots[0] === finalSlots[1] && finalSlots[1] === finalSlots[2]) {
-          finalSlots[2] = symbols[Math.floor(Math.random() * symbols.length)];
+          finalSlots[1] = symbols[Math.floor(Math.random() * symbols.length)];
         }
-        
-        setSlots(finalSlots);
-        setResult('lose');
+        setGameResult('lose');
         onLose?.();
       }
       
+      setSlots(finalSlots);
       setIsRolling(false);
-    }, 2000);
-  };
+    }, rollDuration);
+  }, [isRolling, symbols, winProbability, rollDuration, onWin, onLose, onGameStart]);
 
-  const resetGame = () => {
-    setResult(null);
-    setSlots(['🍒', '🍋', '🍊']);
-  };
+  const resetGame = useCallback(() => {
+    setGameResult(null);
+    setHasPlayed(false);
+    setSlots([symbols[0], symbols[1], symbols[2]]);
+  }, [symbols]);
 
+  // Styles calculés
   const containerStyle: React.CSSProperties = {
-    backgroundColor: containerColor,
-    borderRadius: '20px',
-    padding: '24px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '20px',
-    minWidth: '300px',
-    position: 'relative',
-    ...getBorderStyles(),
+    background: `linear-gradient(135deg, ${backgroundColor}, ${backgroundColor}dd)`,
+    borderRadius: `${borderRadius}px`,
+    padding: `${containerPadding}px`,
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+    border: `2px solid ${primaryColor}40`,
   };
 
-  if (backgroundImage) {
-    containerStyle.backgroundImage = `
-      linear-gradient(145deg, ${containerColor}cc, ${containerColor}aa),
-      url(${backgroundImage})
-    `;
-    containerStyle.backgroundSize = 'cover';
-    containerStyle.backgroundPosition = 'center';
-  }
+  const slotsContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '12px',
+    padding: '16px',
+    background: `linear-gradient(145deg, ${slotBackgroundColor}20, ${slotBackgroundColor}10)`,
+    borderRadius: `${borderRadius - 4}px`,
+    boxShadow: 'inset 0 4px 8px rgba(0, 0, 0, 0.2)',
+  };
 
   const slotStyle: React.CSSProperties = {
-    width: '80px',
-    height: '80px',
+    width: `${slotSize}px`,
+    height: `${slotSize}px`,
     backgroundColor: slotBackgroundColor,
-    border: `2px solid ${slotBorderColor}`,
-    borderRadius: '12px',
+    borderRadius: `${borderRadius / 2}px`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '32px',
+    fontSize: `${slotSize * 0.5}px`,
     fontWeight: 'bold',
-    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
-    transition: 'transform 0.1s ease',
+    boxShadow: isRolling 
+      ? '0 0 20px rgba(255, 255, 255, 0.5), inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+      : '0 4px 8px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.8)',
+    transition: 'all 0.3s ease',
     transform: isRolling ? 'scale(1.05)' : 'scale(1)',
   };
 
   const buttonStyle: React.CSSProperties = {
-    backgroundColor: buttonColor,
+    background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
     color: 'white',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: `${borderRadius / 2}px`,
     padding: '12px 24px',
     fontSize: '16px',
-    fontWeight: '600',
+    fontWeight: 'bold',
     cursor: isRolling ? 'not-allowed' : 'pointer',
-    opacity: isRolling ? 0.7 : 1,
-    transition: 'all 0.2s ease',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+    transition: 'all 0.3s ease',
+    opacity: isRolling ? 0.7 : 1,
+    transform: isRolling ? 'scale(0.95)' : 'scale(1)',
+  };
+
+  const resultStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: '16px',
+    color: gameResult === 'win' ? '#10b981' : gameResult === 'lose' ? '#ef4444' : 'transparent',
   };
 
   return (
-    <div style={containerStyle}>
-      {/* Titre */}
-      <h2 style={{ 
-        color: 'white', 
-        margin: 0, 
-        fontSize: '24px', 
-        fontWeight: 'bold',
-        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-      }}>
-        🎰 Jackpot
-      </h2>
-
-      {/* Slots */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '16px',
-        padding: '16px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderRadius: '16px',
-        backdropFilter: 'blur(10px)'
-      }}>
-        {slots.map((symbol, index) => (
-          <div key={index} style={slotStyle}>
-            {symbol}
-          </div>
-        ))}
-      </div>
-
-      {/* Résultat */}
-      {result && (
-        <div style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: result === 'win' ? '#10b981' : '#ef4444',
-          textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
-        }}>
-          {result === 'win' ? '🎉 Félicitations ! Vous avez gagné !' : '😔 Dommage, essayez encore !'}
+    <div className="flex flex-col items-center justify-center min-h-[300px] p-4">
+      <div style={containerStyle}>
+        {/* Slots */}
+        <div style={slotsContainerStyle}>
+          {slots.map((symbol, index) => (
+            <div
+              key={index}
+              style={slotStyle}
+              className={isRolling ? 'animate-pulse' : ''}
+            >
+              {symbol}
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* Boutons */}
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <button
-          onClick={rollSlots}
-          disabled={isRolling}
-          style={buttonStyle}
-        >
-          {isRolling ? '🎰 En cours...' : '🎰 Lancer'}
-        </button>
-        
-        {result && (
+        {/* Bouton de jeu */}
+        <div className="flex flex-col items-center mt-6">
           <button
-            onClick={resetGame}
-            style={{
-              ...buttonStyle,
-              backgroundColor: '#6b7280',
+            onClick={rollSlots}
+            disabled={isRolling}
+            style={buttonStyle}
+            onMouseEnter={(e) => {
+              if (!isRolling) {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.3)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isRolling) {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+              }
             }}
           >
-            🔄 Rejouer
+            {isRolling ? 'Roulement...' : hasPlayed ? 'Rejouer' : 'Lancer le Jackpot'}
           </button>
-        )}
-      </div>
 
-      {/* Probabilité de gain (en mode développement) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-          fontSize: '12px',
-          color: 'rgba(255, 255, 255, 0.7)',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          padding: '4px 8px',
-          borderRadius: '4px'
-        }}>
-          Win: {Math.round(winProbability * 100)}%
+          {/* Résultat */}
+          <div style={resultStyle}>
+            {gameResult === 'win' && '🎉 JACKPOT! Vous avez gagné! 🎉'}
+            {gameResult === 'lose' && '😔 Pas de chance... Réessayez!'}
+          </div>
+
+          {/* Bouton reset (visible seulement après avoir joué) */}
+          {hasPlayed && !isRolling && (
+            <button
+              onClick={resetGame}
+              className="mt-3 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 underline"
+            >
+              Recommencer
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
