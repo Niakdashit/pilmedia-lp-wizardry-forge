@@ -1,4 +1,4 @@
-// @ts-nocheck
+import React from 'react';
 import { Settings, HelpCircle } from 'lucide-react';
 
 interface QuizSettingsButtonProps {
