@@ -95,12 +95,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = fal
       <div 
         className="slot-machine"
         style={{
-          width: 'var(--slot-w, 300px)',
-          height: 'var(--slot-h, 200px)',
-          background: 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
-          borderRadius: '20px',
-          padding: '20px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+          width: 'var(--slot-w, 400px)',
+          height: 'var(--slot-h, 300px)',
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -108,64 +105,163 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = fal
           gap: '20px'
         }}
       >
-        {/* Rouleaux */}
+        {/* Couronne */}
         <div 
-          className="slot-reels"
+          className="slot-crown"
           style={{
-            display: 'flex',
-            gap: '10px',
-            background: '#000',
-            padding: '15px',
-            borderRadius: '10px',
-            border: '3px solid #ffd700'
+            position: 'absolute',
+            top: '-30px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80px',
+            height: '60px',
+            background: 'linear-gradient(145deg, #ffd700, #ffed4e)',
+            clipPath: 'polygon(20% 0%, 80% 0%, 100% 35%, 85% 100%, 50% 70%, 15% 100%, 0% 35%)',
+            boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4)',
+            zIndex: 10
           }}
         >
-          {reels.map((symbol, index) => (
-            <div
-              key={index}
-              className={`slot-reel ${isSpinning ? 'slot-spinning' : ''}`}
-              style={{
-                width: '60px',
-                height: '60px',
-                background: '#fff',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '32px',
-                fontWeight: 'bold',
-                border: '2px solid #333',
-                animation: isSpinning ? `slot-spin-${index} ${spinDuration[index]}ms ease-out` : 'none'
-              }}
-            >
-              {symbol}
-            </div>
-          ))}
+          {/* Gemmes sur la couronne */}
+          <div style={{
+            position: 'absolute',
+            top: '15px',
+            left: '15px',
+            width: '8px',
+            height: '8px',
+            background: '#ff6b6b',
+            borderRadius: '50%',
+            boxShadow: '0 0 8px rgba(255, 107, 107, 0.6)'
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '10px',
+            height: '10px',
+            background: '#4ecdc4',
+            borderRadius: '50%',
+            boxShadow: '0 0 10px rgba(78, 205, 196, 0.6)'
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: '15px',
+            right: '15px',
+            width: '8px',
+            height: '8px',
+            background: '#45b7d1',
+            borderRadius: '50%',
+            boxShadow: '0 0 8px rgba(69, 183, 209, 0.6)'
+          }} />
         </div>
 
-        {/* Bouton Spin */}
-        <button
-          onClick={spin}
-          disabled={isSpinning || disabled}
-          className="slot-spin-button"
+        {/* Cadre principal avec bordure dorée */}
+        <div 
+          className="slot-frame"
           style={{
-            background: isSpinning || disabled 
-              ? 'linear-gradient(145deg, #666, #444)' 
-              : 'linear-gradient(145deg, #ff6b6b, #ee5a24)',
-            color: 'white',
-            border: 'none',
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(145deg, #dc143c, #b91c3c)',
             borderRadius: '25px',
-            padding: '12px 30px',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            cursor: isSpinning || disabled ? 'not-allowed' : 'pointer',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-            transition: 'all 0.3s ease',
-            transform: isSpinning ? 'scale(0.95)' : 'scale(1)'
+            border: '8px solid #ffd700',
+            boxShadow: '0 15px 40px rgba(0,0,0,0.6), inset 0 2px 10px rgba(255,255,255,0.2)',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '20px',
+            padding: '30px 20px 20px'
           }}
         >
-          {isSpinning ? 'SPINNING...' : 'SPIN'}
-        </button>
+          {/* Points décoratifs sur le cadre */}
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: '12px',
+                height: '12px',
+                background: '#fff',
+                borderRadius: '50%',
+                boxShadow: '0 0 8px rgba(255,255,255,0.8)',
+                top: i < 6 ? '15px' : 'auto',
+                bottom: i >= 6 ? '15px' : 'auto',
+                left: i < 6 ? `${20 + (i * 60)}px` : `${20 + ((i - 6) * 60)}px`,
+                transform: 'translateX(-50%)'
+              }}
+            />
+          ))}
+
+          {/* Zone centrale dorée pour les rouleaux */}
+          <div 
+            className="slot-inner-frame"
+            style={{
+              background: 'linear-gradient(145deg, #ffed4e, #ffd700)',
+              borderRadius: '15px',
+              padding: '15px',
+              border: '3px solid #b8860b',
+              boxShadow: 'inset 0 4px 15px rgba(0,0,0,0.3)'
+            }}
+          >
+            {/* Rouleaux */}
+            <div 
+              className="slot-reels"
+              style={{
+                display: 'flex',
+                gap: '8px'
+              }}
+            >
+              {reels.map((symbol, index) => (
+                <div
+                  key={index}
+                  className={`slot-reel ${isSpinning ? 'slot-spinning' : ''}`}
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    background: 'linear-gradient(145deg, #fff, #f0f0f0)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    border: '2px solid #b8860b',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.5)',
+                    animation: isSpinning ? `slot-spin-${index} ${spinDuration[index]}ms ease-out` : 'none'
+                  }}
+                >
+                  {symbol}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bouton Spin */}
+          <button
+            onClick={spin}
+            disabled={isSpinning || disabled}
+            className="slot-spin-button"
+            style={{
+              background: isSpinning || disabled 
+                ? 'linear-gradient(145deg, #888, #666)' 
+                : 'linear-gradient(145deg, #ffd700, #ffed4e)',
+              color: isSpinning || disabled ? '#ccc' : '#8b4513',
+              border: '3px solid #b8860b',
+              borderRadius: '20px',
+              padding: '10px 25px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: isSpinning || disabled ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.3)',
+              transition: 'all 0.3s ease',
+              transform: isSpinning ? 'scale(0.95)' : 'scale(1)',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+            }}
+          >
+            {isSpinning ? 'SPINNING...' : 'SPIN'}
+          </button>
+        </div>
       </div>
 
       <style>{`
