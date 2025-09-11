@@ -1,16 +1,18 @@
 /* Styles scopés avec préfixe slot- */
 .slot-root {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: auto;
   background: transparent;
   width: var(--slot-w, 320px);
   height: var(--slot-h, 256px);
   max-width: 400px;
   max-height: 320px;
-  margin: auto;
   z-index: 10;
 }
 
