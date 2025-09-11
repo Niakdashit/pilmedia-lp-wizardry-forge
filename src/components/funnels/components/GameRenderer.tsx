@@ -4,7 +4,6 @@ import ContrastBackground from '../../common/ContrastBackground';
 import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import { Jackpot } from '../../GameTypes';
-import PixiJackpot from '../../GameTypes/JackpotPixi/PixiJackpot';
 import QuizPreview from '../../GameTypes/QuizPreview';
 import ScratchPreview from '../../GameTypes/ScratchPreview';
 import DicePreview from '../../GameTypes/DicePreview';
@@ -125,18 +124,21 @@ const GameRenderer: React.FC<GameRendererProps> = ({
       
       case 'jackpot':
         return (
-          <PixiJackpot
-            config={{
-              mode: 'instant_winner',
-              winProbability: campaign.gameConfig?.jackpot?.instantWin?.winProbability ?? 0.1,
-              maxWinners: campaign.gameConfig?.jackpot?.instantWin?.maxWinners,
-              winnersCount: campaign.gameConfig?.jackpot?.instantWin?.winnersCount,
-            }}
+          <Jackpot
+            isPreview={true}
+            instantWinConfig={campaign.gameConfig?.jackpot?.instantWin}
+            buttonLabel={buttonLabel}
+            buttonColor={buttonColor}
+            backgroundImage={gameBackgroundImage}
+            containerBackgroundColor={campaign.gameConfig?.jackpot?.containerBackgroundColor}
+            backgroundColor={campaign.gameConfig?.jackpot?.backgroundColor}
+            borderStyle="classic"
+            slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
+            slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
+            slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
             disabled={!formValidated}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
-            buttonLabel={buttonLabel}
-            buttonColor={buttonColor}
           />
         );
       case 'quiz':

@@ -4,7 +4,6 @@ import WheelPreview from '../../GameTypes/WheelPreview';
 import QuizPreview from '../../GameTypes/QuizPreview';
 import ScratchPreview from '../../GameTypes/ScratchPreview';
 import Jackpot from '../../GameTypes/Jackpot';
-import PixiJackpot from '../../GameTypes/JackpotPixi/PixiJackpot';
 import DicePreview from '../../GameTypes/DicePreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
@@ -80,17 +79,9 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         
       case 'jackpot':
         return (
-          <PixiJackpot
+          <Jackpot
+            {...commonProps}
             key={`jackpot-${campaign._lastUpdate || Date.now()}`}
-            config={{
-              mode: 'instant_winner',
-              winProbability: gameConfig?.winProbability ?? 0.1,
-              maxWinners: (gameConfig as any)?.maxWinners,
-              winnersCount: (gameConfig as any)?.winnersCount,
-            }}
-            disabled={disableForm}
-            onFinish={onGameFinish}
-            previewDevice={previewDevice}
           />
         );
         
