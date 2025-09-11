@@ -2069,13 +2069,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
         {/* Multi-Selection Debug Display */}
         {selectedElements && selectedElements.length > 0 && (
+          <div className="absolute top-2 left-2 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">
+            🎯 Multi-Selection: {selectedElements.length} elements
+            <div className="text-xs mt-1">
+              {selectedElements.map((el: any, i: number) => (
+                <div key={el.id}>{i + 1}. {el.id}</div>
+              ))}
+            </div>
+          </div>
+        )}
         
-        const groupBounds = {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY
-        };
+        {/* Cadre de sélection pour les groupes */}
+        {selectedGroupId && groups && !readOnly && (
           (() => {
             const selectedGroup = groups.find(g => g.id === selectedGroupId);
             if (selectedGroup && selectedGroup.groupChildren) {
