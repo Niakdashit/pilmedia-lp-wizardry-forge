@@ -12,7 +12,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { shallow } from 'zustand/shallow';
 
-import { useCampaignEditor } from '../../../providers/CampaignEditor';
+import { useModernCampaignEditor } from '../../../hooks/useModernCampaignEditor';
 import { useTranslation } from 'react-i18next';
 import {
   DEFAULT_QUIZ_CONFIG,
@@ -37,14 +37,25 @@ import { Trash } from 'lucide-react';
 
 const QuizConfigPanel = () => {
   const { t } = useTranslation();
-  const [quizConfig, setQuizConfig, updateCampaign] = useCampaignEditor(
-    (state) => [
-      state.campaign.quizConfig,
-      state.setQuizConfig,
-      state.updateCampaign,
-    ],
-    shallow
-  );
+  const { campaign, setCampaign } = useModernCampaignEditor();
+  
+  // Extract quiz config from campaign
+  const quizConfig = campaign?.quizConfig || { questions: [], settings: {} };
+  
+  const setQuizConfig = (config: any) => {
+    setCampaign({
+      ...campaign,
+      quizConfig: config
+    });
+  };
+  
+  const updateCampaign = (updates: any) => {
+    setCampaign({
+      ...campaign,
+      ...updates
+    });
+  };
+  
   const [activeId, setActiveId] = useState(null);
 
   const handleConfigChange = useCallback(
