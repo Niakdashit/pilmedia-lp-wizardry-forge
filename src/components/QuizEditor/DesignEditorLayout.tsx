@@ -1526,7 +1526,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 }}
                 // Gestion de la largeur mobile du quiz
                 quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
-                onQuizMobileWidthChange={(width) => {
+                onQuizMobileWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);

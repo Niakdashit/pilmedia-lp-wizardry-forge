@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import { useInteractiveDragDrop } from '../hooks/useInteractiveDragDrop';
 import InteractiveCustomElementsRenderer from './InteractiveCustomElementsRenderer';
-import AlignmentGuides from '../../DesignEditor/components/AlignmentGuides';
+import AlignmentGuides from '../../DesignEditor/components/SmartAlignmentGuides';
 import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 // Composant mémoïsé pour éviter les rendus inutiles
@@ -172,7 +172,6 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       <AlignmentGuides
         canvasSize={canvasSize}
         elements={measuredElements}
-        // Coordinates are already in CSS pixels, use zoom=1 for tolerance math
         zoom={1}
       />
 
