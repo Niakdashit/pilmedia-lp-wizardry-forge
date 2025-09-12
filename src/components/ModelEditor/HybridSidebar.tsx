@@ -69,6 +69,14 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   quizDifficulty?: 'easy' | 'medium' | 'hard';
   quizBorderRadius?: number;
   selectedQuizTemplate?: string;
+  // Quiz layout properties
+  quizWidth?: string;
+  onQuizWidthChange?: (width: string) => void;
+  quizMobileWidth?: string;
+  onQuizMobileWidthChange?: (width: string) => void;
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  textColor?: string;
   // Button colors
   buttonBackgroundColor?: string;
   buttonTextColor?: string;
@@ -553,62 +561,71 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
             // Zoom controls wiring
-            quizWidth={campaign?.design?.quizConfig?.style?.width ?? `${(campaign as any)?.design?.quizConfig?.style?.containerWidth || 800}px`}
-            quizMobileWidth={campaign?.design?.quizConfig?.style?.mobileWidth ?? `${(campaign as any)?.design?.quizConfig?.style?.mobileContainerWidth || 400}px`}
+            quizWidth={(campaign as any)?.design?.quizConfig?.style?.width ?? `${(campaign as any)?.design?.quizConfig?.style?.containerWidth || 800}px`}
+            quizMobileWidth={(campaign as any)?.design?.quizConfig?.style?.mobileWidth ?? `${(campaign as any)?.design?.quizConfig?.style?.mobileContainerWidth || 400}px`}
             // Color controls (with safe defaults for panel display)
-            backgroundColor={campaign?.design?.quizConfig?.style?.backgroundColor ?? '#ffffff'}
-            backgroundOpacity={campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 100}
-            textColor={campaign?.design?.quizConfig?.style?.textColor ?? '#000000'}
-            buttonBackgroundColor={campaign?.design?.quizConfig?.style?.buttonBackgroundColor ?? '#f3f4f6'}
-            buttonTextColor={campaign?.design?.quizConfig?.style?.buttonTextColor ?? '#000000'}
-            buttonHoverBackgroundColor={campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
-            buttonActiveBackgroundColor={campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
+            backgroundColor={(campaign as any)?.design?.quizConfig?.style?.backgroundColor ?? '#ffffff'}
+            backgroundOpacity={(campaign as any)?.design?.quizConfig?.style?.backgroundOpacity ?? 100}
+            textColor={(campaign as any)?.design?.quizConfig?.style?.textColor ?? '#000000'}
+            buttonBackgroundColor={(campaign as any)?.design?.quizConfig?.style?.buttonBackgroundColor ?? '#f3f4f6'}
+            buttonTextColor={(campaign as any)?.design?.quizConfig?.style?.buttonTextColor ?? '#000000'}
+            buttonHoverBackgroundColor={(campaign as any)?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
+            buttonActiveBackgroundColor={(campaign as any)?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
             onQuizWidthChange={(width) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev?.design,
-                  quizConfig: {
-                    ...(prev?.design as any)?.quizConfig,
-                    style: {
-                      ...((prev?.design as any)?.quizConfig?.style || {}),
-                      width
+              setCampaign((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  design: {
+                    ...prev?.design,
+                    quizConfig: {
+                      ...(prev?.design as any)?.quizConfig,
+                      style: {
+                        ...((prev?.design as any)?.quizConfig?.style || {}),
+                        width
+                      }
                     }
                   }
-                }
-              }));
+                };
+              });
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { width } }));
             }}
             onQuizMobileWidthChange={(width) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev?.design,
-                  quizConfig: {
-                    ...(prev?.design as any)?.quizConfig,
-                    style: {
-                      ...((prev?.design as any)?.quizConfig?.style || {}),
-                      mobileWidth: width
+              setCampaign((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  design: {
+                    ...prev?.design,
+                    quizConfig: {
+                      ...(prev?.design as any)?.quizConfig,
+                      style: {
+                        ...((prev?.design as any)?.quizConfig?.style || {}),
+                        mobileWidth: width
+                      }
                     }
                   }
-                }
-              }));
+                };
+              });
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
             }}
             onBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      backgroundColor: color
+              setCampaign((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...(prev.design as any)?.quizConfig,
+                      style: {
+                        ...((prev.design as any)?.quizConfig?.style || {}),
+                        backgroundColor: color
+                      }
                     }
                   }
-                }
-              }));
+                };
+              });
               // Notify preview to re-render
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
                 detail: { 

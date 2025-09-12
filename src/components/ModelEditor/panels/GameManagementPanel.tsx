@@ -30,8 +30,12 @@ interface WheelSegment {
 interface Prize {
   id: string;
   name: string;
-  description: string;
-  attributionMethod: 'calendar' | 'probability';
+  description?: string;
+  totalUnits?: number;
+  awardedUnits?: number;
+  method?: string;
+  probabilityPercent?: number;
+  attributionMethod?: 'calendar' | 'probability';
   calendarDate?: string;
   calendarTime?: string;
   probability?: number;

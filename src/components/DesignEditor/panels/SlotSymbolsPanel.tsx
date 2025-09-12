@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Upload, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';
 
 /**

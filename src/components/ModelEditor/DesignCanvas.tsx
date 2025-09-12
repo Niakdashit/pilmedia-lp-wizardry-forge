@@ -138,6 +138,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [mobileToolbarHeight, setMobileToolbarHeight] = useState<number>(0);
   // Always start with a valid numeric zoom (fallback 1). Clamp to [0.1, 1].
   const [localZoom, setLocalZoom] = useState<number>(
     typeof zoom === 'number' && !Number.isNaN(zoom)
