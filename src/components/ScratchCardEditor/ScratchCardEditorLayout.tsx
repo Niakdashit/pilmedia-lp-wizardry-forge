@@ -1403,9 +1403,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
-                showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
-                onQuizPanelChange={() => {}}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {
@@ -1417,13 +1415,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
                 // Quiz config props for HybridSidebar
-                quizQuestionCount={quizConfig.questionCount}
-                quizTimeLimit={quizConfig.timeLimit}
-                quizDifficulty={quizConfig.difficulty}
-                quizBorderRadius={quizConfig.borderRadius}
-                selectedQuizTemplate={quizConfig.templateId}
-                onQuizQuestionCountChange={(count: number) => setQuizConfig(prev => ({ ...prev, questionCount: count }))}
-                onQuizTimeLimitChange={(time: number) => setQuizConfig(prev => ({ ...prev, timeLimit: time }))}
                 onQuizDifficultyChange={(difficulty: 'easy' | 'medium' | 'hard') => setQuizConfig(prev => ({ ...prev, difficulty }))}
                 onQuizBorderRadiusChange={(borderRadius: number) => {
                   setQuizConfig(prev => ({ ...prev, borderRadius }));

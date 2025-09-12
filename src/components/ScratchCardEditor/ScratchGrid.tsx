@@ -250,7 +250,7 @@ const ScratchGrid: React.FC<ScratchGridProps> = ({
     const cardsEls = Array.from(container.querySelectorAll('.scratch-card')) as HTMLElement[];
     cardsEls.forEach((el) => {
       const dispose = setupCard(el);
-      disposers.push(dispose);
+      disposers.push(dispose || (() => {}));
     });
 
     return () => {

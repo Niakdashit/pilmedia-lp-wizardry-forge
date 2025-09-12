@@ -486,8 +486,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                         <input
                           type="number"
                           min="0"
-                          value={prize.totalUnits || 1}
-                          onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
+                          value={prize.quantity || 1}
+                          onChange={(e) => updatePrize(prize.id, { quantity: Number(e.target.value) || 1 })}
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                         />
                       </div>
