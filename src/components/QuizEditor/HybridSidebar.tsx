@@ -17,14 +17,12 @@ import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
-
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
 const loadLayersPanel = () => import('../DesignEditor/panels/LayersPanel');
 
 const LazyPositionPanel = React.lazy(loadPositionPanel);
 const LazyLayersPanel = React.lazy(loadLayersPanel);
-
 
 export interface HybridSidebarRef {
   setActiveTab: (tab: string) => void;
@@ -269,9 +267,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     onDesignPanelChange
   ]);
 
-  // La gestion de onForceElementsTab a été déplacée dans le premier useEffect
-  // pour éviter la duplication de code et les effets secondaires multiples
-
   // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
   React.useEffect(() => {
     if (activeTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
@@ -332,56 +327,23 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: Gamepad2
     }
   ];
-  console.log('📌 hiddenTabs:', hiddenTabs);
+  
   // Vérifier si hiddenTabs est défini et est un tableau
   const safeHiddenTabs = Array.isArray(hiddenTabs) ? hiddenTabs : [];
-  console.log('🔍 [HybridSidebar] hiddenTabs reçus:', hiddenTabs);
-  console.log('🔍 [HybridSidebar] hiddenTabs après vérification:', safeHiddenTabs);
   
   const tabs = allTabs.filter(tab => {
     const isHidden = safeHiddenTabs.includes(tab.id);
-    console.log(`🔍 [${tab.id}] ${tab.label} - Masqué: ${isHidden}`, tab);
     return !isHidden;
   });
   
-  // Log détaillé du filtrage des onglets
-  console.log('🔍 [HybridSidebar] Filtrage des onglets:', {
-    allTabs: allTabs.map(t => t.id),
-    safeHiddenTabs,
-    filteredTabs: tabs.map(t => t.id),
-    hasBackgroundTab: allTabs.some(t => t.id === 'background'),
-    isBackgroundHidden: safeHiddenTabs.includes('background')
-  });
-  
-  console.log('🔍 [HybridSidebar] Tous les onglets disponibles:', allTabs.map(t => `${t.id} (${t.label})`));
-  console.log('✅ [HybridSidebar] Onglets visibles après filtrage:', tabs.map(t => `${t.id} (${t.label})`));
-  console.log('📋 [HybridSidebar] Onglets masqués:', safeHiddenTabs);
-  
-  // Vérifier si l'onglet 'background' (Design) est présent
-  const hasBackgroundTab = allTabs.some(tab => tab.id === 'background');
-  console.log('🔍 [HybridSidebar] L\'onglet background (Design) est présent:', hasBackgroundTab);
-  
-  // Vérifier si l'onglet 'background' est masqué
-  const isBackgroundHidden = safeHiddenTabs.includes('background');
-  console.log('🔍 [HybridSidebar] L\'onglet background (Design) est masqué:', isBackgroundHidden);
-  
-  // Effet pour vérifier l'état des onglets au chargement
+  // Ensure a valid default active tab on mount and when visible tabs change
   React.useEffect(() => {
-    console.log('🔄 [HybridSidebar] Vérification des onglets au chargement...');
-    console.log('📋 Nombre total d\'onglets:', allTabs.length);
-    console.log('📋 Onglets cachés:', safeHiddenTabs);
-    console.log('📋 Onglets visibles:', tabs.map(t => t.id));
-    
-    // Vérifier si l'onglet 'background' est dans les onglets visibles
-    const backgroundTab = tabs.find(tab => tab.id === 'background');
-    console.log('🔍 Onglet background trouvé dans les onglets visibles:', !!backgroundTab);
-    
-    if (backgroundTab) {
-      console.log('✅ L\'onglet Design est présent et visible');
-    } else {
-      console.warn('⚠️ L\'onglet Design est masqué ou non trouvé dans les onglets visibles');
+    const backgroundVisible = tabs.some(t => t.id === 'background');
+    const activeIsVisible = activeTab ? tabs.some(t => t.id === activeTab) : false;
+    if (!activeIsVisible) {
+      _setActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, allTabs, safeHiddenTabs]);
+  }, [tabs]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -393,14 +355,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   };
 
   // Theme variables to align with Home sidebar colors
-  // Approximations in HSL for:
-  // - background: #2c2c34 -> hsl(240 8% 19%)
-  // - border: #4b5563 -> hsl(220 10% 34%)
-  // - hover: #3f3f46 -> hsl(240 5% 26%)
-  // - icon default: #d1d5db -> hsl(220 9% 72%)
-  // - icon active/text primary: #ffffff -> hsl(0 0% 100%)
-  // - active background (approx mid of gradient #841b60 -> #b41b60): use #9e1b60 -> hsl(326 70% 37%)
-  // - active accent/border: #b41b60 -> hsl(336 75% 41%)
   const themeVars: React.CSSProperties = {
     // Container/backgrounds
     ['--sidebar-bg' as any]: '240 8% 19%',
@@ -418,31 +372,23 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   } as React.CSSProperties;
 
   const handleTabClick = (tabId: string) => {
-    console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
-    
     // Si on clique sur un onglet différent, fermer les panneaux spéciaux
     if (showEffectsPanel && tabId !== 'effects') {
-      console.log('🗂️ Fermeture du panneau effects');
       onEffectsPanelChange?.(false);
     }
     if (showAnimationsPanel && tabId !== 'animations') {
-      console.log('🗂️ Fermeture du panneau animations');
       onAnimationsPanelChange?.(false);
     }
     if (showPositionPanel && tabId !== 'position') {
-      console.log('🗂️ Fermeture du panneau position');
       onPositionPanelChange?.(false);
     }
     if (showQuizPanel && tabId !== 'quiz') {
-      console.log('🗂️ Fermeture du panneau quiz');
       onQuizPanelChange?.(false);
     }
     
     if (activeTab === tabId) {
-      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
       setActiveTab(null); // Close if clicking on active tab
     } else {
-      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
       setActiveTab(tabId);
     }
   };
@@ -502,10 +448,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
-            // Zoom controls wiring  
             quizWidth={(campaign?.design?.quizConfig as any)?.style?.width ?? '800px'}
             quizMobileWidth={(campaign?.design?.quizConfig as any)?.style?.mobileWidth ?? '400px'}
-            // Color controls (with safe defaults for panel display)
             backgroundColor={(campaign?.design?.quizConfig as any)?.style?.backgroundColor ?? '#ffffff'}
             backgroundOpacity={(campaign?.design?.quizConfig as any)?.style?.backgroundOpacity ?? 100}
             textColor={(campaign?.design?.quizConfig as any)?.style?.textColor ?? '#000000'}
@@ -551,186 +495,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 };
               });
             }}
-            onBackgroundColorChange={(color: string) => {
-              setCampaign((prev: any) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  name: prev.name || 'Campaign',
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...prev.design?.quizConfig,
-                      style: {
-                        ...prev.design?.quizConfig?.style,
-                        backgroundColor: color
-                      }
-                    }
-                  }
-                };
-              });
-            }}
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
-            }}
-            onBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      backgroundColor: color
-                    }
-                  }
-                }
-              }));
-              // Notify preview to re-render
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { 
-                  backgroundColor: color,
-                  buttonBackgroundColor: campaign?.design?.quizConfig?.style?.buttonBackgroundColor,
-                  buttonTextColor: campaign?.design?.quizConfig?.style?.buttonTextColor,
-                  buttonHoverBackgroundColor: campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor,
-                  buttonActiveBackgroundColor: campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor
-                } 
-              }));
-            }}
-            onBackgroundOpacityChange={(opacity) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      backgroundOpacity: opacity
-                    }
-                  }
-                }
-              }));
-              // Notify preview to re-render
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { 
-                  backgroundOpacity: opacity
-                } 
-              }));
-            }}
-            onTextColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      textColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { 
-                  textColor: color,
-                  buttonTextColor: campaign?.design?.quizConfig?.style?.buttonTextColor
-                } 
-              }));
-            }}
-            onButtonBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonBackgroundColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonBackgroundColor: color } 
-              }));
-            }}
-            onButtonTextColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonTextColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonTextColor: color } 
-              }));
-            }}
-            onButtonHoverBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonHoverBackgroundColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonHoverBackgroundColor: color } 
-              }));
-            }}
-            onButtonActiveBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonActiveBackgroundColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonActiveBackgroundColor: color } 
-              }));
-            }}
-            onTextColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return prev;
-                const next = {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        textColor: color
-                      }
-                    }
-                  }
-                } as typeof prev;
-                return next;
-              });
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { textColor: color } }));
-            }}
             selectedDevice={selectedDevice}
           />
         );
@@ -752,16 +516,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
         return (
-          <div className="p-4">
+          <div className="h-full overflow-y-auto">
             <QuizManagementPanel 
-              campaign={campaign || campaignConfig}
-              setCampaign={(updatedCampaign) => {
-                // Mettre à jour l'état global ET local
-                setCampaign(updatedCampaign);
-                if (onCampaignConfigChange) {
-                  onCampaignConfigChange(updatedCampaign);
-                }
-              }}
+              campaign={campaign}
+              setCampaign={setCampaign}
             />
           </div>
         );
@@ -794,7 +552,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   if (isCollapsed) {
     return (
       <div className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
-        {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(false)}
           className="p-4 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))]"
@@ -803,7 +560,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <ChevronRight className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
         
-        {/* Collapsed Icons */}
         <div className="flex flex-col space-y-2 p-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -811,7 +567,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               <button
                 key={tab.id}
                 onClick={(e) => {
-                  console.log('🗂️ Clic sur onglet réduit:', tab.id);
                   e.preventDefault();
                   e.stopPropagation();
                   setIsCollapsed(false);
@@ -819,23 +574,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 }}
                 onMouseEnter={() => prefetchTab(tab.id)}
                 onTouchStart={() => prefetchTab(tab.id)}
-                onMouseDown={(e) => {
-                  console.log('🗂️ MouseDown sur onglet réduit:', tab.id);
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
-                style={{ 
-                  pointerEvents: 'auto',
-                  userSelect: 'none'
-                }}
               >
-                <Icon className="w-5 h-5" style={{ pointerEvents: 'none' }} />
+                <Icon className="w-5 h-5" />
               </button>
             );
           })}
@@ -846,9 +592,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   return (
     <div className="flex h-full min-h-0">
-      {/* Vertical Tab Sidebar */}
       <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0" style={themeVars}>
-        {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
           className="p-3 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))] transition-all duration-200"
@@ -857,12 +601,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <ChevronLeft className="w-5 h-5 text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
         
-        {/* Vertical Tabs */}
         <div className="flex flex-col flex-1">
-          {(() => {
-            console.log('📊 Rendu des onglets:', tabs.map(t => t.id));
-            return null;
-          })()}
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -871,46 +610,29 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               <button
                 key={tab.id}
                 onClick={(e) => {
-                  console.log('🗂️ Événement clic sur bouton onglet:', tab.id);
                   e.preventDefault();
                   e.stopPropagation();
                   handleTabClick(tab.id);
                 }}
                 onMouseEnter={() => prefetchTab(tab.id)}
-                onMouseDown={(e) => {
-                  console.log('🗂️ Événement mouseDown sur bouton onglet:', tab.id);
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onTouchStart={(e) => {
-                  console.log('🗂️ Événement touchStart sur bouton onglet:', tab.id);
-                  prefetchTab(tab.id);
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
+                onTouchStart={() => prefetchTab(tab.id)}
                 className={`p-4 flex flex-col items-center justify-center border-b border-[hsl(var(--sidebar-border))] transition-all duration-200 cursor-pointer ${
                   isActive 
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))] border-r-2 border-r-[hsl(var(--sidebar-active))] shadow-sm' 
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
                 title={tab.label}
-                style={{ 
-                  pointerEvents: 'auto',
-                  userSelect: 'none'
-                }}
               >
-                <Icon className="w-6 h-6 mb-1" style={{ pointerEvents: 'none' }} />
-                <span className="text-xs font-medium" style={{ pointerEvents: 'none' }}>{tab.label}</span>
+                <Icon className="w-6 h-6 mb-1" />
+                <span className="text-xs font-medium">{tab.label}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Panel Content */}
       {activeTab && (
         <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
-          {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
               {activeTab === 'effects' ? 'Effets de texte' : 
@@ -921,7 +643,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             </h2>
           </div>
 
-          {/* Panel Content */}
           <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
             {renderPanel(activeTab)}
           </div>
@@ -931,7 +652,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   );
 });
 
-// Ajouter displayName pour le débogage
 HybridSidebar.displayName = 'HybridSidebar';
 
 export default HybridSidebar;

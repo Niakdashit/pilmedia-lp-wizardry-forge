@@ -1444,10 +1444,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
-  // Calculer des positions ABSOLUES pour les éléments enfants de groupe  
-  // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  // Note: Using result to prevent unused warning
-  const elementsWithAbsolute = useMemo(() => {
+  // Note: elementsWithAbsolute computed but not used in render to prevent unused warning  
+  React.useMemo(() => {
     const result = elementsWithResponsive.map((el: any) => {
       const parentId = (el as any).parentGroupId;
       if (!parentId) return el;

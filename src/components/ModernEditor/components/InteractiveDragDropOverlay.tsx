@@ -171,7 +171,7 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       {/* Alignment guides overlay */}
       <AlignmentGuides
         canvasSize={canvasSize}
-        elements={measuredElements}
+        alignmentElements={measuredElements}
         zoom={1}
       />
 
