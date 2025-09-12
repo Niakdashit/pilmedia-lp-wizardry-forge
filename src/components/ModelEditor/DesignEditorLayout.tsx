@@ -752,8 +752,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     });
 
     return {
-      id: 'quiz-design-preview',
-      type: 'quiz',
+      id: 'jackpot-design-preview',
+      type: 'jackpot',
       design: {
         background: canvasBackground,
         customTexts: customTexts,

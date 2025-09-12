@@ -707,8 +707,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     });
 
     return {
-      id: 'quiz-design-preview',
-      type: 'quiz',
+      id: 'scratch-design-preview',
+      type: 'scratch',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
