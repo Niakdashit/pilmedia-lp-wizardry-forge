@@ -410,29 +410,6 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
    * @returns Couleur assombrie au format rgba()
    */
   // Removed unused hover color utility function (fixed syntax)
-  
-  /**
-   * Assombrit une couleur pour l'état actif (plus foncé que hover)
-   * @param color Couleur au format hexadécimal (#RRGGBB)
-   * @returns Couleur assombrie au format rgba()
-   */
-  function _getActiveColor(color: string): string {
-    // Implementation preserved but unused
-    if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.1)';
-    
-    try {
-      // Convertir la couleur hexadécimale en valeurs RGB
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
-      
-      // Assombrir de 20% pour l'état actif (plus foncé que hover)
-      return `rgba(${Math.max(0, r - 50)}, ${Math.max(0, g - 50)}, ${Math.max(0, b - 50)}, 0.9)`;
-    } catch (e) {
-      console.error('Erreur lors du calcul de la couleur active:', e);
-      return color || 'rgba(0,0,0,0.1)';
-    }
-  }
 
   const questionStyle: React.CSSProperties = {
     textAlign: template.questionStyle.textAlign || 'left',

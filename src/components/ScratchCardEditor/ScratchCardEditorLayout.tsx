@@ -146,7 +146,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   });
   // Quiz config state
-  const [quizConfig, setQuizConfig] = useState({
+  const [quizConfig] = useState({
     questionCount: 5,
     timeLimit: 30,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
@@ -485,49 +485,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       setSelectedElement(updatedElement);
     }
   };
-
-  const updateCanvasElementsBorderRadius = useCallback((borderRadius: number) => {
-    console.log('🔄 updateCanvasElementsBorderRadius appelé avec:', borderRadius);
-    
-    // Mettre à jour campaignConfig avec le nouveau border radius
-    setCampaignConfig((currentConfig: any) => {
-      const updatedConfig = { ...currentConfig };
-      updatedConfig.design = updatedConfig.design || {};
-      updatedConfig.design.quizConfig = updatedConfig.design.quizConfig || {};
-      // Ne pas écraser les couleurs; ne mettre à jour que borderRadius
-      updatedConfig.design.quizConfig.style = {
-        ...(updatedConfig.design.quizConfig.style || {}),
-        borderRadius: `${borderRadius}px`
-      };
-      console.log('🎯 CampaignConfig mise à jour (borderRadius uniquement):', updatedConfig.design.quizConfig.style);
-      return updatedConfig;
-    });
-    
-    // Émettre un événement pour forcer le re-render du TemplatedQuiz
-    const event = new CustomEvent('quizStyleUpdate', { 
-      detail: { 
-        borderRadius: `${borderRadius}px`
-      } 
-    });
-    window.dispatchEvent(event);
-    
-    // Mettre à jour les éléments du canvas (pour compatibilité)
-    setCanvasElements(currentElements => 
-      currentElements.map(element => {
-        if (element?.type === 'quiz' || element?.id === 'quiz-template') {
-          return {
-            ...element,
-            borderRadius: `${borderRadius}px`,
-            style: {
-              ...(element.style || {}),
-              borderRadius: `${borderRadius}px`
-            }
-          };
-        }
-        return element;
-      })
-    );
-  }, [setCampaignConfig]);
 
   // ScratchCard Editor doesn't need wheel config sync - using scratch config instead
   const wheelModalConfig = null;
