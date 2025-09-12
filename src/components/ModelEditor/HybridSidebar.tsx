@@ -140,6 +140,25 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
+
+  // Jackpot symbols management
+  const jackpotSymbols = (campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'];
+
+  const handleJackpotSymbolsChange = (symbols: string[]) => {
+    setCampaign((prev: any) => {
+      const base = prev || {};
+      return {
+        ...base,
+        gameConfig: {
+          ...(base.gameConfig || {}),
+          jackpot: {
+            ...(base.gameConfig?.jackpot || {}),
+            symbols
+          }
+        }
+      };
+    });
+  };
   
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
@@ -512,6 +531,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               onJackpotPanelChange?.(false);
               _setActiveTab('elements');
             }}
+            reelSymbols={jackpotSymbols}
+            onReelSymbolsChange={handleJackpotSymbolsChange}
           />
         );
       case 'quiz':
