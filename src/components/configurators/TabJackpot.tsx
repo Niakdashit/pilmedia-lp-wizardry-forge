@@ -101,6 +101,15 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
               </button>
             </div>
           ))}
+          
+          {/* Case d'ajout de nouveau symbole */}
+          <div 
+            className="relative bg-gray-50 border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-lg p-4 flex items-center justify-center h-20 cursor-pointer transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+            title="Ajouter un nouveau symbole"
+          >
+            <span className="text-3xl text-gray-400">+</span>
+          </div>
         </div>
 
         {/* Actions: Ajout d'emoji & Upload */}
