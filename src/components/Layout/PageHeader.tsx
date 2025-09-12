@@ -23,7 +23,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 
   if (variant === 'default') {
     return (
-      <div className="relative w-full mt-2 pb-4 px-6 sm:px-8 lg:px-10 select-none z-10 overflow-hidden">
+      <div className="relative w-full mt-2 pb-4 px-6 sm:px-8 lg:px-10 select-text z-10 overflow-hidden">
         {/* Fond glassmorphique pastel bleu, identique à QuickCreationSection */}
         {/* Suppression de l'ombre ici */}
         <div className="relative max-w-7xl mx-auto rounded-b-3xl overflow-hidden">

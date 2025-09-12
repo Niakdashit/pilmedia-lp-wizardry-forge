@@ -8,9 +8,10 @@ interface AssetsPanelProps {
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  elements?: any[];
 }
 
-const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate, selectedDevice = 'desktop' }) => {
+const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate, selectedDevice = 'desktop', elements = [] }) => {
   // Preview color for shapes in the sub-tab "Formes"
   const SHAPE_PREVIEW_COLOR = '#b1b1b1';
   const [activeTab, setActiveTab] = useState('text');
@@ -69,7 +70,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   const renderContent = () => {
     switch (activeTab) {
       case 'text':
-        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
+        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} elements={elements} />;
 
       case 'shapes':
         // Filtrer toutes les formes selon la recherche

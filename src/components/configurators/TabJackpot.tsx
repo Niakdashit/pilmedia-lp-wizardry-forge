@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface TabJackpotProps {
   campaign: any;
@@ -23,34 +23,54 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
     return <div>Loading...</div>;
   }
 
-  const config = campaign.gameConfig?.[campaign.type] || {};
+  const config = campaign.gameConfig?.jackpot || {};
   const symbols: string[] = config.symbols || DEFAULT_EMOJI_SET;
+  const buttonCfg = config.button || {};
+  const buttonText: string = buttonCfg.text ?? 'SPIN';
+  const buttonColors = buttonCfg.colors || {};
+  const btnBg: string = buttonColors.background ?? '#ffd64d';
+  const btnBorder: string = buttonColors.border ?? '#b8860b';
+  const btnText: string = buttonColors.text ?? '#8b4513';
 
   const updateGameConfig = (key: string, value: any) => {
     setCampaign((prev: any) => ({
       ...prev,
       gameConfig: {
         ...prev.gameConfig,
-        [campaign.type]: {
-          ...prev.gameConfig?.[campaign.type],
+        jackpot: {
+          ...prev.gameConfig?.jackpot,
           [key]: value
         }
       }
     }));
   };
 
-  const handleChange = (field: string, value: any) => {
-    updateGameConfig(field, value);
-  };
+  // Removed generic handleChange as fields were simplified
 
   const updateSymbols = (next: string[]) => {
     updateGameConfig('symbols', next);
   };
 
-  const handleAddEmoji = (emoji: string) => {
-    const next = Array.from(new Set([...(symbols || []), emoji]));
-    updateSymbols(next);
+  const updateButton = (updates: any) => {
+    setCampaign((prev: any) => ({
+      ...prev,
+      gameConfig: {
+        ...prev.gameConfig,
+        jackpot: {
+          ...prev.gameConfig?.jackpot,
+          button: {
+            ...(prev.gameConfig?.jackpot?.button || {}),
+            ...updates,
+            colors: {
+              ...(prev.gameConfig?.jackpot?.button?.colors || {}),
+              ...(updates?.colors || {})
+            }
+          }
+        }
+      }
+    }));
   };
+
 
   const handleRemove = (index: number) => {
     const next = [...symbols];
@@ -73,6 +93,7 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
       console.error('[TabJackpot] Upload failed', err);
     }
   };
+
 
   return (
     <div className="space-y-6">
@@ -112,44 +133,16 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
           </div>
         </div>
 
-        {/* Actions: Ajout d'emoji & Upload */}
-        <div className="space-y-3">
-          <div>
-            <div className="text-xs text-gray-600 mb-2">Ajouter un symbole rapide (émoji)</div>
-            <div className="flex flex-wrap gap-2">
-              {DEFAULT_EMOJI_SET.map((e) => (
-                <button
-                  key={e}
-                  className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-lg"
-                  onClick={() => handleAddEmoji(e)}
-                  title={`Ajouter ${e}`}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Input caché pour l'upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/svg+xml"
+          multiple
+          className="hidden"
+          onChange={handleUpload}
+        />
 
-          <div>
-            <div className="text-xs text-gray-600 mb-2">Importer des symboles (PNG, JPG, SVG)</div>
-            <div className="flex items-center gap-2">
-              <button
-                className="flex items-center gap-2 px-3 py-2 bg-[#841b60] hover:bg-[#7a1856] text-white rounded text-sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="w-4 h-4" /> Importer
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/svg+xml"
-                multiple
-                className="hidden"
-                onChange={handleUpload}
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Astuce */}
         <div className="text-xs text-gray-500 flex items-center gap-2 mt-2">
@@ -158,42 +151,80 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nombre de rouleaux
-        </label>
-        <input
-          type="number"
-          value={config.reels || 3}
-          onChange={(e) => handleChange('reels', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-          min="3"
-          max="5"
-        />
-      </div>
+      
+      {/* Bouton: texte et couleurs */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Texte du bouton</label>
+          <input
+            type="text"
+            value={buttonText}
+            onChange={(e) => updateButton({ text: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Message de victoire
-        </label>
-        <input
-          type="text"
-          value={config.winMessage || 'JACKPOT ! Vous avez gagné !'}
-          onChange={(e) => handleChange('winMessage', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-        />
-      </div>
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Couleur de la bordure</label>
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-100 rounded-md p-1 shadow-inner">
+                <input
+                  type="color"
+                  value={btnBorder}
+                  onChange={(e) => updateButton({ colors: { border: e.target.value } })}
+                  className="w-8 h-8 cursor-pointer border border-gray-300 rounded-[2px] appearance-none"
+                />
+              </div>
+              <input
+                type="text"
+                value={btnBorder}
+                onChange={(e) => updateButton({ colors: { border: e.target.value } })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+            </div>
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Message de défaite
-        </label>
-        <input
-          type="text"
-          value={config.loseMessage || 'Dommage, pas de jackpot !'}
-          onChange={(e) => handleChange('loseMessage', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
-        />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Couleur de fond</label>
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-100 rounded-md p-1 shadow-inner">
+                <input
+                  type="color"
+                  value={btnBg}
+                  onChange={(e) => updateButton({ colors: { background: e.target.value } })}
+                  className="w-8 h-8 cursor-pointer border border-gray-300 rounded-[2px] appearance-none"
+                />
+              </div>
+              <input
+                type="text"
+                value={btnBg}
+                onChange={(e) => updateButton({ colors: { background: e.target.value } })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Couleur du texte</label>
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-100 rounded-md p-1 shadow-inner">
+                <input
+                  type="color"
+                  value={btnText}
+                  onChange={(e) => updateButton({ colors: { text: e.target.value } })}
+                  className="w-8 h-8 cursor-pointer border border-gray-300 rounded-[2px] appearance-none"
+                />
+              </div>
+              <input
+                type="text"
+                value={btnText}
+                onChange={(e) => updateButton({ colors: { text: e.target.value } })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

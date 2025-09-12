@@ -140,7 +140,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           <div
             key={element.id}
             style={elementStyle}
-            className="pointer-events-none select-none"
+            className="pointer-events-none select-text"
           >
             {element.content}
           </div>
@@ -152,7 +152,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
             src={element.src}
             alt={element.alt || ''}
             style={elementStyle}
-            className="pointer-events-none select-none"
+            className="pointer-events-none select-text"
           />
         );
       default:

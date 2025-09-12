@@ -1182,7 +1182,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         ) : (
           <div
             ref={textRef}
-            className={`${readOnly ? '' : 'cursor-move'} select-none whitespace-pre-wrap break-words`
+            className={`${readOnly ? '' : 'cursor-move'} select-text whitespace-pre-wrap break-words`
             }
             style={getTextStyle()}
             data-element-type="text"
