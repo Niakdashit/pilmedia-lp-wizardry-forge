@@ -410,9 +410,6 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
    * @returns Couleur assombrie au format rgba()
    */
   // Unused color utility functions
-  function _getHoverColor(color: string): string {
-    // Implementation preserved but unused
-    if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.05)';
     
     try {
       // Convertir la couleur hexadécimale en valeurs RGB

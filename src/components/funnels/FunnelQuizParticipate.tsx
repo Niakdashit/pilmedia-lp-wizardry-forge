@@ -39,17 +39,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     setPhase('quiz');
   };
 
-  // Unused function - handler for answer in quiz
-  const _handleAnswer = (isCorrect: boolean) => {
-    if (answered) return; // one answer for preview
-    setAnswered(true);
-    if (isCorrect) setScore(prev => prev + 1);
-    // After short delay, move to form
-    setTimeout(() => {
-      setPhase('form');
-      setShowFormModal(true);
-    }, 350);
-  };
+  // Unused answer handler
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);

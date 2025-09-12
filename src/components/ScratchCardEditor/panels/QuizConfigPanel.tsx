@@ -123,20 +123,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
     input.dispatchEvent(new Event('change', { bubbles: true }));
   };
 
-  // Double-clic sur la boîte de valeur (pour % et px) - unused
-  const _promptNumber = (label: string, initial: string) => {
-    const raw = window.prompt(label, initial);
-    if (raw == null) return null;
-    const normalized = raw.replace(/\s+/g, '').replace(',', '.').replace('%', '').replace('px', '');
-    const num = parseFloat(normalized);
-    return isNaN(num) ? null : num;
-  };
-    const raw = window.prompt(label, initial);
-    if (raw == null) return null;
-    const normalized = raw.replace(/\s+/g, '').replace(',', '.').replace('%', '').replace('px', '');
-    const num = Number(normalized);
-    return Number.isNaN(num) ? null : num;
-  };
+  // Unused prompt function
 
   return (
     <div className="h-full flex flex-col">
