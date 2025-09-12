@@ -486,6 +486,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   };
 
+  const updateCanvasElementsBorderRadius = useCallback((borderRadius: number) => {
     console.log('🔄 updateCanvasElementsBorderRadius appelé avec:', borderRadius);
     
     // Mettre à jour campaignConfig avec le nouveau border radius
@@ -1532,5 +1533,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       )}
     </MobileStableEditor>
   );
+};
 
 export default ScratchCardEditorLayout;

@@ -409,21 +409,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
    * @param color Couleur au format hexadécimal (#RRGGBB)
    * @returns Couleur assombrie au format rgba()
    */
-  // Unused color utility functions
-    
-    try {
-      // Convertir la couleur hexadécimale en valeurs RGB
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
-      
-      // Assombrir de 10% pour l'état hover
-      return `rgba(${Math.max(0, r - 25)}, ${Math.max(0, g - 25)}, ${Math.max(0, b - 25)}, 0.9)`;
-    } catch (e) {
-      console.error('Erreur lors du calcul de la couleur hover:', e);
-      return color || 'rgba(0,0,0,0.05)';
-    }
-  }
+  // Removed unused hover color utility function (fixed syntax)
   
   /**
    * Assombrit une couleur pour l'état actif (plus foncé que hover)
