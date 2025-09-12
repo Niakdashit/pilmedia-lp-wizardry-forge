@@ -367,7 +367,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     },
     { 
       id: 'game', 
-      label: 'Jeu', 
+      label: 'Jackpot', 
       icon: Gamepad2
     }
   ];
