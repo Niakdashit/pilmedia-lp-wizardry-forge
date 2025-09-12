@@ -1424,14 +1424,14 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 quizDifficulty={quizConfig.difficulty}
                 quizBorderRadius={quizConfig.borderRadius}
                 selectedQuizTemplate={quizConfig.templateId}
-                onQuizQuestionCountChange={(count) => setQuizConfig(prev => ({ ...prev, questionCount: count }))}
-                onQuizTimeLimitChange={(time) => setQuizConfig(prev => ({ ...prev, timeLimit: time }))}
-                onQuizDifficultyChange={(difficulty) => setQuizConfig(prev => ({ ...prev, difficulty }))}
-                onQuizBorderRadiusChange={(borderRadius) => {
+                onQuizQuestionCountChange={(count: number) => setQuizConfig(prev => ({ ...prev, questionCount: count }))}
+                onQuizTimeLimitChange={(time: number) => setQuizConfig(prev => ({ ...prev, timeLimit: time }))}
+                onQuizDifficultyChange={(difficulty: 'easy' | 'medium' | 'hard') => setQuizConfig(prev => ({ ...prev, difficulty }))}
+                onQuizBorderRadiusChange={(borderRadius: number) => {
                   setQuizConfig(prev => ({ ...prev, borderRadius }));
                   updateCanvasElementsBorderRadius(borderRadius);
                 }}
-                onQuizTemplateChange={(templateId) => {
+                onQuizTemplateChange={(templateId: string) => {
                   console.log('🎯 Changement de template quiz:', templateId);
                   setQuizConfig(prev => ({ ...prev, templateId }));
                   

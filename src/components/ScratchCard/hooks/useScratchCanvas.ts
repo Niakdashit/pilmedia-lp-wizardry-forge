@@ -5,12 +5,17 @@ interface ScratchCanvasConfig {
   canvasRef?: React.RefObject<HTMLCanvasElement>;
   onProgressChange?: (progress: number) => void;
   scratchRadius?: number;
+  scratchColor?: string;
+  brushSize?: number;
+  threshold?: number;
+  onComplete?: (percentage: number) => void;
 }
 
 export const useScratchCanvas = ({
   canvasRef,
   onProgressChange,
-  scratchRadius = 20
+  scratchRadius = 20,
+  scratchColor = '#C0C0C0'
 }: ScratchCanvasConfig) => {
   const internalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentCanvasRef = canvasRef || internalCanvasRef;
@@ -79,11 +84,6 @@ export const useScratchCanvas = ({
     isInitialized.current = true;
   }, []);
 
-  const startScratching = useCallback((x: number, y: number) => {
-    isScratching.current = true;
-    scratch(x, y);
-  }, []);
-
   const scratch = useCallback((x: number, y: number) => {
     const canvas = currentCanvasRef.current;
     if (!canvas || !isInitialized.current) return;
@@ -111,6 +111,11 @@ export const useScratchCanvas = ({
     onProgressChange?.(percentage);
     lastPercentage.current = percentage;
   }, [scratchRadius, onProgressChange]);
+
+  const startScratching = useCallback((x: number, y: number) => {
+    isScratching.current = true;
+    scratch(x, y);
+  }, [scratch]);
 
   const stopScratching = useCallback(() => {
     isScratching.current = false;

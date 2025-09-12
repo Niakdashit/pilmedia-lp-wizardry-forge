@@ -4,6 +4,14 @@ export interface ShapeDefinition {
   id: string;
   name: string;
   category: string;
+  label?: string;
+  type?: string;
+  color?: string;
+  aspectRatio?: number;
+  borderRadius?: number;
+  icon?: any;
+  viewBox?: string;
+  paths?: string[];
 }
 
 export const shapes: ShapeDefinition[] = [];
