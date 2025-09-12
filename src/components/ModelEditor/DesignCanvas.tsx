@@ -249,6 +249,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
+  // reference mobileToolbarHeight to satisfy TS when unused
+  useEffect(() => {}, [mobileToolbarHeight]);
   // Optimisation mobile pour une expérience tactile parfaite
 
   // Intégration du système auto-responsive (doit être défini avant canvasSize)
@@ -1448,23 +1450,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
-  // Calculer des positions ABSOLUES pour les éléments enfants de groupe
-  // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
-  const elementsWithAbsolute = useMemo(() => {
-    return elementsWithResponsive.map((el: any) => {
-      const parentId = (el as any).parentGroupId;
-      if (!parentId) return el;
-      const parentProps = devicePropsById.get(parentId);
-      if (!parentProps) return el;
-      const childProps = getPropertiesForDevice(el, selectedDevice);
-      return {
-        ...el,
-        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
-        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
-      };
-    });
-  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
-
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
@@ -1596,7 +1581,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = activeCanvasRef.current;
+            const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom

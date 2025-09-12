@@ -147,13 +147,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const [isCollapsed, setIsCollapsed] = useState(false);
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
-  const setCampaign = useEditorStore((s) => s.setCampaign);
-
+  const setCampaign = useEditorStore((s) => s.setCampaign) as unknown as (updater: any) => void;
   // Jackpot symbols management
   const jackpotSymbols = (campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'];
 
   const handleJackpotSymbolsChange = (symbols: string[]) => {
-    setCampaign((prev: any) => {
+    setCampaignAny((prev: any) => {
       const base = prev || {};
       return {
         ...base,
@@ -630,10 +629,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
                 detail: { 
                   backgroundColor: color,
-                  buttonBackgroundColor: campaign?.design?.quizConfig?.style?.buttonBackgroundColor,
-                  buttonTextColor: campaign?.design?.quizConfig?.style?.buttonTextColor,
-                  buttonHoverBackgroundColor: campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor,
-                  buttonActiveBackgroundColor: campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor
+                  buttonBackgroundColor: (campaign as any)?.design?.quizConfig?.style?.buttonBackgroundColor,
+                  buttonTextColor: (campaign as any)?.design?.quizConfig?.style?.buttonTextColor,
+                  buttonHoverBackgroundColor: (campaign as any)?.design?.quizConfig?.style?.buttonHoverBackgroundColor,
+                  buttonActiveBackgroundColor: (campaign as any)?.design?.quizConfig?.style?.buttonActiveBackgroundColor
                 } 
               }));
             }}
