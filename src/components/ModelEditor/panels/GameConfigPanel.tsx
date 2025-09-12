@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, Upload, Trash2, Palette, Settings, Image as ImageIcon, Gamepad2 } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';
+import QuizTemplateSelector from '../components/QuizTemplateSelector';
 
 interface GameConfigPanelProps {
   onBack?: () => void;
@@ -11,7 +12,7 @@ const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', 
 const GameConfigPanel: React.FC<GameConfigPanelProps> = ({ onBack }) => {
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
-  const [activeSection, setActiveSection] = useState<'symbols' | 'colors' | 'settings'>('symbols');
+  const [activeSection, setActiveSection] = useState<'templates' | 'symbols' | 'colors' | 'settings'>('templates');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -316,7 +317,28 @@ const GameConfigPanel: React.FC<GameConfigPanelProps> = ({ onBack }) => {
     </div>
   );
 
+  const renderTemplatesSection = () => (
+    <div className="space-y-4">
+      <div className="text-sm text-gray-300 mb-4">
+        Choisissez un template prédéfini pour votre jackpot
+      </div>
+      
+      <QuizTemplateSelector
+        selectedTemplate={jackpotConfig.templateId || 'classic'}
+        onTemplateSelect={(template) => {
+          updateJackpotConfig({ 
+            templateId: template.id,
+            templateStyle: template.style,
+            slotBackgroundColor: template.style.backgroundColor,
+            containerBackgroundColor: template.style.backgroundColor
+          });
+        }}
+      />
+    </div>
+  );
+
   const sections = [
+    { id: 'templates', label: 'Templates', icon: Palette },
     { id: 'symbols', label: 'Symboles', icon: ImageIcon },
     { id: 'colors', label: 'Couleurs', icon: Palette },
     { id: 'settings', label: 'Paramètres', icon: Settings }
@@ -365,6 +387,7 @@ const GameConfigPanel: React.FC<GameConfigPanelProps> = ({ onBack }) => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
+        {activeSection === 'templates' && renderTemplatesSection()}
         {activeSection === 'symbols' && renderSymbolsSection()}
         {activeSection === 'colors' && renderColorsSection()}
         {activeSection === 'settings' && renderSettingsSection()}
