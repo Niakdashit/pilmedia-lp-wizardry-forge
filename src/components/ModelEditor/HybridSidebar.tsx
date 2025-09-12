@@ -15,6 +15,7 @@ import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
+import TabJackpot from '../configurators/TabJackpot';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -770,7 +771,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
-        return <div className="p-4" />;
+        return (
+          <div className="h-full overflow-y-auto">
+            <TabJackpot 
+              campaign={campaign}
+              setCampaign={setCampaign as any}
+            />
+          </div>
+        );
       case 'form':
         return (
           <div className="p-4">
