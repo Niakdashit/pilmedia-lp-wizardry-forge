@@ -152,7 +152,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const jackpotSymbols = (campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'];
 
   const handleJackpotSymbolsChange = (symbols: string[]) => {
-    setCampaignAny((prev: any) => {
+    setCampaign((prev: any) => {
       const base = prev || {};
       return {
         ...base,
@@ -571,7 +571,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             buttonHoverBackgroundColor={(campaign as any)?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
             buttonActiveBackgroundColor={(campaign as any)?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
             onQuizWidthChange={(width) => {
-              setCampaign((prev) => {
+              setCampaign((prev: any) => {
                 if (!prev) return prev;
                 return {
                   ...prev,
@@ -590,7 +590,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { width } }));
             }}
             onQuizMobileWidthChange={(width) => {
-              setCampaign((prev) => {
+              setCampaign((prev: any) => {
                 if (!prev) return prev;
                 return {
                   ...prev,
@@ -609,7 +609,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
             }}
             onBackgroundColorChange={(color) => {
-              setCampaign((prev) => {
+              setCampaign((prev: any) => {
                 if (!prev) return prev;
                 return {
                   ...prev,
@@ -637,7 +637,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onBackgroundOpacityChange={(opacity) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -658,7 +658,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onTextColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -674,12 +674,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
                 detail: { 
                   textColor: color,
-                  buttonTextColor: campaign?.design?.quizConfig?.style?.buttonTextColor
+                  buttonTextColor: (campaign as any)?.design?.quizConfig?.style?.buttonTextColor
                 } 
               }));
             }}
             onButtonBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -697,7 +697,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonTextColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -715,7 +715,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonHoverBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -733,7 +733,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onButtonActiveBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+              setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -749,26 +749,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
                 detail: { buttonActiveBackgroundColor: color } 
               }));
-            }}
-            onTextColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return prev;
-                const next = {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        textColor: color
-                      }
-                    }
-                  }
-                } as typeof prev;
-                return next;
-              });
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { textColor: color } }));
             }}
             selectedDevice={selectedDevice}
           />
