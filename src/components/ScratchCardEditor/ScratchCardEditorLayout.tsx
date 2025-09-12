@@ -793,7 +793,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: (campaignData.type || 'scratch') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: typeof campaignData.design?.background === 'object'
