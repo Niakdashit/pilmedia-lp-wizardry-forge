@@ -1,17 +1,22 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { useEditorStore } from '../../stores/editorStore';
 import './SlotMachine.css';
 
 interface SlotMachineProps {
   onWin?: (result: string[]) => void;
   onLose?: () => void;
+  onOpenConfig?: () => void;
   disabled?: boolean;
+  symbols?: string[]; // Optionnel: permet d'injecter des symboles
 }
 
-const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = false }) => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [reels, setReels] = useState(['🍒', '🍒', '🍒']);
+const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
 
-  const symbols = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
+const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols }) => {
+  const [isSpinning, setIsSpinning] = useState(false);
+  const campaignSymbols = useEditorStore?.((s: any) => s.campaign?.gameConfig?.slot?.symbols) as string[] | undefined;
+  const symbols = useMemo(() => propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS, [propSymbols, campaignSymbols]);
+  const [reels, setReels] = useState([symbols[0], symbols[0], symbols[0]]);
 
   const spin = useCallback(() => {
     if (isSpinning || disabled) return;
@@ -59,12 +64,18 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = fal
         width: '100%',
         height: '100%',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        gap: '20px'
       }}
     >
       <div 
         className="slot-machine"
+        onClick={() => {
+          // Déclencher l'ouverture du panel de configuration
+          onOpenConfig?.();
+        }}
         style={{
           width: '400px',
           height: '300px',
@@ -75,17 +86,26 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = fal
           backgroundPosition: 'center',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          cursor: 'pointer'
         }}
       >
         {/* Zone centrale pour les rouleaux */}
         <div 
-          className="slot-inner-frame"
+          className="slot-machine-container"
+          onClick={() => {
+            // Déclencher l'ouverture du panel de configuration
+            onOpenConfig?.();
+          }}
           style={{
+            position: 'absolute',
+            top: '65%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            gap: '15px'
+            justifyContent: 'center',
+            cursor: 'pointer'
           }}
         >
           {/* Rouleaux */}
@@ -101,15 +121,15 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = fal
                 key={index}
                 className={`slot-reel ${isSpinning ? 'slot-spinning' : ''}`}
                 style={{
-                  width: '60px',
-                  height: '60px',
+                  width: '70px',
+                  height: '70px',
                   background: 'linear-gradient(145deg, #fff, #f0f0f0)',
                   border: '2px solid #ffd700',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
+                  fontSize: '32px',
                   fontWeight: 'bold',
                   color: '#333',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.5)',
@@ -120,36 +140,36 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, disabled = fal
               </div>
             ))}
           </div>
-
-          {/* Bouton SPIN */}
-          <button
-            onClick={spin}
-            disabled={isSpinning}
-            className="slot-spin-button"
-            style={{
-              background: isSpinning 
-                ? 'linear-gradient(145deg, #999, #666)' 
-                : 'linear-gradient(145deg, #ffd700, #ffed4e)',
-              border: '3px solid #b8860b',
-              borderRadius: '15px',
-              padding: '12px 30px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: isSpinning ? '#ccc' : '#8b4513',
-              cursor: isSpinning ? 'not-allowed' : 'pointer',
-              boxShadow: isSpinning 
-                ? 'inset 0 4px 8px rgba(0,0,0,0.3)' 
-                : '0 6px 20px rgba(255, 215, 0, 0.4), inset 0 2px 5px rgba(255,255,255,0.3)',
-              textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-              transition: 'all 0.2s ease',
-              minWidth: '120px',
-              transform: isSpinning ? 'scale(0.95)' : 'scale(1)'
-            }}
-          >
-            {isSpinning ? 'SPINNING...' : 'SPIN'}
-          </button>
         </div>
       </div>
+
+      {/* Bouton SPIN - En dehors du template */}
+      <button
+        onClick={spin}
+        disabled={isSpinning}
+        className="slot-spin-button"
+        style={{
+          background: isSpinning 
+            ? 'linear-gradient(145deg, #999, #666)' 
+            : 'linear-gradient(145deg, #ffd700, #ffed4e)',
+          border: '3px solid #b8860b',
+          borderRadius: '15px',
+          padding: '12px 30px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: isSpinning ? '#ccc' : '#8b4513',
+          cursor: isSpinning ? 'not-allowed' : 'pointer',
+          boxShadow: isSpinning 
+            ? 'inset 0 4px 8px rgba(0,0,0,0.3)' 
+            : '0 6px 20px rgba(255, 215, 0, 0.4), inset 0 2px 5px rgba(255,255,255,0.3)',
+          textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+          transition: 'all 0.2s ease',
+          minWidth: '120px',
+          transform: isSpinning ? 'scale(0.95)' : 'scale(1)'
+        }}
+      >
+        {isSpinning ? 'SPINNING...' : 'SPIN'}
+      </button>
     </div>
   );
 };

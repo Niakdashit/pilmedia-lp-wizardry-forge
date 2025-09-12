@@ -75,6 +75,9 @@ export interface DesignCanvasProps {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
+  // Inline jackpot panel controls
+  showJackpotPanel?: boolean;
+  onJackpotPanelChange?: (show: boolean) => void;
   // Read-only mode to disable interactions
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
@@ -118,6 +121,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   enableInternalAutoFit = false,
   onContentBoundsChange,
   onQuizPanelChange,
+  showJackpotPanel,
+  onJackpotPanelChange,
   readOnly = false,
   containerClassName,
   updateQuizConfig,
@@ -2033,13 +2038,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             {isFeatureEnabled('slotJackpot') && (
               <SlotJackpot
                 onWin={(result) => {
-                  console.log('🎰 Jackpot Win!', result);
                   alert(`🎉 JACKPOT! ${result.join(' ')}`);
                 }}
                 onLose={() => {
-                  console.log('🎰 Try again!');
+                  // Handle loss case if needed
                 }}
                 disabled={readOnly}
+                onOpenConfig={() => {
+                  onJackpotPanelChange?.(true);
+                }}
               />
             )}
 

@@ -13,6 +13,7 @@ import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
 import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
+import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
 
@@ -51,6 +52,9 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
+  // Inline jackpot panel controls
+  showJackpotPanel?: boolean;
+  onJackpotPanelChange?: (show: boolean) => void;
   // Design panel controls
   showDesignPanel?: boolean;
   onDesignPanelChange?: (show: boolean) => void;
@@ -110,6 +114,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizBorderRadiusChange,
   showQuizPanel = false,
   onQuizPanelChange,
+  showJackpotPanel = false,
+  onJackpotPanelChange,
   showDesignPanel = false,
   onDesignPanelChange,
   canvasRef,
@@ -148,7 +154,34 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, []);
+
   const [activeTab, _setActiveTab] = useState<string | null>('elements');
+
+  // Gestion des changements de showJackpotPanel
+  React.useEffect(() => {
+    if (showJackpotPanel) {
+      _setActiveTab('jackpot');
+    } else if (activeTab === 'jackpot') {
+      _setActiveTab('elements');
+    }
+  }, [showJackpotPanel]);
+  
+  // Gestion des changements d'onglet
+  React.useEffect(() => {
+    if (activeTab === 'jackpot') {
+      onJackpotPanelChange?.(true);
+    } else if (activeTab !== 'jackpot' && showJackpotPanel) {
+      onJackpotPanelChange?.(false);
+    }
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    if (showQuizPanel) {
+      _setActiveTab('quiz');
+    } else if (activeTab === 'quiz') {
+      _setActiveTab('elements');
+    }
+  }, [showQuizPanel, activeTab]);
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
@@ -171,6 +204,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   
   // Fonction interne pour gérer le changement d'onglet
   const setActiveTab = (tab: string | null) => {
+    if (tab === activeTab) return; // Éviter les mises à jour inutiles
     _setActiveTab(tab);
   };
   
@@ -470,6 +504,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               canvasRef={canvasRef}
             />
           </React.Suspense>
+        );
+      case 'jackpot':
+        return (
+          <JackpotConfigPanel
+            onBack={() => {
+              onJackpotPanelChange?.(false);
+              _setActiveTab('elements');
+            }}
+          />
         );
       case 'quiz':
         return (

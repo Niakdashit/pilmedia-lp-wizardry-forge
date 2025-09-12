@@ -162,9 +162,15 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
-      const result = hiddenTabs ?? (mode === 'template' ? ['campaign', 'export', 'form'] : []);
-      console.log('🔍 [DesignEditorLayout] effectiveHiddenTabs:', result, 'mode:', mode);
-      return result;
+      // Ne jamais masquer l'onglet 'game'
+      const defaultHidden = mode === 'template' ? ['campaign', 'export', 'form'] : [];
+      const result = hiddenTabs ? [...hiddenTabs] : [...defaultHidden];
+      
+      // S'assurer que 'game' n'est pas dans les onglets masqués
+      const filteredResult = result.filter(tab => tab !== 'game');
+      
+      console.log('🔍 [DesignEditorLayout] effectiveHiddenTabs:', filteredResult, 'mode:', mode);
+      return filteredResult;
     },
     [hiddenTabs, mode]
   );

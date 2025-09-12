@@ -137,6 +137,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   const [designColorContext, setDesignColorContext] = useState<'fill' | 'border' | 'text'>('fill');
   // Inline QuizConfigPanel visibility (controlled at layout level)
   const [showQuizPanel, setShowQuizPanel] = useState(false);
+  const [showJackpotPanel, setShowJackpotPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
       quizConfig: {
@@ -1039,10 +1040,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
       };
       const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
-      const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
+      const lighten = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r + (255 - rgb.r) * pct, g: rgb.g + (255 - rgb.g) * pct, b: rgb.b + (255 - rgb.b) * pct });
 
       const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #841b60
-      const buttonText = getTextOn(primaryRgb);
+      const buttonText = luminance(primaryRgb) > 0.55 ? '#111111' : '#ffffff';
       const hoverHex = toHex(darken(primaryRgb, 0.12));
       const activeHex = toHex(darken(primaryRgb, 0.24));
 
@@ -1280,6 +1281,25 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     }
   });
 
+  useEffect(() => {
+    const handleOpenQuizConfig = () => {
+      console.log('📋 Événement openQuizConfig reçu - Ouverture du panneau Quiz');
+      setShowQuizPanel(true);
+    };
+
+    const handleOpenJackpotConfig = () => {
+      console.log('🎰 Événement openJackpotConfig reçu - Ouverture du panneau Jackpot');
+      setShowJackpotPanel(true);
+    };
+
+    window.addEventListener('openQuizConfig', handleOpenQuizConfig);
+    window.addEventListener('openJackpotConfig', handleOpenJackpotConfig);
+    return () => {
+      window.removeEventListener('openQuizConfig', handleOpenQuizConfig);
+      window.removeEventListener('openJackpotConfig', handleOpenJackpotConfig);
+    };
+  }, []);
+
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
       {/* Bande dégradée avec logo et icônes */}
@@ -1408,6 +1428,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 onPositionPanelChange={setShowPositionInSidebar}
                 showQuizPanel={showQuizPanel}
                 onQuizPanelChange={setShowQuizPanel}
+                showJackpotPanel={showJackpotPanel}
+                onJackpotPanelChange={setShowJackpotPanel}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {
@@ -1418,7 +1440,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
-                // Quiz config props for HybridSidebar
+                // Quiz sync props
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
                 quizDifficulty={quizConfig.difficulty}
@@ -1753,6 +1775,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               // Quiz panels
               showQuizPanel={showQuizPanel}
               onQuizPanelChange={setShowQuizPanel}
+              showJackpotPanel={showJackpotPanel}
+              onJackpotPanelChange={setShowJackpotPanel}
             />
             {/* Zoom Slider - Always visible in bottom center */}
             {selectedDevice === 'mobile' && (

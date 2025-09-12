@@ -4,6 +4,7 @@ import SlotMachine from './SlotMachine';
 interface SlotJackpotProps {
   onWin?: (result: string[]) => void;
   onLose?: () => void;
+  onOpenConfig?: () => void;
   disabled?: boolean;
 }
 
