@@ -591,6 +591,7 @@ const ScratchCardPanel: React.FC = () => {
                       id: Date.now().toString(),
                       name: 'Nouveau lot',
                       quantity: 1,
+                      totalUnits: 1,
                       attributionMethod: 'probability',
                       probability: 10
                     };

@@ -48,6 +48,7 @@ export type Prize = {
   id: string;
   name: string;
   quantity: number;
+  totalUnits: number;
   attributionMethod: 'probability' | 'calendar';
   probability?: number;           // pour méthode probabilité
   calendarDate?: string;          // pour méthode calendrier

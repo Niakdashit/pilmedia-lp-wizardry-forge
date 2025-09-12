@@ -1394,8 +1394,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
                 extractedColors={extractedColors} // Ajout des couleurs extraites
-                campaignConfig={campaignConfig}
-                onCampaignConfigChange={handleCampaignConfigChange}
+                
                 elements={canvasElements}
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
@@ -1406,8 +1405,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
-                showQuizPanel={showQuizPanel}
-                onQuizPanelChange={setShowQuizPanel}
+                onQuizPanelChange={() => {}}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {

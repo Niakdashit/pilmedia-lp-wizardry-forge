@@ -191,10 +191,10 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     const newPrize: Prize = {
       id: Date.now().toString(),
       name: 'Nouveau lot',
+      quantity: 1,
       totalUnits: 1,
-      awardedUnits: 0,
-      method: 'probability',
-      probabilityPercent: 10
+      attributionMethod: 'probability',
+      probability: 10
     };
     updatePrizes([...prizes, newPrize]);
   };

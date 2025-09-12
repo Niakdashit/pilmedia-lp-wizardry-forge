@@ -32,7 +32,6 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({
     initCanvas,
     startScratching,
     scratch,
-    resetScratch,
     getProgress
   } = useScratchCanvas({
     canvasRef,
