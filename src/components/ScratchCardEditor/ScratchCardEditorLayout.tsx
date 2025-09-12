@@ -129,7 +129,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // État pour gérer l'affichage des panneaux dans la sidebar
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
-  const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
+  
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
@@ -1403,7 +1403,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
-                onPositionPanelChange={setShowPositionInSidebar}
+                onPositionPanelChange={setShowAnimationsInSidebar}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {
@@ -1415,30 +1415,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
                 // Quiz config props for HybridSidebar
-                onQuizDifficultyChange={(difficulty: 'easy' | 'medium' | 'hard') => setQuizConfig(prev => ({ ...prev, difficulty }))}
-                onQuizBorderRadiusChange={(borderRadius: number) => {
-                  setQuizConfig(prev => ({ ...prev, borderRadius }));
-                  updateCanvasElementsBorderRadius(borderRadius);
-                }}
-                onQuizTemplateChange={(templateId: string) => {
-                  console.log('🎯 Changement de template quiz:', templateId);
-                  setQuizConfig(prev => ({ ...prev, templateId }));
-                  
-                  // Mettre à jour campaignConfig
-                  setCampaignConfig((current: any) => ({
-                    ...current,
-                    design: {
-                      ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
-                        templateId
-                      }
-                    }
-                  }));
-                }}
                 // Gestion de la largeur du quiz
                 quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
-                onQuizWidthChange={(width) => {
+                onQuizWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
@@ -1659,7 +1638,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   // Fermer les autres panneaux
                   setShowEffectsInSidebar(false);
                   setShowAnimationsInSidebar(false);
-                  setShowPositionInSidebar(false);
+                  setShowAnimationsInSidebar(false);
                 }}
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
@@ -1690,15 +1669,15 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
                 setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
+                setShowAnimationsInSidebar(false);
               }}
               onShowAnimationsPanel={() => {
                 setShowAnimationsInSidebar(true);
                 setShowEffectsInSidebar(false);
-                setShowPositionInSidebar(false);
+                setShowAnimationsInSidebar(false);
               }}
               onShowPositionPanel={() => {
-                setShowPositionInSidebar(true);
+                setShowDesignInSidebar(true);
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
                 setShowDesignInSidebar(false);
@@ -1712,7 +1691,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 setShowDesignInSidebar(true);
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
+                setShowAnimationsInSidebar(false);
 
                 if (sidebarRef.current) {
                   sidebarRef.current.setActiveTab('background');
@@ -1726,7 +1705,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 // Fermer les autres panneaux
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
+                setShowAnimationsInSidebar(false);
               }}
               // Mobile sidebar integrations
               onAddElement={handleAddElement}

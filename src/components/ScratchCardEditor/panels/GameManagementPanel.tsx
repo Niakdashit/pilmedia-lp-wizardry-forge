@@ -12,6 +12,19 @@ import {
   Upload
 } from 'lucide-react';
 
+// Local Prize interface for ScratchCard UI (different from PrizeSystem)
+interface Prize {
+  id: string;
+  name: string;
+  totalUnits: number;
+  awardedUnits: number;
+  attributionMethod: 'calendar' | 'probability';
+  calendarDate?: string;
+  calendarTime?: string;
+  probability?: number;
+  segmentId?: string;
+}
+
 interface GameManagementPanelProps {
   campaign: any;
   setCampaign: (campaign: any) => void;
@@ -27,16 +40,6 @@ interface WheelSegment {
   imageUrl?: string;
 }
 
-interface Prize {
-  id: string;
-  name: string;
-  description: string;
-  attributionMethod: 'calendar' | 'probability';
-  calendarDate?: string;
-  calendarTime?: string;
-  probability?: number;
-  segmentId?: string;
-}
 
 const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   campaign,
@@ -193,8 +196,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
       name: 'Nouveau lot',
       totalUnits: 1,
       awardedUnits: 0,
-      method: 'probability',
-      probabilityPercent: 10
+      attributionMethod: 'probability',
+      probability: 10
     };
     updatePrizes([...prizes, newPrize]);
   };

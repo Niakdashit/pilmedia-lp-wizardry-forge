@@ -39,7 +39,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     setPhase('quiz');
   };
 
-  const handleAnswer = (isCorrect: boolean) => {
+  // Unused function - handler for answer in quiz
+  const _handleAnswer = (isCorrect: boolean) => {
     if (answered) return; // one answer for preview
     setAnswered(true);
     if (isCorrect) setScore(prev => prev + 1);

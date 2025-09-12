@@ -409,8 +409,9 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
    * @param color Couleur au format hexadécimal (#RRGGBB)
    * @returns Couleur assombrie au format rgba()
    */
-  function getHoverColor(color: string): string {
-    // Si la couleur est invalide ou n'est pas en hexadécimal, retourner une valeur par défaut
+  // Unused color utility functions
+  function _getHoverColor(color: string): string {
+    // Implementation preserved but unused
     if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.05)';
     
     try {
@@ -432,8 +433,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
    * @param color Couleur au format hexadécimal (#RRGGBB)
    * @returns Couleur assombrie au format rgba()
    */
-  function getActiveColor(color: string): string {
-    // Si la couleur est invalide ou n'est pas en hexadécimal, retourner une valeur par défaut
+  function _getActiveColor(color: string): string {
+    // Implementation preserved but unused
     if (!color || !color.startsWith('#')) return color || 'rgba(0,0,0,0.1)';
     
     try {

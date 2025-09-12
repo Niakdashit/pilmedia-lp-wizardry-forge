@@ -5,8 +5,9 @@ import type { TextEffectModel, EffectLayer, Fill } from '../../types/TextEffectM
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-const parsePx = (v: string | number | undefined | null, fallback = 0): number => {
-  if (typeof v === 'number') return v;
+// Unused utility function
+const _parsePx = (v: string | number | undefined | null, fallback = 0): number => {
+  // Implementation preserved but unused
   if (!v) return fallback;
   const m = String(v).match(/([-+]?[0-9]*\.?[0-9]+)/);
   return m ? parseFloat(m[1]) : fallback;
