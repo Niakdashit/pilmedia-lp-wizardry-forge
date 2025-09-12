@@ -772,7 +772,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
         return (
-          <div className="h-full overflow-y-auto">
+          <div className="h-full overflow-y-auto p-4">
             <TabJackpot 
               campaign={campaign}
               setCampaign={setCampaign as any}
