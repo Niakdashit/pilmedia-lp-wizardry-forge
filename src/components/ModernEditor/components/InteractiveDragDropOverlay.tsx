@@ -43,7 +43,6 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const deviceDims = useMemo(() => getDeviceDimensions(previewDevice), [previewDevice]);
-  const [measuredElements, setMeasuredElements] = useState<Array<{ id: string; x: number; y: number; width: number; height: number; type?: string }>>([]);
   
   // Measure canvas and compute zoom (CSS px per logical unit)
   useEffect(() => {
@@ -61,54 +60,6 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       ro.disconnect();
     };
   }, [deviceDims.width]);
-
-  // Measure child elements in CSS pixels to feed AlignmentGuides with accurate positions/sizes
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const containerRect = el.getBoundingClientRect();
-    const nodes = el.querySelectorAll('[data-element-id]');
-    const list: Array<{ id: string; x: number; y: number; width: number; height: number; type?: string }> = [];
-    nodes.forEach((node) => {
-      const n = node as HTMLElement;
-      const id = String(n.getAttribute('data-element-id') || '');
-      if (!id) return;
-      const type = n.getAttribute('data-element-type') || undefined;
-      const r = n.getBoundingClientRect();
-      // Default to outer box
-      let mx = r.left - containerRect.left;
-      let my = r.top - containerRect.top;
-      let mw = r.width;
-      let mh = r.height;
-
-      // For text elements, prefer the content box (excluding padding/border)
-      if (type === 'text') {
-        try {
-          const range = document.createRange();
-          range.selectNodeContents(n);
-          const cr = range.getBoundingClientRect();
-          if (cr.width > 0 && cr.height > 0) {
-            mx = cr.left - containerRect.left;
-            my = cr.top - containerRect.top;
-            mw = cr.width;
-            mh = cr.height;
-          }
-        } catch {
-          // Fallback silently to outer box if Range fails
-        }
-      }
-
-      list.push({
-        id,
-        x: mx,
-        y: my,
-        width: mw,
-        height: mh,
-        type
-      });
-    });
-    setMeasuredElements(list);
-  }, [campaign?.design?.customTexts, campaign?.design?.customImages, previewDevice, canvasSize.width, canvasSize.height]);
   
   const {
     selectedElementId,
@@ -171,8 +122,9 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
       {/* Alignment guides overlay */}
       <AlignmentGuides
         canvasSize={canvasSize}
-        alignmentElements={measuredElements}
+        guides={[]}
         zoom={1}
+        isDragging={false}
       />
 
 

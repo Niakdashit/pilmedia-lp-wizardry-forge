@@ -2,15 +2,18 @@
 import { useCallback, useRef } from 'react';
 
 interface ScratchCanvasConfig {
+  canvasRef?: React.RefObject<HTMLCanvasElement>;
   onProgressChange?: (progress: number) => void;
   scratchRadius?: number;
 }
 
 export const useScratchCanvas = ({
+  canvasRef,
   onProgressChange,
   scratchRadius = 20
 }: ScratchCanvasConfig) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const internalCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const currentCanvasRef = canvasRef || internalCanvasRef;
   const isScratching = useRef(false);
   const lastPercentage = useRef(0);
   const isInitialized = useRef(false);
@@ -32,7 +35,7 @@ export const useScratchCanvas = ({
     scratchTexture?: string;
     opacity?: number;
   }) => {
-    canvasRef.current = canvas;
+    internalCanvasRef.current = canvas;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -82,7 +85,7 @@ export const useScratchCanvas = ({
   }, []);
 
   const scratch = useCallback((x: number, y: number) => {
-    const canvas = canvasRef.current;
+    const canvas = currentCanvasRef.current;
     if (!canvas || !isInitialized.current) return;
 
     const ctx = canvas.getContext('2d');
@@ -114,7 +117,7 @@ export const useScratchCanvas = ({
   }, []);
 
   const resetScratch = useCallback(() => {
-    const canvas = canvasRef.current;
+    const canvas = currentCanvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -140,6 +143,8 @@ export const useScratchCanvas = ({
     scratch,
     stopScratching,
     resetScratch,
-    getProgress
+    getProgress,
+    handleScratch: scratch,
+    getScratchPercentage: getProgress
   };
 };
