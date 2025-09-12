@@ -56,6 +56,7 @@ interface WheelConfig extends BaseConfig {
 }
 
 interface JackpotConfig extends BaseConfig {
+  symbols: string[];
   instantWin: InstantWinConfig;
   containerBackgroundColor: string;
   backgroundColor: string;
@@ -145,6 +146,7 @@ export const getDefaultGameConfig = (type: CampaignType) => {
         maxWinners: 10,
         winnersCount: 0
       },
+      symbols: ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
       buttonLabel: 'Lancer le Jackpot',
       buttonColor: '#841b60',
       containerBackgroundColor: '#1f2937',

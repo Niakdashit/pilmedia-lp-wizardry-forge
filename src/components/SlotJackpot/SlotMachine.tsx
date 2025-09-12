@@ -14,7 +14,7 @@ const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', 
 
 const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols }) => {
   const [isSpinning, setIsSpinning] = useState(false);
-  const campaignSymbols = useEditorStore?.((s: any) => s.campaign?.gameConfig?.slot?.symbols) as string[] | undefined;
+  const campaignSymbols = useEditorStore?.((s: any) => s.campaign?.gameConfig?.jackpot?.symbols) as string[] | undefined;
   const symbols = useMemo(() => propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS, [propSymbols, campaignSymbols]);
   const [reels, setReels] = useState([symbols[0], symbols[0], symbols[0]]);
 

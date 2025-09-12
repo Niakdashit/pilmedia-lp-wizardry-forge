@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 
 interface JackpotConfigPanelProps {
   onBack: () => void;
@@ -41,6 +41,22 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
   onBackgroundColorChange,
   onTextColorChange
 }) => {
+  const handleSymbolUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      onReelSymbolsChange?.([...reelSymbols, result]);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveSymbol = (index: number) => {
+    const next = [...reelSymbols];
+    next.splice(index, 1);
+    onReelSymbolsChange?.(next);
+  };
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -57,14 +73,51 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
         </div>
       </div>
 
-      {/* Section Title */}
-      <div className="flex items-center justify-center bg-white border-b border-gray-200 py-3">
-        <h3 className="text-sm font-medium text-gray-900">Configuration du style</h3>
-      </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-6">
+          {/* Symbol management */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Symboles des rouleaux
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {reelSymbols.map((symbol, idx) => (
+                <div key={idx} className="relative">
+                  {symbol.startsWith('data:') ? (
+                    <img
+                      src={symbol}
+                      alt={`symbole-${idx}`}
+                      className="w-12 h-12 object-contain rounded border border-gray-300"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 flex items-center justify-center border border-gray-300 rounded text-xl">
+                      {symbol}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleRemoveSymbol(idx)}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="w-12 h-12 flex items-center justify-center border-2 border-dashed border-gray-300 rounded cursor-pointer text-gray-400">
+                +
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleSymbolUpload}
+                />
+              </label>
+            </div>
+            <p className="text-xs text-gray-500">
+              Ajoutez des émojis ou importez des images pour personnaliser les symboles.
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Taille des rouleaux
