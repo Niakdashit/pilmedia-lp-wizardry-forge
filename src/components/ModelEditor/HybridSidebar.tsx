@@ -532,8 +532,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
-            // Zoom controls wiring
-            // Color controls (with safe defaults for panel display)
+            // Color controls
             backgroundColor={campaign?.design?.quizConfig?.style?.backgroundColor ?? '#ffffff'}
             textColor={campaign?.design?.quizConfig?.style?.textColor ?? '#000000'}
             onBackgroundColorChange={(color) => {
@@ -572,25 +571,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 };
               });
             }}
-            onBackgroundOpacityChange={(opacity) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      backgroundOpacity: opacity
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { 
-                  backgroundOpacity: opacity
-                } 
-              }));
             onTextColorChange={(color) => {
               setCampaign((prev) => {
                 if (!prev) return null;
@@ -610,81 +590,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               });
             }}
             onButtonBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonBackgroundColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonBackgroundColor: color } 
-              }));
-            }}
-            onButtonTextColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonTextColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonTextColor: color } 
-              }));
-            }}
-            onButtonHoverBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonHoverBackgroundColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonHoverBackgroundColor: color } 
-              }));
-            }}
-            onButtonActiveBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
-                ...prev,
-                design: {
-                  ...prev.design,
-                  quizConfig: {
-                    ...(prev.design as any).quizConfig,
-                    style: {
-                      ...((prev.design as any).quizConfig?.style || {}),
-                      buttonActiveBackgroundColor: color
-                    }
-                  }
-                }
-              }));
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
-                detail: { buttonActiveBackgroundColor: color } 
-              }));
-            }}
-            onTextColorChange={(color) => {
               setCampaign((prev) => {
-                if (!prev) return prev;
-                const next = {
+                if (!prev) return null;
+                return {
                   ...prev,
                   design: {
                     ...prev.design,
@@ -692,14 +600,66 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                       ...(prev.design as any).quizConfig,
                       style: {
                         ...((prev.design as any).quizConfig?.style || {}),
-                        textColor: color
+                        buttonBackgroundColor: color
                       }
                     }
                   }
-                } as typeof prev;
-                return next;
+                };
               });
-              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { textColor: color } }));
+            }}
+            onButtonTextColorChange={(color) => {
+              setCampaign((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...(prev.design as any).quizConfig,
+                      style: {
+                        ...((prev.design as any).quizConfig?.style || {}),
+                        buttonTextColor: color
+                      }
+                    }
+                  }
+                };
+              });
+            }}
+            onButtonHoverBackgroundColorChange={(color) => {
+              setCampaign((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...(prev.design as any).quizConfig,
+                      style: {
+                        ...((prev.design as any).quizConfig?.style || {}),
+                        buttonHoverBackgroundColor: color
+                      }
+                    }
+                  }
+                };
+              });
+            }}
+            onButtonActiveBackgroundColorChange={(color) => {
+              setCampaign((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  design: {
+                    ...prev.design,
+                    quizConfig: {
+                      ...(prev.design as any).quizConfig,
+                      style: {
+                        ...((prev.design as any).quizConfig?.style || {}),
+                        buttonActiveBackgroundColor: color
+                      }
+                    }
+                  }
+                };
+              });
             }}
             selectedDevice={selectedDevice}
           />

@@ -17,9 +17,9 @@ const GameConfigPanel: React.FC<GameConfigPanelProps> = ({ onBack }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get current jackpot config
-  const jackpotConfig = campaign?.gameConfig?.jackpot || {};
-  const slotConfig = campaign?.gameConfig?.slot || {};
-  const symbols = slotConfig.symbols || DEFAULT_SYMBOLS;
+  const jackpotConfig = (campaign as any)?.gameConfig?.jackpot || {};
+  const slotConfig = (campaign as any)?.gameConfig?.slot || {};
+  const symbols: string[] = (slotConfig?.symbols as string[]) || DEFAULT_SYMBOLS;
 
   // Update functions
   const updateJackpotConfig = (updates: any) => {
