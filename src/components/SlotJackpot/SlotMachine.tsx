@@ -14,9 +14,7 @@ const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', 
 
 const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols }) => {
   const [isSpinning, setIsSpinning] = useState(false);
-  const campaign = useEditorStore?.((s: any) => s.campaign);
-  const campaignSymbols = campaign?.gameConfig?.slot?.symbols as string[] | undefined;
-  const jackpotConfig = campaign?.gameConfig?.jackpot || {};
+  const campaignSymbols = useEditorStore?.((s: any) => s.campaign?.gameConfig?.slot?.symbols) as string[] | undefined;
   const symbols = useMemo(() => propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS, [propSymbols, campaignSymbols]);
   const [reels, setReels] = useState([symbols[0], symbols[0], symbols[0]]);
 
@@ -61,17 +59,16 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   return (
     <div 
       className="slot-root"
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '20px',
-          backgroundColor: jackpotConfig.containerBackgroundColor || 'transparent'
-        }}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px'
+      }}
     >
       <div 
         className="slot-machine"
@@ -126,8 +123,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                 style={{
                   width: '70px',
                   height: '70px',
-                  background: jackpotConfig.slotBackgroundColor || 'linear-gradient(145deg, #fff, #f0f0f0)',
-                  border: `${jackpotConfig.slotBorderWidth || 2}px solid ${jackpotConfig.slotBorderColor || '#ffd700'}`,
+                  background: 'linear-gradient(145deg, #fff, #f0f0f0)',
+                  border: '2px solid #ffd700',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
@@ -139,11 +136,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                   animation: isSpinning ? `spin-reel-${index} 1500ms ease-out` : 'none'
                 }}
               >
-                {symbol.startsWith('data:image') || symbol.startsWith('http') ? (
-                  <img src={symbol} alt={`symbol-${index}`} className="w-8 h-8 object-contain" />
-                ) : (
-                  symbol
-                )}
+                {symbol}
               </div>
             ))}
           </div>
@@ -158,7 +151,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
         style={{
           background: isSpinning 
             ? 'linear-gradient(145deg, #999, #666)' 
-            : (jackpotConfig.buttonColor || 'linear-gradient(145deg, #ffd700, #ffed4e)'),
+            : 'linear-gradient(145deg, #ffd700, #ffed4e)',
           border: '3px solid #b8860b',
           borderRadius: '15px',
           padding: '12px 30px',
@@ -175,7 +168,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
           transform: isSpinning ? 'scale(0.95)' : 'scale(1)'
         }}
       >
-        {isSpinning ? (jackpotConfig.buttonLabel ? 'SPINNING...' : 'SPINNING...') : (jackpotConfig.buttonLabel || 'SPIN')}
+        {isSpinning ? 'SPINNING...' : 'SPIN'}
       </button>
     </div>
   );

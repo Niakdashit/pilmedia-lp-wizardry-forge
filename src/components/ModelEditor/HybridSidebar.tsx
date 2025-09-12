@@ -14,7 +14,6 @@ import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
-import GameConfigPanel from './panels/GameConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
 
@@ -532,49 +531,192 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
             onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
-            // Color controls
+            // Zoom controls wiring
+            quizWidth={campaign?.design?.quizConfig?.style?.width ?? `${(campaign as any)?.design?.quizConfig?.style?.containerWidth || 800}px`}
+            quizMobileWidth={campaign?.design?.quizConfig?.style?.mobileWidth ?? `${(campaign as any)?.design?.quizConfig?.style?.mobileContainerWidth || 400}px`}
+            // Color controls (with safe defaults for panel display)
             backgroundColor={campaign?.design?.quizConfig?.style?.backgroundColor ?? '#ffffff'}
+            backgroundOpacity={campaign?.design?.quizConfig?.style?.backgroundOpacity ?? 100}
             textColor={campaign?.design?.quizConfig?.style?.textColor ?? '#000000'}
-            onBackgroundColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        backgroundColor: color
-                      }
+            buttonBackgroundColor={campaign?.design?.quizConfig?.style?.buttonBackgroundColor ?? '#f3f4f6'}
+            buttonTextColor={campaign?.design?.quizConfig?.style?.buttonTextColor ?? '#000000'}
+            buttonHoverBackgroundColor={campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
+            buttonActiveBackgroundColor={campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
+            onQuizWidthChange={(width) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev?.design,
+                  quizConfig: {
+                    ...(prev?.design as any)?.quizConfig,
+                    style: {
+                      ...((prev?.design as any)?.quizConfig?.style || {}),
+                      width
                     }
                   }
-                };
-              });
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { width } }));
+            }}
+            onQuizMobileWidthChange={(width) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev?.design,
+                  quizConfig: {
+                    ...(prev?.design as any)?.quizConfig,
+                    style: {
+                      ...((prev?.design as any)?.quizConfig?.style || {}),
+                      mobileWidth: width
+                    }
+                  }
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
+            }}
+            onBackgroundColorChange={(color) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      backgroundColor: color
+                    }
+                  }
+                }
+              }));
+              // Notify preview to re-render
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { 
+                  backgroundColor: color,
+                  buttonBackgroundColor: campaign?.design?.quizConfig?.style?.buttonBackgroundColor,
+                  buttonTextColor: campaign?.design?.quizConfig?.style?.buttonTextColor,
+                  buttonHoverBackgroundColor: campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor,
+                  buttonActiveBackgroundColor: campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor
+                } 
+              }));
             }}
             onBackgroundOpacityChange={(opacity) => {
-              setCampaign((prev) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        backgroundOpacity: opacity
-                      }
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      backgroundOpacity: opacity
                     }
                   }
-                };
-              });
+                }
+              }));
+              // Notify preview to re-render
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { 
+                  backgroundOpacity: opacity
+                } 
+              }));
+            }}
+            onTextColorChange={(color) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      textColor: color
+                    }
+                  }
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { 
+                  textColor: color,
+                  buttonTextColor: campaign?.design?.quizConfig?.style?.buttonTextColor
+                } 
+              }));
+            }}
+            onButtonBackgroundColorChange={(color) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      buttonBackgroundColor: color
+                    }
+                  }
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { buttonBackgroundColor: color } 
+              }));
+            }}
+            onButtonTextColorChange={(color) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      buttonTextColor: color
+                    }
+                  }
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { buttonTextColor: color } 
+              }));
+            }}
+            onButtonHoverBackgroundColorChange={(color) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      buttonHoverBackgroundColor: color
+                    }
+                  }
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { buttonHoverBackgroundColor: color } 
+              }));
+            }}
+            onButtonActiveBackgroundColorChange={(color) => {
+              setCampaign((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  quizConfig: {
+                    ...(prev.design as any).quizConfig,
+                    style: {
+                      ...((prev.design as any).quizConfig?.style || {}),
+                      buttonActiveBackgroundColor: color
+                    }
+                  }
+                }
+              }));
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { 
+                detail: { buttonActiveBackgroundColor: color } 
+              }));
             }}
             onTextColorChange={(color) => {
               setCampaign((prev) => {
-                if (!prev) return null;
-                return {
+                if (!prev) return prev;
+                const next = {
                   ...prev,
                   design: {
                     ...prev.design,
@@ -586,80 +728,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                       }
                     }
                   }
-                };
+                } as typeof prev;
+                return next;
               });
-            }}
-            onButtonBackgroundColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        buttonBackgroundColor: color
-                      }
-                    }
-                  }
-                };
-              });
-            }}
-            onButtonTextColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        buttonTextColor: color
-                      }
-                    }
-                  }
-                };
-              });
-            }}
-            onButtonHoverBackgroundColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        buttonHoverBackgroundColor: color
-                      }
-                    }
-                  }
-                };
-              });
-            }}
-            onButtonActiveBackgroundColorChange={(color) => {
-              setCampaign((prev) => {
-                if (!prev) return null;
-                return {
-                  ...prev,
-                  design: {
-                    ...prev.design,
-                    quizConfig: {
-                      ...(prev.design as any).quizConfig,
-                      style: {
-                        ...((prev.design as any).quizConfig?.style || {}),
-                        buttonActiveBackgroundColor: color
-                      }
-                    }
-                  }
-                };
-              });
+              window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { textColor: color } }));
             }}
             selectedDevice={selectedDevice}
           />
@@ -681,11 +753,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
-        return (
-          <GameConfigPanel 
-            onBack={() => setActiveTab('elements')}
-          />
-        );
+        return <div className="p-4" />;
       case 'form':
         return (
           <div className="p-4">
