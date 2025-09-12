@@ -36,6 +36,7 @@ interface Prize {
   calendarTime?: string;
   probability?: number;
   segmentId?: string;
+  quantity: number;
 }
 
 const GameManagementPanel: React.FC<GameManagementPanelProps> = ({

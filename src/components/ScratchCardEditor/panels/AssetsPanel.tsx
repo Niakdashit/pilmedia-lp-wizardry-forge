@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Type, Shapes, Upload, Search } from 'lucide-react';
 import TextPanel from './TextPanel';
-import ShapePanel from './ShapePanel';
 import { shapes, ShapeDefinition } from '../shapes/shapeLibrary';
 
 interface AssetsPanelProps {
@@ -79,8 +78,8 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
         if (searchQuery) {
           const query = searchQuery.toLowerCase();
           shapesToShow = shapes.filter((shape: ShapeDefinition) => 
-            shape.label.toLowerCase().includes(query) || 
-            shape.type.toLowerCase().includes(query)
+            (shape.label || '').toLowerCase().includes(query) || 
+            (shape.type || '').toLowerCase().includes(query)
           );
         }
 
