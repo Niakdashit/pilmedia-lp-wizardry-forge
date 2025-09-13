@@ -824,13 +824,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             }
           },
           customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
-          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || '',
-          instantWin: {
-            mode: 'instant_winner' as const,
-            winProbability: campaignState?.gameConfig?.jackpot?.instantWin?.winProbability || 0.3,
-            maxWinners: campaignState?.gameConfig?.jackpot?.instantWin?.maxWinners || 100,
-            winnersCount: campaignState?.gameConfig?.jackpot?.instantWin?.winnersCount || 0
-          }
+          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || ''
         }
       },
       buttonConfig: {

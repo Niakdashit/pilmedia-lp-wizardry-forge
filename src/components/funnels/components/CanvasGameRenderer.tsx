@@ -191,6 +191,31 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   // S'abonner à la configuration jackpot du store pour une synchronisation automatique
   const storeJackpotCfg = useEditorStore((s: any) => s.campaign?.gameConfig?.jackpot);
 
+  // Synchroniser le template jackpot entre la campagne (preview) et le store global
+  React.useEffect(() => {
+    try {
+      if (campaign?.type !== 'jackpot') return;
+      const setCampaign = (useEditorStore.getState() as any).setCampaign as (updater: any) => void;
+      const storeTemplate = (useEditorStore.getState() as any)?.campaign?.gameConfig?.jackpot?.template;
+      const campaignTemplate = campaign?.gameConfig?.jackpot?.template;
+      const effective = campaignTemplate ?? storeTemplate ?? 'jackpot-frame';
+      if (storeTemplate !== effective) {
+        setCampaign((prev: any) => ({
+          ...prev,
+          gameConfig: {
+            ...(prev?.gameConfig || {}),
+            jackpot: {
+              ...(prev?.gameConfig?.jackpot || {}),
+              template: effective
+            }
+          }
+        }));
+      }
+    } catch (e) {
+      console.warn('Jackpot template sync failed:', e);
+    }
+  }, [campaign?.type, campaign?.gameConfig?.jackpot?.template]);
+
   const renderGameComponent = () => {
     console.log('🎮 Rendering game component for type:', campaign.type);
     console.log('🎮 Full campaign object:', campaign);
@@ -241,8 +266,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           <React.Suspense fallback={<div>Loading...</div>}>
             <SlotJackpot
-              key={`slotjackpot-${effectiveTemplate || 'default'}-${(effectiveSymbols?.length || 0)}-${effectiveCustomUrl || 'no-url'}`}
-              templateOverride={effectiveTemplate}
               symbols={effectiveSymbols}
               onWin={() => handleGameComplete('win')}
               onLose={() => handleGameComplete('lose')}
