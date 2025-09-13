@@ -698,6 +698,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
 
+    // Fallback secondaire: template jackpot persisté localement
+    const lsJackpotTemplate = (typeof window !== 'undefined') ? localStorage.getItem('jackpotTemplate') : null;
+
     // Primary color used by quiz buttons and participation form
     const toRgb = (color: string): { r: number; g: number; b: number } | null => {
       if (!color) return null;
@@ -773,6 +776,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Priorité 2: store global (préservation entre modes)
             const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
             if (storeTemplate) return storeTemplate;
+
+            // Priorité 2b: localStorage (si disponible)
+            if (lsJackpotTemplate) return lsJackpotTemplate;
             
             // Priorité 3: fallback par défaut
             return 'jackpot-frame';
@@ -805,6 +811,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Priorité 2: store global (préservation entre modes)
             const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
             if (storeTemplate) return storeTemplate;
+
+            // Priorité 2b: localStorage (si disponible)
+            if (lsJackpotTemplate) return lsJackpotTemplate;
             
             // Priorité 3: fallback par défaut
             return 'jackpot-frame';
@@ -825,12 +834,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           },
           customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
           customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || '',
-          instantWin: {
-            mode: 'instant_winner' as const,
-            winProbability: campaignState?.gameConfig?.jackpot?.instantWin?.winProbability || 0.3,
-            maxWinners: campaignState?.gameConfig?.jackpot?.instantWin?.maxWinners || 100,
-            winnersCount: campaignState?.gameConfig?.jackpot?.instantWin?.winnersCount || 0
-          }
         }
       },
       buttonConfig: {
@@ -930,7 +933,16 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               const nextJackpot = (((transformedCampaign as any)?.gameConfig?.jackpot) as any) || {};
               const prevTemplate = prevJackpot?.template;
               const nextTemplate = nextJackpot?.template;
-              const effectiveTemplate = prevTemplate ?? nextTemplate ?? 'jackpot-frame';
+              
+              // Priorité absolue: localStorage pour éviter les resets
+              let effectiveTemplate = prevTemplate ?? nextTemplate;
+              try {
+                const lsTemplate = localStorage.getItem('jackpotTemplate');
+                if (lsTemplate) effectiveTemplate = lsTemplate;
+              } catch {}
+              
+              effectiveTemplate = effectiveTemplate ?? 'jackpot-frame';
+              
               return {
                 ...prevJackpot,
                 ...nextJackpot,
