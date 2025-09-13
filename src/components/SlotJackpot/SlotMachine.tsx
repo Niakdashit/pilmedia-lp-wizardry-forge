@@ -66,7 +66,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     }
     
     const unsubscribe = useEditorStore?.subscribe((state: any) => {
-      const storeTemplate = state.campaign?.gameConfig?.jackpot?.template;
+      const storeTemplate = (state.campaign?.gameConfig?.jackpot as any)?.template;
       const persistedTemplate = getPersistedTemplate();
       
       // Priorité: store > localStorage > fallback
@@ -81,7 +81,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     
     // Vérifier immédiatement au montage
     const initialCheck = () => {
-      const storeTemplate = useEditorStore?.getState()?.campaign?.gameConfig?.jackpot?.template;
+      const storeTemplate = (useEditorStore?.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
       const persistedTemplate = getPersistedTemplate();
       const newTemplate = storeTemplate || persistedTemplate;
       
