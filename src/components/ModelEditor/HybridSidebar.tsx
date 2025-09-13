@@ -218,7 +218,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   const handleJackpotTemplateChange = (templateId: string) => {
     console.log('🎰 [HybridSidebar] handleJackpotTemplateChange called with:', templateId);
-    console.log('🎰 [HybridSidebar] Current campaign before update:', (campaign as any)?.gameConfig?.jackpot?.template);
+    console.log('🎰 [HybridSidebar] Current campaign before update:', campaign?.gameConfig?.jackpot?.template);
     setCampaign((prev: any) => {
       const base = prev || {};
       const defaults = {
