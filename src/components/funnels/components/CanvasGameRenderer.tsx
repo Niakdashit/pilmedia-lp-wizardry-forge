@@ -254,8 +254,25 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     }
     
     if (campaign.type === 'quiz') {
-      // Quiz supprimé - ne rien afficher
-      return null;
+      console.log('🎯 Rendering Quiz component', {
+        quizConfig: campaign.gameConfig?.quiz,
+        design: campaign.design,
+        hasQuizConfig: !!campaign.gameConfig?.quiz,
+        hasDesign: !!campaign.design
+      });
+      
+      const QuizPreview = React.lazy(() => import('../../GameTypes/QuizPreview'));
+      
+      return (
+        <div className="absolute inset-0" style={{ zIndex: 10 }}>
+          <React.Suspense fallback={<div>Loading quiz...</div>}>
+            <QuizPreview
+              config={campaign.gameConfig?.quiz || {}}
+              design={campaign.design || {}}
+            />
+          </React.Suspense>
+        </div>
+      );
     }
     
     console.log('⚠️ No game component found for type:', campaign.type);
