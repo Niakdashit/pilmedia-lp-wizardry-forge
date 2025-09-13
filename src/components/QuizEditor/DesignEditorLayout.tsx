@@ -838,7 +838,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'quiz') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: typeof campaignData.design?.background === 'object'
