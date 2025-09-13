@@ -8,7 +8,6 @@ import DicePreview from '../../GameTypes/DicePreview';
 import MemoryPreview from '../../GameTypes/MemoryPreview';
 import PuzzlePreview from '../../GameTypes/PuzzlePreview';
 import FormPreview from '../../GameTypes/FormPreview';
-import { getCampaignBackgroundImage } from '../../../utils/background';
 
 interface GameRendererProps {
   campaign: any;
@@ -61,7 +60,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`wheel-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
+        
       case 'quiz':
         return (
           <QuizPreview
@@ -69,7 +68,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`quiz-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
+        
       case 'scratch':
         return (
           <ScratchPreview
@@ -77,35 +76,15 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`scratch-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
-      case 'jackpot': {
-        const gameBackgroundImage = getCampaignBackgroundImage(campaign, previewDevice);
-        const buttonLabel =
-          campaign.gameConfig?.jackpot?.buttonLabel || campaign.buttonConfig?.text;
-        const buttonColor =
-          campaign.buttonConfig?.color || campaign.gameConfig?.jackpot?.buttonColor;
-
+        
+      case 'jackpot':
         return (
           <Jackpot
-            /* Enable interactive jackpot rendering in preview */
-            isPreview
-            instantWinConfig={campaign.gameConfig?.jackpot?.instantWin}
-            buttonLabel={buttonLabel}
-            buttonColor={buttonColor}
-            backgroundImage={gameBackgroundImage}
-            containerBackgroundColor={campaign.gameConfig?.jackpot?.containerBackgroundColor}
-            backgroundColor={campaign.gameConfig?.jackpot?.backgroundColor}
-            borderStyle={campaign.gameConfig?.jackpot?.borderStyle || 'classic'}
-            slotBorderColor={campaign.gameConfig?.jackpot?.slotBorderColor}
-            slotBorderWidth={campaign.gameConfig?.jackpot?.slotBorderWidth}
-            slotBackgroundColor={campaign.gameConfig?.jackpot?.slotBackgroundColor}
-            disabled={disableForm}
-            onFinish={onGameFinish}
+            {...commonProps}
             key={`jackpot-${campaign._lastUpdate || Date.now()}`}
           />
         );
-      }
-
+        
       case 'dice':
         return (
           <DicePreview
@@ -113,7 +92,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`dice-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
+        
       case 'memory':
         return (
           <MemoryPreview
@@ -121,7 +100,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`memory-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
+        
       case 'puzzle':
         return (
           <PuzzlePreview
@@ -129,7 +108,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`puzzle-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
+        
       case 'form':
         return (
           <FormPreview
@@ -137,7 +116,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             key={`form-${campaign._lastUpdate || Date.now()}`}
           />
         );
-
+        
       default:
         return (
           <div className="flex items-center justify-center w-full h-full bg-yellow-50 rounded-lg border-2 border-yellow-200">
