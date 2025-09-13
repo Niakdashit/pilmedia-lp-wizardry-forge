@@ -81,6 +81,8 @@ const GameRenderer: React.FC<GameRendererProps> = ({
         return (
           <Jackpot
             {...commonProps}
+            /* Enable interactive jackpot rendering in preview */
+            isPreview
             key={`jackpot-${campaign._lastUpdate || Date.now()}`}
           />
         );
