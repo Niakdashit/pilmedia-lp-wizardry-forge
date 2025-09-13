@@ -52,6 +52,9 @@ interface MobileSidebarDrawerProps {
   onJackpotCustomFrameChange?: (frame: any) => void;
   customTemplateUrl?: string;
   onJackpotCustomTemplateChange?: (url: string) => void;
+  // Control jackpot config drawer externally
+  showJackpotPanel?: boolean;
+  onJackpotPanelChange?: (show: boolean) => void;
 }
 
 const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
@@ -82,7 +85,9 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   customFrame,
   onJackpotCustomFrameChange,
   customTemplateUrl,
-  onJackpotCustomTemplateChange
+  onJackpotCustomTemplateChange,
+  showJackpotPanel = false,
+  onJackpotPanelChange
 }) => {
   const [activeTab, setActiveTab] = useState<string>('assets');
   const [isMinimized, setIsMinimized] = useState(true);
@@ -115,6 +120,19 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       setIsMinimized(false);
     }
   }, [selectedElement, disableAutoOpen]);
+
+  // Ouverture demandée par le parent pour le panneau Jackpot
+  useEffect(() => {
+    if (showJackpotPanel && activeTab !== 'jackpot') {
+      setActiveTab('jackpot');
+      setIsMinimized(false);
+    }
+  }, [showJackpotPanel, activeTab]);
+
+  // Notifier le parent des changements d'onglet Jackpot
+  useEffect(() => {
+    onJackpotPanelChange?.(activeTab === 'jackpot');
+  }, [activeTab, onJackpotPanelChange]);
 
   // Prefetch on hover/touch to smooth first render of heavy tabs
   const prefetchTab = (tabId: string) => {

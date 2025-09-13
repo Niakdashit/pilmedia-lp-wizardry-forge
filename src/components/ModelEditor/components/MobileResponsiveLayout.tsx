@@ -51,6 +51,9 @@ interface MobileResponsiveLayoutProps {
   onJackpotCustomFrameChange?: (frame: any) => void;
   customTemplateUrl?: string;
   onJackpotCustomTemplateChange?: (url: string) => void;
+  // Control jackpot panel drawer
+  showJackpotPanel?: boolean;
+  onJackpotPanelChange?: (show: boolean) => void;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -95,7 +98,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   customFrame,
   onJackpotCustomFrameChange,
   customTemplateUrl,
-  onJackpotCustomTemplateChange
+  onJackpotCustomTemplateChange,
+  showJackpotPanel,
+  onJackpotPanelChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -283,6 +288,8 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           onJackpotCustomFrameChange={onJackpotCustomFrameChange}
           customTemplateUrl={customTemplateUrl}
           onJackpotCustomTemplateChange={onJackpotCustomTemplateChange}
+          showJackpotPanel={showJackpotPanel}
+          onJackpotPanelChange={onJackpotPanelChange}
         />
       )}
 
