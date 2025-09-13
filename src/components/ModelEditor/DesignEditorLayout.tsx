@@ -925,10 +925,18 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           gameConfig: {
             ...prev.gameConfig,
             ...(transformedCampaign as any).gameConfig,
-            jackpot: {
-              ...prev.gameConfig?.jackpot,
-              ...((transformedCampaign as any)?.gameConfig?.jackpot || {})
-            },
+            jackpot: (() => {
+              const prevJackpot = (prev.gameConfig?.jackpot as any) || {};
+              const nextJackpot = (((transformedCampaign as any)?.gameConfig?.jackpot) as any) || {};
+              const prevTemplate = prevJackpot?.template;
+              const nextTemplate = nextJackpot?.template;
+              const effectiveTemplate = prevTemplate ?? nextTemplate ?? 'jackpot-frame';
+              return {
+                ...prevJackpot,
+                ...nextJackpot,
+                template: effectiveTemplate
+              };
+            })(),
             wheel: {
               ...prev.gameConfig?.wheel,
               ...(transformedCampaign as any)?.gameConfig?.wheel,
