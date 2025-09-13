@@ -4,6 +4,7 @@ import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
@@ -1461,11 +1462,18 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             >
               Mode édition
             </button>
-            <FunnelUnlockedGame
-              campaign={campaignData}
-              previewMode={selectedDevice}
-              wheelModalConfig={wheelModalConfig}
-            />
+            {campaignData?.type === 'quiz' ? (
+              <FunnelQuizParticipate
+                campaign={campaignData}
+                previewMode={selectedDevice}
+              />
+            ) : (
+              <FunnelUnlockedGame
+                campaign={campaignData}
+                previewMode={selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
+            )}
           </div>
         ) : (
           /* Design Editor Mode */
