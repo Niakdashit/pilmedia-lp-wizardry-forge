@@ -752,8 +752,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     });
 
     return {
-      id: 'quiz-design-preview',
-      type: 'quiz',
+      id: 'jackpot-design-preview',
+      type: 'jackpot',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
@@ -764,53 +764,86 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
-        quizConfig: {
-          questionCount: campaignConfig?.design?.quizConfig?.questionCount || quizConfig.questionCount || 5,
-          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId,
+        jackpotConfig: {
+          template: (() => {
+            // Priorité 1: campaignState (état local)
+            const stateTemplate = (campaignState?.gameConfig?.jackpot as any)?.template;
+            if (stateTemplate) return stateTemplate;
+            
+            // Priorité 2: store global (préservation entre modes)
+            const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
+            if (storeTemplate) return storeTemplate;
+            
+            // Priorité 3: fallback par défaut
+            return 'jackpot-frame';
+          })(),
+          symbols: (campaignState?.gameConfig?.jackpot as any)?.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
           style: {
-            ...campaignConfig?.design?.quizConfig?.style,
-            buttonBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonBackgroundColor || quizConfig.buttonBackgroundColor,
-            buttonTextColor: campaignConfig?.design?.quizConfig?.style?.buttonTextColor || quizConfig.buttonTextColor,
-            buttonHoverBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonHoverBackgroundColor || quizConfig.buttonHoverBackgroundColor,
-            buttonActiveBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonActiveBackgroundColor || quizConfig.buttonActiveBackgroundColor,
-            borderRadius: campaignConfig?.design?.quizConfig?.style?.borderRadius || `${quizConfig.borderRadius}px` || '8px',
-            // Styles pour le texte
-            textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
-            questionTextWrap: 'break-word',
-            answerTextWrap: 'break-word',
-            // Zoom/largeur - respecter les valeurs ajustées par le panel
-            width: campaignConfig?.design?.quizConfig?.style?.width || `${quizConfig.width ?? '800px'}`,
-            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || `${quizConfig.mobileWidth ?? '400px'}`,
-            // Opacité de fond si définie
-            backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
-            // Mise en page responsive
-            questionPadding: '12px',
-            answerPadding: '12px 16px',
-            answerMargin: '8px 0',
-            answerMinHeight: 'auto'
-          }
+            borderColor: (campaignState?.gameConfig?.jackpot as any)?.style?.borderColor || primaryColor || '#ffd700',
+            backgroundColor: (campaignState?.gameConfig?.jackpot as any)?.style?.backgroundColor || '#ffffff',
+            textColor: (campaignState?.gameConfig?.jackpot as any)?.style?.textColor || '#333333'
+          },
+          button: {
+            text: (campaignState?.gameConfig?.jackpot as any)?.button?.text || 'SPIN',
+            colors: {
+              background: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.background || primaryColor || '#ffd700',
+              border: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.border || '#b8860b',
+              text: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.text || '#8b4513'
+            }
+          },
+          customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
+          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || ''
         }
       },
       gameConfig: {
-        quiz: {
-          questions: configuredQuestions,
-          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId,
-          buttonLabel: buttonElement?.content || 'Commencer le quiz'
+        jackpot: {
+          template: (() => {
+            // Priorité 1: campaignState (état local)
+            const stateTemplate = (campaignState?.gameConfig?.jackpot as any)?.template;
+            if (stateTemplate) return stateTemplate;
+            
+            // Priorité 2: store global (préservation entre modes)
+            const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
+            if (storeTemplate) return storeTemplate;
+            
+            // Priorité 3: fallback par défaut
+            return 'jackpot-frame';
+          })(),
+          symbols: (campaignState?.gameConfig?.jackpot as any)?.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
+          style: {
+            borderColor: (campaignState?.gameConfig?.jackpot as any)?.style?.borderColor || primaryColor || '#ffd700',
+            backgroundColor: (campaignState?.gameConfig?.jackpot as any)?.style?.backgroundColor || '#ffffff',
+            textColor: (campaignState?.gameConfig?.jackpot as any)?.style?.textColor || '#333333'
+          },
+          button: {
+            text: (campaignState?.gameConfig?.jackpot as any)?.button?.text || 'SPIN',
+            colors: {
+              background: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.background || primaryColor || '#ffd700',
+              border: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.border || '#b8860b',
+              text: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.text || '#8b4513'
+            }
+          },
+          customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
+          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || '',
+          instantWin: {
+            mode: 'instant_winner' as const,
+            winProbability: campaignState?.gameConfig?.jackpot?.instantWin?.winProbability || 0.3,
+            maxWinners: campaignState?.gameConfig?.jackpot?.instantWin?.maxWinners || 100,
+            winnersCount: campaignState?.gameConfig?.jackpot?.instantWin?.winnersCount || 0
+          }
         }
       },
       buttonConfig: {
-        text: buttonElement?.content || 'Commencer le quiz',
+        text: buttonElement?.content || 'SPIN',
         color: primaryColor,
         textColor: buttonElement?.style?.color || '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
       screens: [
         {
-          title: titleElement?.content || 'Testez vos connaissances !',
-          description: descriptionElement?.content || 'Répondez aux questions et découvrez votre score',
-          buttonText: buttonElement?.content || 'Commencer'
+          title: titleElement?.content || 'Tentez votre chance !',
+          description: descriptionElement?.content || 'Faites tourner les rouleaux et décrochez le jackpot',
+          buttonText: buttonElement?.content || 'SPIN'
         }
       ],
       // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
@@ -826,7 +859,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         elements: canvasElements,
         background: canvasBackground,
         device: selectedDevice
-      }
+      },
+      // Debug: Ajouter les éléments directement pour le preview
+      elements: canvasElements
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
 
@@ -859,6 +894,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     if (signature !== lastTransformedSigRef.current) {
       if (process.env.NODE_ENV !== 'production') {
         console.debug('[DesignEditorLayout] setCampaign: content changed, merging into store');
+        console.debug('🎰 [DesignEditorLayout] Jackpot template in transformedCampaign:', (transformedCampaign as any)?.gameConfig?.jackpot?.template);
       }
       // Preserve existing wheel segments (including prizeId) to avoid overwriting
       // them with generated/fallback segments during preview sync.
@@ -883,12 +919,16 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           } catch {}
         }
 
-        return {
+        const result = {
           ...prev,
           ...transformedCampaign,
           gameConfig: {
             ...prev.gameConfig,
             ...(transformedCampaign as any).gameConfig,
+            jackpot: {
+              ...prev.gameConfig?.jackpot,
+              ...((transformedCampaign as any)?.gameConfig?.jackpot || {})
+            },
             wheel: {
               ...prev.gameConfig?.wheel,
               ...(transformedCampaign as any)?.gameConfig?.wheel,
@@ -906,6 +946,12 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             }
           }
         } as any;
+        
+        if (process.env.NODE_ENV !== 'production') {
+          console.debug('🎰 [DesignEditorLayout] Final merged jackpot template:', result?.gameConfig?.jackpot?.template);
+        }
+        
+        return result;
       });
       lastTransformedSigRef.current = signature;
     } else {

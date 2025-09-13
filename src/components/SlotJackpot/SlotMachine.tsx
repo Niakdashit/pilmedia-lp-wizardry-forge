@@ -8,6 +8,7 @@ interface SlotMachineProps {
   onOpenConfig?: () => void;
   disabled?: boolean;
   symbols?: string[]; // Optionnel: permet d'injecter des symboles
+  templateOverride?: string; // Optionnel: forcer un template (preview)
 }
 
 const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
@@ -31,15 +32,27 @@ const getTemplateUrl = (templateId: string): string => {
   return encodeURI(path);
 };
 
-const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols }) => {
+const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols, templateOverride }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   
   // Utiliser un état local qui se met à jour depuis le store
-  const [currentTemplate, setCurrentTemplate] = useState('jackpot-frame');
+  const [currentTemplate, setCurrentTemplate] = useState<string>(templateOverride || 'jackpot-frame');
   const [renderKey, setRenderKey] = useState(0);
+
+  // Forcer la mise à jour lorsqu'un templateOverride est fourni par le mode preview
+  React.useEffect(() => {
+    if (templateOverride) {
+      setCurrentTemplate(templateOverride);
+      setRenderKey((prev) => prev + 1);
+    }
+  }, [templateOverride]);
   
   // Écouter les changements du store
   React.useEffect(() => {
+    if (templateOverride) {
+      // En mode preview avec override, on n'écoute pas le store pour éviter les conflits
+      return;
+    }
     const unsubscribe = useEditorStore?.subscribe((state: any) => {
       const newTemplate = state.campaign?.gameConfig?.jackpot?.template || 'jackpot-frame';
       if (newTemplate !== currentTemplate) {
@@ -48,9 +61,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
         setRenderKey(prev => prev + 1);
       }
     });
-    
     return unsubscribe;
-  }, [currentTemplate]);
+  }, [currentTemplate, templateOverride]);
   
   // Récupérer les symboles depuis le store
   const campaign = useEditorStore?.((s: any) => s.campaign);

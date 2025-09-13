@@ -218,6 +218,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   const handleJackpotTemplateChange = (templateId: string) => {
     console.log('🎰 [HybridSidebar] handleJackpotTemplateChange called with:', templateId);
+    console.log('🎰 [HybridSidebar] Current campaign before update:', campaign?.gameConfig?.jackpot?.template);
     setCampaign((prev: any) => {
       const base = prev || {};
       const defaults = {
@@ -355,23 +356,19 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   const [activeTab, _setActiveTab] = useState<string | null>('elements');
 
-  // Gestion des changements de showJackpotPanel
+  // Gestion des changements de showJackpotPanel (ouverture unidirectionnelle)
+  // Si le parent demande l'ouverture, on ouvre l'onglet jackpot.
+  // Ne pas forcer la fermeture ici pour éviter les boucles Elements <-> Jackpot.
   React.useEffect(() => {
-    if (showJackpotPanel) {
+    if (showJackpotPanel && activeTab !== 'jackpot') {
       _setActiveTab('jackpot');
-    } else if (activeTab === 'jackpot') {
-      _setActiveTab('elements');
     }
-  }, [showJackpotPanel]);
+  }, [showJackpotPanel, activeTab]);
   
-  // Gestion des changements d'onglet
+  // Gestion des changements d'onglet -> notifie simplement l'état voulu au parent
   React.useEffect(() => {
-    if (activeTab === 'jackpot') {
-      onJackpotPanelChange?.(true);
-    } else if (activeTab !== 'jackpot' && showJackpotPanel) {
-      onJackpotPanelChange?.(false);
-    }
-  }, [activeTab]);
+    onJackpotPanelChange?.(activeTab === 'jackpot');
+  }, [activeTab, onJackpotPanelChange]);
 
   React.useEffect(() => {
     if (showQuizPanel) {
@@ -657,12 +654,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
     
     if (activeTab === tabId) {
-      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
-      setActiveTab(null); // Close if clicking on active tab
-    } else {
-      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
-      setActiveTab(tabId);
+      // Ne rien faire si on clique sur l'onglet déjà actif pour éviter les oscillations
+      return;
     }
+    console.log('🗂️ Ouverture du nouvel onglet:', tabId);
+    setActiveTab(tabId);
   };
 
   const renderPanel = (tabId: string) => {
