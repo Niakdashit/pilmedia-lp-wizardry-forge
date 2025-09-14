@@ -86,7 +86,7 @@ const PerformanceMonitor: React.FC = memo(() => {
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-black/90 text-white text-xs p-3 rounded-lg font-mono backdrop-blur-sm">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <span className="font-semibold">Performance Monitor</span>
         <button 
           onClick={() => setIsVisible(false)}

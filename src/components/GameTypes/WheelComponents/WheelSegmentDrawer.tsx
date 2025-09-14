@@ -101,23 +101,7 @@ export const drawWheelSegments = ({
         ctx.beginPath();
         ctx.arc(x + imgSize / 2, y + imgSize / 2, imgSize / 2, 0, 2 * Math.PI);
         ctx.clip();
-
-        // Remplir le fond dans le clip avec la couleur du segment pour masquer toute frange sombre
-        const segmentColor = seg.color || themeColors[i % themeColors.length];
-        ctx.fillStyle = segmentColor;
-        ctx.beginPath();
-        ctx.arc(x + imgSize / 2, y + imgSize / 2, imgSize / 2, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Lissage haute qualité + léger oversize pour "manger" le halo
-        ctx.imageSmoothingEnabled = true;
-        try { (ctx as any).imageSmoothingQuality = 'high'; } catch {}
-        const scale = 1.02;
-        const w = imgSize * scale;
-        const h = imgSize * scale;
-        const dx = x - (w - imgSize) / 2;
-        const dy = y - (h - imgSize) / 2;
-        ctx.drawImage(img, dx, dy, w, h);
+        ctx.drawImage(img, x, y, imgSize, imgSize);
         ctx.restore();
       };
       img.src = seg.image;

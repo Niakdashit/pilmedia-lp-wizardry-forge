@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 interface Segment {
-  id?: string;
   label: string;
   chance: number;
   color?: string;
   image?: File | null;
-  prizeId?: string;
 }
 
 interface TabRouletteProps {
@@ -53,28 +51,17 @@ const TabRoulette: React.FC<TabRouletteProps> = ({
   const updateCampaign = (newSegments: Segment[], center: File | null) => {
     setSegments(newSegments);
     setCenterImage(center);
-    setCampaign((prev: any) => {
-      if (!prev) return prev;
-      const mergedSegments = newSegments as any[];
-      return {
-        ...prev,
-        gameConfig: {
-          ...prev.gameConfig,
-          wheel: {
-            ...prev.gameConfig?.wheel,
-            segments: mergedSegments
-          }
-        },
-        config: {
-          ...prev.config,
-          roulette: {
-            ...prev.config?.roulette,
-            segments: mergedSegments,
-            centerImage: center || null
-          }
+    setCampaign((prev: any) => ({
+      ...prev,
+      config: {
+        ...prev.config,
+        roulette: {
+          ...prev.config?.roulette,
+          segments: newSegments,
+          centerImage: center || null
         }
-      };
-    });
+      }
+    }));
   };
 
   const handleSegmentChange = (index: number, field: keyof Segment, value: string | number) => {

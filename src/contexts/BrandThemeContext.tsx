@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { BrandTheme } from '../utils/BrandStyleAnalyzer';
+import { generateBrandThemeFromUrl, BrandTheme } from '../utils/BrandStyleAnalyzer';
 // import { getExactBrandColors } from '../components/QuickCampaign/Preview/utils/exactColorExtractor';
 
 interface BrandThemeContextValue {
@@ -37,8 +37,7 @@ const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
       // const exactColors = getExactBrandColors(url);
       // Continuer avec l'extraction BrandStyleAnalyzer
 
-      // Extraction via BrandStyleAnalyzer (dynamic import to avoid dual import warning)
-      const { generateBrandThemeFromUrl } = await import('../utils/BrandStyleAnalyzer');
+      // Extraction via BrandStyleAnalyzer
       const brandTheme = await generateBrandThemeFromUrl(url);
       setTheme(brandTheme);
       

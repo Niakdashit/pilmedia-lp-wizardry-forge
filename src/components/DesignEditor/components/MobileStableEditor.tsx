@@ -103,6 +103,13 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
       data-device={deviceType}
       data-mobile-optimized={(isMobile || isTablet).toString()}
     >
+      {/* Indicateur de statut mobile (dev only) */}
+      {import.meta.env.DEV && (isMobile || isTablet) && (
+        <div className="fixed top-2 right-2 z-50 bg-green-500 text-white px-2 py-1 rounded text-xs">
+          📱 {deviceType.toUpperCase()} OPTIMIZED
+        </div>
+      )}
+      
       {children}
       
       {/* Styles CSS intégrés pour l'optimisation mobile */}

@@ -74,36 +74,6 @@ const CampaignSettingsPage: React.FC = () => {
     }
   };
 
-  // Simple Accordion state/component
-  const [open, setOpen] = useState<Record<string, boolean>>({
-    limites: true,
-    classement: false,
-    reglement: false,
-    gagnants: false,
-    push: false,
-    avances: false,
-  });
-
-  const AccordionItem: React.FC<{ id: string; title: string; children: React.ReactNode }>
-    = ({ id, title, children }) => (
-    <div className="border border-primary-200 rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(prev => ({ ...prev, [id]: !prev[id] }))}
-        className="w-full flex items-center justify-between px-4 py-3 bg-primary-50 hover:bg-primary-100"
-        aria-expanded={open[id] ? 'true' : 'false'}
-      >
-        <span className="font-semibold text-left">{title}</span>
-        <span className="text-sm text-gray-500">{open[id] ? 'Réduire' : 'Développer'}</span>
-      </button>
-      {open[id] && (
-        <div className="p-4 space-y-3 bg-white">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-
   if (!campaignId) {
     return (
       <div className="p-6">
@@ -140,8 +110,8 @@ const CampaignSettingsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {/* URL de campagne on top */}
+      <div className="space-y-6">
+        {/* Campaign URL */}
         <div>
           <h2 className="font-semibold mb-2">URL de campagne</h2>
           <input
@@ -153,8 +123,9 @@ const CampaignSettingsPage: React.FC = () => {
           />
         </div>
 
-        {/* Limites */}
-        <AccordionItem id="limites" title="Limites">
+        {/* Limits */}
+        <div>
+          <h2 className="font-semibold mb-2">Limites</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm text-gray-600 mb-1">Participants max.</label>
@@ -175,103 +146,54 @@ const CampaignSettingsPage: React.FC = () => {
               />
             </div>
           </div>
-        </AccordionItem>
+        </div>
 
-        {/* Classement des scores */}
-        <AccordionItem id="classement" title="Classement des scores">
-          <p className="text-sm text-gray-600">Paramètres du classement à venir. Vous pourrez définir ici les règles de tri, d'affichage et d'export du leaderboard.</p>
-        </AccordionItem>
-
-        {/* Règlement */}
-        <AccordionItem id="reglement" title="Règlement">
-          <label className="block text-sm text-gray-600 mb-1">legal (JSON)</label>
-          <textarea
-            rows={6}
-            value={JSON.stringify((form as any).legal ?? {}, null, 2)}
-            onChange={e => {
-              try {
-                const v = JSON.parse(e.target.value || '{}');
-                handleChange('legal', v);
-              } catch { /* ignore invalid JSON */ }
-            }}
-            className="w-full px-3 py-2 border rounded-lg font-mono text-xs"
-          />
-        </AccordionItem>
-
-        {/* Gagnants et Contact */}
-        <AccordionItem id="gagnants" title="Gagnants et Contact">
-          <label className="block text-sm text-gray-600 mb-1">winners (JSON)</label>
-          <textarea
-            rows={6}
-            value={JSON.stringify((form as any).winners ?? {}, null, 2)}
-            onChange={e => {
-              try {
-                const v = JSON.parse(e.target.value || '{}');
-                handleChange('winners', v);
-              } catch { /* ignore invalid JSON */ }
-            }}
-            className="w-full px-3 py-2 border rounded-lg font-mono text-xs"
-          />
-        </AccordionItem>
-
-        {/* Push de données */}
-        <AccordionItem id="push" title="Push de données">
-          <label className="block text-sm text-gray-600 mb-1">data_push (JSON)</label>
-          <textarea
-            rows={6}
-            value={JSON.stringify((form as any).data_push ?? {}, null, 2)}
-            onChange={e => {
-              try {
-                const v = JSON.parse(e.target.value || '{}');
-                handleChange('data_push', v);
-              } catch { /* ignore invalid JSON */ }
-            }}
-            className="w-full px-3 py-2 border rounded-lg font-mono text-xs"
-          />
-        </AccordionItem>
-
-        {/* Paramètres avancés */}
-        <AccordionItem id="avances" title="Paramètres avancés">
-          <div>
-            <h3 className="font-medium mb-2">Vérification email</h3>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={Boolean((form.email_verification as any)?.required)}
-                onChange={e => handleChange('email_verification.required', e.target.checked)}
-              />
-              Requérir une vérification email
-            </label>
-          </div>
-
-          <div>
-            <h3 className="font-medium mb-2">Opt-in marketing</h3>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={Boolean((form.opt_in as any)?.marketing)}
-                onChange={e => handleChange('opt_in.marketing', e.target.checked)}
-              />
-              Activer la case opt-in marketing
-            </label>
-          </div>
-
-          <div>
-            <h3 className="font-medium mb-2">Tags</h3>
+        {/* Email verification */}
+        <div>
+          <h2 className="font-semibold mb-2">Vérification email</h2>
+          <label className="flex items-center gap-2 text-sm">
             <input
-              type="text"
-              placeholder="ex: soldes, rentrée, 2025"
-              value={tagsValue}
-              onChange={e => handleTagsChange(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              type="checkbox"
+              checked={Boolean((form.email_verification as any)?.required)}
+              onChange={e => handleChange('email_verification.required', e.target.checked)}
             />
-            <p className="mt-1 text-xs text-gray-500">Séparez les tags par des virgules</p>
-          </div>
+            Requérir une vérification email
+          </label>
+        </div>
 
+        {/* Opt-in */}
+        <div>
+          <h2 className="font-semibold mb-2">Opt-in marketing</h2>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={Boolean((form.opt_in as any)?.marketing)}
+              onChange={e => handleChange('opt_in.marketing', e.target.checked)}
+            />
+            Activer la case opt-in marketing
+          </label>
+        </div>
+
+        {/* Tags */}
+        <div>
+          <h2 className="font-semibold mb-2">Tags</h2>
+          <input
+            type="text"
+            placeholder="ex: soldes, rentrée, 2025"
+            value={tagsValue}
+            onChange={e => handleTagsChange(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg"
+          />
+          <p className="mt-1 text-xs text-gray-500">Séparez les tags par des virgules</p>
+        </div>
+
+        {/* Advanced JSON sections (simple JSON textareas) */}
+        <div>
+          <h2 className="font-semibold mb-2">JSON avancé</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {(['publication', 'soft_gate', 'advanced'] as const).map((key) => (
+            {(['publication', 'soft_gate', 'legal', 'winners', 'data_push', 'advanced'] as const).map((key) => (
               <div key={key}>
-                <label className="block text-sm text-gray-600 mb-1">{key} (JSON)</label>
+                <label className="block text-sm text-gray-600 mb-1">{key}</label>
                 <textarea
                   rows={4}
                   value={JSON.stringify((form as any)[key] ?? {}, null, 2)}
@@ -288,7 +210,7 @@ const CampaignSettingsPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </AccordionItem>
+        </div>
       </div>
     </div>
   );

@@ -30,8 +30,8 @@ export const mergeGameConfig = (defaultConfig: any, newConfig: any) => {
   
   // Validation spécifique pour les segments de roue
   if (merged.wheel?.segments && Array.isArray(merged.wheel.segments)) {
-    merged.wheel.segments = merged.wheel.segments.filter((segment: any) =>
-      segment && typeof segment === 'object' && (typeof segment.label === 'string')
+    merged.wheel.segments = merged.wheel.segments.filter((segment: any) => 
+      segment && typeof segment === 'object' && segment.label
     );
   }
   

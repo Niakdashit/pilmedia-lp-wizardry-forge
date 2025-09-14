@@ -242,72 +242,61 @@ export const useGroupManager = ({ elements, onElementsChange, onAddToHistory }: 
     return !!element?.parentGroupId;
   }, [elements]);
 
-  // Obtenir la hiérarchie des calques pour l'affichage (ordonnée par zIndex du plus haut au plus bas)
+  // Obtenir la hiérarchie des calques pour l'affichage
   const getLayersHierarchy = useCallback((): LayerItem[] => {
-    // Construire unités top-level: groupes et éléments non groupés
-    type TopUnit = { kind: 'group'; id: string; z: number; children: LayerItem[] } | { kind: 'element'; id: string; z: number };
+    const layers: LayerItem[] = [];
+    const processedElements = new Set<string>();
 
-    const byId = new Map(elements.map(e => [e.id, e] as const));
-
-    const units: TopUnit[] = [];
-    // Groupes: z effectif = max zIndex des enfants, ou zIndex du groupe par défaut
+    // D'abord traiter les groupes
     groups.forEach(group => {
-      const childIds = (group.groupChildren || []).filter(id => byId.has(id));
-      const childrenWithZ = childIds
-        .map(id => byId.get(id)!)
-        .map(el => ({ el, z: typeof el.zIndex === 'number' ? el.zIndex : 0 }));
-      const maxChildZ = childrenWithZ.length > 0 ? Math.max(...childrenWithZ.map(c => c.z)) : (typeof group.zIndex === 'number' ? group.zIndex : 0);
-
-      // Ordonner les enfants par zIndex descendant (haut -> bas)
-      const orderedChildren: LayerItem[] = childrenWithZ
-        .sort((a, b) => b.z - a.z)
-        .map(({ el }) => ({
-          id: el.id,
-          type: 'element',
-          name: el.name || el.content || `${el.type} ${el.id.slice(-4)}`,
-          visible: el.visible !== false,
-          locked: el.locked || false,
-          parentId: group.id
-        }));
-
-      units.push({ kind: 'group', id: group.id, z: maxChildZ, children: orderedChildren });
-    });
-
-    // Éléments non groupés
-    elements.forEach(el => {
-      if (!el.isGroup && !el.parentGroupId) {
-        units.push({ kind: 'element', id: el.id, z: typeof el.zIndex === 'number' ? el.zIndex : 0 });
-      }
-    });
-
-    // Trier top-level du plus haut au plus bas
-    units.sort((a, b) => b.z - a.z);
-
-    // Transformer en LayerItem[] avec enfants pour les groupes
-    const layers: LayerItem[] = units.map(unit => {
-      if (unit.kind === 'group') {
-        const group = byId.get(unit.id)!;
-        return {
+      if (!processedElements.has(group.id)) {
+        const groupLayer: LayerItem = {
           id: group.id,
           type: 'group',
           name: group.name || 'Groupe sans nom',
           visible: group.visible !== false,
           locked: group.locked || false,
           isExpanded: true,
-          children: unit.children
+          children: []
         };
+
+        // Ajouter les éléments du groupe
+        if (group.groupChildren && group.groupChildren.length > 0) {
+          group.groupChildren.forEach(childId => {
+            const childElement = elements.find(el => el.id === childId);
+            if (childElement) {
+              groupLayer.children?.push({
+                id: childElement.id,
+                type: 'element',
+                name: childElement.name || childElement.content || `${childElement.type} ${childElement.id.slice(-4)}`,
+                visible: childElement.visible !== false,
+                locked: childElement.locked || false,
+                parentId: group.id
+              });
+              processedElements.add(childId);
+            }
+          });
+        }
+
+        layers.push(groupLayer);
+        processedElements.add(group.id);
       }
-      const el = byId.get(unit.id)!;
-      return {
-        id: el.id,
-        type: 'element',
-        name: el.name || el.content || `${el.type} ${el.id.slice(-4)}`,
-        visible: el.visible !== false,
-        locked: el.locked || false
-      };
     });
 
-    return layers; // déjà trié du haut -> bas
+    // Ensuite traiter les éléments non groupés
+    elements.forEach(element => {
+      if (!processedElements.has(element.id) && !element.isGroup) {
+        layers.push({
+          id: element.id,
+          type: 'element',
+          name: element.name || element.content || `${element.type} ${element.id.slice(-4)}`,
+          visible: element.visible !== false,
+          locked: element.locked || false
+        });
+      }
+    });
+
+    return layers.reverse(); // Inverser pour avoir les derniers créés en haut
   }, [elements, groups]);
 
   return {

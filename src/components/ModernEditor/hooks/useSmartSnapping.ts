@@ -6,8 +6,6 @@ interface SnapGuide {
   orientation: 'horizontal' | 'vertical';
   position: number;
   elementId?: string;
-  // Marks guides that represent the center of another element (for priority snapping)
-  isCenter?: boolean;
 }
 
 interface UseSmartSnappingProps {
@@ -176,51 +174,33 @@ export const useSmartSnapping = ({
       const draggedCenterX = draggedElement.x + draggedElement.width / 2;
       const draggedCenterY = draggedElement.y + draggedElement.height / 2;
 
-      // Vertical: left/right edges
-      [elementLeft, elementRight].forEach(pos => {
-        if (Math.abs(draggedLeft - pos) <= tol || Math.abs(draggedRight - pos) <= tol) {
+      // Vertical alignment guides
+      [elementLeft, elementRight, elementCenterX].forEach(pos => {
+        if (Math.abs(draggedLeft - pos) <= tol ||
+            Math.abs(draggedRight - pos) <= tol ||
+            Math.abs(draggedCenterX - pos) <= tol) {
           guides.push({
             type: 'element',
             orientation: 'vertical',
             position: pos,
-            elementId: element.id,
-            isCenter: false
+            elementId: element.id
           });
         }
       });
-      // Vertical: center-to-center between elements
-      if (Math.abs(draggedCenterX - elementCenterX) <= tol) {
-        guides.push({
-          type: 'element',
-          orientation: 'vertical',
-          position: elementCenterX,
-          elementId: element.id,
-          isCenter: true
-        });
-      }
 
-      // Horizontal: top/bottom edges
-      [elementTop, elementBottom].forEach(pos => {
-        if (Math.abs(draggedTop - pos) <= tol || Math.abs(draggedBottom - pos) <= tol) {
+      // Horizontal alignment guides
+      [elementTop, elementBottom, elementCenterY].forEach(pos => {
+        if (Math.abs(draggedTop - pos) <= tol ||
+            Math.abs(draggedBottom - pos) <= tol ||
+            Math.abs(draggedCenterY - pos) <= tol) {
           guides.push({
             type: 'element',
             orientation: 'horizontal',
             position: pos,
-            elementId: element.id,
-            isCenter: false
+            elementId: element.id
           });
         }
       });
-      // Horizontal: center-to-center between elements
-      if (Math.abs(draggedCenterY - elementCenterY) <= tol) {
-        guides.push({
-          type: 'element',
-          orientation: 'horizontal',
-          position: elementCenterY,
-          elementId: element.id,
-          isCenter: true
-        });
-      }
     });
 
     // Center alignment guides avec calculs précis
@@ -282,13 +262,12 @@ export const useSmartSnapping = ({
         const centerDiff = Math.abs(x + width / 2 - guide.position);
         
         // Tolérance adaptative (identique en ressenti quel que soit le zoom)
-        const isCenterGuide = guide.type === 'center' || !!guide.isCenter;
-        const tolerance = isCenterGuide ? Math.max(1 / z, width * 0.05) : baseTol;
+        const tolerance = guide.type === 'center' ? Math.max(1 / z, width * 0.05) : baseTol;
         
-        // Priorité au centre pour un alignement plus intuitif (y compris centre d'un autre élément)
-        if (centerDiff <= tolerance && (snapPriorityX < 2 || isCenterGuide)) {
+        // Priorité au centre pour un alignement plus intuitif
+        if (centerDiff <= tolerance && (snapPriorityX < 2 || guide.type === 'center')) {
           snappedX = guide.position - width / 2;
-          snapPriorityX = isCenterGuide ? 2 : 1;
+          snapPriorityX = guide.type === 'center' ? 2 : 1;
         } else if (leftDiff <= tolerance && snapPriorityX < 1) {
           snappedX = guide.position;
           snapPriorityX = 1;
@@ -302,12 +281,11 @@ export const useSmartSnapping = ({
         const bottomDiff = Math.abs(y + height - guide.position);
         const centerDiff = Math.abs(y + height / 2 - guide.position);
         
-        const isCenterGuide = guide.type === 'center' || !!guide.isCenter;
-        const tolerance = isCenterGuide ? Math.max(1 / z, height * 0.05) : baseTol;
+        const tolerance = guide.type === 'center' ? Math.max(1 / z, height * 0.05) : baseTol;
         
-        if (centerDiff <= tolerance && (snapPriorityY < 2 || isCenterGuide)) {
+        if (centerDiff <= tolerance && (snapPriorityY < 2 || guide.type === 'center')) {
           snappedY = guide.position - height / 2;
-          snapPriorityY = isCenterGuide ? 2 : 1;
+          snapPriorityY = guide.type === 'center' ? 2 : 1;
         } else if (topDiff <= tolerance && snapPriorityY < 1) {
           snappedY = guide.position;
           snapPriorityY = 1;

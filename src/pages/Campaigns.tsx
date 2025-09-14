@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import PillButton from '../components/shared/PillButton';
 import { Search, Plus, Filter, Eye, Copy, Archive, Trash2, ChevronDown, BarChart2, ExternalLink, MoreVertical, Zap } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
 import { getCampaignTypeIcon, CampaignType } from '../utils/campaignTypes';
@@ -181,8 +180,20 @@ const Campaigns: React.FC = () => {
         size="sm"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-x-4">
-            <PillButton to="/quick-campaign" icon={<Zap className="w-4 h-4" />}>Création rapide</PillButton>
-            <PillButton to="/design-editor" icon={<Plus className="w-4 h-4" />}>Éditeur de Jeux</PillButton>
+            <Link
+              to="/quick-campaign"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Création rapide
+            </Link>
+            <Link
+              to="/design-editor"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Éditeur de Jeux
+            </Link>
           </div>
         }
       />

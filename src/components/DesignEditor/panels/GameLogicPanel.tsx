@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Gift, Calendar as CalendarIcon, Plus, GripVertical, Pencil, Copy, Trash2, Trophy, Image as ImageIcon } from 'lucide-react';
 import { useEditorStore } from '../../../stores/editorStore';
 import ImageUpload from '../../common/ImageUpload';
-import Modal from '../../common/Modal';
-import { usePrizeLogic } from '../../../hooks/usePrizeLogic';
-import type { Prize, CampaignConfig } from '../../../types/PrizeSystem';
+import { getWheelSegments } from '../../../utils/wheelConfig';
+
+type Prize = {
+  id: string;
+  name: string;
+  totalUnits: number;
+  awardedUnits: number;
+  imageUrl?: string;
+  method?: 'immediate' | 'calendar';
+  startDate?: string; // YYYY-MM-DD (for calendar method)
+  endDate?: string;
+};
 
 type WheelSegment = {
   id?: string;
@@ -20,69 +29,17 @@ const GameLogicPanel: React.FC = () => {
   const setCampaign = useEditorStore((s) => s.setCampaign as any);
 
   const [activeTab, setActiveTab] = useState<'lots' | 'calendar'>('lots');
-  
-  // Utiliser le nouveau système centralisé
-  const { 
-    segments, 
-    prizes, 
-    validation,
-    addPrize, 
-    updatePrize, 
-    removePrize, 
-    duplicatePrize,
-    updateSegmentPrize
-  } = usePrizeLogic({ 
-    campaign: campaign as CampaignConfig, 
-    setCampaign 
-  });
-
+  const prizes: Prize[] = useMemo(() => (campaign?.prizes as Prize[]) || [], [campaign]);
   const showPrizes: boolean = campaign?.showPrizes ?? true;
+  // Segments used by the actual wheel rendering (source of truth)
+  const segments = useMemo<WheelSegment[]>(
+    () => getWheelSegments(campaign) as any,
+    [campaign, campaign?._lastUpdate, campaign?.gameConfig?.wheel?.segments, campaign?.config?.roulette?.segments]
+  );
 
-  // Fonctions utilitaires
   const upsertCampaign = (patch: Partial<any>) =>
     setCampaign((prev: any) => (prev ? { ...prev, ...patch } : prev));
 
-  const isValidHex = (v: any) =>
-    typeof v === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim());
-
-  const setShowPrizes = (val: boolean) => upsertCampaign({ showPrizes: val });
-
-  // Gestion des lots avec le nouveau système
-  const handleAddPrize = () => {
-    const base = {
-      name: 'Nouveau lot',
-      totalUnits: 1,
-      awardedUnits: 0,
-      method: 'probability' as Prize['method'],
-      probabilityPercent: 100,
-    };
-    const newPrizeId = addPrize(base);
-    console.log('[GameLogicPanel] Ajouter un lot → id', newPrizeId);
-    // Ouvre la modale immédiatement avec l'objet local (l'état global se mettra à jour en parallèle)
-    setEditing({ id: newPrizeId, ...base } as Prize);
-    setIsModalOpen(true);
-  };
-
-  const handleUpdatePrize = (updated: Prize) => {
-    updatePrize(updated.id, updated);
-  };
-
-  const handleDuplicatePrize = (id: string) => {
-    const source = prizes.find((p) => p.id === id);
-    const newPrizeId = duplicatePrize(id);
-    console.log('[GameLogicPanel] Dupliquer un lot', id, '→', newPrizeId);
-    if (source) {
-      const duplicated: Prize = { ...source, id: newPrizeId, name: `${source.name} (copie)`, awardedUnits: 0 };
-      setEditing(duplicated);
-      setIsModalOpen(true);
-    }
-  };
-
-  const handleRemovePrize = (id: string) => {
-    removePrize(id);
-  };
-
-  // Gestion des segments - versions simplifiées qui utilisent le setCampaign directement
   const getRawSegments = () =>
     (campaign?.gameConfig?.wheel?.segments || campaign?.config?.roulette?.segments || []) as any[];
 
@@ -111,51 +68,59 @@ const GameLogicPanel: React.FC = () => {
     });
   };
 
-  // Palette de couleurs par défaut
-  const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+  const isValidHex = (v: any) =>
+    typeof v === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim());
 
-  const setSegmentCount = (targetCount: number) => {
-    let count = Math.max(2, Math.floor(targetCount));
-    if (count % 2 === 1) count += 1;
+  // no hex text input anymore; color is edited via native color picker
 
-    const raw = getRawSegments();
-    let next = [...raw];
-
-    if (next.length % 2 === 1) {
-      next = next.slice(0, -1);
-    }
-
-    if (next.length > count) {
-      next = next.slice(0, count);
-    }
-
-    while (next.length < count) {
-      const idx = next.length;
-      const defaultSeg = {
-        id: `segment-${idx}`,
-        label: `Segment ${idx + 1}`,
-        color: colorPalette[idx % colorPalette.length],
-        textColor: '#ffffff'
-      } as any;
-      next.push(defaultSeg);
-    }
-
-    if (next.length > count) {
-      next = next.slice(0, count);
-    }
-
-    updateWheelSegments(next);
+  const addPrize = () => {
+    const newPrize: Prize = {
+      id: `prize_${Date.now()}`,
+      name: 'Nouveau lot',
+      totalUnits: 1,
+      awardedUnits: 0,
+      method: 'immediate',
+    };
+    upsertCampaign({ prizes: [...prizes, newPrize] });
+    setEditing(newPrize);
+    setIsModalOpen(true);
   };
 
-  const setSegmentLabel = (index: number, label: string) => {
+  const updatePrize = (updated: Prize) => {
+    const next = prizes.map((p) => (p.id === updated.id ? updated : p));
+    upsertCampaign({ prizes: next });
+  };
+
+  const duplicatePrize = (id: string) => {
+    const src = prizes.find((p) => p.id === id);
+    if (!src) return;
+    const copy: Prize = { ...src, id: `prize_${Date.now()}` };
+    upsertCampaign({ prizes: [...prizes, copy] });
+  };
+
+  const deletePrize = (id: string) => {
+    const next = prizes.filter((p) => p.id !== id);
+    // Remove mapping from wheel segments as well
+    const raw = getRawSegments();
+    const updated = raw.map((seg: any) =>
+      seg?.prizeId === id ? { ...seg, prizeId: undefined } : seg
+    );
+    upsertCampaign({ prizes: next });
+    updateWheelSegments(updated);
+  };
+
+  const setShowPrizes = (val: boolean) => upsertCampaign({ showPrizes: val });
+
+  const setSegmentPrize = (index: number, prizeId?: string) => {
     const raw = getRawSegments();
     const newSegments = [...raw];
     if (!newSegments[index]) {
+      // If segments aren't initialized, create placeholders to match visual segments
       for (let i = raw.length; i <= index; i++) {
         newSegments[i] = { id: `segment-${i}`, label: `Segment ${i + 1}` };
       }
     }
-    newSegments[index] = { ...newSegments[index], label };
+    newSegments[index] = { ...newSegments[index], prizeId };
     updateWheelSegments(newSegments);
   };
 
@@ -183,29 +148,25 @@ const GameLogicPanel: React.FC = () => {
     updateWheelSegments(newSegments);
   };
 
-  // Appliquer explicitement la configuration des segments à la roue
-  const [lastAppliedAt, setLastAppliedAt] = useState<number | null>(null);
-  const applySegmentsToWheel = () => {
+  const setSegmentLabel = (index: number, label: string) => {
     const raw = getRawSegments();
-    // Re-sauvegarde défensive (clone) + bump _lastUpdate via updateWheelSegments
-    const applied = Array.isArray(raw) ? raw.map((s) => ({ ...s })) : [];
-    updateWheelSegments(applied);
-    setLastAppliedAt(Date.now());
-    try {
-      console.log('[GameLogicPanel] Segments appliqués à la roue', { count: applied.length });
-    } catch {}
+    const newSegments = [...raw];
+    if (!newSegments[index]) {
+      for (let i = raw.length; i <= index; i++) {
+        newSegments[i] = { id: `segment-${i}`, label: `Segment ${i + 1}` };
+      }
+    }
+    newSegments[index] = { ...newSegments[index], label };
+    updateWheelSegments(newSegments);
   };
 
-  // État de l'édition
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<Prize | null>(null);
 
-  // Filtrer les lots de probabilité pour l'affichage
-  const probabilityPrizes = prizes.filter(p => p.method === 'probability' || p.method === 'immediate');
-
   return (
     <div className="p-4 space-y-6">
-      {/* Header avec onglets */}
+      {/* Header with tabs and toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <button
@@ -225,39 +186,22 @@ const GameLogicPanel: React.FC = () => {
             <span className="inline-flex items-center"><CalendarIcon className="w-4 h-4 mr-2"/>Calendrier</span>
           </button>
         </div>
+        {/* Toggle moved to the toolbar below */}
       </div>
 
       {activeTab === 'lots' && (
         <div className="space-y-6">
-          {/* Bouton d'ajout */}
+          {/* Create button centered, then a single radio centered below */}
           <div className="space-y-3">
             <div className="flex items-center justify-center">
               <button
-                onClick={handleAddPrize}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                onClick={addPrize}
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-[hsl(var(--primary))] text-white rounded-md hover:opacity-90"
               >
-                <Plus className="w-4 h-4" />
-                Ajouter un lot
+                <Plus className="w-4 h-4"/>
+                <span>Créer un lot</span>
               </button>
             </div>
-
-            {/* Total des probabilités avec validation */}
-            {probabilityPrizes.length > 0 && (
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <span className={validation.totalProbability > 100 ? 'text-red-600' : 'text-gray-600'}>
-                  Somme des probabilités: {Math.round(validation.totalProbability)}%
-                  {validation.totalProbability > 100 && ' — la somme dépasse 100%, elle sera normalisée'}
-                </span>
-                {validation.warnings.length > 0 && (
-                  <div className="mt-2 text-sm text-yellow-600">
-                    {validation.warnings.map((warning, idx) => (
-                      <div key={idx}>⚠️ {warning}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
             <div className="flex items-center justify-center">
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
@@ -274,7 +218,7 @@ const GameLogicPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Table des lots */}
+          {/* Table */}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="grid grid-cols-[32px_1fr_160px_120px_132px] items-center bg-gray-50 text-xs font-medium text-gray-600 px-3 py-2">
               <div></div>
@@ -305,28 +249,18 @@ const GameLogicPanel: React.FC = () => {
                   {p.method === 'calendar' ? (
                     <span className="inline-flex items-center"><CalendarIcon className="w-4 h-4 mr-1"/>Calendrier</span>
                   ) : (
-                    <span>
-                      Probabilité{typeof p.probabilityPercent === 'number' ? ` (${p.probabilityPercent}%)` : ''}
-                    </span>
+                    <span>Immédiat</span>
                   )}
                 </div>
                 <div className="flex items-center justify-end space-x-3 text-gray-500">
                   <button className="hover:text-gray-700" onClick={() => { setEditing(p); setIsModalOpen(true); }} title="Éditer">
                     <Pencil className="w-4 h-4"/>
                   </button>
-                  <button
-                    onClick={() => handleDuplicatePrize(p.id)}
-                    className="p-1 text-gray-400 hover:text-gray-600"
-                    title="Dupliquer"
-                  >
-                    <Copy className="w-4 h-4" />
+                  <button className="hover:text-gray-700" onClick={() => duplicatePrize(p.id)} title="Dupliquer">
+                    <Copy className="w-4 h-4"/>
                   </button>
-                  <button
-                    onClick={() => handleRemovePrize(p.id)}
-                    className="p-1 text-gray-400 hover:text-red-600"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-4 h-4" />
+                  <button className="hover:text-red-600" onClick={() => deletePrize(p.id)} title="Supprimer">
+                    <Trash2 className="w-4 h-4"/>
                   </button>
                 </div>
               </div>
@@ -336,40 +270,9 @@ const GameLogicPanel: React.FC = () => {
             )}
           </div>
 
-          {/* Sélecteur du nombre de segments */}
+          {/* Wheel segments assignment (one per row) */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-gray-700">Nombre de segments</div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={2}
-                  step={2}
-                  value={segments.length || 0}
-                  onChange={(e) => setSegmentCount(parseInt(e.target.value || '0', 10))}
-                  className="w-24 px-3 py-1 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">La roue fonctionne mieux avec un nombre pair de segments.</p>
-          </div>
-
-          {/* Affectation des lots aux segments */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-gray-700">Affectation des lots à la roue</div>
-              <div className="flex items-center gap-2">
-                {lastAppliedAt && (
-                  <span className="text-xs text-green-600">Segments appliqués</span>
-                )}
-                <button
-                  onClick={applySegmentsToWheel}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[hsl(var(--primary))] text-white hover:opacity-90"
-                >
-                  Appliquer
-                </button>
-              </div>
-            </div>
+            <div className="text-sm font-medium text-gray-700">Affectation des lots à la roue</div>
             <div className="grid grid-cols-1 gap-4">
               {segments.map((s: WheelSegment, idx: number) => (
                 <div key={s.id || idx} className="border border-amber-200 rounded-lg p-3 bg-amber-50">
@@ -407,7 +310,7 @@ const GameLogicPanel: React.FC = () => {
                     <select
                       className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
                       value={(s as any).prizeId || ''}
-                      onChange={(e) => updateSegmentPrize(idx, e.target.value || undefined)}
+                      onChange={(e) => setSegmentPrize(idx, e.target.value || undefined)}
                     >
                       <option value="">Aucun lot</option>
                       {prizes.map((p) => (
@@ -434,30 +337,30 @@ const GameLogicPanel: React.FC = () => {
 
       {activeTab === 'calendar' && (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">Planifiez la disponibilité des lots (seuls les lots en mode calendrier sont listés).</div>
-          {prizes.filter((p) => p.method === 'calendar').map((p) => (
+          <div className="text-sm text-gray-600">Planifiez la disponibilité des lots.</div>
+          {prizes.map((p) => (
             <div key={p.id} className="border border-gray-200 rounded-md p-3 flex items-center gap-3">
               <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400">
                 <Gift className="w-4 h-4"/>
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-800">{p.name}</div>
-                <div className="mt-2 grid grid-cols-1 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Date</label>
+                    <label className="block text-xs text-gray-500 mb-1">Début</label>
                     <input
                       type="date"
                       value={p.startDate || ''}
-                      onChange={(e) => handleUpdatePrize({ ...p, startDate: e.target.value })}
+                      onChange={(e) => updatePrize({ ...p, method: 'calendar', startDate: e.target.value })}
                       className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Heure</label>
+                    <label className="block text-xs text-gray-500 mb-1">Fin</label>
                     <input
-                      type="time"
-                      value={p.startTime || ''}
-                      onChange={(e) => handleUpdatePrize({ ...p, startTime: e.target.value })}
+                      type="date"
+                      value={p.endDate || ''}
+                      onChange={(e) => updatePrize({ ...p, method: 'calendar', endDate: e.target.value })}
                       className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     />
                   </div>
@@ -465,21 +368,18 @@ const GameLogicPanel: React.FC = () => {
               </div>
             </div>
           ))}
-          {prizes.filter((p) => p.method === 'calendar').length === 0 && (
-            <div className="text-sm text-gray-500">Aucun lot en mode calendrier. Passez un lot en « Calendrier » dans l'onglet Lots pour l'afficher ici.</div>
+          {prizes.length === 0 && (
+            <div className="text-sm text-gray-500">Aucun lot créé pour le moment.</div>
           )}
         </div>
       )}
 
-      {/* Modal d'édition (via Portal) */}
-      {isModalOpen && (
-        <Modal title="Éditer le lot" onClose={() => { setIsModalOpen(false); setEditing(null); console.log('Closing modal'); }}>
-          <div className="space-y-3" id="prize-edit-modal">
-            {!editing && (
-              <div className="text-sm text-gray-600">Initialisation du lot...</div>
-            )}
-            {editing && (
-            <>
+      {/* Modal */}
+      {isModalOpen && editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-5">
+            <div className="text-base font-semibold mb-4">{editing ? 'Éditer le lot' : 'Créer un lot'}</div>
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Nom du lot</label>
                 <input
@@ -513,35 +413,18 @@ const GameLogicPanel: React.FC = () => {
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Méthode</label>
                 <select
-                  value={(editing.method === 'immediate' ? 'probability' : (editing.method || 'probability'))}
+                  value={editing.method || 'immediate'}
                   onChange={(e) => setEditing({ ...editing, method: e.target.value as Prize['method'] })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
-                  <option value="probability">Probabilité</option>
+                  <option value="immediate">Immédiat</option>
                   <option value="calendar">Calendrier</option>
                 </select>
               </div>
-              {editing.method !== 'calendar' && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Probabilité (%)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={typeof editing.probabilityPercent === 'number' ? editing.probabilityPercent : 100}
-                    onChange={(e) => {
-                      const raw = Number(e.target.value);
-                      const clamped = Math.max(0, Math.min(100, isNaN(raw) ? 0 : raw));
-                      setEditing({ ...editing, method: 'probability', probabilityPercent: clamped });
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                  />
-                </div>
-              )}
               {editing.method === 'calendar' && (
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Date</label>
+                    <label className="block text-xs text-gray-500 mb-1">Début</label>
                     <input
                       type="date"
                       value={editing.startDate || ''}
@@ -550,19 +433,18 @@ const GameLogicPanel: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Heure</label>
+                    <label className="block text-xs text-gray-500 mb-1">Fin</label>
                     <input
-                      type="time"
-                      value={editing.startTime || ''}
-                      onChange={(e) => setEditing({ ...editing, startTime: e.target.value })}
+                      type="date"
+                      value={editing.endDate || ''}
+                      onChange={(e) => setEditing({ ...editing, endDate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                     />
                   </div>
                 </div>
               )}
-            </>
-            )}
-            <div className="mt-3 flex items-center justify-end space-x-2">
+            </div>
+            <div className="mt-5 flex items-center justify-end space-x-2">
               <button
                 className="px-4 py-2 rounded border border-gray-300 text-gray-700"
                 onClick={() => { setIsModalOpen(false); setEditing(null); }}
@@ -571,27 +453,13 @@ const GameLogicPanel: React.FC = () => {
               </button>
               <button
                 className="px-4 py-2 rounded bg-[hsl(var(--primary))] text-white"
-                onClick={() => {
-                  if (editing) {
-                    const payload = {
-                      ...editing,
-                      method: editing.method === 'immediate' ? 'probability' : editing.method,
-                      probabilityPercent:
-                        (editing.method === 'probability' || editing.method === 'immediate')
-                          ? Math.max(0, Math.min(100, Number(editing.probabilityPercent ?? 100)))
-                          : undefined,
-                    } as typeof editing;
-                    handleUpdatePrize(payload);
-                  }
-                  setIsModalOpen(false);
-                  setEditing(null);
-                }}
+                onClick={() => { if (editing) updatePrize(editing); setIsModalOpen(false); setEditing(null); }}
               >
                 Enregistrer
               </button>
             </div>
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   );

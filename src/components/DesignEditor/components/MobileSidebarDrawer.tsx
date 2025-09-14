@@ -7,17 +7,15 @@ import {
   Palette,
   Layers,
   Settings,
+  Gamepad2,
   RotateCcw,
   RotateCw
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
+import LayersPanel from '../panels/LayersPanel';
 import CampaignConfigPanel from '../panels/CampaignConfigPanel';
-
-// Lazy-loaded heavy panels
-const loadLayersPanel = () => import('../panels/LayersPanel');
-
-const LazyLayersPanel = React.lazy(loadLayersPanel);
+import GameLogicPanel from '../panels/GameLogicPanel';
 
 interface MobileSidebarDrawerProps {
   onAddElement: (element: any) => void;
@@ -60,7 +58,8 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     { id: 'assets', label: 'Éléments', icon: Plus, color: '#3B82F6' },
     { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
     { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
-    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' }
+    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' },
+    { id: 'gamelogic', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' }
   ];
 
   // Device detection: show bottom bar only on real mobile devices
@@ -84,35 +83,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     }
   }, [selectedElement, disableAutoOpen]);
 
-  // Prefetch on hover/touch to smooth first render of heavy tabs
-  const prefetchTab = (tabId: string) => {
-    if (tabId === 'layers') {
-      loadLayersPanel();
-    }
-  };
-
-  // Idle prefetch for heavy tabs to reduce first-open delay without blocking startup
-  React.useEffect(() => {
-    const win: any = typeof window !== 'undefined' ? window : undefined;
-    const schedule = (cb: () => void) =>
-      win && typeof win.requestIdleCallback === 'function'
-        ? win.requestIdleCallback(cb, { timeout: 2000 })
-        : setTimeout(cb, 1200);
-    const cancel = (id: any) =>
-      win && typeof win.cancelIdleCallback === 'function' ? win.cancelIdleCallback(id) : clearTimeout(id);
-
-    const id = schedule(() => {
-      try {
-        if (activeTab !== 'layers') {
-          loadLayersPanel();
-        }
-      } catch (_) {
-        // best-effort
-      }
-    });
-    return () => cancel(id);
-  }, [activeTab]);
-
   const renderPanel = (tabId: string) => {
     switch (tabId) {
       case 'assets':
@@ -133,12 +103,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
         );
       case 'layers':
         return (
-          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des calques…</div>}>
-            <LazyLayersPanel 
-              elements={elements} 
-              onElementsChange={onElementsChange || (() => {})} 
-            />
-          </React.Suspense>
+          <LayersPanel 
+            elements={elements} 
+            onElementsChange={onElementsChange || (() => {})} 
+          />
         );
       case 'campaign':
         return (
@@ -147,6 +115,8 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             onConfigChange={onCampaignConfigChange || (() => {})} 
           />
         );
+      case 'gamelogic':
+        return <GameLogicPanel />;
       default:
         return null;
     }
@@ -163,7 +133,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/20 z-30"
-              data-canvas-ui="1"
               onClick={() => setIsMinimized(true)}
             />
           )}
@@ -178,7 +147,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             y: isMinimized ? '100%' : '20%'
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="mobile-sidebar-drawer fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
+          className="fixed left-0 right-0 z-40 bg-white rounded-t-3xl shadow-2xl border-t border-gray-200"
           style={{
             height: '85vh',
             // Leave space for the persistent tab bar AND device safe area
@@ -250,7 +219,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             opacity: 1,
             display: 'block'
           }}
-          data-canvas-ui="1"
         >
           <div className="flex items-center justify-between px-2 py-2 gap-2">
             {/* Undo/Redo controls */}
@@ -285,8 +253,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                       setActiveTab(tab.id);
                       setIsMinimized(false);
                     }}
-                    onMouseEnter={() => prefetchTab(tab.id)}
-                    onTouchStart={() => prefetchTab(tab.id)}
                     onTouchEnd={() => {
                       setActiveTab(tab.id);
                       setIsMinimized(false);

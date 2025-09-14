@@ -18,7 +18,7 @@ const AutoResponsiveIndicator: React.FC<AutoResponsiveIndicatorProps> = ({
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 flex items-center gap-2">
-        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <Zap className="w-4 h-4 text-[hsl(var(--primary))]" />
         <span className="text-sm font-medium text-gray-700">Auto-Responsive</span>
         {issueCount === 0 ? (

@@ -9,19 +9,19 @@ interface TextEffectsPanelProps {
 const textEffects = [
   {
     id: 'none',
-    name: 'Aucun',
+    name: 'None',
     css: {}
   },
   {
     id: 'shadow',
-    name: 'Ombre',
+    name: 'Shadow',
     css: {
       textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
     }
   },
   {
-    id: 'elevation',
-    name: 'Élévation',
+    id: 'lift',
+    name: 'Lift',
     css: {
       textShadow: '0 2px 4px rgba(0,0,0,0.3)',
       transform: 'translateY(-1px)'
@@ -29,15 +29,16 @@ const textEffects = [
   },
   {
     id: 'hollow',
-    name: 'Creux',
+    name: 'Hollow',
     css: {
       color: 'transparent',
-      WebkitTextStroke: '2px #000000'
+      WebkitTextStroke: '2px #000000',
+      textStroke: '2px #000000'
     }
   },
   {
     id: 'splice',
-    name: 'Découpe',
+    name: 'Splice',
     css: {
       textShadow: '3px 3px 0px rgba(0,0,0,0.3)',
       color: '#000000'
@@ -45,7 +46,7 @@ const textEffects = [
   },
   {
     id: 'outline',
-    name: 'Contour',
+    name: 'Outline',
     css: {
       color: '#000000',
       textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff'
@@ -53,7 +54,7 @@ const textEffects = [
   },
   {
     id: 'echo',
-    name: 'Écho',
+    name: 'Echo',
     css: {
       textShadow: '2px 2px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.2), 6px 6px 0px rgba(0,0,0,0.1)',
       color: '#000000'
@@ -69,16 +70,15 @@ const textEffects = [
   },
   {
     id: 'neon',
-    name: 'Néon',
+    name: 'Neon',
     css: {
       color: '#ff00ff',
-      // Softer layered preview glow
-      textShadow: '0 0 2px rgba(255,255,255,0.6), 0 0 6px rgba(255,0,255,0.7), 0 0 12px rgba(255,0,255,0.5), 0 0 22px rgba(255,0,255,0.35), 0 0 36px rgba(255,0,255,0.2)'
+      textShadow: '0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 15px #ff00ff, 0 0 20px #ff00ff'
     }
   },
   {
     id: 'gradient',
-    name: 'Dégradé',
+    name: 'Gradient',
     css: {
       color: 'transparent',
       WebkitTextFillColor: 'transparent',
@@ -89,7 +89,7 @@ const textEffects = [
   },
   {
     id: 'background',
-    name: 'Fond',
+    name: 'Background',
     css: {
       backgroundColor: 'rgba(251,255,0,1)',
       color: '#000000',
@@ -117,12 +117,9 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
   const [outlineThickness, setOutlineThickness] = useState(50);
   const [outlineColor, setOutlineColor] = useState('#ffffff');
   
-  // Hollow (Creux) controls
-  const [hollowThickness, setHollowThickness] = useState(50);
-  
   // Background controls
   const [backgroundRoundness, setBackgroundRoundness] = useState(50);
-  const [backgroundSpread, setBackgroundSpread] = useState(0);
+  const [backgroundSpread, setBackgroundSpread] = useState(50);
   const [backgroundTransparency, setBackgroundTransparency] = useState(100);
   const [backgroundColor, setBackgroundColor] = useState('#fbff00');
   
@@ -139,15 +136,11 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
   const [glitchColorA, setGlitchColorA] = useState('#00ffff');
   const [glitchColorB, setGlitchColorB] = useState('#ff00ff');
 
-  // Neon colors (primary/secondary)
-  const [neonColorA, setNeonColorA] = useState('#ff00ff');
-  const [neonColorB, setNeonColorB] = useState('#00ffff');
-
-  // Elevation controls (0..100 logical)
-  const [elevationStrength, setElevationStrength] = useState(30);
-  const [elevationBlur, setElevationBlur] = useState(20);
-  const [elevationTransparency, setElevationTransparency] = useState(30);
-  const [elevationColor, setElevationColor] = useState('#000000');
+  // Lift controls (0..100 logical)
+  const [liftStrength, setLiftStrength] = useState(30);
+  const [liftBlur, setLiftBlur] = useState(20);
+  const [liftTransparency, setLiftTransparency] = useState(30);
+  const [liftColor, setLiftColor] = useState('#000000');
 
   // Fonction utilitaire pour convertir hex en rgb
   const hexToRgb = (hex: string): string => {
@@ -155,88 +148,6 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
   };
 
-  // (removed colorToRgb; using currentColor strategy for live updates)
-
-
-  // Snapshot all adjustable parameters for persistence on the element
-  const collectCurrentParams = () => ({
-    // shadow
-    shadowOffset,
-    shadowDirection,
-    shadowBlur,
-    shadowTransparency,
-    shadowColor,
-    // outline
-    outlineThickness,
-    outlineColor,
-    // background
-    backgroundRoundness,
-    backgroundSpread,
-    backgroundTransparency,
-    backgroundColor,
-    // general/effect
-    effectColor,
-    // gradient
-    gradientStart,
-    gradientEnd,
-    gradientAngle,
-    // glitch
-    glitchColorA,
-    glitchColorB,
-    // neon
-    neonColorA,
-    neonColorB,
-    // elevation
-    elevationStrength,
-    elevationBlur,
-    elevationTransparency,
-    elevationColor,
-    // hollow
-    hollowThickness,
-  });
-
-  // Rehydrate panel state from the selected element if it already has an effect with saved params
-  useEffect(() => {
-    const adv = (selectedElement as any)?.advancedStyle;
-    if (!adv) return;
-    if (adv.id && adv.id !== selectedEffect) {
-      setSelectedEffect(adv.id);
-    }
-    const p = (adv as any).params || {};
-    // Apply saved params if present (guard each to avoid clobbering when absent)
-    if (typeof p.shadowOffset === 'number') setShadowOffset(p.shadowOffset);
-    if (typeof p.shadowDirection === 'number') setShadowDirection(p.shadowDirection);
-    if (typeof p.shadowBlur === 'number') setShadowBlur(p.shadowBlur);
-    if (typeof p.shadowTransparency === 'number') setShadowTransparency(p.shadowTransparency);
-    if (typeof p.shadowColor === 'string') setShadowColor(p.shadowColor);
-
-    if (typeof p.outlineThickness === 'number') setOutlineThickness(p.outlineThickness);
-    if (typeof p.outlineColor === 'string') setOutlineColor(p.outlineColor);
-
-    if (typeof p.backgroundRoundness === 'number') setBackgroundRoundness(p.backgroundRoundness);
-    if (typeof p.backgroundSpread === 'number') setBackgroundSpread(p.backgroundSpread);
-    if (typeof p.backgroundTransparency === 'number') setBackgroundTransparency(p.backgroundTransparency);
-    if (typeof p.backgroundColor === 'string') setBackgroundColor(p.backgroundColor);
-
-    if (typeof p.effectColor === 'string') setEffectColor(p.effectColor);
-
-    if (typeof p.gradientStart === 'string') setGradientStart(p.gradientStart);
-    if (typeof p.gradientEnd === 'string') setGradientEnd(p.gradientEnd);
-    if (typeof p.gradientAngle === 'number') setGradientAngle(p.gradientAngle);
-
-    if (typeof p.glitchColorA === 'string') setGlitchColorA(p.glitchColorA);
-    if (typeof p.glitchColorB === 'string') setGlitchColorB(p.glitchColorB);
-
-    if (typeof p.neonColorA === 'string') setNeonColorA(p.neonColorA);
-    if (typeof p.neonColorB === 'string') setNeonColorB(p.neonColorB);
-
-    if (typeof p.elevationStrength === 'number') setElevationStrength(p.elevationStrength);
-    if (typeof p.elevationBlur === 'number') setElevationBlur(p.elevationBlur);
-    if (typeof p.elevationTransparency === 'number') setElevationTransparency(p.elevationTransparency);
-    if (typeof p.elevationColor === 'string') setElevationColor(p.elevationColor);
-
-    if (typeof p.hollowThickness === 'number') setHollowThickness(p.hollowThickness);
-  }, [selectedElement]);
 
   // Mettre à jour l'effet en temps réel quand les contrôles changent
   useEffect(() => {
@@ -248,8 +159,8 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     }
   }, [selectedEffect, shadowOffset, shadowDirection, shadowBlur, shadowTransparency, shadowColor, 
       outlineThickness, outlineColor, backgroundRoundness, backgroundSpread, backgroundTransparency, 
-      backgroundColor, effectColor, gradientStart, gradientEnd, gradientAngle, glitchColorA, glitchColorB, neonColorA, neonColorB,
-      elevationStrength, elevationBlur, elevationTransparency, elevationColor, hollowThickness, selectedElement?.color, selectedElement?.fontSize]);
+      backgroundColor, effectColor, gradientStart, gradientEnd, gradientAngle, glitchColorA, glitchColorB,
+      liftStrength, liftBlur, liftTransparency, liftColor, selectedElement?.color, selectedElement?.fontSize]);
 
   const applyEffect = (effect: any) => {
     setSelectedEffect(effect.id);
@@ -281,11 +192,10 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         
       case 'background':
         const fontSize = selectedElement?.fontSize ?? 24;
-        const vPadBase = Math.round(Math.max(6, fontSize * 0.34));
-        const spreadScale = Math.min(1, Math.max(0, backgroundSpread / 100));
-        // Canva-like balance: let horizontal follow vertical but stay a bit smaller
-        const vPadAug = vPadBase + Math.round(spreadScale * 40); // 0..40px extra vertically
-        const hPad = Math.round(vPadAug * 0.7 + fontSize * 0.08); // tie H to V for natural look
+        const vPad = Math.round(Math.max(6, fontSize * 0.35));
+        const spreadDelta = (backgroundSpread / 100) * 40; // apply uniformly
+        const hPad = 8 + spreadDelta; // keep existing 8px min horizontally
+        const vPadAug = vPad + spreadDelta; // add spread vertically too
         {
           const progress = Math.min(100, Math.max(1, backgroundRoundness)) / 100; // 0.01..1
           const parseNumber = (v: any, fb = 0) => {
@@ -298,15 +208,16 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           const actualH = parseNumber((selectedElement as any)?.height, 0);
           const lh = parseNumber((selectedElement as any)?.lineHeight, 1.2);
           const approxHeight = Math.max(1, (actualH || (fontSize * lh)) + vPadAug * 2); // px includes spread vertically
-          const maxRadius = approxHeight / 2; // perfect pill at 100%
-          // Linear mapping like Canva: 0% = 0px, 100% = height/2
-          const radiusPx = +(Math.min(maxRadius, Math.max(0, progress * maxRadius))).toFixed(2);
+          const fudge = 2; // px safety margin to ensure rounded ends
+          const maxRadius = approxHeight / 2 + fudge; // theoretical pill radius + safety
+          // Sqrt easing: more rounding earlier, very smooth from 98→100
+          const eased = Math.sqrt(progress);
+          const radiusPx = +(Math.min(maxRadius, Math.max(0, eased * maxRadius))).toFixed(2);
           combinedCSS = {
             ...combinedCSS,
             backgroundColor: `rgba(${hexToRgb(backgroundColor)}, ${backgroundTransparency / 100})`,
             color: selectedElement?.color ?? '#000000',
             padding: `${vPadAug}px ${hPad}px`,
-            lineHeight: 1.1 as any,
             display: 'inline-block',
             boxSizing: 'border-box',
             textShadow: 'none',
@@ -319,14 +230,14 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         ;
         break;
 
-      case 'elevation': {
-        const dy = -Math.round((elevationStrength / 100) * 6); // up to -6px elevation
-        const blurPx = Math.round((elevationBlur / 100) * 20); // up to 20px blur
-        const alpha = Math.min(1, elevationTransparency / 100);
+      case 'lift': {
+        const dy = -Math.round((liftStrength / 100) * 6); // up to -6px lift
+        const blurPx = Math.round((liftBlur / 100) * 20); // up to 20px blur
+        const alpha = Math.min(1, liftTransparency / 100);
         combinedCSS = {
           ...combinedCSS,
           transform: `translateY(${dy}px)`,
-          textShadow: `0 ${Math.abs(dy)}px ${blurPx}px rgba(${hexToRgb(elevationColor)}, ${alpha})`
+          textShadow: `0 ${Math.abs(dy)}px ${blurPx}px rgba(${hexToRgb(liftColor)}, ${alpha})`
         };
         break;
       }
@@ -385,54 +296,25 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
         break;
       }
 
-      case 'hollow': {
-        const strokePx = Math.max(1, Math.round((hollowThickness / 100) * 12)); // 0..12px
+      case 'hollow':
         combinedCSS = {
           ...combinedCSS,
-          // Use currentColor for stroke so Design tab color propagates instantly
-          color: (selectedElement?.color as string) || undefined,
-          WebkitTextFillColor: 'transparent' as any,
-          WebkitTextStroke: `${strokePx}px currentColor`,
-          textShadow: 'none'
-        } as any;
+          WebkitTextStroke: `2px ${effectColor}`,
+          textStroke: `2px ${effectColor}`
+        };
         break;
-      }
         
       case 'neon':
         {
-          // Map intensity 0..100 -> blur scaling
-          const intensity = Math.max(0, Math.min(100, shadowOffset));
+          const intensity = Math.max(1, Math.round((shadowOffset / 100) * 4));
           const layers: string[] = [];
-          // subtle inner white glow for crispness
-          layers.push(`0 0 2px rgba(255,255,255,0.65)`);
-          // Build layered outer glows with falloff
-          const steps = 5; // consistent pleasant stacking
-          const stepSize = 4 + (intensity / 100) * 6; // 4..10
-          // Blend neonColorA -> neonColorB across layers
-          const parseRgb = (hex: string) => {
-            const [r, g, b] = hexToRgb(hex).split(',').map(v => parseInt(v.trim(), 10));
-            return { r, g, b };
-          };
-          const a = parseRgb(neonColorA);
-          const b = parseRgb(neonColorB);
-          const lerp = (x: number, y: number, t: number) => Math.round(x + (y - x) * t);
-          const alphas = [0.7, 0.55, 0.4, 0.28, 0.16];
-          for (let i = 1; i <= steps; i++) {
-            const blur = Math.round(i * stepSize * (i === steps ? 1.2 : 1));
-            const t = (i - 1) / (steps - 1);
-            const rr = lerp(a.r, b.r, t);
-            const gg = lerp(a.g, b.g, t);
-            const bb = lerp(a.b, b.b, t);
-            const alpha = alphas[i - 1] ?? 0.2;
-            layers.push(`0 0 ${blur}px rgba(${rr}, ${gg}, ${bb}, ${alpha})`);
+          for (let i = 1; i <= 4 + intensity; i++) {
+            const blur = i * 4;
+            layers.push(`0 0 ${blur}px ${effectColor}`);
           }
-          // Prefer prop color; if missing, use current computed DOM color
-          const el = document.querySelector('[data-selected="true"][data-type="text"]') as HTMLElement | null;
-          const liveColor = (selectedElement?.color as string) || (el ? getComputedStyle(el).color : undefined);
           combinedCSS = {
             ...combinedCSS,
-            // Ensure fill reflects Design tab color and glow follows via currentColor
-            color: liveColor,
+            color: effectColor,
             textShadow: layers.join(', ')
           };
         }
@@ -461,8 +343,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           id: effect.id,
           name: effect.name,
           category: 'effect',
-          css: combinedCSS,
-          params: collectCurrentParams()
+          css: combinedCSS
         }
       });
     } else {
@@ -476,8 +357,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               id: effect.id,
               name: effect.name,
               category: 'effect',
-              css: combinedCSS,
-              params: collectCurrentParams()
+              css: combinedCSS
             }
           }
         });
@@ -493,7 +373,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           width: 200,
           height: 40,
           fontSize: 24,
-          fontFamily: 'Open Sans',
+          fontFamily: 'Arial',
           color: '#000000',
           customCSS: combinedCSS,
           advancedStyle: {
@@ -518,7 +398,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Offset */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Décalage</label>
+              <label className="text-sm font-medium text-gray-700">Offset</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -567,7 +447,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Blur */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Flou</label>
+              <label className="text-sm font-medium text-gray-700">Blur</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -590,7 +470,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Transparency */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Transparence</label>
+              <label className="text-sm font-medium text-gray-700">Transparency</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -613,7 +493,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur</label>
+              <label className="text-sm font-medium text-gray-700">Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -622,34 +502,6 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
                 />
                 <span className="text-sm text-gray-500 font-mono">{effectColor}</span>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'elevation':
-        return (
-          <div className="space-y-4">
-            {/* Intensité */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Intensité</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={elevationStrength}
-                  onChange={(e) => setElevationStrength(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${elevationStrength}%, #e5e7eb ${elevationStrength}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setElevationStrength(Math.max(0, elevationStrength - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{elevationStrength}</span>
-                  <button onClick={() => setElevationStrength(Math.min(100, elevationStrength + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
               </div>
             </div>
           </div>
@@ -683,7 +535,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Start Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur de début</label>
+              <label className="text-sm font-medium text-gray-700">Start Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -697,7 +549,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* End Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur de fin</label>
+              <label className="text-sm font-medium text-gray-700">End Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -716,7 +568,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Thickness */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Épaisseur</label>
+              <label className="text-sm font-medium text-gray-700">Thickness</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -758,7 +610,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Roundness */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Rondeur</label>
+              <label className="text-sm font-medium text-gray-700">Roundness</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -782,7 +634,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Spread */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Étendue</label>
+              <label className="text-sm font-medium text-gray-700">Spread</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -828,7 +680,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Background Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur du fond</label>
+              <label className="text-sm font-medium text-gray-700">Background Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -842,7 +694,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Text Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur du texte</label>
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -865,7 +717,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
           <div className="space-y-4">
             {/* Intensity */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Intensité</label>
+              <label className="text-sm font-medium text-gray-700">Intensity</label>
               <div className="flex items-center space-x-3">
                 <input
                   type="range"
@@ -883,33 +735,6 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   <span className="min-w-[2rem] text-center">{shadowOffset}</span>
                   <button onClick={() => setShadowOffset(Math.min(100, shadowOffset + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
                 </div>
-              </div>
-            </div>
-
-            {/* Neon Colors */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur principale</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={neonColorA}
-                  onChange={(e) => setNeonColorA(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{neonColorA}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur secondaire</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={neonColorB}
-                  onChange={(e) => setNeonColorB(e.target.value)}
-                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500 font-mono">{neonColorB}</span>
               </div>
             </div>
           </div>
@@ -969,7 +794,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
             {/* Split Colors */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleurs séparées</label>
+              <label className="text-sm font-medium text-gray-700">Split Colors</label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
                   <input
@@ -1178,32 +1003,9 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
       case 'hollow':
         return (
           <div className="space-y-4">
-            {/* Épaisseur */}
+            {/* Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Épaisseur</label>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={hollowThickness}
-                  onChange={(e) => setHollowThickness(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #8d117a 0%, #8d117a ${hollowThickness}%, #e5e7eb ${hollowThickness}%, #e5e7eb 100%)`
-                  }}
-                />
-                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
-                  <button onClick={() => setHollowThickness(Math.max(0, hollowThickness - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
-                  <span className="min-w-[2rem] text-center">{hollowThickness}</span>
-                  <button onClick={() => setHollowThickness(Math.min(100, hollowThickness + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Couleur du contour (optionnel) */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur du contour</label>
+              <label className="text-sm font-medium text-gray-700">Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -1215,9 +1017,111 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
               </div>
             </div>
 
-            {/* Couleur du texte (pour retour à normal si besoin) */}
+            {/* Text Color */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleur du texte</label>
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={selectedElement?.color || '#000000'}
+                  onChange={(e) => onElementUpdate && onElementUpdate({ color: e.target.value })}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{selectedElement?.color || '#000000'}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'lift':
+        return (
+          <div className="space-y-4">
+            {/* Strength */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Strength</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={liftStrength}
+                  onChange={(e) => setLiftStrength(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftStrength}%, #e5e7eb ${liftStrength}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setLiftStrength(Math.max(0, liftStrength - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{liftStrength}</span>
+                  <button onClick={() => setLiftStrength(Math.min(100, liftStrength + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Blur */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Blur</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={liftBlur}
+                  onChange={(e) => setLiftBlur(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftBlur}%, #e5e7eb ${liftBlur}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setLiftBlur(Math.max(0, liftBlur - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{liftBlur}</span>
+                  <button onClick={() => setLiftBlur(Math.min(100, liftBlur + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Transparency */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Transparency</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={liftTransparency}
+                  onChange={(e) => setLiftTransparency(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${liftTransparency}%, #e5e7eb ${liftTransparency}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="flex items-center space-x-1 bg-gray-800 text-white px-2 py-1 rounded text-sm">
+                  <button onClick={() => setLiftTransparency(Math.max(0, liftTransparency - 5))} className="hover:bg-gray-700 px-1 rounded">−</button>
+                  <span className="min-w-[2rem] text-center">{liftTransparency}</span>
+                  <button onClick={() => setLiftTransparency(Math.min(100, liftTransparency + 5))} className="hover:bg-gray-700 px-1 rounded">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Shadow Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Shadow Color</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  value={liftColor}
+                  onChange={(e) => setLiftColor(e.target.value)}
+                  className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 font-mono">{liftColor}</span>
+              </div>
+            </div>
+
+            {/* Text Color */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Text Color</label>
               <div className="flex items-center space-x-2">
                 <input
                   type="color"
@@ -1257,7 +1161,7 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Effets</h2>
+        <h2 className="text-lg font-semibold text-gray-800">Effects</h2>
         <button
           onClick={onBack}
           className="text-gray-500 hover:text-gray-700 text-xl"

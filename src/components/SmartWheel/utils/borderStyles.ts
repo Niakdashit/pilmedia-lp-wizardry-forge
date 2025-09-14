@@ -291,6 +291,18 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     }
   },
   
+  gold: {
+    name: 'Or',
+    type: 'luxury',
+    colors: ['#FFD700', '#DAA520', '#B8860B'],
+    width: 16,
+    effects: {
+      metallic: true,
+      glow: true,
+      shadow: true
+    }
+  },
+  
   // Image-based gold ring template (uses PNG/SVG ring asset)
   goldRing: {
     name: 'Or (Template)',
@@ -302,6 +314,17 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
       shadow: true
     },
     imageSrc: '/assets/wheel/ring-gold.png'
+  },
+  
+  silver: {
+    name: 'Argent',
+    type: 'metallic',
+    colors: ['#C0C0C0', '#A8A8A8', '#808080'],
+    width: 12,
+    effects: {
+      metallic: true,
+      shadow: true
+    }
   },
   
   // Image-based silver ring template (uses PNG/SVG ring asset)

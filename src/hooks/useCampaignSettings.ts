@@ -10,7 +10,6 @@ export type CampaignSettings = {
   email_verification?: any;
   legal?: any;
   winners?: any;
-  output?: any;
   data_push?: any;
   advanced?: any;
   opt_in?: any;
@@ -88,7 +87,6 @@ export const useCampaignSettings = () => {
         email_verification: values.email_verification ?? null,
         legal: values.legal ?? null,
         winners: values.winners ?? null,
-        output: values.output ?? null,
         data_push: values.data_push ?? null,
         advanced: values.advanced ?? null,
         opt_in: values.opt_in ?? null,

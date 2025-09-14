@@ -83,7 +83,7 @@ const FluidTextElement: React.FC<{
   };
 
   // Use simple precise drag system
-  const { isDragging, handleDragStart, cancelDrag } = useSimplePreciseDrag({
+  const { isDragging, handleDragStart } = useSimplePreciseDrag({
     elementRef,
     containerRef: containerRef || { current: null },
     deviceConfig: { x: config.x || 0, y: config.y || 0, width: 100, height: 30 },
@@ -98,7 +98,21 @@ const FluidTextElement: React.FC<{
     }));
   };
 
-  // Double-tap logic moved to onTouchEnd; desktop uses onDoubleClick.
+  const handleDoubleTap = (e: React.MouseEvent | React.TouchEvent, textId: string, currentText: string) => {
+    e.stopPropagation();
+    const now = Date.now();
+    const timeSince = now - lastTapTimeRef.current;
+    
+    if (timeSince < 300 && timeSince > 0) {
+      setEditingTextId(textId);
+      setEditingText(currentText);
+    } else {
+      lastTapTimeRef.current = now;
+      setTimeout(() => {
+        if (!isEditing) onElementSelect(textId);
+      }, 300);
+    }
+  };
 
   const handleTextEditSubmit = (textId: string) => {
     handleTextEdit(textId, editingText);
@@ -124,16 +138,16 @@ const FluidTextElement: React.FC<{
     top: `${(config.y ?? defaultY ?? 0)}px`,
     fontSize: config.fontSize ? `${config.fontSize}px` : (sizeMap[config.size || 'base'] || '14px'),
     color: config.color || '#000000',
-    fontFamily: config.fontFamily || 'Open Sans, sans-serif',
+    fontFamily: config.fontFamily || 'Inter, sans-serif',
     fontWeight: config.bold ? 'bold' : (config.fontWeight || 'normal'),
     fontStyle: config.italic ? 'italic' : (config.fontStyle || 'normal'),
     textDecoration: config.underline ? 'underline' : (config.textDecoration || 'none'),
     textAlign: (previewDevice === 'mobile' ? (config.textAlign || 'center') : (config.textAlign || 'left')) as any,
     zIndex: isSelected ? 1000 : 200,
-    cursor: isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab'),
-    userSelect: isEditing ? 'text' : 'none',
+    cursor: isDragging ? 'grabbing' : 'grab',
+    userSelect: 'none',
     whiteSpace: previewDevice === 'mobile' ? 'normal' : 'nowrap',
-    touchAction: isEditing ? 'auto' : 'none',
+    touchAction: 'none',
     width: previewDevice === 'mobile'
       ? (config.width != null ? `${config.width}px` : '100%')
       : (config.width != null ? `${config.width}px` : undefined),
@@ -205,33 +219,8 @@ const FluidTextElement: React.FC<{
       style={textStyle}
       onClick={(e) => {
         if (!isEditing) {
-          // Single click/tap -> select only
-          e.stopPropagation();
-          if (!isSelected) onElementSelect(customText.id.toString());
+          handleDoubleTap(e, customText.id.toString(), config.text || 'Texte personnalisé');
         }
-      }}
-      onDoubleClick={(e) => {
-        // Desktop: enter edit mode immediately on double click
-        e.stopPropagation();
-        if (!isEditing) {
-          cancelDrag();
-          setEditingTextId(customText.id.toString());
-          setEditingText(config.text || 'Texte personnalisé');
-        }
-      }}
-      onTouchEnd={(e) => {
-        // Mobile: detect double tap to enter edit mode
-        const now = Date.now();
-        const timeSince = now - lastTapTimeRef.current;
-        if (timeSince > 0 && timeSince < 300) {
-          e.stopPropagation();
-          if (!isEditing) {
-            cancelDrag();
-            setEditingTextId(customText.id.toString());
-            setEditingText(config.text || 'Texte personnalisé');
-          }
-        }
-        lastTapTimeRef.current = now;
       }}
       onPointerDown={handlePointerDown}
       className="group hover:shadow-lg"
@@ -247,18 +236,14 @@ const FluidTextElement: React.FC<{
               handleTextEditSubmit(customText.id.toString());
             }
           }}
-          
           autoFocus
-          className="canvas-text-editor bg-transparent border-none outline-none w-full"
+          className="bg-transparent border-none outline-none w-full"
           style={{
             color: config.color || '#000000',
-            fontFamily: config.fontFamily || 'Open Sans, sans-serif',
+            fontFamily: config.fontFamily || 'Inter, sans-serif',
             fontSize: 'inherit',
             fontWeight: 'inherit',
-            fontStyle: 'inherit',
-            lineHeight: 'inherit',
-            userSelect: 'text',
-            WebkitUserSelect: 'text'
+            fontStyle: 'inherit'
           }}
         />
       ) : (
@@ -274,7 +259,6 @@ const FluidTextElement: React.FC<{
             className="absolute -top-6 -left-6 bg-green-500 text-white p-1.5 rounded-full shadow-lg opacity-100 transition-opacity touch-manipulation"
             onClick={(e) => {
               e.stopPropagation();
-              cancelDrag();
               setEditingTextId(customText.id.toString());
               setEditingText(config.text || 'Texte personnalisé');
             }}

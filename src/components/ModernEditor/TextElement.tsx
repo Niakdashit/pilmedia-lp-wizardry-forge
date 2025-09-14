@@ -70,7 +70,7 @@ const TextElement: React.FC<TextElementProps> = ({
       fontWeight: element.bold ? 'bold' : (element.fontWeight || 'normal'),
       fontStyle: element.italic ? 'italic' : (element.fontStyle || 'normal'),
       textDecoration: element.underline ? 'underline' : (element.textDecoration || 'none'),
-      fontFamily: element.fontFamily || 'Open Sans, sans-serif',
+      fontFamily: element.fontFamily || 'Inter, sans-serif',
       cursor: isDragging ? 'grabbing' : 'grab',
       userSelect: 'none',
       transition: 'box-shadow 0.1s ease',

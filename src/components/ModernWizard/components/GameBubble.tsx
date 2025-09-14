@@ -58,9 +58,9 @@ const GameBubble: React.FC<GameBubbleProps> = ({
         </div>
       </div>
 
-      {/* Selection ring (static) */}
+      {/* Selection ring */}
       {isSelected && (
-        <div className="absolute inset-0 rounded-3xl border-2 border-[#841b60]"></div>
+        <div className="absolute inset-0 rounded-3xl border-2 border-[#841b60] animate-pulse"></div>
       )}
 
       {/* Tooltip */}
@@ -72,11 +72,11 @@ const GameBubble: React.FC<GameBubbleProps> = ({
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-black/80"></div>
       </div>
 
-      {/* Floating particles (removed animations) */}
+      {/* Floating particles */}
       {isSelected && (
         <>
-          <div className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-violet-400 rounded-full"></div>
+          <div className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full animate-ping"></div>
+          <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-violet-400 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
         </>
       )}
     </div>

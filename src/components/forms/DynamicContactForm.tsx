@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export type FieldConfig = {
   id: string;
@@ -28,34 +28,24 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   fields,
   onSubmit,
   submitLabel = "Envoyer",
-  defaultValues,
+  defaultValues = {},
   className = "",
   textStyles,
   inputBorderColor = "#E5E7EB",
   inputFocusColor = "#841b60"
 }) => {
-  // Stabilize defaultValues to avoid identity changes causing effects to loop
-  const stableDefaultValues = useMemo(() => defaultValues ?? {}, [defaultValues]);
-
-  const [formData, setFormData] = useState<Record<string, string>>(() => stableDefaultValues);
+  const [formData, setFormData] = useState<Record<string, string>>(defaultValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Keep form in sync when fields or defaultValues change
   useEffect(() => {
     const initial: Record<string, string> = {};
     fields.forEach((f) => {
-      initial[f.id] = stableDefaultValues[f.id] ?? '';
+      initial[f.id] = defaultValues[f.id] ?? '';
     });
-    // Only update state if values actually changed
-    const sameShape = Object.keys(initial).length === Object.keys(formData).length;
-    const sameValues = sameShape && fields.every(f => (formData[f.id] ?? '') === (initial[f.id] ?? ''));
-    if (!sameValues) {
-      setFormData(initial);
-    }
-    if (Object.keys(errors).length > 0) {
-      setErrors({});
-    }
-  }, [fields, stableDefaultValues]);
+    setFormData(initial);
+    setErrors({});
+  }, [fields, defaultValues]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -106,7 +96,10 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
     outline: "none"
   });
 
-  const getFocusClass = () => 'focus:ring-2';
+  const getFocusClass = () =>
+    inputFocusColor 
+      ? `focus:ring-2 focus:ring-[${inputFocusColor}]`
+      : "focus:ring-2 focus:ring-[#841b60]";
 
   const renderField = (field: FieldConfig) => {
     const baseProps = {
@@ -114,11 +107,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
       name: field.id,
       required: field.required,
       autoComplete: field.autoComplete || "on",
-      style: {
-        ...getInputStyle(),
-        // Override Tailwind ring color safely via CSS variable
-        ['--tw-ring-color' as any]: inputFocusColor || '#841b60',
-      },
+      style: getInputStyle(),
       className: `w-full px-4 py-2 border rounded-[2px] ${getFocusClass()}`,
       onChange: handleChange
     };
@@ -153,11 +142,10 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
               name={field.id}
               checked={formData[field.id] === 'true'}
               onChange={handleChange}
-              className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded-[2px] ring-2 ring-[#841b60]"
+              className="mr-2 w-4 h-4 text-[#841b60] border-gray-300 rounded-[2px] focus:ring-[#841b60]"
               style={{
                 borderColor: inputBorderColor,
-                outline: "none",
-                ['--tw-ring-color' as any]: inputFocusColor || '#841b60',
+                outline: "none"
               }}
             />
             <label htmlFor={field.id} className="text-sm text-gray-700">

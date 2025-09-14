@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
 
 const AppearanceStep: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getSettings, upsertSettings, error, saveDraft } = useCampaignSettings();
+  const navigate = useNavigate();
+  const { getSettings, upsertSettings, loading, error, saveDraft } = useCampaignSettings();
   const [form, setForm] = useState<Partial<CampaignSettings>>({});
   const campaignId = id || '';
 
@@ -44,21 +45,9 @@ const AppearanceStep: React.FC = () => {
     }
   };
 
-  // Listen to global save-and-close action from layout
-  useEffect(() => {
-    const onSaveAndClose = (_e: Event) => {
-      handleSave();
-    };
-    window.addEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
-    return () => {
-      window.removeEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, form]);
-
   return (
     <div className="space-y-6">
-      <div aria-hidden className="h-[1.75rem]" />
+      <h1 className="text-xl font-semibold font-brand text-primary-800">Apparence</h1>
       {error && (<div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>)}
 
       <div>
@@ -71,6 +60,11 @@ const AppearanceStep: React.FC = () => {
           <option value="light">Clair</option>
           <option value="dark">Sombre</option>
         </select>
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={() => navigate('virality')} className="px-3 py-1.5 border border-primary-200 rounded-lg text-sm text-primary-700 hover:bg-primary-50">Précédent</button>
+        <button onClick={handleSave} disabled={loading} className="px-3 py-1.5 rounded-lg text-white text-sm bg-brand hover:bg-brand-dark disabled:opacity-60">{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
       </div>
     </div>
   );

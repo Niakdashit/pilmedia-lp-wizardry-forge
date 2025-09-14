@@ -57,7 +57,7 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
     borderRadius: '0.5rem',
     textStyles: {
       title: {
-        fontFamily: 'Open Sans',
+        fontFamily: 'Inter',
         fontSize: '24px',
         fontWeight: 'bold',
         textAlign: 'center' as const,
@@ -65,7 +65,7 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
         lineHeight: '1.2'
       },
       description: {
-        fontFamily: 'Open Sans',
+        fontFamily: 'Inter',
         fontSize: '16px',
         fontWeight: 'normal',
         textAlign: 'left' as const,
@@ -73,7 +73,7 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
         lineHeight: '1.5'
       },
       label: {
-        fontFamily: 'Open Sans',
+        fontFamily: 'Inter',
         fontSize: '14px',
         fontWeight: 'normal',
         textAlign: 'left' as const,
@@ -81,7 +81,7 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
         lineHeight: '1.4'
       },
       button: {
-        fontFamily: 'Open Sans',
+        fontFamily: 'Inter',
         fontSize: '16px',
         fontWeight: 'bold',
         textAlign: 'center' as const,

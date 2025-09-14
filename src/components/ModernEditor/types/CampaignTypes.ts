@@ -33,16 +33,6 @@ export interface CampaignDesign {
   
   // Mobile specific
   mobileBackgroundImage?: string;
-  
-  // Quiz specific design configuration (optional)
-  quizConfig?: {
-    templateId?: string;
-    style?: {
-      backgroundColor?: string;
-      textColor?: string;
-      borderRadius?: string | number;
-    };
-  };
 }
 
 export interface CustomText {

@@ -27,24 +27,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   maxSize,
   buttonPosition,
   isMode1 = true,
-  formFields,
-  spinMode,
-  winProbability,
-  speed
+  formFields
 }) => {
-  // Forcer la mise à jour des couleurs des segments avec brandColors
-  const updatedSegments = useMemo(() => {
-    if (!segments || !Array.isArray(segments)) return segments;
-    
-    return segments.map((segment, index) => {
-      // Si le segment a la couleur par défaut et qu'on a des brandColors, utiliser brandColors.primary
-      if (segment.color === '#841b60' && brandColors?.primary) {
-        console.log(`🔧 SmartWheel: Forcing segment ${segment.id} color from #841b60 to ${brandColors.primary}`);
-        return { ...segment, color: brandColors.primary };
-      }
-      return segment;
-    });
-  }, [segments, brandColors?.primary]);
   const [currentBorderStyle, setCurrentBorderStyle] = useState(borderStyle);
   const [showBorderSelector, setShowBorderSelector] = useState(false);
   
@@ -56,48 +40,6 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   useEffect(() => {
     setCurrentBorderStyle(borderStyle);
   }, [borderStyle]);
-
-  // Log segment details when they change
-  useEffect(() => {
-    if (!segments || !Array.isArray(segments)) {
-      console.error('Invalid segments data:', segments);
-      return;
-    }
-    console.log('🎯 SmartWheel - Segments received:', segments.map(s => ({
-      id: s.id,
-      label: s.label,
-      color: s.color,
-      probability: s.probability
-    })));
-    console.log('🎯 SmartWheel - Brand colors received:', brandColors);
-    console.group('🎡 SmartWheel - Segments Update');
-    console.log('Number of segments:', segments.length);
-    console.log('Spin mode:', spinMode);
-    
-    const totalProbability = segments.reduce((sum, s) => {
-      if (!s) return sum;
-      return sum + (typeof s.probability === 'number' ? s.probability : 0);
-    }, 0);
-    
-    console.log('Total probability:', totalProbability);
-    
-    console.log('Segment details:');
-    segments.forEach((segment, index) => {
-      if (!segment) {
-        console.warn(`- [${index}] Segment is undefined or null`);
-        return;
-      }
-      
-      console.log(`- [${index}] ${segment.label || 'Unlabeled segment'}:`, {
-        probability: segment.probability,
-        isWinning: segment.isWinning,
-        prizeId: segment.prizeId,
-        type: typeof segment,
-        keys: Object.keys(segment)
-      });
-    });
-    console.groupEnd();
-  }, [segments, spinMode]);
 
   // Résoudre le thème
   const resolvedTheme = getTheme(theme, brandColors);
@@ -146,41 +88,29 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   // Animation de la roue
   const {
-    isSpinning = false,
-    rotation = 0,
-    targetRotation = 0,
-    currentSegment = null,
+    wheelState,
     spin
   } = useWheelAnimation({
     segments,
     theme: resolvedTheme,
     onResult: handleWheelResult,
-    disabled,
-    spinMode,
-    winProbability,
-    speed: speed === 'medium' ? 'normal' : speed // Map 'medium' to 'normal' for compatibility
-  }) || {};
-
-  // Create a stable wheelState object
-  const wheelState = useMemo(() => ({
-    isSpinning,
-    rotation,
-    targetRotation,
-    currentSegment
-  }), [isSpinning, rotation, targetRotation, currentSegment]);
+    disabled
+  });
 
   // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
-  const { canvasRef, centerImgReady } = useSmartWheelRenderer({
-    segments: updatedSegments,
+  const {
+    canvasRef,
+    centerImgReady
+  } = useSmartWheelRenderer({
+    segments,
     theme: resolvedTheme,
     wheelState,
     size: actualSize,
     borderStyle: currentBorderStyle,
-    customBorderColor,
+    customBorderColor: customBorderColor || brandColors?.primary,
     customBorderWidth,
     showBulbs,
-    disablePointerAnimation,
-    brandColors
+    disablePointerAnimation
   });
   
   const handleSpin = () => {
@@ -229,6 +159,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   };
 
   const finalButtonPosition = getOptimalButtonPosition();
+  console.log('🔵 Position finale du bouton:', finalButtonPosition);
 
   // Styles de disposition selon la position du bouton
   const getLayoutClasses = () => {

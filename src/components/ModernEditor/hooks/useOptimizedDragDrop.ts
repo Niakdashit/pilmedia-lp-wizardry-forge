@@ -133,7 +133,15 @@ export const useOptimizedDragDrop = ({
   // Enhanced element selection with snapping
   const handleElementSelectWithSnapping = useCallback((elementId: string) => {
     handleElementSelect(elementId);
-    // No visual pulse feedback per clean UI guidelines
+    
+    // Add visual feedback
+    const element = document.querySelector(`[data-element-id="${elementId}"]`);
+    if (element) {
+      element.classList.add('animate-pulse');
+      setTimeout(() => {
+        element.classList.remove('animate-pulse');
+      }, 200);
+    }
   }, [handleElementSelect]);
 
   // Cleanup on unmount

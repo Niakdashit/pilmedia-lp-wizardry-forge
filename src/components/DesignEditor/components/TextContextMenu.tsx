@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Trash2, Layers, MoreHorizontal, Clipboard, ChevronsUp, ChevronUp, ChevronDown, ChevronsDown } from 'lucide-react';
-import { createPortal } from 'react-dom';
-import { usePortalMenuPosition } from '../hooks/usePortalMenuPosition';
+import { Copy, Clipboard, Move, Trash2, AlignLeft, MoreHorizontal } from 'lucide-react';
 
 interface TextContextMenuProps {
   element: any;
@@ -9,11 +7,7 @@ interface TextContextMenuProps {
   onPaste: () => void;
   onDuplicate: (element: any) => void;
   onDelete: (id: string) => void;
-  onAlign: (alignment: string) => void; // kept for backward-compat (unused section removed)
-  onBringToFront?: () => void;
-  onBringForward?: () => void;
-  onSendBackward?: () => void;
-  onSendToBack?: () => void;
+  onAlign: (alignment: string) => void;
   canPaste?: boolean;
 }
 
@@ -30,10 +24,6 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
   onDuplicate,
   onDelete,
   onAlign,
-  onBringToFront,
-  onBringForward,
-  onSendBackward,
-  onSendToBack,
   canPaste = false
 }) => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -42,13 +32,7 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
     y: 0
   });
   const [showKebabMenu, setShowKebabMenu] = useState(false);
-  // Use shared hook to keep menu inside viewport
-  const { menuRef } = usePortalMenuPosition(
-    contextMenu.isOpen,
-    { x: contextMenu.x, y: contextMenu.y },
-    (p) => setContextMenu((cm) => ({ ...cm, ...p })),
-    8
-  );
+  const menuRef = useRef<HTMLDivElement>(null);
   const kebabRef = useRef<HTMLButtonElement>(null);
 
   // Fermer le menu si on clique ailleurs
@@ -70,8 +54,6 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    console.log('🖱️ Right-click detected on element:', element.id, 'at position:', e.clientX, e.clientY);
     
     setContextMenu({
       isOpen: true,
@@ -118,21 +100,8 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
     setContextMenu({ ...contextMenu, isOpen: false });
   };
 
-  // Layer order actions (restored)
-  const handleBringToFront = () => {
-    onBringToFront?.();
-    setContextMenu({ ...contextMenu, isOpen: false });
-  };
-  const handleBringForward = () => {
-    onBringForward?.();
-    setContextMenu({ ...contextMenu, isOpen: false });
-  };
-  const handleSendBackward = () => {
-    onSendBackward?.();
-    setContextMenu({ ...contextMenu, isOpen: false });
-  };
-  const handleSendToBack = () => {
-    onSendToBack?.();
+  const handleAlign = (alignment: string) => {
+    onAlign(alignment);
     setContextMenu({ ...contextMenu, isOpen: false });
   };
 
@@ -157,7 +126,7 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
       disabled: !canPaste
     },
     {
-      icon: Copy,
+      icon: Move,
       label: 'Dupliquer',
       shortcut: '⌘D',
       action: handleDuplicate
@@ -192,16 +161,15 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
         style={{ zIndex: 999 }}
       />
 
-      {/* Menu contextuel - render in a portal to avoid parent transforms */}
-      {contextMenu.isOpen && createPortal(
+      {/* Menu contextuel */}
+      {contextMenu.isOpen && (
         <div
           ref={menuRef}
-          className="fixed bg-gray-800 text-white rounded-lg shadow-xl border border-gray-700 py-1.5 z-50"
+          className="fixed bg-gray-800 text-white rounded-lg shadow-xl border border-gray-700 py-3 min-w-56 z-50"
           style={{
             left: contextMenu.x,
             top: contextMenu.y,
-            zIndex: 9999,
-            width: 'max-content'
+            zIndex: 9999
           }}
         >
           {menuItems.map((item, index) => (
@@ -209,61 +177,49 @@ const TextContextMenu: React.FC<TextContextMenuProps> = ({
               key={index}
               onClick={item.action}
               disabled={item.disabled}
-              className={`w-full px-2.5 py-1 text-left flex items-center justify-between hover:bg-gray-700 transition-colors whitespace-nowrap ${
+              className={`w-full px-5 py-3 text-left flex items-center justify-between hover:bg-gray-700 transition-colors ${
                 item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
               } ${item.danger ? 'hover:bg-red-600' : ''}`}
             >
-              <div className="flex items-center min-w-0 whitespace-nowrap">
-                <item.icon className="w-3.5 h-3.5 mr-2" />
-                <span className="text-xs">{item.label}</span>
+              <div className="flex items-center">
+                <item.icon className="w-5 h-5 mr-4" />
+                <span className="text-base">{item.label}</span>
               </div>
-              <span className="text-[10px] text-gray-400 ml-3 shrink-0">{item.shortcut}</span>
+              <span className="text-sm text-gray-400 ml-6">{item.shortcut}</span>
             </button>
           ))}
           
           {/* Séparateur */}
           <div className="border-t border-gray-600 my-2" />
           
-          {/* Sous-menu Ordre des calques */}
-          <div className="px-2.5 py-1.5 whitespace-nowrap">
-            <div className="flex items-center mb-1.5 whitespace-nowrap">
-              <Layers className="w-3.5 h-3.5 mr-2" />
-              <span className="text-xs">Ordre des calques</span>
+          {/* Sous-menu Aligner */}
+          <div className="px-5 py-3">
+            <div className="flex items-center mb-3">
+              <AlignLeft className="w-5 h-5 mr-4" />
+              <span className="text-base">Aligner sur la page</span>
             </div>
-            {/* Layer ordering section */}
-            <div className="border-t border-gray-600 pt-1 mt-1">
+            <div className="ml-9 space-y-2">
               <button
-                onClick={handleBringToFront}
-                className="block w-full text-left text-[11px] text-gray-300 hover:text-white py-0.5 px-2 rounded hover:bg-gray-700 transition-colors flex items-center"
-                disabled={!onBringToFront}
+                onClick={() => handleAlign('left')}
+                className="block w-full text-left text-sm text-gray-300 hover:text-white py-1.5 px-2 rounded hover:bg-gray-700 transition-colors"
               >
-                <ChevronsUp className="w-3.5 h-3.5 mr-2" /> Amener au premier plan
+                Gauche
               </button>
               <button
-                onClick={handleBringForward}
-                className="block w-full text-left text-[11px] text-gray-300 hover:text-white py-0.5 px-2 rounded hover:bg-gray-700 transition-colors flex items-center"
-                disabled={!onBringForward}
+                onClick={() => handleAlign('center')}
+                className="block w-full text-left text-sm text-gray-300 hover:text-white py-1.5 px-2 rounded hover:bg-gray-700 transition-colors"
               >
-                <ChevronUp className="w-3.5 h-3.5 mr-2" /> Avancer
+                Centre
               </button>
               <button
-                onClick={handleSendBackward}
-                className="block w-full text-left text-[11px] text-gray-300 hover:text-white py-0.5 px-2 rounded hover:bg-gray-700 transition-colors flex items-center"
-                disabled={!onSendBackward}
+                onClick={() => handleAlign('right')}
+                className="block w-full text-left text-sm text-gray-300 hover:text-white py-1.5 px-2 rounded hover:bg-gray-700 transition-colors"
               >
-                <ChevronDown className="w-3.5 h-3.5 mr-2" /> Reculer
-              </button>
-              <button
-                onClick={handleSendToBack}
-                className="block w-full text-left text-[11px] text-gray-300 hover:text-white py-0.5 px-2 rounded hover:bg-gray-700 transition-colors flex items-center"
-                disabled={!onSendToBack}
-              >
-                <ChevronsDown className="w-3.5 h-3.5 mr-2" /> Envoyer à l'arrière-plan
+                Droite
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </>
   );

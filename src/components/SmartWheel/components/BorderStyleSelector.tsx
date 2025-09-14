@@ -28,26 +28,39 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
               {/* Aperçu visuel du style */}
               <div
                 className="w-12 h-12 rounded-full border-4 flex items-center justify-center overflow-hidden"
-                style={{
-                  borderImage:
-                    style.type === 'gradient'
-                      ? `linear-gradient(45deg, ${style.colors.join(', ')}) 1`
-                      : undefined,
-                  borderColor: style.type !== 'gradient' ? style.colors[0] : undefined,
-                  background:
-                    style.type === 'metallic' || style.type === 'luxury'
-                      ? `linear-gradient(135deg, ${style.colors.join(', ')})`
-                      : style.type === 'neon'
-                      ? style.colors[0]
-                      : '#f9fafb',
-                  boxShadow: style.effects.glow
-                    ? `0 0 20px ${style.colors[0]}40`
-                    : style.effects.shadow
-                    ? '0 4px 8px rgba(0,0,0,0.1)'
-                    : undefined,
-                }}
+                style={
+                  style.imageSrc
+                    ? {
+                        borderColor: 'transparent',
+                        backgroundImage: `url(${style.imageSrc})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        boxShadow: style.effects.shadow
+                          ? '0 4px 8px rgba(0,0,0,0.1)'
+                          : undefined,
+                      }
+                    : {
+                        borderImage:
+                          style.type === 'gradient'
+                            ? `linear-gradient(45deg, ${style.colors.join(', ')}) 1`
+                            : undefined,
+                        borderColor: style.type !== 'gradient' ? style.colors[0] : undefined,
+                        background:
+                          style.type === 'metallic' || style.type === 'luxury'
+                            ? `linear-gradient(135deg, ${style.colors.join(', ')})`
+                            : style.type === 'neon'
+                            ? style.colors[0]
+                            : '#f9fafb',
+                        boxShadow: style.effects.glow
+                          ? `0 0 20px ${style.colors[0]}40`
+                          : style.effects.shadow
+                          ? '0 4px 8px rgba(0,0,0,0.1)'
+                          : undefined,
+                      }
+                }
               >
-                {style.effects.metallic && (
+                {!style.imageSrc && style.effects.metallic && (
                   <div className="w-2 h-2 bg-white/60 rounded-full" />
                 )}
               </div>
@@ -65,7 +78,7 @@ const BorderStyleSelector: React.FC<BorderStyleSelectorProps> = ({
                 )}
                 {style.effects.animated && (
                   <span
-                    className="w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
+                    className="w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"
                     title="Animé"
                   />
                 )}

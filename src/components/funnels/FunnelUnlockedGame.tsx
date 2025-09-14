@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
 import CanvasGameRenderer from './components/CanvasGameRenderer';
@@ -37,13 +37,22 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     createParticipation
   } = useParticipations();
 
-  const fields: FieldConfig[] = useMemo(() => (
-    (campaign?.formFields && Array.isArray(campaign.formFields)) ? campaign.formFields : [
-      { id: 'prenom', label: 'Prénom', type: 'text', required: true },
-      { id: 'nom', label: 'Nom', type: 'text', required: true },
-      { id: 'email', label: 'Email', type: 'email', required: true }
-    ]
-  ), [campaign?.formFields]);
+  const fields: FieldConfig[] = campaign.formFields || [{
+    id: 'prenom',
+    label: 'Prénom',
+    type: 'text',
+    required: true
+  }, {
+    id: 'nom',
+    label: 'Nom',
+    type: 'text',
+    required: true
+  }, {
+    id: 'email',
+    label: 'Email',
+    type: 'email',
+    required: true
+  }];
 
   const handleGameButtonClick = () => {
     // Si le formulaire n'est pas validé, on affiche la modale

@@ -50,14 +50,14 @@ const PublishStep: React.FC<PublishStepProps> = ({
           {isPublishing ? (
             <div className="space-y-6">
               <div className="w-16 h-16 bg-[#951b6d]/10 rounded-full flex items-center justify-center mx-auto">
-                <Rocket className="w-8 h-8 text-[#951b6d]" />
+                <Rocket className="w-8 h-8 text-[#951b6d] animate-bounce" />
               </div>
               <div>
                 <h3 className="font-semibold text-[#141e29] mb-2">Publication en cours...</h3>
                 <p className="text-gray-600">Votre campagne est en cours de déploiement</p>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-[#951b6d] h-2 rounded-full" style={{ width: '75%' }}></div>
+                <div className="bg-[#951b6d] h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
               </div>
             </div>
           ) : isPublished ? (

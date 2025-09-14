@@ -24,7 +24,7 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
   const tabs: TabConfig[] = [
     { id: 'general', label: 'Général', icon: Settings, description: 'Informations de base' },
     { id: 'game', label: 'Jeu', icon: Gamepad2, description: 'Configuration du jeu' },
-    { id: 'gameconfig', label: 'Mise en page', icon: Sliders, description: 'Taille et position' },
+    { id: 'gameconfig', label: 'Layout', icon: Sliders, description: 'Taille et position' },
     { id: 'design', label: 'Design', icon: Palette, description: 'Couleurs et style' },
     { id: 'form', label: 'Formulaire', icon: FormInput, description: 'Champs de saisie' },
     { id: 'mobile', label: 'Mobile', icon: Smartphone, description: 'Vue mobile' }

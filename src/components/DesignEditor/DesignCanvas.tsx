@@ -4,15 +4,13 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
 import StandardizedWheel from '../shared/StandardizedWheel';
-import SmartAlignmentGuides from './components/SmartAlignmentGuides';
-import AlignmentToolbar from './components/AlignmentToolbar';
+import AlignmentGuides from './components/AlignmentGuides';
 import GridOverlay from './components/GridOverlay';
 import WheelSettingsButton from './components/WheelSettingsButton';
 import ZoomSlider from './components/ZoomSlider';
 import GroupSelectionFrame from './components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
-import { useAlignmentSystem } from './hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
@@ -43,8 +41,6 @@ export interface DesignCanvasProps {
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
   onElementUpdate?: (updates: any) => void;
-  // Report union of DOM-measured element bounds (canvas-space) to parent for auto-fit
-  onContentBoundsChange?: (bounds: { x: number; y: number; width: number; height: number } | null) => void;
   // Props pour la gestion des groupes
   selectedGroupId?: string;
   onSelectedGroupChange?: (groupId: string | null) => void;
@@ -54,7 +50,6 @@ export interface DesignCanvasProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
-  onShowDesignPanel?: () => void;
   onOpenElementsTab?: () => void;
   // Props pour la sidebar mobile
   onAddElement?: (element: any) => void;
@@ -65,11 +60,6 @@ export interface DesignCanvasProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
-  // Optionally enable internal one-time auto-fit (disabled by default; parent should manage auto-fit)
-  enableInternalAutoFit?: boolean;
-  // Wheel configuration sync props
-  wheelModalConfig?: any;
-  extractedColors?: string[];
   updateWheelConfig?: (updates: any) => void;
   getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
   // Inline wheel panel controls
@@ -104,7 +94,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onShowEffectsPanel,
   onShowAnimationsPanel,
   onShowPositionPanel,
-  onShowDesignPanel,
   onOpenElementsTab,
   // Props pour la sidebar mobile
   onAddElement,
@@ -115,71 +104,34 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onRedo,
   canUndo,
   canRedo,
-  enableInternalAutoFit = false,
-  onContentBoundsChange,
+  
+  
+  
   onWheelPanelChange,
   readOnly = false,
-  containerClassName,
-  updateWheelConfig,
-  getCanonicalConfig,
-  wheelModalConfig,
-  extractedColors
+  containerClassName
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const autoFitEnabledRef = useRef(true);
   
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  // Always start with a valid numeric zoom (fallback 1). Clamp to [0.1, 1].
-  const [localZoom, setLocalZoom] = useState<number>(
-    typeof zoom === 'number' && !Number.isNaN(zoom)
-      ? Math.max(0.1, Math.min(1, zoom))
-      : 1
-  );
-  // Pan offset in screen pixels, applied before scale with origin at center for stable centering
-  const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [localZoom, setLocalZoom] = useState(zoom);
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [mobileToolbarHeight, setMobileToolbarHeight] = useState(0);
+  // Prevent repeated auto-fit on mobile when viewing desktop canvas
+  const didAutoFitRef = useRef(false);
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
 
-  // Suppress the next click-clear after a marquee drag completes
-  const suppressNextClickClearRef = useRef(false);
-
   // Precise DOM-measured bounds per element (canvas-space units)
   const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
-
-  // Collect measured bounds from children (CanvasElement)
-  const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
-    setMeasuredBounds(prev => {
-      const prevRect = prev[id];
-      // Avoid unnecessary state updates if unchanged
-      if (prevRect && prevRect.x === rect.x && prevRect.y === rect.y && prevRect.width === rect.width && prevRect.height === rect.height) {
-        return prev;
-      }
-      return { ...prev, [id]: rect };
-    });
-  }, []);
-
-  // Derive simplified alignment bounds preferring measured layout when available
-  const alignmentElements = useMemo(() => {
-    return elements.map((el: any) => {
-      const mb = measuredBounds[el.id];
-      const x = (mb?.x != null) ? mb.x : Number(el.x) || 0;
-      const y = (mb?.y != null) ? mb.y : Number(el.y) || 0;
-      const width = (mb?.width != null) ? mb.width : Math.max(20, Number(el.width) || 100);
-      const height = (mb?.height != null) ? mb.height : Math.max(20, Number(el.height) || 30);
-      return { id: String(el.id), x, y, width, height };
-    });
-  }, [elements, measuredBounds]);
 
   // Stable origin bounds for resize interactions to prevent drift
   const multiResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -187,41 +139,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const multiResizeElementsSnapshotRef = useRef<Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }>>({});
   const groupResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const groupResizeElementsSnapshotRef = useRef<Record<string, { absX: number; absY: number; width: number; height: number; fontSize?: number; parentAbsX: number; parentAbsY: number }>>({});
-
-  // Compute union of bounds from selected elements if any, otherwise all measured elements
-  const computeContentBounds = useCallback((): { x: number; y: number; width: number; height: number } | null => {
-    // Prefer selected elements when available
-    const source = (selectedElements && selectedElements.length > 0) ? selectedElements : elements;
-    if (!source || source.length === 0) return null;
-    const boxes = source
-      .map((el: any) => measuredBounds[el.id])
-      .filter(Boolean) as Array<{ x: number; y: number; width: number; height: number }>;
-    if (boxes.length === 0) return null;
-    const minX = Math.min(...boxes.map(b => b.x));
-    const minY = Math.min(...boxes.map(b => b.y));
-    const maxX = Math.max(...boxes.map(b => b.x + b.width));
-    const maxY = Math.max(...boxes.map(b => b.y + b.height));
-    return { x: minX, y: minY, width: Math.max(0, maxX - minX), height: Math.max(0, maxY - minY) };
-  }, [selectedElements, elements, measuredBounds]);
-
-  // Emit content bounds changes upstream when they change
-  const lastEmittedBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
-  useEffect(() => {
-    if (!onContentBoundsChange) return;
-    const bounds = computeContentBounds();
-    const last = lastEmittedBoundsRef.current;
-    const changed =
-      !last ||
-      !bounds ||
-      Math.abs((bounds?.x || 0) - (last?.x || 0)) > 0.5 ||
-      Math.abs((bounds?.y || 0) - (last?.y || 0)) > 0.5 ||
-      Math.abs((bounds?.width || 0) - (last?.width || 0)) > 0.5 ||
-      Math.abs((bounds?.height || 0) - (last?.height || 0)) > 0.5;
-    if (changed) {
-      lastEmittedBoundsRef.current = bounds;
-      onContentBoundsChange(bounds);
-    }
-  }, [computeContentBounds, onContentBoundsChange]);
+  const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
+    setMeasuredBounds(prev => {
+      const prevRect = prev[id];
+      if (prevRect && prevRect.x === rect.x && prevRect.y === rect.y && prevRect.width === rect.width && prevRect.height === rect.height) {
+        return prev;
+      }
+      return { ...prev, [id]: rect };
+    });
+  }, []);
 
   // Références pour lisser les mises à jour de zoom
   const rafRef = useRef<number | null>(null);
@@ -310,33 +236,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     snapTolerance: 3 // Réduit pour plus de précision
   });
 
-  // Store centralisé pour la grille
-  const { showGridLines, setShowGridLines } = useEditorStore();
-
-  // Nouveau système d'alignement simple et efficace
-  const {
-    currentGuides,
-    isDragging,
-    snapElement,
-    startDragging,
-    stopDragging
-  } = useAlignmentSystem({
-    elements: alignmentElements,
-    canvasSize: effectiveCanvasSize,
-    zoom: localZoom,
-    snapTolerance: 8,
-    gridSize: 20,
-    showGrid: showGridLines
-  });
-
-
   // Handlers optimisés avec snapping et cache intelligent (moved earlier)
   const handleElementUpdate = useCallback((id: string, updates: any) => {
     // Utiliser la fonction externe si disponible
     if (externalOnElementUpdate && selectedElement === id) {
-      // Appeler le handler externe pour la synchronisation/side-effects,
-      // mais continuer la mise à jour locale pour garantir le re-render (ex: zIndex)
-      try { externalOnElementUpdate(updates); } catch {}
+      externalOnElementUpdate(updates);
+      return;
     }
 
     // 🔒 Blocage des déplacements des enfants quand leur groupe parent est sélectionné
@@ -362,20 +267,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const workingUpdates: Record<string, any> = { ...updates };
     const devicePatch: Record<string, any> = {};
 
-    // Appliquer le nouveau système d'alignement si c'est un déplacement
+    // Appliquer le snapping si c'est un déplacement (avant de répartir par device)
     if (workingUpdates.x !== undefined && workingUpdates.y !== undefined) {
       const element = elementById.get(id);
       if (element) {
-        const snapResult = snapElement({
-          x: workingUpdates.x,
-          y: workingUpdates.y,
-          width: element.width || 100,
-          height: element.height || 100,
+        const snappedPosition = applySnapping(
+          workingUpdates.x,
+          workingUpdates.y,
+          element.width || 100,
+          element.height || 100,
           id
-        });
-        
-        workingUpdates.x = snapResult.x;
-        workingUpdates.y = snapResult.y;
+        );
+        workingUpdates.x = snappedPosition.x;
+        workingUpdates.y = snappedPosition.y;
 
         // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
         const positionCacheKey = `snap-${id}-${Math.floor(workingUpdates.x/5)}-${Math.floor(workingUpdates.y/5)}`;
@@ -468,17 +372,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           }
         };
       }
-      
-      // Debug logging for zIndex updates
-      if (workingUpdates.zIndex !== undefined) {
-        console.log('🔄 handleElementUpdate - zIndex change:', {
-          elementId: id,
-          oldZIndex: el.zIndex,
-          newZIndex: workingUpdates.zIndex,
-          elementType: el.type
-        });
-      }
-      
       return base;
     });
 
@@ -502,22 +395,25 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Synchroniser le zoom local avec le prop
   useEffect(() => {
-    // Synchroniser depuis le prop uniquement s'il est valide
-    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
-      const clamped = Math.max(0.1, Math.min(1, zoom));
-      // Éviter les mises à jour inutiles et considérer ceci comme un zoom manuel externe
-      if (Math.abs(clamped - localZoom) > 0.0001) {
-        // Un changement de zoom manuel doit désactiver l'auto-fit jusqu'au prochain resize/device
-        autoFitEnabledRef.current = false;
-        setLocalZoom(clamped);
-      }
-    }
-  }, [zoom, localZoom]);
+    // Clamp le zoom entre 0.1 et 1.0 (100%)
+    const clamped = Math.max(0.1, Math.min(1, zoom));
+    setLocalZoom(clamped);
+  }, [zoom]);
 
   // Définir le zoom par défaut selon l'appareil
   // - Mobile: 85%
   // - Tablette: 60%
   // - Desktop: 70%
+  useEffect(() => {
+    const defaultZoom =
+      selectedDevice === 'mobile' ? 0.85 :
+      selectedDevice === 'tablet' ? 0.6 : 0.7;
+
+    setLocalZoom(defaultZoom);
+    if (onZoomChange) {
+      onZoomChange(defaultZoom);
+    }
+  }, [selectedDevice]);
 
   // Calculer le zoom par défaut selon l'appareil (pour le bouton reset)
   const deviceDefaultZoom = useMemo(() => {
@@ -525,60 +421,59 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
            selectedDevice === 'tablet' ? 0.6 : 0.7;
   }, [selectedDevice]);
 
-  // Unified Auto-Fit: observe container size and fit the canvas on any device
-  const updateAutoFit = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    // Respect the auto-fit lock: skip recalculation if disabled by manual zoom
-    if (!autoFitEnabledRef.current) return;
+  // Auto-fit: if on a real mobile device but viewing the desktop canvas, fit the canvas to viewport
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isRealMobile() || selectedDevice !== 'desktop') return;
 
-    const style = getComputedStyle(container);
-    const paddingLeft = parseFloat(style.paddingLeft) || 0;
-    const paddingRight = parseFloat(style.paddingRight) || 0;
-    const paddingTop = parseFloat(style.paddingTop) || 0;
-    const paddingBottom = parseFloat(style.paddingBottom) || 0;
+    const computeAndApplyFit = () => {
+      // Only auto-fit once until orientation changes
+      if (didAutoFitRef.current) return;
 
-    const availableWidth = Math.max(0, container.clientWidth - paddingLeft - paddingRight);
-    const availableHeight = Math.max(0, container.clientHeight - paddingTop - paddingBottom);
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
 
-    const targetW = effectiveCanvasSize.width;
-    const targetH = effectiveCanvasSize.height;
+      // Match paddings used in the container around the canvas for desktop-on-mobile
+      const paddingTop = 32;
+      const paddingBottom = mobileToolbarHeight; // space reserved for MobileSidebarDrawer
+      const paddingLeft = 20;
+      const paddingRight = 20;
 
-    if (targetW > 0 && targetH > 0 && availableWidth > 0 && availableHeight > 0) {
-      const scaleX = availableWidth / targetW;
-      const scaleY = availableHeight / targetH;
-      const fitted = Math.min(scaleX, scaleY, 1);
-      const clamped = Math.max(0.1, Math.min(1, fitted));
-      // Avoid thrashing state for tiny differences
-      if (Math.abs(clamped - localZoom) > 0.001) {
+      const availableWidth = Math.max(0, viewportWidth - paddingLeft - paddingRight);
+      const availableHeight = Math.max(0, viewportHeight - paddingTop - paddingBottom);
+
+      const targetW = effectiveCanvasSize.width;
+      const targetH = effectiveCanvasSize.height;
+
+      if (targetW > 0 && targetH > 0 && availableWidth > 0 && availableHeight > 0) {
+        const scaleX = availableWidth / targetW;
+        const scaleY = availableHeight / targetH;
+        const fitted = Math.min(scaleX, scaleY, 1);
+        const clamped = Math.max(0.1, Math.min(1, fitted));
+
         setLocalZoom(clamped);
         onZoomChange?.(clamped);
+        didAutoFitRef.current = true;
       }
-    }
-  }, [effectiveCanvasSize, localZoom, onZoomChange]);
+    };
 
+    // Initial fit
+    computeAndApplyFit();
 
-  // One-time auto-fit on mount (only if explicitly enabled), then keep it disabled
-  useEffect(() => {
-    if (enableInternalAutoFit) {
-      // Apply auto-fit exactly once when the page loads
-      updateAutoFit();
-    }
-    // Then disable auto-fit so user zoom persists across interactions/resizes/device changes
-    autoFitEnabledRef.current = false;
-  }, [enableInternalAutoFit, updateAutoFit]);
-
-  // Do not auto-fit on resizes anymore; keep user's zoom unchanged
-  useEffect(() => {
-    // intentionally left blank
-  }, []);
+    // Re-fit on orientation changes
+    const handleOrientation = () => {
+      didAutoFitRef.current = false;
+      // Allow the browser to update innerWidth/innerHeight first
+      requestAnimationFrame(() => computeAndApplyFit());
+    };
+    window.addEventListener('orientationchange', handleOrientation);
+    return () => window.removeEventListener('orientationchange', handleOrientation);
+  }, [selectedDevice, effectiveCanvasSize, onZoomChange, mobileToolbarHeight]);
 
   // Handler centralisé pour changer le zoom depuis la barre d'échelle
   const handleZoomChange = useCallback((value: number) => {
     // Clamp le zoom entre 0.1 et 1.0 (100%)
     const clamped = Math.max(0.1, Math.min(1, value));
-    // Manual slider zoom disables auto-fit temporarily
-    autoFitEnabledRef.current = false;
     setLocalZoom(clamped);
     if (onZoomChange) {
       onZoomChange(clamped);
@@ -600,24 +495,26 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Begin marquee when clicking empty background
   const handleBackgroundPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (readOnly) return;
-    // Allow marquee on all devices; treat touch specially
-    // Only react to primary mouse button, but allow touch regardless of e.button
-    if (e.pointerType !== 'touch' && e.button !== 0) return;
-    if (e.pointerType === 'touch') {
-      // Prevent native gestures from interfering with marquee start
-      e.preventDefault();
+    
+    // Désactiver la sélection marquee sur mobile/tablette pour éviter les interactions accidentelles
+    if (selectedDevice === 'mobile' || selectedDevice === 'tablet') {
+      return;
     }
-    // Start suppression so the subsequent synthetic click won't clear selection
-    suppressNextClickClearRef.current = true;
-    console.debug('🟦 Marquee start (pointerdown)', { clientX: e.clientX, clientY: e.clientY });
+    // Only react to primary button
+    if (e.button !== 0) return;
+    // Disable marquee selection on touch for mobile UX
+    if (e.pointerType === 'touch' && isRealMobile()) {
+      // On touch, treat as tap-to-clear without starting marquee
+      setSelectedElement(null);
+      onSelectedElementChange?.(null);
+      onSelectedElementsChange?.([]);
+      return;
+    }
     // Start marquee selection
     const pt = getCanvasPointFromClient(e.clientX, e.clientY);
     marqueeStartRef.current = pt;
     setMarqueeEnd(pt);
     setIsMarqueeActive(true);
-    // Mark canvas as marquee-active so mobile canvas lock can bypass blocking
-    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
-    canvasEl?.setAttribute('data-marquee', 'active');
 
     // Clear single selection immediately; multi selection will be set on pointerup
     setSelectedElement(null);
@@ -628,37 +525,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       if (!marqueeStartRef.current) return;
       const p = getCanvasPointFromClient(ev.clientX, ev.clientY);
       setMarqueeEnd(p);
-      // Lightweight debug to confirm moves are tracked
-      // console.debug('🟦 Marquee move', { x: p.x, y: p.y });
-    };
-    const onCancel = () => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onCancel);
-      // Reset marquee state without applying selection
-      marqueeStartRef.current = null;
-      setIsMarqueeActive(false);
-      setMarqueeEnd(null);
-      // Clear marquee-active flag on canvas
-      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
-      canvasEl?.removeAttribute('data-marquee');
-      // Ensure suppression flag is cleared
-      setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
-      console.debug('🟦 Marquee canceled (pointercancel)');
     };
     const onUp = (ev: PointerEvent) => {
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onCancel);
 
       if (!marqueeStartRef.current) {
         setIsMarqueeActive(false);
         setMarqueeEnd(null);
-        // Clear marquee-active flag on canvas
-        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
-        canvasEl?.removeAttribute('data-marquee');
-        // Allow click-clear after event loop turn
-        setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
         return;
       }
       const start = marqueeStartRef.current;
@@ -673,16 +547,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const height = maxY - minY;
 
       // If tiny drag (click), just clear multi-selection
-      const isTouch = ev.pointerType === 'touch';
-      const MIN_SIZE = isTouch ? 12 : 3; // larger threshold on touch
+      const MIN_SIZE = 3; // canvas-space px
       if (width < MIN_SIZE && height < MIN_SIZE) {
         onSelectedElementsChange?.([]);
         setIsMarqueeActive(false);
         setMarqueeEnd(null);
-        // Clear marquee-active flag on canvas
-        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
-        canvasEl?.removeAttribute('data-marquee');
-        setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
         return;
       }
 
@@ -711,17 +580,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onSelectedElementsChange?.(newSelection);
       setIsMarqueeActive(false);
       setMarqueeEnd(null);
-      // Clear marquee-active flag on canvas
-      const canvasEl2 = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
-      canvasEl2?.removeAttribute('data-marquee');
-      console.debug('🟦 Marquee end (pointerup)', { selected: newSelection.map((e: any) => e.id), rect: { minX, minY, maxX, maxY } });
-      // Defer reset so the subsequent click doesn't clear the fresh selection
-      setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
     };
 
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onCancel);
   }, [getCanvasPointFromClient, readOnly, onSelectedElementChange, onSelectedElementsChange, elements, selectedElements, measuredBounds]);
 
   // Compute marquee rect in canvas-space for rendering
@@ -737,13 +599,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const h = Math.abs(ey - sy);
     return { x, y, w, h };
   }, [isMarqueeActive, marqueeEnd]);
-
-  // Clear any current selection (single and multi)
-  const handleClearSelection = useCallback(() => {
-    setSelectedElement(null);
-    onSelectedElementChange?.(null);
-    onSelectedElementsChange?.([]);
-  }, [onSelectedElementChange, onSelectedElementsChange]);
 
   // Move multiple selected elements by delta (canvas-space)
   const moveSelectedElements = useCallback((deltaX: number, deltaY: number) => {
@@ -1091,15 +946,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           const within = pointInRect(mid, startBounds) || pointInRect(p0, startBounds) || pointInRect(p1, startBounds);
           isPinchResizing = within;
           isPinchZooming = !within;
-          // If this interaction is a canvas zoom, disable auto-fit until next resize/device change
-          if (isPinchZooming) {
-            autoFitEnabledRef.current = false;
-          }
         } else {
           isPinchResizing = false;
           isPinchZooming = true;
-          // Canvas pinch-zoom: disable auto-fit
-          autoFitEnabledRef.current = false;
         }
         e.preventDefault();
       }
@@ -1179,8 +1028,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Calculer le facteur de zoom basé sur le delta (plus lent)
         const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
         const newZoom = Math.max(0.1, Math.min(1, localZoom * zoomFactor));
-        // Manual wheel/trackpad zoom disables auto-fit temporarily
-        autoFitEnabledRef.current = false;
         
         setLocalZoom(newZoom);
         
@@ -1198,7 +1045,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasElement.removeEventListener('wheel', handleWheel);
       };
     }
-  }, [localZoom, activeCanvasRef, onZoomChange]);
+  }, [localZoom, activeCanvasRef]);
 
   // Fonction de sélection qui notifie l'état externe
   const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
@@ -1261,6 +1108,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onSelectedElementsChange?.([]);
     }
   }, [elementById, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
+
+  // Store centralisé pour la grille
+  const { showGridLines, setShowGridLines } = useEditorStore();
 
   // (removed) calculateAbsolutePosition was unused after adopting DOM-measured bounds exclusively for group frames
 
@@ -1385,14 +1235,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
-  // Tri mémoïsé par zIndex pour le rendu du canvas
-  const elementsSortedByZIndex = useMemo(() => {
-    return elementsWithResponsive.slice().sort((a: any, b: any) => {
-      const za = typeof a.zIndex === 'number' ? a.zIndex : 0;
-      const zb = typeof b.zIndex === 'number' ? b.zIndex : 0;
-      return za - zb; // plus petit d'abord, plus grand rendu en dernier (au-dessus)
+  // Calculer des positions ABSOLUES pour les éléments enfants de groupe
+  // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
+  const elementsWithAbsolute = useMemo(() => {
+    return elementsWithResponsive.map((el: any) => {
+      const parentId = (el as any).parentGroupId;
+      if (!parentId) return el;
+      const parentProps = devicePropsById.get(parentId);
+      if (!parentProps) return el;
+      const childProps = getPropertiesForDevice(el, selectedDevice);
+      return {
+        ...el,
+        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
+        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
+      };
     });
-  }, [elementsWithResponsive]);
+  }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
 
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
@@ -1476,7 +1334,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative overflow-hidden`}
         // Props pour la sidebar mobile
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
@@ -1491,59 +1349,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onRedo={onRedo}
         canUndo={canUndo}
         canRedo={canRedo}
-        // Clear selection when clicking outside canvas/toolbars on mobile
-        onClearSelection={handleClearSelection}
       >
-        {/* Canvas Toolbar - Show for text and shape elements */}
-        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && (
+        {/* Canvas Toolbar - Only show when text element is selected */}
+        {(!readOnly) && selectedElementData && selectedElementData.type === 'text' && (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
-              selectedElement={{
-                ...selectedElementData,
-                ...getPropertiesForDevice(selectedElementData, selectedDevice)
-              }} 
+              selectedElement={selectedElementData} 
               onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
-              onShowDesignPanel={onShowDesignPanel}
               onOpenElementsTab={onOpenElementsTab}
               canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
             />
           </div>
         )}
         
-        <div 
-          ref={containerRef} 
-          className="flex justify-center items-center h-full w-full"
-          onPointerDownCapture={(e) => {
-            // Enable selecting elements even when they visually overflow outside the clipped canvas
-            // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' ? activeCanvasRef.current : null;
-            if (!canvasEl || readOnly) return;
-            if (canvasEl.contains(e.target as Node)) return;
-            // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
-            const rect = canvasEl.getBoundingClientRect();
-            const px = (e.clientX - rect.left - panOffset.x) / localZoom;
-            const py = (e.clientY - rect.top - panOffset.y) / localZoom;
-
-            // Hit test topmost first: iterate elements in reverse paint order
-            for (let i = elements.length - 1; i >= 0; i--) {
-              const el: any = elements[i];
-              const mb = measuredBounds[el.id];
-              if (!mb) continue;
-              if (px >= mb.x && px <= mb.x + mb.width && py >= mb.y && py <= mb.y + mb.height) {
-                // Select this element
-                setSelectedElement?.(el.id);
-                onSelectedElementsChange?.([el.id]);
-                onSelectedElementChange?.(el.id);
-                e.preventDefault();
-                e.stopPropagation();
-                break;
-              }
-            }
-          }}
-          style={{
+        <div className="flex justify-center items-center h-full w-full" style={{
           // Padding fixe (indépendant du zoom) pour garantir un centrage stable
           paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
           paddingLeft: selectedDevice === 'tablet' ? 32 : 20,
@@ -1570,35 +1392,24 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minWidth: `${effectiveCanvasSize.width}px`,
                 minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
-                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
+                transform: `scale(${localZoom})`,
                 transformOrigin: 'center center',
                 touchAction: 'none',
-                userSelect: 'none',
+                transition: 'transform 0.15s ease-out',
                 willChange: 'transform'
               }}
-              onClickCapture={(e) => {
-                // Clear selection only when clicking on empty canvas, not on elements
-                if (readOnly) return;
-                // If we just performed a marquee, ignore this synthetic click
-                if (suppressNextClickClearRef.current || isMarqueeActive) return;
-                const me = e as unknown as React.MouseEvent<HTMLDivElement>;
-                if (me.ctrlKey || me.metaKey) return;
-                const target = e.target as HTMLElement | null;
-                // If the click originated from an interactive element inside the canvas, skip clearing
-                if (target && (target.closest('[data-element-id]') || target.closest('[data-canvas-ui]'))) return;
-                const hasAnySelection = (selectedElement != null) || (selectedElements && selectedElements.length > 0);
-                if (hasAnySelection) {
-                  if (typeof handleClearSelection === 'function') {
-                    handleClearSelection();
-                  } else {
-                    // Fallback (should not happen): clear via local state notifiers
-                    setSelectedElement(null);
-                    onSelectedElementsChange?.([]);
-                    onSelectedElementChange?.(null);
-                  }
+            onMouseDown={(e) => {
+              if (readOnly) return; // Guard in read-only mode
+              if (e.target === e.currentTarget) {
+                setSelectedElement(null);
+                // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
+                if (onSelectedElementChange) {
+                  console.log('🎯 Canvas container click - clearing selection via onSelectedElementChange');
+                  onSelectedElementChange(null);
                 }
-              }}
-            >
+              }
+            }}
+          >
             {/* Canvas Background */}
             <div 
               className="absolute inset-0" 
@@ -1628,26 +1439,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 zoom={localZoom}
               />
               
-              {/* Smart Alignment Guides - Système refactorisé uniquement */}
-              <SmartAlignmentGuides
-                guides={currentGuides}
+              {/* Alignment Guides */}
+              <AlignmentGuides
                 canvasSize={effectiveCanvasSize}
+                elements={elementsWithAbsolute}
                 zoom={localZoom}
-                isDragging={isDragging}
               />
-              
-              {/* Alignment Toolbar */}
-              {selectedElements && selectedElements.length > 0 && !readOnly && (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-                  <AlignmentToolbar
-                    selectedElements={selectedElements.map(el => el.id)}
-                    onElementUpdate={handleElementUpdate}
-                    elements={elements}
-                    canvasSize={effectiveCanvasSize}
-                    zoom={localZoom}
-                  />
-                </div>
-              )}
               
               {/* Clouds */}
               
@@ -1655,42 +1452,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               
               
               
-              {(() => {
-                // Debug: log just before the wheel renders to trace segment source and canonical config
-                try {
-                  const segs = (campaign as any)?.gameConfig?.wheel?.segments 
-                    || (campaign as any)?.config?.roulette?.segments 
-                    || [];
-                  const campaignSegIds = Array.isArray(segs) ? segs.map((s: any) => s?.id ?? '?') : [];
-                  const canonical = typeof getCanonicalConfig === 'function' 
-                    ? getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true }) 
-                    : null;
-                  const canonicalSegs = (canonical as any)?.segments || [];
-                  const canonicalSegIds = Array.isArray(canonicalSegs) ? canonicalSegs.map((s: any) => s?.id ?? '?') : [];
-                  console.log('🧭 [DesignCanvas] Pre-render wheel debug:', {
-                    device: selectedDevice,
-                    campaignSegCount: Array.isArray(segs) ? segs.length : 0,
-                    campaignSegIds,
-                    hasGetCanonicalConfig: typeof getCanonicalConfig === 'function',
-                    canonicalSegCount: Array.isArray(canonicalSegs) ? canonicalSegs.length : 0,
-                    canonicalSegIds
-                  });
-                } catch (e) {
-                  console.warn('🧭 [DesignCanvas] pre-render log error', e);
-                }
-                return null;
-              })()}
-
               {/* Roue standardisée avec découpage cohérent */}
               <StandardizedWheel
                 campaign={campaign}
                 device={selectedDevice}
                 shouldCropWheel={true}
                 disabled={readOnly}
-                getCanonicalConfig={getCanonicalConfig}
-                updateWheelConfig={updateWheelConfig}
-                extractedColors={extractedColors}
-                wheelModalConfig={wheelModalConfig}
                 onClick={() => {
                   if (readOnly) return;
                   console.log('🔘 Clic sur la roue détecté');
@@ -1712,7 +1479,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
-            {elementsSortedByZIndex
+            {elementsWithResponsive
               .filter((element: any) => {
                 // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
                 const elementWithProps = {
@@ -1799,16 +1566,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   isMultiSelecting={Boolean(selectedElements && selectedElements.length > 1)}
                   isGroupSelecting={Boolean(selectedGroupId)}
                   activeGroupId={selectedGroupId || null}
-                  // Pass campaign data for wheel elements
-                  campaign={campaign}
-                  // Pass extracted colors for wheel customization
-                  extractedColors={extractedColors}
-                  // Pass alignment system for new snapping logic
-                  alignmentSystem={{
-                    snapElement,
-                    startDragging,
-                    stopDragging
-                  }}
                 />
               );
             })}
@@ -1927,20 +1684,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             })()}
 
             </div>
-
-            {/* Selection overlay (visual layer, not interactive yet) */}
-            <div 
-              className="pointer-events-none absolute"
-              style={{
-                left: 0,
-                top: 0,
-                width: `${effectiveCanvasSize.width}px`,
-                height: `${effectiveCanvasSize.height}px`,
-                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
-                transformOrigin: 'center center',
-                zIndex: 100
-              }}
-            />
           </div>
         </div>
 

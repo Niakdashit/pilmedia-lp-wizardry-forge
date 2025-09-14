@@ -76,8 +76,6 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
       [`${modifierKey}+S`, 'Sauvegarder la campagne'],
       [`${modifierKey}+Z`, 'Annuler'],
       [`${modifierKey}+Y`, 'Rétablir'],
-      [`${modifierKey}+A`, 'Sélectionner tout (éléments du canvas)'],
-      ['Alt+A', 'Sélectionner tout (éléments du canvas)'],
       [`${modifierKey}+C`, 'Copier l\'élément sélectionné'],
       [`${modifierKey}+V`, 'Coller l\'élément'],
       ['Suppr', 'Supprimer l\'élément sélectionné'],

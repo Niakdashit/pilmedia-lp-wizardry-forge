@@ -53,7 +53,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
           className="p-1 hover:bg-[hsl(var(--sidebar-hover))] rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           aria-label="Zoom arrière"
         >
-          <Minus size={16} aria-hidden className="hidden text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
+          <Minus size={16} className="text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
 
         {/* Zoom Slider */}
@@ -88,14 +88,14 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
           className="p-1 hover:bg-[hsl(var(--sidebar-hover))] rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           aria-label="Zoom avant"
         >
-          <Plus size={16} aria-hidden className="hidden text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
+          <Plus size={16} className="text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
         </button>
 
         {/* Reset Zoom Button */}
-        <div className="hidden w-px h-4 bg-gray-300 mx-1" />
+        <div className="w-px h-4 bg-gray-300 mx-1" />
         <button
           onClick={handleResetZoom}
-          className="hidden p-1 hover:bg-[hsl(var(--sidebar-hover))] rounded-full transition-all duration-200"
+          className="p-1 hover:bg-[hsl(var(--sidebar-hover))] rounded-full transition-all duration-200"
           aria-label="Réinitialiser le zoom"
           title="Réinitialiser le zoom"
         >

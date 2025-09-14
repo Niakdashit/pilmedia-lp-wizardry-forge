@@ -4,7 +4,6 @@ import WheelCanvas from './MobileWheel/WheelCanvas';
 import WheelDecorations from './MobileWheel/WheelDecorations';
 import WheelPointer from './MobileWheel/WheelPointer';
 import { GAME_SIZES, GameSize } from '../configurators/GameSizeSelector';
-import { WheelConfigService } from '../../services/WheelConfigService';
 
 interface MobileWheelPreviewProps {
   campaign: any;
@@ -21,44 +20,13 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
   verticalOffset = 0,
   horizontalOffset = 0
 }) => {
-  // Canonical wheel config (mobile device) and standardized segments
-  const wheelConfig = WheelConfigService.getCanonicalWheelConfig(
-    campaign,
-    campaign?.design?.extractedColors || [],
-    {},
-    { device: 'mobile', shouldCropWheel: false }
-  );
-  const standardizedSegments = React.useMemo(
-    () => WheelConfigService.getStandardizedSegments(wheelConfig),
-    [
-      JSON.stringify(wheelConfig?.segments || []),
-      wheelConfig.customColors?.primary,
-      wheelConfig.brandColors?.primary,
-      wheelConfig.customColors?.secondary,
-      wheelConfig.brandColors?.secondary
-    ]
-  );
-  // Map to MobileWheel canvas segment shape
-  const segments = React.useMemo(
-    () => standardizedSegments.map((s: any) => ({
-      label: s.label,
-      chance: typeof s.probability === 'number' ? s.probability : 1,
-      color: s.color
-    })),
-    [standardizedSegments]
-  );
-  try {
-    const ids = standardizedSegments.map((s: any, i: number) => s.id ?? String(i + 1));
-    console.log('📱 MobileWheelPreview: standardized segments', {
-      campaignId: campaign?.id,
-      sourceCount: (wheelConfig?.segments || []).length,
-      outCount: standardizedSegments.length,
-      ids
-    });
-  } catch {}
-  const theme = (campaign?.config?.roulette || {})?.theme || 'default';
-  const borderColor = wheelConfig.borderColor;
-  const pointerColor = wheelConfig.borderColor;
+  const mobileRouletteConfig = campaign?.mobileConfig?.roulette || {};
+  const desktopRouletteConfig = campaign?.config?.roulette || {};
+  const segments = desktopRouletteConfig.segments || [];
+  const centerImage = desktopRouletteConfig.centerImage;
+  const theme = desktopRouletteConfig.theme || 'default';
+  const borderColor = desktopRouletteConfig.borderColor || '#841b60';
+  const pointerColor = desktopRouletteConfig.pointerColor || '#841b60';
   const hideLaunchButton = campaign?.mobileConfig?.hideLaunchButton || false;
 
   // Get game size from campaign and calculate canvas size
@@ -70,7 +38,12 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
   const scaleFactor = Math.min(gameDimensions.width, gameDimensions.height) / 400; // 400 is our reference size
   const calculatedCanvasSize = Math.max(200, Math.min(600, DEFAULT_CANVAS_SIZE * scaleFactor));
 
-  const canvasSize = wheelConfig.size || calculatedCanvasSize;
+  const canvasSize =
+    mobileRouletteConfig.size ||
+    mobileRouletteConfig.width ||
+    desktopRouletteConfig.size ||
+    desktopRouletteConfig.width ||
+    calculatedCanvasSize;
 
   if (segments.length === 0) {
     return null;
@@ -144,7 +117,7 @@ const MobileWheelPreview: React.FC<MobileWheelPreviewProps> = ({
       <div style={{ position: 'absolute', top: offset.top, left: offset.left }}>
         <WheelCanvas
           segments={segments}
-          centerImage={undefined}
+          centerImage={centerImage}
           theme={theme}
           borderColor={borderColor}
           canvasSize={canvasSize}

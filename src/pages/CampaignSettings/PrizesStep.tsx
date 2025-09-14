@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useCampaignSettings, CampaignSettings } from '@/hooks/useCampaignSettings';
 
 const PrizesStep: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getSettings, upsertSettings, error, saveDraft } = useCampaignSettings();
+  const navigate = useNavigate();
+  const { getSettings, upsertSettings, loading, error, saveDraft } = useCampaignSettings();
   const [form, setForm] = useState<Partial<CampaignSettings>>({});
   const campaignId = id || '';
 
@@ -33,32 +34,22 @@ const PrizesStep: React.FC = () => {
     });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (goNext = false) => {
     if (!campaignId) return;
     const saved = await upsertSettings(campaignId, {
       winners: form.winners ?? { count: Number((form as any)?.winners?.count) || 0 },
     });
-    if (!saved) {
+    if (saved) {
+      if (goNext) navigate('form');
+    } else {
       try { saveDraft(campaignId, form); } catch {}
       alert('Sauvegarde distante échouée, un brouillon local a été enregistré.');
     }
   };
 
-  // Listen to global save-and-close action from layout
-  useEffect(() => {
-    const onSaveAndClose = (_e: Event) => {
-      handleSave();
-    };
-    window.addEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
-    return () => {
-      window.removeEventListener('campaign:saveAndClose', onSaveAndClose as EventListener);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, form]);
-
   return (
     <div className="space-y-6">
-      <div aria-hidden className="h-[1.75rem]" />
+      <h1 className="text-xl font-semibold font-brand text-primary-800">Lots</h1>
       {error && (<div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700 text-sm">{error}</div>)}
 
       <div>
@@ -71,6 +62,11 @@ const PrizesStep: React.FC = () => {
         />
       </div>
 
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={() => navigate('home')} className="px-3 py-1.5 border border-primary-200 rounded-lg text-sm text-primary-700 hover:bg-primary-50">Précédent</button>
+        <button onClick={() => handleSave(false)} disabled={loading} className="px-3 py-1.5 rounded-lg text-white text-sm bg-primary-700 hover:bg-primary-800 disabled:opacity-60">{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
+        <button onClick={() => handleSave(true)} disabled={loading} className="px-3 py-1.5 rounded-lg text-white text-sm bg-brand hover:bg-brand-dark disabled:opacity-60">{loading ? 'Enregistrement...' : 'Enregistrer et continuer'}</button>
+      </div>
     </div>
   );
 };

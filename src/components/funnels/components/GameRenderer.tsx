@@ -99,9 +99,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             gameSize={gameSize}
             gamePosition={gamePosition}
             previewDevice={previewMode}
-            wheelModalConfig={{
-              extractedColors: campaign?.design?.extractedColors || []
-            }}
             disabled={!formValidated}
             disableForm={false}
           />
