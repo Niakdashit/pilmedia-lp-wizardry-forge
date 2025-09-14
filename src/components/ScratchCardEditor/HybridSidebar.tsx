@@ -12,7 +12,7 @@ import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
 import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
 import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
-import ScratchCardPanel from './panels/ScratchCardPanel';
+import ScratchConfigPanel from './panels/ScratchConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
 
@@ -338,7 +338,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'scratch':
         return (
-          <ScratchCardPanel />
+          <ScratchConfigPanel
+            onBack={() => {
+              onScratchPanelChange?.(false);
+              setActiveTab('elements');
+            }}
+            scratchConfig={scratchConfig}
+            onScratchConfigChange={onScratchConfigChange}
+            selectedDevice={selectedDevice}
+          />
         );
       case 'background':
         return (
@@ -358,8 +366,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
         return (
-          <div className="h-full overflow-y-auto">
-            <ScratchCardPanel />
+          <div className="p-4">
+            <ScratchConfigPanel
+              scratchConfig={scratchConfig}
+              onScratchConfigChange={onScratchConfigChange}
+              selectedDevice={selectedDevice}
+            />
           </div>
         );
       case 'form':

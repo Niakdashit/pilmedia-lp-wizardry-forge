@@ -41,18 +41,18 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
       // Une seule carte : centrée
       gridClasses = "flex justify-center items-center";
     } else if (cardCount === 2) {
-      // Deux cartes : 2 par ligne (côte à côte) même sur mobile
-      gridClasses = "grid grid-cols-2 gap-4 sm:gap-8 place-items-center justify-items-center w-full";
+      // Deux cartes : côte à côte, centrées
+      gridClasses = "grid grid-cols-1 sm:grid-cols-2 gap-8 place-items-center justify-items-center w-full";
     } else if (cardCount <= 4) {
-      // 3-4 cartes : 2 par ligne sur mobile (2x2), 4 sur grand écran
-      gridClasses = "grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 place-items-center justify-items-center w-full";
+      // 3-4 cartes : max 2 par ligne sur petit écran, 4 sur grand écran
+      gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 place-items-center justify-items-center w-full";
     } else if (cardCount <= 6) {
-      // 5-6 cartes : 2 par ligne sur mobile, 3 par ligne sur grand écran
-      gridClasses = "grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 place-items-center justify-items-center w-full";
+      // 5-6 cartes : max 3 par ligne
+      gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center justify-items-center w-full";
     } else {
-      // Plus de 6 cartes : 2 par ligne sur mobile, grille auto-fit sur grand écran
-      gridClasses = "grid grid-cols-2 lg:gap-8 gap-4 place-items-center justify-items-center w-full";
-      // Style inline pour auto-fit sur grand écran seulement
+      // Plus de 6 cartes : grille auto-fit avec minimum 200px par carte
+      gridClasses = "grid gap-8 place-items-center justify-items-center w-full";
+      // Style inline pour auto-fit
     }
     
     return { containerBase, gridClasses, cardCount };

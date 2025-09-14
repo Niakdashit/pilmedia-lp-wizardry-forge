@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import Wheel from '../../GameTypes/Wheel';
+import ValidationMessage from '../../common/ValidationMessage';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
-import ValidationMessage from '../../common/ValidationMessage';
+import TemplatedQuiz from '../../shared/TemplatedQuiz';
 
 interface CanvasGameRendererProps {
   campaign: any;
@@ -188,8 +188,20 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       );
     }
     if (campaign.type === 'quiz') {
-      // Quiz supprimé - ne rien afficher
-      return null;
+      return (
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <TemplatedQuiz
+            campaign={campaign}
+            device={previewMode}
+            disabled={!formValidated}
+            templateId={
+              campaign?.gameConfig?.quiz?.templateId ||
+              campaign?.design?.quizConfig?.templateId ||
+              'image-quiz'
+            }
+          />
+        </div>
+      );
     }
     return null;
   };

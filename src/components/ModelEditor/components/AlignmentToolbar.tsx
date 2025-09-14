@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAlignmentSystem } from '../hooks/useAlignmentSystem';
 
 interface AlignmentToolbarProps {
   selectedElements: string[];
@@ -12,34 +13,29 @@ const AlignmentToolbar: React.FC<AlignmentToolbarProps> = ({
   selectedElements,
   onElementUpdate,
   elements,
-  canvasSize
+  canvasSize,
+  zoom
 }) => {
+  const alignmentSystem = useAlignmentSystem({
+    elements: elements.map(el => ({
+      id: el.id,
+      x: el.x,
+      y: el.y,
+      width: el.width,
+      height: el.height
+    })),
+    canvasSize,
+    zoom,
+    snapTolerance: 8,
+    gridSize: 20,
+    showGrid: false
+  });
 
   const handleCanvasAlignment = (alignment: 'center-h' | 'center-v' | 'top' | 'bottom' | 'left' | 'right') => {
     selectedElements.forEach(elementId => {
       const element = elements.find(el => el.id === elementId);
       if (element) {
-        let newPosition;
-        switch (alignment) {
-          case 'left':
-            newPosition = { x: 0 };
-            break;
-          case 'right':
-            newPosition = { x: canvasSize.width - element.width };
-            break;
-          case 'center-h':
-            newPosition = { x: (canvasSize.width - element.width) / 2 };
-            break;
-          case 'top':
-            newPosition = { y: 0 };
-            break;
-          case 'bottom':
-            newPosition = { y: canvasSize.height - element.height };
-            break;
-          case 'center-v':
-            newPosition = { y: (canvasSize.height - element.height) / 2 };
-            break;
-        }
+        const newPosition = alignmentSystem.alignToCanvas(element, alignment);
         onElementUpdate(elementId, newPosition);
       }
     });
@@ -52,28 +48,10 @@ const AlignmentToolbar: React.FC<AlignmentToolbarProps> = ({
       elements.find(el => el.id === id)
     ).filter(Boolean);
 
-    // Simple distribution logic
-    if (direction === 'horizontal') {
-      const sortedElements = selectedElementData.sort((a, b) => a.x - b.x);
-      const totalWidth = sortedElements[sortedElements.length - 1].x - sortedElements[0].x;
-      const spacing = totalWidth / (sortedElements.length - 1);
-      
-      sortedElements.forEach((el, index) => {
-        if (index > 0 && index < sortedElements.length - 1) {
-          onElementUpdate(el.id, { x: sortedElements[0].x + spacing * index });
-        }
-      });
-    } else {
-      const sortedElements = selectedElementData.sort((a, b) => a.y - b.y);
-      const totalHeight = sortedElements[sortedElements.length - 1].y - sortedElements[0].y;
-      const spacing = totalHeight / (sortedElements.length - 1);
-      
-      sortedElements.forEach((el, index) => {
-        if (index > 0 && index < sortedElements.length - 1) {
-          onElementUpdate(el.id, { y: sortedElements[0].y + spacing * index });
-        }
-      });
-    }
+    const positions = alignmentSystem.distributeElements(selectedElementData, direction);
+    positions.forEach(pos => {
+      onElementUpdate(pos.id, { x: pos.x, y: pos.y });
+    });
   };
 
   return (

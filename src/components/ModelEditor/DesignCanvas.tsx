@@ -3,9 +3,11 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
+import QuizSettingsButton from './components/QuizSettingsButton';
 import ZoomSlider from '../DesignEditor/components/ZoomSlider';
 import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
@@ -20,9 +22,8 @@ import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
-import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
+import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
-import { isRealMobile } from '../../utils/isRealMobile';
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
@@ -143,6 +144,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -229,18 +231,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
 
-  // Mesure dynamique de la hauteur de la toolbar mobile
-  useEffect(() => {
-    if (!isRealMobile()) return;
-    const updateHeight = () => {
-      const toolbar = document.getElementById('mobile-toolbar');
-      // Store height if needed for calculations
-      console.log('Mobile toolbar height:', toolbar?.getBoundingClientRect().height || 0);
-    };
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
+  // Note: Mobile toolbar height calculation removed - not used
 
   // Optimisation mobile pour une expérience tactile parfaite
 
@@ -1441,8 +1432,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
-  // Note: Removed unused elementsWithAbsolute calculation
-
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
@@ -1574,7 +1563,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
+            const canvasEl = typeof activeCanvasRef === 'object' ? activeCanvasRef.current : null;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -1776,12 +1765,30 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     }}
                     className="w-full h-full flex items-center justify-center cursor-pointer"
                   >
-                    {/* Quiz supprimé du canvas */}
+                    {/* Afficher l'aperçu inline uniquement si l'élément positionné n'existe pas encore */}
+                    {(!elements.some(el => el.id === 'quiz-template')) && (
+                      <TemplatedQuiz
+                        campaign={campaignToUse}
+                        device={selectedDevice}
+                        disabled={readOnly}
+                        templateId={quizModalConfig?.templateId || campaignToUse?.gameConfig?.quiz?.templateId || campaignToUse?.design?.quizConfig?.templateId || 'image-quiz'}
+                      />
+                    )}
                   </div>
                 );
               })()}
 
-              {/* Bouton configuration quiz supprimé */}
+              {/* Bouton configuration quiz ABSOLU dans le canvas d'aperçu */}
+              {!readOnly && (
+                <div className="absolute bottom-2 right-2 z-50">
+                  <QuizSettingsButton
+                    onClick={() => {
+                      console.log('🔘 Clic sur QuizSettingsButton détecté');
+                      onQuizPanelChange?.(true);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}

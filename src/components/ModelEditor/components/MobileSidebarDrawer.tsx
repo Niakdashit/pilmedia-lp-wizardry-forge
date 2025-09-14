@@ -6,13 +6,15 @@ import {
   Plus,
   Palette,
   Layers,
-  Settings,
+  FormInput,
+  Gamepad2,
   RotateCcw,
   RotateCw
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
-import CampaignConfigPanel from '../panels/CampaignConfigPanel';
+import ModernFormTab from '../ModernEditor/ModernFormTab';
+import { useEditorStore } from '../../../stores/editorStore';
 
 // Lazy-loaded heavy panels
 const loadLayersPanel = () => import('../panels/LayersPanel');
@@ -42,8 +44,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   onBackgroundChange,
   onExtractedColorsChange,
   currentBackground,
-  campaignConfig,
-  onCampaignConfigChange,
   elements = [],
   onElementsChange,
   selectedElement,
@@ -53,14 +53,17 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   canUndo,
   canRedo
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('assets');
+  const campaign = useEditorStore((s: any) => s.campaign);
+  const setCampaign = useEditorStore((s: any) => s.setCampaign);
+  const [activeTab, setActiveTab] = useState<string>('elements');
   const [isMinimized, setIsMinimized] = useState(true);
 
   const tabs = [
-    { id: 'assets', label: 'Éléments', icon: Plus, color: '#3B82F6' },
     { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
+    { id: 'elements', label: 'Éléments', icon: Plus, color: '#3B82F6' },
     { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
-    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' }
+    { id: 'form', label: 'Formulaire', icon: FormInput, color: '#F59E0B' },
+    { id: 'game', label: 'Jeu', icon: Gamepad2, color: '#8B5CF6' }
   ];
 
   // Device detection: show bottom bar only on real mobile devices
@@ -79,7 +82,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   // Auto-ouverture si un élément est sélectionné
   useEffect(() => {
     if (selectedElement && !disableAutoOpen) {
-      setActiveTab('assets');
+      setActiveTab('elements');
       setIsMinimized(false);
     }
   }, [selectedElement, disableAutoOpen]);
@@ -115,12 +118,12 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
   const renderPanel = (tabId: string) => {
     switch (tabId) {
-      case 'assets':
+      case 'elements':
         return (
-          <AssetsPanel 
-            onAddElement={onAddElement} 
-            selectedElement={selectedElement} 
-            onElementUpdate={onElementUpdate} 
+          <AssetsPanel
+            onAddElement={onAddElement}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
           />
         );
       case 'background':
@@ -140,13 +143,14 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             />
           </React.Suspense>
         );
-      case 'campaign':
+      case 'form':
         return (
-          <CampaignConfigPanel 
-            config={campaignConfig} 
-            onConfigChange={onCampaignConfigChange || (() => {})} 
-          />
+          <div className="p-4">
+            <ModernFormTab campaign={campaign} setCampaign={setCampaign as any} />
+          </div>
         );
+      case 'game':
+        return <div className="p-4" />;
       default:
         return null;
     }

@@ -1,4 +1,3 @@
-// @ts-nocheck - Temporary fix for complex type issues in QuizEditor
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
@@ -502,7 +501,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             buttonHoverBackgroundColor={campaign?.design?.quizConfig?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
             buttonActiveBackgroundColor={campaign?.design?.quizConfig?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
             onQuizWidthChange={(width) => {
-              setCampaign((prev) => ({
+            setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev?.design,
@@ -518,7 +517,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { width } }));
             }}
             onQuizMobileWidthChange={(width) => {
-              setCampaign((prev) => ({
+            setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev?.design,
@@ -534,7 +533,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
             }}
             onBackgroundColorChange={(color) => {
-              setCampaign((prev) => ({
+            setCampaign((prev: any) => ({
                 ...prev,
                 design: {
                   ...prev.design,
@@ -673,7 +672,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }));
             }}
             onTextColorChange={(color) => {
-              setCampaign((prev) => {
+              setCampaign((prev: any) => {
                 if (!prev) return prev;
                 const next = {
                   ...prev,

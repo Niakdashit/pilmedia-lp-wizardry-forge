@@ -124,7 +124,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   };
 
   // Double-clic sur la boîte de valeur (pour % et px)
-  const promptNumber = (label: string, initial: string) => {
+  const getPromptValue = (label: string, initial: string) => {
     const raw = window.prompt(label, initial);
     if (raw == null) return null;
     const normalized = raw.replace(/\s+/g, '').replace(',', '.').replace('%', '').replace('px', '');
