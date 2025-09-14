@@ -1933,6 +1933,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     startDragging,
                     stopDragging
                   }}
+                  // Allow opening the Quiz panel by clicking the quiz placeholder
+                  onOpenQuizPanel={() => onQuizPanelChange?.(true)}
                 />
               );
             })}

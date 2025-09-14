@@ -623,15 +623,11 @@ export const useSmartWheelRenderer = ({
   const drawStyledBorder = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, radius: number, borderStyleName: string, animationTime: number, customWidth?: number) => {
     const borderStyleConfig = getBorderStyle(borderStyleName);
     
-    // Calculer le facteur d'échelle basé sur la taille de la roue
-    // Taille de référence : 200px (taille de base)
-    const scaleFactor = size / 200;
-    
     // Utiliser la largeur personnalisée si fournie, sinon la largeur du style
     const baseBorderWidth = customWidth !== undefined ? customWidth : borderStyleConfig.width;
     
-    // Ajuster la largeur de bordure proportionnellement à l'échelle
-    const borderWidth = baseBorderWidth * scaleFactor;
+    // Largeur de bordure indépendante de la taille de la roue
+    const borderWidth = baseBorderWidth;
 
     // Utiliser la couleur personnalisée si fournie, quel que soit le style
     const getBorderColor = (index: number = 0) => {
@@ -860,8 +856,18 @@ export const useSmartWheelRenderer = ({
     ctx.rotate(startAngle + anglePerSegment / 2);
     
     // Utiliser la couleur de texte du segment ou calculer automatiquement
+    // Règle preview: sur segment blanc -> couleur primaire; sinon -> blanc
+    const primaryColor = (brandColors && brandColors.primary) ? brandColors.primary : '#841b60';
+    const isWhite = (val: any) => {
+      try {
+        const c = String(val || '').trim().toLowerCase();
+        if (!c) return false;
+        if (c === '#fff' || c === '#ffffff' || c === 'white') return true;
+        return /^rgba?\(\s*255\s*,\s*255\s*,\s*255(\s*,\s*1\s*)?\)/.test(c);
+      } catch { return false; }
+    };
     const textColor = segmentAny.textColor || segment.textColor || 
-      (segmentAny.color === '#ffffff' ? '#000000' : '#ffffff') || 
+      (isWhite(segmentAny.color) ? primaryColor : '#ffffff') || 
       theme.colors.text;
     
     ctx.fillStyle = textColor;

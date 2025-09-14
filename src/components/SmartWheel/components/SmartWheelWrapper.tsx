@@ -65,13 +65,29 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
     lastUpdate: (campaign as any)?._lastUpdate
   });
 
+  // Déterminer les couleurs de marque (besoin avant de mapper textColor)
+  const resolvedBrandColors = brandColors || {
+    primary: campaign?.design?.customColors?.primary || '#841b60',
+    secondary: campaign?.design?.customColors?.secondary || '#4ecdc4',
+    accent: campaign?.design?.customColors?.accent || '#45b7d1'
+  };
+
   // Convertir au format SmartWheel si nécessaire
   const processedSegments = segments.map((segment: any) => {
+    const isWhite = (val: any) => {
+      try {
+        const c = String(val || '').trim().toLowerCase();
+        if (!c) return false;
+        if (c === '#fff' || c === '#ffffff' || c === 'white') return true;
+        return /^rgba?\(\s*255\s*,\s*255\s*,\s*255(\s*,\s*1\s*)?\)/.test(c);
+      } catch { return false; }
+    };
+    const defaultTextColor = isWhite(segment.color) ? resolvedBrandColors.primary : '#ffffff';
     const processed = {
       id: segment.id,
       label: segment.label,
       color: segment.color,
-      textColor: segment.textColor || (segment.color === '#ffffff' ? '#000000' : '#ffffff'),
+      textColor: segment.textColor || defaultTextColor,
       probability: segment.probability || 1,
       prizeId: segment.prizeId,
       contentType: segment.contentType || (segment?.imageUrl ? 'image' : 'text'),
@@ -90,13 +106,6 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
     
     return processed;
   });
-
-  // Déterminer les couleurs de marque
-  const resolvedBrandColors = brandColors || {
-    primary: campaign?.design?.customColors?.primary || '#841b60',
-    secondary: campaign?.design?.customColors?.secondary || '#4ecdc4',
-    accent: campaign?.design?.customColors?.accent || '#45b7d1'
-  };
 
   // Résoudre les paramètres de spin depuis les props ou la configuration
   const resolvedSpinMode = spinMode ||

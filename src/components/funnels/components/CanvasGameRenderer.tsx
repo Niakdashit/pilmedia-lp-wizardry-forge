@@ -253,6 +253,32 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       );
     }
     
+    if (campaign.type === 'scratch') {
+      console.log('🎯 Rendering Scratch component', {
+        scratchConfig: campaign.gameConfig?.scratch,
+        design: campaign.design,
+        hasScratchConfig: !!campaign.gameConfig?.scratch,
+        hasDesign: !!campaign.design,
+        canvasElements: canvasElements.length,
+        scratchCards: canvasElements.filter((el: any) => el.type === 'scratch-card').length
+      });
+      
+      // Utiliser le vrai composant ScratchCardCanvas au lieu de ScratchPreview générique
+      const ScratchCardCanvas = React.lazy(() => import('../../ScratchCardEditor/ScratchCardCanvas'));
+      
+      return (
+        <div className="absolute inset-0" style={{ zIndex: 10 }}>
+          <React.Suspense fallback={<div>Loading scratch cards...</div>}>
+            <ScratchCardCanvas
+              previewMode={true}
+              selectedDevice={previewMode}
+              formValidated={formValidated}
+            />
+          </React.Suspense>
+        </div>
+      );
+    }
+    
     if (campaign.type === 'quiz') {
       console.log('🎯 Rendering Quiz component', {
         quizConfig: campaign.gameConfig?.quiz,

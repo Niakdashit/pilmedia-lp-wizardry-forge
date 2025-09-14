@@ -36,6 +36,11 @@ export type GridSettings = {
   borderRadius: number; 
   cardSize?: { width?: number; height?: number };
   cardShape?: CardShape; // New: shape of the cards
+  // Facteurs d'échelle (zoom visuel)
+  // Ancien: `scale` global; Nouveau: distinction Desktop/Mobile
+  scale?: number; // fallback pour compat
+  desktopScale?: number;
+  mobileScale?: number;
 };
 
 export type BrushSettings = { 
@@ -107,7 +112,10 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     cols: 2,
     gap: 20,
     borderRadius: 24,
-    cardShape: 'vertical-rectangle' // Default to rectangle
+    cardShape: 'vertical-rectangle', // Default to rectangle
+    scale: 1,
+    desktopScale: 1,
+    mobileScale: 1
   },
   brush: {
     radius: 25, // Increased from 10 to 25 - larger brush for easier scratching

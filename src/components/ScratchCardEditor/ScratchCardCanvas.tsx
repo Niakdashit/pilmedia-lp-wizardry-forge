@@ -6,11 +6,13 @@ import { shouldPlayerWin } from './utils/prizeAttribution';
 interface ScratchCardCanvasProps {
   previewMode?: boolean;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  formValidated?: boolean;
 }
 
 const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
   previewMode = false,
-  selectedDevice = 'desktop'
+  selectedDevice = 'desktop',
+  formValidated = true
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -179,6 +181,14 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     };
   }, []);
 
+  // Device-specific scale (fallback to global scale, then 1)
+  const deviceScale = useMemo(() => {
+    const global = grid.scale ?? 1;
+    if (selectedDevice === 'mobile') return grid.mobileScale ?? global;
+    // Use desktopScale for desktop & tablet
+    return grid.desktopScale ?? global;
+  }, [selectedDevice, grid.mobileScale, grid.desktopScale, grid.scale]);
+
   // Initialize scratch cards
   useEffect(() => {
     if (!isInitialized) {
@@ -221,8 +231,8 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       ? (logic.winnerReveal || globalReveal)
       : (logic.loserReveal || globalReveal);
 
-    // Determine if this card is scratchable
-    const isCardScratchable = previewMode || selectedCardId === null || selectedCardId === card.id;
+    // Determine if this card is scratchable - doit être grattable si le formulaire est validé
+    const isCardScratchable = previewMode || formValidated && (selectedCardId === null || selectedCardId === card.id);
 
     return (
       <ScratchCardItem
@@ -263,7 +273,8 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     updateCardProgress,
     revealCard,
     handleCardSelect,
-    previewMode
+    previewMode,
+    formValidated
   ]);
 
   return (
@@ -322,7 +333,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           gap: `${containerDimensions.gridGap}px`,
 
           // Dézoom non destructif pour FIT
-          transform: `scale(${containerDimensions.zoomScale})`,
+          transform: `scale(${containerDimensions.zoomScale * deviceScale})`,
           transformOrigin: 'center center',
           willChange: 'transform'
         }}
@@ -491,7 +502,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
 
   // Scratch functionality
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (card.revealed || previewMode) return;
+    if (card.revealed) return;
 
     // If card is not scratchable, select it but don't allow scratching
     if (!isScratchable) {

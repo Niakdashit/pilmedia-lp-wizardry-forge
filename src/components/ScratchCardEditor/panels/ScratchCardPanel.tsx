@@ -129,6 +129,39 @@ const ScratchCardPanel: React.FC = () => {
 
             {/* Manual Grid Settings removed (Lignes/Colonnes) */}
 
+            {/* Taille des cartes (échelles distinctes) */}
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Taille cartes Desktop: {Math.round(((config.grid.desktopScale ?? config.grid.scale ?? 1) * 100))}%
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.05"
+                  value={config.grid.desktopScale ?? config.grid.scale ?? 1}
+                  onChange={(e) => handleGridChange('desktopScale', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Taille cartes Mobile: {Math.round(((config.grid.mobileScale ?? config.grid.scale ?? 1) * 100))}%
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.05"
+                  value={config.grid.mobileScale ?? config.grid.scale ?? 1}
+                  onChange={(e) => handleGridChange('mobileScale', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">Ces réglages s’appliquent selon l’appareil en aperçu (desktop/tablette vs mobile).</p>
+              </div>
+            </div>
+
             {/* Spacing & Style */}
             <div className="grid grid-cols-2 gap-4">
               <div>

@@ -301,17 +301,21 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   // Les styles d'option sont maintenant gérés directement dans le rendu
   
-  // Déterminer la largeur cible (desktop/mobile) en respectant la config
-  const getTargetWidth = (): string => {
+  // Déterminer l'échelle (scale) à partir des largeurs configurées
+  const getScaleFromConfig = (): number => {
     const baseWidth = template.style.containerWidth;
     const desktopWidth = currentStyles.width || campaign?.design?.quizConfig?.style?.width;
     const mobileWidth = currentStyles.mobileWidth || campaign?.design?.quizConfig?.style?.mobileWidth;
     const chosen = device === 'mobile' ? (mobileWidth || desktopWidth) : (desktopWidth || mobileWidth);
-    const target = chosen || `${baseWidth}px`;
-    console.log('🔍 Width calculation:', { device, baseWidth, desktopWidth, mobileWidth, target });
-    return target;
+    if (!chosen || chosen === '100%' || chosen === 'auto') return 1;
+    const match = String(chosen).match(/(\d+(?:\.\d+)?)px/);
+    const px = match ? parseFloat(match[1]) : Number(chosen);
+    const s = !px || isNaN(px) ? 1 : px / baseWidth;
+    const clamped = Math.max(0.3, Math.min(2, s));
+    console.log('🔍 Scale from config:', { device, baseWidth, desktopWidth, mobileWidth, chosen, px, scale: clamped });
+    return clamped;
   };
-  const targetWidth = getTargetWidth();
+  const scale = getScaleFromConfig();
 
   // Calculer la couleur de fond avec opacité
   const getBackgroundWithOpacity = () => {
@@ -340,8 +344,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   };
 
   const containerStyle: React.CSSProperties = {
-    // Appliquer directement la largeur cible pour respecter la taille
-    width: targetWidth,
+    // Toujours la largeur interne de base; l'échelle est appliquée via un wrapper
+    width: `${template.style.containerWidth}px`,
     position: 'relative', // Assurer un contexte d'empilement propre
     zIndex: 20, // Au-dessus du CanvasContextMenu (z-index: 1)
     height: currentStyles.height === 'auto' || !currentStyles.height
@@ -375,6 +379,13 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     maxWidth: '100%',
     maxHeight: '100vh',
     boxSizing: 'border-box'
+  };
+
+  // Wrapper appliquant l'échelle visuelle
+  const scaleWrapperStyle: React.CSSProperties = {
+    display: 'inline-block',
+    transform: `scale(${scale})`,
+    transformOrigin: 'center center'
   };
 
   // Les styles de bouton sont maintenant utilisés directement via buttonStyles.normal, .hover, .active
@@ -621,7 +632,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
-      <div id="quiz-preview-container" style={containerStyle}>
+      <div style={scaleWrapperStyle}>
+        <div id="quiz-preview-container" style={containerStyle}>
         {/* Optional header/banner */}
         {template.header && (
           <div
@@ -686,6 +698,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
             <p style={{ color: '#9ca3af', fontSize: '14px' }}>Cliquez pour commencer</p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,8 @@ import {
   Layers,
   FormInput,
   Gamepad2,
-  Palette
+  Palette,
+  Settings
 } from 'lucide-react';
 import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
 import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
@@ -136,6 +137,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizTimeLimitChange,
   onQuizDifficultyChange,
   onQuizTemplateChange,
+  onQuizWidthChange,
+  onQuizMobileWidthChange,
   selectedDevice = 'desktop',
   hiddenTabs = [],
   onForceElementsTab,
@@ -325,6 +328,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       id: 'game', 
       label: 'Jeu', 
       icon: Gamepad2
+    },
+    { 
+      id: 'quiz', 
+      label: 'Configuration', 
+      icon: Settings
     }
   ];
   
@@ -458,6 +466,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             buttonHoverBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonHoverBackgroundColor ?? '#9fa4a4'}
             buttonActiveBackgroundColor={(campaign?.design?.quizConfig as any)?.style?.buttonActiveBackgroundColor ?? '#a7acb5'}
             onQuizWidthChange={(width: string) => {
+              // Propagate to parent (updates preview + events)
+              onQuizWidthChange?.(width);
+              // Also reflect in centralized store for consistency
               setCampaign((prev: any) => {
                 if (!prev) return null;
                 return {
@@ -477,6 +488,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               });
             }}
             onQuizMobileWidthChange={(width: string) => {
+              // Propagate to parent (updates preview + events)
+              onQuizMobileWidthChange?.(width);
+              // Also reflect in centralized store for consistency
               setCampaign((prev: any) => {
                 if (!prev) return null;
                 return {

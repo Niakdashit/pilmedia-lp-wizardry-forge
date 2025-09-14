@@ -574,7 +574,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     },
     { 
       id: 'game', 
-      label: 'Jackpot', 
+      label: 'Jeu', 
       icon: Gamepad2
     }
   ];
@@ -730,28 +730,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </React.Suspense>
         );
-      case 'jackpot':
+      case 'game':
+        // Onglet "Jeu" vidé: rien à afficher pour le modèle de base
         return (
-          <JackpotConfigPanel
-            onBack={() => {
-              onJackpotPanelChange?.(false);
-              _setActiveTab('elements');
-            }}
-            reelSymbols={jackpotSymbols}
-            onReelSymbolsChange={handleJackpotSymbolsChange}
-            selectedTemplate={jackpotTemplate}
-            onTemplateChange={handleJackpotTemplateChange}
-            borderColor={jackpotBorderColor}
-            backgroundColor={jackpotBackgroundColor}
-            textColor={jackpotTextColor}
-            onBorderColorChange={handleJackpotBorderColorChange}
-            onBackgroundColorChange={handleJackpotBackgroundColorChange}
-            onTextColorChange={handleJackpotTextColorChange}
-            customFrame={customFrame}
-            onCustomFrameChange={handleCustomFrameChange}
-            customTemplateUrl={customTemplateUrl}
-            onCustomTemplateChange={handleCustomTemplateChange}
-          />
+          <div className="p-4 text-sm text-gray-400">
+            Aucun panneau de jeu dans ce modèle.
+          </div>
         );
       case 'quiz':
         return (

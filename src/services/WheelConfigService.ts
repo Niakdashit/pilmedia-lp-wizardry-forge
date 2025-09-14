@@ -154,8 +154,9 @@ export class WheelConfigService {
     const defaults = {
       borderStyle: 'classic',
       borderColor: '#841b60',
-      borderWidth: 12,
-      scale: 1,
+      borderWidth: 32,
+      // Panel affiche 0-100% via (scale/3)*100 => 77% => 2.31
+      scale: 2.31,
       size: 200,
       showBulbs: false,
       position: 'center' as const,
@@ -285,8 +286,10 @@ export class WheelConfigService {
       secondaryColor = '#ffffff';
     }
 
-    // Choix de la couleur de texte lisible (noir/blanc) selon luminance
-    const getReadableTextColor = (bgHex: string) => (WheelConfigService.luminanceFromHex(bgHex) > 0.5 ? '#000000' : '#ffffff');
+    // Règle de couleur de texte par défaut: sur les segments blancs, utiliser la couleur primaire; sur les segments primaires, utiliser blanc
+    const getOppositeTextColor = (bgHex: string) => (bgHex?.toLowerCase() === (secondaryColor?.toLowerCase() || '#ffffff')
+      ? normPrimary
+      : '#ffffff');
 
     // Toujours imposer l'alternance (même si seg.color est défini) pour respecter la règle globale
     // Si le nombre de segments est impair, ajouter un "spacer" neutre pour obtenir un compte pair
@@ -303,14 +306,16 @@ export class WheelConfigService {
     }
     if (cfgSegments.length > 0) {
       const out = cfgSegments.map((seg, idx) => {
-        const bg = idx % 2 === 0 ? normPrimary : secondaryColor;
+        // Respecter une couleur personnalisée définie sur le segment, sinon fallback à l'alternance primaire/blanc
+        const customHex = WheelConfigService.parseToHex((seg as any)?.color || undefined) || '';
+        const bg = customHex || (idx % 2 === 0 ? normPrimary : secondaryColor);
         // Conserver les champs additionnels (ex: prizeId, image, etc.) pour la logique de gain
         return {
           ...(seg as any),
           id: seg.id ?? String(idx + 1),
           label: seg.label ?? `Item ${idx + 1}`,
           color: bg,
-          textColor: getReadableTextColor(bg),
+          textColor: getOppositeTextColor(bg),
           probability: seg.probability,
           isWinning: seg.isWinning
         } as any;
@@ -335,7 +340,7 @@ export class WheelConfigService {
     ];
     return demo.map((s, idx) => {
       const bg = idx % 2 === 0 ? normPrimary : secondaryColor;
-      return { id: s.id, label: s.label, color: bg, textColor: getReadableTextColor(bg) } as WheelSegment;
+      return { id: s.id, label: s.label, color: bg, textColor: getOppositeTextColor(bg) } as WheelSegment;
     });
   }
 
@@ -355,13 +360,13 @@ export class WheelConfigService {
       };
     }
 
-    // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) pour tous les devices
-    if (position === 'center' || device !== 'desktop') {
+    // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) sur tous les devices
+    if (position === 'center') {
       const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden';
       const centerClass = 'left-1/2 -translate-x-1/2';
       return {
-        containerClass: `${base} ${centerClass} z-40`,
-        wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
+        containerClass: `${base} ${centerClass} z-50`,
+        wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105 z-50',
         transform: 'translate-y-1/3',
         styles: {
           paddingBottom: '-30%'
@@ -369,13 +374,15 @@ export class WheelConfigService {
       };
     }
 
-    // Cas 2: Desktop + (left|right) => visible entièrement et centré verticalement
+    // Cas 2: Position gauche/droite -> visible entièrement et centré verticalement (tous devices)
     const base = 'absolute top-1/2 transform -translate-y-1/2';
     const positionClass = position === 'left' ? 'left-0' : 'right-0';
-    const insetStyles = position === 'left' ? { left: '150px' } : { right: '150px' };
+    // Insets adaptés selon device
+    const inset = device === 'mobile' ? 16 : device === 'tablet' ? 72 : 150;
+    const insetStyles = position === 'left' ? { left: `${inset}px` } : { right: `${inset}px` };
     return {
-      containerClass: `${base} ${positionClass} z-40`,
-      wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105',
+      containerClass: `${base} ${positionClass} z-50`,
+      wheelClass: 'cursor-pointer pointer-events-auto transition-all duration-200 hover:brightness-105 z-50',
       transform: '-translate-y-1/2',
       styles: insetStyles
     };

@@ -23,8 +23,7 @@ import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopu
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
-import SlotJackpot from '../SlotJackpot';
-import { isFeatureEnabled } from '../../utils/features';
+// Removed game components for a clean base model canvas
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
@@ -75,7 +74,7 @@ export interface DesignCanvasProps {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
-  // Inline jackpot panel controls
+  // Inline jackpot panel controls (unused in ModelEditor base)
   showJackpotPanel?: boolean;
   onJackpotPanelChange?: (show: boolean) => void;
   // Read-only mode to disable interactions
@@ -1905,6 +1904,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     startDragging,
                     stopDragging
                   }}
+                  onOpenQuizPanel={() => onQuizPanelChange?.(true)}
                 />
               );
             })}
@@ -2022,21 +2022,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })()}
 
-            {/* Slot Jackpot Game - Feature Flag Controlled */}
-            {isFeatureEnabled('slotJackpot') && (
-              <SlotJackpot
-                onWin={(result) => {
-                  alert(`🎉 JACKPOT! ${result.join(' ')}`);
-                }}
-                onLose={() => {
-                  // Handle loss case if needed
-                }}
-                disabled={readOnly}
-                onOpenConfig={() => {
-                  onJackpotPanelChange?.(true);
-                }}
-              />
-            )}
+            {/* No in-canvas game preview in ModelEditor base */}
 
             </div>
 

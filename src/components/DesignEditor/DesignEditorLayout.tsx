@@ -124,7 +124,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
       wheelConfig: {
-        scale: 2
+        // Par défaut: 77% (panel calcule via scale/3)
+        scale: 2.31,
+        borderColor: '#841b60',
+        borderWidth: 32
       }
     }
   });
@@ -705,6 +708,26 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     setShowFunnel(!showFunnel);
   };
 
+  // Helper: ouvrir/fermer le panneau "Roue de fortune" et forcer l'onglet correspondant
+  const handleWheelPanelChange = useCallback((show: boolean) => {
+    setShowWheelPanel(show);
+    if (show) {
+      // Fermer explicitement le panneau Design pour éviter un basculement automatique vers "Design"
+      setShowDesignInSidebar(false);
+      // Forcer immédiatement l'onglet 'wheel' dans la sidebar si dispo
+      try { sidebarRef.current?.setActiveTab('wheel'); } catch {}
+    }
+  }, []);
+
+  // Ouvrir automatiquement l'onglet "Roue de fortune" dans la sidebar quand on demande l'ouverture du panneau
+  useEffect(() => {
+    if (showWheelPanel && sidebarRef.current) {
+      try {
+        sidebarRef.current.setActiveTab('wheel');
+      } catch {}
+    }
+  }, [showWheelPanel]);
+
   // Save and continue: persist then navigate to settings page
   const handleSaveAndContinue = useCallback(() => {
     const fn = createSaveAndContinueHandler(
@@ -1119,8 +1142,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
-              <HybridSidebar
-                ref={sidebarRef}
+            <HybridSidebar
+              ref={sidebarRef}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
@@ -1139,7 +1162,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
                 showWheelPanel={showWheelPanel}
-                onWheelPanelChange={setShowWheelPanel}
+                onWheelPanelChange={handleWheelPanelChange}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {
@@ -1188,7 +1211,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-              campaign={campaignConfig}
+              campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
@@ -1255,7 +1278,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               canUndo={canUndo}
               canRedo={canRedo}
               showWheelPanel={showWheelPanel}
-              onWheelPanelChange={setShowWheelPanel}
+              onWheelPanelChange={handleWheelPanelChange}
             />
             {/* Zoom Slider - Always visible in bottom center */}
             {selectedDevice === 'mobile' && (

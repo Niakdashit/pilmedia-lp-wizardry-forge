@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
-const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
+// Removed game preview components to keep ModelEditor as a clean base
+// const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
+// const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
@@ -999,7 +1000,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   const handlePreview = () => {
-    setShowFunnel(!showFunnel);
+    // Toggle overlay preview (read-only DesignCanvas). No game components.
+    setShowFunnel((v) => !v);
   };
 
   // Save and continue: persist then navigate to settings page
@@ -1423,9 +1425,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         </div>
       </GradientBand>
 
-      {/* Top Toolbar - Hidden only in preview mode */}
-      {!showFunnel && (
-        <>
+      {/* Top Toolbar */}
+      <>
           <DesignToolbar
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
@@ -1447,36 +1448,44 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           <div className="absolute top-4 right-4 z-10">
             <KeyboardShortcutsHelp shortcuts={shortcuts} />
           </div>
-        </>
-      )}
+      </>
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        {showFunnel ? (
-          /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-            {/* Floating Edit Mode Button */}
-            <button
-              onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
-            >
-              Mode édition
-            </button>
-            {campaignData?.type === 'quiz' ? (
-              <FunnelQuizParticipate
-                campaign={campaignData}
-                previewMode={selectedDevice}
-              />
-            ) : (
-              <FunnelUnlockedGame
-                campaign={campaignData}
-                previewMode={selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
-            )}
-          </div>
-        ) : (
-          /* Design Editor Mode */
+          {/* Overlay Preview (read-only DesignCanvas, no games) */}
+          {showFunnel && (
+            <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+              {/* Floating Edit Mode Button */}
+              <button
+                onClick={() => setShowFunnel(false)}
+                className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+              >
+                Mode édition
+              </button>
+              <div className="relative w-full h-full">
+                <DesignCanvas
+                  ref={canvasRef}
+                  selectedDevice={selectedDevice}
+                  elements={canvasElements}
+                  onElementsChange={() => {}}
+                  background={canvasBackground}
+                  campaign={campaignConfig}
+                  onCampaignChange={() => {}}
+                  zoom={1}
+                  onZoomChange={() => {}}
+                  selectedElement={null}
+                  onSelectedElementChange={() => {}}
+                  selectedElements={[]}
+                  onSelectedElementsChange={() => {}}
+                  onElementUpdate={() => {}}
+                  // Read-only to prevent edits in preview
+                  readOnly
+                  containerClassName="bg-transparent"
+                />
+              </div>
+            </div>
+          )}
+          {/* Design Editor Mode */}
           <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
@@ -1862,7 +1871,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               />
             )}
           </>
-        )}
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (
