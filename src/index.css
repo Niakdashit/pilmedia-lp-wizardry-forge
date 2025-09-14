@@ -88,13 +88,13 @@
 /* Animations pour les effets de texte */
 @keyframes glitch {
   0% {
-    text-shadow: none;
+    text-shadow: 2px 0 #ff00ff, -2px 0 #ffff00;
   }
   50% {
-    text-shadow: none;
+    text-shadow: -2px 0 #ff00ff, 2px 0 #ffff00;
   }
   100% {
-    text-shadow: none;
+    text-shadow: 2px 0 #ff00ff, -2px 0 #ffff00;
   }
 }
 
@@ -186,11 +186,11 @@ html, body {
 
 @layer components {
   .game-shadow {
-    filter: none;
+    filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.1));
   }
   
   .wheel-pointer {
-    filter: none;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
   }
   
   /* Responsive table wrapper */
@@ -298,7 +298,7 @@ html, body {
   }
 
   .dice-svg {
-    filter: none;
+    @apply drop-shadow-lg;
   }
 
   .dice-results {
@@ -823,25 +823,25 @@ html, body {
 /* Animations pour les effets de texte avancés */
 @keyframes glitch {
   0% {
-    text-shadow: none;
+    text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00;
   }
   15% {
-    text-shadow: none;
+    text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00;
   }
   16% {
-    text-shadow: none;
+    text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00;
   }
   49% {
-    text-shadow: none;
+    text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00;
   }
   50% {
-    text-shadow: none;
+    text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0 -0.04em 0 #fffc00;
   }
   99% {
-    text-shadow: none;
+    text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0 -0.04em 0 #fffc00;
   }
   100% {
-    text-shadow: none;
+    text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00;
   }
 }
 
@@ -858,10 +858,10 @@ html, body {
 
 /* Classe utilitaire pour désactiver la sélection pendant les animations */
 .no-select {
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* Classes de durée dynamiques */

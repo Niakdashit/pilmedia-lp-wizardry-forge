@@ -15,7 +15,6 @@ import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import TabJackpot from '../configurators/TabJackpot';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -151,21 +150,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const setCampaign = useEditorStore((s) => s.setCampaign) as unknown as (updater: any) => void;
   // Jackpot symbols management
   const jackpotSymbols = (campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'];
-  // Préserver le template sélectionné entre les modes via localStorage (fallback secondaire)
-  const lsJackpotTemplate = (typeof window !== 'undefined') ? localStorage.getItem('jackpotTemplate') : null;
-  const jackpotTemplate = (campaign as any)?.gameConfig?.jackpot?.template || lsJackpotTemplate || 'jackpot-frame';
-  const jackpotStyle = (campaign as any)?.gameConfig?.jackpot?.style || {};
-  const customFrame = (campaign as any)?.gameConfig?.jackpot?.customFrame || {
-    frameColor: '#f4d555',
-    backgroundColor: '#c1ae44',
-    showBorder: true,
-    borderColor: '#b8860b',
-    frameThickness: 5
-  };
-  const customTemplateUrl = (campaign as any)?.gameConfig?.jackpot?.customTemplateUrl || '';
-  const jackpotBorderColor = jackpotStyle.borderColor || '#ffd700';
-  const jackpotBackgroundColor = jackpotStyle.backgroundColor || '#ffffff';
-  const jackpotTextColor = jackpotStyle.textColor || '#333333';
 
   const handleJackpotSymbolsChange = (symbols: string[]) => {
     setCampaign((prev: any) => {
@@ -177,143 +161,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           jackpot: {
             ...(base.gameConfig?.jackpot || {}),
             symbols
-          }
-        }
-      };
-    });
-  };
-
-  const handleCustomTemplateChange = (url: string) => {
-    setCampaign((prev: any) => {
-      const base = prev || {};
-      return {
-        ...base,
-        gameConfig: {
-          ...(base.gameConfig || {}),
-          jackpot: {
-            ...(base.gameConfig?.jackpot || {}),
-            customTemplateUrl: url
-          }
-        }
-      };
-    });
-  };
-
-  const handleCustomFrameChange = (updates: Partial<typeof customFrame>) => {
-    setCampaign((prev: any) => {
-      const base = prev || {};
-      return {
-        ...base,
-        gameConfig: {
-          ...(base.gameConfig || {}),
-          jackpot: {
-            ...(base.gameConfig?.jackpot || {}),
-            customFrame: {
-              ...(base.gameConfig?.jackpot?.customFrame || {}),
-              ...updates
-            }
-          }
-        }
-      };
-    });
-  };
-
-  const handleJackpotTemplateChange = (templateId: string) => {
-    console.log('🎰 [HybridSidebar] handleJackpotTemplateChange called with:', templateId);
-    console.log('🎰 [HybridSidebar] Current campaign before update:', (campaign as any)?.gameConfig?.jackpot?.template);
-    
-    // PERSISTANCE IMMÉDIATE - PRIORITÉ ABSOLUE
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('jackpotTemplate', templateId);
-        console.log('🎰 [HybridSidebar] Template persisté dans localStorage:', templateId);
-      }
-    } catch {}
-    setCampaign((prev: any) => {
-      const base = prev || {};
-      const defaults = {
-        frameColor: '#f4d555',
-        backgroundColor: '#c1ae44',
-        showBorder: true,
-        borderColor: '#b8860b',
-        frameThickness: 5
-      };
-      const existingCF = base?.gameConfig?.jackpot?.customFrame || {};
-      const needsCustomDefaults = templateId === 'custom-frame' && (
-        !base?.gameConfig?.jackpot?.customFrame ||
-        Object.keys(defaults).some((k) => (existingCF as any)[k] === undefined)
-      );
-      const updated = {
-        ...base,
-        gameConfig: {
-          ...(base.gameConfig || {}),
-          jackpot: {
-            ...(base.gameConfig?.jackpot || {}),
-            template: templateId,
-            ...(needsCustomDefaults
-              ? {
-                  customFrame: { ...defaults, ...existingCF }
-                }
-              : {})
-          }
-        }
-      };
-      console.log('🎰 [HybridSidebar] Updated campaign:', updated);
-      return updated;
-    });
-  };
-
-  const handleJackpotBorderColorChange = (color: string) => {
-    setCampaign((prev: any) => {
-      const base = prev || {};
-      return {
-        ...base,
-        gameConfig: {
-          ...(base.gameConfig || {}),
-          jackpot: {
-            ...(base.gameConfig?.jackpot || {}),
-            style: {
-              ...(base.gameConfig?.jackpot?.style || {}),
-              borderColor: color
-            }
-          }
-        }
-      };
-    });
-  };
-
-  const handleJackpotBackgroundColorChange = (color: string) => {
-    setCampaign((prev: any) => {
-      const base = prev || {};
-      return {
-        ...base,
-        gameConfig: {
-          ...(base.gameConfig || {}),
-          jackpot: {
-            ...(base.gameConfig?.jackpot || {}),
-            style: {
-              ...(base.gameConfig?.jackpot?.style || {}),
-              backgroundColor: color
-            }
-          }
-        }
-      };
-    });
-  };
-
-  const handleJackpotTextColorChange = (color: string) => {
-    setCampaign((prev: any) => {
-      const base = prev || {};
-      return {
-        ...base,
-        gameConfig: {
-          ...(base.gameConfig || {}),
-          jackpot: {
-            ...(base.gameConfig?.jackpot || {}),
-            style: {
-              ...(base.gameConfig?.jackpot?.style || {}),
-              textColor: color
-            }
           }
         }
       };
@@ -334,72 +181,25 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, []);
 
-  // Au montage: si le store diffère de localStorage, aligner sur localStorage pour éviter les resets
-  React.useEffect(() => {
-    const current = (campaign as any)?.gameConfig?.jackpot?.template;
-    if (lsJackpotTemplate && current !== lsJackpotTemplate) {
-      setCampaign((prev: any) => {
-        const base = prev || {};
-        return {
-          ...base,
-          gameConfig: {
-            ...(base.gameConfig || {}),
-            jackpot: {
-              ...(base.gameConfig?.jackpot || {}),
-              template: lsJackpotTemplate
-            }
-          }
-        };
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Si le template actuel est 'custom-frame', fusionner les valeurs manquantes avec les défauts pour refléter visuellement
-  React.useEffect(() => {
-    if (jackpotTemplate === 'custom-frame') {
-      const defaults = {
-        frameColor: '#f4d555',
-        backgroundColor: '#c1ae44',
-        showBorder: true,
-        borderColor: '#b8860b',
-        frameThickness: 5
-      };
-      const currentCF = (campaign as any)?.gameConfig?.jackpot?.customFrame || {};
-      const needsUpdate = Object.keys(defaults).some((k) => (currentCF as any)[k] === undefined);
-      if (needsUpdate) {
-        setCampaign((prev: any) => {
-          const base = prev || {};
-          return {
-            ...base,
-            gameConfig: {
-              ...(base.gameConfig || {}),
-              jackpot: {
-                ...(base.gameConfig?.jackpot || {}),
-                customFrame: { ...defaults, ...currentCF }
-              }
-            }
-          };
-        });
-      }
-    }
-  }, [jackpotTemplate]);
-
   const [activeTab, _setActiveTab] = useState<string | null>('elements');
 
-  // Gestion des changements de showJackpotPanel (ouverture unidirectionnelle)
-  // Si le parent demande l'ouverture, on ouvre l'onglet jackpot.
-  // Ne pas forcer la fermeture ici pour éviter les boucles Elements <-> Jackpot.
+  // Gestion des changements de showJackpotPanel
   React.useEffect(() => {
-    if (showJackpotPanel && activeTab !== 'jackpot') {
+    if (showJackpotPanel) {
       _setActiveTab('jackpot');
+    } else if (activeTab === 'jackpot') {
+      _setActiveTab('elements');
     }
-  }, [showJackpotPanel, activeTab]);
+  }, [showJackpotPanel]);
   
-  // Gestion des changements d'onglet -> notifie simplement l'état voulu au parent
+  // Gestion des changements d'onglet
   React.useEffect(() => {
-    onJackpotPanelChange?.(activeTab === 'jackpot');
-  }, [activeTab, onJackpotPanelChange]);
+    if (activeTab === 'jackpot') {
+      onJackpotPanelChange?.(true);
+    } else if (activeTab !== 'jackpot' && showJackpotPanel) {
+      onJackpotPanelChange?.(false);
+    }
+  }, [activeTab]);
 
   React.useEffect(() => {
     if (showQuizPanel) {
@@ -685,11 +485,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
     
     if (activeTab === tabId) {
-      // Ne rien faire si on clique sur l'onglet déjà actif pour éviter les oscillations
-      return;
+      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
+      setActiveTab(null); // Close if clicking on active tab
+    } else {
+      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
+      setActiveTab(tabId);
     }
-    console.log('🗂️ Ouverture du nouvel onglet:', tabId);
-    setActiveTab(tabId);
   };
 
   const renderPanel = (tabId: string) => {
@@ -739,18 +540,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             }}
             reelSymbols={jackpotSymbols}
             onReelSymbolsChange={handleJackpotSymbolsChange}
-            selectedTemplate={jackpotTemplate}
-            onTemplateChange={handleJackpotTemplateChange}
-            borderColor={jackpotBorderColor}
-            backgroundColor={jackpotBackgroundColor}
-            textColor={jackpotTextColor}
-            onBorderColorChange={handleJackpotBorderColorChange}
-            onBackgroundColorChange={handleJackpotBackgroundColorChange}
-            onTextColorChange={handleJackpotTextColorChange}
-            customFrame={customFrame}
-            onCustomFrameChange={handleCustomFrameChange}
-            customTemplateUrl={customTemplateUrl}
-            onCustomTemplateChange={handleCustomTemplateChange}
           />
         );
       case 'quiz':
@@ -981,14 +770,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
-        return (
-          <div className="h-full overflow-y-auto p-4">
-            <TabJackpot 
-              campaign={campaign}
-              setCampaign={setCampaign as any}
-            />
-          </div>
-        );
+        return <div className="p-4" />;
       case 'form':
         return (
           <div className="p-4">
@@ -1056,7 +838,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 title={tab.label}
                 style={{ 
                   pointerEvents: 'auto',
-                  userSelect: 'text'
+                  userSelect: 'none'
                 }}
               >
                 <Icon className="w-5 h-5" style={{ pointerEvents: 'none' }} />
@@ -1120,11 +902,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 title={tab.label}
                 style={{ 
                   pointerEvents: 'auto',
-                  userSelect: 'text'
+                  userSelect: 'none'
                 }}
               >
                 <Icon className="w-6 h-6 mb-1" style={{ pointerEvents: 'none' }} />
-                <span className="text-xs font-medium select-text" style={{ pointerEvents: 'none' }}>{tab.label}</span>
+                <span className="text-xs font-medium" style={{ pointerEvents: 'none' }}>{tab.label}</span>
               </button>
             );
           })}
@@ -1136,7 +918,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
-            <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter select-text">
+            <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
               {activeTab === 'effects' ? 'Effets de texte' : 
                activeTab === 'animations' ? 'Animations de texte' : 
                activeTab === 'position' ? 'Position' : 

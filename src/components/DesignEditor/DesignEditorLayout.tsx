@@ -1026,7 +1026,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               marginLeft: '24px'
             }}
           >
-            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-text">
+            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-none">
               Edition de template
             </span>
           </div>

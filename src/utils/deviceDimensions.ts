@@ -54,39 +54,3 @@ export const calculateCenteredPosition = (
     y: (container.height - elementSize.height) / 2
   };
 };
-
-export const calculateCenteredTopPosition = (
-  container: { width: number; height: number },
-  elementSize: { width: number; height: number },
-  topOffset: number = 50
-) => {
-  return {
-    x: (container.width - elementSize.width) / 2,
-    y: topOffset
-  };
-};
-
-export const estimateTextWidth = (
-  text: string,
-  fontSize: number,
-  fontWeight: string = 'normal',
-  fontFamily: string = 'Open Sans'
-) => {
-  // Estimation approximative de la largeur du texte
-  // Facteur de base pour la largeur des caractères
-  let baseCharWidth = fontSize * 0.6; // Approximation générale
-  
-  // Ajustement selon le poids de la police
-  if (fontWeight === 'bold' || fontWeight === '700' || fontWeight === '800' || fontWeight === '900') {
-    baseCharWidth *= 1.15; // Le texte en gras est environ 15% plus large
-  }
-  
-  // Ajustement selon la famille de police (approximatif)
-  if (fontFamily.includes('Condensed') || fontFamily.includes('Narrow')) {
-    baseCharWidth *= 0.8;
-  } else if (fontFamily.includes('Extended') || fontFamily.includes('Wide')) {
-    baseCharWidth *= 1.2;
-  }
-  
-  return Math.ceil(text.length * baseCharWidth);
-};

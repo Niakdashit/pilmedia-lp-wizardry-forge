@@ -21,7 +21,7 @@ const DashboardHeader: React.FC = () => {
     type: 'form',
     label: 'Formulaire'
   }];
-  return <div className="relative w-full mt-2 pb-4 px-6 select-text sm:px-8 lg:px-10 z-10 overflow-hidden">
+  return <div className="relative w-full mt-2 pb-4 px-6 select-none sm:px-8 lg:px-10 z-10 overflow-hidden">
       {/* Fond glassmorphique pastel bleu, identique à PageHeader */}
       <div className="relative max-w-7xl mx-auto rounded-b-3xl overflow-hidden">
         <div className="

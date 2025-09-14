@@ -8,13 +8,11 @@ import {
   Layers,
   Settings,
   RotateCcw,
-  RotateCw,
-  DollarSign
+  RotateCw
 } from 'lucide-react';
 import AssetsPanel from '../panels/AssetsPanel';
 import BackgroundPanel from '../panels/BackgroundPanel';
 import CampaignConfigPanel from '../panels/CampaignConfigPanel';
-import JackpotConfigPanel from '../../SlotJackpot/panels/JackpotConfigPanel';
 
 // Lazy-loaded heavy panels
 const loadLayersPanel = () => import('../panels/LayersPanel');
@@ -37,24 +35,6 @@ interface MobileSidebarDrawerProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
-  // Jackpot configuration props
-  jackpotSymbols?: string[];
-  onJackpotSymbolsChange?: (symbols: string[]) => void;
-  jackpotTemplate?: string;
-  onJackpotTemplateChange?: (template: string) => void;
-  jackpotBorderColor?: string;
-  jackpotBackgroundColor?: string;
-  jackpotTextColor?: string;
-  onJackpotBorderColorChange?: (color: string) => void;
-  onJackpotBackgroundColorChange?: (color: string) => void;
-  onJackpotTextColorChange?: (color: string) => void;
-  customFrame?: any;
-  onJackpotCustomFrameChange?: (frame: any) => void;
-  customTemplateUrl?: string;
-  onJackpotCustomTemplateChange?: (url: string) => void;
-  // Control jackpot config drawer externally
-  showJackpotPanel?: boolean;
-  onJackpotPanelChange?: (show: boolean) => void;
 }
 
 const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
@@ -71,23 +51,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   onUndo,
   onRedo,
   canUndo,
-  canRedo,
-  jackpotSymbols,
-  onJackpotSymbolsChange,
-  jackpotTemplate,
-  onJackpotTemplateChange,
-  jackpotBorderColor,
-  jackpotBackgroundColor,
-  jackpotTextColor,
-  onJackpotBorderColorChange,
-  onJackpotBackgroundColorChange,
-  onJackpotTextColorChange,
-  customFrame,
-  onJackpotCustomFrameChange,
-  customTemplateUrl,
-  onJackpotCustomTemplateChange,
-  showJackpotPanel = false,
-  onJackpotPanelChange
+  canRedo
 }) => {
   const [activeTab, setActiveTab] = useState<string>('assets');
   const [isMinimized, setIsMinimized] = useState(true);
@@ -96,8 +60,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     { id: 'assets', label: 'Éléments', icon: Plus, color: '#3B82F6' },
     { id: 'background', label: 'Design', icon: Palette, color: '#EC4899' },
     { id: 'layers', label: 'Calques', icon: Layers, color: '#10B981' },
-    { id: 'jackpot', label: 'Jackpot', icon: DollarSign, color: '#F59E0B' },
-    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#8B5CF6' }
+    { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' }
   ];
 
   // Device detection: show bottom bar only on real mobile devices
@@ -120,19 +83,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
       setIsMinimized(false);
     }
   }, [selectedElement, disableAutoOpen]);
-
-  // Ouverture demandée par le parent pour le panneau Jackpot
-  useEffect(() => {
-    if (showJackpotPanel && activeTab !== 'jackpot') {
-      setActiveTab('jackpot');
-      setIsMinimized(false);
-    }
-  }, [showJackpotPanel, activeTab]);
-
-  // Notifier le parent des changements d'onglet Jackpot
-  useEffect(() => {
-    onJackpotPanelChange?.(activeTab === 'jackpot');
-  }, [activeTab, onJackpotPanelChange]);
 
   // Prefetch on hover/touch to smooth first render of heavy tabs
   const prefetchTab = (tabId: string) => {
@@ -189,26 +139,6 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
               onElementsChange={onElementsChange || (() => {})} 
             />
           </React.Suspense>
-        );
-      case 'jackpot':
-        return (
-          <JackpotConfigPanel
-            onBack={() => setActiveTab('assets')}
-            reelSymbols={jackpotSymbols}
-            onReelSymbolsChange={onJackpotSymbolsChange}
-            selectedTemplate={jackpotTemplate}
-            onTemplateChange={onJackpotTemplateChange}
-            borderColor={jackpotBorderColor}
-            backgroundColor={jackpotBackgroundColor}
-            textColor={jackpotTextColor}
-            onBorderColorChange={onJackpotBorderColorChange}
-            onBackgroundColorChange={onJackpotBackgroundColorChange}
-            onTextColorChange={onJackpotTextColorChange}
-            customFrame={customFrame}
-            onCustomFrameChange={onJackpotCustomFrameChange}
-            customTemplateUrl={customTemplateUrl}
-            onCustomTemplateChange={onJackpotCustomTemplateChange}
-          />
         );
       case 'campaign':
         return (

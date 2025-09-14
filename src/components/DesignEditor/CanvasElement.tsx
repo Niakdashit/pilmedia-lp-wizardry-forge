@@ -1102,7 +1102,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
             fontStyle: element.fontStyle || element.style?.fontStyle || 'normal',
             textDecoration: element.textDecoration || element.style?.textDecoration || 'none',
-            textAlign: element.textAlign || (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.style?.textAlign || 'left',
+            textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
             lineHeight: '1.2',
             ...elementStyle
           };
@@ -1182,7 +1182,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         ) : (
           <div
             ref={textRef}
-            className={`${readOnly ? '' : 'cursor-move'} select-text whitespace-pre-wrap break-words`
+            className={`${readOnly ? '' : 'cursor-move'} select-none whitespace-pre-wrap break-words`
             }
             style={getTextStyle()}
             data-element-type="text"

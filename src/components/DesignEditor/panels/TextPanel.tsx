@@ -3,14 +3,13 @@ import type { CSSProperties } from 'react';
 import { Type } from 'lucide-react';
 import TextEffectsPanel from './TextEffectsPanel';
 import { titlePresets, compositeTitlePresets } from '../../../config/titlePresets';
-import { getDeviceDimensions, calculateCenteredPosition, calculateCenteredTopPosition, estimateTextWidth } from '../../../utils/deviceDimensions';
+import { getDeviceDimensions, calculateCenteredPosition } from '../../../utils/deviceDimensions';
 
 interface TextPanelProps {
   onAddElement: (element: any) => void;
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
-  elements?: any[];
 }
 
 // Polices organisées par catégories - Enrichies avec de nouvelles Google Fonts
@@ -79,8 +78,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
   onAddElement,
   selectedElement,
   onElementUpdate,
-  selectedDevice = 'desktop',
-  elements = []
+  selectedDevice = 'desktop'
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(fontCategories[0]);
   const [showEffects, setShowEffects] = useState(false);
@@ -127,33 +125,17 @@ const TextPanel: React.FC<TextPanelProps> = ({
     }
     
     // Sinon, créer un nouveau texte comme avant
-    const currentCanvas = getDeviceDimensions(selectedDevice);
-    
-    // Vérifier si c'est le premier texte ajouté
-    const existingTextElements = elements.filter(el => el.type === 'text');
-    const isFirstText = existingTextElements.length === 0;
-    const baseFontSize = preset?.fontSize || 24;
-    const fontSize = isFirstText ? Math.round(baseFontSize * 2) : baseFontSize;
-    const fontWeight = preset?.fontWeight || (isFirstText ? 'bold' : 'normal');
-    const fontFamily = preset?.fontFamily || 'Open Sans';
-    const textContent = preset?.text || stylePreset?.text || 'Nouveau texte';
-    
-    // Calculer la largeur estimée du texte pour un meilleur centrage
-    const estimatedTextWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
-    const textSize = { width: estimatedTextWidth, height: fontSize * 1.2 };
-    const centeredTopPosition = calculateCenteredTopPosition(currentCanvas, textSize, 50);
-    
     const newElement: any = {
       id: `text-${Date.now()}`,
       type: 'text',
-      content: textContent,
-      x: centeredTopPosition.x,
-      y: centeredTopPosition.y,
-      fontSize: fontSize,
+      content: preset?.text || stylePreset?.text || 'Nouveau texte',
+      x: Math.random() * 400 + 100,
+      y: Math.random() * 300 + 100,
+      fontSize: preset?.fontSize || 24,
       color: preset?.color || '#000000',
-      fontFamily: fontFamily,
-      fontWeight: fontWeight,
-      textAlign: preset?.textAlign || (isFirstText ? 'center' : 'left'),
+      fontFamily: preset?.fontFamily || 'Open Sans',
+      fontWeight: preset?.fontWeight || 'normal',
+      textAlign: preset?.textAlign || 'left',
       ...(typeof preset?.letterSpacing !== 'undefined' ? { letterSpacing: preset.letterSpacing } : {}),
       ...(typeof preset?.lineHeight !== 'undefined' ? { lineHeight: preset.lineHeight } : {}),
       ...(stylePreset && {
@@ -166,31 +148,24 @@ const TextPanel: React.FC<TextPanelProps> = ({
         }
       })
     };
-    // Pre-set coordinates for all devices to ensure proper centering
-    const allDevices = ['desktop', 'tablet', 'mobile'] as const;
-    allDevices.forEach(device => {
-      if (device !== selectedDevice) {
-        const deviceCanvas = getDeviceDimensions(device);
-        const deviceEstimatedWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
-        const deviceTextSize = { width: deviceEstimatedWidth, height: fontSize * 1.2 };
-        const deviceCenteredTop = calculateCenteredTopPosition(deviceCanvas, deviceTextSize, 50);
-        newElement[device] = {
-          ...(newElement[device] || {}),
-          x: deviceCenteredTop.x,
-          y: deviceCenteredTop.y
-        };
-      }
-    });
+    // If added from desktop, pre-set mobile coordinates to be centered on mobile canvas
+    if (selectedDevice === 'desktop') {
+      const mobileCanvas = getDeviceDimensions('mobile');
+      const defaultTextSize = { width: 200, height: 40 };
+      const centered = calculateCenteredPosition(mobileCanvas, defaultTextSize);
+      newElement.mobile = {
+        ...(newElement.mobile || {}),
+        x: centered.x,
+        y: centered.y
+      };
+    }
     onAddElement(newElement);
   };
 
   // Insérer un template composite (plusieurs calques de texte)
   const addComposite = (composite: any) => {
-    const currentCanvas = getDeviceDimensions(selectedDevice);
-    const defaultTextSize = { width: 200, height: 40 };
-    const centeredTopPosition = calculateCenteredTopPosition(currentCanvas, defaultTextSize, 50);
-    const baseX = centeredTopPosition.x;
-    const baseY = centeredTopPosition.y;
+    const baseX = Math.random() * 400 + 100;
+    const baseY = Math.random() * 300 + 100;
     const layers = [...(composite?.layers || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
     layers.forEach((layer: any, idx: number) => {
       const el: any = {

@@ -1555,8 +1555,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canUndo={canUndo}
         canRedo={canRedo}
         onClearSelection={handleClearSelection}
-        showJackpotPanel={showJackpotPanel}
-        onJackpotPanelChange={onJackpotPanelChange}
       >
         {/* Canvas Toolbar - Show for text and shape elements */}
         {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && (
