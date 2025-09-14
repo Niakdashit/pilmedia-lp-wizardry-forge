@@ -120,7 +120,7 @@ const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
         style={{
           top: '-25%',
           height: '125%',
-          zIndex: -1
+          zIndex: 1
         }}
         onContextMenu={handleCanvasContextMenu}
       />

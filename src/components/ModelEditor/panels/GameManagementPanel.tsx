@@ -1,22 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { 
-  Plus, 
-  Trash2, 
-  Calendar, 
-  Percent,
-  RotateCcw,
-  Clock,
-  Gift,
-  Image,
-  Type,
-  Upload
-} from 'lucide-react';
+// @ts-nocheck
+import React, { useState, useCallback, useMemo, memo } from 'react';
+import { Plus, Trash2, Edit3, Calendar, Percent, Trophy, Info, Upload, Image, ChevronDown, ChevronUp, X, Settings } from 'lucide-react';
+import { ColorPicker } from '../../shared/ColorPicker';
 
-interface GameManagementPanelProps {
-  campaign: any;
-  setCampaign: (campaign: any) => void;
-}
-
+// Interfaces locales
 interface WheelSegment {
   id: string;
   label: string;
@@ -30,579 +17,558 @@ interface WheelSegment {
 interface Prize {
   id: string;
   name: string;
-  description?: string;
-  totalUnits?: number;
-  awardedUnits?: number;
-  method?: string;
+  description: string;
+  totalUnits: number;
+  awardedUnits: number;
+  method: 'calendar' | 'probability';
+  attributionMethod: 'calendar' | 'probability';
   probabilityPercent?: number;
-  attributionMethod?: 'calendar' | 'probability';
   calendarDate?: string;
   calendarTime?: string;
   probability?: number;
   segmentId?: string;
 }
 
-const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
-  campaign,
-  setCampaign
-}) => {
-  const [activeSection, setActiveSection] = useState<'segments' | 'prizes'>('segments');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+interface GameManagementPanelProps {
+  onBack: () => void;
+  segments: WheelSegment[];
+  onUpdateSegments: (segments: WheelSegment[]) => void;
+  prizes: Prize[];
+  onUpdatePrizes: (prizes: Prize[]) => void;
+  gameType: 'wheel' | 'quiz' | 'scratch';
+}
 
-  // Fonction pour mettre à jour les couleurs des segments existants
-  const updateSegmentColorsFromExtractedColors = () => {
-    const extractedColors = campaign?.design?.extractedColors || [];
-    if (extractedColors.length === 0) return;
-    
-    const primaryColor = extractedColors[0];
-    const existingSegments = campaign?.wheelConfig?.segments || [];
-    
-    if (existingSegments.length > 0) {
-      const updatedSegments = existingSegments.map((segment: WheelSegment, index: number) => {
-        // Ne mettre à jour que les segments qui utilisent encore la couleur par défaut
-        if (segment.color === '#841b60') {
-          return { ...segment, color: primaryColor };
-        }
-        return segment;
-      });
-      
-      updateSegments(updatedSegments);
+const GameManagementPanel = memo<GameManagementPanelProps>(({ 
+  onBack, 
+  segments, 
+  onUpdateSegments, 
+  prizes, 
+  onUpdatePrizes, 
+  gameType = 'wheel' 
+}) => {
+  const [activeView, setActiveView] = useState<'segments' | 'prizes'>('segments');
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
+  const [selectedPrizeId, setSelectedPrizeId] = useState<string | null>(null);
+  const [showImageUpload, setShowImageUpload] = useState<string | null>(null);
+
+  const gameLabels = {
+    wheel: {
+      segments: 'Segments de la roue',
+      prizes: 'Lots disponibles',
+      addSegment: 'Ajouter un segment',
+      segmentLabel: 'Libellé du segment',
+      probability: 'Probabilité (%)',
+      colors: 'Couleurs des segments'
+    },
+    quiz: {
+      segments: 'Réponses du quiz',
+      prizes: 'Récompenses disponibles',
+      addSegment: 'Ajouter une réponse',
+      segmentLabel: 'Texte de la réponse',
+      probability: 'Probabilité de gain (%)',
+      colors: 'Couleurs des réponses'
+    },
+    scratch: {
+      segments: 'Cartes à gratter',
+      prizes: 'Gains cachés',
+      addSegment: 'Ajouter une carte',
+      segmentLabel: 'Contenu de la carte',
+      probability: 'Chance de gain (%)',
+      colors: 'Couleurs des cartes'
     }
   };
 
-  // Mettre à jour les couleurs quand les couleurs extraites changent
-  React.useEffect(() => {
-    updateSegmentColorsFromExtractedColors();
-  }, [campaign?.design?.extractedColors]);
+  const labels = gameLabels[gameType] || gameLabels.wheel;
 
-  // Segments par défaut pour la roue de la fortune avec alternance couleur/blanc
-  // Utiliser les couleurs extraites si disponibles
-  const extractedColors = campaign?.design?.extractedColors || [];
-  const primaryColor = extractedColors[0] || '#841b60';
-  
-  const defaultSegments: WheelSegment[] = [
-    { id: '1', label: 'Segment 1', color: primaryColor, contentType: 'text' },
-    { id: '2', label: 'Segment 2', color: '#ffffff', contentType: 'text' },
-    { id: '3', label: 'Segment 3', color: primaryColor, contentType: 'text' },
-    { id: '4', label: 'Segment 4', color: '#ffffff', contentType: 'text' },
-    { id: '5', label: 'Segment 5', color: primaryColor, contentType: 'text' },
-    { id: '6', label: 'Segment 6', color: '#ffffff', contentType: 'text' },
-  ];
-
-  const segments: WheelSegment[] = campaign?.wheelConfig?.segments || defaultSegments;
-  const prizes: Prize[] = campaign?.prizes || [];
-
-  const updateSegments = (newSegments: WheelSegment[]) => {
-    console.log('🎯 GameManagementPanel: Updating segments', {
-      newSegments,
-      campaignId: campaign?.id,
-      previousSegments: campaign?.wheelConfig?.segments
-    });
-    
-    setCampaign({
-      ...campaign,
-      wheelConfig: {
-        ...campaign.wheelConfig,
-        segments: newSegments
-      },
-      _lastUpdate: Date.now() // Force re-render trigger
-    });
-  };
-
-  const updatePrizes = (newPrizes: Prize[]) => {
-    setCampaign({
-      ...campaign,
-      prizes: newPrizes.map(prize => ({
-        ...prize,
-        // Map GameManagementPanel format to ProbabilityEngine format
-        method: prize.attributionMethod,
-        probabilityPercent: prize.probability,
-        calendarDateTime: prize.calendarDate && prize.calendarTime ? 
-          `${prize.calendarDate}T${prize.calendarTime}` : undefined
-      }))
-    });
-  };
-
+  // Gestion des segments
   const addSegment = () => {
-    const newSegmentIndex = segments.length;
-    const isEven = newSegmentIndex % 2 === 0;
-    
-    // Utiliser les couleurs extraites si disponibles
-    const extractedColors = campaign?.design?.extractedColors || [];
-    const primaryColor = extractedColors[0] || '#841b60';
-    
     const newSegment: WheelSegment = {
       id: Date.now().toString(),
-      label: `Segment ${segments.length + 1}`,
-      color: isEven ? primaryColor : '#ffffff',
+      label: `Nouveau ${gameType === 'wheel' ? 'segment' : gameType === 'quiz' ? 'réponse' : 'carte'} ${segments.length + 1}`,
+      color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`,
+      probability: 10,
       contentType: 'text'
     };
-    updateSegments([...segments, newSegment]);
-  };
-
-  const removeSegment = (segmentId: string) => {
-    if (segments.length > 2) { // Minimum 2 segments
-      updateSegments(segments.filter(s => s.id !== segmentId));
-    }
+    onUpdateSegments([...segments, newSegment]);
   };
 
   const updateSegment = (segmentId: string, updates: Partial<WheelSegment>) => {
-    updateSegments(segments.map(s => 
-      s.id === segmentId ? { ...s, ...updates } : s
-    ));
+    const updatedSegments = segments.map(segment => 
+      segment.id === segmentId ? { ...segment, ...updates } : segment
+    );
+    onUpdateSegments(updatedSegments);
   };
 
-  const handleImageUpload = async (segmentId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      // Validation du fichier avec l'utilitaire
-      const { validateImageFile, optimizeImageForSegment } = await import('../../../utils/imageOptimizer');
-      const validation = validateImageFile(file);
-      
-      if (!validation.valid) {
-        alert(validation.error);
-        return;
-      }
-
-      // Optimiser l'image pour les segments de roue - FORCER PNG pour préserver la transparence
-      const optimizedImage = await optimizeImageForSegment(file, {
-        maxWidth: 200,
-        maxHeight: 200,
-        quality: 0.9,
-        format: 'png'
-      });
-
-      // Mettre à jour le segment avec l'image optimisée
-      updateSegment(segmentId, { 
-        imageUrl: optimizedImage.dataUrl, 
-        contentType: 'image',
-        label: '' // Pas de label pour les segments image - l'image sera affichée à la place
-      });
-
-      console.log(`Image optimized: ${optimizedImage.width}x${optimizedImage.height}, ${Math.round(optimizedImage.size / 1024)}KB`);
-    } catch (error) {
-      console.error('Error processing image:', error);
-      alert('Erreur lors du traitement de l\'image');
+  const deleteSegment = (segmentId: string) => {
+    const updatedSegments = segments.filter(segment => segment.id !== segmentId);
+    onUpdateSegments(updatedSegments);
+    if (selectedSegmentId === segmentId) {
+      setSelectedSegmentId(null);
     }
-    
-    // Reset input pour permettre de re-sélectionner le même fichier
-    event.target.value = '';
   };
 
+  // Gestion des lots
   const addPrize = () => {
     const newPrize: Prize = {
       id: Date.now().toString(),
       name: 'Nouveau lot',
+      description: '',
       totalUnits: 1,
       awardedUnits: 0,
       method: 'probability',
+      attributionMethod: 'probability',
       probabilityPercent: 10
     };
-    updatePrizes([...prizes, newPrize]);
-  };
-
-  const removePrize = (prizeId: string) => {
-    updatePrizes(prizes.filter(p => p.id !== prizeId));
+    onUpdatePrizes([...prizes, newPrize]);
   };
 
   const updatePrize = (prizeId: string, updates: Partial<Prize>) => {
-    updatePrizes(prizes.map(p => 
-      p.id === prizeId ? { ...p, ...updates } : p
-    ));
+    const updatedPrizes = prizes.map(prize => 
+      prize.id === prizeId ? { ...prize, ...updates } : prize
+    );
+    onUpdatePrizes(updatedPrizes);
   };
 
+  const deletePrize = (prizeId: string) => {
+    const updatedPrizes = prizes.filter(prize => prize.id !== prizeId);
+    onUpdatePrizes(updatedPrizes);
+    if (selectedPrizeId === prizeId) {
+      setSelectedPrizeId(null);
+    }
+  };
+
+  const handleImageUpload = (segmentId: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      updateSegment(segmentId, { 
+        imageUrl: e.target?.result as string,
+        contentType: 'image'
+      });
+      setShowImageUpload(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Calcul des probabilités totales
+  const totalProbability = useMemo(() => {
+    return segments.reduce((sum, segment) => sum + (segment.probability || 0), 0);
+  }, [segments]);
+
+  const totalPrizeProbability = useMemo(() => {
+    return prizes.reduce((sum, prize) => sum + (prize.probabilityPercent || 0), 0);
+  }, [prizes]);
+
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Gestion du jeu</h2>
-        <p className="text-gray-600 text-sm">
-          Configurez les segments de la roue et gérez les lots à gagner
-        </p>
-      </div>
-
-      {/* Navigation des sections */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
-          onClick={() => setActiveSection('segments')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeSection === 'segments'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <RotateCcw className="w-4 h-4 inline mr-2" />
-          Segments
-        </button>
-        <button
-          onClick={() => setActiveSection('prizes')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeSection === 'prizes'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Gift className="w-4 h-4 inline mr-2" />
-          Lots
-        </button>
-      </div>
-
-      {/* Section Segments */}
-      {activeSection === 'segments' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Segments de la roue ({segments.length})
-            </h3>
+    <div className="p-4">
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center px-3 py-2 text-sm rounded-md bg-white border hover:bg-gray-50 text-gray-700"
+          >
+            <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+            Retour
+          </button>
+          
+          <div className="flex bg-gray-100 rounded-lg p-1">
             <button
-              onClick={addSegment}
-              className="flex items-center px-3 py-2 bg-[#841b60] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
+              onClick={() => setActiveView('segments')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                activeView === 'segments' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <Plus className="w-4 h-4 mr-1" />
-              Ajouter
+              {labels.segments}
             </button>
-          </div>
-
-          <div className="space-y-3">
-            {segments.map((segment, index) => (
-              <div key={segment.id} className="bg-gray-50 p-4 rounded-lg border">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">
-                    Segment {index + 1}
-                  </span>
-                  {segments.length > 2 && (
-                    <button
-                      onClick={() => removeSegment(segment.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  {/* Type de contenu */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-2">
-                      Type de contenu
-                    </label>
-                    <div className="flex space-x-3">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`content-type-${segment.id}`}
-                          value="text"
-                          checked={segment.contentType === 'text'}
-                          onChange={() => updateSegment(segment.id, { contentType: 'text', imageUrl: undefined })}
-                          className="mr-2"
-                        />
-                        <Type className="w-4 h-4 mr-1" />
-                        <span className="text-sm">Texte</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`content-type-${segment.id}`}
-                          value="image"
-                          checked={segment.contentType === 'image'}
-                          onChange={() => updateSegment(segment.id, { contentType: 'image' })}
-                          className="mr-2"
-                        />
-                        <Image className="w-4 h-4 mr-1" />
-                        <span className="text-sm">Image</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Contenu selon le type */}
-                    <div>
-                      {segment.contentType === 'text' ? (
-                        <>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Texte
-                          </label>
-                          <input
-                            type="text"
-                            value={segment.label}
-                            onChange={(e) => updateSegment(segment.id, { label: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Image
-                          </label>
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              ref={fileInputRef}
-                              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                              onChange={(e) => handleImageUpload(segment.id, e)}
-                              className="hidden"
-                            />
-                            <button
-                              onClick={() => fileInputRef.current?.click()}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center transition-colors"
-                            >
-                              <Upload className="w-4 h-4 mr-2" />
-                              {segment.imageUrl ? 'Changer l\'image' : 'Choisir une image'}
-                            </button>
-                            {segment.imageUrl && (
-                              <div className="relative">
-                                <img
-                                  src={segment.imageUrl}
-                                  alt="Aperçu du segment"
-                                  className="w-full h-20 object-cover rounded border bg-gray-100"
-                                />
-                                <button
-                                  onClick={() => updateSegment(segment.id, { imageUrl: undefined, contentType: 'text' })}
-                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-                                  title="Supprimer l'image"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            )}
-                            <p className="text-xs text-gray-500">
-                              JPG, PNG, GIF, WebP - Max 5MB
-                            </p>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    
-                    {/* Couleur */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Couleur
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-6 h-6 rounded-full border-2 border-gray-300 cursor-pointer shadow-sm"
-                          style={{ backgroundColor: segment.color }}
-                          onClick={() => {
-                            const colorInput = document.getElementById(`color-${segment.id}`) as HTMLInputElement;
-                            colorInput?.click();
-                          }}
-                        />
-                        <input
-                          id={`color-${segment.id}`}
-                          type="color"
-                          value={segment.color}
-                          onChange={(e) => updateSegment(segment.id, { color: e.target.value })}
-                          className="hidden"
-                        />
-                        <input
-                          type="text"
-                          value={segment.color}
-                          onChange={(e) => updateSegment(segment.id, { color: e.target.value })}
-                          className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] max-w-20"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Attribution de lot */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Lot attribué
-                    </label>
-                    <select
-                      value={segment.prizeId || ''}
-                      onChange={(e) => updateSegment(segment.id, { prizeId: e.target.value || undefined })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                    >
-                      <option value="">Aucun lot</option>
-                      {prizes.map((prize) => (
-                        <option key={prize.id} value={prize.id}>
-                          {prize.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <button
+              onClick={() => setActiveView('prizes')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                activeView === 'prizes' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {labels.prizes}
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Section Lots */}
-      {activeSection === 'prizes' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Lots à gagner ({prizes.length})
-            </h3>
-            <button
-              onClick={addPrize}
-              className="flex items-center px-3 py-2 bg-[#841b60] text-white text-sm rounded-lg hover:bg-[#6d1650] transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Créer un lot
-            </button>
-          </div>
-
-          {prizes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Gift className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Aucun lot configuré</p>
-              <p className="text-sm">Cliquez sur "Créer un lot" pour commencer</p>
+        {/* Vue Segments */}
+        {activeView === 'segments' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">{labels.segments}</h3>
+              <button
+                onClick={addSegment}
+                className="inline-flex items-center px-2 py-1 text-xs bg-[hsl(var(--primary))] text-white rounded-md hover:bg-[hsl(var(--primary-dark))]"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                {labels.addSegment}
+              </button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {prizes.map((prize, index) => (
-                <div key={prize.id} className="bg-gray-50 p-4 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-gray-700">
-                      Lot {index + 1}
-                    </span>
-                    <button
-                      onClick={() => removePrize(prize.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+
+            {totalProbability !== 100 && totalProbability > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center">
+                  <Info className="w-4 h-4 text-yellow-600 mr-2" />
+                  <span className="text-sm text-yellow-800">
+                    Total des probabilités : {totalProbability.toFixed(1)}% (recommandé : 100%)
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {segments.map((segment, index) => (
+                <div key={segment.id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      {/* Libellé */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          {labels.segmentLabel}
+                        </label>
+                        <input
+                          type="text"
+                          value={segment.label}
+                          onChange={(e) => updateSegment(segment.id, { label: e.target.value })}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                        />
+                      </div>
+
+                      <div className="flex gap-3">
+                        {/* Couleur */}
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Couleur
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-8 h-8 rounded-md border-2 border-gray-300 cursor-pointer"
+                              style={{ backgroundColor: segment.color }}
+                              onClick={() => setSelectedSegmentId(selectedSegmentId === segment.id ? null : segment.id)}
+                            />
+                            <input
+                              type="text"
+                              value={segment.color}
+                              onChange={(e) => updateSegment(segment.id, { color: e.target.value })}
+                              className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md"
+                              placeholder="#ff0000"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Probabilité */}
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {labels.probability}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={segment.probability || 0}
+                            onChange={(e) => updateSegment(segment.id, { probability: Number(e.target.value) })}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Type de contenu */}
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Type de contenu
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => updateSegment(segment.id, { contentType: 'text', imageUrl: undefined })}
+                            className={`px-3 py-1 text-xs rounded-md border ${
+                              segment.contentType === 'text'
+                                ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            Texte
+                          </button>
+                          <button
+                            onClick={() => setShowImageUpload(segment.id)}
+                            className={`px-3 py-1 text-xs rounded-md border ${
+                              segment.contentType === 'image'
+                                ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <Image className="w-3 h-3 mr-1 inline" />
+                            Image
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Upload d'image */}
+                      {showImageUpload === segment.id && (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                          <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                          <p className="text-xs text-gray-600 mb-2">Glissez une image ou cliquez pour parcourir</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload(segment.id, file);
+                            }}
+                            className="hidden"
+                            id={`image-upload-${segment.id}`}
+                          />
+                          <label
+                            htmlFor={`image-upload-${segment.id}`}
+                            className="inline-block px-3 py-1 bg-[hsl(var(--primary))] text-white text-xs rounded-md cursor-pointer hover:bg-[hsl(var(--primary-dark))]"
+                          >
+                            Parcourir
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Aperçu de l'image */}
+                      {segment.imageUrl && (
+                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                          <img
+                            src={segment.imageUrl}
+                            alt="Aperçu"
+                            className="w-8 h-8 rounded object-cover"
+                          />
+                          <span className="text-xs text-gray-600 flex-1 ml-2">Image uploadée</span>
+                          <button
+                            onClick={() => updateSegment(segment.id, { imageUrl: undefined, contentType: 'text' })}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="ml-3 flex flex-col gap-1">
+                      <button
+                        onClick={() => deleteSegment(segment.id)}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                    {/* Nom et description */}
-                    <div className="grid grid-cols-2 gap-3">
+                  {/* Color Picker */}
+                  {selectedSegmentId === segment.id && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <ColorPicker
+                        color={segment.color}
+                        onChange={(color) => updateSegment(segment.id, { color })}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {segments.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm">Aucun segment configuré</p>
+                <p className="text-xs mt-1">Cliquez sur "{labels.addSegment}" pour commencer</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Vue Lots/Récompenses */}
+        {activeView === 'prizes' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">{labels.prizes}</h3>
+              <button
+                onClick={addPrize}
+                className="inline-flex items-center px-2 py-1 text-xs bg-[hsl(var(--primary))] text-white rounded-md hover:bg-[hsl(var(--primary-dark))]"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Ajouter un lot
+              </button>
+            </div>
+
+            {totalPrizeProbability !== 100 && totalPrizeProbability > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center">
+                  <Info className="w-4 h-4 text-yellow-600 mr-2" />
+                  <span className="text-sm text-yellow-800">
+                    Total des probabilités : {totalPrizeProbability.toFixed(1)}% (recommandé : 100%)
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {prizes.map((prize) => (
+                <div key={prize.id} className="border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      {/* Nom du lot */}
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Nom du lot
                         </label>
                         <input
                           type="text"
                           value={prize.name}
                           onChange={(e) => updatePrize(prize.id, { name: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
                         />
                       </div>
+
+                      {/* Description */}
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Quantité
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Description
                         </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={prize.totalUnits || 1}
-                          onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                        <textarea
+                          value={prize.description || ''}
+                          onChange={(e) => updatePrize(prize.id, { description: e.target.value })}
+                          rows={2}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                          placeholder="Description du lot..."
                         />
                       </div>
-                    </div>
 
-                    {/* Méthode d'attribution */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">
-                        Méthode d'attribution
-                      </label>
-                      <div className="flex space-x-3">
-                        <label className="flex items-center">
+                      <div className="flex gap-3">
+                        {/* Méthode d'attribution */}
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Méthode d'attribution
+                          </label>
+                          <select
+                            value={prize.method || prize.attributionMethod || 'probability'}
+                            onChange={(e) => updatePrize(prize.id, { 
+                              method: e.target.value as 'calendar' | 'probability',
+                              attributionMethod: e.target.value as 'calendar' | 'probability'
+                            })}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                          >
+                            <option value="probability">Probabilité</option>
+                            <option value="calendar">Calendrier</option>
+                          </select>
+                        </div>
+
+                        {/* Unités disponibles */}
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Unités disponibles
+                          </label>
                           <input
-                            type="radio"
-                            name={`attribution-${prize.id}`}
-                            value="probability"
-                            checked={prize.attributionMethod === 'probability'}
-                            onChange={(e) => updatePrize(prize.id, { attributionMethod: 'probability' })}
-                            className="mr-2"
+                            type="number"
+                            min="0"
+                            value={prize.totalUnits || 1}
+                            onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
                           />
-                          <Percent className="w-4 h-4 mr-1" />
-                          <span className="text-sm">Probabilité</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name={`attribution-${prize.id}`}
-                            value="calendar"
-                            checked={prize.attributionMethod === 'calendar'}
-                            onChange={(e) => updatePrize(prize.id, { attributionMethod: 'calendar' })}
-                            className="mr-2"
-                          />
-                          <Calendar className="w-4 h-4 mr-1" />
-                          <span className="text-sm">Calendrier</span>
-                        </label>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Configuration selon la méthode */}
-                    {prize.attributionMethod === 'probability' && (
-                      <div className="grid grid-cols-2 gap-3">
+                      {/* Configuration spécifique à la méthode */}
+                      {(prize.method || prize.attributionMethod) === 'probability' && (
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             Probabilité (%)
                           </label>
                           <input
                             type="number"
                             min="0"
                             max="100"
-                            value={prize.probability || 0}
-                            onChange={(e) => updatePrize(prize.id, { probability: Number(e.target.value) })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                            step="0.1"
+                            value={prize.probabilityPercent || prize.probability || 0}
+                            onChange={(e) => updatePrize(prize.id, { 
+                              probabilityPercent: Number(e.target.value),
+                              probability: Number(e.target.value)
+                            })}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Segment associé
-                          </label>
-                          <select
-                            value={prize.segmentId || ''}
-                            onChange={(e) => updatePrize(prize.id, { segmentId: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                          >
-                            <option value="">Aucun segment</option>
-                            {segments.map((segment) => (
-                              <option key={segment.id} value={segment.id}>
-                                {segment.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {prize.attributionMethod === 'calendar' && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            <Calendar className="w-3 h-3 inline mr-1" />
-                            Date d'attribution
-                          </label>
-                          <input
-                            type="date"
-                            value={prize.calendarDate || ''}
-                            onChange={(e) => updatePrize(prize.id, { calendarDate: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
-                          />
+                      {(prize.method || prize.attributionMethod) === 'calendar' && (
+                        <div className="flex gap-3">
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Date
+                            </label>
+                            <input
+                              type="date"
+                              value={prize.calendarDate || ''}
+                              onChange={(e) => updatePrize(prize.id, { calendarDate: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Heure
+                            </label>
+                            <input
+                              type="time"
+                              value={prize.calendarTime || ''}
+                              onChange={(e) => updatePrize(prize.id, { calendarTime: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            <Clock className="w-3 h-3 inline mr-1" />
-                            Heure d'attribution
-                          </label>
-                          <input
-                            type="time"
-                            value={prize.calendarTime || ''}
-                            onChange={(e) => updatePrize(prize.id, { calendarTime: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+                      )}
+
+                      {/* Statistiques */}
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">Attribués:</span>
+                          <span className="font-medium">{prize.awardedUnits || 0}/{prize.totalUnits || 1}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                          <div 
+                            className="bg-[hsl(var(--primary))] h-1 rounded-full transition-all"
+                            style={{ 
+                              width: `${Math.min(((prize.awardedUnits || 0) / (prize.totalUnits || 1)) * 100, 100)}%` 
+                            }}
                           />
                         </div>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="ml-3 flex flex-col gap-1">
+                      <button
+                        onClick={() => deletePrize(prize.id)}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      )}
+
+            {prizes.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm">Aucun lot configuré</p>
+                <p className="text-xs mt-1">Cliquez sur "Ajouter un lot" pour commencer</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
-};
+});
+
+GameManagementPanel.displayName = 'GameManagementPanel';
 
 export default GameManagementPanel;

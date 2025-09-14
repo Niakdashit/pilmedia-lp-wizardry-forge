@@ -126,9 +126,32 @@ const SmartWheelWrapper: React.FC<SmartWheelWrapperProps> = ({
       campaign?.prizes?.find((prize: any) => prize.id === segment.prizeId) : null;
 
     // Attribution du lot: incrémenter awardedUnits si un lot est gagné
-    if (assignedPrize) {
+    if (assignedPrize && setCampaign) {
       console.log('🏆 Prize won! Incrementing awardedUnits for prize:', assignedPrize.name);
-      // Note: Prize allocation would be handled by the parent component
+      setCampaign((prevCampaign: any) => {
+        if (!prevCampaign) return prevCampaign;
+        
+        const updatedPrizes = prevCampaign.prizes?.map((prize: any) => {
+          if (prize.id === assignedPrize.id) {
+            const newAwardedUnits = (prize.awardedUnits || 0) + 1;
+            const remaining = (prize.totalUnits || 0) - newAwardedUnits;
+            console.log(`🎯 Prize ${prize.name}: ${prize.awardedUnits || 0} -> ${newAwardedUnits} (remaining: ${remaining}/${prize.totalUnits})`);
+            
+            if (remaining <= 0) {
+              console.log(`⚠️ Prize ${prize.name} is now EXHAUSTED - no more units available`);
+            }
+            
+            return { ...prize, awardedUnits: newAwardedUnits };
+          }
+          return prize;
+        }) || [];
+
+        return {
+          ...prevCampaign,
+          prizes: updatedPrizes,
+          _lastUpdate: Date.now()
+        };
+      });
     }
 
     // Enrichir le segment avec les informations du lot

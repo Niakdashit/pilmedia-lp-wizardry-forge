@@ -1,12 +1,12 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
   ChevronRight,
   Plus,
   Layers,
   FormInput,
-  Palette,
-  Gamepad2
+  Gamepad2,
+  Palette
 } from 'lucide-react';
 import BackgroundPanel from './panels/BackgroundPanel';
 import AssetsPanel from './panels/AssetsPanel';
@@ -14,6 +14,7 @@ import TextEffectsPanel from './panels/TextEffectsPanel';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
+import GameManagementPanel from './panels/GameManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 
 
@@ -145,12 +146,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   }, []);
   // Default to 'Design' tab on entry
   const [activeTab, _setActiveTab] = useState<string | null>('background');
-
-  // Monitor activeTab state changes for debugging
-  useEffect(() => {
-    console.log('🔄 [USE EFFECT] activeTab changed to:', activeTab);
-    console.log('🔄 [USE EFFECT] Component will re-render');
-  }, [activeTab]);
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
@@ -304,15 +299,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       label: 'Calques', 
       icon: Layers
     },
-    {
-      id: 'game',
-      label: 'Jeu',
-      icon: Gamepad2
-    },
     { 
       id: 'form', 
       label: 'Formulaire', 
       icon: FormInput
+    },
+    { 
+      id: 'game', 
+      label: 'Jeu', 
+      icon: Gamepad2
     }
   ];
   console.log('📌 hiddenTabs:', hiddenTabs);
@@ -436,20 +431,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     } else {
       console.log('🗂️ Ouverture du nouvel onglet:', tabId);
       setActiveTab(tabId);
-      
-      // Log supplémentaire pour le tab game
-      if (tabId === 'game') {
-        console.log('🎮 [GAME TAB] Onglet Jeu activé!');
-        console.log('🎮 [GAME TAB] setActiveTab appelé avec:', tabId);
-        setTimeout(() => {
-          console.log('🎮 [GAME TAB] Vérification activeTab après timeout');
-        }, 100);
-      }
     }
   };
 
   const renderPanel = (tabId: string) => {
-    console.log('🎯 [RENDER PANEL] Rendu du panneau pour:', tabId);
     switch (tabId) {
       case 'effects':
         return (
@@ -526,141 +511,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       case 'elements':
         return <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
       case 'game':
-        console.log('🔄 [GAME TAB] Début du rendu du panneau Jeu');
-        console.log('🔄 [GAME TAB] activeTab:', activeTab);
-        console.log('🔄 [GAME TAB] Création du contenu...');
-        
         return (
-          <div className="p-6 text-[hsl(var(--sidebar-text-primary))] min-h-full overflow-y-auto">
-            <div className="bg-green-600/20 border border-green-500/50 text-green-100 p-4 rounded-lg mb-6">
-              <div className="flex items-center gap-2">
-                <div className="text-lg">🎮</div>
-                <div>
-                  <div className="font-semibold">Panneau de configuration du jeu</div>
-                  <div className="text-sm opacity-80">Gérez les symboles et les paramètres du jeu</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              {/* Templates de cadres */}
-              <div className="bg-[hsl(var(--sidebar-surface))] p-4 rounded-lg border border-[hsl(var(--sidebar-border))]">
-                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                  <span>🖼️</span>
-                  <span>Templates de cadres</span>
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  {[
-                    { name: 'Jackpot Frame', file: 'jackpot-frame.svg', description: 'Cadre principal' },
-                    { name: 'Jackpot 2', file: 'Jackpot 2.svg', description: 'Style vintage' },
-                    { name: 'Jackpot 3', file: 'Jackpot 3.svg', description: 'Bordure néon rouge' },
-                    { name: 'Jackpot 4', file: 'Jackpot 4.svg', description: 'Design orange moderne' },
-                    { name: 'Jackpot 5', file: 'Jackpot 5.svg', description: 'Cadre doré lumineux' },
-                    { name: 'Jackpot 6', file: 'Jackpot 6.svg', description: 'Style cylindre classique' }
-                  ].map((template, idx) => (
-                    <div 
-                      key={idx} 
-                      className="bg-[hsl(var(--sidebar-active-bg))] p-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer border border-[hsl(var(--sidebar-border))] relative overflow-hidden"
-                      title={template.description}
-                      onClick={() => console.log('Template sélectionné:', template.name, template.file)}
-                    >
-                      <div className="text-center">
-                        <div className="w-full h-16 mb-2 flex items-center justify-center bg-white/5 rounded">
-                          <img 
-                            src={`/assets/slot-frames/${template.file}`}
-                            alt={template.name}
-                            className="max-w-full max-h-full object-contain"
-                            onError={(e) => {
-                              console.log('Erreur de chargement:', template.file);
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div className="text-xs font-medium text-[hsl(var(--sidebar-text-primary))]">{template.name}</div>
-                        <div className="text-xs text-[hsl(var(--sidebar-text-secondary))] mt-1">{template.description}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="flex gap-2 mt-4">
-                  <button 
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    onClick={() => console.log('Importer template personnalisé')}
-                  >
-                    <span>📁</span>
-                    <span>Importer SVG</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-[hsl(var(--sidebar-surface))] p-4 rounded-lg border border-[hsl(var(--sidebar-border))]">
-                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                  <span>🎰</span>
-                  <span>Symboles du jeu</span>
-                </h3>
-                
-                <div className="grid grid-cols-4 gap-3 mb-4">
-                  {['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'].map((symbol, idx) => (
-                    <div 
-                      key={idx} 
-                      className="bg-[hsl(var(--sidebar-active-bg))] p-3 rounded-lg text-center text-2xl hover:opacity-90 transition-opacity cursor-pointer"
-                      title={`Symbole ${idx + 1}`}
-                    >
-                      {symbol}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="flex gap-2 mt-4">
-                  <button 
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    onClick={() => console.log('Ajouter un symbole')}
-                  >
-                    <span>+</span>
-                    <span>Ajouter un symbole</span>
-                  </button>
-                  <button 
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    onClick={() => console.log('Importer des symboles')}
-                  >
-                    <span>📁</span>
-                    <span>Importer</span>
-                  </button>
-                </div>
-              </div>
-              
-              <div className="bg-[hsl(var(--sidebar-surface))] p-4 rounded-lg border border-[hsl(var(--sidebar-border))]">
-                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                  <span>⚙️</span>
-                  <span>Paramètres du jeu</span>
-                </h3>
-                
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-[hsl(var(--sidebar-text-secondary))] mb-1">
-                      Difficulté
-                    </label>
-                    <select className="w-full bg-[hsl(var(--sidebar-bg))] border border-[hsl(var(--sidebar-border))] rounded-lg px-3 py-2 text-sm">
-                      <option>Facile</option>
-                      <option>Moyen</option>
-                      <option>Difficile</option>
-                    </select>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm font-medium text-[hsl(var(--sidebar-text-secondary))]">
-                      Activer les effets sonores
-                    </span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="p-4">
+            <GameManagementPanel 
+              campaign={campaign || campaignConfig}
+              setCampaign={(updatedCampaign) => {
+                // Mettre à jour l'état global ET local
+                setCampaign(updatedCampaign);
+                if (onCampaignConfigChange) {
+                  onCampaignConfigChange(updatedCampaign);
+                }
+              }}
+            />
           </div>
         );
       case 'form':
@@ -806,11 +668,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       </div>
 
       {/* Panel Content */}
-      {(() => {
-        console.log('🎯 [PANEL WRAPPER] activeTab:', activeTab);
-        console.log('🎯 [PANEL WRAPPER] Condition activeTab &&:', activeTab && true);
-        return null;
-      })()}
       {activeTab && (
         <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
@@ -820,21 +677,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                activeTab === 'animations' ? 'Animations de texte' : 
                activeTab === 'position' ? 'Position' : 
                activeTab === 'wheel' ? 'Roue de fortune' : 
-               activeTab === 'game' ? 'Jeu' :
                tabs.find(tab => tab.id === activeTab)?.label}
             </h2>
           </div>
 
           {/* Panel Content */}
           <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-            {(() => {
-              console.log('🎯 [PANEL CONTENT] Rendu du contenu pour activeTab:', activeTab);
-              console.log('🎯 [PANEL CONTENT] activeTab === "game":', activeTab === 'game');
-              const panelContent = renderPanel(activeTab);
-              console.log('🎯 [PANEL CONTENT] Contenu généré:', panelContent ? 'OUI' : 'NON');
-              console.log('🎯 [PANEL CONTENT] Type du contenu:', typeof panelContent);
-              return panelContent;
-            })()}
+            {renderPanel(activeTab)}
           </div>
         </div>
       )}

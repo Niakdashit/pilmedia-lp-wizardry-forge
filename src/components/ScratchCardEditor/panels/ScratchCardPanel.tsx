@@ -1,21 +1,22 @@
 import React, { useState, useCallback } from 'react';
 import { 
   Grid3X3, 
+  Palette, 
+  Image, 
   Type, 
   Brush, 
   Settings, 
+  Upload, 
   RotateCcw,
-  Minus,
   Plus,
-  Trash2,
-  Calendar,
-  Percent,
-  Gift
-  // Download,
-  // FileUp
+  Minus,
+  Download,
+  FileUp,
+  Square,
+  RectangleHorizontal
 } from 'lucide-react';
 import { useScratchCardStore } from '../state/scratchcard.store';
-import { Cover, ScratchCard, Reveal, Prize } from '../state/types';
+import { Cover, Reveal, ScratchCard } from '../state/types';
 
 const ScratchCardPanel: React.FC = () => {
   const {
@@ -23,14 +24,22 @@ const ScratchCardPanel: React.FC = () => {
     updateGrid,
     updateBrush,
     updateThreshold,
+    updateGlobalCover,
+    updateGlobalReveal,
     updateLogic,
-    // updateEffects, // not used in this panel
+    updateEffects,
+    updateCardShape,
+    addCard,
     removeCard,
     updateCard,
+    resetAllCards,
+    exportConfig,
+    importConfig,
     resetToDefault
   } = useScratchCardStore();
 
   const [activeSection, setActiveSection] = useState<string>('grid');
+  const [importText, setImportText] = useState('');
 
   // Section handlers
   const handleGridChange = useCallback((field: string, value: any) => {
@@ -41,18 +50,47 @@ const ScratchCardPanel: React.FC = () => {
     updateBrush({ [field]: value });
   }, [updateBrush]);
 
-  // Global cover/reveal handlers removed with sub-tabs; per-card controls are used instead
+  const handleCoverChange = useCallback((cover: Cover) => {
+    updateGlobalCover(cover);
+  }, [updateGlobalCover]);
+
+  const handleRevealChange = useCallback((reveal: Reveal) => {
+    updateGlobalReveal(reveal);
+  }, [updateGlobalReveal]);
 
   const handleCardUpdate = useCallback((cardId: string, updates: Partial<ScratchCard>) => {
     updateCard(cardId, updates);
   }, [updateCard]);
 
-  // Export/Import removed per request
+  const handleImport = useCallback(() => {
+    if (importConfig(importText)) {
+      setImportText('');
+      alert('Configuration importée avec succès !');
+    } else {
+      alert('Erreur lors de l\'import de la configuration');
+    }
+  }, [importConfig, importText]);
 
-  // Quick grid templates removed per request
+  const handleExport = useCallback(() => {
+    const config = exportConfig();
+    navigator.clipboard.writeText(config);
+    alert('Configuration copiée dans le presse-papiers !');
+  }, [exportConfig]);
+
+  // Quick grid templates
+  const gridTemplates = [
+    { name: '2×2', rows: 2, cols: 2 },
+    { name: '3×2', rows: 2, cols: 3 },
+    { name: '3×3', rows: 3, cols: 3 },
+    { name: '4×2', rows: 2, cols: 4 },
+    { name: '2×4', rows: 4, cols: 2 },
+    { name: '4×3', rows: 3, cols: 4 }
+  ];
 
   const sections = [
     { id: 'grid', name: 'Grille', icon: Grid3X3 },
+    { id: 'cover', name: 'Couverture', icon: Palette },
+    { id: 'reveal', name: 'Révélation', icon: Image },
     { id: 'brush', name: 'Grattage', icon: Brush },
     { id: 'cards', name: 'Cartes', icon: Type },
     { id: 'logic', name: 'Logique', icon: Settings }
@@ -60,7 +98,11 @@ const ScratchCardPanel: React.FC = () => {
 
   return (
     <div className="sc-panel h-full flex flex-col bg-white">
-      {/* Header removed per request */}
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">Jeu de Cartes à Gratter</h2>
+        <p className="text-sm text-gray-600 mt-1">Configuration du jeu interactif</p>
+      </div>
 
       {/* Section Navigation */}
       <div className="flex flex-wrap gap-1 p-3 border-b border-gray-100">
@@ -91,43 +133,60 @@ const ScratchCardPanel: React.FC = () => {
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Configuration de la grille</h3>
             
-            {/* Quick Templates removed */}
-
-            {/* Max Cards (4 or 6) */}
+            {/* Quick Templates */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre maximum de cartes
+                Gabarits rapides
               </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => useScratchCardStore.getState().updateMaxCards(3)}
-                  className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    config.maxCards === 3 ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  3 cartes (3×1)
-                </button>
-                <button
-                  onClick={() => useScratchCardStore.getState().updateMaxCards(4)}
-                  className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    config.maxCards === 4 ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  4 cartes (2×2)
-                </button>
-                <button
-                  onClick={() => useScratchCardStore.getState().updateMaxCards(6)}
-                  className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    config.maxCards === 6 ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  6 cartes (3×2)
-                </button>
+              <div className="grid grid-cols-3 gap-2">
+                {gridTemplates.map((template) => (
+                  <button
+                    key={template.name}
+                    onClick={() => {
+                      handleGridChange('rows', template.rows);
+                      handleGridChange('cols', template.cols);
+                    }}
+                    className={`p-2 text-sm border rounded-lg transition-colors ${
+                      config.grid.rows === template.rows && config.grid.cols === template.cols
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {template.name}
+                  </button>
+                ))}
               </div>
-              <p className="text-xs text-gray-500 mt-2">Le nombre de cartes visibles est limité globalement à 3, 4 ou 6 et s'applique sur desktop et mobile.</p>
             </div>
 
-            {/* Manual Grid Settings removed (Lignes/Colonnes) */}
+            {/* Manual Grid Settings */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lignes
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="6"
+                  value={config.grid.rows}
+                  onChange={(e) => handleGridChange('rows', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Colonnes
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="6"
+                  value={config.grid.cols}
+                  onChange={(e) => handleGridChange('cols', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
 
             {/* Spacing & Style */}
             <div className="grid grid-cols-2 gap-4">
@@ -159,13 +218,223 @@ const ScratchCardPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Card Shape fixed to rectangle: UI removed */}
+            {/* Card Shape Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Format des cartes
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => updateCardShape('square')}
+                  className={`flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-all ${
+                    config.grid.cardShape === 'square'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <Square size={24} />
+                  <span className="text-sm font-medium">Carré</span>
+                  <span className="text-xs text-gray-500">1:1</span>
+                </button>
+                <button
+                  onClick={() => updateCardShape('vertical-rectangle')}
+                  className={`flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-all ${
+                    config.grid.cardShape === 'vertical-rectangle'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <RectangleHorizontal size={24} />
+                  <span className="text-sm font-medium">Rectangle</span>
+                  <span className="text-xs text-gray-500">3:2</span>
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Le format rectangle vertical offre plus d'espace pour le contenu
+              </p>
+            </div>
           </div>
         )}
 
-        {/* Couverture Section removed per request */}
+        {/* Couverture Section */}
+        {activeSection === 'cover' && (
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">Couverture des cartes</h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="flex items-center gap-2 mb-2">
+                  <input
+                    type="radio"
+                    name="coverType"
+                    checked={config.globalCover?.type === 'color'}
+                    onChange={() => handleCoverChange({ type: 'color', value: '#D9B7A4', opacity: 1 })}
+                    className="text-blue-600"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Couleur unie</span>
+                </label>
+                {config.globalCover?.type === 'color' && (
+                  <div className="ml-6 space-y-2">
+                    <input
+                      type="color"
+                      value={config.globalCover?.type === 'color' ? config.globalCover.value : '#D9B7A4'}
+                      onChange={(e) => handleCoverChange({ 
+                        type: 'color', 
+                        value: e.target.value, 
+                        opacity: config.globalCover?.type === 'color' ? config.globalCover.opacity || 1 : 1
+                      })}
+                      className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
+                    />
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Opacité: {Math.round((config.globalCover?.type === 'color' ? config.globalCover.opacity || 1 : 1) * 100)}%
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={config.globalCover?.type === 'color' ? config.globalCover.opacity || 1 : 1}
+                        onChange={(e) => handleCoverChange({ 
+                          type: 'color',
+                          value: config.globalCover?.type === 'color' ? config.globalCover.value : '#D9B7A4',
+                          opacity: parseFloat(e.target.value) 
+                        })}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
-        {/* Révélation Section removed per request */}
+              <div>
+                <label className="flex items-center gap-2 mb-2">
+                  <input
+                    type="radio"
+                    name="coverType"
+                    checked={config.globalCover?.type === 'image'}
+                    onChange={() => handleCoverChange({ type: 'image', url: '' })}
+                    className="text-blue-600"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Image</span>
+                </label>
+                {config.globalCover?.type === 'image' && (
+                  <div className="ml-6">
+                    <input
+                      type="url"
+                      placeholder="URL de l'image..."
+                      value={config.globalCover.url || ''}
+                      onChange={(e) => handleCoverChange({ type: 'image', url: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Révélation Section */}
+        {activeSection === 'reveal' && (
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">Contenu révélé</h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="flex items-center gap-2 mb-2">
+                  <input
+                    type="radio"
+                    name="revealType"
+                    checked={config.globalReveal?.type === 'text'}
+                    onChange={() => handleRevealChange({ 
+                      type: 'text', 
+                      value: 'Grattez ici !',
+                      style: { fontSize: 16, fontWeight: 600, color: '#333333', align: 'center' }
+                    })}
+                    className="text-blue-600"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Texte</span>
+                </label>
+                {config.globalReveal?.type === 'text' && (
+                  <div className="ml-6 space-y-3">
+                    <input
+                      type="text"
+                      placeholder="Texte à révéler..."
+                      value={config.globalReveal?.type === 'text' ? config.globalReveal.value : ''}
+                      onChange={(e) => handleRevealChange({ 
+                        type: 'text',
+                        value: e.target.value,
+                        style: config.globalReveal?.type === 'text' ? config.globalReveal.style : undefined
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Taille</label>
+                        <input
+                          type="number"
+                          min="8"
+                          max="48"
+                          value={config.globalReveal?.type === 'text' ? config.globalReveal.style?.fontSize || 16 : 16}
+                          onChange={(e) => handleRevealChange({ 
+                            type: 'text',
+                            value: config.globalReveal?.type === 'text' ? config.globalReveal.value : '',
+                            style: { 
+                              ...(config.globalReveal?.type === 'text' ? config.globalReveal.style : {}), 
+                              fontSize: parseInt(e.target.value) 
+                            } 
+                          })}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Couleur</label>
+                        <input
+                          type="color"
+                          value={config.globalReveal?.type === 'text' ? config.globalReveal.style?.color || '#333333' : '#333333'}
+                          onChange={(e) => handleRevealChange({ 
+                            type: 'text',
+                            value: config.globalReveal?.type === 'text' ? config.globalReveal.value : '',
+                            style: { 
+                              ...(config.globalReveal?.type === 'text' ? config.globalReveal.style : {}), 
+                              color: e.target.value 
+                            } 
+                          })}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 mb-2">
+                  <input
+                    type="radio"
+                    name="revealType"
+                    checked={config.globalReveal?.type === 'image'}
+                    onChange={() => handleRevealChange({ type: 'image', url: '' })}
+                    className="text-blue-600"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Image</span>
+                </label>
+                {config.globalReveal?.type === 'image' && (
+                  <div className="ml-6">
+                    <input
+                      type="url"
+                      placeholder="URL de l'image..."
+                      value={config.globalReveal.url || ''}
+                      onChange={(e) => handleRevealChange({ type: 'image', url: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Grattage Section */}
         {activeSection === 'brush' && (
@@ -228,9 +497,25 @@ const ScratchCardPanel: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-gray-900">Gestion des cartes</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={addCard}
+                  className="flex items-center gap-1 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                >
+                  <Plus size={14} />
+                  Ajouter
+                </button>
+                <button
+                  onClick={resetAllCards}
+                  className="flex items-center gap-1 px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  <RotateCcw size={14} />
+                  Reset
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-64 overflow-y-auto">
               {config.cards.map((card, index) => (
                 <div key={card.id} className="p-3 border border-gray-200 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
@@ -260,108 +545,6 @@ const ScratchCardPanel: React.FC = () => {
                       {card.revealed && <span className="ml-2 text-green-600">✓ Révélée</span>}
                     </div>
                   )}
-
-                  {/* Per-card Cover Settings */}
-                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-                    <div className="text-xs font-medium text-gray-700">Couverture de la carte</div>
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name={`card-${card.id}-cover-type`}
-                          checked={(card.cover?.type || config.globalCover?.type || 'color') === 'color'}
-                          onChange={() => handleCardUpdate(card.id, { cover: { type: 'color', value: '#D9B7A4', opacity: 1 } as Cover })}
-                        />
-                        Couleur unie
-                      </label>
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name={`card-${card.id}-cover-type`}
-                          checked={(card.cover?.type || config.globalCover?.type) === 'image'}
-                          onChange={() => handleCardUpdate(card.id, { cover: { type: 'image', url: '' } as Cover })}
-                        />
-                        Image
-                      </label>
-                    </div>
-
-                    {/* Color controls */}
-                    {((card.cover?.type || config.globalCover?.type || 'color') === 'color') && (
-                      <div className="grid grid-cols-2 gap-3 items-center">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={card.cover?.type === 'color' ? card.cover.value : (config.globalCover?.type === 'color' ? config.globalCover.value : '#D9B7A4')}
-                            onChange={(e) => handleCardUpdate(card.id, { 
-                              cover: { 
-                                type: 'color', 
-                                value: e.target.value, 
-                                opacity: card.cover?.type === 'color' ? (card.cover.opacity ?? 1) : 1
-                              } as Cover 
-                            })}
-                            className="h-10 w-full border border-gray-300 rounded"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 mb-1">Opacité: {Math.round(((card.cover?.type === 'color' ? (card.cover.opacity ?? 1) : (config.globalCover?.type === 'color' ? (config.globalCover.opacity ?? 1) : 1)) * 100))}%</label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={card.cover?.type === 'color' ? (card.cover.opacity ?? 1) : 1}
-                            onChange={(e) => handleCardUpdate(card.id, { 
-                              cover: { 
-                                type: 'color', 
-                                value: card.cover?.type === 'color' ? card.cover.value : '#D9B7A4', 
-                                opacity: parseFloat(e.target.value) 
-                              } as Cover 
-                            })}
-                            className="w-full"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Image controls */}
-                    {(card.cover?.type === 'image') && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const reader = new FileReader();
-                              reader.onload = () => {
-                                handleCardUpdate(card.id, { cover: { type: 'image', url: reader.result as string } });
-                              };
-                              reader.readAsDataURL(file);
-                            }}
-                            className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                          />
-                          {card.cover?.type === 'image' && card.cover.url && (
-                            <button
-                              type="button"
-                              onClick={() => handleCardUpdate(card.id, { cover: { type: 'image', url: '' } })}
-                              className="px-2 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100"
-                            >
-                              Effacer
-                            </button>
-                          )}
-                        </div>
-                        {card.cover?.type === 'image' && card.cover.url && (
-                          <div className="flex items-center gap-3">
-                            <img src={card.cover.url} alt={`Aperçu carte ${index + 1}`} className="h-16 w-auto rounded border" />
-                            <span className="text-xs text-gray-500">Aperçu</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Per-card Reveal Settings removed per request */}
                 </div>
               ))}
             </div>
@@ -371,422 +554,121 @@ const ScratchCardPanel: React.FC = () => {
         {/* Logique Section */}
         {activeSection === 'logic' && (
           <div className="space-y-4">
-            {/* Winner Reveal Section */}
-            <div className="mt-6 pt-4 border-t border-gray-200 space-y-4">
-              <h4 className="font-medium text-gray-900">Contenu gagnant révélé</h4>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="winnerRevealType"
-                      checked={config.logic.winnerReveal?.type === 'text'}
-                      onChange={() => updateLogic({ 
-                        winnerReveal: { 
-                          type: 'text', 
-                          value: 'Gagné !',
-                          style: { fontSize: 18, fontWeight: 700, color: '#22c55e', align: 'center' }
-                        } as Reveal 
-                      })}
-                      className="text-blue-600"
-                    />
-                    Texte
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="winnerRevealType"
-                      checked={config.logic.winnerReveal?.type === 'image'}
-                      onChange={() => updateLogic({ winnerReveal: { type: 'image', url: '' } as Reveal })}
-                      className="text-blue-600"
-                    />
-                    Image
-                  </label>
-                </div>
-
-                {config.logic.winnerReveal?.type === 'text' && (
-                  <div className="grid grid-cols-2 gap-3 items-center">
-                    <input
-                      type="text"
-                      placeholder="Texte gagnant..."
-                      value={config.logic.winnerReveal.type === 'text' ? config.logic.winnerReveal.value || '' : ''}
-                      onChange={(e) => updateLogic({ 
-                        winnerReveal: { 
-                          type: 'text',
-                          value: e.target.value,
-                          style: config.logic.winnerReveal?.type === 'text' ? config.logic.winnerReveal.style : { fontSize: 18, fontWeight: 700, color: '#22c55e', align: 'center' }
-                        } as Reveal 
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-600">Couleur</label>
-                      <input
-                        type="color"
-                        value={config.logic.winnerReveal?.type === 'text' ? config.logic.winnerReveal.style?.color || '#22c55e' : '#22c55e'}
-                        onChange={(e) => updateLogic({ 
-                          winnerReveal: { 
-                            type: 'text',
-                            value: config.logic.winnerReveal?.type === 'text' ? config.logic.winnerReveal.value || '' : '',
-                            style: { ...(config.logic.winnerReveal?.type === 'text' ? config.logic.winnerReveal.style : {}), color: e.target.value }
-                          } as Reveal 
-                        })}
-                        className="h-10 w-14 border border-gray-300 rounded"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {config.logic.winnerReveal?.type === 'image' && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            updateLogic({ winnerReveal: { type: 'image', url: reader.result as string } as Reveal });
-                          };
-                          reader.readAsDataURL(file);
-                        }}
-                        className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {config.logic.winnerReveal.url && (
-                        <button
-                          type="button"
-                          onClick={() => updateLogic({ winnerReveal: { type: 'image', url: '' } as Reveal })}
-                          className="px-2 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100"
-                        >
-                          Effacer
-                        </button>
-                      )}
-                    </div>
-                    {config.logic.winnerReveal.url && (
-                      <div className="flex items-center gap-3">
-                        <img src={config.logic.winnerReveal.url} alt="Aperçu gagnant" className="h-16 w-auto rounded border" />
-                        <span className="text-xs text-gray-500">Aperçu</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Loser Reveal Section */}
-            <div className="mt-6 pt-4 border-t border-gray-200 space-y-4">
-              <h4 className="font-medium text-gray-900">Contenu perdant révélé</h4>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="loserRevealType"
-                      checked={config.logic.loserReveal?.type === 'text'}
-                      onChange={() => updateLogic({ 
-                        loserReveal: { 
-                          type: 'text', 
-                          value: 'Perdu',
-                          style: { fontSize: 16, fontWeight: 600, color: '#ef4444', align: 'center' }
-                        } as Reveal 
-                      })}
-                      className="text-blue-600"
-                    />
-                    Texte
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="loserRevealType"
-                      checked={config.logic.loserReveal?.type === 'image'}
-                      onChange={() => updateLogic({ loserReveal: { type: 'image', url: '' } as Reveal })}
-                      className="text-blue-600"
-                    />
-                    Image
-                  </label>
-                </div>
-
-                {config.logic.loserReveal?.type === 'text' && (
-                  <div className="grid grid-cols-2 gap-3 items-center">
-                    <input
-                      type="text"
-                      placeholder="Texte perdant..."
-                      value={config.logic.loserReveal.type === 'text' ? config.logic.loserReveal.value || '' : ''}
-                      onChange={(e) => updateLogic({ 
-                        loserReveal: { 
-                          type: 'text',
-                          value: e.target.value,
-                          style: config.logic.loserReveal?.type === 'text' ? config.logic.loserReveal.style : { fontSize: 16, fontWeight: 600, color: '#ef4444', align: 'center' }
-                        } as Reveal 
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-600">Couleur</label>
-                      <input
-                        type="color"
-                        value={config.logic.loserReveal?.type === 'text' ? config.logic.loserReveal.style?.color || '#ef4444' : '#ef4444'}
-                        onChange={(e) => updateLogic({ 
-                          loserReveal: { 
-                            type: 'text',
-                            value: config.logic.loserReveal?.type === 'text' ? config.logic.loserReveal.value || '' : '',
-                            style: { ...(config.logic.loserReveal?.type === 'text' ? config.logic.loserReveal.style : {}), color: e.target.value }
-                          } as Reveal 
-                        })}
-                        className="h-10 w-14 border border-gray-300 rounded"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {config.logic.loserReveal?.type === 'image' && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            updateLogic({ loserReveal: { type: 'image', url: reader.result as string } as Reveal });
-                          };
-                          reader.readAsDataURL(file);
-                        }}
-                        className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {config.logic.loserReveal.url && (
-                        <button
-                          type="button"
-                          onClick={() => updateLogic({ loserReveal: { type: 'image', url: '' } as Reveal })}
-                          className="px-2 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100"
-                        >
-                          Effacer
-                        </button>
-                      )}
-                    </div>
-                    {config.logic.loserReveal.url && (
-                      <div className="flex items-center gap-3">
-                        <img src={config.logic.loserReveal.url} alt="Aperçu perdant" className="h-16 w-auto rounded border" />
-                        <span className="text-xs text-gray-500">Aperçu</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Prizes Section */}
-            <div className="mt-6 pt-4 border-t border-gray-200 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Lots à gagner ({(config.logic.prizes || []).length})</h4>
-                <button
-                  onClick={() => {
-                    const newPrize: Prize = {
-                      id: Date.now().toString(),
-                      name: 'Nouveau lot',
-                      quantity: 1,
-                      totalUnits: 1,
-                      attributionMethod: 'probability',
-                      probability: 10
-                    };
-                    updateLogic({ 
-                      prizes: [...(config.logic.prizes || []), newPrize] 
-                    });
-                  }}
-                  className="flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            <h3 className="font-medium text-gray-900">Logique de gain</h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
+                <select
+                  value={config.logic.mode}
+                  onChange={(e) => updateLogic({ mode: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Créer un lot
-                </button>
+                  <option value="fixed">Gagnants fixes</option>
+                  <option value="probability">Probabilité</option>
+                  <option value="weighted">Pondéré</option>
+                </select>
               </div>
 
-              {(config.logic.prizes || []).length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Gift className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Aucun lot configuré</p>
-                  <p className="text-sm">Cliquez sur "Créer un lot" pour commencer</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {(config.logic.prizes || []).map((prize, index) => (
-                    <div key={prize.id} className="bg-gray-50 p-4 rounded-lg border">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-medium text-gray-700">
-                          Lot {index + 1}
-                        </span>
-                        <button
-                          onClick={() => {
-                            const updatedPrizes = (config.logic.prizes || []).filter(p => p.id !== prize.id);
-                            updateLogic({ prizes: updatedPrizes });
-                          }}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="space-y-3">
-                        {/* Nom et quantité */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Nom du lot
-                            </label>
-                            <input
-                              type="text"
-                              value={prize.name}
-                              onChange={(e) => {
-                                const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                  p.id === prize.id ? { ...p, name: e.target.value } : p
-                                );
-                                updateLogic({ prizes: updatedPrizes });
-                              }}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Quantité
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={prize.quantity}
-                              onChange={(e) => {
-                                const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                  p.id === prize.id ? { ...p, quantity: Number(e.target.value) || 1 } : p
-                                );
-                                updateLogic({ prizes: updatedPrizes });
-                              }}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Méthode d'attribution */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-2">
-                            Méthode d'attribution
-                          </label>
-                          <div className="flex space-x-3">
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`attribution-${prize.id}`}
-                                checked={prize.attributionMethod === 'probability'}
-                                onChange={() => {
-                                  const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                    p.id === prize.id ? { ...p, attributionMethod: 'probability' as const } : p
-                                  );
-                                  updateLogic({ prizes: updatedPrizes });
-                                }}
-                                className="mr-2"
-                              />
-                              <Percent className="w-4 h-4 mr-1" />
-                              <span className="text-sm">Probabilité</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`attribution-${prize.id}`}
-                                checked={prize.attributionMethod === 'calendar'}
-                                onChange={() => {
-                                  const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                    p.id === prize.id ? { ...p, attributionMethod: 'calendar' as const } : p
-                                  );
-                                  updateLogic({ prizes: updatedPrizes });
-                                }}
-                                className="mr-2"
-                              />
-                              <Calendar className="w-4 h-4 mr-1" />
-                              <span className="text-sm">Calendrier</span>
-                            </label>
-                          </div>
-                        </div>
-
-                        {/* Configuration selon la méthode */}
-                        {prize.attributionMethod === 'probability' && (
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Probabilité (%)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={prize.probability || 0}
-                              onChange={(e) => {
-                                const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                  p.id === prize.id ? { ...p, probability: Number(e.target.value) } : p
-                                );
-                                updateLogic({ prizes: updatedPrizes });
-                              }}
-                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        )}
-
-                        {prize.attributionMethod === 'calendar' && (
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Date d'attribution
-                              </label>
-                              <input
-                                type="date"
-                                value={prize.calendarDate || ''}
-                                onChange={(e) => {
-                                  const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                    p.id === prize.id ? { ...p, calendarDate: e.target.value } : p
-                                  );
-                                  updateLogic({ prizes: updatedPrizes });
-                                }}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Heure d'attribution
-                              </label>
-                              <input
-                                type="time"
-                                value={prize.calendarTime || ''}
-                                onChange={(e) => {
-                                  const updatedPrizes = (config.logic.prizes || []).map(p => 
-                                    p.id === prize.id ? { ...p, calendarTime: e.target.value } : p
-                                  );
-                                  updateLogic({ prizes: updatedPrizes });
-                                }}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              {config.logic.mode === 'fixed' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre de gagnants
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max={config.cards.length}
+                    value={config.logic.winnersCount || 1}
+                    onChange={(e) => updateLogic({ winnersCount: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
               )}
+
+              {config.logic.mode === 'probability' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Probabilité de gain: {Math.round((config.logic.probability || 0.5) * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={config.logic.probability || 0.5}
+                    onChange={(e) => updateLogic({ probability: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="multipleWins"
+                  checked={config.logic.allowMultipleWins || false}
+                  onChange={(e) => updateLogic({ allowMultipleWins: e.target.checked })}
+                  className="text-blue-600"
+                />
+                <label htmlFor="multipleWins" className="text-sm text-gray-700">
+                  Autoriser plusieurs gains
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Seed (déterminisme)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Optionnel..."
+                  value={config.logic.seed || ''}
+                  onChange={(e) => updateLogic({ seed: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Footer Actions (Exporter/Importer removed) */}
-      <div className="p-4 border-t border-gray-200">
-        <button
-          onClick={resetToDefault}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          <RotateCcw size={16} />
-          Défaut
-        </button>
+      {/* Footer Actions */}
+      <div className="p-4 border-t border-gray-200 space-y-3">
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Download size={16} />
+            Exporter
+          </button>
+          <button
+            onClick={resetToDefault}
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <RotateCcw size={16} />
+            Défaut
+          </button>
+        </div>
+        
+        <div className="space-y-2">
+          <textarea
+            placeholder="Coller la configuration JSON ici..."
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            rows={3}
+          />
+          <button
+            onClick={handleImport}
+            disabled={!importText.trim()}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            <FileUp size={16} />
+            Importer
+          </button>
+        </div>
       </div>
     </div>
   );

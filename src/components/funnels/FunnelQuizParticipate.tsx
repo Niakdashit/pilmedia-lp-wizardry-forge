@@ -13,7 +13,7 @@ interface FunnelQuizParticipateProps {
 const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign, previewMode }) => {
   const [phase, setPhase] = useState<'participate' | 'quiz' | 'form' | 'thankyou'>('participate');
   const [score, setScore] = useState<number>(0);
-  
+  const [answered, setAnswered] = useState<boolean>(false);
   const [showFormModal, setShowFormModal] = useState<boolean>(false);
   const [participationLoading, setParticipationLoading] = useState<boolean>(false);
 
@@ -39,7 +39,16 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     setPhase('quiz');
   };
 
-  // Unused answer handler
+  const handleAnswer = (isCorrect: boolean) => {
+    if (answered) return; // one answer for preview
+    setAnswered(true);
+    if (isCorrect) setScore(prev => prev + 1);
+    // After short delay, move to form
+    setTimeout(() => {
+      setPhase('form');
+      setShowFormModal(true);
+    }, 350);
+  };
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);
@@ -63,6 +72,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
   const handleReplay = () => {
     setScore(0);
+    setAnswered(false);
     setPhase('participate');
   };
 

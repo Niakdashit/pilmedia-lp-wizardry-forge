@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import Wheel from '../../GameTypes/Wheel';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';

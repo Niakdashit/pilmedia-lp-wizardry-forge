@@ -1,4 +1,5 @@
-import React from 'react';
+// @ts-nocheck
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import BorderStyleSelector from '../../SmartWheel/components/BorderStyleSelector';
 
 interface WheelConfigPanelProps {

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useScratchCardStore } from './state/scratchcard.store';
 import { ScratchCard, Cover, Reveal } from './state/types';
-import { shouldPlayerWin } from './utils/prizeAttribution';
 
 interface ScratchCardCanvasProps {
   previewMode?: boolean;
@@ -14,14 +13,10 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   // Store state
   const { config, updateCardProgress, revealCard, resetAllCards } = useScratchCardStore();
-  const { cards, grid, brush, threshold, globalCover, globalReveal, logic } = config;
-
-  // Appliquer le cap global (4 ou 6 cartes max)
-  const effectiveCards = useMemo(() => cards.slice(0, config.maxCards), [cards, config.maxCards]);
+  const { cards, grid, brush, threshold, globalCover, globalReveal } = config;
 
   console.log(`🔧 ScratchCardCanvas render - threshold: ${(threshold * 100).toFixed(1)}%`);
   console.log(`🔧 ScratchCardCanvas render - updateCardProgress function:`, typeof updateCardProgress);
@@ -52,9 +47,9 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       containerPadding = 20;
       gridGap = 12;
 
-      // Forcer 2 colonnes sur mobile; lignes basées sur le nombre effectif de cartes (cap inclus)
-      localGrid.cols = 2;
-      localGrid.rows = Math.max(2, Math.ceil(effectiveCards.length / localGrid.cols));
+      // Forcer 1 colonne sur mobile
+      localGrid.cols = 1;
+      localGrid.rows = Math.ceil(cards.length / localGrid.cols);
     } else if (isTablet) {
       sidebarWidth = 260;
       containerPadding = 30;
@@ -62,7 +57,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
 
       // Limiter à 2 colonnes sur tablette
       localGrid.cols = Math.min(localGrid.cols, 2);
-      localGrid.rows = Math.ceil(effectiveCards.length / localGrid.cols);
+      localGrid.rows = Math.ceil(cards.length / localGrid.cols);
     }
 
     // Espace réellement disponible
@@ -76,55 +71,59 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     const cardSpaceWidth = availableWidth - totalGapWidth;
     const cardSpaceHeight = availableHeight - totalGapHeight;
 
-    // Bornes max par carte (même formule pour tous les devices, dépend de localGrid)
-    const maxCardWidth = Math.floor(cardSpaceWidth / localGrid.cols);
-    const maxCardHeight = Math.floor(cardSpaceHeight / localGrid.rows);
+    // Bornes max par carte
+    let maxCardWidth: number;
+    let maxCardHeight: number;
+
+    if (isMobile) {
+      const mobileCardWidth = Math.min(cardSpaceWidth * 0.7, 280);
+      maxCardWidth = Math.floor(mobileCardWidth);
+      maxCardHeight = Math.floor(cardSpaceHeight / localGrid.rows);
+    } else {
+      maxCardWidth = Math.floor(cardSpaceWidth / localGrid.cols);
+      maxCardHeight = Math.floor(cardSpaceHeight / localGrid.rows);
+    }
 
     console.log(`📐 Viewport: ${viewportWidth}x${viewportHeight}`);
     console.log(`📐 Available space: ${availableWidth}x${availableHeight}`);
     console.log(`📐 Card space after gaps: ${cardSpaceWidth}x${cardSpaceHeight}`);
     console.log(`📐 Max card size: ${maxCardWidth}x${maxCardHeight}`);
     console.log(`📱 Device detection: isMobile=${isMobile}, isTablet=${isTablet}, selectedDevice=${selectedDevice}`);
-    console.log(`🧮 EffectiveCards (cap) length: ${effectiveCards.length} / max ${config.maxCards}`);
 
     // Dimensions finales d'une carte
     let cardWidth: number;
     let cardHeight: number;
 
-    // Sur mobile, plafonner la taille visuelle pour rester présentable
-    // (évite des cartes trop grandes dans un large viewport desktop simulant le mobile)
-    const limitedMaxCardWidth = isMobile ? Math.min(maxCardWidth, 200) : maxCardWidth;
-    const limitedMaxCardHeight = isMobile ? Math.min(maxCardHeight, 200) : maxCardHeight;
-
     if (grid.cardShape === 'vertical-rectangle') {
       // 3:2 (vertical)
-      const widthBasedHeight = limitedMaxCardWidth * 1.5;
-      const heightBasedWidth = limitedMaxCardHeight / 1.5;
+      const widthBasedHeight = maxCardWidth * 1.5;
+      const heightBasedWidth = maxCardHeight / 1.5;
 
-      if (widthBasedHeight <= limitedMaxCardHeight) {
-        cardWidth = limitedMaxCardWidth;
+      if (widthBasedHeight <= maxCardHeight) {
+        cardWidth = maxCardWidth;
         cardHeight = widthBasedHeight;
       } else {
         cardWidth = heightBasedWidth;
-        cardHeight = limitedMaxCardHeight;
+        cardHeight = maxCardHeight;
       }
     } else {
       // Carré
-      const squareSize = Math.min(limitedMaxCardWidth, limitedMaxCardHeight);
+      const squareSize = Math.min(maxCardWidth, maxCardHeight);
       cardWidth = squareSize;
       cardHeight = squareSize;
     }
 
-    // Calcul du conteneur théorique (sans forcer la taille des cartes)
+    // Taille mini utilisable
+    const minSize = isMobile ? 120 : 150;
+    if (cardWidth < minSize || cardHeight < minSize) {
+      const scale = minSize / Math.min(cardWidth, cardHeight);
+      cardWidth *= scale;
+      cardHeight *= scale;
+    }
+
+    // Dimensions finales du conteneur/grille
     const containerWidth = cardWidth * localGrid.cols + totalGapWidth;
     const containerHeight = cardHeight * localGrid.rows + totalGapHeight;
-
-    // Dézoom non destructif: facteur d'échelle pour FIT dans l'espace dispo
-    const zoomScale = Math.min(
-      availableWidth / containerWidth,
-      availableHeight / containerHeight,
-      1
-    );
 
     console.log(`🎴 Final card: ${cardWidth.toFixed(1)}x${cardHeight.toFixed(1)}`);
     console.log(`🎴 Final container: ${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}`);
@@ -137,10 +136,9 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       isMobile,
       isTablet,
       localGrid,
-      gridGap,
-      zoomScale
+      gridGap
     };
-  }, [windowSize, grid, effectiveCards.length, selectedDevice, config.maxCards]);
+  }, [windowSize, grid, cards.length, selectedDevice]);
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -186,25 +184,6 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     }
   }, [isInitialized]);
 
-  // Determine if player should win based on prize attribution logic
-  const playerShouldWin = useMemo(() => {
-    return shouldPlayerWin(logic.prizes || []);
-  }, [logic.prizes]);
-
-  // Handle card selection for single-card scratching
-  const handleCardSelect = useCallback((cardId: string) => {
-    if (!selectedCardId && !previewMode) {
-      setSelectedCardId(cardId);
-      console.log(`🎯 Card ${cardId} selected for scratching`);
-    }
-  }, [selectedCardId, previewMode]);
-
-  // Reset selected card when resetting all cards
-  const handleResetAllCards = useCallback(() => {
-    setSelectedCardId(null);
-    resetAllCards();
-  }, [resetAllCards]);
-
   // Render individual scratch card
   const renderScratchCard = useCallback((card: ScratchCard, index: number) => {
     // ⚠️ Utiliser les colonnes/espaces recalculés (localGrid + gridGap)
@@ -215,14 +194,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     const y = row * (containerDimensions.cardHeight + containerDimensions.gridGap);
 
     const cardCover = card.cover || globalCover;
-    
-    // Use attribution logic to determine reveal content
-    const cardReveal = playerShouldWin 
-      ? (logic.winnerReveal || globalReveal)
-      : (logic.loserReveal || globalReveal);
-
-    // Determine if this card is scratchable
-    const isCardScratchable = previewMode || selectedCardId === null || selectedCardId === card.id;
+    const cardReveal = card.reveal || globalReveal;
 
     return (
       <ScratchCardItem
@@ -242,27 +214,18 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           updateCardProgress(card.id, progress);
         }}
         onReveal={() => revealCard(card.id)}
-        onCardSelect={() => handleCardSelect(card.id)}
         previewMode={previewMode}
-        isWinner={playerShouldWin}
-        isScratchable={isCardScratchable}
-        isSelected={selectedCardId === card.id}
       />
     );
   }, [
     containerDimensions,
     globalCover,
     globalReveal,
-    logic.winnerReveal,
-    logic.loserReveal,
-    playerShouldWin,
-    selectedCardId,
     grid.borderRadius,
     brush.radius,
     threshold,
     updateCardProgress,
     revealCard,
-    handleCardSelect,
     previewMode
   ]);
 
@@ -284,7 +247,7 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
       {/* Reset button (visible only in edit mode) */}
       {!previewMode && (
         <button
-          onClick={handleResetAllCards}
+          onClick={resetAllCards}
           className="sc-reset-button"
           style={{
             position: 'absolute',
@@ -312,8 +275,6 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           position: 'relative',
           width: `${containerDimensions.containerWidth}px`,
           height: `${containerDimensions.containerHeight}px`,
-          maxWidth: '100%',
-          maxHeight: '100%',
 
           // On peut garder grid (esthétique/outils), mais les cartes sont positionnées en absolu
           display: 'grid',
@@ -321,13 +282,12 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
           gridTemplateRows: `repeat(${containerDimensions.localGrid.rows}, ${containerDimensions.cardHeight}px)`,
           gap: `${containerDimensions.gridGap}px`,
 
-          // Dézoom non destructif pour FIT
-          transform: `scale(${containerDimensions.zoomScale})`,
-          transformOrigin: 'center center',
-          willChange: 'transform'
+          // ❌ Ne plus centrer en absolu sur mobile, le parent flex le fait déjà
         }}
       >
-        {effectiveCards.map(renderScratchCard)}
+        {cards
+          .slice(0, containerDimensions.localGrid.rows * containerDimensions.localGrid.cols)
+          .map(renderScratchCard)}
       </div>
     </div>
   );
@@ -347,11 +307,7 @@ interface ScratchCardItemProps {
   threshold: number;
   onProgressUpdate: (progress: number) => void;
   onReveal: () => void;
-  onCardSelect: () => void;
   previewMode: boolean;
-  isWinner: boolean;
-  isScratchable: boolean;
-  isSelected: boolean;
 }
 
 const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
@@ -367,11 +323,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
   threshold,
   onProgressUpdate,
   onReveal,
-  onCardSelect,
-  previewMode,
-  isWinner,
-  isScratchable,
-  isSelected
+  previewMode
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -438,12 +390,23 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
     if (reveal?.type === 'image' && reveal.url) {
       const img = new Image();
       img.onload = () => {
-        // COVER: image must fill the entire canvas, cropping overflow while keeping aspect ratio
-        const scale = Math.max(w / img.width, h / img.height);
-        const drawWidth = img.width * scale;
-        const drawHeight = img.height * scale;
-        const drawX = (w - drawWidth) / 2;
-        const drawY = (h - drawHeight) / 2;
+        const imgAspectRatio = img.width / img.height;
+        const canvasAspectRatio = w / h;
+
+        let drawWidth, drawHeight, drawX, drawY;
+
+        if (imgAspectRatio > canvasAspectRatio) {
+          drawWidth = w;
+          drawHeight = w / imgAspectRatio;
+          drawX = 0;
+          drawY = (h - drawHeight) / 2;
+        } else {
+          drawHeight = h;
+          drawWidth = h * imgAspectRatio;
+          drawX = (w - drawWidth) / 2;
+          drawY = 0;
+        }
+
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
       };
       img.src = reveal.url;
@@ -470,12 +433,23 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
         const opacity = (cover as any).opacity || 1;
         ctx.globalAlpha = opacity;
 
-        // COVER: image must fill the entire canvas, cropping overflow while keeping aspect ratio
-        const scale = Math.max(w / img.width, h / img.height);
-        const drawWidth = img.width * scale;
-        const drawHeight = img.height * scale;
-        const drawX = (w - drawWidth) / 2;
-        const drawY = (h - drawHeight) / 2;
+        const imgAspectRatio = img.width / img.height;
+        const canvasAspectRatio = w / h;
+
+        let drawWidth, drawHeight, drawX, drawY;
+
+        if (imgAspectRatio > canvasAspectRatio) {
+          drawWidth = w;
+          drawHeight = w / imgAspectRatio;
+          drawX = 0;
+          drawY = (h - drawHeight) / 2;
+        } else {
+          drawHeight = h;
+          drawWidth = h * imgAspectRatio;
+          drawX = (w - drawWidth) / 2;
+          drawY = 0;
+        }
+
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1;
       };
@@ -493,19 +467,8 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
   const handlePointerDown = (e: React.PointerEvent) => {
     if (card.revealed || previewMode) return;
 
-    // If card is not scratchable, select it but don't allow scratching
-    if (!isScratchable) {
-      onCardSelect();
-      return;
-    }
-
     e.stopPropagation();
     e.preventDefault();
-
-    // Select the card on first interaction
-    if (!isSelected) {
-      onCardSelect();
-    }
 
     setIsScratching(true);
     const canvas = overlayCanvasRef.current;
@@ -556,7 +519,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       if (transform && transform !== 'none') {
         const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
         if (matrixMatch) {
-          const values = matrixMatch[1].split(',').map((v: string) => parseFloat(v.trim()));
+          const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()));
           if (values.length >= 6) {
             cumulativeScale *= values[0];
             cumulativeTranslateX += values[4];
@@ -676,8 +639,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
         borderRadius,
         overflow: 'hidden',
         background: 'white',
-        cursor: card.revealed || previewMode ? 'default' : isScratchable ? 'crosshair' : 'pointer',
-        opacity: !isScratchable && !isSelected ? 0.6 : 1
+        cursor: card.revealed || previewMode ? 'default' : 'crosshair'
       }}
     >
       {/* Reveal content (background) */}
@@ -712,7 +674,7 @@ const ScratchCardItem: React.FC<ScratchCardItemProps> = ({
       )}
 
       {/* Winner indicator */}
-      {card.revealed && isWinner && (
+      {card.revealed && card.isWinner && (
         <div
           style={{
             position: 'absolute',

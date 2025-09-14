@@ -129,7 +129,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // État pour gérer l'affichage des panneaux dans la sidebar
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
-  
+  const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
@@ -146,7 +146,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   });
   // Quiz config state
-  const [quizConfig] = useState({
+  const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
     timeLimit: 30,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
@@ -485,6 +485,50 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       setSelectedElement(updatedElement);
     }
   };
+
+  // Mettre à jour les éléments du canvas avec le nouveau border radius
+  const updateCanvasElementsBorderRadius = useCallback((borderRadius: number) => {
+    console.log('🔄 updateCanvasElementsBorderRadius appelé avec:', borderRadius);
+    
+    // Mettre à jour campaignConfig avec le nouveau border radius
+    setCampaignConfig((currentConfig: any) => {
+      const updatedConfig = { ...currentConfig };
+      updatedConfig.design = updatedConfig.design || {};
+      updatedConfig.design.quizConfig = updatedConfig.design.quizConfig || {};
+      // Ne pas écraser les couleurs; ne mettre à jour que borderRadius
+      updatedConfig.design.quizConfig.style = {
+        ...(updatedConfig.design.quizConfig.style || {}),
+        borderRadius: `${borderRadius}px`
+      };
+      console.log('🎯 CampaignConfig mise à jour (borderRadius uniquement):', updatedConfig.design.quizConfig.style);
+      return updatedConfig;
+    });
+    
+    // Émettre un événement pour forcer le re-render du TemplatedQuiz
+    const event = new CustomEvent('quizStyleUpdate', { 
+      detail: { 
+        borderRadius: `${borderRadius}px`
+      } 
+    });
+    window.dispatchEvent(event);
+    
+    // Mettre à jour les éléments du canvas (pour compatibilité)
+    setCanvasElements(currentElements => 
+      currentElements.map(element => {
+        if (element?.type === 'quiz' || element?.id === 'quiz-template') {
+          return {
+            ...element,
+            borderRadius: `${borderRadius}px`,
+            style: {
+              ...(element.style || {}),
+              borderRadius: `${borderRadius}px`
+            }
+          };
+        }
+        return element;
+      })
+    );
+  }, [setCampaignConfig]);
 
   // ScratchCard Editor doesn't need wheel config sync - using scratch config instead
   const wheelModalConfig = null;
@@ -1350,7 +1394,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
                 extractedColors={extractedColors} // Ajout des couleurs extraites
-                
+                campaignConfig={campaignConfig}
+                onCampaignConfigChange={handleCampaignConfigChange}
                 elements={canvasElements}
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
@@ -1359,7 +1404,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
-                onPositionPanelChange={setShowAnimationsInSidebar}
+                showPositionPanel={showPositionInSidebar}
+                onPositionPanelChange={setShowPositionInSidebar}
+                showQuizPanel={showQuizPanel}
+                onQuizPanelChange={setShowQuizPanel}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {
@@ -1370,7 +1418,260 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
-                // Quiz config props removed for HybridSidebar compatibility
+                // Quiz config props for HybridSidebar
+                quizQuestionCount={quizConfig.questionCount}
+                quizTimeLimit={quizConfig.timeLimit}
+                quizDifficulty={quizConfig.difficulty}
+                quizBorderRadius={quizConfig.borderRadius}
+                selectedQuizTemplate={quizConfig.templateId}
+                onQuizQuestionCountChange={(count) => setQuizConfig(prev => ({ ...prev, questionCount: count }))}
+                onQuizTimeLimitChange={(time) => setQuizConfig(prev => ({ ...prev, timeLimit: time }))}
+                onQuizDifficultyChange={(difficulty) => setQuizConfig(prev => ({ ...prev, difficulty }))}
+                onQuizBorderRadiusChange={(borderRadius) => {
+                  setQuizConfig(prev => ({ ...prev, borderRadius }));
+                  updateCanvasElementsBorderRadius(borderRadius);
+                }}
+                onQuizTemplateChange={(templateId) => {
+                  console.log('🎯 Changement de template quiz:', templateId);
+                  setQuizConfig(prev => ({ ...prev, templateId }));
+                  
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        templateId
+                      }
+                    }
+                  }));
+                }}
+                // Gestion de la largeur du quiz
+                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
+                onQuizWidthChange={(width) => {
+                  // S'assurer que width est une chaîne avec 'px' à la fin
+                  const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
+                  console.log('🔄 Mise à jour de la largeur du quiz:', normalizedWidth);
+                  
+                  setQuizConfig(prev => ({ ...prev, width: normalizedWidth }));
+                  
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => {
+                    const updated = {
+                      ...current,
+                      design: {
+                        ...current.design,
+                        quizConfig: {
+                          ...current.design.quizConfig,
+                          style: {
+                            ...(current.design.quizConfig?.style || {}),
+                            width: normalizedWidth
+                          }
+                        }
+                      }
+                    };
+                    console.log('📝 Nouvelle configuration de campagne (width):', updated);
+                    return updated;
+                  });
+                  
+                  // Créer et dispatcher l'événement personnalisé
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { width }
+                    });
+                    
+                    const logData = {
+                      type: 'quizStyleUpdate',
+                      detail: { width },
+                      timestamp: new Date().toISOString(),
+                      target: 'window',
+                      bubbles: true,
+                      cancelable: true,
+                      composed: true
+                    };
+                    
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (width):', logData);
+                    
+                    // Émettre l'événement de manière synchrone
+                    const target = document.getElementById('quiz-preview-container') || window;
+                    const eventDispatched = target.dispatchEvent(event);
+                    
+                    console.log('📤 [DesignEditorLayout] Événement émis avec succès:', {
+                      eventDispatched,
+                      target: target === window ? 'window' : 'quiz-preview-container'
+                    });
+                    
+                    // Si l'événement n'a pas été traité, émettre un événement de secours
+                    if (!eventDispatched) {
+                      console.warn('⚠️ [DesignEditorLayout] L\'événement n\'a pas été traité, tentative avec un événement de secours');
+                      const fallbackEvent = new CustomEvent('quizStyleUpdateFallback', {
+                        detail: { width },
+                        bubbles: true,
+                        cancelable: true
+                      });
+                      target.dispatchEvent(fallbackEvent);
+                    }
+                  } catch (error) {
+                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate:', error);
+                  }
+                }}
+                // Gestion de la largeur mobile du quiz
+                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
+                onQuizMobileWidthChange={(width) => {
+                  // S'assurer que width est une chaîne avec 'px' à la fin
+                  const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
+                  console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);
+                  
+                  setQuizConfig(prev => ({ ...prev, mobileWidth: normalizedWidth }));
+                  
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => {
+                    const updated = {
+                      ...current,
+                      design: {
+                        ...current.design,
+                        quizConfig: {
+                          ...current.design.quizConfig,
+                          style: {
+                            ...(current.design.quizConfig?.style || {}),
+                            mobileWidth: normalizedWidth
+                          }
+                        }
+                      }
+                    };
+                    console.log('📝 Nouvelle configuration de campagne (mobileWidth):', updated);
+                    return updated;
+                  });
+                  
+                  // Créer et dispatcher l'événement personnalisé
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { mobileWidth: width }
+                    });
+                    
+                    const logData = {
+                      type: 'quizStyleUpdate',
+                      detail: { mobileWidth: width },
+                      timestamp: new Date().toISOString(),
+                      target: 'window',
+                      bubbles: true,
+                      cancelable: true,
+                      composed: true
+                    };
+                    
+                    console.log('📤 [DesignEditorLayout] Émission de l\'événement quizStyleUpdate (mobileWidth):', logData);
+                    
+                    // Émettre l'événement de manière synchrone
+                    const target = document.getElementById('quiz-preview-container') || window;
+                    const eventDispatched = target.dispatchEvent(event);
+                    
+                    console.log('✅ [DesignEditorLayout] Événement quizStyleUpdate (mobileWidth) émis avec succès:', eventDispatched);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de l\'émission de l\'événement quizStyleUpdate (mobileWidth):', error);
+                  }
+                }}
+                // Gestion des couleurs des boutons
+                onButtonBackgroundColorChange={(color) => {
+                  setQuizConfig(prev => ({
+                    ...prev,
+                    buttonBackgroundColor: color,
+                    // Mettre à jour automatiquement la couleur de survol si elle n'a pas été personnalisée
+                    buttonHoverBackgroundColor: prev.buttonHoverBackgroundColor === prev.buttonBackgroundColor 
+                      ? color 
+                      : prev.buttonHoverBackgroundColor,
+                    buttonActiveBackgroundColor: prev.buttonActiveBackgroundColor === prev.buttonBackgroundColor
+                      ? color
+                      : prev.buttonActiveBackgroundColor
+                  }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonBackgroundColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                onButtonTextColorChange={(color) => {
+                  setQuizConfig(prev => ({ ...prev, buttonTextColor: color }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonTextColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                onButtonHoverBackgroundColorChange={(color) => {
+                  setQuizConfig(prev => ({
+                    ...prev,
+                    buttonHoverBackgroundColor: color,
+                    // Mettre à jour automatiquement la couleur active si elle n'a pas été personnalisée
+                    buttonActiveBackgroundColor: prev.buttonActiveBackgroundColor === prev.buttonHoverBackgroundColor
+                      ? color
+                      : prev.buttonActiveBackgroundColor
+                  }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonHoverBackgroundColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                onButtonActiveBackgroundColorChange={(color) => {
+                  setQuizConfig(prev => ({ ...prev, buttonActiveBackgroundColor: color }));
+                  // Mettre à jour campaignConfig
+                  setCampaignConfig((current: any) => ({
+                    ...current,
+                    design: {
+                      ...current.design,
+                      quizConfig: {
+                        ...current.design.quizConfig,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          buttonActiveBackgroundColor: color
+                        }
+                      }
+                    }
+                  }));
+                }}
+                // Passer les couleurs actuelles
+                buttonBackgroundColor={quizConfig.buttonBackgroundColor}
+                buttonTextColor={quizConfig.buttonTextColor}
+                buttonHoverBackgroundColor={quizConfig.buttonHoverBackgroundColor}
+                buttonActiveBackgroundColor={quizConfig.buttonActiveBackgroundColor}
+                onForceElementsTab={() => {
+                  // Utiliser la référence pour changer l'onglet actif
+                  if (sidebarRef.current) {
+                    sidebarRef.current.setActiveTab('elements');
+                  }
+                  // Fermer les autres panneaux
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
+                }}
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
@@ -1400,15 +1701,15 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
                 setShowAnimationsInSidebar(false);
-                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
               }}
               onShowAnimationsPanel={() => {
                 setShowAnimationsInSidebar(true);
                 setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
               }}
               onShowPositionPanel={() => {
-                setShowDesignInSidebar(true);
+                setShowPositionInSidebar(true);
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
                 setShowDesignInSidebar(false);
@@ -1422,7 +1723,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 setShowDesignInSidebar(true);
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
-                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
 
                 if (sidebarRef.current) {
                   sidebarRef.current.setActiveTab('background');
@@ -1436,7 +1737,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 // Fermer les autres panneaux
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
-                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
               }}
               // Mobile sidebar integrations
               onAddElement={handleAddElement}

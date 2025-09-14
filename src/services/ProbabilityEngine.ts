@@ -155,7 +155,7 @@ export class ProbabilityEngine {
 
     // 5. Cas normal: répartir selon les probabilités configurées
     console.log(`📊 Normal probability mode - distributing based on configured percentages`);
-    return this.calculateNormalProbabilities(segments, mappings);
+    return this.calculateNormalProbabilities(segments, mappings, availablePrizes, segsByPrize);
   }
 
   /**

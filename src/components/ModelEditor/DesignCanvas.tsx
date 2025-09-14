@@ -23,8 +23,6 @@ import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopu
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
-import SlotJackpot from '../SlotJackpot';
-import { isFeatureEnabled } from '../../utils/features';
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
@@ -75,9 +73,6 @@ export interface DesignCanvasProps {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
-  // Inline jackpot panel controls
-  showJackpotPanel?: boolean;
-  onJackpotPanelChange?: (show: boolean) => void;
   // Read-only mode to disable interactions
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
@@ -121,8 +116,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   enableInternalAutoFit = false,
   onContentBoundsChange,
   onQuizPanelChange,
-  showJackpotPanel,
-  onJackpotPanelChange,
   readOnly = false,
   containerClassName,
   updateQuizConfig,
@@ -138,7 +131,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [mobileToolbarHeight, setMobileToolbarHeight] = useState<number>(0);
   // Always start with a valid numeric zoom (fallback 1). Clamp to [0.1, 1].
   const [localZoom, setLocalZoom] = useState<number>(
     typeof zoom === 'number' && !Number.isNaN(zoom)
@@ -242,15 +234,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (!isRealMobile()) return;
     const updateHeight = () => {
       const toolbar = document.getElementById('mobile-toolbar');
-      setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
+      // Store height if needed for calculations
+      console.log('Mobile toolbar height:', toolbar?.getBoundingClientRect().height || 0);
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  // reference mobileToolbarHeight to satisfy TS when unused
-  useEffect(() => {}, [mobileToolbarHeight]);
   // Optimisation mobile pour une expérience tactile parfaite
 
   // Intégration du système auto-responsive (doit être défini avant canvasSize)
@@ -1450,6 +1441,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
+  // Note: Removed unused elementsWithAbsolute calculation
+
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
@@ -1581,7 +1574,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+            const canvasEl = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -2019,22 +2012,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 />
               );
             })()}
-
-            {/* Slot Jackpot Game - Feature Flag Controlled */}
-            {isFeatureEnabled('slotJackpot') && (
-              <SlotJackpot
-                onWin={(result) => {
-                  alert(`🎉 JACKPOT! ${result.join(' ')}`);
-                }}
-                onLose={() => {
-                  // Handle loss case if needed
-                }}
-                disabled={readOnly}
-                onOpenConfig={() => {
-                  onJackpotPanelChange?.(true);
-                }}
-              />
-            )}
 
             </div>
 

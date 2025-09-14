@@ -2,23 +2,15 @@
 import { useCallback, useRef } from 'react';
 
 interface ScratchCanvasConfig {
-  canvasRef?: React.RefObject<HTMLCanvasElement>;
   onProgressChange?: (progress: number) => void;
   scratchRadius?: number;
-  scratchColor?: string;
-  brushSize?: number;
-  threshold?: number;
-  onComplete?: (percentage: number) => void;
 }
 
 export const useScratchCanvas = ({
-  canvasRef,
   onProgressChange,
-  scratchRadius = 20,
-  scratchColor = '#C0C0C0'
+  scratchRadius = 20
 }: ScratchCanvasConfig) => {
-  const internalCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const currentCanvasRef = canvasRef || internalCanvasRef;
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isScratching = useRef(false);
   const lastPercentage = useRef(0);
   const isInitialized = useRef(false);
@@ -40,7 +32,7 @@ export const useScratchCanvas = ({
     scratchTexture?: string;
     opacity?: number;
   }) => {
-    internalCanvasRef.current = canvas;
+    canvasRef.current = canvas;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -84,8 +76,13 @@ export const useScratchCanvas = ({
     isInitialized.current = true;
   }, []);
 
+  const startScratching = useCallback((x: number, y: number) => {
+    isScratching.current = true;
+    scratch(x, y);
+  }, []);
+
   const scratch = useCallback((x: number, y: number) => {
-    const canvas = currentCanvasRef.current;
+    const canvas = canvasRef.current;
     if (!canvas || !isInitialized.current) return;
 
     const ctx = canvas.getContext('2d');
@@ -112,17 +109,12 @@ export const useScratchCanvas = ({
     lastPercentage.current = percentage;
   }, [scratchRadius, onProgressChange]);
 
-  const startScratching = useCallback((x: number, y: number) => {
-    isScratching.current = true;
-    scratch(x, y);
-  }, [scratch]);
-
   const stopScratching = useCallback(() => {
     isScratching.current = false;
   }, []);
 
   const resetScratch = useCallback(() => {
-    const canvas = currentCanvasRef.current;
+    const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -148,8 +140,6 @@ export const useScratchCanvas = ({
     scratch,
     stopScratching,
     resetScratch,
-    getProgress,
-    handleScratch: scratch,
-    getScratchPercentage: getProgress
+    getProgress
   };
 };
