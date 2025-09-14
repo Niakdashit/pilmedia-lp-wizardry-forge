@@ -1,7 +1,9 @@
 
-import React, { useEffect, useRef, memo } from 'react';
+import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import { useInteractiveDragDrop } from '../hooks/useInteractiveDragDrop';
 import InteractiveCustomElementsRenderer from './InteractiveCustomElementsRenderer';
+import AlignmentGuides from '../../DesignEditor/components/SmartAlignmentGuides';
+import { getDeviceDimensions } from '../../../utils/deviceDimensions';
 
 // Composant mémoïsé pour éviter les rendus inutiles
 const DragFeedback = memo(({ isDragging, selectedElementId }: { 
@@ -39,6 +41,25 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
   children
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const deviceDims = useMemo(() => getDeviceDimensions(previewDevice), [previewDevice]);
+  
+  // Measure canvas and compute zoom (CSS px per logical unit)
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      setCanvasSize({ width: rect.width, height: rect.height });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      try { ro.unobserve(el); } catch {}
+      ro.disconnect();
+    };
+  }, [deviceDims.width]);
   
   const {
     selectedElementId,
@@ -98,6 +119,15 @@ const InteractiveDragDropOverlay: React.FC<InteractiveDragDropOverlayProps> = ({
         position: 'relative'
       }}
     >
+      {/* Alignment guides overlay */}
+      <AlignmentGuides
+        canvasSize={canvasSize}
+        guides={[]}
+        zoom={1}
+        isDragging={false}
+      />
+
+
       {/* Overlay des éléments interactifs fluides */}
       <div className="relative w-full h-full">
         <InteractiveCustomElementsRenderer

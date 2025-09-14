@@ -6,8 +6,11 @@ export const useElementSelection = (): ElementSelection => {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
   const handleElementSelect = useCallback((elementId: string) => {
-    setSelectedElementId(selectedElementId === elementId ? null : elementId);
-  }, [selectedElementId]);
+    // Always set selection to the provided elementId (idempotent).
+    // This avoids accidental deselection when multiple handlers (pointerdown + click)
+    // fire for the same element interaction.
+    setSelectedElementId(elementId);
+  }, []);
 
   const handleDeselectAll = useCallback(() => {
     setSelectedElementId(null);

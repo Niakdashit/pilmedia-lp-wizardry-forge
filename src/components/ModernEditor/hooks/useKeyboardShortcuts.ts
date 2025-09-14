@@ -73,14 +73,16 @@ export const useKeyboardShortcuts = ({
   } = useEditorStore();
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const { ctrlKey, metaKey, shiftKey, key, target } = event;
+    const { ctrlKey, metaKey, shiftKey, key, target, altKey, code } = event;
     
     // Debug: Log all keyboard events
     console.log('🎹 Keyboard event detected:', {
       key: key,
+      code,
       ctrlKey,
       metaKey,
       shiftKey,
+      altKey,
       target: (target as Element)?.tagName,
       contentEditable: (target as HTMLElement)?.contentEditable
     });
@@ -119,6 +121,14 @@ export const useKeyboardShortcuts = ({
     // Don't trigger other shortcuts when typing in inputs
     if (isTextInput) {
       console.log('🎹 Ignoring keyboard event - typing in input field');
+      return;
+    }
+
+    // Alt+A (Option+A on Mac): select all canvas elements (do not run in inputs)
+    if (altKey && (key.toLowerCase() === 'a' || code === 'KeyA')) {
+      console.log('🎹 Alt+A: Selecting all canvas elements');
+      event.preventDefault();
+      onSelectAll?.();
       return;
     }
 
@@ -494,7 +504,8 @@ export const useKeyboardShortcuts = ({
       'G': 'Basculer la grille',
       [`${modifierKey}+C`]: 'Copier l\'élément sélectionné',
       [`${modifierKey}+V`]: 'Coller l\'élément',
-      [`${modifierKey}+A`]: 'Sélectionner tout (futur)',
+      [`${modifierKey}+A`]: 'Sélectionner tout (texte natif en saisie, sinon éléments du canvas)',
+      ['Alt+A']: 'Sélectionner tout (éléments du canvas)',
       [`${modifierKey}+D`]: 'Dupliquer l\'élément',
       [`${modifierKey}++`]: 'Zoomer',
       [`${modifierKey}+-`]: 'Dézoomer',

@@ -14,13 +14,20 @@ interface StudioPreviewProps {
   logoUrl?: string;
   backgroundUrl?: string;
   onBack: () => void;
+  // Spin controls (optional)
+  spinMode?: 'random' | 'instant_winner' | 'probability';
+  speed?: 'slow' | 'medium' | 'fast';
+  winProbability?: number;
 }
 
 const StudioPreview: React.FC<StudioPreviewProps> = ({
   campaignData,
   logoUrl,
   backgroundUrl,
-  onBack
+  onBack,
+  spinMode,
+  speed,
+  winProbability
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
 
@@ -167,6 +174,9 @@ const StudioPreview: React.FC<StudioPreviewProps> = ({
                   secondaryColor={campaignData.design?.secondaryColor || '#5bbad5'}
                   accentColor={campaignData.design?.accentColor || '#ffffff'}
                   onSpin={() => console.log('Roue tournée!')}
+                  spinMode={spinMode}
+                  speed={speed}
+                  winProbability={winProbability}
                 />
               </div>
 

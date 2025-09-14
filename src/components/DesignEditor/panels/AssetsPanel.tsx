@@ -1,79 +1,60 @@
-import React, { useState } from 'react';
-import { 
-  Type, 
-  Image, 
-  Shapes, 
-  Star,
-  Circle,
-  Square,
-  Triangle,
-  Heart,
-  Upload,
-  Search,
-  Grid3X3
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Type, Shapes, Upload, Search } from 'lucide-react';
 import TextPanel from './TextPanel';
+import { shapes, ShapeDefinition } from '../shapes/shapeLibrary';
 
 interface AssetsPanelProps {
   onAddElement: (element: any) => void;
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  elements?: any[];
 }
 
-const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate, selectedDevice = 'desktop' }) => {
-  const [activeCategory, setActiveCategory] = useState('text');
+const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement, onElementUpdate, selectedDevice = 'desktop', elements = [] }) => {
+  // Preview color for shapes in the sub-tab "Formes"
+  const SHAPE_PREVIEW_COLOR = '#b1b1b1';
+  // Visually disable the "Formes" sub-tab
+  const SHAPES_TAB_DISABLED = true;
+  const [activeTab, setActiveTab] = useState('text');
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImages, setUploadedImages] = useState<any[]>([]);
 
   const categories = [
     { id: 'text', label: 'Texte', icon: Type },
-    { id: 'images', label: 'Images', icon: Image },
     { id: 'shapes', label: 'Formes', icon: Shapes },
-    { id: 'icons', label: 'Icônes', icon: Star },
     { id: 'uploads', label: 'Uploads', icon: Upload }
   ];
 
+  // If shapes are disabled and currently active, fallback to text
+  useEffect(() => {
+    if (SHAPES_TAB_DISABLED && activeTab === 'shapes') {
+      setActiveTab('text');
+    }
+  }, [activeTab]);
 
-  const shapes = [
-    { type: 'rectangle', label: 'Rectangle', icon: Square, color: '#3B82F6' },
-    { type: 'circle', label: 'Cercle', icon: Circle, color: '#EF4444' },
-    { type: 'triangle', label: 'Triangle', icon: Triangle, color: '#10B981' },
-    { type: 'heart', label: 'Cœur', icon: Heart, color: '#F59E0B' }
-  ];
-
-  const stockImages = [
-    { id: 1, url: '/api/placeholder/150/100', category: 'celebration' },
-    { id: 2, url: '/api/placeholder/150/100', category: 'gaming' },
-    { id: 3, url: '/api/placeholder/150/100', category: 'prizes' },
-    { id: 4, url: '/api/placeholder/150/100', category: 'celebration' }
-  ];
-
-
-  const handleAddShape = (shape: any) => {
+  const handleAddShape = (shape: ShapeDefinition) => {
     const element = {
-      id: `shape-${Date.now()}`,
+      id: `shape-${Date.now()}-${shape.id}`,
       type: 'shape',
-      shapeType: shape.type,
-      x: 100,
-      y: 100,
-      width: 100,
-      height: 100,
-      backgroundColor: shape.color,
-      borderRadius: shape.type === 'circle' ? '50%' : '0'
-    };
-    onAddElement(element);
-  };
-
-  const handleAddImage = (image: any) => {
-    const element = {
-      id: `image-${Date.now()}`,
-      type: 'image',
-      src: image.url,
       x: 100,
       y: 100,
       width: 150,
-      height: 100
+      height: 150,
+      rotation: 0,
+      zIndex: 1,
+      backgroundColor: shape.color,
+      style: {
+        backgroundColor: shape.color,
+      },
+      shapeType: shape.type, // Assurez-vous que c'est bien défini
+      // Propriétés spécifiques pour certaines formes
+      ...(shape.aspectRatio && { aspectRatio: shape.aspectRatio }),
+      ...(shape.borderRadius && { borderRadius: shape.borderRadius }),
+      metadata: {
+        originalType: shape.type,
+        icon: shape.icon?.name || 'square'
+      }
     };
     onAddElement(element);
   };
@@ -96,62 +77,65 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   };
 
   const renderContent = () => {
-    switch (activeCategory) {
+    switch (activeTab) {
       case 'text':
-        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />;
+        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} elements={elements} />;
 
       case 'shapes':
+        // Filtrer toutes les formes selon la recherche
+        let shapesToShow = shapes;
+        
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          shapesToShow = shapes.filter((shape: ShapeDefinition) => 
+            shape.label.toLowerCase().includes(query) || 
+            shape.type.toLowerCase().includes(query)
+          );
+        }
+
         return (
-          <div className="grid grid-cols-2 gap-3">
-            {shapes.map((shape) => {
-              const Icon = shape.icon;
-              return (
-                <button
-                  key={shape.type}
-                  onClick={() => handleAddShape(shape)}
-                  className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors group group-hover:[--icon-color:#ffffff]"
-                  style={{ ['--icon-color' as any]: shape.color }}
-                >
-                  <Icon 
-                    className="w-8 h-8 mb-2" 
-                    style={{ color: 'var(--icon-color)' }}
-                  />
-                  <span className="text-xs font-medium text-gray-700 group-hover:text-white">{shape.label}</span>
-                </button>
-              );
-            })}
+          <div>
+            {/* Grille de formes sans cadres */}
+            <div className="grid grid-cols-3 gap-4">
+              {shapesToShow.map((shape: ShapeDefinition) => {
+                return (
+                  <button
+                    key={shape.id}
+                    onClick={() => handleAddShape(shape)}
+                    className="aspect-square p-2 hover:bg-gray-100 hover:bg-opacity-20 transition-colors flex items-center justify-center"
+                    title={shape.label}
+                  >
+                    {shape.viewBox && shape.paths ? (
+                      <svg
+                        viewBox={shape.viewBox}
+                        className="w-full h-full"
+                        fill="none"
+                      >
+                        {shape.paths.map((path: any, index: number) => (
+                          <path
+                            key={index}
+                            d={path.d}
+                            fill={SHAPE_PREVIEW_COLOR}
+                            stroke="none"
+                            {...(path.fillRule && { fillRule: path.fillRule })}
+                            {...(path.clipRule && { clipRule: path.clipRule })}
+                            {...(path.opacity && { opacity: path.opacity })}
+                          />
+                        ))}
+                      </svg>
+                    ) : (
+                      <div className="w-full h-full" style={{ backgroundColor: SHAPE_PREVIEW_COLOR }}></div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         );
 
-      case 'images':
+      case 'uploads':
         return (
           <div className="space-y-4">
-            {/* Images stock */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Images suggérées</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {stockImages.map((image) => (
-                  <button
-                    key={image.id}
-                    onClick={() => handleAddImage(image)}
-                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[hsl(var(--primary))] transition-colors"
-                  >
-                    <img
-                      src={image.url}
-                      alt={`Stock ${image.category}`}
-                      className="w-full h-20 object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-xs opacity-0 group-hover:opacity-100">
-                        Ajouter
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Upload */}
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[hsl(var(--primary))] transition-colors">
               <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -163,108 +147,113 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
                 className="hidden"
                 id="file-upload"
               />
-              <label htmlFor="file-upload" className="text-[hsl(var(--primary))] text-sm font-medium hover:text-[hsl(var(--primary))] cursor-pointer">
-                Parcourir les fichiers
+              <label
+                htmlFor="file-upload"
+                className="inline-block px-4 py-2 bg-[hsl(var(--primary))] text-white rounded-md text-sm font-medium cursor-pointer hover:bg-[hsl(var(--primary-dark))] transition-colors"
+              >
+                Parcourir
               </label>
             </div>
-          </div>
-        );
 
-      case 'uploads':
-        return (
-          <div className="space-y-4">
-            {uploadedImages.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2">
-                {uploadedImages.map((image) => (
-                  <button
-                    key={image.id}
-                    onClick={() => handleAddImage(image)}
-                    className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[hsl(var(--primary))] transition-colors"
-                  >
-                    <img
-                      src={image.url}
-                      alt="Uploaded image"
-                      className="w-full h-20 object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-xs opacity-0 group-hover:opacity-100">
-                        Ajouter
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Upload className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-sm">Vos uploads apparaîtront ici</p>
+            {/* Images uploadées */}
+            {uploadedImages.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Vos images</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {uploadedImages.map((image) => (
+                    <button
+                      key={image.id}
+                      onClick={() => {
+                        const element = {
+                          id: `image-${Date.now()}`,
+                          type: 'image',
+                          src: image.url,
+                          x: 100,
+                          y: 100,
+                          width: 150,
+                          height: 100
+                        };
+                        onAddElement(element);
+                      }}
+                      className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[hsl(var(--primary))] transition-colors"
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-full h-20 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-xs opacity-0 group-hover:opacity-100">
+                          Ajouter
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[hsl(var(--primary))] transition-colors">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload-uploads"
-              />
-              <label htmlFor="file-upload-uploads" className="text-[hsl(var(--primary))] text-sm font-medium hover:text-[hsl(var(--primary))] cursor-pointer">
-                Uploader un fichier
-              </label>
-            </div>
           </div>
         );
 
       default:
-        return (
-          <div className="text-center py-8">
-            <Grid3X3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Contenu à venir...</p>
-          </div>
-        );
+        return null;
     }
   };
 
   return (
     <div className="p-4">
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Rechercher des éléments..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
-        />
-      </div>
-
-      {/* Categories */}
-      <div className="flex flex-wrap gap-1 mb-4">
-        {categories.map((category) => {
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-4">
+        {categories
+          .filter((c) => !(SHAPES_TAB_DISABLED && c.id === 'shapes'))
+          .map((category) => {
           const Icon = category.icon;
+          const isShapes = category.id === 'shapes';
+          const isDisabled = isShapes && SHAPES_TAB_DISABLED;
+          const handleClick = () => {
+            if (isDisabled) return; // Prevent activating disabled tab
+            setActiveTab(category.id);
+          };
           return (
             <button
               key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                activeCategory === category.id
-                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border border-[hsl(var(--primary))]'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              onClick={handleClick}
+              disabled={isDisabled}
+              aria-disabled={isDisabled}
+              className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 ${
+                isDisabled
+                  ? 'text-gray-400 cursor-not-allowed opacity-60'
+                  : activeTab === category.id
+                    ? 'text-[hsl(var(--primary))] border-b-2 border-[hsl(var(--primary))]'
+                    : 'text-gray-500 hover:text-gray-700'
               }`}
+              title={isDisabled ? 'Désactivé' : category.label}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className={`w-4 h-4 ${isDisabled ? 'opacity-60' : ''}`} />
               <span>{category.label}</span>
             </button>
           );
         })}
       </div>
 
+      {/* Search - Seulement affiché pour les formes */}
+      {activeTab === 'shapes' && !SHAPES_TAB_DISABLED && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher une forme..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
+          />
+        </div>
+      )}
+
       {/* Content */}
-      {renderContent()}
+      {/* Prevent rendering of disabled tab content */}
+      {activeTab === 'shapes' && SHAPES_TAB_DISABLED ? null : renderContent()}
     </div>
   );
 };

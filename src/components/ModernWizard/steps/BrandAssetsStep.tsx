@@ -74,8 +74,8 @@ const BrandAssetsStep: React.FC<BrandAssetsStepProps> = ({
         </div>
         {/* Infos extraction */}
         {extractingTheme && (
-          <div className="mb-3 flex items-center gap-3 text-[#815194] animate-pulse">
-            <svg width="22" height="22" fill="none" className="animate-spin" viewBox="0 0 24 24">
+          <div className="mb-3 flex items-center gap-3 text-[#815194]">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#ae8ac3" strokeWidth="4" />
               <path className="opacity-75" fill="#ae8ac3" d="M4 12a8 8 0 018-8v8z" />
             </svg>

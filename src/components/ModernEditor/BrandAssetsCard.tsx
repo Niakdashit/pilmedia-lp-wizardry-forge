@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Palette, Upload, Sparkles } from 'lucide-react';
+import { Palette, Upload } from 'lucide-react';
 import { generateBrandThemeFromFile } from '../../utils/BrandStyleAnalyzer';
 
 interface BrandAssetsCardProps {
@@ -93,11 +93,6 @@ const BrandAssetsCard: React.FC<BrandAssetsCardProps> = ({ campaign, setCampaign
                   alt="Logo preview" 
                   className="max-h-20 mx-auto rounded-lg"
                 />
-                {isExtracting && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
-                    <Sparkles className="w-6 h-6 text-white animate-pulse" />
-                  </div>
-                )}
               </div>
             ) : (
               <>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart3, LineChart, PieChart, Users, Target, ArrowUpRight, Calendar, Download } from 'lucide-react';
 import PageHeader from '../components/Layout/PageHeader';
+import PillButton from '../components/shared/PillButton';
 
 const Statistics: React.FC = () => {
   const [period, setPeriod] = useState('30');
@@ -20,10 +21,7 @@ const Statistics: React.FC = () => {
               <option value="90">90 derniers jours</option>
               <option value="365">Cette année</option>
             </select>
-            <button className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20">
-              <Download className="w-4 h-4 mr-2" />
-              Exporter
-            </button>
+            <PillButton icon={<Download className="w-4 h-4" />}>Exporter</PillButton>
           </div>
         }
       />

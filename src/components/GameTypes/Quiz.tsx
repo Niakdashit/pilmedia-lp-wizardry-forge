@@ -239,10 +239,10 @@ const Quiz: React.FC<QuizProps> = ({
               <button
                 key={index}
                 onClick={() => handleAnswerSelect(index)}
-                className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 hover:scale-[1.02] ${
+                className={`w-full p-4 text-left rounded-lg transition-all duration-200 hover:scale-[1.02] ${
                   selectedAnswer === index
-                    ? 'border-current bg-blue-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    ? 'bg-blue-50'
+                    : 'bg-white hover:bg-gray-50'
                 }`}
                 style={{
                   borderColor: selectedAnswer === index ? buttonColor : undefined,

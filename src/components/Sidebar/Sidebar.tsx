@@ -1,64 +1,63 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Target,
-  Gamepad2,
-  BarChart3,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
-import { useAppContext } from '../../context/AppContext';
-const sidebarLogo = '/logos/prosplay-sidebar-logo.svg';
+import { LayoutDashboard, Target, Gamepad2, BarChart3 } from 'lucide-react';
 const logoIcon = '/prosplay-icon.svg';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  const { sidebarCollapsed, toggleSidebar } = useAppContext();
+  // Sidebar is permanently collapsed (no toggle)
+
+  // Prefetch map for lazy routes defined in App.tsx
+  const routePrefetchers: Record<string, () => Promise<any>> = {
+    '/dashboard': () => import('../../pages/Dashboard'),
+    '/campaigns': () => import('../../pages/Campaigns'),
+    '/gamification': () => import('../../pages/Gamification'),
+    '/statistics': () => import('../../pages/Statistics'),
+    // '/templates-editor': () => import('../../pages/TemplatesEditor'), // Add if linked in sidebar later
+  };
+
+  const prefetchRoute = (path: string) => {
+    const loader = routePrefetchers[path];
+    if (loader) {
+      try { loader(); } catch (_) { /* best-effort */ }
+    }
+  };
 
   const navItems = [
-    { name: 'Tableau de bord', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { name: 'Accueil', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Campagnes', path: '/campaigns', icon: <Target className="w-5 h-5" /> },
     { name: 'Gamification', path: '/gamification', icon: <Gamepad2 className="w-5 h-5" /> },
-    { name: 'Statistiques', path: '/statistics', icon: <BarChart3 className="w-5 h-5" /> }
+    { name: 'Stats', path: '/statistics', icon: <BarChart3 className="w-5 h-5" /> }
   ];
 
   return (
     <div
-      className={`fixed md:static inset-y-0 left-0 z-40 flex flex-col bg-white/95 backdrop-blur-sm border-r border-gray-200/50 transform md:transform-none transition-transform duration-300 ease-in-out ${sidebarCollapsed ? '-translate-x-full md:translate-x-0 md:w-20' : 'translate-x-0 md:w-64'} w-64`}
+      className={`fixed md:static inset-y-0 left-0 z-40 flex flex-col bg-[#2c2c34] border-r border-gray-700/50 transform md:transform-none transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 md:w-20 w-64`}
       style={{ borderTopLeftRadius: '28px' }}
     >
       {/* Logo section */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">
-        {!sidebarCollapsed ? (
-          <img src={sidebarLogo} alt="Prosplay Logo" className="h-24 w-auto mx-auto mt-2" style={{maxWidth: '220px'}} />
-        ) : (
-          <div className="w-full flex items-center justify-center">
-            <img src={logoIcon} alt="Prosplay Icon" className="h-12 w-12 object-contain" style={{maxWidth: '48px'}} />
-          </div>
-        )}
-        <button
-          onClick={toggleSidebar}
-          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#841b60] focus:outline-none transition-colors duration-200"
-        >
-          {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-        </button>
+      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-600/30">
+        <div className="w-full flex items-center justify-center">
+          <img src={logoIcon} alt="Prosplay Icon" className="h-12 w-12 object-contain brightness-0 invert" style={{maxWidth: '48px'}} />
+        </div>
       </div>
 
       {/* Navigation section */}
-      <nav className="flex-1 px-3 py-4">
-        <div className="space-y-0.5">
+      <nav className="flex-1 px-2 py-4">
+        <div className="grid grid-cols-1 gap-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-2 rounded-xl transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-600 hover:bg-[#f8f0f5] hover:text-[#841b60]'}`}
+                onMouseEnter={() => prefetchRoute(item.path)}
+                onTouchStart={() => prefetchRoute(item.path)}
+                className={`flex flex-col items-center px-2 py-3 rounded-xl transition-all duration-200 group ${isActive ? 'bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`}
               >
-                <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20' : 'bg-white group-hover:bg-white'}`}>{item.icon}</div>
-                {!sidebarCollapsed && <span className="ml-3 font-medium truncate">{item.name}</span>}
+                <div className={`flex items-center justify-center w-8 h-8 rounded-lg ${isActive ? 'bg-white/20 text-white' : 'bg-gray-600/30 text-gray-300 group-hover:bg-gray-600/50 group-hover:text-white'}`}>{item.icon}</div>
+                <span className="mt-1 text-[10px] font-medium text-center truncate w-full">{item.name}</span>
               </Link>
             );
           })}

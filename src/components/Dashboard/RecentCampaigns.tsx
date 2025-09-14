@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import PillButton from '../shared/PillButton';
 import { ChevronRight, Calendar, MoreVertical } from 'lucide-react';
 import { getCampaignTypeIcon, getCampaignTypeText, CampaignType } from '../../utils/campaignTypes';
 import { RecentCampaign } from './types';
@@ -11,7 +11,7 @@ const RecentCampaigns: React.FC = () => {
     participants: 4,
     status: 'draft',
     createdAt: '17 mai 2025',
-    image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg'
+    image: 'https://images.pexels.com/photos/298864/pexels-photo-298864.jpeg'
   }, {
     id: '2',
     name: 'Roue de la fortune Soldes',
@@ -19,7 +19,7 @@ const RecentCampaigns: React.FC = () => {
     participants: 45,
     status: 'active',
     createdAt: '16 mai 2025',
-    image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg'
+    image: 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg'
   }, {
     id: '3',
     name: 'Campagne Instagram Été',
@@ -27,8 +27,24 @@ const RecentCampaigns: React.FC = () => {
     participants: 128,
     status: 'active',
     createdAt: '15 mai 2025',
-    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg'
+    image: 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg'
   }];
+
+  // Duplicate campaigns to display 6 cards (two rows of three)
+  // Provide alternate images for the duplicated set to avoid repetition
+  const altImages = [
+    'https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg', // Sneakers product
+    'https://images.pexels.com/photos/845434/pexels-photo-845434.jpeg', // Cosmetics products
+    'https://images.pexels.com/photos/325153/pexels-photo-325153.jpeg', // Tech workspace/products
+  ];
+  const duplicatedCampaigns: RecentCampaign[] = [
+    ...recentCampaigns,
+    ...recentCampaigns.map((c, i) => ({
+      ...c,
+      id: (recentCampaigns.length + i + 1).toString(),
+      image: altImages[i] || c.image,
+    })),
+  ];
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -72,22 +88,18 @@ const RecentCampaigns: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Galerie des créations</h2>
             <p className="text-gray-600">Vos dernières campagnes avec style</p>
           </div>
-          <Link to="/campaigns" className="group relative overflow-hidden inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20" aria-label="Voir toutes les campagnes">
+          <PillButton to="/campaigns" className="group">
             <span className="relative z-10 flex items-center">
               Voir toutes
               <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
             </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#841b60] to-[#6d164f] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </Link>
+          </PillButton>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {recentCampaigns.map((campaign, index) => {
+          {duplicatedCampaigns.map((campaign, index) => {
           const IconComponent = getCampaignTypeIcon(campaign.type);
-          return <div key={campaign.id} className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] opacity-0 animate-fade-in" style={{
-            animationDelay: `${index * 0.15}s`,
-            animationFillMode: 'forwards'
-          }}>
+          return <div key={campaign.id} className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02]">
                 {/* Main Campaign Card */}
                 <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-900 to-gray-700">
                   {/* Background Image with Parallax Effect */}
@@ -101,7 +113,7 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
 
                   {/* Neon Border Glow Effect */}
-                  <div className="absolute inset-0 rounded-2xl border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
+                  <div className="absolute inset-0 rounded-xl border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
 
                   {/* Campaign Type Badge */}
                   <div className="absolute top-4 left-4 z-20">
@@ -119,7 +131,7 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute top-4 right-4 z-20">
                     <div className={`relative overflow-hidden rounded-full px-2.5 py-1 text-xs font-bold border backdrop-blur-sm shadow-lg transition-all duration-300 group-hover:scale-110 ${getStatusColor(campaign.status)} ${getStatusGlow(campaign.status)} group-hover:shadow-lg`}>
                       <span className="relative z-10 flex items-center">
-                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                        <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" />
                         {getStatusText(campaign.status)}
                       </span>
                       {/* Status Badge Glow Animation */}
@@ -153,11 +165,11 @@ const RecentCampaigns: React.FC = () => {
                     </div>
 
                     {/* Hover Reveal: Action Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-2xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-xl"></div>
                   </div>
 
                   {/* Animated Light Streak */}
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                  <div className="absolute inset-0 overflow-hidden rounded-xl">
                     <div className="absolute -top-full -left-full w-full h-full bg-gradient-to-br from-transparent via-white/10 to-transparent transform rotate-45 group-hover:top-full group-hover:left-full transition-all duration-1000 ease-out"></div>
                   </div>
                 </div>
@@ -166,22 +178,7 @@ const RecentCampaigns: React.FC = () => {
         </div>
       </div>
 
-      <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-      `}</style>
+      
     </div>;
 };
 export default RecentCampaigns;

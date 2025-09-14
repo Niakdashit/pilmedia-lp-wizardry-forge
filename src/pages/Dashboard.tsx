@@ -1,16 +1,14 @@
 import React from 'react';
 import DashboardHeader from '../components/Dashboard/DashboardHeader';
-import StatsGrid from '../components/Dashboard/StatsGrid';
 import RecentCampaigns from '../components/Dashboard/RecentCampaigns';
 import PageContainer from '../components/Layout/PageContainer';
 
 const Dashboard: React.FC = () => {
   return (
-    <PageContainer>
+    <PageContainer className="bg-gray-50">
       <DashboardHeader />
       
-      <div className="space-y-6 px-[25px] py-0">
-        <StatsGrid />
+      <div className="space-y-8 px-6 sm:px-8 lg:px-10 py-6">
         <RecentCampaigns />
       </div>
     </PageContainer>

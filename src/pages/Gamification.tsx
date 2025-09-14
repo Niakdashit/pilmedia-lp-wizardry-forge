@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import PillButton from '../components/shared/PillButton';
 import PageHeader from '../components/Layout/PageHeader';
 import { CampaignType, getCampaignTypeIcon } from '../utils/campaignTypes';
 
@@ -70,20 +70,8 @@ const Gamification: React.FC = () => {
         title="Gamification"
         actions={
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-            <Link
-              to="/design-editor"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Éditeur de Jeux
-            </Link>
-            <Link
-              to="/design-editor"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Éditeur de Jeux
-            </Link>
+            <PillButton to="/design-editor" icon={<Plus className="w-4 h-4" />}>Éditeur de Jeux</PillButton>
+            <PillButton to="/design-editor" icon={<Plus className="w-4 h-4" />}>Éditeur de Jeux</PillButton>
           </div>
         }
       />
@@ -111,12 +99,7 @@ const Gamification: React.FC = () => {
                   <div className="p-4">
                     <h3 className="font-bold text-gray-800 mb-1">{game.name}</h3>
                     <p className="text-sm text-gray-600 mb-4">{game.description}</p>
-                    <Link
-                      to="/design-editor"
-                      className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium rounded-xl border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Créer avec l'éditeur
-                    </Link>
+                    <PillButton to="/design-editor" className="w-full justify-center">Créer avec l'éditeur</PillButton>
                   </div>
                 </div>
               );

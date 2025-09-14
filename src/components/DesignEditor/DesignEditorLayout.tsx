@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
-import HybridSidebar from './HybridSidebar';
-import DesignToolbar from './DesignToolbar';
-import FunnelUnlockedGame from '../funnels/FunnelUnlockedGame';
+const HybridSidebar = lazy(() => import('./HybridSidebar'));
+const DesignToolbar = lazy(() => import('./DesignToolbar'));
+const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
-import DesignCanvas from './DesignCanvas';
+const DesignCanvas = lazy(() => import('./DesignCanvas'));
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -19,8 +19,8 @@ import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 
-import KeyboardShortcutsHelp from '../shared/KeyboardShortcutsHelp';
-import MobileStableEditor from './components/MobileStableEditor';
+const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
+const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
 
 interface DesignEditorLayoutProps {
   mode?: 'template' | 'campaign';
@@ -114,6 +114,11 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
+  const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
+  // Référence pour contrôler l'onglet actif dans HybridSidebar
+  const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
+  // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
+  const [designColorContext, setDesignColorContext] = useState<'fill' | 'border' | 'text'>('fill');
   // Inline WheelConfigPanel visibility (controlled at layout level)
   const [showWheelPanel, setShowWheelPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
@@ -155,7 +160,20 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
   // Calcul des onglets à masquer selon le mode
-  const effectiveHiddenTabs = useMemo(() => hiddenTabs ?? (mode === 'template' ? ['campaign', 'gamelogic', 'export'] : []), [hiddenTabs, mode]);
+  const effectiveHiddenTabs = useMemo(
+    () => {
+      // Ne jamais masquer l'onglet 'game'
+      const defaultHidden = mode === 'template' ? ['campaign', 'export', 'form'] : [];
+      const result = hiddenTabs ? [...hiddenTabs] : [...defaultHidden];
+      
+      // S'assurer que 'game' n'est pas dans les onglets masqués
+      const filteredResult = result.filter(tab => tab !== 'game');
+      
+      console.log('🔍 [DesignEditorLayout] effectiveHiddenTabs:', filteredResult, 'mode:', mode);
+      return filteredResult;
+    },
+    [hiddenTabs, mode]
+  );
 
   useEffect(() => {
     try {
@@ -483,6 +501,51 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       : currentWheelConfig.borderColor;
     const secondaryColor = '#ffffff';
 
+    // Build dynamic wheel segments for preview:
+    // Prefer central editor store (campaignState) updated by panels/modals,
+    // then fallback to local campaignConfig, else generate by count
+    const configuredSegments = (
+      (campaignState as any)?.wheelConfig?.segments ||
+      (campaignConfig as any)?.wheelConfig?.segments ||
+      (campaignState as any)?.gameConfig?.wheel?.segments ||
+      (campaignState as any)?.config?.roulette?.segments ||
+      (campaignConfig as any)?.gameConfig?.wheel?.segments ||
+      (campaignConfig as any)?.config?.roulette?.segments ||
+      []
+    );
+    const fallbackCount = configuredSegments.length > 0 ? configuredSegments.length : 6;
+    const generatedSegments = Array.from({ length: fallbackCount }, (_, i) => {
+      const isWinning = i % 2 === 0;
+      return {
+        id: String(i + 1),
+        label: isWinning ? `Prix ${Math.floor(i / 2) + 1}` : 'Dommage',
+        color: isWinning ? primaryColor : secondaryColor,
+        textColor: isWinning ? secondaryColor : primaryColor,
+        probability: 1,
+        isWinning
+      } as any;
+    });
+    const wheelSegments = configuredSegments.length > 0 ? configuredSegments : generatedSegments;
+    // Debug: trace the segment flow feeding the preview campaign
+    try {
+      const segIds = Array.isArray(wheelSegments) ? wheelSegments.map((s: any) => s?.id ?? '?') : [];
+      const source = configuredSegments.length > 0 ? 'configured' : `generated(${fallbackCount})`;
+      console.log('🧭 [DesignEditorLayout] campaignData segments:', {
+        source,
+        count: Array.isArray(wheelSegments) ? wheelSegments.length : 0,
+        ids: segIds,
+        haveCampaignStateWheelConfig: Boolean((campaignState as any)?.wheelConfig?.segments),
+        haveCampaignConfigWheelConfig: Boolean((campaignConfig as any)?.wheelConfig?.segments),
+        haveCampaignState: Boolean((campaignState as any)?.gameConfig?.wheel?.segments || (campaignState as any)?.config?.roulette?.segments),
+        haveCampaignConfig: Boolean((campaignConfig as any)?.gameConfig?.wheel?.segments || (campaignConfig as any)?.config?.roulette?.segments),
+        campaignStateSegments: (campaignState as any)?.wheelConfig?.segments,
+        campaignConfigSegments: (campaignConfig as any)?.wheelConfig?.segments,
+        device: selectedDevice
+      });
+    } catch (e) {
+      console.warn('🧭 [DesignEditorLayout] segment log error', e);
+    }
+
     return {
       id: 'wheel-design-preview',
       type: 'wheel',
@@ -501,12 +564,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       },
       gameConfig: {
         wheel: {
-          segments: [
-            { id: '1', label: 'Prix 1', color: primaryColor, textColor: secondaryColor, probability: 0.25, isWinning: true },
-            { id: '2', label: 'Prix 2', color: secondaryColor, textColor: primaryColor, probability: 0.25, isWinning: true },
-            { id: '3', label: 'Prix 3', color: primaryColor, textColor: secondaryColor, probability: 0.25, isWinning: true },
-            { id: '4', label: 'Dommage', color: secondaryColor, textColor: primaryColor, probability: 0.25, isWinning: false }
-          ],
+          segments: wheelSegments,
           winProbability: 0.75,
           maxWinners: 100,
           buttonLabel: buttonElement?.content || 'Faire tourner'
@@ -570,9 +628,55 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
     if (signature !== lastTransformedSigRef.current) {
       if (process.env.NODE_ENV !== 'production') {
-        console.debug('[DesignEditorLayout] setCampaign: content changed, updating store');
+        console.debug('[DesignEditorLayout] setCampaign: content changed, merging into store');
       }
-      setCampaign(transformedCampaign);
+      // Preserve existing wheel segments (including prizeId) to avoid overwriting
+      // them with generated/fallback segments during preview sync.
+      setCampaign((prev: any) => {
+        if (!prev) return transformedCampaign as any;
+
+        const prevSegments = (prev?.gameConfig?.wheel?.segments?.length
+          ? prev.gameConfig.wheel.segments
+          : (prev?.config?.roulette?.segments || [])) as any[];
+        const nextSegments = (transformedCampaign as any)?.gameConfig?.wheel?.segments as any[] | undefined;
+        const mergedSegments = (prevSegments && prevSegments.length) ? prevSegments : (nextSegments || []);
+
+        if (process.env.NODE_ENV !== 'production') {
+          try {
+            const hasPrizeIds = Array.isArray(mergedSegments) && mergedSegments.some((s: any) => s && 'prizeId' in s && s.prizeId);
+            console.debug('🎯 [DesignEditorLayout] Preserving wheel segments during merge', {
+              prevCount: Array.isArray(prevSegments) ? prevSegments.length : 0,
+              nextCount: Array.isArray(nextSegments) ? nextSegments.length : 0,
+              used: (prevSegments && prevSegments.length) ? 'prev' : 'next',
+              hasPrizeIds
+            });
+          } catch {}
+        }
+
+        return {
+          ...prev,
+          ...transformedCampaign,
+          gameConfig: {
+            ...prev.gameConfig,
+            ...(transformedCampaign as any).gameConfig,
+            wheel: {
+              ...prev.gameConfig?.wheel,
+              ...(transformedCampaign as any)?.gameConfig?.wheel,
+              segments: mergedSegments
+            }
+          },
+          // Mirror segments to legacy config.roulette as well for compatibility
+          config: {
+            ...prev.config,
+            ...(transformedCampaign as any).config,
+            roulette: {
+              ...prev.config?.roulette,
+              ...(transformedCampaign as any)?.config?.roulette,
+              segments: mergedSegments
+            }
+          }
+        } as any;
+      });
       lastTransformedSigRef.current = signature;
     } else {
       if (process.env.NODE_ENV !== 'production') {
@@ -630,33 +734,123 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [campaignState, navigate, setCampaign]);
 
-  // Fonction pour appliquer les couleurs extraites à la roue
+  // Fonction pour appliquer les couleurs extraites à la roue et aux segments
   const handleExtractedColorsChange = (colors: string[]) => {
+    if (!colors || !Array.isArray(colors) || colors.length === 0) return;
+    
+    console.log('🎨 handleExtractedColorsChange - Nouvelles couleurs extraites:', colors);
+    
+    // Mettre à jour les couleurs extraites dans l'état
     setExtractedColors(colors);
     
+    // Créer une copie profonde de la configuration actuelle
     setCampaignConfig((prev: any) => {
-      const currentWheelConfig = prev?.design?.wheelConfig;
+      if (!prev) return prev;
+      
+      // Créer une copie profonde de la configuration actuelle
+      const currentConfig = JSON.parse(JSON.stringify(prev));
+      
+      // Mettre à jour les couleurs extraites dans l'objet campaign pour le mode preview
+      if (!currentConfig.design) currentConfig.design = {};
+      currentConfig.design.extractedColors = [...colors];
+      
+      // Récupérer la configuration actuelle de la roue
+      const currentWheelConfig = currentConfig?.design?.wheelConfig || {};
       const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
       const shouldUpdateBorderColor = isClassicBorder && 
         (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
       
-      return {
-        ...prev,
+      // Couleurs principales à utiliser
+      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#841b60';
+      const secondaryColor = '#ffffff'; // Toujours blanc pour les segments secondaires
+      const accentColor = colors[2] || currentConfig?.design?.brandColors?.accent || '#45b7d1';
+      
+      // Mettre à jour les segments de la roue avec les nouvelles couleurs
+      const currentSegments = currentConfig?.gameConfig?.wheel?.segments || [];
+      const updatedSegments = currentSegments.map((segment: any, index: number) => {
+        // Déterminer si le segment est gagnant (alternance par défaut si non spécifié)
+        const isWinning = segment.isWinning ?? (index % 2 === 0);
+        
+        // Pour les segments gagnants, utiliser la couleur primaire, sinon blanc
+        const segmentColor = isWinning ? primaryColor : secondaryColor;
+        const textColor = isWinning ? secondaryColor : primaryColor;
+        
+        return {
+          ...segment,
+          // Forcer la mise à jour de la couleur
+          color: segmentColor,
+          // Définir la couleur du texte pour un bon contraste
+          textColor: textColor,
+          // S'assurer que la propriété value est définie pour chaque segment
+          value: segment.value || segment.label || `segment-${index + 1}`,
+          // Forcer la mise à jour en modifiant un timestamp
+          _updatedAt: Date.now()
+        };
+      });
+      
+      // Mettre à jour la configuration avec les nouvelles couleurs
+      const updatedConfig = {
+        ...currentConfig,
         design: {
-          ...prev?.design,
+          ...currentConfig.design,
+          // Mettre à jour la configuration de la roue
           wheelConfig: {
             ...currentWheelConfig,
+            // Mettre à jour la couleur de bordure si nécessaire
             ...(shouldUpdateBorderColor && {
-              borderColor: colors[0] || '#841b60'
+              borderColor: primaryColor,
+              // Forcer la mise à jour en modifiant un timestamp
+              _updatedAt: Date.now()
             })
           },
+          // Mettre à jour les couleurs de la marque
           brandColors: {
-            primary: colors[0] || '#841b60',
-            secondary: '#ffffff',
-            accent: colors[0] || '#45b7d1'
-          }
-        }
+            ...currentConfig.design?.brandColors,
+            primary: primaryColor,
+            secondary: secondaryColor,
+            accent: accentColor,
+            // Forcer la mise à jour
+            _updatedAt: Date.now()
+          },
+          // Mettre à jour les couleurs personnalisées
+          customColors: {
+            ...currentConfig.design?.customColors,
+            primary: primaryColor,
+            secondary: secondaryColor,
+            // Forcer la mise à jour
+            _updatedAt: Date.now()
+          },
+          // Forcer la mise à jour du design
+          _updatedAt: Date.now()
+        },
+        // Mettre à jour les segments de la roue avec les nouvelles couleurs
+        gameConfig: {
+          ...currentConfig.gameConfig,
+          wheel: {
+            ...currentConfig.gameConfig?.wheel,
+            segments: updatedSegments,
+            // Forcer la mise à jour
+            _updatedAt: Date.now()
+          },
+          // Forcer la mise à jour
+          _updatedAt: Date.now()
+        },
+        // Forcer la mise à jour globale
+        _updatedAt: Date.now()
       };
+      
+      console.log('🎨 Mise à jour des couleurs extraites:', {
+        colors,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        segmentsCount: updatedSegments.length,
+        firstSegment: updatedSegments[0],
+        config: updatedConfig.design.wheelConfig,
+        hasSegments: !!updatedConfig.gameConfig?.wheel?.segments?.length
+      });
+      
+      return updatedConfig;
     });
   };
 
@@ -819,9 +1013,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   });
 
   return (
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px]">
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
       {/* Bande dégradée avec logo et icônes */}
-      <GradientBand>
+      <GradientBand className="transform translate-y-[0.4vh]">
         {mode === 'template' ? (
           <div
             style={{
@@ -832,7 +1026,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               marginLeft: '24px'
             }}
           >
-            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-none">
+            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-text">
               Edition de template
             </span>
           </div>
@@ -926,10 +1120,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
               <HybridSidebar
+                ref={sidebarRef}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
                 currentBackground={canvasBackground}
+                extractedColors={extractedColors} // Ajout des couleurs extraites
                 campaignConfig={campaignConfig}
                 onCampaignConfigChange={handleCampaignConfigChange}
                 elements={canvasElements}
@@ -944,6 +1140,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onPositionPanelChange={setShowPositionInSidebar}
                 showWheelPanel={showWheelPanel}
                 onWheelPanelChange={setShowWheelPanel}
+                showDesignPanel={showDesignInSidebar}
+                onDesignPanelChange={(isOpen) => {
+                  if (!isOpen) {
+                    setShowDesignInSidebar(false);
+                  }
+                }}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
@@ -959,6 +1161,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 wheelShowBulbs={campaignConfig?.design?.wheelConfig?.showBulbs}
                 wheelPosition={campaignConfig?.design?.wheelConfig?.position}
                 onWheelBorderStyleChange={setWheelBorderStyle}
+                onForceElementsTab={() => {
+                  // Utiliser la référence pour changer l'onglet actif
+                  if (sidebarRef.current) {
+                    sidebarRef.current.setActiveTab('elements');
+                  }
+                  // Fermer les autres panneaux
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
+                }}
                 onWheelBorderColorChange={setWheelBorderColor}
                 onWheelBorderWidthChange={setWheelBorderWidth}
                 onWheelScaleChange={setWheelScale}
@@ -966,6 +1178,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onWheelPositionChange={setWheelPosition}
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
+                colorEditingContext={designColorContext}
               />
             )}
             {/* Main Canvas Area */}
@@ -984,7 +1197,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               selectedElements={selectedElements}
               onSelectedElementsChange={setSelectedElements}
               onElementUpdate={handleElementUpdate}
-              containerClassName={mode === 'template' ? 'bg-[#eaf5f6]' : undefined}
+              // Wheel sync props
+              wheelModalConfig={wheelModalConfig}
+              extractedColors={extractedColors}
+              containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
@@ -1000,6 +1216,32 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 setShowPositionInSidebar(true);
                 setShowEffectsInSidebar(false);
                 setShowAnimationsInSidebar(false);
+                setShowDesignInSidebar(false);
+              }}
+              onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                if (context) {
+                  setDesignColorContext(context);
+                }
+                // Toujours ouvrir/forcer l'onglet Design
+                setShowDesignInSidebar(true);
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
+
+                if (sidebarRef.current) {
+                  sidebarRef.current.setActiveTab('background');
+                }
+              }}
+              onOpenElementsTab={() => {
+                // Utiliser la même logique que onForceElementsTab
+                if (sidebarRef.current) {
+                  sidebarRef.current.setActiveTab('elements');
+                }
+                // Fermer les autres panneaux
+                setShowEffectsInSidebar(false);
+                setShowAnimationsInSidebar(false);
+                setShowPositionInSidebar(false);
               }}
               // Mobile sidebar integrations
               onAddElement={handleAddElement}

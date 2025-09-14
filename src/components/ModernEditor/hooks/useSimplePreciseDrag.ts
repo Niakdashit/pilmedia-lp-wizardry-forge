@@ -47,19 +47,68 @@ export const useSimplePreciseDrag = ({
     const sx = Math.round(snapped.x);
     const sy = Math.round(snapped.y);
 
-    // Alignment guides payload (centers in logical units)
-    const elementCenterX = sx + elW / 2;
-    const elementCenterY = sy + elH / 2;
-    const canvasCenterX = deviceDims.width / 2;
-    const canvasCenterY = deviceDims.height / 2;
+    // Convert to pixels for alignment guides using DOM measurements for precision
+    let scaleX = 1, scaleY = 1, canvasPxW = 0, canvasPxH = 0;
+    let pxX = 0, pxY = 0, pxW = elW, pxH = elH;
+    if (containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      canvasPxW = containerRect.width;
+      canvasPxH = containerRect.height;
+      scaleX = containerRect.width / (deviceDims.width || 1);
+      scaleY = containerRect.height / (deviceDims.height || 1);
+
+      // Base on snapped logical position
+      pxX = sx * scaleX;
+      pxY = sy * scaleY;
+      pxW = elW * scaleX;
+      pxH = elH * scaleY;
+
+      // If we can, prefer actual DOM rect (accounts for text wrapping, padding, transforms)
+      if (elementRef.current) {
+        const el = elementRef.current;
+        const rect = el.getBoundingClientRect();
+        let mx = rect.left - containerRect.left;
+        let my = rect.top - containerRect.top;
+        let mw = rect.width;
+        let mh = rect.height;
+
+        // For text elements, prefer the content bounds (exclude padding/border) to match overlay measurements
+        const typeAttr = el.getAttribute('data-element-type');
+        if (typeAttr === 'text') {
+          try {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const cr = range.getBoundingClientRect();
+            if (cr.width > 0 && cr.height > 0) {
+              mx = cr.left - containerRect.left;
+              my = cr.top - containerRect.top;
+              mw = cr.width;
+              mh = cr.height;
+            }
+          } catch {
+            // ignore, fallback to outer rect
+          }
+        }
+
+        pxX = mx;
+        pxY = my;
+        pxW = mw;
+        pxH = mh;
+      }
+    }
+
+    const elementCenterX = pxX + pxW / 2;
+    const elementCenterY = pxY + pxH / 2;
+    const canvasCenterX = canvasPxW / 2;
+    const canvasCenterY = canvasPxH / 2;
 
     const alignmentEvent = new CustomEvent('showAlignmentGuides', {
       detail: {
-        elementId,
-        x: sx,
-        y: sy,
-        width: elW,
-        height: elH,
+        elementId: String(elementId),
+        x: pxX,
+        y: pxY,
+        width: pxW,
+        height: pxH,
         elementCenterX,
         elementCenterY,
         canvasCenterX,
@@ -70,7 +119,7 @@ export const useSimplePreciseDrag = ({
     document.dispatchEvent(alignmentEvent);
 
     onUpdate({ x: sx, y: sy });
-  }, [applySnapping, deviceDims.width, deviceDims.height, elementId, onUpdate]);
+  }, [applySnapping, deviceDims.width, deviceDims.height, elementId, onUpdate, elementRef, containerRef]);
 
   const scheduleUpdate = useCallback((x: number, y: number, elW: number, elH: number) => {
     pendingPosRef.current = { x, y };
@@ -188,6 +237,19 @@ export const useSimplePreciseDrag = ({
 
   return {
     isDragging,
-    handleDragStart: handlePointerStart
+    handleDragStart: handlePointerStart,
+    // Allow external consumers to cancel drag and reset global cursor immediately
+    cancelDrag: () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      dragStateRef.current = null;
+      if (isDragging) setIsDragging(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      const hideGuidesEvent = new CustomEvent('hideAlignmentGuides');
+      document.dispatchEvent(hideGuidesEvent);
+    }
   };
 };

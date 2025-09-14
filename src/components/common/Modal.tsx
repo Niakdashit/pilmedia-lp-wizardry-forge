@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ModalProps {
@@ -10,6 +10,16 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
+  useEffect(() => {
+    // Aide au debug en cas de soucis d'affichage
+    // eslint-disable-next-line no-console
+    console.log('[Modal] mount');
+    return () => {
+      // eslint-disable-next-line no-console
+      console.log('[Modal] unmount');
+    };
+  }, []);
+
   const modalContent = (
     <div 
       className="bg-black/40 p-4"
@@ -19,10 +29,11 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
         left: 0, 
         right: 0, 
         bottom: 0,
-        zIndex: 9999,
+        zIndex: 2147483647, // super élevé pour passer devant tout
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        pointerEvents: 'auto'
       }}
     >
       <div 

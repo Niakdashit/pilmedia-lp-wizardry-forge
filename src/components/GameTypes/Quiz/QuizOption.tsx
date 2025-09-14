@@ -26,7 +26,7 @@ const QuizOption: React.FC<QuizOptionProps> = ({
       : '#ffffff',
     borderColor: isSelected 
       ? design.primaryColor || '#841b60' 
-      : '#e5e7eb',
+      : 'transparent',
     color: design.textColor || '#374151',
     borderRadius: '16px',
     borderWidth: '2px',
@@ -43,7 +43,7 @@ const QuizOption: React.FC<QuizOptionProps> = ({
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
-      className="w-full p-5 text-left border transition-all duration-200 hover:shadow-xl group bg-white"
+      className="w-full p-5 text-left transition-all duration-200 hover:shadow-xl group bg-white"
       style={optionStyle}
     >
       <div className="flex items-center space-x-4">
