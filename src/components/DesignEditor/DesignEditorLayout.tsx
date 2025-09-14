@@ -819,7 +819,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   });
 
   return (
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.5vh]">
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px]">
       {/* Bande dégradée avec logo et icônes */}
       <GradientBand>
         {mode === 'template' ? (

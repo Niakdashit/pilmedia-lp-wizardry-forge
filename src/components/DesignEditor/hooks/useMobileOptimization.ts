@@ -257,11 +257,6 @@ export const useMobileOptimization = (
     console.log('📱 Mobile Optimization initialized:', {
       isMobile: mobile,
       isTablet: tablet,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      minDim: Math.min(window.innerWidth, window.innerHeight),
-      userAgent: navigator.userAgent,
-      touchCapable: (navigator as any).maxTouchPoints > 1,
       touchCalibration,
       config
     });

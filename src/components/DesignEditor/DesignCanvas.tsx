@@ -1322,7 +1322,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     <DndProvider backend={HTML5Backend}>
       <MobileResponsiveLayout
         selectedElement={selectedElementData || undefined}
-        selectedDevice={selectedDevice}
         onElementUpdate={(updates) => {
           if (selectedElement) {
             handleElementUpdate(selectedElement, updates);
