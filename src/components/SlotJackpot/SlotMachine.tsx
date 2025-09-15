@@ -8,6 +8,7 @@ interface SlotMachineProps {
   onOpenConfig?: () => void;
   disabled?: boolean;
   symbols?: string[]; // Optionnel: permet d'injecter des symboles
+  templateOverride?: string; // Optionnel: forcer un template (preview)
 }
 
 const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
@@ -31,26 +32,69 @@ const getTemplateUrl = (templateId: string): string => {
   return encodeURI(path);
 };
 
-const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols }) => {
+const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols, templateOverride }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   
-  // Utiliser un état local qui se met à jour depuis le store
-  const [currentTemplate, setCurrentTemplate] = useState('jackpot-frame');
+  // Persistance du template sélectionné via localStorage
+  const getPersistedTemplate = () => {
+    try {
+      return localStorage.getItem('jackpotTemplate') || 'jackpot-frame';
+    } catch {
+      return 'jackpot-frame';
+    }
+  };
+
+  // Utiliser le template persisté ou l'override du preview
+  const [currentTemplate, setCurrentTemplate] = useState<string>(() => {
+    return templateOverride || getPersistedTemplate();
+  });
   const [renderKey, setRenderKey] = useState(0);
-  
-  // Écouter les changements du store
+
+  // Forcer la mise à jour lorsqu'un templateOverride est fourni par le mode preview
   React.useEffect(() => {
+    if (templateOverride) {
+      setCurrentTemplate(templateOverride);
+      setRenderKey((prev) => prev + 1);
+    }
+  }, [templateOverride]);
+  
+  // Écouter les changements du store ET localStorage
+  React.useEffect(() => {
+    if (templateOverride) {
+      // En mode preview avec override, on n'écoute pas le store pour éviter les conflits
+      return;
+    }
+    
     const unsubscribe = useEditorStore?.subscribe((state: any) => {
-      const newTemplate = state.campaign?.gameConfig?.jackpot?.template || 'jackpot-frame';
+      const storeTemplate = (state.campaign?.gameConfig?.jackpot as any)?.template;
+      const persistedTemplate = getPersistedTemplate();
+      
+      // Priorité: store > localStorage > fallback
+      const newTemplate = storeTemplate || persistedTemplate;
+      
       if (newTemplate !== currentTemplate) {
-        console.log('🎰 [SlotMachine] Store changed, updating template from', currentTemplate, 'to', newTemplate);
+        console.log('🎰 [SlotMachine] Template changed from', currentTemplate, 'to', newTemplate);
         setCurrentTemplate(newTemplate);
         setRenderKey(prev => prev + 1);
       }
     });
     
+    // Vérifier immédiatement au montage
+    const initialCheck = () => {
+      const storeTemplate = (useEditorStore?.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
+      const persistedTemplate = getPersistedTemplate();
+      const newTemplate = storeTemplate || persistedTemplate;
+      
+      if (newTemplate !== currentTemplate) {
+        console.log('🎰 [SlotMachine] Initial template set to', newTemplate);
+        setCurrentTemplate(newTemplate);
+        setRenderKey(prev => prev + 1);
+      }
+    };
+    
+    initialCheck();
     return unsubscribe;
-  }, [currentTemplate]);
+  }, [currentTemplate, templateOverride]);
   
   // Récupérer les symboles depuis le store
   const campaign = useEditorStore?.((s: any) => s.campaign);

@@ -838,7 +838,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'quiz') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: typeof campaignData.design?.background === 'object'
@@ -883,6 +883,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
           } catch {}
         }
 
+        // Préserver les questions quiz lors du merge
+        const prevQuestions = prev.gameConfig?.quiz?.questions;
+        const nextQuestions = (transformedCampaign as any)?.gameConfig?.quiz?.questions;
+        const mergedQuestions = (prevQuestions && prevQuestions.length) ? prevQuestions : (nextQuestions || []);
+
         return {
           ...prev,
           ...transformedCampaign,
@@ -893,6 +898,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               ...prev.gameConfig?.wheel,
               ...(transformedCampaign as any)?.gameConfig?.wheel,
               segments: mergedSegments
+            },
+            quiz: {
+              ...prev.gameConfig?.quiz,
+              ...(transformedCampaign as any)?.gameConfig?.quiz,
+              questions: mergedQuestions
             }
           },
           // Mirror segments to legacy config.roulette as well for compatibility
