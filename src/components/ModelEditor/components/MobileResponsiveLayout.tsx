@@ -36,24 +36,6 @@ interface MobileResponsiveLayoutProps {
   canRedo?: boolean;
   // Permet de vider la sélection quand on clique hors sidebar/canvas
   onClearSelection?: () => void;
-  // Jackpot configuration props
-  jackpotSymbols?: string[];
-  onJackpotSymbolsChange?: (symbols: string[]) => void;
-  jackpotTemplate?: string;
-  onJackpotTemplateChange?: (template: string) => void;
-  jackpotBorderColor?: string;
-  jackpotBackgroundColor?: string;
-  jackpotTextColor?: string;
-  onJackpotBorderColorChange?: (color: string) => void;
-  onJackpotBackgroundColorChange?: (color: string) => void;
-  onJackpotTextColorChange?: (color: string) => void;
-  customFrame?: any;
-  onJackpotCustomFrameChange?: (frame: any) => void;
-  customTemplateUrl?: string;
-  onJackpotCustomTemplateChange?: (url: string) => void;
-  // Control jackpot panel drawer
-  showJackpotPanel?: boolean;
-  onJackpotPanelChange?: (show: boolean) => void;
 }
 
 const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
@@ -84,23 +66,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   canUndo,
   canRedo,
   onClearSelection,
-  // Jackpot props
-  jackpotSymbols,
-  onJackpotSymbolsChange,
-  jackpotTemplate,
-  onJackpotTemplateChange,
-  jackpotBorderColor,
-  jackpotBackgroundColor,
-  jackpotTextColor,
-  onJackpotBorderColorChange,
-  onJackpotBackgroundColorChange,
-  onJackpotTextColorChange,
-  customFrame,
-  onJackpotCustomFrameChange,
-  customTemplateUrl,
-  onJackpotCustomTemplateChange,
-  showJackpotPanel,
-  onJackpotPanelChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -273,23 +238,6 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           onRedo={onRedo}
           canUndo={canUndo}
           canRedo={canRedo}
-          // Jackpot props
-          jackpotSymbols={jackpotSymbols}
-          onJackpotSymbolsChange={onJackpotSymbolsChange}
-          jackpotTemplate={jackpotTemplate}
-          onJackpotTemplateChange={onJackpotTemplateChange}
-          jackpotBorderColor={jackpotBorderColor}
-          jackpotBackgroundColor={jackpotBackgroundColor}
-          jackpotTextColor={jackpotTextColor}
-          onJackpotBorderColorChange={onJackpotBorderColorChange}
-          onJackpotBackgroundColorChange={onJackpotBackgroundColorChange}
-          onJackpotTextColorChange={onJackpotTextColorChange}
-          customFrame={customFrame}
-          onJackpotCustomFrameChange={onJackpotCustomFrameChange}
-          customTemplateUrl={customTemplateUrl}
-          onJackpotCustomTemplateChange={onJackpotCustomTemplateChange}
-          showJackpotPanel={showJackpotPanel}
-          onJackpotPanelChange={onJackpotPanelChange}
         />
       )}
 

@@ -43,8 +43,6 @@ export interface CanvasElementProps {
     startDragging: () => void;
     stopDragging: () => void;
   };
-  // Optional: open the quiz configuration panel (used for 'quiz-template')
-  onOpenQuizPanel?: () => void;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -1104,7 +1102,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',
             fontStyle: element.fontStyle || element.style?.fontStyle || 'normal',
             textDecoration: element.textDecoration || element.style?.textDecoration || 'none',
-            textAlign: element.textAlign || (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.style?.textAlign || 'left',
+            textAlign: (element.type === 'text' ? (deviceProps as any).textAlign : undefined) || element.textAlign || element.style?.textAlign || 'left',
             lineHeight: '1.2',
             ...elementStyle
           };
@@ -1242,29 +1240,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         );
       case 'quiz-template':
         return (
-          <div
-            className={`${readOnly ? '' : 'cursor-pointer'}`}
-            style={elementStyle}
-            data-element-type="quiz-template"
-            onPointerDown={(e) => { e.stopPropagation(); }}
-            onClick={(e) => {
-              // Open quiz panel directly when clicking the placeholder
-              e.stopPropagation();
-              if (typeof (window as any) !== 'undefined') {
-                console.log('🔘 Click on quiz-template placeholder: opening Quiz panel');
-              }
-              // Prefer explicit callback if provided
-              onOpenQuizPanel && onOpenQuizPanel();
-            }}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              onOpenQuizPanel && onOpenQuizPanel();
-            }}
-            title="Ouvrir la configuration du quiz"
-          >
-            {/* Placeholder for removed/abstract quiz element */}
-            <div className="w-full h-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-600 text-sm select-none">
-              Cliquer pour configurer le quiz
+          <div className={`${readOnly ? '' : 'cursor-move'}`} style={elementStyle} data-element-type="quiz-template">
+            {/* Quiz supprimé - élément vide */}
+            <div className="w-full h-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500">
+              Quiz supprimé
             </div>
           </div>
         );

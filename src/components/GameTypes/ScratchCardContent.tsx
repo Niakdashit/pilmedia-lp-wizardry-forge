@@ -60,17 +60,6 @@ const ScratchCardContent: React.FC<ScratchCardContentProps> = ({
       );
     }
 
-    // Si la couverture provient d'une couleur d'éditeur, rester strict: pas d'emoji/texte, un aplat
-    const colorFromCover = card.colorFromCover || config?.colorFromCover;
-    if (colorFromCover) {
-      return (
-        <div 
-          className="absolute inset-0" 
-          style={{ backgroundColor: finalScratchColor }}
-        />
-      );
-    }
-
     return (
       <div 
         className="absolute inset-0 flex items-center justify-center" 
@@ -78,7 +67,7 @@ const ScratchCardContent: React.FC<ScratchCardContentProps> = ({
           background: `linear-gradient(145deg, ${finalScratchColor}, ${finalScratchColor}DD)`
         }}
       >
-        <div className="text-white text-center select-none">
+        <div className="text-white text-center">
           <div className="text-lg mb-1">🎫</div>
           <div className="text-xs">Carte {index + 1}</div>
         </div>

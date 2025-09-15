@@ -125,34 +125,6 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
   
   const wheelSize = wheelConfig.size || 200;
 
-  // Prioriser les couleurs personnalisées définies dans l'onglet Jeu (wheelConfig.segments)
-  const mergedPreviewSegments = React.useMemo(() => {
-    const sourceArr = Array.isArray(campaign?.wheelConfig?.segments)
-      ? (campaign.wheelConfig.segments as any[])
-      : (Array.isArray(campaign?.gameConfig?.wheel?.segments) ? (campaign.gameConfig.wheel.segments as any[]) : []);
-    // Map d'override par id (string)
-    const byId = new Map<string, any>();
-    sourceArr.forEach((seg: any) => {
-      const key = String(seg?.id ?? '');
-      if (key) byId.set(key, seg);
-    });
-
-    const isWhite = (val: any) => {
-      try {
-        const c = String(val || '').trim().toLowerCase();
-        if (!c) return false;
-        if (c === '#fff' || c === '#ffffff' || c === 'white') return true;
-        return /^rgba?\(\s*255\s*,\s*255\s*,\s*255(\s*,\s*1\s*)?\)/.test(c);
-      } catch { return false; }
-    };
-    return (segments || []).map((s: any) => {
-      const override = byId.get(String(s?.id ?? ''));
-      const color = (override && override.color) ? override.color : s.color;
-      const textColor = s.textColor || (isWhite(color) ? (wheelConfig.brandColors?.primary || '#841b60') : '#ffffff');
-      return { ...s, color, textColor };
-    });
-  }, [segments, campaign?.wheelConfig?.segments, campaign?.gameConfig?.wheel?.segments, wheelConfig.brandColors?.primary]);
-
   // Styles de découpage/position selon la config unifiée
   const cropping = WheelConfigService.getWheelCroppingStyles(
     wheelConfig.shouldCropWheel ?? true,
@@ -226,7 +198,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
                 return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
               }
             })()}
-            segments={mergedPreviewSegments as any}
+            segments={syncedSegments as any}
             theme="modern"
             size={wheelSize}
             brandColors={{

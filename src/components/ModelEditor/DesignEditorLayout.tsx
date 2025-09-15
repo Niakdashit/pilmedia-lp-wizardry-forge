@@ -3,9 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-// Removed game preview components to keep ModelEditor as a clean base
-// const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
-// const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
+const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
@@ -700,9 +698,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
 
-    // Fallback secondaire: template jackpot persisté localement
-    const lsJackpotTemplate = (typeof window !== 'undefined') ? localStorage.getItem('jackpotTemplate') : null;
-
     // Primary color used by quiz buttons and participation form
     const toRgb = (color: string): { r: number; g: number; b: number } | null => {
       if (!color) return null;
@@ -757,8 +752,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     });
 
     return {
-      id: 'jackpot-design-preview',
-      type: 'jackpot',
+      id: 'quiz-design-preview',
+      type: 'quiz',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
@@ -769,86 +764,53 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
-        jackpotConfig: {
-          template: (() => {
-            // Priorité 1: campaignState (état local)
-            const stateTemplate = (campaignState?.gameConfig?.jackpot as any)?.template;
-            if (stateTemplate) return stateTemplate;
-            
-            // Priorité 2: store global (préservation entre modes)
-            const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
-            if (storeTemplate) return storeTemplate;
-
-            // Priorité 2b: localStorage (si disponible)
-            if (lsJackpotTemplate) return lsJackpotTemplate;
-            
-            // Priorité 3: fallback par défaut
-            return 'jackpot-frame';
-          })(),
-          symbols: (campaignState?.gameConfig?.jackpot as any)?.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
+        quizConfig: {
+          questionCount: campaignConfig?.design?.quizConfig?.questionCount || quizConfig.questionCount || 5,
+          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
+          templateId: quizConfig.templateId,
           style: {
-            borderColor: (campaignState?.gameConfig?.jackpot as any)?.style?.borderColor || primaryColor || '#ffd700',
-            backgroundColor: (campaignState?.gameConfig?.jackpot as any)?.style?.backgroundColor || '#ffffff',
-            textColor: (campaignState?.gameConfig?.jackpot as any)?.style?.textColor || '#333333'
-          },
-          button: {
-            text: (campaignState?.gameConfig?.jackpot as any)?.button?.text || 'SPIN',
-            colors: {
-              background: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.background || primaryColor || '#ffd700',
-              border: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.border || '#b8860b',
-              text: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.text || '#8b4513'
-            }
-          },
-          customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
-          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || ''
+            ...campaignConfig?.design?.quizConfig?.style,
+            buttonBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonBackgroundColor || quizConfig.buttonBackgroundColor,
+            buttonTextColor: campaignConfig?.design?.quizConfig?.style?.buttonTextColor || quizConfig.buttonTextColor,
+            buttonHoverBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonHoverBackgroundColor || quizConfig.buttonHoverBackgroundColor,
+            buttonActiveBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonActiveBackgroundColor || quizConfig.buttonActiveBackgroundColor,
+            borderRadius: campaignConfig?.design?.quizConfig?.style?.borderRadius || `${quizConfig.borderRadius}px` || '8px',
+            // Styles pour le texte
+            textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
+            questionTextWrap: 'break-word',
+            answerTextWrap: 'break-word',
+            // Zoom/largeur - respecter les valeurs ajustées par le panel
+            width: campaignConfig?.design?.quizConfig?.style?.width || `${quizConfig.width ?? '800px'}`,
+            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || `${quizConfig.mobileWidth ?? '400px'}`,
+            // Opacité de fond si définie
+            backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
+            // Mise en page responsive
+            questionPadding: '12px',
+            answerPadding: '12px 16px',
+            answerMargin: '8px 0',
+            answerMinHeight: 'auto'
+          }
         }
       },
       gameConfig: {
-        jackpot: {
-          template: (() => {
-            // Priorité 1: campaignState (état local)
-            const stateTemplate = (campaignState?.gameConfig?.jackpot as any)?.template;
-            if (stateTemplate) return stateTemplate;
-            
-            // Priorité 2: store global (préservation entre modes)
-            const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
-            if (storeTemplate) return storeTemplate;
-
-            // Priorité 2b: localStorage (si disponible)
-            if (lsJackpotTemplate) return lsJackpotTemplate;
-            
-            // Priorité 3: fallback par défaut
-            return 'jackpot-frame';
-          })(),
-          symbols: (campaignState?.gameConfig?.jackpot as any)?.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
-          style: {
-            borderColor: (campaignState?.gameConfig?.jackpot as any)?.style?.borderColor || primaryColor || '#ffd700',
-            backgroundColor: (campaignState?.gameConfig?.jackpot as any)?.style?.backgroundColor || '#ffffff',
-            textColor: (campaignState?.gameConfig?.jackpot as any)?.style?.textColor || '#333333'
-          },
-          button: {
-            text: (campaignState?.gameConfig?.jackpot as any)?.button?.text || 'SPIN',
-            colors: {
-              background: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.background || primaryColor || '#ffd700',
-              border: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.border || '#b8860b',
-              text: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.text || '#8b4513'
-            }
-          },
-          customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
-          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || '',
+        quiz: {
+          questions: configuredQuestions,
+          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
+          templateId: quizConfig.templateId,
+          buttonLabel: buttonElement?.content || 'Commencer le quiz'
         }
       },
       buttonConfig: {
-        text: buttonElement?.content || 'SPIN',
+        text: buttonElement?.content || 'Commencer le quiz',
         color: primaryColor,
         textColor: buttonElement?.style?.color || '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
       screens: [
         {
-          title: titleElement?.content || 'Tentez votre chance !',
-          description: descriptionElement?.content || 'Faites tourner les rouleaux et décrochez le jackpot',
-          buttonText: buttonElement?.content || 'SPIN'
+          title: titleElement?.content || 'Testez vos connaissances !',
+          description: descriptionElement?.content || 'Répondez aux questions et découvrez votre score',
+          buttonText: buttonElement?.content || 'Commencer'
         }
       ],
       // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
@@ -864,9 +826,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         elements: canvasElements,
         background: canvasBackground,
         device: selectedDevice
-      },
-      // Debug: Ajouter les éléments directement pour le preview
-      elements: canvasElements
+      }
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
 
@@ -878,7 +838,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: (campaignData.type || 'jackpot') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: typeof campaignData.design?.background === 'object'
@@ -899,7 +859,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     if (signature !== lastTransformedSigRef.current) {
       if (process.env.NODE_ENV !== 'production') {
         console.debug('[DesignEditorLayout] setCampaign: content changed, merging into store');
-        console.debug('🎰 [DesignEditorLayout] Jackpot template in transformedCampaign:', (transformedCampaign as any)?.gameConfig?.jackpot?.template);
       }
       // Preserve existing wheel segments (including prizeId) to avoid overwriting
       // them with generated/fallback segments during preview sync.
@@ -924,33 +883,12 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           } catch {}
         }
 
-        const result = {
+        return {
           ...prev,
           ...transformedCampaign,
           gameConfig: {
             ...prev.gameConfig,
             ...(transformedCampaign as any).gameConfig,
-            jackpot: (() => {
-              const prevJackpot = (prev.gameConfig?.jackpot as any) || {};
-              const nextJackpot = (((transformedCampaign as any)?.gameConfig?.jackpot) as any) || {};
-              const prevTemplate = prevJackpot?.template;
-              const nextTemplate = nextJackpot?.template;
-              
-              // Priorité absolue: localStorage pour éviter les resets
-              let effectiveTemplate = prevTemplate ?? nextTemplate;
-              try {
-                const lsTemplate = localStorage.getItem('jackpotTemplate');
-                if (lsTemplate) effectiveTemplate = lsTemplate;
-              } catch {}
-              
-              effectiveTemplate = effectiveTemplate ?? 'jackpot-frame';
-              
-              return {
-                ...prevJackpot,
-                ...nextJackpot,
-                template: effectiveTemplate
-              };
-            })(),
             wheel: {
               ...prev.gameConfig?.wheel,
               ...(transformedCampaign as any)?.gameConfig?.wheel,
@@ -968,12 +906,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             }
           }
         } as any;
-        
-        if (process.env.NODE_ENV !== 'production') {
-          console.debug('🎰 [DesignEditorLayout] Final merged jackpot template:', result?.gameConfig?.jackpot?.template);
-        }
-        
-        return result;
       });
       lastTransformedSigRef.current = signature;
     } else {
@@ -1000,8 +932,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   const handlePreview = () => {
-    // Toggle overlay preview (read-only DesignCanvas). No game components.
-    setShowFunnel((v) => !v);
+    setShowFunnel(!showFunnel);
   };
 
   // Save and continue: persist then navigate to settings page
@@ -1425,8 +1356,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         </div>
       </GradientBand>
 
-      {/* Top Toolbar */}
-      <>
+      {/* Top Toolbar - Hidden only in preview mode */}
+      {!showFunnel && (
+        <>
           <DesignToolbar
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
@@ -1448,44 +1380,29 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           <div className="absolute top-4 right-4 z-10">
             <KeyboardShortcutsHelp shortcuts={shortcuts} />
           </div>
-      </>
+        </>
+      )}
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-          {/* Overlay Preview (read-only DesignCanvas, no games) */}
-          {showFunnel && (
-            <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-              {/* Floating Edit Mode Button */}
-              <button
-                onClick={() => setShowFunnel(false)}
-                className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-              >
-                Mode édition
-              </button>
-              <div className="relative w-full h-full">
-                <DesignCanvas
-                  ref={canvasRef}
-                  selectedDevice={selectedDevice}
-                  elements={canvasElements}
-                  onElementsChange={() => {}}
-                  background={canvasBackground}
-                  campaign={campaignConfig}
-                  onCampaignChange={() => {}}
-                  zoom={1}
-                  onZoomChange={() => {}}
-                  selectedElement={null}
-                  onSelectedElementChange={() => {}}
-                  selectedElements={[]}
-                  onSelectedElementsChange={() => {}}
-                  onElementUpdate={() => {}}
-                  // Read-only to prevent edits in preview
-                  readOnly
-                  containerClassName="bg-transparent"
-                />
-              </div>
-            </div>
-          )}
-          {/* Design Editor Mode */}
+        {showFunnel ? (
+          /* Funnel Preview Mode */
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+            {/* Floating Edit Mode Button */}
+            <button
+              onClick={() => setShowFunnel(false)}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+            >
+              Mode édition
+            </button>
+            <FunnelUnlockedGame
+              campaign={campaignData}
+              previewMode={selectedDevice}
+              wheelModalConfig={wheelModalConfig}
+            />
+          </div>
+        ) : (
+          /* Design Editor Mode */
           <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
@@ -1871,6 +1788,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               />
             )}
           </>
+        )}
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (

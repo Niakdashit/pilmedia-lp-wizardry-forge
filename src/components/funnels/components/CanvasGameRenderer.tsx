@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useEditorStore } from '../../../stores/editorStore';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
@@ -27,22 +26,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   onGameStart,
   onGameButtonClick
 }) => {
-  // Configuration du canvas depuis la campagne - essayer plusieurs sources
+  // Configuration du canvas depuis la campagne
   const canvasConfig = campaign.canvasConfig || {};
-  const canvasElements = canvasConfig.elements || campaign.elements || [];
+  const canvasElements = canvasConfig.elements || [];
   const canvasBackground = canvasConfig.background || campaign.design?.background;
-  
-  // Debug logging pour identifier le problème
-  console.log('🔍 CanvasGameRenderer Debug:', {
-    campaignType: campaign.type,
-    canvasConfigExists: !!campaign.canvasConfig,
-    campaignElementsExists: !!campaign.elements,
-    canvasElementsCount: canvasElements.length,
-    canvasElements: canvasElements,
-    customTextsCount: campaign.design?.customTexts?.length || 0,
-    customImagesCount: campaign.design?.customImages?.length || 0,
-    previewMode
-  });
   
   // Système responsif pour les éléments customisés
   const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
@@ -57,22 +44,12 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     '2xl': '24px'
   }), []);
 
-  // Utiliser prioritairement les données structurées de design, puis fallback sur canvasConfig
+  // Utiliser prioritairement les données structurées de design
   const responsiveTexts = useMemo(() => {
     const customTexts = campaign.design?.customTexts || [];
-    const canvasTexts = canvasElements.filter((el: any) => el.type === 'text') || [];
-    const allTexts = customTexts.length > 0 ? customTexts : canvasTexts;
+    if (!customTexts.length) return [];
     
-    console.log('🔍 ResponsiveTexts Debug:', {
-      customTextsCount: customTexts.length,
-      canvasTextsCount: canvasTexts.length,
-      allTextsCount: allTexts.length,
-      allTexts: allTexts
-    });
-    
-    if (!allTexts.length) return [];
-    
-    const convertedTexts = allTexts.map((text: any) => ({
+    const convertedTexts = customTexts.map((text: any) => ({
       ...text,
       type: 'text' as const,
       x: text.x || 0,
@@ -82,20 +59,15 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       color: text.color || text.style?.color || '#000000',
       fontWeight: text.fontWeight || text.style?.fontWeight || 'normal'
     }));
-    
-    console.log('🔍 ConvertedTexts:', convertedTexts);
-    
     return applyAutoResponsive(convertedTexts);
-  }, [campaign.design?.customTexts, canvasElements, applyAutoResponsive]);
+  }, [campaign.design?.customTexts, applyAutoResponsive]);
 
   // Convertir les images en format responsif
   const responsiveImages = useMemo(() => {
     const customImages = campaign.design?.customImages || [];
-    const canvasImages = canvasElements.filter((el: any) => el.type === 'image') || [];
-    const allImages = customImages.length > 0 ? customImages : canvasImages;
-    if (!allImages.length) return [];
+    if (!customImages.length) return [];
     
-    const convertedImages = allImages.map((image: any) => ({
+    const convertedImages = customImages.map((image: any) => ({
       ...image,
       type: 'image' as const,
       x: image.x || 0,
@@ -104,7 +76,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       height: image.height || 150
     }));
     return applyAutoResponsive(convertedImages);
-  }, [campaign.design?.customImages, canvasElements, applyAutoResponsive]);
+  }, [campaign.design?.customImages, applyAutoResponsive]);
 
   // Préparer les éléments pour CustomElementsRenderer
   const customTextsForRenderer = useMemo(() => {
@@ -188,13 +160,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     }
   };
 
-  // S'abonner à la configuration jackpot du store pour une synchronisation automatique
-  const storeJackpotCfg = useEditorStore((s: any) => s.campaign?.gameConfig?.jackpot);
-
   const renderGameComponent = () => {
-    console.log('🎮 Rendering game component for type:', campaign.type);
-    console.log('🎮 Full campaign object:', campaign);
-    
     if (campaign.type === 'wheel') {
       return (
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
@@ -220,88 +186,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         </div>
       );
     }
-    
-    if (campaign.type === 'jackpot') {
-      // Fusionner campagne fournie et store réactif (le store gagne si la campagne est vide)
-      const campaignJackpot = campaign?.gameConfig?.jackpot || {};
-      const effectiveTemplate = campaignJackpot?.template ?? storeJackpotCfg?.template;
-      const effectiveSymbols = campaignJackpot?.symbols ?? storeJackpotCfg?.symbols;
-      const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? storeJackpotCfg?.customTemplateUrl;
-      console.log('🎰 Rendering Jackpot component (SlotJackpot)', {
-        template: effectiveTemplate,
-        symbols: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
-        campaignTemplate: campaignJackpot?.template,
-        storeTemplate: storeJackpotCfg?.template,
-        effectiveTemplate
-      });
-      // Utiliser le même composant que l'éditeur pour garantir la parité visuelle
-      const SlotJackpot = React.lazy(() => import('../../SlotJackpot'));
-      
-      return (
-        <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <SlotJackpot
-              key={`slotjackpot-${effectiveTemplate || 'default'}-${(effectiveSymbols?.length || 0)}-${effectiveCustomUrl || 'no-url'}`}
-              templateOverride={effectiveTemplate}
-              symbols={effectiveSymbols}
-              onWin={() => handleGameComplete('win')}
-              onLose={() => handleGameComplete('lose')}
-              disabled={!formValidated}
-            />
-          </React.Suspense>
-        </div>
-      );
-    }
-    
-    if (campaign.type === 'scratch') {
-      console.log('🎯 Rendering Scratch component', {
-        scratchConfig: campaign.gameConfig?.scratch,
-        design: campaign.design,
-        hasScratchConfig: !!campaign.gameConfig?.scratch,
-        hasDesign: !!campaign.design,
-        canvasElements: canvasElements.length,
-        scratchCards: canvasElements.filter((el: any) => el.type === 'scratch-card').length
-      });
-      
-      // Utiliser le vrai composant ScratchCardCanvas au lieu de ScratchPreview générique
-      const ScratchCardCanvas = React.lazy(() => import('../../ScratchCardEditor/ScratchCardCanvas'));
-      
-      return (
-        <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <React.Suspense fallback={<div>Loading scratch cards...</div>}>
-            <ScratchCardCanvas
-              previewMode={true}
-              selectedDevice={previewMode}
-              formValidated={formValidated}
-            />
-          </React.Suspense>
-        </div>
-      );
-    }
-    
     if (campaign.type === 'quiz') {
-      console.log('🎯 Rendering Quiz component', {
-        quizConfig: campaign.gameConfig?.quiz,
-        design: campaign.design,
-        hasQuizConfig: !!campaign.gameConfig?.quiz,
-        hasDesign: !!campaign.design
-      });
-      
-      const QuizPreview = React.lazy(() => import('../../GameTypes/QuizPreview'));
-      
-      return (
-        <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          <React.Suspense fallback={<div>Loading quiz...</div>}>
-            <QuizPreview
-              config={campaign.gameConfig?.quiz || {}}
-              design={campaign.design || {}}
-            />
-          </React.Suspense>
-        </div>
-      );
+      // Quiz supprimé - ne rien afficher
+      return null;
     }
-    
-    console.log('⚠️ No game component found for type:', campaign.type);
     return null;
   };
 

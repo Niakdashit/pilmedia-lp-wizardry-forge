@@ -166,21 +166,18 @@ const TextPanel: React.FC<TextPanelProps> = ({
         }
       })
     };
-    // Pre-set coordinates for all devices to ensure proper centering
-    const allDevices = ['desktop', 'tablet', 'mobile'] as const;
-    allDevices.forEach(device => {
-      if (device !== selectedDevice) {
-        const deviceCanvas = getDeviceDimensions(device);
-        const deviceEstimatedWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
-        const deviceTextSize = { width: deviceEstimatedWidth, height: fontSize * 1.2 };
-        const deviceCenteredTop = calculateCenteredTopPosition(deviceCanvas, deviceTextSize, 50);
-        newElement[device] = {
-          ...(newElement[device] || {}),
-          x: deviceCenteredTop.x,
-          y: deviceCenteredTop.y
-        };
-      }
-    });
+    // If added from desktop, pre-set mobile coordinates to be centered on mobile canvas
+    if (selectedDevice === 'desktop') {
+      const mobileCanvas = getDeviceDimensions('mobile');
+      const mobileEstimatedWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
+      const mobileTextSize = { width: mobileEstimatedWidth, height: fontSize * 1.2 };
+      const mobileCenteredTop = calculateCenteredTopPosition(mobileCanvas, mobileTextSize, 50);
+      newElement.mobile = {
+        ...(newElement.mobile || {}),
+        x: mobileCenteredTop.x,
+        y: mobileCenteredTop.y
+      };
+    }
     onAddElement(newElement);
   };
 

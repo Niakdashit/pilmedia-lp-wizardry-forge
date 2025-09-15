@@ -707,8 +707,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     });
 
     return {
-      id: 'scratch-design-preview',
-      type: 'scratch',
+      id: 'quiz-design-preview',
+      type: 'quiz',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
@@ -748,40 +748,24 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         }
       },
       gameConfig: {
-        scratch: {
-          // Utiliser la vraie configuration du jeu de grattage depuis le store
-          cards: canvasElements.filter(el => el.type === 'scratch-card').map((card, index) => ({
-            id: card.id || (index + 1),
-            revealed: false,
-            prize: card.content || `Prix ${index + 1}`,
-            cover: card.cover,
-            reveal: card.reveal
-          })),
-          scratchThreshold: campaignConfig?.design?.scratchConfig?.threshold || 50,
-          buttonLabel: buttonElement?.content || 'Commencer à gratter',
-          // Passer toute la configuration du scratch canvas
-          config: {
-            cards: canvasElements.filter(el => el.type === 'scratch-card'),
-            grid: campaignConfig?.design?.scratchConfig?.grid || { cols: 2, rows: 2 },
-            brush: campaignConfig?.design?.scratchConfig?.brush || { radius: 20 },
-            threshold: (campaignConfig?.design?.scratchConfig?.threshold || 50) / 100,
-            globalCover: campaignConfig?.design?.scratchConfig?.globalCover,
-            globalReveal: campaignConfig?.design?.scratchConfig?.globalReveal,
-            logic: campaignConfig?.design?.scratchConfig?.logic || {}
-          }
+        quiz: {
+          questions: configuredQuestions,
+          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
+          templateId: quizConfig.templateId,
+          buttonLabel: buttonElement?.content || 'Commencer le quiz'
         }
       },
       buttonConfig: {
-        text: buttonElement?.content || 'Commencer à gratter',
+        text: buttonElement?.content || 'Commencer le quiz',
         color: primaryColor,
         textColor: buttonElement?.style?.color || '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
       screens: [
         {
-          title: titleElement?.content || 'Grattez et gagnez !',
-          description: descriptionElement?.content || 'Grattez les cartes et découvrez vos prix',
-          buttonText: buttonElement?.content || 'Commencer à gratter'
+          title: titleElement?.content || 'Testez vos connaissances !',
+          description: descriptionElement?.content || 'Répondez aux questions et découvrez votre score',
+          buttonText: buttonElement?.content || 'Commencer'
         }
       ],
       // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)

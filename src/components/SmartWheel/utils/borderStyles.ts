@@ -285,7 +285,7 @@ export const BORDER_STYLES: Record<string, BorderStyle> = {
     name: 'Classique',
     type: 'solid',
     colors: ['#d1d5db'],
-    width: 32,
+    width: 12,
     effects: {
       shadow: true
     }
@@ -472,8 +472,7 @@ export const renderGoldBorder = (
 
   // Scale factors
   const scaleFactor = wheelSize / 200;
-  // Largeur de bordure fixe (indépendante de la taille de la roue)
-  const borderWidth = 12;
+  const borderWidth = 12 * scaleFactor; // match goldClassic config width
 
   // Outer gold gradient (pale gold to rich gold)
   const outerGradient = ctx.createRadialGradient(
@@ -576,8 +575,7 @@ export const createRoyalRouletteEffect = (
   
   // Calculer le facteur d'échelle pour les largeurs de bordure
   const scaleFactor = wheelSize / 200;
-  // Largeur de bordure fixe (indépendante de la taille de la roue)
-  const borderWidth = 22; // Bordure épaisse type BK, mais constante en px
+  const borderWidth = 22 * scaleFactor; // Bordure très épaisse comme Burger King
   
   // === BORDURE EXTÉRIEURE PRINCIPALE ===
   // Gradient radial doré/orange comme Burger King

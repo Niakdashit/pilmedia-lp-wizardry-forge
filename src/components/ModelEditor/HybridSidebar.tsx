@@ -151,9 +151,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const setCampaign = useEditorStore((s) => s.setCampaign) as unknown as (updater: any) => void;
   // Jackpot symbols management
   const jackpotSymbols = (campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'];
-  // Préserver le template sélectionné entre les modes via localStorage (fallback secondaire)
-  const lsJackpotTemplate = (typeof window !== 'undefined') ? localStorage.getItem('jackpotTemplate') : null;
-  const jackpotTemplate = (campaign as any)?.gameConfig?.jackpot?.template || lsJackpotTemplate || 'jackpot-frame';
+  const jackpotTemplate = (campaign as any)?.gameConfig?.jackpot?.template || 'jackpot-frame';
   const jackpotStyle = (campaign as any)?.gameConfig?.jackpot?.style || {};
   const customFrame = (campaign as any)?.gameConfig?.jackpot?.customFrame || {
     frameColor: '#f4d555',
@@ -220,15 +218,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   const handleJackpotTemplateChange = (templateId: string) => {
     console.log('🎰 [HybridSidebar] handleJackpotTemplateChange called with:', templateId);
-    console.log('🎰 [HybridSidebar] Current campaign before update:', (campaign as any)?.gameConfig?.jackpot?.template);
-    
-    // PERSISTANCE IMMÉDIATE - PRIORITÉ ABSOLUE
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('jackpotTemplate', templateId);
-        console.log('🎰 [HybridSidebar] Template persisté dans localStorage:', templateId);
-      }
-    } catch {}
     setCampaign((prev: any) => {
       const base = prev || {};
       const defaults = {
@@ -334,27 +323,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, []);
 
-  // Au montage: si le store diffère de localStorage, aligner sur localStorage pour éviter les resets
-  React.useEffect(() => {
-    const current = (campaign as any)?.gameConfig?.jackpot?.template;
-    if (lsJackpotTemplate && current !== lsJackpotTemplate) {
-      setCampaign((prev: any) => {
-        const base = prev || {};
-        return {
-          ...base,
-          gameConfig: {
-            ...(base.gameConfig || {}),
-            jackpot: {
-              ...(base.gameConfig?.jackpot || {}),
-              template: lsJackpotTemplate
-            }
-          }
-        };
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Si le template actuel est 'custom-frame', fusionner les valeurs manquantes avec les défauts pour refléter visuellement
   React.useEffect(() => {
     if (jackpotTemplate === 'custom-frame') {
@@ -387,19 +355,23 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   const [activeTab, _setActiveTab] = useState<string | null>('elements');
 
-  // Gestion des changements de showJackpotPanel (ouverture unidirectionnelle)
-  // Si le parent demande l'ouverture, on ouvre l'onglet jackpot.
-  // Ne pas forcer la fermeture ici pour éviter les boucles Elements <-> Jackpot.
+  // Gestion des changements de showJackpotPanel
   React.useEffect(() => {
-    if (showJackpotPanel && activeTab !== 'jackpot') {
+    if (showJackpotPanel) {
       _setActiveTab('jackpot');
+    } else if (activeTab === 'jackpot') {
+      _setActiveTab('elements');
     }
-  }, [showJackpotPanel, activeTab]);
+  }, [showJackpotPanel]);
   
-  // Gestion des changements d'onglet -> notifie simplement l'état voulu au parent
+  // Gestion des changements d'onglet
   React.useEffect(() => {
-    onJackpotPanelChange?.(activeTab === 'jackpot');
-  }, [activeTab, onJackpotPanelChange]);
+    if (activeTab === 'jackpot') {
+      onJackpotPanelChange?.(true);
+    } else if (activeTab !== 'jackpot' && showJackpotPanel) {
+      onJackpotPanelChange?.(false);
+    }
+  }, [activeTab]);
 
   React.useEffect(() => {
     if (showQuizPanel) {
@@ -574,7 +546,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     },
     { 
       id: 'game', 
-      label: 'Jeu', 
+      label: 'Jackpot', 
       icon: Gamepad2
     }
   ];
@@ -685,11 +657,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
     
     if (activeTab === tabId) {
-      // Ne rien faire si on clique sur l'onglet déjà actif pour éviter les oscillations
-      return;
+      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
+      setActiveTab(null); // Close if clicking on active tab
+    } else {
+      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
+      setActiveTab(tabId);
     }
-    console.log('🗂️ Ouverture du nouvel onglet:', tabId);
-    setActiveTab(tabId);
   };
 
   const renderPanel = (tabId: string) => {
@@ -730,12 +703,28 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </React.Suspense>
         );
-      case 'game':
-        // Onglet "Jeu" vidé: rien à afficher pour le modèle de base
+      case 'jackpot':
         return (
-          <div className="p-4 text-sm text-gray-400">
-            Aucun panneau de jeu dans ce modèle.
-          </div>
+          <JackpotConfigPanel
+            onBack={() => {
+              onJackpotPanelChange?.(false);
+              _setActiveTab('elements');
+            }}
+            reelSymbols={jackpotSymbols}
+            onReelSymbolsChange={handleJackpotSymbolsChange}
+            selectedTemplate={jackpotTemplate}
+            onTemplateChange={handleJackpotTemplateChange}
+            borderColor={jackpotBorderColor}
+            backgroundColor={jackpotBackgroundColor}
+            textColor={jackpotTextColor}
+            onBorderColorChange={handleJackpotBorderColorChange}
+            onBackgroundColorChange={handleJackpotBackgroundColorChange}
+            onTextColorChange={handleJackpotTextColorChange}
+            customFrame={customFrame}
+            onCustomFrameChange={handleCustomFrameChange}
+            customTemplateUrl={customTemplateUrl}
+            onCustomTemplateChange={handleCustomTemplateChange}
+          />
         );
       case 'quiz':
         return (

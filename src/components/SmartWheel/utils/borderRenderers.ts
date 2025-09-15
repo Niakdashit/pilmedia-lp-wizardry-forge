@@ -16,8 +16,7 @@ export const renderWheelBorder = (
   // Utiliser la largeur personnalisée si fournie, sinon celle de la config
   const borderWidth = customBorderWidth || config.dimensions.width;
   const scaleFactor = wheelSize / 200;
-  // Largeur de bordure indépendante de la taille de la roue
-  const scaledBorderWidth = borderWidth;
+  const scaledBorderWidth = borderWidth * scaleFactor;
 
   // Appeler le renderer personnalisé si spécifié
   if (config.customRenderer) {

@@ -256,6 +256,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
       hoverBgColor,
       activeBgColor,
       width: `${template.style.containerWidth}px`,
+      scale,
       device,
       source: {
         currentStyles,
@@ -301,21 +302,40 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   // Les styles d'option sont maintenant gérés directement dans le rendu
   
-  // Déterminer l'échelle (scale) à partir des largeurs configurées
-  const getScaleFromConfig = (): number => {
+  // Appliquer les styles avec les surcharges de campagne
+  const getResponsiveScale = () => {
+    // Calculer le facteur d'échelle basé sur la largeur
     const baseWidth = template.style.containerWidth;
-    const desktopWidth = currentStyles.width || campaign?.design?.quizConfig?.style?.width;
-    const mobileWidth = currentStyles.mobileWidth || campaign?.design?.quizConfig?.style?.mobileWidth;
-    const chosen = device === 'mobile' ? (mobileWidth || desktopWidth) : (desktopWidth || mobileWidth);
-    if (!chosen || chosen === '100%' || chosen === 'auto') return 1;
-    const match = String(chosen).match(/(\d+(?:\.\d+)?)px/);
-    const px = match ? parseFloat(match[1]) : Number(chosen);
-    const s = !px || isNaN(px) ? 1 : px / baseWidth;
-    const clamped = Math.max(0.3, Math.min(2, s));
-    console.log('🔍 Scale from config:', { device, baseWidth, desktopWidth, mobileWidth, chosen, px, scale: clamped });
-    return clamped;
+    let targetWidth: string;
+    
+    if (device === 'mobile') {
+      targetWidth = currentStyles.mobileWidth || 
+                   campaign?.design?.quizConfig?.style?.mobileWidth || 
+                   currentStyles.width || 
+                   campaign?.design?.quizConfig?.style?.width || 
+                   `${baseWidth}px`;
+    } else {
+      targetWidth = currentStyles.width || 
+                   campaign?.design?.quizConfig?.style?.width || 
+                   `${baseWidth}px`;
+    }
+    
+    // Extraire la valeur numérique de la largeur cible
+    const targetWidthValue = parseInt(targetWidth.replace(/px|%/, ''));
+    const scale = isNaN(targetWidthValue) ? 1 : targetWidthValue / baseWidth;
+    
+    console.log('🔍 Scale calculation:', {
+      device,
+      baseWidth,
+      targetWidth,
+      targetWidthValue,
+      scale
+    });
+    
+    return scale;
   };
-  const scale = getScaleFromConfig();
+
+  const scale = getResponsiveScale();
 
   // Calculer la couleur de fond avec opacité
   const getBackgroundWithOpacity = () => {
@@ -344,8 +364,9 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   };
 
   const containerStyle: React.CSSProperties = {
-    // Toujours la largeur interne de base; l'échelle est appliquée via un wrapper
-    width: `${template.style.containerWidth}px`,
+    width: `${template.style.containerWidth}px`, // Largeur de base
+    transform: `scale(${scale})`, // Appliquer l'échelle proportionnelle
+    transformOrigin: 'center center', // Centrer la transformation
     position: 'relative', // Assurer un contexte d'empilement propre
     zIndex: 20, // Au-dessus du CanvasContextMenu (z-index: 1)
     height: currentStyles.height === 'auto' || !currentStyles.height
@@ -379,13 +400,6 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     maxWidth: '100%',
     maxHeight: '100vh',
     boxSizing: 'border-box'
-  };
-
-  // Wrapper appliquant l'échelle visuelle
-  const scaleWrapperStyle: React.CSSProperties = {
-    display: 'inline-block',
-    transform: `scale(${scale})`,
-    transformOrigin: 'center center'
   };
 
   // Les styles de bouton sont maintenant utilisés directement via buttonStyles.normal, .hover, .active
@@ -632,8 +646,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
-      <div style={scaleWrapperStyle}>
-        <div id="quiz-preview-container" style={containerStyle}>
+      <div id="quiz-preview-container" style={containerStyle}>
         {/* Optional header/banner */}
         {template.header && (
           <div
@@ -698,7 +711,6 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
             <p style={{ color: '#9ca3af', fontSize: '14px' }}>Cliquez pour commencer</p>
           </div>
         )}
-        </div>
       </div>
     </div>
   );
