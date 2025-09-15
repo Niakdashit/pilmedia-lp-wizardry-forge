@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
+import { createPortal } from 'react-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
@@ -17,6 +18,8 @@ import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDr
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
+import DynamicContactForm from '../forms/DynamicContactForm';
+import { DEFAULT_FIELDS } from '../../utils/wheelConfig';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
@@ -82,6 +85,8 @@ export interface DesignCanvasProps {
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
   containerClassName?: string;
+  // When true, display a hover form overlay on the right side (30% width)
+  showFormOverlay?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -125,6 +130,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onJackpotPanelChange,
   readOnly = false,
   containerClassName,
+  showFormOverlay = false,
   updateQuizConfig,
   getCanonicalConfig,
   quizModalConfig,
@@ -319,6 +325,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
+  // Campagne (Zustand) en source de vérité pour des mises à jour instantanées des champs
+  const liveCampaign = useEditorStore(state => state.campaign);
 
   // Nouveau système d'alignement simple et efficace
   const {
@@ -1619,7 +1627,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className="relative bg-transparent rounded-3xl overflow-hidden" 
+              className="relative bg-transparent rounded-3xl overflow-hidden group" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
@@ -1704,6 +1712,167 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   />
                 </div>
               )}
+
+              {/* Fixed Form Overlay: configurable side/size/design */}
+              {showFormOverlay && (() => {
+                const campaignDesign = (liveCampaign as any)?.design || (campaign as any)?.design || {};
+                // Position (left | right). Default: right
+                const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
+                const panelWidth = campaignDesign.formWidth || '30%';
+                const panelHeight = campaignDesign.formHeight || '100%';
+                const fields = (Array.isArray((liveCampaign as any)?.formFields) && (liveCampaign as any)?.formFields.length > 0)
+                  ? (liveCampaign as any).formFields
+                  : ((Array.isArray((campaign as any)?.formFields) && (campaign as any)?.formFields.length > 0)
+                    ? (campaign as any).formFields
+                    : DEFAULT_FIELDS);
+                const buttonColor = campaignDesign.buttonColor || '#841b60';
+                const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
+                const borderColor = campaignDesign.borderColor || '#E5E7EB';
+                const focusColor = buttonColor;
+                const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
+                const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
+                const panelBg = campaignDesign.blockColor || '#ffffff';
+                const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
+                const title = (liveCampaign as any)?.screens?.[1]?.title || 'Vos informations';
+                const description = (liveCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour poursuivre';
+                const submitLabel = (liveCampaign as any)?.buttonConfig?.text || 'Valider le formulaire';
+
+                // Aperçu mobile : layout scindé (bannière + formulaire)
+                if (selectedDevice === 'mobile') {
+                  const backgroundImage = campaignDesign.background?.value || campaignDesign.background;
+                  
+                  const content = (
+                    <div className="flex flex-col w-full h-full" data-canvas-ui>
+                      {/* Bannière image en haut */}
+                      <div 
+                        className="flex-shrink-0 bg-no-repeat flex items-center justify-center"
+                        style={{
+                          backgroundColor: backgroundImage ? 'transparent' : (campaignDesign.backgroundColor || '#f3f4f6')
+                        }}
+                      >
+                        {backgroundImage && (
+                          <img 
+                            src={backgroundImage}
+                            alt="Background"
+                            className="w-full h-auto object-contain"
+                            style={{
+                              maxHeight: '60vh',
+                              display: 'block'
+                            }}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Formulaire en bas */}
+                      <div 
+                        className="flex-1 p-6 overflow-y-auto"
+                        style={{ 
+                          backgroundColor: panelBg
+                        }}
+                      >
+                        <div className="flex flex-col" style={{ color: textColor, fontFamily: campaignDesign.fontFamily }}>
+                          <div className="mb-4">
+                            <h3 className="text-lg font-semibold mb-2" style={{ color: textColor }}>{title}</h3>
+                            <p className="text-sm opacity-75" style={{ color: textColor }}>{description}</p>
+                          </div>
+                          
+                          <DynamicContactForm
+                            fields={fields}
+                            submitLabel={submitLabel}
+                            onSubmit={() => {}}
+                            textStyles={{
+                              label: {
+                                color: textColor,
+                                fontFamily: campaignDesign.fontFamily,
+                                fontSize: '14px',
+                                fontWeight: '500'
+                              },
+                              button: {
+                                backgroundColor: buttonColor,
+                                color: buttonTextColor,
+                                borderRadius: borderRadius,
+                                fontFamily: campaignDesign.fontFamily,
+                                fontWeight: '600',
+                                fontSize: '16px'
+                              }
+                            }}
+                            inputBorderColor={borderColor}
+                            inputFocusColor={focusColor}
+                            inputBorderRadius={inputBorderRadius}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                  // En mode preview (readOnly), on sort du canvas via portal plein écran.
+                  if (readOnly) {
+                    const node = (
+                      <div className="fixed inset-0 z-[9998] flex flex-col">{content}</div>
+                    );
+                    return typeof document !== 'undefined' ? (createPortal(node, document.body) as any) : (node as any);
+                  }
+                  // En mode édition, on reste dans le cadre de l'appareil (canvas), sans portal.
+                  return (
+                    <div className="absolute inset-0 z-[60]">{content}</div>
+                  );
+                }
+
+                // Aperçu desktop/tablet : modale classique
+                return (
+                  <div
+                    className={`absolute z-[60] opacity-100 pointer-events-auto flex`}
+                    style={{
+                      // Centrage vertical et ancrage horizontal selon la position choisie
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      ...(formPosition === 'left' ? { left: 16 } : { right: 16 }),
+                      // Empêcher la coupure horizontale
+                      width: 'min(640px, max(320px, calc(100% - 32px)))',
+                      height: 'auto',
+                      maxHeight: 'calc(100% - 32px)'
+                    }}
+                    data-canvas-ui
+                  >
+                    <div
+                      className={`w-full shadow-2xl rounded-xl p-6 overflow-y-auto`}
+                      style={{ backgroundColor: panelBg, maxHeight: 'calc(100% - 0px)' }}
+                    >
+                      <div className="flex flex-col" style={{ color: textColor, fontFamily: campaignDesign.fontFamily }}>
+                        <div className="mb-4">
+                          <h3 className="text-base font-semibold" style={{ color: textColor }}>{title}</h3>
+                          <p className="text-xs opacity-80" style={{ color: textColor }}>{description}</p>
+                        </div>
+                        <div
+                          className="rounded-md border"
+                          style={{ borderColor, borderWidth: 2, borderRadius, backgroundColor: panelBg }}
+                        >
+                          <div className="p-3">
+                            <DynamicContactForm
+                              fields={fields}
+                              onSubmit={() => {}}
+                              submitLabel={submitLabel}
+                              textStyles={{
+                                label: { ...(campaignDesign.textStyles?.label || {}), color: textColor, fontFamily: campaignDesign.fontFamily },
+                                button: {
+                                  backgroundColor: buttonColor,
+                                  color: buttonTextColor,
+                                  borderRadius,
+                                  fontFamily: campaignDesign.fontFamily,
+                                  fontWeight: campaignDesign.textStyles?.button?.fontWeight,
+                                  fontSize: campaignDesign.textStyles?.button?.fontSize,
+                                },
+                              }}
+                              inputBorderColor={borderColor}
+                              inputFocusColor={focusColor}
+                              inputBorderRadius={inputBorderRadius}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               
               {/* Clouds */}
               

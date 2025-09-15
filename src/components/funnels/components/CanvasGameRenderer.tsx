@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useEditorStore } from '../../../stores/editorStore';
 import WheelPreview from '../../GameTypes/WheelPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
@@ -15,6 +16,8 @@ interface CanvasGameRendererProps {
   onGameFinish: (result: 'win' | 'lose') => void;
   onGameStart: () => void;
   onGameButtonClick: () => void;
+  /** When true, render the preview on a fixed full-screen overlay to ensure parity with other editors */
+  fullScreen?: boolean;
 }
 
 const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
@@ -25,7 +28,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   wheelModalConfig,
   onGameFinish,
   onGameStart,
-  onGameButtonClick
+  onGameButtonClick,
+  fullScreen = true
 }) => {
   // Configuration du canvas depuis la campagne - essayer plusieurs sources
   const canvasConfig = campaign.canvasConfig || {};
@@ -307,8 +311,22 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     };
   }, [previewMode, canvasSize]);
 
+  // Wrapper styles: either fixed full-screen overlay (preferred in editors) or normal flow
+  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    if (fullScreen) {
+      const node = (
+        <div className="fixed inset-0 z-[9999] w-screen h-[100dvh] min-h-[100dvh]">
+          {children}
+        </div>
+      );
+      // Use a portal to escape any transformed ancestor that would clip a fixed element
+      return typeof document !== 'undefined' ? (createPortal(node, document.body)) as any : (node as any);
+    }
+    return <div className="w-full h-[100dvh] min-h-[100dvh]">{children}</div>;
+  };
+
   return (
-    <div className="w-full h-[100dvh] min-h-[100dvh]">
+    <Wrapper>
       <div
         className="canvas-container relative overflow-hidden w-full"
         style={containerStyle}
@@ -360,7 +378,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           />
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 };
 

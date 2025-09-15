@@ -1236,6 +1236,20 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   });
 
+  // Inline editable campaign title (used in template mode header)
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState<string>('');
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setTitleInput(((campaignState as any)?.name as string) || '');
+    }
+  }, [campaignState, isEditingTitle]);
+  const commitTitle = useCallback(() => {
+    const value = (titleInput || '').trim() || 'Sans titre';
+    setCampaign((prev: any) => ({ ...(prev || {}), name: value }));
+    setIsEditingTitle(false);
+  }, [titleInput, setCampaign]);
+
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
       {/* Bande dégradée avec logo et icônes */}
@@ -1250,9 +1264,29 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               marginLeft: '24px'
             }}
           >
-            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-text">
-              Edition de template
-            </span>
+            {isEditingTitle ? (
+              <input
+                autoFocus
+                value={titleInput}
+                onChange={(e) => setTitleInput(e.target.value)}
+                onBlur={commitTitle}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitTitle();
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
+                placeholder="Nom de la campagne"
+                className="bg-transparent border-b border-white/70 text-white placeholder-white/70 focus:outline-none focus:border-white px-1 py-0.5 text-base sm:text-lg font-semibold tracking-wide w-[min(60vw,420px)]"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsEditingTitle(true)}
+                title="Modifier le nom de la campagne"
+                className="text-white font-semibold tracking-wide text-base sm:text-lg select-text text-left"
+              >
+                {((campaignState as any)?.name as string) || 'Edition de template'}
+              </button>
+            )}
           </div>
         ) : (
           <img 
