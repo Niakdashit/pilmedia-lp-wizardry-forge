@@ -704,37 +704,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </React.Suspense>
         );
-<<<<<<< HEAD
-      case 'jackpot':
-        return (
-          <JackpotConfigPanel
-            onBack={() => {
-              onJackpotPanelChange?.(false);
-              _setActiveTab('elements');
-            }}
-            reelSymbols={jackpotSymbols}
-            onReelSymbolsChange={handleJackpotSymbolsChange}
-            selectedTemplate={jackpotTemplate}
-            onTemplateChange={handleJackpotTemplateChange}
-            borderColor={jackpotBorderColor}
-            backgroundColor={jackpotBackgroundColor}
-            textColor={jackpotTextColor}
-            onBorderColorChange={handleJackpotBorderColorChange}
-            onBackgroundColorChange={handleJackpotBackgroundColorChange}
-            onTextColorChange={handleJackpotTextColorChange}
-            customFrame={customFrame}
-            onCustomFrameChange={handleCustomFrameChange}
-            customTemplateUrl={customTemplateUrl}
-            onCustomTemplateChange={handleCustomTemplateChange}
-          />
-=======
       case 'game':
         // Restore the original Game tab to control form preview styles (fond, bordures, couleurs, police, rayon, position, largeur, hauteur)
         return (
           <div className="p-0">
             <TabForm campaign={campaign} setCampaign={setCampaign as any} />
           </div>
->>>>>>> 583f2fc8 (feat(form-editor): full-screen live preview via portal; restore mobile edit preview inside device frame; reintroduce Game tab with form style controls; modal theming (background/radius); portalized CanvasGameRenderer; fix FormHandler radius/width/height passthrough)
         );
       case 'jackpot':
         return (

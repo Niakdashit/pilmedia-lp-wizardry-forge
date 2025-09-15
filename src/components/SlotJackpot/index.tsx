@@ -6,6 +6,8 @@ interface SlotJackpotProps {
   onLose?: () => void;
   onOpenConfig?: () => void;
   disabled?: boolean;
+  templateOverride?: any;
+  symbols?: string[];
 }
 
 const SlotJackpot: React.FC<SlotJackpotProps> = (props) => {

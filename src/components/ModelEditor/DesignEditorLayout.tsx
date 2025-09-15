@@ -5,10 +5,7 @@ import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
-const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import GradientBand from '../shared/GradientBand';
-// Use live funnel preview in overlay
-const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -1500,33 +1497,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-<<<<<<< HEAD
-        {showFunnel ? (
-          /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-            {/* Floating Edit Mode Button */}
-            <button
-              onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
-            >
-              Mode édition
-            </button>
-            {campaignData?.type === 'quiz' ? (
-              <FunnelQuizParticipate
-                campaign={campaignData}
-                previewMode={selectedDevice}
-              />
-            ) : (
-              <FunnelUnlockedGame
-                campaign={campaignData}
-                previewMode={selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
-            )}
-          </div>
-        ) : (
-          /* Design Editor Mode */
-=======
           {/* Overlay Preview: full live funnel (matches other editors) */}
           {showFunnel && (() => {
             const previewCampaign = {
@@ -1563,13 +1533,12 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             return typeof document !== 'undefined' ? (createPortal(node, document.body) as any) : (node as any);
           })()}
           {/* Design Editor Mode */}
->>>>>>> 583f2fc8 (feat(form-editor): full-screen live preview via portal; restore mobile edit preview inside device frame; reintroduce Game tab with form style controls; modal theming (background/radius); portalized CanvasGameRenderer; fix FormHandler radius/width/height passthrough)
-          <>
+          {!showFunnel && (
+            <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
               <HybridSidebar
                 ref={sidebarRef}
-                isFormMode={showFormOverlay}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
                 onExtractedColorsChange={handleExtractedColorsChange}
@@ -1952,7 +1921,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               />
             )}
           </>
-        )}
+          )}
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (

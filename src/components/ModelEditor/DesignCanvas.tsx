@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -1718,8 +1718,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const campaignDesign = (liveCampaign as any)?.design || (campaign as any)?.design || {};
                 // Position (left | right). Default: right
                 const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
-                const panelWidth = campaignDesign.formWidth || '30%';
-                const panelHeight = campaignDesign.formHeight || '100%';
                 const fields = (Array.isArray((liveCampaign as any)?.formFields) && (liveCampaign as any)?.formFields.length > 0)
                   ? (liveCampaign as any).formFields
                   : ((Array.isArray((campaign as any)?.formFields) && (campaign as any)?.formFields.length > 0)
