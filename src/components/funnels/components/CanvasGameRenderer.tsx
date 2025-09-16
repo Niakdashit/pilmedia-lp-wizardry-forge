@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useEditorStore } from '../../../stores/editorStore';
 import WheelPreview from '../../GameTypes/WheelPreview';
+import FormCanvas from '../../GameTypes/FormCanvas';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 import ValidationMessage from '../../common/ValidationMessage';
@@ -225,6 +226,38 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       );
     }
     
+    if (campaign.type === 'form') {
+      // Use formStructure directly from the campaign (same as DesignCanvas)
+      const formStructure = campaign?.formStructure || {
+        fields: [],
+        submitButtonText: 'Participer',
+        title: 'Participez au jeu',
+        description: 'Remplissez le formulaire pour participer'
+      };
+
+      console.log('🔄 [CanvasGameRenderer] Using formStructure from campaign (Preview):', {
+        fieldsCount: formStructure.fields.length,
+        fields: formStructure.fields.map((f: any) => `${f.label}(${f.type})`)
+      });
+
+      return (
+        <div className="absolute inset-0 flex items-center justify-end pr-6" style={{ zIndex: 10 }}>
+          <FormCanvas 
+            key={`form-canvas-preview-${formStructure.fields.length}-${JSON.stringify(formStructure.fields.map((f: any) => f.id))}`}
+            config={campaign.design?.formConfig || {}}
+            formStructure={formStructure}
+            onSubmit={(formData: any) => {
+              console.log('Form submitted:', formData);
+            }}
+            onChange={(propName: any, value: any) => {
+              console.log('Form config changed:', propName, value);
+            }}
+            isPreview={true}
+          />
+        </div>
+      );
+    }
+
     if (campaign.type === 'jackpot') {
       // Fusionner campagne fournie et store réactif (le store gagne si la campagne est vide)
       const campaignJackpot = campaign?.gameConfig?.jackpot || {};
