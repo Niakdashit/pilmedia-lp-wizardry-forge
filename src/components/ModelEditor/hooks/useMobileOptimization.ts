@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
+import { shouldForceDesktopEditorUI } from '@/utils/deviceOverrides';
 
 interface MobileOptimizationConfig {
   preventScrollBounce: boolean;
@@ -37,6 +38,30 @@ export const useMobileOptimization = (
 
   // Détection précise de l'appareil
   const detectDevice = useCallback(() => {
+    if (typeof window === 'undefined') {
+      setIsMobile(false);
+      setIsTablet(false);
+      setTouchCalibration({
+        offsetX: 0,
+        offsetY: 0,
+        sensitivity: 1.0,
+        precision: 1.0
+      });
+      return { isMobile: false, isTablet: false };
+    }
+
+    if (shouldForceDesktopEditorUI()) {
+      setIsMobile(false);
+      setIsTablet(false);
+      setTouchCalibration({
+        offsetX: 0,
+        offsetY: 0,
+        sensitivity: 1.0,
+        precision: 1.0
+      });
+      return { isMobile: false, isTablet: false };
+    }
+
     const width = window.innerWidth;
     const height = window.innerHeight;
     const minDim = Math.min(width, height);
@@ -253,18 +278,25 @@ export const useMobileOptimization = (
   // Initialisation
   useEffect(() => {
     const { isMobile: mobile, isTablet: tablet } = detectDevice();
-    
+    const forcingDesktop = shouldForceDesktopEditorUI();
+
     console.log('📱 Mobile Optimization initialized:', {
       isMobile: mobile,
       isTablet: tablet,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      minDim: Math.min(window.innerWidth, window.innerHeight),
-      userAgent: navigator.userAgent,
-      touchCapable: (navigator as any).maxTouchPoints > 1,
+      width: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
+      height: typeof window !== 'undefined' ? window.innerHeight : 'N/A',
+      minDim:
+        typeof window !== 'undefined' ? Math.min(window.innerWidth, window.innerHeight) : 'N/A',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+      touchCapable: typeof navigator !== 'undefined' ? (navigator as any).maxTouchPoints > 1 : false,
       touchCalibration,
-      config
+      config,
+      forcingDesktop
     });
+
+    if (forcingDesktop) {
+      return;
+    }
 
     const cleanupViewport = stabilizeViewport();
     const cleanupBounce = preventScrollBounce();

@@ -16,6 +16,7 @@ import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
+import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -150,16 +151,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    
+
     // Exposer la fonction pour forcer l'onglet Elements si elle est fournie
     if (onForceElementsTab) {
       (window as any).forceElementsTab = onForceElementsTab;
     }
-    
+
+    const deviceOverride = getEditorDeviceOverride();
+    if (deviceOverride === 'desktop') {
+      setIsCollapsed(false);
+      return;
+    }
+
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, []);
+  }, [onForceElementsTab]);
   const [activeTab, _setActiveTab] = useState<string | null>('elements');
   
   // Exposer setActiveTab via ref

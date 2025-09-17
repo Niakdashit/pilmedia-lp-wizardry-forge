@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, RefObject } from 'react';
+import { shouldForceDesktopEditorUI } from '@/utils/deviceOverrides';
 
 interface UseCanvasZoomProps {
   canvasRef: RefObject<HTMLDivElement>;
@@ -34,25 +35,35 @@ export const useCanvasZoom = ({
   // Auto-zoom pour mobile en mode PC
   useEffect(() => {
     const checkIfMobile = () => {
+      if (typeof window === 'undefined') {
+        setIsMobileView(false);
+        return;
+      }
+
+      if (shouldForceDesktopEditorUI()) {
+        setIsMobileView(false);
+        return;
+      }
+
       const userAgent = typeof window.navigator === 'undefined' ? '' : navigator.userAgent;
-      const mobile = 
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) || 
+      const mobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) ||
         (navigator as any).maxTouchPoints > 0;
-      
+
       setIsMobileView(mobile);
-      
+
       if (mobile && canvasRef.current) {
         // Ajuster le zoom pour le mode mobile
         const container = canvasRef.current.parentElement;
         if (container) {
           const containerWidth = container.clientWidth;
           const containerHeight = container.clientHeight;
-          
+
           // Calculer l'échelle pour que le canvas tienne dans la vue
           const scaleX = (containerWidth * 0.9) / 1200; // 1200 est la largeur du canvas PC
           const scaleY = (containerHeight * 0.9) / 800;  // 800 est la hauteur du canvas PC
           const newScale = Math.min(scaleX, scaleY, 1); // Ne pas dépasser 100%
-          
+
           if (newScale > minZoom && newScale < maxZoom) {
             setZoomState(prev => ({
               ...prev,
@@ -64,10 +75,13 @@ export const useCanvasZoom = ({
         }
       }
     };
-    
+
     checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    return () => window.removeEventListener('resize', checkIfMobile);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkIfMobile);
+      return () => window.removeEventListener('resize', checkIfMobile);
+    }
+    return undefined;
   }, [minZoom, maxZoom, canvasRef]);
 
   // Fonction pour zoomer vers un point spécifique

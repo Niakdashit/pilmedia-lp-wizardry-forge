@@ -15,6 +15,7 @@ import TextAnimationsPanel from './panels/TextAnimationsPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
+import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 
 // Lazy-loaded heavy panels
@@ -140,14 +141,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
     
     // Debug logging pour la détection mobile
+    const deviceOverride = getEditorDeviceOverride();
+
     console.log('📱 HybridSidebar - Mobile detection:', {
       userAgent: ua,
       isMobileUA: /Mobi|Android/i.test(ua),
       windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
       selectedDevice,
-      willCollapse: /Mobi|Android/i.test(ua)
+      willCollapse: deviceOverride === null && /Mobi|Android/i.test(ua),
+      deviceOverride
     });
-    
+
+    if (deviceOverride === 'desktop') {
+      setIsCollapsed(false);
+      return;
+    }
+
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
