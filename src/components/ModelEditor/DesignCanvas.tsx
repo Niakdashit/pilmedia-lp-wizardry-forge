@@ -1722,8 +1722,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const campaignDesign = (activeCampaign as any)?.design || {};
                 // Position (left | right). Default: right
                 const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
-                // Largeur du panneau configurée par l'utilisateur
-                const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : 'min(640px, max(320px, calc(100% - 8%)))';
+                // Largeur du panneau configurée par l'utilisateur - fixe pour éviter les changements responsive
+                const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
                 const fields = (Array.isArray((activeCampaign as any)?.formFields) && (activeCampaign as any)?.formFields.length > 0)
                   ? (activeCampaign as any).formFields
                   : DEFAULT_FIELDS;

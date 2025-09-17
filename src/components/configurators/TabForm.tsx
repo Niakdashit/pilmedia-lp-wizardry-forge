@@ -121,6 +121,13 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
         </LabeledRow>
 
         <div className="grid grid-cols-1 gap-4">
+          <LabeledRow label="Affichage du formulaire">
+            <Select value={design.formDisplayMode || 'overlay'} onChange={(e) => updateDesign({ formDisplayMode: e.target.value })}>
+              <option value="overlay">Survol (par-dessus l'arrière-plan)</option>
+              <option value="embedded">Intégré (30% de la page)</option>
+            </Select>
+            <p className="mt-1 text-xs text-gray-500">En mode intégré, le formulaire occupe ~30% de la largeur et l'arrière-plan reste visible sur ~70%.</p>
+          </LabeledRow>
           <LabeledRow label="Rayon des bords (px)">
             <NumberInput value={typeof design.borderRadius === 'number' ? design.borderRadius : parseInt(String(design.borderRadius || '12'), 10)} min={0} max={48} step={1}
               onChange={(v) => updateDesign({ borderRadius: v })} />

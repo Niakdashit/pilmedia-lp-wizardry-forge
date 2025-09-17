@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
+import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';

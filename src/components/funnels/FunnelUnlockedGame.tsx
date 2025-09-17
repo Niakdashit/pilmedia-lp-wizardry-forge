@@ -167,8 +167,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
     // Récupérer les styles de design comme dans l'édition
     const campaignDesign = liveCampaign.design || {};
-    // Largeur du panneau configurée par l'utilisateur
-    const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : 'min(640px, max(320px, calc(100% - 8%)))';
+    // Largeur du panneau configurée par l'utilisateur - fixe pour éviter les changements responsive
+    const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
     const buttonColor = campaignDesign.buttonColor || '#841b60';
     const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
     const borderColor = campaignDesign.borderColor || '#E5E7EB';
@@ -181,6 +181,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
     // Récupérer les éléments du canvas pour les afficher
     const canvasElements = liveCampaign.canvasElements || liveCampaign.elements || [];
+    // Utiliser 'desktop' pour éviter les changements de largeur responsive
     const { getPropertiesForDevice } = useUniversalResponsive('desktop');
 
     return (

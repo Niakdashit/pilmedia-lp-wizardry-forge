@@ -13,7 +13,7 @@ const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ModelEditor = lazy(() => import('./pages/ModelEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
-const FormEditor = lazy(() => import('./pages/FormEditor'));
+import FormEditor from './pages/FormEditor';
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
 const ScratchCard2 = lazy(() => import('./pages/ScratchCard2'));
 const TemplateEditor = lazy(() => import('./pages/TemplateEditor'));

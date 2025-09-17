@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useEditorStore } from '../../../stores/editorStore';
 import WheelPreview from '../../GameTypes/WheelPreview';
-import FormCanvas from '../../GameTypes/FormCanvas';
+import FormPreview from '../../GameTypes/FormPreview';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 import ValidationMessage from '../../common/ValidationMessage';
@@ -49,6 +49,9 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     previewMode
   });
   
+  // Form display mode (for form campaigns)
+  const displayMode: 'overlay' | 'embedded' = (campaign?.design?.formDisplayMode as any) || 'overlay';
+
   // Système responsif pour les éléments customisés
   const { applyAutoResponsive, getPropertiesForDevice } = useUniversalResponsive('desktop');
 
@@ -227,32 +230,50 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     }
     
     if (campaign.type === 'form') {
-      // Use formStructure directly from the campaign (same as DesignCanvas)
-      const formStructure = campaign?.formStructure || {
-        fields: [],
-        submitButtonText: 'Participer',
-        title: 'Participez au jeu',
-        description: 'Remplissez le formulaire pour participer'
-      };
-
-      console.log('🔄 [CanvasGameRenderer] Using formStructure from campaign (Preview):', {
-        fieldsCount: formStructure.fields.length,
-        fields: formStructure.fields.map((f: any) => `${f.label}(${f.type})`)
-      });
-
+      const displayMode = campaign?.design?.formDisplayMode || 'overlay'; // 'overlay' | 'embedded'
+      const formPosition = campaign?.design?.formPosition === 'left' ? 'left' : 'right';
+      if (displayMode === 'embedded') {
+        // Embedded layout: 70% background/content + 30% form panel
+        return (
+          <div className="absolute inset-0 flex" style={{ zIndex: 10 }}>
+            {formPosition === 'left' && (
+              <div className="w-[30%] min-w-[280px] max-w-[520px] h-full flex items-center justify-center p-4">
+                <FormPreview campaign={campaign} gameSize="medium" className="w-full" />
+              </div>
+            )}
+            <div className="flex-1 relative">
+              {/* Background + custom elements in the remaining 70% */}
+              <div 
+                className="absolute inset-0" 
+                style={{
+                  background: campaign.design?.background?.type === 'image' 
+                    ? `url(${campaign.design.background.value}) center/cover no-repeat` 
+                    : campaign.design?.background?.value || canvasBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                }}
+              >
+                <CustomElementsRenderer
+                  customTexts={customTextsForRenderer}
+                  customImages={customImagesForRenderer}
+                  previewDevice={previewMode}
+                  sizeMap={sizeMap}
+                />
+              </div>
+            </div>
+            {formPosition === 'right' && (
+              <div className="w-[30%] min-w-[280px] max-w-[520px] h-full flex items-center justify-center p-4">
+                <FormPreview campaign={campaign} gameSize="medium" className="w-full" />
+              </div>
+            )}
+          </div>
+        );
+      }
+      // Default overlay behavior: keep as before
       return (
         <div className="absolute inset-0 flex items-center justify-end pr-6" style={{ zIndex: 10 }}>
-          <FormCanvas 
-            key={`form-canvas-preview-${formStructure.fields.length}-${JSON.stringify(formStructure.fields.map((f: any) => f.id))}`}
-            config={campaign.design?.formConfig || {}}
-            formStructure={formStructure}
-            onSubmit={(formData: any) => {
-              console.log('Form submitted:', formData);
-            }}
-            onChange={(propName: any, value: any) => {
-              console.log('Form config changed:', propName, value);
-            }}
-            isPreview={true}
+          <FormPreview
+            campaign={campaign}
+            gameSize="medium"
+            className="pointer-events-auto"
           />
         </div>
       );
@@ -404,7 +425,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         </div>
 
         {/* Overlay pour déclencher le formulaire si pas validé */}
-        {!formValidated && (
+        {!formValidated && displayMode !== 'embedded' && (
           <div 
             onClick={() => {
               console.log('Canvas overlay clicked - triggering form');
