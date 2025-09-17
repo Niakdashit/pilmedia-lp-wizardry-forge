@@ -70,6 +70,15 @@ const FormStylePanel: React.FC<FormStylePanelProps> = ({
         }
         break;
       
+      case 'heightPx':
+        const height = parseInt(value);
+        if (isNaN(height) || height < 200 || height > 800) {
+          newErrors[propName] = 'Hauteur entre 200 et 800 pixels';
+        } else {
+          delete newErrors[propName];
+        }
+        break;
+      
       default:
         delete newErrors[propName];
     }
@@ -384,6 +393,38 @@ const FormStylePanel: React.FC<FormStylePanelProps> = ({
           </div>
           {errors.widthPx && (
             <p className="text-xs text-red-600 mt-1">{errors.widthPx}</p>
+          )}
+        </div>
+
+        {/* Hauteur */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Hauteur (200-800px)
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="200"
+              max="800"
+              step="10"
+              value={formConfig.heightPx}
+              onChange={(e) => handleChange('heightPx', parseInt(e.target.value))}
+              className="flex-1"
+            />
+            <input
+              type="number"
+              min="200"
+              max="800"
+              value={formConfig.heightPx}
+              onChange={(e) => handleChange('heightPx', parseInt(e.target.value))}
+              className={`w-20 px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-purple-500 ${
+                errors.heightPx ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            <span className="text-sm text-gray-600">px</span>
+          </div>
+          {errors.heightPx && (
+            <p className="text-xs text-red-600 mt-1">{errors.heightPx}</p>
           )}
         </div>
       </div>

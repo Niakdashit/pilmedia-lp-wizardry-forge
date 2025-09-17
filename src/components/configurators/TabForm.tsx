@@ -46,16 +46,6 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
     }));
   };
 
-  const withUnit = (v: string | number | undefined, fallback: string): string => {
-    if (v === undefined || v === null) return fallback;
-    const s = String(v).trim();
-    // If value already contains a unit (%, px, vh, vw), keep as-is
-    if (/[%a-zA-Z]/.test(s)) return s;
-    // Numeric only -> default to px
-    const n = Number(s);
-    return Number.isFinite(n) ? `${n}px` : fallback;
-  };
-
   const updateScreen = (updates: any) => {
     setCampaign((prev: any) => {
       const arr = Array.isArray(prev?.screens) ? [...prev.screens] : [];
@@ -146,24 +136,73 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <LabeledRow label="Largeur du panneau (ex: 30%, 320px)">
-            <Input
-              value={design.formWidth || '30%'}
-              onChange={(e) => updateDesign({ formWidth: withUnit(e.target.value, '30%') })}
-              placeholder="30% ou 320px"
-            />
+          <LabeledRow label="Largeur du panneau (240-720px)">
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="240"
+                max="720"
+                step="10"
+                value={parseInt(String(design.formConfig?.widthPx || 360))}
+                onChange={(e) => {
+                  const widthPx = parseInt(e.target.value);
+                  updateDesign({ 
+                    formConfig: { ...(design.formConfig || {}), widthPx },
+                    formWidth: `${widthPx}px`
+                  });
+                }}
+                className="flex-1"
+              />
+              <input
+                type="number"
+                min="240"
+                max="720"
+                value={parseInt(String(design.formConfig?.widthPx || 360))}
+                onChange={(e) => {
+                  const widthPx = parseInt(e.target.value) || 360;
+                  updateDesign({ 
+                    formConfig: { ...(design.formConfig || {}), widthPx },
+                    formWidth: `${widthPx}px`
+                  });
+                }}
+                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              />
+              <span className="text-sm text-gray-600">px</span>
+            </div>
           </LabeledRow>
-          <LabeledRow label="Hauteur (ex: auto, 100%)">
-            <Input
-              value={design.formHeight || '100%'}
-              onChange={(e) => {
-                const raw = e.target.value.trim();
-                // Autoriser 'auto' tel quel
-                const val = raw.toLowerCase() === 'auto' ? 'auto' : withUnit(raw, '100%');
-                updateDesign({ formHeight: val });
-              }}
-              placeholder="auto ou 100%"
-            />
+          <LabeledRow label="Hauteur (200-800px)">
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="200"
+                max="800"
+                step="10"
+                value={parseInt(String(design.formConfig?.heightPx || 500))}
+                onChange={(e) => {
+                  const heightPx = parseInt(e.target.value);
+                  updateDesign({ 
+                    formConfig: { ...(design.formConfig || {}), heightPx },
+                    formHeight: `${heightPx}px`
+                  });
+                }}
+                className="flex-1"
+              />
+              <input
+                type="number"
+                min="200"
+                max="800"
+                value={parseInt(String(design.formConfig?.heightPx || 500))}
+                onChange={(e) => {
+                  const heightPx = parseInt(e.target.value) || 500;
+                  updateDesign({ 
+                    formConfig: { ...(design.formConfig || {}), heightPx },
+                    formHeight: `${heightPx}px`
+                  });
+                }}
+                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+              />
+              <span className="text-sm text-gray-600">px</span>
+            </div>
           </LabeledRow>
         </div>
       </div>

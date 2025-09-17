@@ -14,6 +14,7 @@ export interface FormConfig {
   fieldRadius: number;
   position: 'left' | 'right';
   widthPx: number;
+  heightPx: number;
 }
 
 export const DEFAULT_FORM_CONFIG: FormConfig = {
@@ -26,7 +27,8 @@ export const DEFAULT_FORM_CONFIG: FormConfig = {
   borderRadius: 12,
   fieldRadius: 8,
   position: 'left',
-  widthPx: 360
+  widthPx: 360,
+  heightPx: 500
 };
 
 interface FormCanvasProps {
@@ -233,9 +235,11 @@ const FormCanvas: React.FC<FormCanvasProps> = ({
     fontFamily: formConfig.fontFamily,
     borderRadius: `${formConfig.borderRadius}px`,
     width: `${Math.min(Math.max(formConfig.widthPx, 240), 720)}px`,
+    height: `${Math.min(Math.max(formConfig.heightPx, 200), 800)}px`,
     border: `1px solid ${formConfig.borderColor}`,
     padding: '24px',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    overflow: 'auto',
   };
 
   const fieldStyle: React.CSSProperties = {
