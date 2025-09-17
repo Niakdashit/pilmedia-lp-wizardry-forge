@@ -2189,8 +2189,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })()}
 
-            {/* Slot Jackpot Game - Feature Flag Controlled */}
-            {isFeatureEnabled('slotJackpot') && (
+            {/* Slot Jackpot Game - Hidden in Form Editor */}
+            {isFeatureEnabled('slotJackpot') && !window.location.pathname.includes('/form-editor') && (
               <SlotJackpot
                 onWin={(result) => {
                   alert(`🎉 JACKPOT! ${result.join(' ')}`);

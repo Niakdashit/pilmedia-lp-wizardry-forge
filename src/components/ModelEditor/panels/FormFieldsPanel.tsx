@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Plus, 
   Trash2, 
   GripVertical, 
   Type, 
@@ -145,7 +144,7 @@ const FieldEditor: React.FC<FieldEditorProps> = ({ field, onSave, onCancel }) =>
 
   const updateField = (updates: Partial<FormField>) => {
     if (editedField) {
-      setEditedField({ ...editedField, ...updates });
+      setEditedField({ ...editedField, ...updates } as FormField);
     }
   };
 
@@ -442,7 +441,7 @@ const FormFieldsPanel: React.FC<FormFieldsPanelProps> = ({
                     key={field.id}
                     field={field}
                     index={index}
-                    onEdit={setEditingField}
+                    onEdit={(field) => setEditingField(field as FormField)}
                     onDelete={deleteField}
                     moveField={moveField}
                   />

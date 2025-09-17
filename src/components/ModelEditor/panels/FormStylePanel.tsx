@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Palette, Type, Move, Maximize2, AlertTriangle } from 'lucide-react';
 import { FormConfig, DEFAULT_FORM_CONFIG } from '../../GameTypes/FormCanvas';
 

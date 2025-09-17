@@ -174,9 +174,9 @@ const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
             {...commonProps}
             type="text"
             value={fieldValue}
-            onChange={(e) => onFieldChange(field.id, e.target.value)}
-            placeholder={field.placeholder || ''}
-            required={field.required}
+            onChange={(e) => onFieldChange((field as any).id, e.target.value)}
+            placeholder={(field as any).placeholder || ''}
+            required={(field as any).required}
           />
         );
     }
