@@ -1702,6 +1702,169 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   />
                 </div>
               )}
+
+              {/* Fixed Form Overlay: configurable side/size/design */}
+              {showFormOverlay && (() => {
+                // Utiliser les données du store en temps réel pour la synchronisation
+                const storeCampaign = useEditorStore.getState().campaign;
+                const activeCampaign = storeCampaign || liveCampaign || campaign;
+                
+                const campaignDesign = (activeCampaign as any)?.design || {};
+                // Position (left | right). Default: right
+                const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
+                // Largeur du panneau configurée par l'utilisateur
+                const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : 'min(640px, max(320px, calc(100% - 8%)))';
+                const fields = (Array.isArray((activeCampaign as any)?.formFields) && (activeCampaign as any)?.formFields.length > 0)
+                  ? (activeCampaign as any).formFields
+                  : DEFAULT_FIELDS;
+                const buttonColor = campaignDesign.buttonColor || '#841b60';
+                const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
+                const borderColor = campaignDesign.borderColor || '#E5E7EB';
+                const focusColor = buttonColor;
+                const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
+                const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
+                const panelBg = campaignDesign.blockColor || '#ffffff';
+                const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
+                const title = (activeCampaign as any)?.screens?.[1]?.title || 'Vos informations';
+                const description = (activeCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour poursuivre';
+                const submitLabel = (activeCampaign as any)?.screens?.[1]?.buttonText || 'Participer';
+
+                // Aperçu mobile : layout scindé (bannière + formulaire)
+                if (selectedDevice === 'mobile') {
+                  const backgroundImage = campaignDesign.background?.value || campaignDesign.background;
+                  
+                  const content = (
+                    <div className="flex flex-col w-full h-full" data-canvas-ui>
+                      {/* Bannière image en haut */}
+                      <div 
+                        className="flex-shrink-0 bg-no-repeat flex items-center justify-center"
+                        style={{
+                          backgroundColor: backgroundImage ? 'transparent' : (campaignDesign.backgroundColor || '#f3f4f6')
+                        }}
+                      >
+                        {backgroundImage && (
+                          <img 
+                            src={backgroundImage}
+                            alt="Background"
+                            className="w-full h-auto object-contain"
+                            style={{
+                              maxHeight: '60vh',
+                              display: 'block'
+                            }}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Formulaire en bas */}
+                      <div 
+                        className="flex-1 p-6 overflow-y-auto"
+                        style={{ 
+                          backgroundColor: panelBg
+                        }}
+                      >
+                        <div className="flex flex-col" style={{ color: textColor, fontFamily: campaignDesign.fontFamily }}>
+                          <div className="mb-4">
+                            <h3 className="text-lg font-semibold mb-2" style={{ color: textColor }}>{title}</h3>
+                            <p className="text-sm opacity-75" style={{ color: textColor }}>{description}</p>
+                          </div>
+                          
+                          <DynamicContactForm
+                            fields={fields}
+                            submitLabel={submitLabel}
+                            onSubmit={() => {}}
+                            textStyles={{
+                              label: {
+                                color: textColor,
+                                fontFamily: campaignDesign.fontFamily,
+                                fontSize: '14px',
+                                fontWeight: '500'
+                              },
+                              button: {
+                                backgroundColor: buttonColor,
+                                color: buttonTextColor,
+                                borderRadius: borderRadius,
+                                fontFamily: campaignDesign.fontFamily,
+                                fontWeight: '600',
+                                fontSize: '16px'
+                              }
+                            }}
+                            inputBorderColor={borderColor}
+                            inputFocusColor={focusColor}
+                            inputBorderRadius={inputBorderRadius}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                  // En mode preview (readOnly), on sort du canvas via portal plein écran.
+                  if (readOnly) {
+                    const node = (
+                      <div className="fixed inset-0 z-[9998] flex flex-col">{content}</div>
+                    );
+                    return typeof document !== 'undefined' ? (createPortal(node, document.body) as any) : (node as any);
+                  }
+                  // En mode édition, on reste dans le cadre de l'appareil (canvas), sans portal.
+                  return (
+                    <div className="absolute inset-0 z-[60]">{content}</div>
+                  );
+                }
+
+                // Aperçu desktop/tablet : modale classique
+                return (
+                  <div
+                    className={`absolute z-[60] opacity-100 pointer-events-auto flex`}
+                    style={{
+                      // Centrage vertical et ancrage horizontal selon la position choisie
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      ...(formPosition === 'left' ? { left: '4%' } : { right: '4%' }),
+                      // Largeur configurée par l'utilisateur
+                      width: formWidth,
+                      height: 'auto',
+                      maxHeight: 'calc(100% - 32px)'
+                    }}
+                    data-canvas-ui
+                  >
+                    <div
+                      className={`w-full shadow-2xl rounded-xl p-6 overflow-y-auto`}
+                      style={{ backgroundColor: panelBg, maxHeight: 'calc(100% - 0px)' }}
+                    >
+                      <div className="flex flex-col" style={{ color: textColor, fontFamily: campaignDesign.fontFamily }}>
+                        <div className="mb-4">
+                          <h3 className="text-base font-semibold" style={{ color: textColor }}>{title}</h3>
+                          <p className="text-xs opacity-80" style={{ color: textColor }}>{description}</p>
+                        </div>
+                        <div
+                          className="rounded-md border"
+                          style={{ borderColor, borderWidth: 2, borderRadius, backgroundColor: panelBg }}
+                        >
+                          <div className="p-3">
+                            <DynamicContactForm
+                              fields={fields}
+                              onSubmit={() => {}}
+                              submitLabel={submitLabel}
+                              textStyles={{
+                                label: { ...(campaignDesign.textStyles?.label || {}), color: textColor, fontFamily: campaignDesign.fontFamily },
+                                button: {
+                                  backgroundColor: buttonColor,
+                                  color: buttonTextColor,
+                                  borderRadius,
+                                  fontFamily: campaignDesign.fontFamily,
+                                  fontWeight: campaignDesign.textStyles?.button?.fontWeight,
+                                  fontSize: campaignDesign.textStyles?.button?.fontSize,
+                                },
+                              }}
+                              inputBorderColor={borderColor}
+                              inputFocusColor={focusColor}
+                              inputBorderRadius={inputBorderRadius}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               
               {/* Clouds */}
               
@@ -1758,8 +1921,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 
                 return (
                   <div
-                    role="button"
-                    tabIndex={0}
+                    role={showFormOverlay ? undefined : "button"}
+                    tabIndex={showFormOverlay ? -1 : 0}
                     onPointerDown={(e) => {
                       // Empêcher toute interaction de déplacement/redimensionnement depuis la preview
                       e.stopPropagation();
@@ -1772,16 +1935,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
+                        // Désactiver le panel quiz sur la page form-editor
+                        if (showFormOverlay) return;
                         onQuizPanelChange?.(true);
                       }
                     }}
                     onClick={(e) => {
                       if (readOnly) return;
+                      // Désactiver le panel quiz sur la page form-editor
+                      if (showFormOverlay) return;
                       e.stopPropagation();
                       console.log('🔘 Clic sur le quiz: ouverture du panneau Configuration (sans déplacement/redimensionnement)');
                       onQuizPanelChange?.(true);
                     }}
-                    className="w-full h-full flex items-center justify-center cursor-pointer"
+                    className={`w-full h-full flex items-center justify-center ${showFormOverlay ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     {/* Quiz supprimé du canvas */}
                   </div>

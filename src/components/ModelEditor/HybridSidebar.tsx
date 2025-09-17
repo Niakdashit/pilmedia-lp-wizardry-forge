@@ -8,6 +8,7 @@ import {
   Gamepad2,
   Palette
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
 import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
 import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
@@ -17,6 +18,7 @@ import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import TabJackpot from '../configurators/TabJackpot';
 import { useEditorStore } from '../../stores/editorStore';
+import { useEditorState } from '../../hooks/useEditorState';
 
 
 // Lazy-loaded heavy panels
@@ -146,6 +148,23 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 }: HybridSidebarProps, ref) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+  const isFormEditor = location.pathname === '/form-editor';
+  
+  // Utiliser le hook d'état isolé par éditeur
+  const {
+    editorType,
+    activeTab: editorActiveTab,
+    showQuizPanel: editorShowQuizPanel,
+    showJackpotPanel: editorShowJackpotPanel,
+    showDesignPanel: editorShowDesignPanel,
+    showEffectsPanel: editorShowEffectsPanel,
+    showAnimationsPanel: editorShowAnimationsPanel,
+    showPositionPanel: editorShowPositionPanel,
+    setActiveTab: setEditorActiveTab,
+    setPanelState: setEditorPanelState
+  } = useEditorState();
+  
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign) as unknown as (updater: any) => void;
@@ -385,135 +404,62 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, [jackpotTemplate]);
 
-  const [activeTab, _setActiveTab] = useState<string | null>('elements');
+  // Utiliser l'état isolé par éditeur
+  const activeTab = editorActiveTab || 'elements';
 
-  // Gestion des changements de showJackpotPanel (ouverture unidirectionnelle)
-  // Si le parent demande l'ouverture, on ouvre l'onglet jackpot.
-  // Ne pas forcer la fermeture ici pour éviter les boucles Elements <-> Jackpot.
+  // Gestion des changements de showJackpotPanel - simplifié pour éviter les boucles
   React.useEffect(() => {
-    if (showJackpotPanel && activeTab !== 'jackpot') {
-      _setActiveTab('jackpot');
+    if (showJackpotPanel && activeTab !== 'game') {
+      setEditorActiveTab('game');
     }
-  }, [showJackpotPanel, activeTab]);
-  
-  // Gestion des changements d'onglet -> notifie simplement l'état voulu au parent
-  React.useEffect(() => {
-    onJackpotPanelChange?.(activeTab === 'jackpot');
-  }, [activeTab, onJackpotPanelChange]);
+  }, [showJackpotPanel, setEditorActiveTab, activeTab]);
 
   React.useEffect(() => {
-    if (showQuizPanel) {
-      _setActiveTab('quiz');
-    } else if (activeTab === 'quiz') {
-      _setActiveTab('elements');
+    if (showQuizPanel && activeTab !== 'quiz') {
+      setEditorActiveTab('quiz');
     }
-  }, [showQuizPanel, activeTab]);
+  }, [showQuizPanel, setEditorActiveTab, activeTab]);
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
     setActiveTab: (tab: string) => {
-      _setActiveTab(tab);
+      setEditorActiveTab(tab);
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
       if (tab === 'background') {
         onDesignPanelChange?.(true);
+        setEditorPanelState('showDesignPanel', true);
       } else if (tab === 'effects') {
         onEffectsPanelChange?.(true);
+        setEditorPanelState('showEffectsPanel', true);
       } else if (tab === 'animations') {
         onAnimationsPanelChange?.(true);
+        setEditorPanelState('showAnimationsPanel', true);
       } else if (tab === 'position') {
         onPositionPanelChange?.(true);
+        setEditorPanelState('showPositionPanel', true);
       } else if (tab === 'quiz') {
         onQuizPanelChange?.(true);
+        setEditorPanelState('showQuizPanel', true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange]);
+  }), [setEditorActiveTab, setEditorPanelState, onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange]);
   
-  // Fonction interne pour gérer le changement d'onglet
-  const setActiveTab = (tab: string | null) => {
-    if (tab === activeTab) return; // Éviter les mises à jour inutiles
-    _setActiveTab(tab);
+  // Fonction interne pour gérer le changement d'onglet - simplifiée
+  const setActiveTab = (tab: string) => {
+    if (tab !== activeTab) {
+      setEditorActiveTab(tab);
+    }
   };
   
-  // Référence pour suivre les états précédents
-  const prevStatesRef = useRef({
-    showEffectsPanel,
-    showAnimationsPanel,
-    showPositionPanel,
-    showQuizPanel,
-    showDesignPanel,
-    activeTab
-  });
+  // Référence pour suivre les états précédents - supprimée car plus utilisée
 
-  // Gérer l'affichage des onglets en fonction des états des panneaux
+  // Gérer l'affichage des onglets en fonction des états des panneaux - simplifié
   React.useEffect(() => {
-    const prev = prevStatesRef.current;
-    let newActiveTab = activeTab;
-    let shouldUpdate = false;
-
-    // Vérifier si un panneau a été activé/désactivé
-    const panelStates = [
-      { key: 'effects', active: showEffectsPanel, prevActive: prev.showEffectsPanel },
-      { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
-      { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
-      { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
-      { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
-    ];
-
-    // Si le panneau Quiz est activé, forcer l'onglet quiz
-    if (showQuizPanel && !prev.showQuizPanel) {
-      newActiveTab = 'quiz';
-      shouldUpdate = true;
-    }
     // Si le panneau Design est activé, forcer l'onglet background
-    else if (showDesignPanel && !prev.showDesignPanel) {
-      newActiveTab = 'background';
-      shouldUpdate = true;
-    } 
-    // Si un autre panneau a été activé, basculer vers son onglet correspondant
-    else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz');
-      if (activatedPanel) {
-        newActiveTab = activatedPanel.key;
-        shouldUpdate = true;
-      } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'elements'
-      else if (panelStates.some(p => p.key === activeTab && !p.active && p.prevActive)) {
-        newActiveTab = 'elements';
-        shouldUpdate = true;
-      }
+    if (editorShowDesignPanel && activeTab !== 'background') {
+      setEditorActiveTab('background');
     }
-
-    // Mettre à jour l'état si nécessaire
-    if (shouldUpdate && newActiveTab !== activeTab) {
-      setActiveTab(newActiveTab);
-    }
-
-    // Mettre à jour la référence des états précédents
-    prevStatesRef.current = {
-      showEffectsPanel,
-      showAnimationsPanel,
-      showPositionPanel,
-      showQuizPanel,
-      showDesignPanel,
-      activeTab: newActiveTab
-    };
-
-    // Notifier le parent des changements de l'onglet Design
-    if (onDesignPanelChange) {
-      const isDesignActive = newActiveTab === 'background' || showDesignPanel;
-      if (isDesignActive !== prev.showDesignPanel) {
-        onDesignPanelChange(isDesignActive);
-      }
-    }
-  }, [
-    showEffectsPanel, 
-    showAnimationsPanel, 
-    showPositionPanel, 
-    showQuizPanel,
-    showDesignPanel,
-    activeTab,
-    onDesignPanelChange
-  ]);
+  }, [editorShowDesignPanel, setEditorActiveTab, activeTab]);
 
   // La gestion de onForceElementsTab a été déplacée dans le premier useEffect
   // pour éviter la duplication de code et les effets secondaires multiples
@@ -522,9 +468,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   React.useEffect(() => {
     if (activeTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
       onEffectsPanelChange?.(false);
+      setEditorPanelState('showEffectsPanel', false);
       setActiveTab('elements');
     }
-  }, [selectedElement, activeTab, onEffectsPanelChange]);
+  }, [selectedElement, activeTab, onEffectsPanelChange, setEditorPanelState, setActiveTab]);
 
   // Idle prefetch heavy panels to smooth first open without blocking initial render
   React.useEffect(() => {
@@ -574,7 +521,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     },
     { 
       id: 'game', 
-      label: 'Jackpot', 
+      label: isFormEditor ? 'Jeu' : 'Jackpot', 
       icon: Gamepad2
     }
   ];
@@ -666,30 +613,35 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const handleTabClick = (tabId: string) => {
     console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
     
-    // Si on clique sur un onglet différent, fermer les panneaux spéciaux
-    if (showEffectsPanel && tabId !== 'effects') {
-      console.log('🗂️ Fermeture du panneau effects');
-      onEffectsPanelChange?.(false);
-    }
-    if (showAnimationsPanel && tabId !== 'animations') {
-      console.log('🗂️ Fermeture du panneau animations');
-      onAnimationsPanelChange?.(false);
-    }
-    if (showPositionPanel && tabId !== 'position') {
-      console.log('🗂️ Fermeture du panneau position');
-      onPositionPanelChange?.(false);
-    }
-    if (showQuizPanel && tabId !== 'quiz') {
-      console.log('🗂️ Fermeture du panneau quiz');
-      onQuizPanelChange?.(false);
-    }
-    
     if (activeTab === tabId) {
-      // Ne rien faire si on clique sur l'onglet déjà actif pour éviter les oscillations
-      return;
+      console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
+      setEditorActiveTab('elements'); // Revenir à elements au lieu de null
+    } else {
+      console.log('🗂️ Ouverture du nouvel onglet:', tabId);
+      setEditorActiveTab(tabId);
+      
+      // Fermer les autres panneaux quand on change d'onglet
+      if (tabId !== 'effects' && editorShowEffectsPanel) {
+        onEffectsPanelChange?.(false);
+        setEditorPanelState('showEffectsPanel', false);
+      }
+      if (tabId !== 'animations' && editorShowAnimationsPanel) {
+        onAnimationsPanelChange?.(false);
+        setEditorPanelState('showAnimationsPanel', false);
+      }
+      if (tabId !== 'position' && editorShowPositionPanel) {
+        onPositionPanelChange?.(false);
+        setEditorPanelState('showPositionPanel', false);
+      }
+      if (tabId !== 'quiz' && editorShowQuizPanel) {
+        onQuizPanelChange?.(false);
+        setEditorPanelState('showQuizPanel', false);
+      }
+      if (tabId !== 'game' && showJackpotPanel) {
+        onJackpotPanelChange?.(false);
+        setEditorPanelState('showJackpotPanel', false);
+      }
     }
-    console.log('🗂️ Ouverture du nouvel onglet:', tabId);
-    setActiveTab(tabId);
   };
 
   const renderPanel = (tabId: string) => {
@@ -730,6 +682,130 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </React.Suspense>
         );
+      case 'game':
+        // Afficher JackpotConfigPanel si showJackpotPanel est true, sinon TabJackpot/TabForm
+        if (showJackpotPanel) {
+          return (
+            <div className="h-full overflow-y-auto">
+              <JackpotConfigPanel
+                onBack={() => onJackpotPanelChange?.(false)}
+                reelSymbols={campaign?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒']}
+                selectedTemplate={campaign?.gameConfig?.jackpot?.template || 'jackpot-frame'}
+                borderColor={campaign?.gameConfig?.jackpot?.borderColor || '#ffd700'}
+                backgroundColor={campaign?.gameConfig?.jackpot?.backgroundColor || '#ffffff'}
+                textColor={campaign?.gameConfig?.jackpot?.textColor || '#333333'}
+                customFrame={campaign?.gameConfig?.jackpot?.customFrame}
+                customTemplateUrl={campaign?.gameConfig?.jackpot?.customTemplateUrl}
+                onReelSymbolsChange={(symbols) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        symbols,
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+                onTemplateChange={(templateId) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        template: templateId,
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+                onBorderColorChange={(color) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        borderColor: color,
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+                onBackgroundColorChange={(color) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        backgroundColor: color,
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+                onTextColorChange={(color) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        textColor: color,
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+                onCustomFrameChange={(updates) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        customFrame: {
+                          ...prev.gameConfig?.jackpot?.customFrame,
+                          ...updates
+                        },
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+                onCustomTemplateChange={(url) => {
+                  setCampaign((prev: any) => ({
+                    ...prev,
+                    gameConfig: {
+                      ...prev.gameConfig,
+                      jackpot: {
+                        ...prev.gameConfig?.jackpot,
+                        customTemplateUrl: url,
+                        _lastUpdate: Date.now()
+                      }
+                    }
+                  }));
+                }}
+              />
+            </div>
+          );
+        } else if (isFormEditor) {
+          return (
+            <div className="h-full overflow-y-auto p-4">
+              <TabForm campaign={campaign} setCampaign={setCampaign as any} />
+            </div>
+          );
+        } else {
+          return (
+            <div className="h-full overflow-y-auto p-4">
+              <TabJackpot campaign={campaign} setCampaign={setCampaign as any} />
+            </div>
+          );
+        }
       case 'jackpot':
         return (
           <JackpotConfigPanel
@@ -1141,6 +1217,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                activeTab === 'animations' ? 'Animations de texte' : 
                activeTab === 'position' ? 'Position' : 
                activeTab === 'quiz' ? 'Configuration Quiz' : 
+               activeTab === 'game' && isFormEditor ? 'Configuration Jeu' :
                tabs.find(tab => tab.id === activeTab)?.label}
             </h2>
           </div>

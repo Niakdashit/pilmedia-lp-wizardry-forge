@@ -125,7 +125,9 @@ const ModernEditorCanvas: React.FC<ModernEditorCanvasProps> = ({
           onClick={handleCanvasClickWithDeselect}
           className="relative w-full h-full overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${enhancedCampaign.design?.background || '#f8fafc'} 0%, ${enhancedCampaign.design?.background || '#f8fafc'}88 100%)`,
+            background: enhancedCampaign.design?.background ? 
+              `linear-gradient(135deg, ${enhancedCampaign.design.background} 0%, ${enhancedCampaign.design.background}88 100%)` : 
+              'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)',
             backgroundImage: showGridLines ? 
               'radial-gradient(circle, rgba(147, 197, 253, 0.2) 1px, transparent 1px)' : 'none',
             backgroundSize: showGridLines ? '20px 20px' : 'auto'

@@ -36,7 +36,7 @@ const FormHandler: React.FC<FormHandlerProps> = ({
     >
       <DynamicContactForm
         fields={fields}
-        submitLabel={participationLoading ? 'Chargement...' : campaign.screens?.[1]?.buttonText || "C'est parti !"}
+        submitLabel={participationLoading ? 'Chargement...' : campaign.screens?.[1]?.buttonText || "Participer"}
         onSubmit={onSubmit}
         textStyles={{
           label: {

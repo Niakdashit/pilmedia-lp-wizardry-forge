@@ -16,6 +16,7 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 // import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
+import EditorStateCleanup from '../EditorStateCleanup';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -31,6 +32,9 @@ interface ModelEditorLayoutProps {
 
 const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
+  // Hook pour surveiller les changements du store en temps réel
+  const storeCampaign = useEditorStore((state) => state.campaign);
+  
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -94,9 +98,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
-    mode === 'template'
-      ? { type: 'color', value: '#4ECDC4' }
-      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+    { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
@@ -694,6 +696,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
     
+    // Synchronisation forcée avec le store en temps réel pour le form-editor
+    const currentCampaignState = storeCampaign;
+    
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
@@ -845,13 +850,19 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       },
       screens: [
         {
-          title: titleElement?.content || 'Tentez votre chance !',
-          description: descriptionElement?.content || 'Faites tourner les rouleaux et décrochez le jackpot',
-          buttonText: buttonElement?.content || 'SPIN'
+          title: titleElement?.content || currentCampaignState?.screens?.[1]?.title || 'Tentez votre chance !',
+          description: descriptionElement?.content || currentCampaignState?.screens?.[1]?.description || 'Faites tourner les rouleaux et décrochez le jackpot',
+          buttonText: buttonElement?.content || currentCampaignState?.screens?.[1]?.buttonText || 'SPIN'
+        },
+        {
+          title: currentCampaignState?.screens?.[1]?.title || titleElement?.content || 'Vos informations',
+          description: currentCampaignState?.screens?.[1]?.description || descriptionElement?.content || 'Remplissez le formulaire pour participer',
+          buttonText: currentCampaignState?.buttonConfig?.text || buttonElement?.content || 'Participer'
         }
       ],
-      // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
-      formFields: ((campaignState as any)?.formFields !== undefined)
+      // Champs de contact dynamiques avec synchronisation en temps réel
+      formFields: currentCampaignState?.formFields || 
+        ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
         : [
             { id: 'prenom', label: 'Prénom', type: 'text', required: true },
@@ -867,7 +878,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       // Debug: Ajouter les éléments directement pour le preview
       elements: canvasElements
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, storeCampaign]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -1368,6 +1379,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
+      {/* Nettoyage des états d'éditeur */}
+      <EditorStateCleanup />
+      
       {/* Bande dégradée avec logo et icônes */}
       <GradientBand className="transform translate-y-[0.4vh]">
         {mode === 'template' ? (
@@ -1452,32 +1466,69 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        {showFunnel ? (
-          /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-            {/* Floating Edit Mode Button */}
-            <button
-              onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
-            >
-              Mode édition
-            </button>
-            {campaignData?.type === 'quiz' ? (
-              <FunnelQuizParticipate
-                campaign={campaignData}
-                previewMode={selectedDevice}
-              />
-            ) : (
-              <FunnelUnlockedGame
-                campaign={campaignData}
-                previewMode={selectedDevice}
-                wheelModalConfig={wheelModalConfig}
-              />
-            )}
-          </div>
-        ) : (
-          /* Design Editor Mode */
-          <>
+        {/* Overlay Preview: full live funnel (matches other editors) */}
+        {showFunnel && (() => {
+          const previewCampaign = {
+            ...campaignData, // Utiliser campaignData qui est synchronisé avec le store
+            type: (showFormOverlay ? 'form' : campaignData?.type) || 'wheel',
+              design: {
+                ...campaignData?.design,
+                background: canvasBackground
+              },
+              canvasConfig: {
+                elements: canvasElements,
+                background: canvasBackground
+              }
+            } as any;
+
+            // Pour le form-editor, afficher le formulaire en plein écran
+            if (showFormOverlay) {
+              const node = (
+                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+                  {/* Floating Edit Mode Button */}
+                  <button
+                    onClick={() => setShowFunnel(false)}
+                    className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                  >
+                    Mode édition
+                  </button>
+                  <div className="relative w-full h-full">
+                    {/* Afficher le formulaire en plein écran comme les autres éditeurs */}
+                    <FunnelUnlockedGame 
+                      campaign={previewCampaign}
+                      previewMode={selectedDevice}
+                      wheelModalConfig={quizModalConfig}
+                    />
+                  </div>
+                </div>
+              );
+              return createPortal(node, document.body);
+            }
+
+            // Pour les autres types de jeux, utiliser FunnelUnlockedGame
+            const node = (
+              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+                {/* Floating Edit Mode Button */}
+                <button
+                  onClick={() => setShowFunnel(false)}
+                  className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                >
+                  Mode édition
+                </button>
+                <div className="relative w-full h-full">
+                  <FunnelUnlockedGame 
+                    campaign={previewCampaign}
+                    previewMode={selectedDevice}
+                    wheelModalConfig={quizModalConfig}
+                  />
+                </div>
+              </div>
+            );
+            return typeof document !== 'undefined' ? (createPortal(node, document.body) as any) : (node as any);
+          })()}
+          {/* Design Editor Mode */}
+          {!showFunnel && (
+            <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
               <HybridSidebar

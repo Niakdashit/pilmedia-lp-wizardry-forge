@@ -39,6 +39,19 @@ interface EditorState {
 
   // Global clipboard state
   clipboard: ClipboardData | null;
+  
+  // Editor-specific states (namespaced by editor type)
+  editorStates: {
+    [editorType: string]: {
+      activeTab: string;
+      showQuizPanel: boolean;
+      showJackpotPanel: boolean;
+      showDesignPanel: boolean;
+      showEffectsPanel: boolean;
+      showAnimationsPanel: boolean;
+      showPositionPanel: boolean;
+    };
+  };
 }
 
 interface EditorActions {
@@ -74,6 +87,12 @@ interface EditorActions {
   // Batch actions for performance
   batchUpdate: (updates: Array<Partial<OptimizedCampaign> | ((prev: OptimizedCampaign | null) => OptimizedCampaign | null)>) => void;
   flushBatchedUpdates: () => void;
+  
+  // Editor-specific state actions
+  setEditorActiveTab: (editorType: string, tab: string) => void;
+  setEditorPanelState: (editorType: string, panel: string, show: boolean) => void;
+  getEditorState: (editorType: string) => EditorState['editorStates'][string];
+  resetEditorState: (editorType: string) => void;
 }
 
 type EditorStore = EditorState & EditorActions;
@@ -105,6 +124,9 @@ export const useEditorStore = create<EditorStore>()(
 
     // Clipboard state
     clipboard: null,
+    
+    // Editor-specific states
+    editorStates: {},
 
     // Campaign actions with batching
     setCampaign: (updater) => {
@@ -208,6 +230,61 @@ export const useEditorStore = create<EditorStore>()(
     setClipboard: (clipboard) => set({ clipboard }),
     clearClipboard: () => set({ clipboard: null }),
     canPaste: () => !!get().clipboard,
+    
+    // Editor-specific state actions
+    setEditorActiveTab: (editorType, tab) => {
+      set((state) => ({
+        editorStates: {
+          ...state.editorStates,
+          [editorType]: {
+            ...state.editorStates[editorType],
+            activeTab: tab
+          }
+        }
+      }));
+    },
+    
+    setEditorPanelState: (editorType, panel, show) => {
+      set((state) => ({
+        editorStates: {
+          ...state.editorStates,
+          [editorType]: {
+            ...state.editorStates[editorType],
+            [panel]: show
+          }
+        }
+      }));
+    },
+    
+    getEditorState: (editorType) => {
+      const state = get();
+      return state.editorStates[editorType] || {
+        activeTab: 'elements',
+        showQuizPanel: false,
+        showJackpotPanel: false,
+        showDesignPanel: false,
+        showEffectsPanel: false,
+        showAnimationsPanel: false,
+        showPositionPanel: false
+      };
+    },
+    
+    resetEditorState: (editorType) => {
+      set((state) => ({
+        editorStates: {
+          ...state.editorStates,
+          [editorType]: {
+            activeTab: 'elements',
+            showQuizPanel: false,
+            showJackpotPanel: false,
+            showDesignPanel: false,
+            showEffectsPanel: false,
+            showAnimationsPanel: false,
+            showPositionPanel: false
+          }
+        }
+      }));
+    },
   }))
 );
 

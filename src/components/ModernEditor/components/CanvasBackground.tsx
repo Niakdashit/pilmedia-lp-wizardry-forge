@@ -22,7 +22,10 @@ const CanvasBackground: React.FC<CanvasBackgroundProps> = ({
     const baseStyle = {
       width: '100%',
       height: '100%',
-      backgroundColor: campaign.design?.background || '#f8fafc',
+      backgroundColor: campaign.design?.background || '#87CEEB',
+      background: campaign.design?.background ? 
+        `linear-gradient(135deg, ${campaign.design.background} 0%, ${campaign.design.background}88 100%)` : 
+        'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)',
       transition: 'background-color 0.3s ease',
       position: 'relative' as const,
       overflow: 'hidden',

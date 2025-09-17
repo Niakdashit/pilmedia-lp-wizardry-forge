@@ -16,9 +16,12 @@ const FormPreview: React.FC<FormPreviewProps> = ({
 }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const fields = Array.isArray(campaign.formFields) && campaign.formFields.length > 0
-    ? campaign.formFields 
-    : DEFAULT_FIELDS;
+  const fields = React.useMemo(() => {
+    if (Array.isArray(campaign.formFields) && campaign.formFields.length > 0) {
+      return campaign.formFields;
+    }
+    return DEFAULT_FIELDS;
+  }, [campaign.formFields, campaign._lastUpdate]);
 
   const design = campaign.design || {};
   const buttonColor = design.buttonColor || "#841b60";

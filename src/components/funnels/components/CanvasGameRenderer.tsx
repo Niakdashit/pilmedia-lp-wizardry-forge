@@ -227,13 +227,25 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       const effectiveTemplate = campaignJackpot?.template ?? storeJackpotCfg?.template;
       const effectiveSymbols = campaignJackpot?.symbols ?? storeJackpotCfg?.symbols;
       const effectiveCustomUrl = campaignJackpot?.customTemplateUrl ?? storeJackpotCfg?.customTemplateUrl;
+      
+      // Récupérer toutes les configurations pour assurer la parité avec le mode édition
+      const effectiveBorderColor = campaignJackpot?.borderColor ?? storeJackpotCfg?.borderColor;
+      const effectiveBackgroundColor = campaignJackpot?.backgroundColor ?? storeJackpotCfg?.backgroundColor;
+      const effectiveTextColor = campaignJackpot?.textColor ?? storeJackpotCfg?.textColor;
+      const effectiveCustomFrame = campaignJackpot?.customFrame ?? storeJackpotCfg?.customFrame;
+      const effectiveButton = campaignJackpot?.button ?? storeJackpotCfg?.button;
+      
       console.log('🎰 Rendering Jackpot component (SlotJackpot)', {
         template: effectiveTemplate,
         symbols: Array.isArray(effectiveSymbols) ? effectiveSymbols.length : 0,
+        borderColor: effectiveBorderColor,
+        backgroundColor: effectiveBackgroundColor,
+        textColor: effectiveTextColor,
         campaignTemplate: campaignJackpot?.template,
         storeTemplate: storeJackpotCfg?.template,
         effectiveTemplate
       });
+      
       // Utiliser le même composant que l'éditeur pour garantir la parité visuelle
       const SlotJackpot = React.lazy(() => import('../../SlotJackpot'));
       
@@ -241,7 +253,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           <React.Suspense fallback={<div>Loading...</div>}>
             <SlotJackpot
-              key={`slotjackpot-${effectiveTemplate || 'default'}-${(effectiveSymbols?.length || 0)}-${effectiveCustomUrl || 'no-url'}`}
+              key={`slotjackpot-${effectiveTemplate || 'default'}-${(effectiveSymbols?.length || 0)}-${effectiveCustomUrl || 'no-url'}-${effectiveBorderColor || 'no-border'}-${effectiveBackgroundColor || 'no-bg'}`}
               templateOverride={effectiveTemplate}
               symbols={effectiveSymbols}
               onWin={() => handleGameComplete('win')}

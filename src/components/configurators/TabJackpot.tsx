@@ -41,7 +41,8 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
           ...prev.gameConfig?.jackpot,
           [key]: value
         }
-      }
+      },
+      _lastUpdate: Date.now() // Force sync avec preview
     }));
   };
 
@@ -67,7 +68,8 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
             }
           }
         }
-      }
+      },
+      _lastUpdate: Date.now() // Force sync avec preview
     }));
   };
 

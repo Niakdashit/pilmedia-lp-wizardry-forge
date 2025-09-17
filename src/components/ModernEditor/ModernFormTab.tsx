@@ -188,7 +188,8 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
 
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: [...(prev.formFields || []), newField]
+      formFields: [...(prev.formFields || []), newField],
+      _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
   };
 
@@ -197,14 +198,16 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       ...prev,
       formFields: (prev.formFields || []).map((field: any) => 
         field.id === fieldId ? { ...field, ...updates } : field
-      )
+      ),
+      _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
   };
 
   const removeField = (fieldId: string) => {
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: (prev.formFields || []).filter((field: any) => field.id !== fieldId)
+      formFields: (prev.formFields || []).filter((field: any) => field.id !== fieldId),
+      _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
   };
 
@@ -216,7 +219,8 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       const items = arrayMove(formFields, oldIndex, newIndex);
       setCampaign((prev: any) => (prev ? {
         ...prev,
-        formFields: items
+        formFields: items,
+        _lastUpdate: Date.now() // Force sync avec preview
       } : prev));
     }
   };
@@ -253,7 +257,8 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
     if (!proceed) return;
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: Array.isArray(selected.fields) ? selected.fields : []
+      formFields: Array.isArray(selected.fields) ? selected.fields : [],
+      _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
   };
 
