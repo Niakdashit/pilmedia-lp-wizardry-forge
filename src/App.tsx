@@ -28,6 +28,8 @@ const OutputStep = lazy(() => import('./pages/CampaignSettings/OutputStep'));
 const ParametersStep = lazy(() => import('./pages/CampaignSettings/ParametersStep'));
 const ViralityStep = lazy(() => import('./pages/CampaignSettings/ViralityStep'));
 const AppearanceStep = lazy(() => import('./pages/CampaignSettings/AppearanceStep'));
+const MobileTestPage = lazy(() => import('./pages/MobileTestPage'));
+const MobileCompleteTestPage = lazy(() => import('./pages/MobileCompleteTestPage'));
 
 function App() {
   // Idle prefetch heavy editor routes to smooth first navigation without impacting TTI
@@ -78,6 +80,8 @@ function App() {
               <Route path="/scratch-editor" element={<ScratchCardEditor />} />
               <Route path="/scratch-card-2" element={<ScratchCard2 />} />
               <Route path="/template-editor" element={<TemplateEditor />} />
+              <Route path="/mobile-test" element={<MobileTestPage />} />
+              <Route path="/mobile-complete-test" element={<MobileCompleteTestPage />} />
               <Route path="/campaign/:id/settings/*" element={<CampaignSettingsLayout />}>
                 <Route index element={<ChannelsStep />} />
                 <Route path="home" element={<HomeStep />} />

@@ -139,10 +139,19 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       (window as any).forceElementsTab = onForceElementsTab;
     }
     
+    // Debug logging pour la détection mobile
+    console.log('📱 HybridSidebar - Mobile detection:', {
+      userAgent: ua,
+      isMobileUA: /Mobi|Android/i.test(ua),
+      windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
+      selectedDevice,
+      willCollapse: /Mobi|Android/i.test(ua)
+    });
+    
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, []);
+  }, [onForceElementsTab, selectedDevice]);
   // Default to 'Design' tab on entry
   const [activeTab, _setActiveTab] = useState<string | null>('background');
 
