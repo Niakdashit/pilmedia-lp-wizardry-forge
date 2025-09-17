@@ -22,7 +22,6 @@ interface DynamicContactFormProps {
   };
   inputBorderColor?: string;
   inputFocusColor?: string;
-  inputBorderRadius?: string;
 }
 
 const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
@@ -33,8 +32,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   className = "",
   textStyles,
   inputBorderColor = "#E5E7EB",
-  inputFocusColor = "#841b60",
-  inputBorderRadius = "2px"
+  inputFocusColor = "#841b60"
 }) => {
   // Stabilize defaultValues to avoid identity changes causing effects to loop
   const stableDefaultValues = useMemo(() => defaultValues ?? {}, [defaultValues]);

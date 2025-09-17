@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('../funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
@@ -27,11 +27,9 @@ const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'))
 interface ModelEditorLayoutProps {
   mode?: 'template' | 'campaign';
   hiddenTabs?: string[];
-  // When true, show the form preview overlay (30% right) on canvas hover
-  showFormOverlay?: boolean;
 }
 
-const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs, showFormOverlay = false }) => {
+const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
@@ -227,15 +225,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       localStorage.setItem('previewButtonSide', previewButtonSide);
     } catch {}
   }, [previewButtonSide]);
-
-  // Sur la page de form editor, activer immédiatement l'onglet "Jeu"
-  useEffect(() => {
-    if (showFormOverlay && sidebarRef.current) {
-      try {
-        sidebarRef.current.setActiveTab('game');
-      } catch {}
-    }
-  }, [showFormOverlay]);
 
   // Activer la saisie directe sur double-clic pour tous les curseurs (input[type="range"]) de l'éditeur
   useEffect(() => {
@@ -888,7 +877,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: ((showFormOverlay ? 'form' : campaignData.type) || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: typeof campaignData.design?.background === 'object'
@@ -1377,20 +1366,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     };
   }, []);
 
-  // Inline editable campaign title (used in template mode header)
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [titleInput, setTitleInput] = useState<string>('');
-  useEffect(() => {
-    if (!isEditingTitle) {
-      setTitleInput(((campaignState as any)?.name as string) || '');
-    }
-  }, [campaignState, isEditingTitle]);
-  const commitTitle = useCallback(() => {
-    const value = (titleInput || '').trim() || 'Sans titre';
-    setCampaign((prev: any) => ({ ...(prev || {}), name: value }));
-    setIsEditingTitle(false);
-  }, [titleInput, setCampaign]);
-
   return (
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
       {/* Bande dégradée avec logo et icônes */}
@@ -1405,29 +1380,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               marginLeft: '24px'
             }}
           >
-            {isEditingTitle ? (
-              <input
-                autoFocus
-                value={titleInput}
-                onChange={(e) => setTitleInput(e.target.value)}
-                onBlur={commitTitle}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitTitle();
-                  if (e.key === 'Escape') setIsEditingTitle(false);
-                }}
-                placeholder="Nom de la campagne"
-                className="bg-transparent border-b border-white/70 text-white placeholder-white/70 focus:outline-none focus:border-white px-1 py-0.5 text-base sm:text-lg font-semibold tracking-wide w-[min(60vw,420px)]"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditingTitle(true)}
-                title="Modifier le nom de la campagne"
-                className="text-white font-semibold tracking-wide text-base sm:text-lg select-text text-left"
-              >
-                {((campaignState as any)?.name as string) || 'Edition de template'}
-              </button>
-            )}
+            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-text">
+              Edition de template
+            </span>
           </div>
         ) : (
           <img 
@@ -1497,44 +1452,32 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-          {/* Overlay Preview: full live funnel (matches other editors) */}
-          {showFunnel && (() => {
-            const previewCampaign = {
-              ...(campaignConfig || {}),
-              type: (showFormOverlay ? 'form' : (campaignConfig as any)?.type) || 'wheel',
-              design: {
-                ...((campaignConfig as any)?.design || {}),
-                background: canvasBackground
-              },
-              canvasConfig: {
-                elements: canvasElements,
-                background: canvasBackground
-              }
-            } as any;
-
-            const node = (
-              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-                {/* Floating Edit Mode Button */}
-                <button
-                  onClick={() => setShowFunnel(false)}
-                  className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-                >
-                  Mode édition
-                </button>
-                <div className="relative w-full h-full">
-                  <FunnelUnlockedGame 
-                    campaign={previewCampaign}
-                    previewMode={selectedDevice}
-                    wheelModalConfig={quizModalConfig}
-                  />
-                </div>
-              </div>
-            );
-            return typeof document !== 'undefined' ? (createPortal(node, document.body) as any) : (node as any);
-          })()}
-          {/* Design Editor Mode */}
-          {!showFunnel && (
-            <>
+        {showFunnel ? (
+          /* Funnel Preview Mode */
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+            {/* Floating Edit Mode Button */}
+            <button
+              onClick={() => setShowFunnel(false)}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+            >
+              Mode édition
+            </button>
+            {campaignData?.type === 'quiz' ? (
+              <FunnelQuizParticipate
+                campaign={campaignData}
+                previewMode={selectedDevice}
+              />
+            ) : (
+              <FunnelUnlockedGame
+                campaign={campaignData}
+                previewMode={selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
+            )}
+          </div>
+        ) : (
+          /* Design Editor Mode */
+          <>
             {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
             {actualDevice !== 'mobile' && (
               <HybridSidebar
@@ -1849,8 +1792,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               extractedColors={extractedColors}
               quizModalConfig={quizModalConfig}
               containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-              // Show the form overlay only if requested by the page
-              showFormOverlay={showFormOverlay}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
                 setShowEffectsInSidebar(true);
@@ -1921,7 +1862,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               />
             )}
           </>
-          )}
+        )}
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (

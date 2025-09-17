@@ -6,7 +6,9 @@ interface SlotJackpotProps {
   onLose?: () => void;
   onOpenConfig?: () => void;
   disabled?: boolean;
-  templateOverride?: any;
+  // Permet au mode preview de forcer un template précis sans attendre la mise à jour du store
+  templateOverride?: string;
+  // Permet d'injecter les symboles depuis la campagne
   symbols?: string[];
 }
 

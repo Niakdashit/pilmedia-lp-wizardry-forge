@@ -256,6 +256,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
       hoverBgColor,
       activeBgColor,
       width: `${template.style.containerWidth}px`,
+      scale,
       device,
       source: {
         currentStyles,
@@ -301,17 +302,40 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
 
   // Les styles d'option sont maintenant gérés directement dans le rendu
   
-  // Déterminer la largeur cible (desktop/mobile) en respectant la config
-  const getTargetWidth = (): string => {
+  // Appliquer les styles avec les surcharges de campagne
+  const getResponsiveScale = () => {
+    // Calculer le facteur d'échelle basé sur la largeur
     const baseWidth = template.style.containerWidth;
-    const desktopWidth = currentStyles.width || campaign?.design?.quizConfig?.style?.width;
-    const mobileWidth = currentStyles.mobileWidth || campaign?.design?.quizConfig?.style?.mobileWidth;
-    const chosen = device === 'mobile' ? (mobileWidth || desktopWidth) : (desktopWidth || mobileWidth);
-    const target = chosen || `${baseWidth}px`;
-    console.log('🔍 Width calculation:', { device, baseWidth, desktopWidth, mobileWidth, target });
-    return target;
+    let targetWidth: string;
+    
+    if (device === 'mobile') {
+      targetWidth = currentStyles.mobileWidth || 
+                   campaign?.design?.quizConfig?.style?.mobileWidth || 
+                   currentStyles.width || 
+                   campaign?.design?.quizConfig?.style?.width || 
+                   `${baseWidth}px`;
+    } else {
+      targetWidth = currentStyles.width || 
+                   campaign?.design?.quizConfig?.style?.width || 
+                   `${baseWidth}px`;
+    }
+    
+    // Extraire la valeur numérique de la largeur cible
+    const targetWidthValue = parseInt(targetWidth.replace(/px|%/, ''));
+    const scale = isNaN(targetWidthValue) ? 1 : targetWidthValue / baseWidth;
+    
+    console.log('🔍 Scale calculation:', {
+      device,
+      baseWidth,
+      targetWidth,
+      targetWidthValue,
+      scale
+    });
+    
+    return scale;
   };
-  const targetWidth = getTargetWidth();
+
+  const scale = getResponsiveScale();
 
   // Calculer la couleur de fond avec opacité
   const getBackgroundWithOpacity = () => {
@@ -340,8 +364,9 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   };
 
   const containerStyle: React.CSSProperties = {
-    // Appliquer directement la largeur cible pour respecter la taille
-    width: targetWidth,
+    width: `${template.style.containerWidth}px`, // Largeur de base
+    transform: `scale(${scale})`, // Appliquer l'échelle proportionnelle
+    transformOrigin: 'center center', // Centrer la transformation
     position: 'relative', // Assurer un contexte d'empilement propre
     zIndex: 20, // Au-dessus du CanvasContextMenu (z-index: 1)
     height: currentStyles.height === 'auto' || !currentStyles.height

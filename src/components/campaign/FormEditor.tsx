@@ -230,7 +230,6 @@ const FormEditor: React.FC<FormEditorProps> = ({
                   label: campaign?.design?.textStyles?.label,
                   button: campaign?.design?.textStyles?.button
                 }}
-                inputBorderRadius={campaign?.design?.inputBorderRadius ?? campaign?.design?.borderRadius ?? 2}
               />
             </div>
           )}

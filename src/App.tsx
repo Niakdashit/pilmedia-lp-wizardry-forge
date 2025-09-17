@@ -14,7 +14,6 @@ const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ModelEditor = lazy(() => import('./pages/ModelEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
-const FormEditor = lazy(() => import('./pages/FormEditor'));
 const ScratchCard2 = lazy(() => import('./pages/ScratchCard2'));
 const TemplateEditor = lazy(() => import('./pages/TemplateEditor'));
 const TemplatesEditor = lazy(() => import('./pages/TemplatesEditor'));
@@ -77,7 +76,6 @@ function App() {
               <Route path="/scratch-editor" element={<ScratchCardEditor />} />
               <Route path="/scratch-card-2" element={<ScratchCard2 />} />
               <Route path="/template-editor" element={<TemplateEditor />} />
-              <Route path="/form-editor" element={<FormEditor />} />
               <Route path="/campaign/:id/settings/*" element={<CampaignSettingsLayout />}>
                 <Route index element={<ChannelsStep />} />
                 <Route path="home" element={<HomeStep />} />

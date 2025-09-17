@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useEditorStore } from '../../../stores/editorStore';
 import WheelPreview from '../../GameTypes/WheelPreview';
-import FormCanvas from '../../GameTypes/FormCanvas';
 import CustomElementsRenderer from '../../ModernEditor/components/CustomElementsRenderer';
 import { useUniversalResponsive } from '../../../hooks/useUniversalResponsive';
 import ValidationMessage from '../../common/ValidationMessage';
@@ -17,8 +15,6 @@ interface CanvasGameRendererProps {
   onGameFinish: (result: 'win' | 'lose') => void;
   onGameStart: () => void;
   onGameButtonClick: () => void;
-  /** When true, render the preview on a fixed full-screen overlay to ensure parity with other editors */
-  fullScreen?: boolean;
 }
 
 const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
@@ -29,8 +25,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   wheelModalConfig,
   onGameFinish,
   onGameStart,
-  onGameButtonClick,
-  fullScreen = true
+  onGameButtonClick
 }) => {
   // Configuration du canvas depuis la campagne - essayer plusieurs sources
   const canvasConfig = campaign.canvasConfig || {};
@@ -226,38 +221,6 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       );
     }
     
-    if (campaign.type === 'form') {
-      // Use formStructure directly from the campaign (same as DesignCanvas)
-      const formStructure = campaign?.formStructure || {
-        fields: [],
-        submitButtonText: 'Participer',
-        title: 'Participez au jeu',
-        description: 'Remplissez le formulaire pour participer'
-      };
-
-      console.log('🔄 [CanvasGameRenderer] Using formStructure from campaign (Preview):', {
-        fieldsCount: formStructure.fields.length,
-        fields: formStructure.fields.map((f: any) => `${f.label}(${f.type})`)
-      });
-
-      return (
-        <div className="absolute inset-0 flex items-center justify-end pr-6" style={{ zIndex: 10 }}>
-          <FormCanvas 
-            key={`form-canvas-preview-${formStructure.fields.length}-${JSON.stringify(formStructure.fields.map((f: any) => f.id))}`}
-            config={campaign.design?.formConfig || {}}
-            formStructure={formStructure}
-            onSubmit={(formData: any) => {
-              console.log('Form submitted:', formData);
-            }}
-            onChange={(propName: any, value: any) => {
-              console.log('Form config changed:', propName, value);
-            }}
-            isPreview={true}
-          />
-        </div>
-      );
-    }
-
     if (campaign.type === 'jackpot') {
       // Fusionner campagne fournie et store réactif (le store gagne si la campagne est vide)
       const campaignJackpot = campaign?.gameConfig?.jackpot || {};
@@ -344,22 +307,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     };
   }, [previewMode, canvasSize]);
 
-  // Wrapper styles: either fixed full-screen overlay (preferred in editors) or normal flow
-  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    if (fullScreen) {
-      const node = (
-        <div className="fixed inset-0 z-[9999] w-screen h-[100dvh] min-h-[100dvh]">
-          {children}
-        </div>
-      );
-      // Use a portal to escape any transformed ancestor that would clip a fixed element
-      return typeof document !== 'undefined' ? (createPortal(node, document.body)) as any : (node as any);
-    }
-    return <div className="w-full h-[100dvh] min-h-[100dvh]">{children}</div>;
-  };
-
   return (
-    <Wrapper>
+    <div className="w-full h-[100dvh] min-h-[100dvh]">
       <div
         className="canvas-container relative overflow-hidden w-full"
         style={containerStyle}
@@ -411,7 +360,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           />
         </div>
       </div>
-    </Wrapper>
+    </div>
   );
 };
 
