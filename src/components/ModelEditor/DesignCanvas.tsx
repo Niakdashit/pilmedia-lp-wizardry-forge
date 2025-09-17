@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
@@ -17,10 +18,12 @@ import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDr
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
+import DynamicContactForm from '../forms/DynamicContactForm';
+import { DEFAULT_FIELDS } from '../../utils/wheelConfig';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
-import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
+import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 import SlotJackpot from '../SlotJackpot';
@@ -82,6 +85,8 @@ export interface DesignCanvasProps {
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
   containerClassName?: string;
+  // When true, display a hover form overlay on the right side (30% width)
+  showFormOverlay?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -125,6 +130,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onJackpotPanelChange,
   readOnly = false,
   containerClassName,
+  showFormOverlay = false,
   updateQuizConfig,
   getCanonicalConfig,
   quizModalConfig,
@@ -319,6 +325,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Store centralisé pour la grille
   const { showGridLines, setShowGridLines } = useEditorStore();
+  // Campagne (Zustand) en source de vérité pour des mises à jour instantanées des champs
+  const liveCampaign = useEditorStore(state => state.campaign);
 
   // Nouveau système d'alignement simple et efficace
   const {
@@ -1555,6 +1563,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canUndo={canUndo}
         canRedo={canRedo}
         onClearSelection={handleClearSelection}
+        showJackpotPanel={showJackpotPanel}
+        onJackpotPanelChange={onJackpotPanelChange}
       >
         {/* Canvas Toolbar - Show for text and shape elements */}
         {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && (
@@ -1617,7 +1627,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className="relative bg-transparent rounded-3xl overflow-hidden" 
+              className="relative bg-transparent rounded-3xl overflow-hidden group" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
@@ -2187,8 +2197,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               );
             })()}
 
-            {/* Slot Jackpot Game - Feature Flag Controlled */}
-            {isFeatureEnabled('slotJackpot') && (
+            {/* Slot Jackpot Game - Hidden in Form Editor */}
+            {isFeatureEnabled('slotJackpot') && !window.location.pathname.includes('/form-editor') && (
               <SlotJackpot
                 onWin={(result) => {
                   alert(`🎉 JACKPOT! ${result.join(' ')}`);

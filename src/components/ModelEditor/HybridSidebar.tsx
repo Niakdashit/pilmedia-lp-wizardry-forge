@@ -17,6 +17,7 @@ import QuizConfigPanel from './panels/QuizConfigPanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import TabJackpot from '../configurators/TabJackpot';
+import TabForm from '../configurators/TabForm';
 import { useEditorStore } from '../../stores/editorStore';
 import { useEditorState } from '../../hooks/useEditorState';
 
@@ -170,9 +171,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const setCampaign = useEditorStore((s) => s.setCampaign) as unknown as (updater: any) => void;
   // Jackpot symbols management
   const jackpotSymbols = (campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒'];
-  // Préserver le template sélectionné entre les modes via localStorage (fallback secondaire)
-  const lsJackpotTemplate = (typeof window !== 'undefined') ? localStorage.getItem('jackpotTemplate') : null;
-  const jackpotTemplate = (campaign as any)?.gameConfig?.jackpot?.template || lsJackpotTemplate || 'jackpot-frame';
+  const jackpotTemplate = (campaign as any)?.gameConfig?.jackpot?.template || 'jackpot-frame';
   const jackpotStyle = (campaign as any)?.gameConfig?.jackpot?.style || {};
   const customFrame = (campaign as any)?.gameConfig?.jackpot?.customFrame || {
     frameColor: '#f4d555',
@@ -239,15 +238,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   const handleJackpotTemplateChange = (templateId: string) => {
     console.log('🎰 [HybridSidebar] handleJackpotTemplateChange called with:', templateId);
-    console.log('🎰 [HybridSidebar] Current campaign before update:', (campaign as any)?.gameConfig?.jackpot?.template);
-    
-    // PERSISTANCE IMMÉDIATE - PRIORITÉ ABSOLUE
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('jackpotTemplate', templateId);
-        console.log('🎰 [HybridSidebar] Template persisté dans localStorage:', templateId);
-      }
-    } catch {}
     setCampaign((prev: any) => {
       const base = prev || {};
       const defaults = {
@@ -351,27 +341,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, []);
-
-  // Au montage: si le store diffère de localStorage, aligner sur localStorage pour éviter les resets
-  React.useEffect(() => {
-    const current = (campaign as any)?.gameConfig?.jackpot?.template;
-    if (lsJackpotTemplate && current !== lsJackpotTemplate) {
-      setCampaign((prev: any) => {
-        const base = prev || {};
-        return {
-          ...base,
-          gameConfig: {
-            ...(base.gameConfig || {}),
-            jackpot: {
-              ...(base.gameConfig?.jackpot || {}),
-              template: lsJackpotTemplate
-            }
-          }
-        };
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Si le template actuel est 'custom-frame', fusionner les valeurs manquantes avec les défauts pour refléter visuellement

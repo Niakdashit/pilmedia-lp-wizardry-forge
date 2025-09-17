@@ -317,6 +317,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         previewMode={previewMode} 
         mobileConfig={mobileConfig} 
         wheelModalConfig={wheelModalConfig}
+        fullScreen={true}
         onGameFinish={handleGameFinish} 
         onGameStart={handleGameStart} 
         onGameButtonClick={handleGameButtonClick} 
