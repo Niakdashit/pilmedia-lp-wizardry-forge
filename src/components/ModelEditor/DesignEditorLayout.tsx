@@ -16,6 +16,7 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 // import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
+import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import EditorStateCleanup from '../EditorStateCleanup';
 
 
@@ -39,6 +40,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
+    const override = getEditorDeviceOverride();
+    if (override) return override;
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     if (/Mobi|Android/i.test(ua)) return 'mobile';
     if (/Tablet|iPad/i.test(ua)) return 'tablet';

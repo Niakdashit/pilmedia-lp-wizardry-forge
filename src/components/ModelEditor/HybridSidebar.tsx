@@ -20,6 +20,7 @@ import TabJackpot from '../configurators/TabJackpot';
 import TabForm from '../configurators/TabForm';
 import { useEditorStore } from '../../stores/editorStore';
 import { useEditorState } from '../../hooks/useEditorState';
+import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 
 // Lazy-loaded heavy panels
@@ -332,16 +333,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    
+
     // Exposer la fonction pour forcer l'onglet Elements si elle est fournie
     if (onForceElementsTab) {
       (window as any).forceElementsTab = onForceElementsTab;
     }
-    
+
+    const deviceOverride = getEditorDeviceOverride();
+    if (deviceOverride === 'desktop') {
+      setIsCollapsed(false);
+      return;
+    }
+
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, []);
+  }, [onForceElementsTab]);
 
   // Si le template actuel est 'custom-frame', fusionner les valeurs manquantes avec les défauts pour refléter visuellement
   React.useEffect(() => {

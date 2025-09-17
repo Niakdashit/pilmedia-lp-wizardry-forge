@@ -15,6 +15,7 @@ import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import ScratchCardPanel from './panels/ScratchCardPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import { useEditorStore } from '../../stores/editorStore';
+import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -94,6 +95,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+
+    const deviceOverride = getEditorDeviceOverride();
+    if (deviceOverride === 'desktop') {
+      setIsCollapsed(false);
+      return;
+    }
+
     if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
