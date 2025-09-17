@@ -63,6 +63,11 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     { id: 'campaign', label: 'Réglages', icon: Settings, color: '#F59E0B' }
   ];
 
+  // Debug logging pour les onglets
+  React.useEffect(() => {
+    console.log('📱 MobileSidebarDrawer - Onglets disponibles:', tabs.map(t => ({ id: t.id, label: t.label })));
+  }, []);
+
   // Device detection: show bottom bar only on real mobile devices
   const containerRef = useRef<HTMLDivElement>(null);
   const { isMobile, isTablet } = useMobileOptimization(containerRef, {
@@ -71,6 +76,17 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     optimizeTouchEvents: true,
     preventZoomGestures: false
   });
+
+  // Debug logging for mobile detection
+  React.useEffect(() => {
+    console.log('📱 MobileSidebarDrawer - Device detection:', {
+      isMobile,
+      isTablet,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+      windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
+      windowHeight: typeof window !== 'undefined' ? window.innerHeight : 'N/A'
+    });
+  }, [isMobile, isTablet]);
 
   // Disable auto-open on mobile for specific editor routes
   const location = useLocation();
