@@ -44,9 +44,39 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Mettre à jour la campagne en temps réel quand le store change
   useEffect(() => {
     if ((campaign.type === 'form' || campaign.type === 'jackpot') && storeCampaign) {
-      setLiveCampaign(storeCampaign);
+      const storeBackground =
+        storeCampaign.canvasConfig?.background ?? storeCampaign.design?.background;
+      const campaignBackground =
+        campaign.canvasConfig?.background ?? campaign.design?.background;
+
+      const mergedBackground = storeBackground ?? campaignBackground;
+      const normalizedBackground =
+        mergedBackground && typeof mergedBackground === 'object' && 'value' in mergedBackground
+          ? mergedBackground
+          : mergedBackground
+            ? { type: 'color' as const, value: mergedBackground as string }
+            : undefined;
+
+      setLiveCampaign({
+        ...storeCampaign,
+        canvasConfig: {
+          ...(campaign.canvasConfig || {}),
+          ...(storeCampaign.canvasConfig || {}),
+          background: normalizedBackground
+        },
+        design: {
+          ...(campaign.design || {}),
+          ...(storeCampaign.design || {}),
+          background:
+            normalizedBackground ??
+            storeCampaign.design?.background ??
+            campaign.design?.background
+        }
+      });
+    } else {
+      setLiveCampaign(campaign);
     }
-  }, [storeCampaign, campaign.type]);
+  }, [storeCampaign, campaign]);
   
   const {
     createParticipation
