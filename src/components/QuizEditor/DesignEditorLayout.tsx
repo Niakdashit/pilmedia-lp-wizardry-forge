@@ -1695,7 +1695,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-              campaign={campaignData}
+              campaign={campaignConfig}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}

@@ -45,9 +45,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   useEffect(() => {
     if ((campaign.type === 'form' || campaign.type === 'jackpot') && storeCampaign) {
       const storeBackground =
-        storeCampaign.design?.background ?? { type: 'color', value: '#ffffff' };
+        storeCampaign.canvasConfig?.background ?? storeCampaign.design?.background;
       const campaignBackground =
-        campaign.design?.background ?? { type: 'color', value: '#ffffff' };
+        campaign.canvasConfig?.background ?? campaign.design?.background;
 
       const mergedBackground = storeBackground ?? campaignBackground;
       const normalizedBackground =
@@ -60,8 +60,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setLiveCampaign({
         ...storeCampaign,
         canvasConfig: {
-          ...(campaign.design || {}),
-          ...(storeCampaign.design || {}),
+          ...(campaign.canvasConfig || {}),
+          ...(storeCampaign.canvasConfig || {}),
           background: normalizedBackground
         },
         design: {
@@ -204,6 +204,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     const borderColor = campaignDesign.borderColor || '#E5E7EB';
     const focusColor = buttonColor;
     const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
+    const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
     const panelBg = campaignDesign.blockColor || '#ffffff';
     const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
     const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
@@ -251,7 +252,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 onSelect={() => {}} 
                 onUpdate={() => {}} 
                 onDelete={() => {}}
-                containerRef={undefined}
+                containerRef={null}
                 readOnly={true}
                 onMeasureBounds={() => {}}
                 onAddElement={() => {}}
@@ -261,7 +262,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 activeGroupId={null}
                 campaign={liveCampaign}
                 extractedColors={[]}
-                alignmentSystem={undefined}
+                alignmentSystem={null}
               />
             );
           })}
@@ -325,6 +326,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                         }}
                         inputBorderColor={borderColor}
                         inputFocusColor={focusColor}
+                        inputBorderRadius={inputBorderRadius}
                       />
                     </div>
                   </div>

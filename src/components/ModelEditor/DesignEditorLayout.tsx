@@ -706,6 +706,13 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
+    const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
+    const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
+    const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
+    
+    // Synchronisation forcée avec le store en temps réel pour le form-editor
+    const currentCampaignState = storeCampaign;
+    
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
@@ -850,13 +857,26 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         }
       },
       buttonConfig: {
-        text: 'SPIN',
+        text: buttonElement?.content || 'SPIN',
         color: primaryColor,
-        textColor: '#ffffff',
+        textColor: buttonElement?.style?.color || '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
+      screens: [
+        {
+          title: titleElement?.content || currentCampaignState?.screens?.[1]?.title || 'Tentez votre chance !',
+          description: descriptionElement?.content || currentCampaignState?.screens?.[1]?.description || 'Faites tourner les rouleaux et décrochez le jackpot',
+          buttonText: buttonElement?.content || currentCampaignState?.screens?.[1]?.buttonText || 'SPIN'
+        },
+        {
+          title: currentCampaignState?.screens?.[1]?.title || titleElement?.content || 'Vos informations',
+          description: currentCampaignState?.screens?.[1]?.description || descriptionElement?.content || 'Remplissez le formulaire pour participer',
+          buttonText: currentCampaignState?.buttonConfig?.text || buttonElement?.content || 'Participer'
+        }
+      ],
       // Champs de contact dynamiques avec synchronisation en temps réel
-      formFields: ((campaignState as any)?.formFields !== undefined)
+      formFields: currentCampaignState?.formFields || 
+        ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
         : [
             { id: 'prenom', label: 'Prénom', type: 'text', required: true },
@@ -1512,11 +1532,11 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Pour le form-editor, afficher le formulaire en plein écran
             if (showFormOverlay) {
               const node = (
-                <div className="group fixed inset-0 z-[10050] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}
-                    className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-90 hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105`}
+                    className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                   >
                     Mode édition
                   </button>
@@ -1535,11 +1555,11 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
             // Pour les autres types de jeux, utiliser FunnelUnlockedGame
             const node = (
-              <div className="group fixed inset-0 z-[10050] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
                 {/* Floating Edit Mode Button */}
                 <button
                   onClick={() => setShowFunnel(false)}
-                  className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-90 hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105`}
+                  className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                 >
                   Mode édition
                 </button>

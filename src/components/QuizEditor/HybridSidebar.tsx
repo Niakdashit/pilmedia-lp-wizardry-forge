@@ -6,8 +6,7 @@ import {
   Layers,
   FormInput,
   Gamepad2,
-  Palette,
-  HelpCircle
+  Palette
 } from 'lucide-react';
 import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
 import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
@@ -323,11 +322,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       id: 'layers', 
       label: 'Calques', 
       icon: Layers
-    },
-    { 
-      id: 'quiz', 
-      label: 'Configuration Quiz', 
-      icon: HelpCircle
     },
     { 
       id: 'form', 

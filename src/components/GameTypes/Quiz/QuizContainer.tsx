@@ -9,32 +9,17 @@ interface QuizContainerProps {
   config: any;
   design?: any;
   className?: string;
-  onComplete?: (summary: QuizCompletionSummary) => void;
-  showResultsScreen?: boolean;
-}
-
-export interface QuizCompletionSummary {
-  score: number;
-  total: number;
-  responses: Array<{
-    questionId: string | number;
-    selectedOptionIds: (string | number)[];
-    isCorrect: boolean;
-  }>;
 }
 
 const QuizContainer: React.FC<QuizContainerProps> = ({
   config,
   design = {},
-  className = '',
-  onComplete,
-  showResultsScreen = true
+  className = ''
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<(string | number)[]>([]);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const [responses, setResponses] = useState<QuizCompletionSummary['responses']>([]);
 
   // Ensure config exists and has questions
   const questions = config?.questions || [];
@@ -66,35 +51,20 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
   const handleNext = () => {
     // Calculer le score
     const correctAnswers = currentQuestion.options?.filter((opt: any) => opt.isCorrect) || [];
-    const isCorrect = selectedAnswers.some(answer =>
+    const isCorrect = selectedAnswers.some(answer => 
       correctAnswers.some((correct: any) => correct.id === answer)
     );
-
-    const nextScore = isCorrect ? score + 1 : score;
-    const responseEntry = {
-      questionId: currentQuestion.id ?? currentQuestionIndex,
-      selectedOptionIds: [...selectedAnswers],
-      isCorrect
-    };
-
-    const updatedResponses = [...responses, responseEntry];
-
-    setScore(nextScore);
-    setResponses(updatedResponses);
+    
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+    }
 
     // Passer à la question suivante ou afficher les résultats
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswers([]);
     } else {
-      if (showResultsScreen) {
-        setShowResults(true);
-      }
-      onComplete?.({
-        score: nextScore,
-        total: questions.length,
-        responses: updatedResponses
-      });
+      setShowResults(true);
     }
   };
 
@@ -103,7 +73,6 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
     setSelectedAnswers([]);
     setScore(0);
     setShowResults(false);
-    setResponses([]);
   };
 
   const getContainerStyle = () => ({

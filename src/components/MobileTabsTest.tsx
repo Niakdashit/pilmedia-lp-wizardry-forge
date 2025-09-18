@@ -5,7 +5,7 @@ import HybridSidebar from './DesignEditor/HybridSidebar';
 
 const MobileTabsTest: React.FC = () => {
   const [selectedElement, setSelectedElement] = useState<any>(null);
-  const [currentBackground, setCurrentBackground] = useState<{ type: 'color' | 'image'; value: string }>({ type: 'color', value: '#ffffff' });
+  const [currentBackground, setCurrentBackground] = useState({ type: 'color' as const, value: '#ffffff' });
   const [campaignConfig, setCampaignConfig] = useState({});
   const [elements, setElements] = useState<any[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');

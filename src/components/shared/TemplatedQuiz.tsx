@@ -169,36 +169,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     ]
   };
 
-  const normalizeQuestion = (question: any, questionIndex: number) => {
-    const answersSource = Array.isArray(question?.answers) && question.answers.length > 0
-      ? question.answers
-      : Array.isArray(question?.options)
-        ? question.options
-        : [];
-
-    const normalizedAnswers = answersSource.map((answer: any, answerIndex: number) => ({
-      ...answer,
-      id: answer?.id ?? `${question?.id ?? questionIndex}-${answerIndex}`,
-      text: answer?.text ?? answer?.label ?? answer?.value ?? `Option ${answerIndex + 1}`,
-      image: answer?.image ?? answer?.mediaUrl ?? answer?.picture ?? undefined,
-      isCorrect: typeof answer?.isCorrect === 'boolean'
-        ? answer.isCorrect
-        : !!answer?.correct
-    }));
-
-    return {
-      ...question,
-      id: question?.id ?? questionIndex,
-      question: question?.question ?? question?.text ?? question?.title ?? `Question ${questionIndex + 1}`,
-      answers: normalizedAnswers,
-      image: question?.image ?? question?.mediaUrl ?? question?.picture ?? undefined
-    };
-  };
-
-  const questions = Array.isArray(quizConfig?.questions)
-    ? quizConfig.questions.map(normalizeQuestion)
-    : [];
-
+  const questions = quizConfig.questions || [];
   const currentQuestion = questions[0] || {};
   const answers = currentQuestion.answers || [];
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
