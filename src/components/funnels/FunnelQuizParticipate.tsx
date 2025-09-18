@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import FormHandler from './components/FormHandler';
 import { useParticipations } from '../../hooks/useParticipations';
 import { FieldConfig } from '../forms/DynamicContactForm';
+import QuizGame from '../GameTypes/QuizGame';
+import type { QuizCompletionSummary } from '../GameTypes/Quiz/QuizContainer';
 
 interface FunnelQuizParticipateProps {
   campaign: any;
@@ -13,11 +15,14 @@ interface FunnelQuizParticipateProps {
 const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign, previewMode }) => {
   const [phase, setPhase] = useState<'participate' | 'quiz' | 'form' | 'thankyou'>('participate');
   const [score, setScore] = useState<number>(0);
-  
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+  const [quizResponses, setQuizResponses] = useState<QuizCompletionSummary['responses']>([]);
+
   const [showFormModal, setShowFormModal] = useState<boolean>(false);
   const [participationLoading, setParticipationLoading] = useState<boolean>(false);
 
   const showScore = !!campaign?.gameConfig?.quiz?.showScore;
+  const quizConfig = campaign?.gameConfig?.quiz;
 
   const { createParticipation } = useParticipations();
 
@@ -36,10 +41,28 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   }), [campaign?.design?.background]);
 
   const handleParticipate = () => {
-    setPhase('quiz');
+    if (quizConfig?.questions?.length) {
+      setPhase('quiz');
+    } else {
+      setPhase('form');
+    }
   };
 
-  // Unused answer handler
+  useEffect(() => {
+    setShowFormModal(phase === 'form');
+  }, [phase]);
+
+  const handleQuizComplete = useCallback((result: QuizCompletionSummary) => {
+    setScore(result.score);
+    setTotalQuestions(result.total);
+    setQuizResponses(result.responses);
+    setPhase('form');
+  }, []);
+
+  const handleFormClose = useCallback(() => {
+    setShowFormModal(false);
+    setPhase('participate');
+  }, []);
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);
@@ -47,7 +70,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
       if (campaign.id) {
         await createParticipation({
           campaign_id: campaign.id,
-          form_data: { ...formData, score },
+          form_data: { ...formData, score, totalQuestions, quizResponses },
           user_email: formData.email
         });
       }
@@ -63,6 +86,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
   const handleReplay = () => {
     setScore(0);
+    setTotalQuestions(0);
+    setQuizResponses([]);
     setPhase('participate');
   };
 
@@ -83,11 +108,18 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
           </div>
         )}
 
-        {/* Quiz phase - Supprimé, passer directement au formulaire */}
-        {phase === 'quiz' && (() => {
-          setPhase('form');
-          return null;
-        })()}
+        {phase === 'quiz' && (
+          <div className="relative z-10 h-full flex items-center justify-center p-4 overflow-y-auto">
+            <div className="w-full max-w-3xl">
+              <QuizGame
+                config={quizConfig}
+                design={campaign.design}
+                onGameComplete={handleQuizComplete}
+                showResultsScreen={false}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Form phase - use modal component to keep look consistent */}
         <FormHandler
@@ -95,7 +127,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
           campaign={campaign}
           fields={fields}
           participationLoading={participationLoading}
-          onClose={() => setShowFormModal(false)}
+          onClose={handleFormClose}
           onSubmit={handleFormSubmit}
         />
 
@@ -105,7 +137,9 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
             <div className="bg-white/90 backdrop-blur px-6 py-5 rounded-xl shadow">
               <div className="text-lg font-semibold text-gray-800 mb-2">Merci pour votre participation !</div>
               {showScore && (
-                <div className="text-sm text-gray-700 mb-3">Score: {score}</div>
+                <div className="text-sm text-gray-700 mb-3">
+                  Score: {score}{totalQuestions ? `/${totalQuestions}` : ''}
+                </div>
               )}
               <div className="flex justify-center">
                 <button
