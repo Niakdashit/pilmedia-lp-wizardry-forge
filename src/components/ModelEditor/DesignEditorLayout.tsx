@@ -706,9 +706,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
-    // Synchronisation forcée avec le store en temps réel pour le form-editor
-    const currentCampaignState = storeCampaign;
-    
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
