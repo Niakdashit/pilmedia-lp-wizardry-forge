@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { Type } from 'lucide-react';
 import TextEffectsPanel from './TextEffectsPanel';
 import { titlePresets, compositeTitlePresets } from '../../../config/titlePresets';
-import { getDeviceDimensions, calculateCenteredPosition, calculateCenteredTopPosition, estimateTextWidth } from '../../../utils/deviceDimensions';
+import { getDeviceDimensions, estimateTextWidth } from '../../../utils/deviceDimensions';
 
 interface TextPanelProps {
   onAddElement: (element: any) => void;
@@ -141,19 +141,21 @@ const TextPanel: React.FC<TextPanelProps> = ({
     // Calculer la largeur estimée du texte pour un meilleur centrage
     const estimatedTextWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
     const textSize = { width: estimatedTextWidth, height: fontSize * 1.2 };
-    const centeredTopPosition = calculateCenteredTopPosition(currentCanvas, textSize, 50);
+    const horizontalCenter = Math.max(0, (currentCanvas.width - textSize.width) / 2);
+    const topOffset = 50;
     
     const newElement: any = {
       id: `text-${Date.now()}`,
       type: 'text',
       content: textContent,
-      x: centeredTopPosition.x,
-      y: centeredTopPosition.y,
+      x: horizontalCenter,
+      y: topOffset,
       fontSize: fontSize,
       color: preset?.color || '#000000',
       fontFamily: fontFamily,
       fontWeight: fontWeight,
       textAlign: preset?.textAlign || (isFirstText ? 'center' : 'left'),
+      autoCenter: 'horizontal',
       ...(typeof preset?.letterSpacing !== 'undefined' ? { letterSpacing: preset.letterSpacing } : {}),
       ...(typeof preset?.lineHeight !== 'undefined' ? { lineHeight: preset.lineHeight } : {}),
       ...(stylePreset && {
@@ -173,11 +175,12 @@ const TextPanel: React.FC<TextPanelProps> = ({
         const deviceCanvas = getDeviceDimensions(device);
         const deviceEstimatedWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
         const deviceTextSize = { width: deviceEstimatedWidth, height: fontSize * 1.2 };
-        const deviceCenteredTop = calculateCenteredTopPosition(deviceCanvas, deviceTextSize, 50);
+        const deviceCenterX = Math.max(0, (deviceCanvas.width - deviceTextSize.width) / 2);
+        const deviceTop = topOffset;
         newElement[device] = {
           ...(newElement[device] || {}),
-          x: deviceCenteredTop.x,
-          y: deviceCenteredTop.y
+          x: deviceCenterX,
+          y: deviceTop
         };
       }
     });
@@ -188,9 +191,10 @@ const TextPanel: React.FC<TextPanelProps> = ({
   const addComposite = (composite: any) => {
     const currentCanvas = getDeviceDimensions(selectedDevice);
     const defaultTextSize = { width: 200, height: 40 };
-    const centeredTopPosition = calculateCenteredTopPosition(currentCanvas, defaultTextSize, 50);
-    const baseX = centeredTopPosition.x;
-    const baseY = centeredTopPosition.y;
+    const horizontalCenter = Math.max(0, (currentCanvas.width - defaultTextSize.width) / 2);
+    const topOffset = 50;
+    const baseX = horizontalCenter;
+    const baseY = topOffset;
     const layers = [...(composite?.layers || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
     layers.forEach((layer: any, idx: number) => {
       const el: any = {
@@ -218,12 +222,12 @@ const TextPanel: React.FC<TextPanelProps> = ({
       };
       if (selectedDevice === 'desktop') {
         const mobileCanvas = getDeviceDimensions('mobile');
-        const defaultTextSize = { width: 200, height: 40 };
-        const centered = calculateCenteredPosition(mobileCanvas, defaultTextSize);
+        const mobileCenterX = Math.max(0, (mobileCanvas.width - defaultTextSize.width) / 2);
+        const mobileTop = topOffset;
         el.mobile = {
           ...(el.mobile || {}),
-          x: centered.x,
-          y: centered.y
+          x: mobileCenterX,
+          y: mobileTop
         };
       }
       onAddElement(el);

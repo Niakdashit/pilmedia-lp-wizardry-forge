@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
@@ -8,7 +7,7 @@ import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
 import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
-const DesignCanvas = lazy(() => import('./DesignCanvas'));
+import DesignCanvas from './DesignCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
@@ -214,6 +213,19 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
+  useEffect(() => {
+    if (!showFunnel) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowFunnel(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFunnel]);
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -1536,21 +1548,32 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}
-                    className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                    className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
+                    style={{ top: 'calc(var(--editor-preview-toolbar-offset, 72px) + 16px)' }}
+                    aria-label="Retourner en mode édition"
                   >
                     Mode édition
-                  </button>
-                  <div className="relative w-full h-full">
-                    {/* Afficher le formulaire en plein écran comme les autres éditeurs */}
-                    <FunnelUnlockedGame 
-                      campaign={previewCampaign}
-                      previewMode={selectedDevice}
-                      wheelModalConfig={quizModalConfig}
-                    />
-                  </div>
+                </button>
+                <div className="relative w-full h-full">
+                  {/* Afficher le formulaire en plein écran comme les autres éditeurs */}
+                  <FunnelUnlockedGame 
+                    campaign={previewCampaign}
+                    previewMode={selectedDevice}
+                    wheelModalConfig={quizModalConfig}
+                  />
                 </div>
+                {/* Fallback exit control (bottom-left) */}
+                <button
+                  onClick={() => setShowFunnel(false)}
+                  className="absolute bottom-4 left-4 z-[100000] px-3 py-1.5 text-xs sm:text-sm bg-black/70 text-white rounded-md shadow-md"
+                  aria-label="Quitter l'aperçu (Échap)"
+                  title="Quitter l'aperçu (Échap)"
+                >
+                  Quitter l'aperçu (Échap)
+                </button>
+              </div>
               );
-              return createPortal(node, document.body);
+              return node;
             }
 
             // Pour les autres types de jeux, utiliser FunnelUnlockedGame
@@ -1559,7 +1582,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 {/* Floating Edit Mode Button */}
                 <button
                   onClick={() => setShowFunnel(false)}
-                  className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                  className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
+                  style={{ top: 'calc(var(--editor-preview-toolbar-offset, 72px) + 16px)' }}
+                  aria-label="Retourner en mode édition"
                 >
                   Mode édition
                 </button>
@@ -1570,9 +1595,18 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     wheelModalConfig={quizModalConfig}
                   />
                 </div>
+                {/* Fallback exit control (bottom-left) */}
+                <button
+                  onClick={() => setShowFunnel(false)}
+                  className="absolute bottom-4 left-4 z-[100000] px-3 py-1.5 text-xs sm:text-sm bg-black/70 text-white rounded-md shadow-md"
+                  aria-label="Quitter l'aperçu (Échap)"
+                  title="Quitter l'aperçu (Échap)"
+                >
+                  Quitter l'aperçu (Échap)
+                </button>
               </div>
             );
-            return typeof document !== 'undefined' ? (createPortal(node, document.body) as any) : (node as any);
+            return node as any;
           })()}
           {/* Design Editor Mode */}
           {!showFunnel && (

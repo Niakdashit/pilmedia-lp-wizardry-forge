@@ -143,6 +143,24 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
+
+  // Taille du canvas memoized avec format mobile 9:16 sans bordures ni encoches
+  const effectiveCanvasSize = useMemo(() => {
+    if (selectedDevice === 'mobile') {
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
+    } else if (selectedDevice === 'tablet') {
+      // 3:4 ratio for tablet
+      return { width: 810, height: 1080 };
+    } else {
+      // Desktop - 16:9 ratio
+      return { width: 1280, height: 720 };
+    }
+  }, [selectedDevice]);
+
+  // Pan offset in screen pixels, applied before scale with origin at center for stable centering
+  const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [mobileToolbarHeight, setMobileToolbarHeight] = useState<number>(0);
   // Always start with a valid numeric zoom (fallback 1). Clamp to [0.1, 1].
@@ -151,9 +169,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       ? Math.max(0.1, Math.min(1, zoom))
       : 1
   );
-  // Pan offset in screen pixels, applied before scale with origin at center for stable centering
-  const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  
+
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
@@ -179,6 +195,48 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return { ...prev, [id]: rect };
     });
   }, []);
+
+  useEffect(() => {
+    if (!onElementsChange) return;
+    if (!elements || elements.length === 0) return;
+
+    let changed = false;
+    const updated = elements.map((el: any) => {
+      if (el?.type === 'text' && el.autoCenter && measuredBounds[el.id]) {
+        const bounds = measuredBounds[el.id];
+        const autoCenter = el.autoCenter;
+        const wantsBoth = autoCenter === true || autoCenter === 'both';
+        const wantsHorizontal = wantsBoth || autoCenter === 'horizontal';
+        const wantsVertical = wantsBoth || autoCenter === 'vertical';
+
+        if (!wantsHorizontal && !wantsVertical) {
+          return { ...el, autoCenter: undefined };
+        }
+
+        const nextX = wantsHorizontal ? Math.max(0, (effectiveCanvasSize.width - bounds.width) / 2) : (el.x ?? 0);
+        const nextY = wantsVertical ? Math.max(0, (effectiveCanvasSize.height - bounds.height) / 2) : (el.y ?? 0);
+        const deviceKey = selectedDevice as 'desktop' | 'tablet' | 'mobile';
+        const deviceProps = (el?.[deviceKey] || {}) as Record<string, unknown>;
+        changed = true;
+        return {
+          ...el,
+          x: nextX,
+          y: nextY,
+          autoCenter: undefined,
+          [deviceKey]: {
+            ...deviceProps,
+            ...(wantsHorizontal ? { x: nextX } : {}),
+            ...(wantsVertical ? { y: nextY } : {})
+          }
+        };
+      }
+      return el;
+    });
+
+    if (changed) {
+      onElementsChange(updated);
+    }
+  }, [elements, measuredBounds, effectiveCanvasSize.width, effectiveCanvasSize.height, onElementsChange, selectedDevice]);
 
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
@@ -262,19 +320,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Intégration du système auto-responsive (doit être défini avant canvasSize)
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
 
-  // Taille du canvas memoized
-  const canvasSize = useMemo(() => {
-    return DEVICE_DIMENSIONS[selectedDevice];
-  }, [selectedDevice, DEVICE_DIMENSIONS]);
-
-  // Forcer un format mobile 9:16 sans bordures ni encoches
-  const effectiveCanvasSize = useMemo(() => {
-    if (selectedDevice === 'mobile') {
-      // 9:16 exact ratio
-      return { width: 360, height: 640 };
-    }
-    return canvasSize;
-  }, [selectedDevice, canvasSize]);
 
   // Memoized maps for fast lookups during interactions
   const elementById = useMemo(() => {

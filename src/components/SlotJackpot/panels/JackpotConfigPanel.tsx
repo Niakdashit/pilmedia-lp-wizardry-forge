@@ -81,8 +81,31 @@ const jackpotTemplates: JackpotTemplate[] = [
     name: 'Style Cylindre Classique',
     description: 'Design traditionnel de machine à sous',
     imagePath: '/assets/slot-frames/Jackpot 6.svg'
-  }
-  ,
+  },
+  {
+    id: 'jackpot-8',
+    name: 'Jackpot Style 8',
+    description: 'Design moderne avec effets métalliques',
+    imagePath: '/assets/slot-frames/Jackpot 8.svg'
+  },
+  {
+    id: 'jackpot-9',
+    name: 'Jackpot Style 9',
+    description: 'Cadre élégant avec ornements dorés',
+    imagePath: '/assets/slot-frames/Jackpot 9.svg'
+  },
+  {
+    id: 'jackpot-10',
+    name: 'Jackpot Style 10',
+    description: 'Design épuré avec accents lumineux',
+    imagePath: '/assets/slot-frames/Jackpot 10.svg'
+  },
+  {
+    id: 'jackpot-11',
+    name: 'Jackpot Style 11',
+    description: 'Cadre sophistiqué avec effets 3D',
+    imagePath: '/assets/slot-frames/Jackpot 11.svg'
+  },
   {
     id: 'custom-frame',
     name: 'Personnalisé',

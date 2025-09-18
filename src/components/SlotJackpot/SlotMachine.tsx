@@ -21,7 +21,11 @@ const getTemplateFileName = (templateId: string): string => {
     'jackpot-3': 'Jackpot 3.svg',
     'jackpot-4': 'Jackpot 4.svg',
     'jackpot-5': 'Jackpot 5.svg',
-    'jackpot-6': 'Jackpot 6.svg'
+    'jackpot-6': 'Jackpot 6.svg',
+    'jackpot-8': 'Jackpot 8.svg',
+    'jackpot-9': 'Jackpot 9.svg',
+    'jackpot-10': 'Jackpot 10.svg',
+    'jackpot-11': 'Jackpot 11.svg'
   };
   return templateMap[templateId] || 'jackpot-frame.svg';
 };
@@ -98,19 +102,20 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   
   // Récupérer les symboles depuis le store
   const campaign = useEditorStore?.((s: any) => s.campaign);
-  const campaignSymbols = campaign?.gameConfig?.jackpot?.symbols as string[] | undefined;
-  const jackpotStyle = (campaign?.gameConfig?.jackpot?.style as any) || {};
-  const customFrameCfg = (campaign?.gameConfig?.jackpot?.customFrame as any) || {};
-  const customTemplateUrl = (campaign?.gameConfig?.jackpot?.customTemplateUrl as string) || '';
-  const buttonCfg = (campaign?.gameConfig?.jackpot?.button as any) || {};
+  const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
+  const campaignSymbols = jackpotConfig.symbols as string[] | undefined;
+  const jackpotStyle = (jackpotConfig.style as any) || {};
+  const customFrameCfg = (jackpotConfig.customFrame as any) || {};
+  const customTemplateUrl = (jackpotConfig.customTemplateUrl as string) || '';
+  const buttonCfg = (jackpotConfig.button as any) || {};
   const btnTextCfg: string = buttonCfg.text ?? 'SPIN';
   const btnColors = (buttonCfg.colors as any) || {};
-  const btnBg = btnColors.background ?? undefined;
-  const btnBorder = btnColors.border ?? undefined;
+  const btnBg = btnColors.background ?? jackpotConfig.buttonColor ?? undefined;
+  const btnBorder = btnColors.border ?? jackpotConfig.borderColor ?? undefined;
   const btnTextColor = btnColors.text ?? undefined;
-  const reelBorderColor = jackpotStyle.borderColor || '#ffd700';
-  const reelBackgroundColor = jackpotStyle.backgroundColor || '#ffffff';
-  const reelTextColor = jackpotStyle.textColor || '#333333';
+  const reelBorderColor = jackpotConfig.borderColor || jackpotStyle.borderColor || '#ffd700';
+  const reelBackgroundColor = jackpotConfig.backgroundColor || jackpotStyle.backgroundColor || '#ffffff';
+  const reelTextColor = jackpotConfig.textColor || jackpotStyle.textColor || '#333333';
   
   const symbols = useMemo(() => propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS, [propSymbols, campaignSymbols]);
   const [reels, setReels] = useState([symbols[0], symbols[0], symbols[0]]);

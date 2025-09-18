@@ -169,6 +169,50 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     });
   }, []);
 
+  // Auto-center freshly added text elements once real dimensions are known
+  useEffect(() => {
+    if (!onElementsChange) return;
+    if (!elements || elements.length === 0) return;
+
+    let changed = false;
+    const updated = elements.map((el: any) => {
+      if (el?.type === 'text' && el.autoCenter && measuredBounds[el.id]) {
+        const bounds = measuredBounds[el.id];
+        const autoCenter = el.autoCenter;
+        const wantsBoth = autoCenter === true || autoCenter === 'both';
+        const wantsHorizontal = wantsBoth || autoCenter === 'horizontal';
+        const wantsVertical = wantsBoth || autoCenter === 'vertical';
+
+        if (!wantsHorizontal && !wantsVertical) {
+          return { ...el, autoCenter: undefined };
+        }
+
+        const nextX = wantsHorizontal ? Math.max(0, (effectiveCanvasSize.width - bounds.width) / 2) : (el.x ?? 0);
+        const nextY = wantsVertical ? Math.max(0, (effectiveCanvasSize.height - bounds.height) / 2) : (el.y ?? 0);
+        const deviceKey = selectedDevice as 'desktop' | 'tablet' | 'mobile';
+        const deviceProps = (el?.[deviceKey] || {}) as Record<string, unknown>;
+
+        changed = true;
+        return {
+          ...el,
+          x: nextX,
+          y: nextY,
+          autoCenter: undefined,
+          [deviceKey]: {
+            ...deviceProps,
+            ...(wantsHorizontal ? { x: nextX } : {}),
+            ...(wantsVertical ? { y: nextY } : {})
+          }
+        };
+      }
+      return el;
+    });
+
+    if (changed) {
+      onElementsChange(updated);
+    }
+  }, [elements, measuredBounds, effectiveCanvasSize.width, effectiveCanvasSize.height, onElementsChange, selectedDevice]);
+
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
     return elements.map((el: any) => {
