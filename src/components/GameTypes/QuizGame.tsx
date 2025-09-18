@@ -1,17 +1,20 @@
 
 import React from 'react';
-import QuizContainer from './Quiz/QuizContainer';
+import QuizContainer, { QuizCompletionSummary } from './Quiz/QuizContainer';
 import { createEnhancedQuizDesign } from '../../utils/quizConfigSync';
 
 interface QuizGameProps {
   config: any;
   design?: any;
-  onGameComplete?: (result: any) => void;
+  onGameComplete?: (result: QuizCompletionSummary) => void;
+  showResultsScreen?: boolean;
 }
 
 const QuizGame: React.FC<QuizGameProps> = ({
   config,
-  design = {}
+  design = {},
+  onGameComplete,
+  showResultsScreen = true
 }) => {
   const questions = config?.questions || [];
 
@@ -31,10 +34,12 @@ const QuizGame: React.FC<QuizGameProps> = ({
 
   // Use QuizContainer directly instead of wrapping it
   return (
-    <QuizContainer 
+    <QuizContainer
       config={config}
       design={enhancedDesign}
       className="max-w-2xl mx-auto"
+      onComplete={onGameComplete}
+      showResultsScreen={showResultsScreen}
     />
   );
 };
