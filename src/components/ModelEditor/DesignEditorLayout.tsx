@@ -1512,7 +1512,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Pour le form-editor, afficher le formulaire en plein écran
             if (showFormOverlay) {
               const node = (
-                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+                <div className="group fixed inset-0 z-[10050] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}
@@ -1535,7 +1535,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
             // Pour les autres types de jeux, utiliser FunnelUnlockedGame
             const node = (
-              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+              <div className="group fixed inset-0 z-[10050] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
                 {/* Floating Edit Mode Button */}
                 <button
                   onClick={() => setShowFunnel(false)}
