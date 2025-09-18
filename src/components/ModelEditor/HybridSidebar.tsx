@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
   ChevronRight,
@@ -155,10 +155,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   
   // Utiliser le hook d'état isolé par éditeur
   const {
-    editorType,
     activeTab: editorActiveTab,
     showQuizPanel: editorShowQuizPanel,
-    showJackpotPanel: editorShowJackpotPanel,
     showDesignPanel: editorShowDesignPanel,
     showEffectsPanel: editorShowEffectsPanel,
     showAnimationsPanel: editorShowAnimationsPanel,
@@ -666,12 +664,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               <JackpotConfigPanel
                 onBack={() => onJackpotPanelChange?.(false)}
                 reelSymbols={campaign?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒']}
-                selectedTemplate={campaign?.gameConfig?.jackpot?.template || 'jackpot-frame'}
-                borderColor={campaign?.gameConfig?.jackpot?.borderColor || '#ffd700'}
-                backgroundColor={campaign?.gameConfig?.jackpot?.backgroundColor || '#ffffff'}
-                textColor={campaign?.gameConfig?.jackpot?.textColor || '#333333'}
-                customFrame={campaign?.gameConfig?.jackpot?.customFrame}
-                customTemplateUrl={campaign?.gameConfig?.jackpot?.customTemplateUrl}
+                selectedTemplate={campaign?.gameConfig?.jackpot?.symbols?.[0] ? 'jackpot-frame' : 'jackpot-frame'}
+                borderColor={'#ffd700'}
+                backgroundColor={'#ffffff'}
+                textColor={'#333333'}
                 onReelSymbolsChange={(symbols) => {
                   setCampaign((prev: any) => ({
                     ...prev,
@@ -787,7 +783,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <JackpotConfigPanel
             onBack={() => {
               onJackpotPanelChange?.(false);
-              _setActiveTab('elements');
+              setEditorActiveTab('elements');
             }}
             reelSymbols={jackpotSymbols}
             onReelSymbolsChange={handleJackpotSymbolsChange}

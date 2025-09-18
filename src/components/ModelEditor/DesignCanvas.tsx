@@ -1732,7 +1732,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const borderColor = campaignDesign.borderColor || '#E5E7EB';
                 const focusColor = buttonColor;
                 const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
-                const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
                 const panelBg = campaignDesign.blockColor || '#ffffff';
                 const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
                 const title = (activeCampaign as any)?.screens?.[1]?.title || 'Vos informations';
@@ -1800,7 +1799,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             }}
                             inputBorderColor={borderColor}
                             inputFocusColor={focusColor}
-                            inputBorderRadius={inputBorderRadius}
                           />
                         </div>
                       </div>
@@ -1866,7 +1864,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                               }}
                               inputBorderColor={borderColor}
                               inputFocusColor={focusColor}
-                              inputBorderRadius={inputBorderRadius}
                             />
                           </div>
                         </div>

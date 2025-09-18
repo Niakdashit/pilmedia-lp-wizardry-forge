@@ -45,9 +45,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   useEffect(() => {
     if ((campaign.type === 'form' || campaign.type === 'jackpot') && storeCampaign) {
       const storeBackground =
-        storeCampaign.canvasConfig?.background ?? storeCampaign.design?.background;
+        storeCampaign.design?.background ?? { type: 'color', value: '#ffffff' };
       const campaignBackground =
-        campaign.canvasConfig?.background ?? campaign.design?.background;
+        campaign.design?.background ?? { type: 'color', value: '#ffffff' };
 
       const mergedBackground = storeBackground ?? campaignBackground;
       const normalizedBackground =
@@ -326,7 +326,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                         }}
                         inputBorderColor={borderColor}
                         inputFocusColor={focusColor}
-                        inputBorderRadius={inputBorderRadius}
                       />
                     </div>
                   </div>

@@ -706,10 +706,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
-    const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
-    const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
-    const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
-    
     // Synchronisation forcée avec le store en temps réel pour le form-editor
     const currentCampaignState = storeCampaign;
     
@@ -857,26 +853,13 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         }
       },
       buttonConfig: {
-        text: buttonElement?.content || 'SPIN',
+        text: 'SPIN',
         color: primaryColor,
-        textColor: buttonElement?.style?.color || '#ffffff',
+        textColor: '#ffffff',
         borderRadius: campaignConfig.borderRadius || '8px'
       },
-      screens: [
-        {
-          title: titleElement?.content || currentCampaignState?.screens?.[1]?.title || 'Tentez votre chance !',
-          description: descriptionElement?.content || currentCampaignState?.screens?.[1]?.description || 'Faites tourner les rouleaux et décrochez le jackpot',
-          buttonText: buttonElement?.content || currentCampaignState?.screens?.[1]?.buttonText || 'SPIN'
-        },
-        {
-          title: currentCampaignState?.screens?.[1]?.title || titleElement?.content || 'Vos informations',
-          description: currentCampaignState?.screens?.[1]?.description || descriptionElement?.content || 'Remplissez le formulaire pour participer',
-          buttonText: currentCampaignState?.buttonConfig?.text || buttonElement?.content || 'Participer'
-        }
-      ],
       // Champs de contact dynamiques avec synchronisation en temps réel
-      formFields: currentCampaignState?.formFields || 
-        ((campaignState as any)?.formFields !== undefined)
+      formFields: ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
         : [
             { id: 'prenom', label: 'Prénom', type: 'text', required: true },
