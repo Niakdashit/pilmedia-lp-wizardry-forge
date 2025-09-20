@@ -156,6 +156,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Precise DOM-measured bounds per element (canvas-space units)
   const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
 
+  // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
+  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
+  // Taille du canvas memoized
+  const canvasSize = useMemo(() => {
+    return DEVICE_DIMENSIONS[selectedDevice];
+  }, [selectedDevice, DEVICE_DIMENSIONS]);
+
+  // Forcer un format mobile 9:16 sans bordures ni encoches
+  const effectiveCanvasSize = useMemo(() => {
+    if (selectedDevice === 'mobile') {
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
+    }
+    return canvasSize;
+  }, [selectedDevice, canvasSize]);
+
   // Collect measured bounds from children (CanvasElement)
   const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
     setMeasuredBounds(prev => {
@@ -288,23 +305,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }, []);
 
   // Optimisation mobile pour une expérience tactile parfaite
-
-  // Intégration du système auto-responsive (doit être défini avant canvasSize)
-  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
-
-  // Taille du canvas memoized
-  const canvasSize = useMemo(() => {
-    return DEVICE_DIMENSIONS[selectedDevice];
-  }, [selectedDevice, DEVICE_DIMENSIONS]);
-
-  // Forcer un format mobile 9:16 sans bordures ni encoches
-  const effectiveCanvasSize = useMemo(() => {
-    if (selectedDevice === 'mobile') {
-      // 9:16 exact ratio
-      return { width: 360, height: 640 };
-    }
-    return canvasSize;
-  }, [selectedDevice, canvasSize]);
 
   // Memoized maps for fast lookups during interactions
   const elementById = useMemo(() => {

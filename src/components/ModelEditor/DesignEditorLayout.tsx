@@ -21,6 +21,7 @@ import EditorStateCleanup from '../EditorStateCleanup';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { quizTemplates } from '../../types/quizTemplates';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -34,6 +35,14 @@ interface ModelEditorLayoutProps {
 
 const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs, showFormOverlay = false }) => {
   const navigate = useNavigate();
+  const getTemplateBaseWidths = useCallback((templateId?: string) => {
+    const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
+    const width = template?.style?.containerWidth ?? 450;
+    return { desktop: `${width}px`, mobile: `${width}px` };
+  }, []);
+
+  const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
+
   // Hook pour surveiller les changements du store en temps réel
   const storeCampaign = useEditorStore((state) => state.campaign);
   
@@ -149,7 +158,11 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     design: {
       quizConfig: {
         questionCount: 5,
-        timeLimit: 30
+        timeLimit: 30,
+        style: {
+          width: initialTemplateWidths.desktop,
+          mobileWidth: initialTemplateWidths.mobile
+        }
       }
     }
   });
@@ -161,8 +174,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     templateId: 'image-quiz',
     borderRadius: 12, // Valeur par défaut pour le border radius
     // Taille par défaut du quiz
-    width: '800px',
-    mobileWidth: '400px',
+    width: initialTemplateWidths.desktop,
+    mobileWidth: initialTemplateWidths.mobile,
     height: 'auto',
     // Couleurs par défaut des boutons
     buttonBackgroundColor: '#f3f4f6',
@@ -1661,22 +1674,40 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 onQuizTemplateChange={(templateId) => {
                   console.log('🎯 Changement de template quiz:', templateId);
-                  setQuizConfig(prev => ({ ...prev, templateId }));
-                  
-                  // Mettre à jour campaignConfig
+                  const { desktop, mobile } = getTemplateBaseWidths(templateId);
+
+                  setQuizConfig(prev => ({
+                    ...prev,
+                    templateId,
+                    width: desktop,
+                    mobileWidth: mobile
+                  }));
+
                   setCampaignConfig((current: any) => ({
                     ...current,
                     design: {
                       ...current.design,
                       quizConfig: {
                         ...current.design.quizConfig,
-                        templateId
+                        templateId,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          width: desktop,
+                          mobileWidth: mobile
+                        }
                       }
                     }
                   }));
+
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', { detail: { width: desktop, mobileWidth: mobile } });
+                    (document.getElementById('quiz-preview-container') || window).dispatchEvent(event);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la diffusion de quizStyleUpdate après changement de template (ModelEditor):', error);
+                  }
                 }}
                 // Gestion de la largeur du quiz
-                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
+                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : initialTemplateWidths.desktop}
                 onQuizWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
@@ -1745,7 +1776,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   }
                 }}
                 // Gestion de la largeur mobile du quiz
-                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
+                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : initialTemplateWidths.mobile}
                 onQuizMobileWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;

@@ -249,30 +249,20 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
                     </div>
                   )}
 
-                  <div className="flex items-start space-x-3">
-                    {/* Template preview */}
+                  <div className="flex items-center space-x-3">
                     <div className={`p-2 rounded-lg ${
                       selectedTemplate === template.id
                         ? 'text-white'
-                        : 'bg-gray-100 text-gray-600'
+                        : 'bg-gray-100 text-gray-400'
                     }`} style={selectedTemplate === template.id ? {
                       background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)'
                     } : {}}>
                       <Image className="w-5 h-5" />
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <h5 className="font-medium text-gray-900 truncate">
-                          {template.name}
-                        </h5>
-                      </div>
-                      {template.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {template.description}
-                        </p>
-                      )}
+                    <div className="flex-1 flex flex-col gap-1">
+                      <span className="h-2 rounded bg-gray-200" />
+                      <span className="h-2 w-2/3 rounded bg-gray-100" />
                     </div>
                   </div>
 

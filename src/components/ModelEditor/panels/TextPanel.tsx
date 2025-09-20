@@ -130,32 +130,43 @@ const TextPanel: React.FC<TextPanelProps> = ({
     const currentCanvas = getDeviceDimensions(selectedDevice);
     
     // Vérifier si c'est le premier texte ajouté
-    const existingTextElements = elements.filter(el => el.type === 'text');
-    const isFirstText = existingTextElements.length === 0;
+    const existingTextElements = elements
+      .filter(el => el.type === 'text')
+      .sort((a, b) => (a.y ?? 0) - (b.y ?? 0));
+    const textIndex = existingTextElements.length;
+    const isFirstText = textIndex === 0;
     const baseFontSize = preset?.fontSize || 24;
-    const fontSize = isFirstText ? Math.round(baseFontSize * 2) : baseFontSize;
+    const desktopFontSize = isFirstText ? Math.round(baseFontSize * 2) : baseFontSize;
+    const mobileFontSize = Math.max(Math.round(desktopFontSize * 4), 96);
+    const fontSize = selectedDevice === 'mobile' ? mobileFontSize : desktopFontSize;
     const fontWeight = preset?.fontWeight || (isFirstText ? 'bold' : 'normal');
     const fontFamily = preset?.fontFamily || 'Open Sans';
     const textContent = preset?.text || stylePreset?.text || 'Nouveau texte';
     
     // Calculer la largeur estimée du texte pour un meilleur centrage
     const estimatedTextWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
-    const textSize = { width: estimatedTextWidth, height: fontSize * 1.2 };
-    const horizontalCenter = Math.max(0, (currentCanvas.width - textSize.width) / 2);
+    const textHeight = fontSize * 1.2;
+    const horizontalCenter = Math.max(0, (currentCanvas.width - estimatedTextWidth) / 2);
     const topOffset = 50;
+    const autoCenterMode: 'horizontal' = 'horizontal';
+
+    const stackedOffset = existingTextElements.reduce((offset, el) => {
+      const existingHeight = typeof el.fontSize === 'number' ? el.fontSize * 1.2 : textHeight;
+      return Math.max(offset, (el.y ?? topOffset) + existingHeight + 32);
+    }, topOffset);
     
     const newElement: any = {
       id: `text-${Date.now()}`,
       type: 'text',
       content: textContent,
       x: horizontalCenter,
-      y: topOffset,
+      y: stackedOffset,
       fontSize: fontSize,
       color: preset?.color || '#000000',
       fontFamily: fontFamily,
       fontWeight: fontWeight,
       textAlign: preset?.textAlign || (isFirstText ? 'center' : 'left'),
-      autoCenter: 'horizontal',
+      autoCenter: autoCenterMode,
       ...(typeof preset?.letterSpacing !== 'undefined' ? { letterSpacing: preset.letterSpacing } : {}),
       ...(typeof preset?.lineHeight !== 'undefined' ? { lineHeight: preset.lineHeight } : {}),
       ...(stylePreset && {
@@ -171,18 +182,25 @@ const TextPanel: React.FC<TextPanelProps> = ({
     // Pre-set coordinates for all devices to ensure proper centering
     const allDevices = ['desktop', 'tablet', 'mobile'] as const;
     allDevices.forEach(device => {
-      if (device !== selectedDevice) {
-        const deviceCanvas = getDeviceDimensions(device);
-        const deviceEstimatedWidth = estimateTextWidth(textContent, fontSize, fontWeight, fontFamily);
-        const deviceTextSize = { width: deviceEstimatedWidth, height: fontSize * 1.2 };
-        const deviceCenterX = Math.max(0, (deviceCanvas.width - deviceTextSize.width) / 2);
-        const deviceTop = topOffset;
-        newElement[device] = {
-          ...(newElement[device] || {}),
-          x: deviceCenterX,
-          y: deviceTop
-        };
-      }
+      const deviceCanvas = getDeviceDimensions(device);
+      const deviceFontSize = device === 'mobile' ? mobileFontSize : desktopFontSize;
+      const deviceEstimatedWidth = estimateTextWidth(textContent, deviceFontSize, fontWeight, fontFamily);
+      const deviceTextSize = { width: deviceEstimatedWidth, height: deviceFontSize * 1.2 };
+      const deviceCenterX = Math.max(0, (deviceCanvas.width - deviceTextSize.width) / 2);
+      const deviceStackedOffset = existingTextElements.reduce((offset, el) => {
+        const perDevice = (el as any)[device];
+        const baseY = perDevice?.y ?? el.y ?? topOffset;
+        const baseFont = perDevice?.fontSize ?? el.fontSize ?? fontSize;
+        const elementHeight = (typeof baseFont === 'number' ? baseFont : fontSize) * 1.2;
+        return Math.max(offset, baseY + elementHeight + 32);
+      }, topOffset);
+      const deviceTop = Math.max(deviceStackedOffset, topOffset);
+      newElement[device] = {
+        ...(newElement[device] || {}),
+        x: deviceCenterX,
+        y: deviceTop,
+        fontSize: deviceFontSize
+      };
     });
     onAddElement(newElement);
   };
@@ -191,23 +209,42 @@ const TextPanel: React.FC<TextPanelProps> = ({
   const addComposite = (composite: any) => {
     const currentCanvas = getDeviceDimensions(selectedDevice);
     const defaultTextSize = { width: 200, height: 40 };
-    const horizontalCenter = Math.max(0, (currentCanvas.width - defaultTextSize.width) / 2);
     const topOffset = 50;
-    const baseX = horizontalCenter;
-    const baseY = topOffset;
+    const existingTextElements = elements.filter(el => el.type === 'text');
+    const baseIndex = existingTextElements.length;
     const layers = [...(composite?.layers || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
     layers.forEach((layer: any, idx: number) => {
+      const layerBaseFontSize = layer?.preset?.fontSize || 24;
+      const layerDesktopFontSize = layerBaseFontSize;
+      const layerMobileFontSize = Math.max(
+        Math.round(layerDesktopFontSize * 4),
+        Math.round((layer?.preset?.fontSize || 24) * 4),
+        96
+      );
+      const layerFontSize = selectedDevice === 'mobile' ? layerMobileFontSize : layerDesktopFontSize;
+      const layerText = layer.text || composite.sample || 'Texte';
+      const estimatedLayerWidth = estimateTextWidth(layerText, layerFontSize, layer?.preset?.fontWeight || 'normal', layer?.preset?.fontFamily || 'Open Sans');
+    const baseHorizontalCenter = Math.max(0, (currentCanvas.width - estimatedLayerWidth) / 2);
+    const currentStackedOffset = existingTextElements.reduce((offset, el) => {
+      const baseFont = el.fontSize ?? desktopFontSize;
+      const perDevice = (el as any)[selectedDevice];
+      const y = perDevice?.y ?? el.y ?? topOffset;
+      const height = (typeof baseFont === 'number' ? baseFont : desktopFontSize) * 1.2;
+      return Math.max(offset, y + height + 32);
+    }, topOffset);
+    const baseVertical = currentStackedOffset + Math.round(idx * (layerFontSize * 1.2));
       const el: any = {
         id: `text-${Date.now()}-${idx}`,
         type: 'text',
-        content: layer.text || composite.sample || 'Texte',
-        x: baseX + (layer.offsetX || 0),
-        y: baseY + (layer.offsetY || 0),
-        fontSize: layer?.preset?.fontSize || 24,
+        content: layerText,
+        x: baseHorizontalCenter + (layer.offsetX || 0),
+        y: baseVertical + (layer.offsetY || 0),
+        fontSize: layerFontSize,
         color: layer?.preset?.color || '#000000',
         fontFamily: layer?.preset?.fontFamily || 'Open Sans',
         fontWeight: layer?.preset?.fontWeight || 'normal',
         textAlign: layer?.preset?.textAlign || 'left',
+        autoCenter: 'horizontal',
         ...(typeof layer?.preset?.letterSpacing !== 'undefined' ? { letterSpacing: layer.preset.letterSpacing } : {}),
         ...(typeof layer?.preset?.lineHeight !== 'undefined' ? { lineHeight: layer.preset.lineHeight } : {}),
         ...(layer?.stylePreset && {
@@ -220,16 +257,27 @@ const TextPanel: React.FC<TextPanelProps> = ({
           }
         })
       };
-      if (selectedDevice === 'desktop') {
-        const mobileCanvas = getDeviceDimensions('mobile');
-        const mobileCenterX = Math.max(0, (mobileCanvas.width - defaultTextSize.width) / 2);
-        const mobileTop = topOffset;
-        el.mobile = {
-          ...(el.mobile || {}),
-          x: mobileCenterX,
-          y: mobileTop
+      const devices = ['desktop', 'tablet', 'mobile'] as const;
+      devices.forEach(device => {
+        const deviceCanvas = getDeviceDimensions(device);
+        const deviceFontSize = device === 'mobile' ? layerMobileFontSize : layerDesktopFontSize;
+        const deviceEstimatedWidth = estimateTextWidth(layerText, deviceFontSize, layer?.preset?.fontWeight || 'normal', layer?.preset?.fontFamily || 'Open Sans');
+        const deviceCenterX = Math.max(0, (deviceCanvas.width - deviceEstimatedWidth) / 2);
+        const deviceStackedOffset = existingTextElements.reduce((offset, el) => {
+          const perDevice = (el as any)[device];
+          const y = perDevice?.y ?? el.y ?? topOffset;
+          const baseFont = perDevice?.fontSize ?? el.fontSize ?? deviceFontSize;
+          const height = (typeof baseFont === 'number' ? baseFont : deviceFontSize) * 1.2;
+          return Math.max(offset, y + height + 32);
+        }, topOffset);
+        const deviceBaseY = deviceStackedOffset + Math.round(idx * (deviceFontSize * 1.2));
+        el[device] = {
+          ...(el[device] || {}),
+          x: deviceCenterX + (layer.offsetX || 0),
+          y: deviceBaseY + (layer.offsetY || 0),
+          fontSize: deviceFontSize
         };
-      }
+      });
       onAddElement(el);
     });
   };

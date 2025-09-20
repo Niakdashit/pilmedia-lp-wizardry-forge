@@ -214,7 +214,7 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6 min-h-full overflow-y-auto text-[hsl(var(--sidebar-text-primary))]">
       {/* En-tête */}
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">Gestion du jeu</h2>

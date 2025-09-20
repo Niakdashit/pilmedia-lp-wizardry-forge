@@ -1095,8 +1095,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           // Do not scale per-element font size here; the whole canvas is already scaled via container transform
           const scaledFontSize = parsePx(baseFontSize, 16);
 
+          const enforcedFontSize = selectedDevice === 'mobile'
+            ? Math.max(scaledFontSize, 96)
+            : scaledFontSize;
+
           const baseStyle: React.CSSProperties = {
-            fontSize: scaledFontSize,
+            fontSize: enforcedFontSize,
             fontFamily: element.fontFamily || element.style?.fontFamily || 'Open Sans',
             color: element.color || element.style?.color || '#000000',
             fontWeight: element.fontWeight || element.style?.fontWeight || 'normal',

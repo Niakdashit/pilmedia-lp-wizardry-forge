@@ -21,6 +21,7 @@ import TabForm from '../configurators/TabForm';
 import { useEditorStore } from '../../stores/editorStore';
 import { useEditorState } from '../../hooks/useEditorState';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { quizTemplates } from '../../types/quizTemplates';
 
 
 // Lazy-loaded heavy panels
@@ -142,7 +143,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizQuestionCountChange,
   onQuizTimeLimitChange,
   onQuizDifficultyChange,
-  onQuizTemplateChange,
+  onQuizTemplateChange: handleQuizTemplateChange,
+  onQuizWidthChange: handleQuizWidthChange,
+  onQuizMobileWidthChange: handleQuizMobileWidthChange,
   selectedDevice = 'desktop',
   hiddenTabs = [],
   onForceElementsTab,
@@ -419,6 +422,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       }
     }
   }), [setEditorActiveTab, setEditorPanelState, onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange]);
+
+  const activeTemplate = React.useMemo(() => {
+    return quizTemplates.find((tpl) => tpl.id === selectedQuizTemplate) || quizTemplates[0];
+  }, [selectedQuizTemplate]);
+  const templateDesktopWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
+  const templateMobileWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
   
   // Fonction interne pour gérer le changement d'onglet - simplifiée
   const setActiveTab = (tab: string) => {
@@ -821,10 +830,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onTimeLimitChange={(t) => onQuizTimeLimitChange?.(t)}
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
-            onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
+            onTemplateChange={(template) => handleQuizTemplateChange?.(template.id)}
             // Zoom controls wiring
-            quizWidth={(campaign as any)?.design?.quizConfig?.style?.width ?? `${(campaign as any)?.design?.quizConfig?.style?.containerWidth || 800}px`}
-            quizMobileWidth={(campaign as any)?.design?.quizConfig?.style?.mobileWidth ?? `${(campaign as any)?.design?.quizConfig?.style?.mobileContainerWidth || 400}px`}
+            quizWidth={(campaign as any)?.design?.quizConfig?.style?.width ?? templateDesktopWidth}
+            quizMobileWidth={(campaign as any)?.design?.quizConfig?.style?.mobileWidth ?? templateMobileWidth}
             // Color controls (with safe defaults for panel display)
             backgroundColor={(campaign as any)?.design?.quizConfig?.style?.backgroundColor ?? '#ffffff'}
             backgroundOpacity={(campaign as any)?.design?.quizConfig?.style?.backgroundOpacity ?? 100}
@@ -851,6 +860,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 };
               });
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { width } }));
+              handleQuizWidthChange?.(width);
             }}
             onQuizMobileWidthChange={(width) => {
               setCampaign((prev: any) => {
@@ -870,6 +880,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                 };
               });
               window.dispatchEvent(new CustomEvent('quizStyleUpdate', { detail: { mobileWidth: width } }));
+              handleQuizMobileWidthChange?.(width);
             }}
             onBackgroundColorChange={(color) => {
               setCampaign((prev: any) => {

@@ -20,6 +20,9 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { quizTemplates } from '../../types/quizTemplates';
+import { useScratchCardStore } from './state/scratchcard.store';
+import { ScratchCardState } from './state/types';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -29,8 +32,88 @@ interface ScratchCardEditorLayoutProps {
   hiddenTabs?: string[];
 }
 
+const SCRATCH_DEFAULT_COLOR = '#C0C0C0';
+
+const transformScratchStateToGameConfig = (state?: ScratchCardState) => {
+  if (!state) {
+    return {
+      scratchArea: 70,
+      scratchColor: SCRATCH_DEFAULT_COLOR,
+      cards: [
+        {
+          id: '1',
+          revealMessage: 'Félicitations !',
+          scratchColor: SCRATCH_DEFAULT_COLOR,
+          threshold: 70
+        }
+      ]
+    };
+  }
+
+  const threshold = typeof state.threshold === 'number' ? state.threshold : 0.7;
+  const baseColor = state.globalCover?.type === 'color' ? state.globalCover.value : SCRATCH_DEFAULT_COLOR;
+  const baseSurface = state.globalCover?.type === 'image' ? state.globalCover.url : undefined;
+
+  const cards = (state.cards || [])
+    .slice(0, state.maxCards)
+    .map((card, index) => {
+      const cardCover = card.cover ?? state.globalCover;
+      const cardReveal = card.reveal
+        ?? (card.isWinner ? state.logic?.winnerReveal : state.logic?.loserReveal)
+        ?? state.globalReveal;
+      const cardThreshold = typeof card.threshold === 'number' ? card.threshold : threshold;
+
+      return {
+        id: card.id || String(index + 1),
+        title: card.title,
+        revealMessage: cardReveal?.type === 'text' ? cardReveal.value : undefined,
+        revealImage: cardReveal?.type === 'image' ? cardReveal.url : undefined,
+        scratchSurface: cardCover?.type === 'image' ? cardCover.url : baseSurface,
+        scratchColor: cardCover?.type === 'color' ? cardCover.value : baseColor,
+        isWinner: card.isWinner ?? false,
+        threshold: Math.round(cardThreshold * 100)
+      };
+    });
+
+  const safeCards = cards.length > 0
+    ? cards
+    : [{
+        id: '1',
+        revealMessage: state.globalReveal?.type === 'text' ? state.globalReveal.value : 'Félicitations !',
+        revealImage: state.globalReveal?.type === 'image' ? state.globalReveal.url : undefined,
+        scratchSurface: baseSurface,
+        scratchColor: baseColor,
+        isWinner: false,
+        threshold: Math.round(threshold * 100)
+      }];
+
+  return {
+    scratchArea: Math.round(threshold * 100),
+    scratchColor: baseColor,
+    scratchSurface: baseSurface,
+    revealMessage: state.globalReveal?.type === 'text' ? state.globalReveal.value : undefined,
+    revealImage: state.globalReveal?.type === 'image' ? state.globalReveal.url : undefined,
+    brushSize: state.brush?.radius ?? 20,
+    revealThreshold: threshold,
+    overlayColor: state.globalCover?.type === 'color' ? state.globalCover.value : undefined,
+    cards: safeCards,
+    effects: state.effects,
+    logic: state.logic,
+    grid: state.grid,
+    maxCards: state.maxCards
+  };
+};
+
 const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
+  const getTemplateBaseWidths = useCallback((templateId?: string) => {
+    const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
+    const width = template?.style?.containerWidth ?? 450;
+    return { desktop: `${width}px`, mobile: `${width}px` };
+  }, []);
+
+  const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
+
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();
@@ -138,26 +221,31 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
   const [designColorContext, setDesignColorContext] = useState<'fill' | 'border' | 'text'>('fill');
+  const scratchState = useScratchCardStore((state) => state.config);
   // Inline QuizConfigPanel visibility (controlled at layout level)
   const [showQuizPanel, setShowQuizPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
       quizConfig: {
         questionCount: 5,
-        timeLimit: 30
+        timeLimit: 30,
+        style: {
+          width: initialTemplateWidths.desktop,
+          mobileWidth: initialTemplateWidths.mobile
+        }
       }
     }
   });
   // Quiz config state
-  const [quizConfig] = useState({
+  const [quizConfig, setQuizConfig] = useState({
     questionCount: 5,
     timeLimit: 30,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     templateId: 'image-quiz',
     borderRadius: 12, // Valeur par défaut pour le border radius
     // Taille par défaut du quiz
-    width: '800px',
-    mobileWidth: '400px',
+    width: initialTemplateWidths.desktop,
+    mobileWidth: initialTemplateWidths.mobile,
     height: 'auto',
     // Couleurs par défaut des boutons
     buttonBackgroundColor: '#f3f4f6',
@@ -695,23 +783,53 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     })();
     const secondaryColor = '#ffffff';
 
-    // Build dynamic quiz questions for preview:
-    const configuredQuestions = (
-      (campaignState as any)?.quizConfig?.questions ||
-      (campaignConfig as any)?.quizConfig?.questions ||
-      (campaignState as any)?.gameConfig?.quiz?.questions ||
-      (campaignConfig as any)?.gameConfig?.quiz?.questions ||
-      []
-    );
-    
-    console.log('🧭 [QuizEditorLayout] campaignData questions:', {
-      count: Array.isArray(configuredQuestions) ? configuredQuestions.length : 0,
+    const primaryRgb = toRgb(primaryColor) ?? { r: 132, g: 27, b: 96 };
+    const hoverHex = toHex(lighten(primaryRgb, 0.12));
+    const activeHex = toHex(darken(primaryRgb, 0.1));
+
+    const styleSource =
+      (campaignConfig as any)?.design?.scratchConfig?.style ||
+      (campaignConfig as any)?.design?.quizConfig?.style ||
+      {};
+
+    const buttonLabel = buttonElement?.content || 'Gratter maintenant';
+
+    const scratchStyle = {
+      width: styleSource.width || (quizConfig.width || initialTemplateWidths.desktop),
+      mobileWidth: styleSource.mobileWidth || (quizConfig.mobileWidth || initialTemplateWidths.mobile),
+      backgroundOpacity: styleSource.backgroundOpacity ?? 100,
+      borderRadius: styleSource.borderRadius || `${quizConfig.borderRadius}px` || '12px',
+      textColor: styleSource.textColor || '#000000',
+      buttonBackgroundColor: styleSource.buttonBackgroundColor || primaryColor,
+      buttonTextColor: styleSource.buttonTextColor || buttonElement?.style?.color || '#ffffff',
+      buttonHoverBackgroundColor: styleSource.buttonHoverBackgroundColor || hoverHex,
+      buttonActiveBackgroundColor: styleSource.buttonActiveBackgroundColor || activeHex
+    };
+
+    const scratchGame = {
+      ...transformScratchStateToGameConfig(scratchState),
+      buttonLabel,
+      buttonColor: scratchStyle.buttonBackgroundColor
+    };
+
+    const scratchDesignConfig = {
+      ...(campaignConfig?.design?.scratchConfig || {}),
+      style: scratchStyle,
+      grid: scratchState?.grid,
+      brush: scratchState?.brush,
+      threshold: scratchState?.threshold,
+      effects: scratchState?.effects,
+      logic: scratchState?.logic
+    };
+
+    console.log('🎯 [ScratchEditorLayout] scratch preview config', {
+      cards: scratchGame.cards?.length || 0,
       device: selectedDevice
     });
 
     return {
-      id: 'quiz-design-preview',
-      type: 'quiz',
+      id: 'scratch-design-preview',
+      type: 'scratch',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
@@ -722,56 +840,24 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
-        quizConfig: {
-          questionCount: campaignConfig?.design?.quizConfig?.questionCount || quizConfig.questionCount || 5,
-          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId,
-          style: {
-            ...campaignConfig?.design?.quizConfig?.style,
-            buttonBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonBackgroundColor || quizConfig.buttonBackgroundColor,
-            buttonTextColor: campaignConfig?.design?.quizConfig?.style?.buttonTextColor || quizConfig.buttonTextColor,
-            buttonHoverBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonHoverBackgroundColor || quizConfig.buttonHoverBackgroundColor,
-            buttonActiveBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonActiveBackgroundColor || quizConfig.buttonActiveBackgroundColor,
-            borderRadius: campaignConfig?.design?.quizConfig?.style?.borderRadius || `${quizConfig.borderRadius}px` || '8px',
-            // Styles pour le texte
-            textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
-            questionTextWrap: 'break-word',
-            answerTextWrap: 'break-word',
-            // Zoom/largeur - respecter les valeurs ajustées par le panel
-            width: campaignConfig?.design?.quizConfig?.style?.width || `${quizConfig.width ?? '800px'}`,
-            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || `${quizConfig.mobileWidth ?? '400px'}`,
-            // Opacité de fond si définie
-            backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
-            // Mise en page responsive
-            questionPadding: '12px',
-            answerPadding: '12px 16px',
-            answerMargin: '8px 0',
-            answerMinHeight: 'auto'
-          }
-        }
+        scratchConfig: scratchDesignConfig
       },
       gameConfig: {
-        quiz: {
-          questions: configuredQuestions,
-          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
-          templateId: quizConfig.templateId,
-          buttonLabel: buttonElement?.content || 'Commencer le quiz'
-        }
+        scratch: scratchGame
       },
       buttonConfig: {
-        text: buttonElement?.content || 'Commencer le quiz',
-        color: primaryColor,
-        textColor: buttonElement?.style?.color || '#ffffff',
-        borderRadius: campaignConfig.borderRadius || '8px'
+        text: buttonLabel,
+        color: scratchStyle.buttonBackgroundColor,
+        textColor: scratchStyle.buttonTextColor,
+        borderRadius: scratchStyle.borderRadius || '12px'
       },
       screens: [
         {
-          title: titleElement?.content || 'Testez vos connaissances !',
-          description: descriptionElement?.content || 'Répondez aux questions et découvrez votre score',
-          buttonText: buttonElement?.content || 'Commencer'
+          title: titleElement?.content || 'Tentez votre chance !',
+          description: descriptionElement?.content || 'Grattez la carte pour découvrir votre surprise.',
+          buttonText: buttonLabel
         }
       ],
-      // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
       formFields: ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
         : [
@@ -779,14 +865,23 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Garder la configuration canvas pour compatibilité
       canvasConfig: {
         elements: canvasElements,
         background: canvasBackground,
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
+  }, [
+    canvasElements,
+    canvasBackground,
+    campaignConfig,
+    extractedColors,
+    selectedDevice,
+    wheelModalConfig,
+    campaignState,
+    scratchState,
+    quizConfig
+  ]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import QuizTemplateSelector from '../components/QuizTemplateSelector';
-import { QuizTemplate } from '../../../types/quizTemplates';
+import { QuizTemplate, quizTemplates } from '../../../types/quizTemplates';
 
 interface QuizConfigPanelProps {
   onBack: () => void;
@@ -44,7 +44,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   // quizDifficulty, // supprimé de l'UI
   quizBorderRadius = 12,
   quizWidth = '100%',
-  quizMobileWidth = '400px',
+  quizMobileWidth = '100%',
   // onQuestionCountChange, // supprimé de l'UI
   // onTimeLimitChange, // segment supprimé
   // onDifficultyChange, // supprimé de l'UI
@@ -73,6 +73,12 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   const [isEditingOpacity, setIsEditingOpacity] = React.useState(false);
   const [isEditingRadius, setIsEditingRadius] = React.useState(false);
   const [isEditingZoom, setIsEditingZoom] = React.useState(false);
+
+  const activeTemplate = React.useMemo(() => {
+    return quizTemplates.find((tpl) => tpl.id === selectedTemplate) || quizTemplates[0];
+  }, [selectedTemplate]);
+  const desktopWidthValue = React.useMemo(() => activeTemplate?.style?.containerWidth ?? 450, [activeTemplate]);
+  const mobileWidthValue = React.useMemo(() => activeTemplate?.style?.containerWidth ?? 450, [activeTemplate]);
 
   // Permettre la saisie directe au double-clic sur un input range spécifique
   const handleRangeDblClick = (e: React.MouseEvent<HTMLInputElement>, opts?: { kind?: 'percent' | 'px' | 'scale' }) => {
@@ -435,11 +441,11 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     // Convertir la largeur en échelle de zoom (base 800px = 100%)
                     if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                     const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                    return isNaN(numValue) ? 1 : numValue / 800;
+                    return isNaN(numValue) ? 1 : numValue / desktopWidthValue;
                   })()}
                   onChange={(e) => {
                     const scale = parseFloat(e.target.value);
-                    const width = Math.round(scale * 800);
+                    const width = Math.round(scale * desktopWidthValue);
                     onQuizWidthChange(`${width}px`);
                     console.log('Échelle Desktop mise à jour:', scale, '-> Largeur:', `${width}px`);
                   }}
@@ -452,14 +458,14 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                       const scale = (() => {
                         if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                         const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                        return isNaN(numValue) ? 1 : numValue / 800;
+                        return isNaN(numValue) ? 1 : numValue / desktopWidthValue;
                       })();
                       return ((scale - 0.5) / (2 - 0.5)) * 100;
                     })()}%, #e5e7eb ${(() => {
                       const scale = (() => {
                         if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                         const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                        return isNaN(numValue) ? 1 : numValue / 800;
+                        return isNaN(numValue) ? 1 : numValue / desktopWidthValue;
                       })();
                       return ((scale - 0.5) / (2 - 0.5)) * 100;
                     })()}%, #e5e7eb 100%)`
@@ -471,8 +477,8 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     autoFocus
                     defaultValue={(() => {
                       if (quizWidth === '100%' || quizWidth === 'auto') return 100;
-                      const numValue = parseInt((quizWidth || '800px').replace(/px|%/, ''));
-                      const scale = isNaN(numValue) ? 1 : numValue / 800;
+                      const numValue = parseInt((quizWidth || `${desktopWidthValue}px`).replace(/px|%/, ''));
+                      const scale = isNaN(numValue) ? 1 : numValue / desktopWidthValue;
                       return Math.round(scale * 100);
                     })()}
                     min={50}
@@ -482,7 +488,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                       const val = Number(e.target.value);
                       if (!Number.isNaN(val)) {
                         const clampedPct = Math.max(50, Math.min(200, Math.round(val)));
-                        const width = Math.round((clampedPct / 100) * 800);
+                        const width = Math.round((clampedPct / 100) * desktopWidthValue);
                         onQuizWidthChange?.(`${width}px`);
                       }
                       setIsEditingZoom(false);
@@ -505,7 +511,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     {(() => {
                       if (quizWidth === '100%' || quizWidth === 'auto') return '100%';
                       const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                      const scale = isNaN(numValue) ? 1 : numValue / 800;
+                      const scale = isNaN(numValue) ? 1 : numValue / desktopWidthValue;
                       return `${Math.round(scale * 100)}%`;
                   })()}
                   </div>
@@ -537,7 +543,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                       const percentage = x / rect.width;
                       const scale = 0.3 + (percentage * (1.5 - 0.3));
                       const clampedScale = Math.max(0.3, Math.min(1.5, scale));
-                      const width = Math.round(clampedScale * 400);
+                      const width = Math.round(clampedScale * mobileWidthValue);
                       console.log('🔧 Mobile custom slider click:', { percentage, scale: clampedScale, width });
                       onQuizMobileWidthChange(`${width}px`);
                     }}
@@ -549,9 +555,9 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                         background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)',
                         width: `${(() => {
                           console.log('🎨 Track fill calculation - quizMobileWidth:', quizMobileWidth);
-                          if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return 58.33; // 1.0 scale = 58.33%
+                          if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
                           const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                          const scale = isNaN(numValue) ? 1 : numValue / 400;
+                          const scale = isNaN(numValue) ? 1 : numValue / mobileWidthValue;
                           const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
                           console.log('🎨 Track fill - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
                           return percentage;
@@ -565,9 +571,9 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                         background: '#841b60',
                         left: `${(() => {
                           console.log('🎯 Thumb position calculation - quizMobileWidth:', quizMobileWidth);
-                          if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return 58.33; // 1.0 scale = 58.33%
+                          if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
                           const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                          const scale = isNaN(numValue) ? 1 : numValue / 400;
+                          const scale = isNaN(numValue) ? 1 : numValue / mobileWidthValue;
                           const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
                           console.log('🎯 Thumb position - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
                           return percentage;
@@ -584,7 +590,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                           const x = moveEvent.clientX - rect.left;
                           const percentage = Math.max(0, Math.min(1, x / rect.width));
                           const scale = 0.3 + (percentage * (1.5 - 0.3));
-                          const width = Math.round(scale * 400);
+                          const width = Math.round(scale * mobileWidthValue);
                           console.log('🔧 Mobile custom slider drag:', { percentage, scale, width });
                           onQuizMobileWidthChange(`${width}px`);
                         };
@@ -604,7 +610,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   {(() => {
                     if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return '100%';
                     const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                    const scale = isNaN(numValue) ? 1 : numValue / 400;
+                    const scale = isNaN(numValue) ? 1 : numValue / mobileWidthValue;
                     return `${Math.round(scale * 100)}%`;
                   })()}
                 </div>

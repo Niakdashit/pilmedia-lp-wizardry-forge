@@ -17,6 +17,7 @@ import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { quizTemplates } from '../../types/quizTemplates';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -136,7 +137,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizQuestionCountChange,
   onQuizTimeLimitChange,
   onQuizDifficultyChange,
-  onQuizTemplateChange,
+  onQuizTemplateChange: handleQuizTemplateChange,
+  onQuizWidthChange: handleQuizWidthChange,
+  onQuizMobileWidthChange: handleQuizMobileWidthChange,
   selectedDevice = 'desktop',
   hiddenTabs = [],
   onForceElementsTab,
@@ -188,6 +191,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange]);
   
+  // Fonction interne pour gérer le changement d'onglet
+  const activeTemplate = React.useMemo(() => {
+    return quizTemplates.find((tpl) => tpl.id === selectedQuizTemplate) || quizTemplates[0];
+  }, [selectedQuizTemplate]);
+  const templateDesktopWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
+  const templateMobileWidth = React.useMemo(() => `${activeTemplate?.style?.containerWidth ?? 450}px`, [activeTemplate]);
+
   // Fonction interne pour gérer le changement d'onglet
   const setActiveTab = (tab: string | null) => {
     _setActiveTab(tab);
@@ -347,10 +357,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   React.useEffect(() => {
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = activeTab ? tabs.some(t => t.id === activeTab) : false;
-    if (!activeIsVisible) {
+    const isTransientQuiz = activeTab === 'quiz' && showQuizPanel;
+
+    if (!activeIsVisible && !isTransientQuiz) {
       _setActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs]);
+  }, [tabs, activeTab, showQuizPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -454,9 +466,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onTimeLimitChange={(t) => onQuizTimeLimitChange?.(t)}
             onDifficultyChange={(d) => onQuizDifficultyChange?.(d)}
             onBorderRadiusChange={(r) => onQuizBorderRadiusChange?.(r)}
-            onTemplateChange={(template) => onQuizTemplateChange?.(template.id)}
-            quizWidth={(campaign?.design?.quizConfig as any)?.style?.width ?? '800px'}
-            quizMobileWidth={(campaign?.design?.quizConfig as any)?.style?.mobileWidth ?? '400px'}
+            onTemplateChange={(template) => handleQuizTemplateChange?.(template.id)}
+            quizWidth={(campaign?.design?.quizConfig as any)?.style?.width ?? templateDesktopWidth}
+            quizMobileWidth={(campaign?.design?.quizConfig as any)?.style?.mobileWidth ?? templateMobileWidth}
             backgroundColor={(campaign?.design?.quizConfig as any)?.style?.backgroundColor ?? '#ffffff'}
             backgroundOpacity={(campaign?.design?.quizConfig as any)?.style?.backgroundOpacity ?? 100}
             textColor={(campaign?.design?.quizConfig as any)?.style?.textColor ?? '#000000'}
@@ -482,6 +494,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                   }
                 };
               });
+              handleQuizWidthChange?.(width);
             }}
             onQuizMobileWidthChange={(width: string) => {
               setCampaign((prev: any) => {
@@ -501,9 +514,19 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                   }
                 };
               });
+              handleQuizMobileWidthChange?.(width);
             }}
             selectedDevice={selectedDevice}
           />
+        );
+      case 'game':
+        return (
+          <div className="h-full overflow-y-auto">
+            <QuizManagementPanel 
+              campaign={campaign}
+              setCampaign={setCampaign}
+            />
+          </div>
         );
       case 'background':
         return (

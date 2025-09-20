@@ -21,6 +21,7 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
+import { quizTemplates } from '../../types/quizTemplates';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -32,6 +33,14 @@ interface QuizEditorLayoutProps {
 
 const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
+  const getTemplateBaseWidths = useCallback((templateId?: string) => {
+    const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
+    const width = template?.style?.containerWidth ?? 450;
+    return { desktop: `${width}px`, mobile: `${width}px` };
+  }, []);
+
+  const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
+
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();
@@ -145,7 +154,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     design: {
       quizConfig: {
         questionCount: 5,
-        timeLimit: 30
+        timeLimit: 30,
+        style: {
+          width: initialTemplateWidths.desktop,
+          mobileWidth: initialTemplateWidths.mobile
+        }
       }
     }
   });
@@ -157,8 +170,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     templateId: 'image-quiz',
     borderRadius: 12, // Valeur par défaut pour le border radius
     // Taille par défaut du quiz
-    width: '800px',
-    mobileWidth: '400px',
+    width: initialTemplateWidths.desktop,
+    mobileWidth: initialTemplateWidths.mobile,
     height: 'auto',
     // Couleurs par défaut des boutons
     buttonBackgroundColor: '#f3f4f6',
@@ -783,8 +796,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             questionTextWrap: 'break-word',
             answerTextWrap: 'break-word',
             // Zoom/largeur - respecter les valeurs ajustées par le panel
-            width: campaignConfig?.design?.quizConfig?.style?.width || `${quizConfig.width ?? '800px'}`,
-            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || `${quizConfig.mobileWidth ?? '400px'}`,
+            width: campaignConfig?.design?.quizConfig?.style?.width || (quizConfig.width || initialTemplateWidths.desktop),
+            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || (quizConfig.mobileWidth || initialTemplateWidths.mobile),
             // Opacité de fond si définie
             backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
             // Mise en page responsive
@@ -1444,22 +1457,42 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 }}
                 onQuizTemplateChange={(templateId) => {
                   console.log('🎯 Changement de template quiz:', templateId);
-                  setQuizConfig(prev => ({ ...prev, templateId }));
-                  
-                  // Mettre à jour campaignConfig
+                  const { desktop, mobile } = getTemplateBaseWidths(templateId);
+
+                  setQuizConfig(prev => ({
+                    ...prev,
+                    templateId,
+                    width: desktop,
+                    mobileWidth: mobile
+                  }));
+
                   setCampaignConfig((current: any) => ({
                     ...current,
                     design: {
                       ...current.design,
                       quizConfig: {
                         ...current.design.quizConfig,
-                        templateId
+                        templateId,
+                        style: {
+                          ...(current.design.quizConfig?.style || {}),
+                          width: desktop,
+                          mobileWidth: mobile
+                        }
                       }
                     }
                   }));
+
+                  try {
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { width: desktop, mobileWidth: mobile }
+                    });
+                    (document.getElementById('quiz-preview-container') || window).dispatchEvent(event);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la diffusion de quizStyleUpdate après changement de template:', error);
+                  }
                 }}
                 // Gestion de la largeur du quiz
-                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : '800px'}
+                quizWidth={typeof quizConfig.width === 'string' ? quizConfig.width : initialTemplateWidths.desktop}
                 onQuizWidthChange={(width) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
@@ -1528,7 +1561,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   }
                 }}
                 // Gestion de la largeur mobile du quiz
-                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : '400px'}
+                quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : initialTemplateWidths.mobile}
                 onQuizMobileWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;

@@ -10,6 +10,8 @@ import { FieldConfig } from '../forms/DynamicContactForm';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasElement from '../ModelEditor/CanvasElement';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
+import ScratchPreview from '../GameTypes/ScratchPreview';
+import ValidationMessage from '../common/ValidationMessage';
 
 interface FunnelUnlockedGameProps {
   campaign: any;
@@ -40,10 +42,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Synchronisation en temps réel avec le store pour les campagnes de type "form"
   const storeCampaign = useEditorStore((state) => state.campaign);
   const [liveCampaign, setLiveCampaign] = useState(campaign);
+  const universalResponsive = useUniversalResponsive('desktop');
   
   // Mettre à jour la campagne en temps réel quand le store change
   useEffect(() => {
-    if ((campaign.type === 'form' || campaign.type === 'jackpot') && storeCampaign) {
+    if ((campaign.type === 'form' || campaign.type === 'jackpot' || campaign.type === 'scratch') && storeCampaign) {
       const storeBackground =
         storeCampaign.canvasConfig?.background ?? storeCampaign.design?.background;
       const campaignBackground =
@@ -185,6 +188,120 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     );
   }
 
+  if (liveCampaign.type === 'scratch') {
+    const canvasBackground = liveCampaign.canvasConfig?.background || liveCampaign.design?.background;
+    const backgroundStyle: React.CSSProperties = {
+      background: canvasBackground?.type === 'image'
+        ? `url(${canvasBackground.value}) center/cover no-repeat`
+        : canvasBackground?.value || liveCampaign.design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
+    };
+
+    const canvasElements = liveCampaign.canvasConfig?.elements || liveCampaign.elements || [];
+    const { getPropertiesForDevice } = universalResponsive;
+
+    const scratchButtonLabel = liveCampaign.gameConfig?.scratch?.buttonLabel
+      || liveCampaign.buttonConfig?.text
+      || 'Gratter maintenant';
+    const scratchButtonColor = liveCampaign.gameConfig?.scratch?.buttonColor
+      || liveCampaign.buttonConfig?.color
+      || '#841b60';
+
+    const scratchGameSize = (['small', 'medium', 'large', 'xlarge'] as const).includes(liveCampaign.gameSize)
+      ? (liveCampaign.gameSize as 'small' | 'medium' | 'large' | 'xlarge')
+      : 'medium';
+
+    return (
+      <div className="w-full h-[100dvh] min-h-[100dvh]">
+        <div className="relative w-full h-full">
+          <div className="absolute inset-0" style={backgroundStyle} />
+
+          {canvasElements.map((element: any) => {
+            const elementWithProps = {
+              ...element,
+              ...getPropertiesForDevice(element, previewMode)
+            };
+
+            if (element.type === 'text') {
+              elementWithProps.width = element.width || 200;
+              elementWithProps.height = element.height || 40;
+              if (elementWithProps.width < 150) {
+                elementWithProps.width = 150;
+              }
+            }
+
+            elementWithProps.x = Number(elementWithProps.x) || 0;
+            elementWithProps.y = Number(elementWithProps.y) || 0;
+            elementWithProps.width = Number(elementWithProps.width) || 100;
+            elementWithProps.height = Number(elementWithProps.height) || 100;
+
+            return (
+              <CanvasElement
+                key={element.id}
+                element={elementWithProps}
+                selectedDevice={previewMode}
+                isSelected={false}
+                onSelect={() => {}}
+                onUpdate={() => {}}
+                onDelete={() => {}}
+                containerRef={null}
+                readOnly={true}
+                onMeasureBounds={() => {}}
+                onAddElement={() => {}}
+                elements={canvasElements}
+                isMultiSelecting={false}
+                isGroupSelecting={false}
+                activeGroupId={null}
+                campaign={liveCampaign}
+                extractedColors={[]}
+                alignmentSystem={null}
+              />
+            );
+          })}
+
+          <div className="absolute inset-0 flex items-center justify-center px-4 py-8">
+            <div className="relative w-full max-w-4xl">
+              <ScratchPreview
+                config={liveCampaign.gameConfig?.scratch || {}}
+                buttonLabel={scratchButtonLabel}
+                buttonColor={scratchButtonColor}
+                gameSize={scratchGameSize}
+                disabled={!formValidated}
+                onFinish={handleGameFinish}
+                onStart={handleGameStart}
+                isModal={previewMode !== 'desktop'}
+                autoStart={false}
+              />
+
+              {!formValidated && (
+                <div
+                  className="absolute inset-0 z-20 cursor-pointer"
+                  onClick={handleGameButtonClick}
+                />
+              )}
+
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
+                <ValidationMessage
+                  show={showValidationMessage}
+                  message="Formulaire validé ! Vous pouvez maintenant jouer."
+                  type="success"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <FormHandler
+          showFormModal={showFormModal}
+          campaign={campaign}
+          fields={fields}
+          participationLoading={participationLoading}
+          onClose={() => setShowFormModal(false)}
+          onSubmit={handleFormSubmit}
+        />
+      </div>
+    );
+  }
+
   // Pour les campagnes de type "form", afficher directement le formulaire en plein écran
   if (liveCampaign.type === 'form') {
     // Récupérer l'image de fond depuis canvasConfig.background (synchronisé avec le canvas)
@@ -212,7 +329,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     // Récupérer les éléments du canvas pour les afficher
     const canvasElements = liveCampaign.canvasElements || liveCampaign.elements || [];
     // Utiliser 'desktop' pour éviter les changements de largeur responsive
-    const { getPropertiesForDevice } = useUniversalResponsive('desktop');
+    const { getPropertiesForDevice } = universalResponsive;
 
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">

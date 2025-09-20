@@ -9,6 +9,7 @@ import { useEditorStore } from '@/stores/editorStore';
 
 interface WheelSegmentsPanelProps {
   onBack: () => void;
+  showHeader?: boolean;
 }
 
 interface Segment {
@@ -27,6 +28,7 @@ const defaultColorPalette = [
 
 const WheelSegmentsPanel: React.FC<WheelSegmentsPanelProps> = ({
   onBack,
+  showHeader = true,
 }) => {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [showColorPicker, setShowColorPicker] = useState<number | null>(null);
@@ -229,16 +231,18 @@ const WheelSegmentsPanel: React.FC<WheelSegmentsPanelProps> = ({
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={onBack}
-          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-        >
-          ← Retour
-        </button>
-        <h2 className="text-lg font-semibold">Gestion des segments</h2>
-        <div className="w-8"></div> {/* For alignment */}
-      </div>
+      {showHeader && (
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={onBack}
+            className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+          >
+            ← Retour
+          </button>
+          <h2 className="text-lg font-semibold">Gestion des segments</h2>
+          <div className="w-8"></div> {/* For alignment */}
+        </div>
+      )}
 
       {/* Segments List */}
       <div className="space-y-4 mb-6">
