@@ -104,7 +104,13 @@ const RecentCampaigns: React.FC = () => {
                 <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-900 to-gray-700">
                   {/* Background Image with Parallax Effect */}
                   {campaign.image && <div className="absolute inset-0 overflow-hidden">
-                      <img src={campaign.image} alt={campaign.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img
+                        src={campaign.image}
+                        alt={campaign.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
                       {/* Dark Overlay for Better Text Contrast */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                     </div>}

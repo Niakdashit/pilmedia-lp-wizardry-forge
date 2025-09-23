@@ -9,9 +9,10 @@ import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
 import { FieldConfig } from '../forms/DynamicContactForm';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasElement from '../ModelEditor/CanvasElement';
+import DesignCanvas from '../ModelEditor/DesignCanvas';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
-import ScratchPreview from '../GameTypes/ScratchPreview';
-import ValidationMessage from '../common/ValidationMessage';
+import { getDeviceDimensions } from '../../utils/deviceDimensions';
+import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
 
 interface FunnelUnlockedGameProps {
   campaign: any;
@@ -39,10 +40,22 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [participationLoading, setParticipationLoading] = useState(false);
   
+  const [formPreviewElements, setFormPreviewElements] = useState<any[]>([]);
+  const [formPreviewBackground, setFormPreviewBackground] = useState<{ type: 'color' | 'image'; value: string }>({
+    type: 'color',
+    value: '#ffffff'
+  });
+  const [formPreviewZoom, setFormPreviewZoom] = useState(() => {
+    const device: 'desktop' | 'tablet' | 'mobile' = previewMode;
+    const stored = getStoredZoom(device);
+    return stored ?? getDefaultPreviewZoom(device);
+  });
+
   // Synchronisation en temps réel avec le store pour les campagnes de type "form"
   const storeCampaign = useEditorStore((state) => state.campaign);
   const [liveCampaign, setLiveCampaign] = useState(campaign);
   const universalResponsive = useUniversalResponsive('desktop');
+  const { getPropertiesForDevice } = universalResponsive;
   
   // Mettre à jour la campagne en temps réel quand le store change
   useEffect(() => {
@@ -80,6 +93,81 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setLiveCampaign(campaign);
     }
   }, [storeCampaign, campaign]);
+
+  const normalizeBackground = (bg: any): { type: 'color' | 'image'; value: string } => {
+    if (!bg) {
+      return { type: 'color', value: '#ffffff' };
+    }
+    if (typeof bg === 'string') {
+      return { type: 'color', value: bg };
+    }
+    if (typeof bg === 'object') {
+      if (bg.type === 'color' || bg.type === 'image') {
+        if (typeof bg.value === 'string' && bg.value) {
+          return { type: bg.type, value: bg.value };
+        }
+        if (bg.url) {
+          return { type: 'image', value: bg.url };
+        }
+      }
+    }
+    return { type: 'color', value: '#ffffff' };
+  };
+
+  function getStoredZoom(device: 'desktop' | 'tablet' | 'mobile'): number | undefined {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    try {
+      const raw = window.localStorage.getItem(`editor-zoom-${device}`);
+      if (!raw) return undefined;
+      const value = parseFloat(raw);
+      if (!Number.isNaN(value) && value >= 0.1 && value <= 1) {
+        return value;
+      }
+    } catch (error) {
+      console.warn('⚠️ Unable to read stored zoom value:', error);
+    }
+    return undefined;
+  }
+
+  function getDefaultPreviewZoom(device: 'desktop' | 'tablet' | 'mobile'): number {
+    if (device === 'mobile') {
+      if (typeof window !== 'undefined') {
+        try {
+          const { width, height } = getDeviceDimensions('mobile');
+          const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
+          if (!Number.isNaN(scale) && scale > 0) {
+            return Math.min(Math.max(scale, 0.1), 1);
+          }
+        } catch (error) {
+          console.warn('⚠️ Unable to compute responsive mobile zoom:', error);
+        }
+      }
+      return 0.45;
+    }
+    if (device === 'tablet') {
+      return 0.55;
+    }
+    return 0.7;
+  }
+
+  useEffect(() => {
+    if (liveCampaign?.type !== 'form') {
+      return;
+    }
+
+    const elements = Array.isArray(liveCampaign.canvasConfig?.elements)
+      ? JSON.parse(JSON.stringify(liveCampaign.canvasConfig?.elements))
+      : [];
+    setFormPreviewElements(elements);
+
+    const bgCandidate = liveCampaign.canvasConfig?.background ?? liveCampaign.design?.background;
+    setFormPreviewBackground(normalizeBackground(bgCandidate));
+    const device: 'desktop' | 'tablet' | 'mobile' = previewMode;
+    const storedZoom = getStoredZoom(device);
+    setFormPreviewZoom(storedZoom ?? getDefaultPreviewZoom(device));
+  }, [liveCampaign, previewMode]);
   
   const {
     createParticipation
@@ -199,17 +287,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     const canvasElements = liveCampaign.canvasConfig?.elements || liveCampaign.elements || [];
     const { getPropertiesForDevice } = universalResponsive;
 
-    const scratchButtonLabel = liveCampaign.gameConfig?.scratch?.buttonLabel
-      || liveCampaign.buttonConfig?.text
-      || 'Gratter maintenant';
-    const scratchButtonColor = liveCampaign.gameConfig?.scratch?.buttonColor
-      || liveCampaign.buttonConfig?.color
-      || '#841b60';
-
-    const scratchGameSize = (['small', 'medium', 'large', 'xlarge'] as const).includes(liveCampaign.gameSize)
-      ? (liveCampaign.gameSize as 'small' | 'medium' | 'large' | 'xlarge')
-      : 'medium';
-
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
@@ -258,35 +335,149 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             );
           })}
 
-          <div className="absolute inset-0 flex items-center justify-center px-4 py-8">
-            <div className="relative w-full max-w-4xl">
-              <ScratchPreview
-                config={liveCampaign.gameConfig?.scratch || {}}
-                buttonLabel={scratchButtonLabel}
-                buttonColor={scratchButtonColor}
-                gameSize={scratchGameSize}
-                disabled={!formValidated}
-                onFinish={handleGameFinish}
-                onStart={handleGameStart}
-                isModal={previewMode !== 'desktop'}
-                autoStart={false}
-              />
-
-              {!formValidated && (
-                <div
-                  className="absolute inset-0 z-20 cursor-pointer"
-                  onClick={handleGameButtonClick}
-                />
-              )}
-
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
-                <ValidationMessage
-                  show={showValidationMessage}
-                  message="Formulaire validé ! Vous pouvez maintenant jouer."
-                  type="success"
-                />
-              </div>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 50 }}>
+            <div className="pointer-events-auto">
+              <ScratchCardCanvas selectedDevice={previewMode} />
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pour les campagnes de type "form", afficher directement le formulaire en plein écran
+  if (liveCampaign.type === 'form') {
+    const backgroundStyle: React.CSSProperties = {
+      background: formPreviewBackground?.type === 'image'
+        ? `url(${formPreviewBackground.value}) center/cover no-repeat`
+        : formPreviewBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+    };
+
+    return (
+      <div className="relative w-full h-[100dvh] min-h-[100dvh]">
+        <div className="absolute inset-0" style={backgroundStyle} />
+        
+        {/* Afficher les éléments du canvas en arrière-plan */}
+        <div className="relative z-10 w-full h-full">
+          {formPreviewElements.map((element: any) => {
+            const elementWithProps = {
+              ...element,
+              ...getPropertiesForDevice(element, previewMode)
+            };
+
+            if (element.type === 'text') {
+              elementWithProps.width = element.width || 200;
+              elementWithProps.height = element.height || 40;
+              if (elementWithProps.width < 150) {
+                elementWithProps.width = 150;
+              }
+            }
+
+            elementWithProps.x = Number(elementWithProps.x) || 0;
+            elementWithProps.y = Number(elementWithProps.y) || 0;
+            elementWithProps.width = Number(elementWithProps.width) || 100;
+            elementWithProps.height = Number(elementWithProps.height) || 100;
+
+            return (
+              <CanvasElement
+                key={element.id}
+                element={elementWithProps}
+                selectedDevice={previewMode}
+                isSelected={false}
+                onSelect={() => {}}
+                onUpdate={() => {}}
+                onDelete={() => {}}
+                containerRef={null}
+                readOnly={true}
+                onMeasureBounds={() => {}}
+                onAddElement={() => {}}
+                elements={formPreviewElements}
+                isMultiSelecting={false}
+                isGroupSelecting={false}
+                activeGroupId={null}
+                campaign={liveCampaign}
+                extractedColors={[]}
+                alignmentSystem={null}
+              />
+            );
+          })}
+        </div>
+
+        {/* Afficher le formulaire configuré exactement comme dans l'éditeur */}
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {(() => {
+              // Reproduire exactement la logique de DesignCanvas pour le formulaire
+              const campaignDesign = (liveCampaign as any)?.design || {};
+              const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
+              const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
+              const buttonColor = campaignDesign.buttonColor || '#841b60';
+              const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
+              const borderColor = campaignDesign.borderColor || '#E5E7EB';
+              const focusColor = buttonColor;
+              const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
+              const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
+              const panelBg = campaignDesign.blockColor || '#ffffff';
+              const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
+              const title = (liveCampaign as any)?.screens?.[1]?.title || 'Vos informations';
+              const description = (liveCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour participer';
+              const submitLabel = (liveCampaign as any)?.screens?.[1]?.buttonText || 'SPIN';
+
+              return (
+                <div
+                  className={`absolute z-[60] opacity-100 pointer-events-auto flex`}
+                  style={{
+                    // Centrage vertical et ancrage horizontal selon la position choisie
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    ...(formPosition === 'left' ? { left: '4%' } : { right: '4%' }),
+                    // Largeur configurée par l'utilisateur
+                    width: formWidth,
+                    height: 'auto',
+                    maxHeight: 'calc(100% - 32px)'
+                  }}
+                  data-canvas-ui
+                >
+                  <div
+                    className={`w-full shadow-2xl rounded-xl p-6 overflow-y-auto`}
+                    style={{ backgroundColor: panelBg, maxHeight: 'calc(100% - 0px)' }}
+                  >
+                    <div className="flex flex-col" style={{ color: textColor, fontFamily: campaignDesign.fontFamily }}>
+                      <div className="mb-4">
+                        <h3 className="text-base font-semibold" style={{ color: textColor }}>{title}</h3>
+                        <p className="text-xs opacity-80" style={{ color: textColor }}>{description}</p>
+                      </div>
+                      <div
+                        className="rounded-md border"
+                        style={{ borderColor, borderWidth: 2, borderRadius, backgroundColor: panelBg }}
+                      >
+                        <div className="p-3">
+                          <DynamicContactForm
+                            fields={fields}
+                            onSubmit={() => {}}
+                            submitLabel={submitLabel}
+                            textStyles={{
+                              label: { ...(campaignDesign.textStyles?.label || {}), color: textColor, fontFamily: campaignDesign.fontFamily },
+                              button: {
+                                backgroundColor: buttonColor,
+                                color: buttonTextColor,
+                                borderRadius,
+                                fontFamily: campaignDesign.fontFamily,
+                                fontWeight: campaignDesign.textStyles?.button?.fontWeight,
+                                fontSize: campaignDesign.textStyles?.button?.fontSize,
+                              },
+                            }}
+                            inputBorderColor={borderColor}
+                            inputFocusColor={focusColor}
+                            inputBorderRadius={inputBorderRadius}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -298,160 +489,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           onClose={() => setShowFormModal(false)}
           onSubmit={handleFormSubmit}
         />
-      </div>
-    );
-  }
-
-  // Pour les campagnes de type "form", afficher directement le formulaire en plein écran
-  if (liveCampaign.type === 'form') {
-    // Récupérer l'image de fond depuis canvasConfig.background (synchronisé avec le canvas)
-    const canvasBackground = liveCampaign.canvasConfig?.background || liveCampaign.design?.background;
-    const backgroundStyle: React.CSSProperties = {
-      background: canvasBackground?.type === 'image'
-        ? `url(${canvasBackground.value}) center/cover no-repeat`
-        : canvasBackground?.value || liveCampaign.design?.background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-    };
-
-    // Récupérer les styles de design comme dans l'édition
-    const campaignDesign = liveCampaign.design || {};
-    // Largeur du panneau configurée par l'utilisateur - fixe pour éviter les changements responsive
-    const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
-    const buttonColor = campaignDesign.buttonColor || '#841b60';
-    const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
-    const borderColor = campaignDesign.borderColor || '#E5E7EB';
-    const focusColor = buttonColor;
-    const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
-    const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
-    const panelBg = campaignDesign.blockColor || '#ffffff';
-    const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
-    const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
-
-    // Récupérer les éléments du canvas pour les afficher
-    const canvasElements = liveCampaign.canvasElements || liveCampaign.elements || [];
-    // Utiliser 'desktop' pour éviter les changements de largeur responsive
-    const { getPropertiesForDevice } = universalResponsive;
-
-    return (
-      <div className="w-full h-[100dvh] min-h-[100dvh]">
-        <div className="relative w-full h-full">
-          <div className="absolute inset-0" style={backgroundStyle} />
-          
-          {/* Rendu des éléments du canvas */}
-          {canvasElements.map((element: any) => {
-            const elementWithProps = {
-              ...element,
-              ...getPropertiesForDevice(element, previewMode)
-            };
-            
-            // Pour les éléments de texte, s'assurer que les dimensions sont cohérentes
-            if (element.type === 'text') {
-              // Utiliser les dimensions originales de l'élément pour éviter les retours à la ligne
-              elementWithProps.width = element.width || 200;
-              elementWithProps.height = element.height || 40;
-              // S'assurer que le texte ne se wrappe pas en forçant une largeur suffisante
-              if (elementWithProps.width < 150) {
-                elementWithProps.width = 150;
-              }
-            }
-            
-            // S'assurer que x, y, width, height sont des nombres
-            elementWithProps.x = Number(elementWithProps.x) || 0;
-            elementWithProps.y = Number(elementWithProps.y) || 0;
-            elementWithProps.width = Number(elementWithProps.width) || 100;
-            elementWithProps.height = Number(elementWithProps.height) || 100;
-
-            return (
-              <CanvasElement 
-                key={element.id} 
-                element={elementWithProps} 
-                selectedDevice={previewMode}
-                isSelected={false}
-                onSelect={() => {}} 
-                onUpdate={() => {}} 
-                onDelete={() => {}}
-                containerRef={null}
-                readOnly={true}
-                onMeasureBounds={() => {}}
-                onAddElement={() => {}}
-                elements={canvasElements}
-                isMultiSelecting={false}
-                isGroupSelecting={false}
-                activeGroupId={null}
-                campaign={liveCampaign}
-                extractedColors={[]}
-                alignmentSystem={null}
-              />
-            );
-          })}
-          
-          <div className="relative z-10 h-full flex">
-            {/* Reproduire exactement le même positionnement que dans l'édition */}
-            <div
-              className="flex items-center justify-center"
-              style={{
-                // Centrage vertical et ancrage horizontal selon la position choisie
-                top: '50%',
-                transform: 'translateY(-50%)',
-                ...(formPosition === 'left' ? { left: '4%' } : { right: '4%' }),
-                // Largeur configurée par l'utilisateur
-                width: formWidth,
-                height: 'auto',
-                maxHeight: 'calc(100% - 32px)',
-                position: 'absolute'
-              }}
-            >
-              <div
-                className="w-full shadow-2xl rounded-xl p-6 overflow-y-auto"
-                style={{ 
-                  backgroundColor: panelBg, 
-                  maxHeight: 'calc(100% - 0px)',
-                  borderRadius: borderRadius
-                }}
-              >
-                <div className="flex flex-col" style={{ color: textColor, fontFamily: campaignDesign.fontFamily }}>
-                  <div className="mb-4">
-                    <h3 className="text-base font-semibold" style={{ color: textColor }}>
-                      {liveCampaign.screens?.[1]?.title || 'Vos informations'}
-                    </h3>
-                    <p className="text-xs opacity-80" style={{ color: textColor }}>
-                      {liveCampaign.screens?.[1]?.description || 'Remplissez le formulaire pour participer'}
-                    </p>
-                  </div>
-                  <div
-                    className="rounded-md border"
-                    style={{ borderColor, borderWidth: 2, borderRadius, backgroundColor: panelBg }}
-                  >
-                    <div className="p-3">
-                      <DynamicContactForm
-                        fields={fields}
-                        submitLabel={participationLoading ? 'Chargement...' : liveCampaign.screens?.[1]?.buttonText || "Participer"}
-                        onSubmit={handleFormSubmit}
-                        textStyles={{
-                          label: { 
-                            ...(campaignDesign.textStyles?.label || {}), 
-                            color: textColor, 
-                            fontFamily: campaignDesign.fontFamily 
-                          },
-                          button: {
-                            backgroundColor: buttonColor,
-                            color: buttonTextColor,
-                            borderRadius,
-                            fontFamily: campaignDesign.fontFamily,
-                            fontWeight: campaignDesign.textStyles?.button?.fontWeight,
-                            fontSize: campaignDesign.textStyles?.button?.fontSize,
-                          },
-                        }}
-                        inputBorderColor={borderColor}
-                        inputFocusColor={focusColor}
-                        inputBorderRadius={inputBorderRadius}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     );
   }

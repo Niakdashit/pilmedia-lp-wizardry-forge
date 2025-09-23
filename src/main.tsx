@@ -1,7 +1,6 @@
 
-import { StrictMode } from 'react';
+import { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import './index.css';
 
@@ -26,34 +25,32 @@ if (typeof window !== 'undefined') {
   env.NODE_ENV = import.meta.env.MODE || (env.NODE_ENV ?? 'development');
 }
 
-// Add loading state
+// Locate the application mount point
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-const root = createRoot(rootElement);
+const App = lazy(() => import('./App.tsx'));
 
-// Initial render with loading state
-root.render(
-  <StrictMode>
-    <div className="flex items-center justify-center w-full h-screen bg-gray-100">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-700">Loading application...</p>
-      </div>
+const LoadingSplash = () => (
+  <div className="flex items-center justify-center w-full h-screen bg-gray-100">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-blue-600 mx-auto"></div>
+      <p className="mt-4 text-gray-700">Loading application...</p>
     </div>
-  </StrictMode>
+  </div>
 );
 
-// Load the app after a short delay to ensure styles are loaded
-setTimeout(() => {
-  root.render(
-    <StrictMode>
-      <ErrorBoundary>
+const root = createRoot(rootElement);
+
+root.render(
+  <StrictMode>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSplash />}>
         <App />
-      </ErrorBoundary>
-    </StrictMode>
-  );
-}, 100);
+      </Suspense>
+    </ErrorBoundary>
+  </StrictMode>
+);

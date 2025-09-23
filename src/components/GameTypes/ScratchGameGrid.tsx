@@ -13,6 +13,13 @@ interface ScratchGameGridProps {
   scratchStarted: boolean;
   config: any;
   isModal?: boolean;
+  gridConfig?: {
+    rows?: number;
+    cols?: number;
+    gap?: number;
+    cardShape?: string;
+  };
+  maxCards?: number;
 }
 
 const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
@@ -25,58 +32,30 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   selectedCard,
   scratchStarted,
   config,
-  isModal = false
+  isModal = false,
+  gridConfig,
+  maxCards
 }) => {
-  // Configuration pour une grille responsive qui s'adapte au nombre de cartes
-  const getGridContainerClasses = () => {
-    const cardCount = cards.length;
-    
-    // Container principal : prend 100% de l'espace disponible
-    const containerBase = "w-full h-full flex items-center justify-center p-6";
-    
-    // Grille responsive avec auto-fit pour s'adapter au nombre de cartes
-    let gridClasses = "";
-    
-    if (cardCount === 1) {
-      // Une seule carte : centrée
-      gridClasses = "flex justify-center items-center";
-    } else if (cardCount === 2) {
-      // Deux cartes : côte à côte, centrées
-      gridClasses = "grid grid-cols-1 sm:grid-cols-2 gap-8 place-items-center justify-items-center w-full";
-    } else if (cardCount <= 4) {
-      // 3-4 cartes : max 2 par ligne sur petit écran, 4 sur grand écran
-      gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 place-items-center justify-items-center w-full";
-    } else if (cardCount <= 6) {
-      // 5-6 cartes : max 3 par ligne
-      gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center justify-items-center w-full";
-    } else {
-      // Plus de 6 cartes : grille auto-fit avec minimum 200px par carte
-      gridClasses = "grid gap-8 place-items-center justify-items-center w-full";
-      // Style inline pour auto-fit
-    }
-    
-    return { containerBase, gridClasses, cardCount };
-  };
-
-  const { containerBase, gridClasses, cardCount } = getGridContainerClasses();
-
-  // Style inline pour les grilles avec beaucoup de cartes (auto-fit)
-  const gridStyle = cardCount > 6 ? {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '32px',
-    width: '100%',
-    placeItems: 'center',
-    justifyItems: 'center'
-  } : {};
+  const effectiveCards = maxCards ? cards.slice(0, maxCards) : cards;
+  const resolvedCols = Math.max(1, gridConfig?.cols || effectiveCards.length);
+  const resolvedRows = Math.max(1, gridConfig?.rows || Math.ceil(effectiveCards.length / resolvedCols));
+  const resolvedGap = typeof gridConfig?.gap === 'number' ? gridConfig.gap : 24;
+  const cardShape = gridConfig?.cardShape;
 
   return (
-    <div className={containerBase}>
-      <div 
-        className={gridClasses}
-        style={cardCount > 6 ? gridStyle : {}}
+    <div className="w-full h-full flex items-center justify-center p-6">
+      <div
+        className="w-full max-w-[1200px]"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${resolvedCols}, minmax(0, 1fr))`,
+          gridAutoRows: 'auto',
+          gap: `${resolvedGap}px`,
+          justifyItems: 'center',
+          alignItems: 'center'
+        }}
       >
-        {cards.map((card: any, index: number) => {
+        {effectiveCards.map((card: any, index: number) => {
           const isThisCardSelected = selectedCard === index;
           
           const isLocked = gameStarted && scratchStarted && !isThisCardSelected;
@@ -99,6 +78,7 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
                 isSelected={isThisCardSelected}
                 config={config}
                 isModal={isModal}
+                cardShape={cardShape}
               />
             </div>
           );

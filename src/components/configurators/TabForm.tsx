@@ -36,6 +36,29 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
   const screenIndex = 1; // Convention: écran formulaire
   const screen = screens[screenIndex] || {};
 
+  // Initialiser les couleurs par défaut si elles n'existent pas
+  React.useEffect(() => {
+    if (!design.buttonColor || !design.buttonTextColor || !design.borderColor || !design.blockColor || !design.textStyles?.label?.color) {
+      setCampaign((prev: any) => ({
+        ...prev,
+        design: {
+          ...(prev?.design || {}),
+          buttonColor: prev?.design?.buttonColor || '#000000',
+          buttonTextColor: prev?.design?.buttonTextColor || '#ffffff',
+          borderColor: prev?.design?.borderColor || '#E5E7EB',
+          blockColor: prev?.design?.blockColor || '#ffffff',
+          textStyles: {
+            ...(prev?.design?.textStyles || {}),
+            label: {
+              ...(prev?.design?.textStyles?.label || {}),
+              color: prev?.design?.textStyles?.label?.color || '#111827'
+            }
+          }
+        }
+      }));
+    }
+  }, [campaign, setCampaign]);
+
   const updateDesign = (updates: any) => {
     setCampaign((prev: any) => ({
       ...prev,
@@ -52,7 +75,12 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
       const arr = Array.isArray(prev?.screens) ? [...prev.screens] : [];
       const base = arr[screenIndex] || {};
       arr[screenIndex] = { ...base, ...updates };
-      return { ...prev, screens: arr, _lastUpdate: Date.now() }; // Force sync avec preview
+      return { 
+        ...prev, 
+        screens: arr, 
+        // Ne pas toucher aux styles de design existants - les laisser intacts
+        _lastUpdate: Date.now() // Force sync avec preview
+      };
     });
   };
 
@@ -63,6 +91,7 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
         ...(prev?.buttonConfig || {}),
         text,
       },
+      // Ne pas toucher aux styles de design existants - les laisser intacts
       _lastUpdate: Date.now(), // Force sync avec preview
     }));
   };
@@ -108,7 +137,7 @@ const TabForm: React.FC<TabFormProps> = ({ campaign, setCampaign }) => {
           </div>
           <div>
             <span className="block text-xs text-gray-500 mb-1">Couleur bouton</span>
-            <ColorInput value={design.buttonColor} onChange={(v) => updateDesign({ buttonColor: v })} />
+            <ColorInput value={design.buttonColor || '#000000'} onChange={(v) => updateDesign({ buttonColor: v })} />
           </div>
           <div>
             <span className="block text-xs text-gray-500 mb-1">Couleur texte bouton</span>

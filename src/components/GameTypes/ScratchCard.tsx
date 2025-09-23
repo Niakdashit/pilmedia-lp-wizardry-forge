@@ -19,6 +19,7 @@ interface ScratchCardProps {
   isSelected: boolean;
   config: any;
   isModal?: boolean;
+  cardShape?: string;
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -34,7 +35,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   canScratch,
   isSelected,
   config,
-  isModal = false
+  isModal = false,
+  cardShape
 }) => {
   // Dimensions selon la taille avec adaptation pour modal
   const getDimensions = () => {
@@ -45,15 +47,19 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       xlarge: { width: 350, height: 280 }
     }[gameSize] || { width: 250, height: 200 };
 
+    const isVertical = cardShape === 'vertical-rectangle';
+    const aspectWidth = baseSize.width;
+    const aspectHeight = isVertical ? aspectWidth * 1.5 : baseSize.height;
+
     // Ajustement pour les modals - réduction moins agressive
     if (isModal) {
       return {
-        width: Math.max(200, baseSize.width * 0.9),
-        height: Math.max(160, baseSize.height * 0.9)
+        width: Math.max(200, aspectWidth * 0.9),
+        height: Math.max(160, aspectHeight * 0.9)
       };
     }
 
-    return baseSize;
+    return { width: aspectWidth, height: aspectHeight };
   };
 
   const { width, height } = getDimensions();

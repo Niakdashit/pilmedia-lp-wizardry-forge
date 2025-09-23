@@ -812,6 +812,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
+        // Styles du formulaire depuis campaignState
+        ...(campaignState?.design || {}),
         jackpotConfig: {
           template: (() => {
             // Priorité 1: campaignState (état local)
@@ -1943,7 +1945,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-              campaign={campaignConfig}
+              campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}

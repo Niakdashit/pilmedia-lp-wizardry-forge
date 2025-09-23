@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import FormHandler from './components/FormHandler';
 import { useParticipations } from '../../hooks/useParticipations';
 import { FieldConfig } from '../forms/DynamicContactForm';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
 
 interface FunnelQuizParticipateProps {
   campaign: any;
@@ -83,11 +84,26 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
           </div>
         )}
 
-        {/* Quiz phase - Supprimé, passer directement au formulaire */}
-        {phase === 'quiz' && (() => {
-          setPhase('form');
-          return null;
-        })()}
+        {/* Quiz phase - Afficher le quiz réel */}
+        {phase === 'quiz' && (
+          <div className="relative z-10 h-full flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl">
+              {/* Utiliser le composant TemplatedQuiz pour afficher le quiz */}
+              <TemplatedQuiz
+                campaign={campaign}
+                device={previewMode}
+                disabled={false}
+                onClick={() => setPhase('form')}
+                templateId={campaign?.gameConfig?.quiz?.templateId || 'image-quiz'}
+                onAnswerSelected={(isCorrect) => {
+                  if (isCorrect) {
+                    setScore(prev => prev + 1);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Form phase - use modal component to keep look consistent */}
         <FormHandler

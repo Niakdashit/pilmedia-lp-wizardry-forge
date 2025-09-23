@@ -102,12 +102,16 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
   };
 
   // Ensure we have at least one card with proper defaults
-  const cards = config?.cards && config.cards.length > 0 ? config.cards : [{
-    id: 1,
-    revealImage: config?.revealImage || '',
-    revealMessage: config?.revealMessage || 'Félicitations !',
-    scratchColor: config?.scratchColor || '#C0C0C0'
-  }];
+  const configuredCards = Array.isArray(config?.cards) ? config.cards : [];
+  const maxCards = typeof config?.maxCards === 'number' ? config.maxCards : configuredCards.length;
+  const cards = configuredCards.length > 0
+    ? configuredCards.slice(0, Math.max(1, maxCards || configuredCards.length))
+    : [{
+        id: 1,
+        revealImage: config?.revealImage || '',
+        revealMessage: config?.revealMessage || 'Félicitations !',
+        scratchColor: config?.scratchColor || '#C0C0C0'
+      }];
 
   // ✅ INTERFACE DE DÉMARRAGE : respecte le funnel unlocked
   if (!gameStarted) {
@@ -115,18 +119,20 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
       <div className="w-full h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Zone d'aperçu des cartes - prend tout l'espace disponible */}
         <div className="flex-1 w-full h-full">
-          <ScratchGameGrid
-            cards={cards}
-            gameSize={gameSize}
-            gameStarted={false}
-            onCardFinish={() => {}}
-            onCardSelect={() => {}}
-            onScratchStart={() => {}}
-            selectedCard={null}
-            scratchStarted={false}
-            config={config}
-            isModal={isModal}
-          />
+        <ScratchGameGrid
+          cards={cards}
+          gameSize={gameSize}
+          gameStarted={false}
+          onCardFinish={() => {}}
+          onCardSelect={() => {}}
+          onScratchStart={() => {}}
+          selectedCard={null}
+          scratchStarted={false}
+          config={config}
+          isModal={isModal}
+          gridConfig={config?.grid}
+          maxCards={maxCards}
+        />
         </div>
 
         {/* ✅ BOUTON DE DÉMARRAGE : respecte disabled pour le funnel */}
@@ -173,6 +179,8 @@ const ScratchPreview: React.FC<ScratchPreviewProps> = ({
           scratchStarted={scratchStarted}
           config={config}
           isModal={isModal}
+          gridConfig={config?.grid}
+          maxCards={maxCards}
         />
       </div>
 

@@ -144,19 +144,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
 
-  // Taille du canvas memoized avec format mobile 9:16 sans bordures ni encoches
+  // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
+  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
+  // Taille du canvas memoized
+  const canvasSize = useMemo(() => {
+    return DEVICE_DIMENSIONS[selectedDevice];
+  }, [selectedDevice, DEVICE_DIMENSIONS]);
+
+  // Forcer un format mobile 9:16 sans bordures ni encoches
   const effectiveCanvasSize = useMemo(() => {
     if (selectedDevice === 'mobile') {
       // 9:16 exact ratio
       return { width: 360, height: 640 };
-    } else if (selectedDevice === 'tablet') {
-      // 3:4 ratio for tablet
-      return { width: 810, height: 1080 };
-    } else {
-      // Desktop - 16:9 ratio
-      return { width: 1280, height: 720 };
     }
-  }, [selectedDevice]);
+    return canvasSize;
+  }, [selectedDevice, canvasSize]);
 
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -317,8 +320,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {}, [mobileToolbarHeight]);
   // Optimisation mobile pour une expérience tactile parfaite
 
-  // Intégration du système auto-responsive (doit être défini avant canvasSize)
-  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
 
 
   // Memoized maps for fast lookups during interactions
@@ -1594,7 +1595,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-center max-w-[1520px] w-full mx-auto ${containerClassName || 'p-4 bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
@@ -2004,6 +2005,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       onQuizPanelChange?.(true);
                     }}
                     className={`w-full h-full flex items-center justify-center ${showFormOverlay ? 'cursor-default' : 'cursor-pointer'}`}
+                    style={{
+                      width: '300px',  // Largeur fixe
+                      height: '60px',  // Hauteur fixe
+                      minWidth: '300px',  // Largeur minimale
+                      minHeight: '60px',  // Hauteur minimale
+                      maxWidth: '300px',  // Largeur maximale
+                      maxHeight: '60px',  // Hauteur maximale
+                      margin: '0 auto',  // Centrage horizontal
+                      flexShrink: 0  // Empêche le rétrécissement
+                    }}
                   >
                     {/* Quiz supprimé du canvas */}
                   </div>

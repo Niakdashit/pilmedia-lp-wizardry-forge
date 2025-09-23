@@ -1191,7 +1191,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-              campaign={campaignConfig}
+              campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}

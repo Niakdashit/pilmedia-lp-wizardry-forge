@@ -13,7 +13,7 @@ const DesignEditor = lazy(() => import('./pages/DesignEditor'));
 const QuizEditor = lazy(() => import('./pages/QuizEditor'));
 const ModelEditor = lazy(() => import('./pages/ModelEditor'));
 const JackpotEditor = lazy(() => import('./pages/JackpotEditor'));
-import FormEditor from './pages/FormEditor';
+const FormEditor = lazy(() => import('./pages/FormEditor'));
 const ScratchCardEditor = lazy(() => import('./pages/ScratchCardEditor'));
 const ScratchCard2 = lazy(() => import('./pages/ScratchCard2'));
 const TemplateEditor = lazy(() => import('./pages/TemplateEditor'));
@@ -49,6 +49,7 @@ function App() {
         import('./pages/TemplateEditor');
         import('./pages/TemplatesEditor');
         import('./pages/ModelEditor');
+        import('./pages/FormEditor');
       } catch (_) {
         // best-effort
       }
@@ -102,6 +103,5 @@ function App() {
 }
 
 export default App;
-
 
 

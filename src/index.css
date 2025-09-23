@@ -162,15 +162,20 @@
 }
 
 html, body {
-  overflow-x: hidden;
+  overflow: hidden; /* Bloque tout scroll */
   max-width: 100vw;
-  height: 100%;
+  height: 100vh; /* Hauteur fixe à 100vh */
   margin: 0;
   padding: 0;
+  position: fixed; /* Fixe la position pour empêcher le scroll */
+  width: 100vw; /* Largeur fixe */
 }
 
 #root {
-  min-height: 100vh;
+  height: 100vh; /* Hauteur fixe */
+  width: 100vw; /* Largeur fixe */
+  overflow: hidden; /* Pas de scroll */
+  position: relative; /* Position relative pour les éléments enfants */
 }
 
 @layer base {

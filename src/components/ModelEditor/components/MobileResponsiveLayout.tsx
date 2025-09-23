@@ -238,7 +238,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       }}
     >
       {/* Contenu principal */}
-      <div className={`layout-content ${className}`}>
+      <div className={`layout-content${className ? ` ${className}` : ''}`}>
         {children}
       </div>
 
