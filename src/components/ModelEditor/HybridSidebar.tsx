@@ -152,7 +152,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   colorEditingContext
 }: HybridSidebarProps, ref) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
   const location = useLocation();
   const isFormEditor = location.pathname === '/form-editor';
   

@@ -72,17 +72,38 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     preventZoomGestures: false
   });
 
-  // Disable auto-open on mobile for specific editor routes
+  // Disable auto-open on mobile and 9:16 window for all editor routes
   const location = useLocation();
-  const disableAutoOpen = isMobile && (location.pathname === '/design-editor' || location.pathname === '/template-editor');
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
+  const disableAutoOpen = (isMobile || isWindowMobile) && (
+    location.pathname === '/design-editor' || 
+    location.pathname === '/template-editor' || 
+    location.pathname === '/quiz-editor' ||
+    location.pathname === '/jackpot-editor' ||
+    location.pathname === '/form-editor' ||
+    location.pathname === '/scratch-editor'
+  );
 
-  // Auto-ouverture si un élément est sélectionné
+  // Détection de la taille de fenêtre
   useEffect(() => {
-    if (selectedElement && !disableAutoOpen) {
-      setActiveTab('assets');
-      setIsMinimized(false);
-    }
-  }, [selectedElement, disableAutoOpen]);
+    const updateWindowSize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    updateWindowSize();
+    window.addEventListener('resize', updateWindowSize);
+    return () => window.removeEventListener('resize', updateWindowSize);
+  }, []);
+
+  // Auto-ouverture désactivée - la sidebar ne s'ouvre que manuellement
+  // useEffect(() => {
+  //   if (selectedElement && !disableAutoOpen) {
+  //     setActiveTab('assets');
+  //     setIsMinimized(false);
+  //   }
+  // }, [selectedElement, disableAutoOpen]);
 
   // Prefetch on hover/touch to smooth first render of heavy tabs
   const prefetchTab = (tabId: string) => {

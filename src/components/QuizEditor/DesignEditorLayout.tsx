@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Save, X } from 'lucide-react';
+import { User, LogOut, Save, X, ChevronRight } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
@@ -53,6 +53,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Détection de l'appareil physique réel (pour l'interface)
   const [actualDevice, setActualDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+  
+  // Détection de la taille de fenêtre pour la responsivité
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -127,6 +131,17 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     setCanvasZoom(getDefaultZoom(device));
   }, []);
 
+  // Détection de la taille de fenêtre
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    updateWindowSize();
+    window.addEventListener('resize', updateWindowSize);
+    return () => window.removeEventListener('resize', updateWindowSize);
+  }, []);
+
   // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
   useEffect(() => {
     if (actualDevice === 'mobile') {
@@ -198,6 +213,37 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
+  
+  // État pour tracker la position de scroll (quel écran est visible)
+  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
+  
+  // Détecter la position de scroll pour changer le bouton
+  useEffect(() => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area');
+    if (!canvasScrollArea) return;
+
+    const handleScroll = () => {
+      const scrollTop = canvasScrollArea.scrollTop;
+      const scrollHeight = canvasScrollArea.scrollHeight;
+      const clientHeight = canvasScrollArea.clientHeight;
+      
+      // Calculer les seuils pour 3 écrans
+      const screenHeight = clientHeight;
+      const screen1End = screenHeight * 0.33;
+      const screen2End = screenHeight * 0.66;
+      
+      if (scrollTop < screen1End) {
+        setCurrentScreen('screen1');
+      } else if (scrollTop < screen2End) {
+        setCurrentScreen('screen2');
+      } else {
+        setCurrentScreen('screen3');
+      }
+    };
+
+    canvasScrollArea.addEventListener('scroll', handleScroll);
+    return () => canvasScrollArea.removeEventListener('scroll', handleScroll);
+  }, []);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
@@ -1409,8 +1455,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         ) : (
           /* Design Editor Mode */
           <>
-            {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
-            {actualDevice !== 'mobile' && (
+            {/* Hybrid Sidebar - Design & Technical (always vertical, with drawer from bottom) */}
               <HybridSidebar
                 ref={sidebarRef}
                 onAddElement={handleAddElement}
@@ -1719,16 +1764,19 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
+                className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
-            )}
-            {/* Main Canvas Area */}
+            {/* Canvas Scrollable Area */}
+            <div className="flex-1 canvas-scroll-area relative z-20">
+              <div className="min-h-full flex flex-col">
+                {/* Premier Canvas */}
             <DesignCanvas
               ref={canvasRef}
               selectedDevice={selectedDevice}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-              campaign={campaignData}
+                  campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
@@ -1798,14 +1846,237 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               showQuizPanel={showQuizPanel}
               onQuizPanelChange={setShowQuizPanel}
             />
-            {/* Zoom Slider - Always visible in bottom center */}
-            {selectedDevice === 'mobile' && (
+                
+                {/* Deuxième Canvas */}
+                <div className="mt-4 relative">
+                  {/* Background pour éviter la transparence de la bande magenta */}
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  {/* Background supplémentaire pour l'espace entre les canvas */}
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{
+                      background: '#ffffff'
+                    }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={canvasBackground}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      // Quiz sync props
+                      extractedColors={extractedColors}
+                      quizModalConfig={quizModalConfig}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      // Sidebar panel triggers
+                      onShowEffectsPanel={() => {
+                        setShowEffectsInSidebar(true);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      onShowAnimationsPanel={() => {
+                        setShowAnimationsInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      onShowPositionPanel={() => {
+                        setShowPositionInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowDesignInSidebar(false);
+                      }}
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      // Mobile sidebar integrations
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      // Group selection wiring
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      // Quiz panels
+                      showQuizPanel={showQuizPanel}
+                      onQuizPanelChange={setShowQuizPanel}
+                    />
+                  </div>
+                </div>
+
+                {/* Troisième Canvas */}
+                <div className="mt-4 relative">
+                  {/* Background pour éviter la transparence de la bande magenta */}
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  {/* Background supplémentaire pour l'espace entre les canvas */}
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{
+                      background: '#ffffff'
+                    }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={canvasBackground}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      // Quiz sync props
+                      extractedColors={extractedColors}
+                      quizModalConfig={quizModalConfig}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      // Sidebar panel triggers
+                      onShowEffectsPanel={() => {
+                        setShowEffectsInSidebar(true);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      onShowAnimationsPanel={() => {
+                        setShowAnimationsInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      onShowPositionPanel={() => {
+                        setShowPositionInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowDesignInSidebar(false);
+                      }}
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      // Mobile sidebar integrations
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      // Group selection wiring
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      // Quiz panels
+                      showQuizPanel={showQuizPanel}
+                      onQuizPanelChange={setShowQuizPanel}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Zoom Slider with integrated Screen navigation button */}
+            {!isWindowMobile && (
               <ZoomSlider 
                 zoom={canvasZoom}
                 onZoomChange={setCanvasZoom}
                 minZoom={0.1}
                 maxZoom={1}
                 step={0.05}
+                onNavigateToScreen2={() => {
+                  const canvasScrollArea = document.querySelector('.canvas-scroll-area');
+                  if (canvasScrollArea) {
+                    const clientHeight = canvasScrollArea.clientHeight;
+                    
+                    if (currentScreen === 'screen1') {
+                      // Aller à l'écran 2
+                      canvasScrollArea.scrollTo({
+                        top: clientHeight * 0.5,
+                        behavior: 'smooth'
+                      });
+                    } else if (currentScreen === 'screen2') {
+                      // Aller à l'écran 3
+                      canvasScrollArea.scrollTo({
+                        top: canvasScrollArea.scrollHeight,
+                        behavior: 'smooth'
+                      });
+                    } else {
+                      // Retourner à l'écran 1
+                      canvasScrollArea.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                      });
+                    }
+                  }
+                }}
+                currentScreen={currentScreen}
               />
             )}
           </>

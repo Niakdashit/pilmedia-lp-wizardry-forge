@@ -89,7 +89,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   hiddenTabs = [],
   colorEditingContext
 }: HybridSidebarProps, ref) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
   

@@ -127,7 +127,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   colorEditingContext
 }: HybridSidebarProps, ref) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);

@@ -6,7 +6,6 @@ import CanvasToolbar from './CanvasToolbar';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
-import ZoomSlider from '../DesignEditor/components/ZoomSlider';
 import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
 import ScratchCardCanvas from './ScratchCardCanvas';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
@@ -148,6 +147,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
   const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
+  
+  // Détection de la taille de fenêtre pour la responsivité
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
 
   // Suppress the next click-clear after a marquee drag completes
   const suppressNextClickClearRef = useRef(false);
@@ -300,6 +303,84 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     window.addEventListener('resize', updateHeight);
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
+
+  // Détection de la taille de fenêtre
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    updateWindowSize();
+    window.addEventListener('resize', updateWindowSize);
+    return () => window.removeEventListener('resize', updateWindowSize);
+  }, []);
+
+  // Gestion du pinch-to-zoom fluide sur mobile
+  useEffect(() => {
+    if (!isRealMobile()) return;
+    
+    const canvas = activeCanvasRef.current;
+    if (!canvas) return;
+
+    let initialDistance = 0;
+    let initialZoom = 1;
+    let isPinching = false;
+    let lastTouchTime = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        initialZoom = localZoom;
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) + 
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isPinching && e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) + 
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+        
+        if (initialDistance > 0) {
+          const scale = currentDistance / initialDistance;
+          const newZoom = Math.max(0.1, Math.min(2, initialZoom * scale));
+          
+          // Appliquer le zoom avec une transition fluide
+          requestAnimationFrame(() => {
+            onZoomChange(newZoom);
+          });
+        }
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isPinching) {
+        isPinching = false;
+        lastTouchTime = Date.now();
+      }
+    };
+
+    // Ajouter les event listeners
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [localZoom, onZoomChange, activeCanvasRef]);
 
   // Optimisation mobile pour une expérience tactile parfaite
 
@@ -1598,7 +1679,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-center p-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center ${isWindowMobile ? 'justify-start -mt-20' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
@@ -1614,7 +1695,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onClearSelection={handleClearSelection}
       >
         {/* Canvas Toolbar - Show for text and shape elements */}
-        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && (
+        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile' && (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
               selectedElement={{
@@ -1682,7 +1763,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
-                transformOrigin: 'center center',
+                transformOrigin: 'center top',
                 touchAction: 'none',
                 userSelect: 'none',
                 willChange: 'transform'
@@ -2105,7 +2186,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
-                transformOrigin: 'center center',
+                transformOrigin: 'center top',
                 zIndex: 100
               }}
             />
@@ -2237,17 +2318,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           })()
         )}
         
-        {/* Barre d'échelle de zoom (overlay bas-centre) */}
-        {selectedDevice !== 'mobile' && (
-          <ZoomSlider
-            zoom={localZoom}
-            onZoomChange={handleZoomChange}
-            minZoom={0.1}
-            maxZoom={1}
-            step={0.05}
-            defaultZoom={deviceDefaultZoom}
-          />
-        )}
         
         {/* Popup contextuel d'animation */}
         {showAnimationPopup && selectedAnimation && (

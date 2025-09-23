@@ -178,6 +178,24 @@ html, body {
   position: relative; /* Position relative pour les éléments enfants */
 }
 
+/* Masquer les barres de scroll dans la zone des canvas */
+.canvas-scroll-area {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.canvas-scroll-area::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* S'assurer qu'il n'y a pas d'espace vide sous la barre de scroll */
+.canvas-scroll-area {
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Supprimer l'espace réservé pour la barre de scroll */
+  scrollbar-gutter: stable;
+}
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 font-sans;
@@ -940,4 +958,85 @@ html, body {
 .rounded-l-xl { 
   border-top-left-radius: 0.5rem !important; 
   border-bottom-left-radius: 0.5rem !important; 
+}
+
+/* Styles pour la sidebar verticale avec tiroir de bas vers le haut en format 9:16 */
+.vertical-sidebar-drawer {
+  /* Sidebar reste verticale mais plus étroite */
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.vertical-sidebar-drawer .sidebar-tabs {
+  /* Onglets compacts en vertical */
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 8px 4px !important;
+}
+
+.vertical-sidebar-drawer .sidebar-tab {
+  /* Onglets carrés compacts */
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.vertical-sidebar-drawer .sidebar-tab-icon {
+  width: 20px !important;
+  height: 20px !important;
+  margin-bottom: 2px !important;
+}
+
+.vertical-sidebar-drawer .sidebar-tab-label {
+  font-size: 8px !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.vertical-sidebar-drawer .sidebar-content {
+  /* Contenu s'ouvre en tiroir de bas vers le haut */
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 60px !important;
+  right: 0 !important;
+  max-height: 70vh !important;
+  min-height: 300px !important;
+  overflow-y: auto !important;
+  background: white !important;
+  border-left: 1px solid #e5e7eb !important;
+  border-top: 1px solid #e5e7eb !important;
+  box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1), 0 -4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  z-index: 50 !important;
+  transform: translateY(100%) !important;
+  transition: transform 0.3s ease-in-out !important;
+}
+
+.vertical-sidebar-drawer .sidebar-content.open {
+  transform: translateY(0) !important;
+}
+
+/* Animation d'ouverture du tiroir */
+.vertical-sidebar-drawer .sidebar-content {
+  animation: slideUpFromBottom 0.3s ease-in-out !important;
+}
+
+@keyframes slideUpFromBottom {
+  from {
+    transform: translateY(100%) !important;
+  }
+  to {
+    transform: translateY(0) !important;
+  }
 }

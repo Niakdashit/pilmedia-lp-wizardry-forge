@@ -170,7 +170,7 @@ const ModernEditorLayout: React.FC<ModernEditorLayoutProps> = memo(({
             {/* Zone de prévisualisation - pleine largeur avec spacing propre */}
             <div 
               ref={canvasRef}
-              className="flex-1 flex items-center justify-center overflow-hidden design-canvas-container"
+              className="flex-1 flex items-center justify-start pt-40 pb-4 px-4 overflow-hidden design-canvas-container"
             >
               <div className="relative w-full h-full flex items-center justify-center design-canvas-wrapper">
                 {(isGenerating || isPreviewLoading) && (

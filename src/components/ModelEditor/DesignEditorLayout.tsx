@@ -58,6 +58,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // Détection de l'appareil physique réel (pour l'interface)
   const [actualDevice, setActualDevice] = useState<'desktop' | 'tablet' | 'mobile'>(detectDevice());
+  
+  // Détection de la taille de fenêtre pour la responsivité
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -128,6 +132,17 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     setActualDevice(device);
     setSelectedDevice(device);
     setCanvasZoom(getDefaultZoom(device));
+  }, []);
+
+  // Détection de la taille de fenêtre
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    updateWindowSize();
+    window.addEventListener('resize', updateWindowSize);
+    return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
   // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
@@ -1626,9 +1641,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           {/* Design Editor Mode */}
           {!showFunnel && (
             <>
-            {/* Hybrid Sidebar - Design & Technical (always visible on PC/desktop, hidden only on actual mobile devices) */}
-            {actualDevice !== 'mobile' && (
-              <HybridSidebar
+            {/* Hybrid Sidebar - Design & Technical (always vertical, with drawer from bottom) */}
+            <HybridSidebar
                 ref={sidebarRef}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
@@ -1936,8 +1950,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 selectedDevice={selectedDevice}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
+                className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
-            )}
             {/* Main Canvas Area */}
             <DesignCanvas
               ref={canvasRef}
@@ -2019,8 +2033,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               showJackpotPanel={showJackpotPanel}
               onJackpotPanelChange={setShowJackpotPanel}
             />
-            {/* Zoom Slider - Always visible in bottom center */}
-            {selectedDevice === 'mobile' && (
+            {/* Zoom Slider - Hidden when window is in mobile format */}
+            {!isWindowMobile && (
               <ZoomSlider 
                 zoom={canvasZoom}
                 onZoomChange={setCanvasZoom}
