@@ -12,6 +12,7 @@ import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
 import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
 import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
+import LaunchButtonDesignPanel from './components/LaunchButtonDesignPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
@@ -88,6 +89,11 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onButtonTextColorChange?: (color: string) => void;
   onButtonHoverBackgroundColorChange?: (color: string) => void;
   onButtonActiveBackgroundColorChange?: (color: string) => void;
+  launchButtonStyles?: React.CSSProperties | null;
+  launchButtonText?: string;
+  onLaunchButtonStyleChange?: (styles: Partial<React.CSSProperties>) => void;
+  onLaunchButtonTextChange?: (text: string) => void;
+  onLaunchButtonReset?: () => void;
   onQuizQuestionCountChange?: (count: number) => void;
   onQuizTimeLimitChange?: (time: number) => void;
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
@@ -143,7 +149,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   selectedDevice = 'desktop',
   hiddenTabs = [],
   onForceElementsTab,
-  colorEditingContext
+  colorEditingContext,
+  launchButtonStyles,
+  launchButtonText,
+  onLaunchButtonStyleChange,
+  onLaunchButtonTextChange,
+  onLaunchButtonReset
 }: HybridSidebarProps, ref) => {
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
   const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
@@ -530,7 +541,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'background':
         return (
-          <div className="h-full overflow-y-auto">
+          <div className="h-full overflow-y-auto space-y-6 pb-12">
             <BackgroundPanel 
               onBackgroundChange={onBackgroundChange || (() => {})} 
               onExtractedColorsChange={onExtractedColorsChange}
@@ -540,6 +551,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               onElementUpdate={onElementUpdate}
               colorEditingContext={colorEditingContext}
             />
+            {onLaunchButtonStyleChange && (
+              <LaunchButtonDesignPanel
+                buttonStyles={launchButtonStyles || undefined}
+                buttonText={launchButtonText || ''}
+                onStyleChange={onLaunchButtonStyleChange}
+                onTextChange={onLaunchButtonTextChange}
+                onReset={onLaunchButtonReset}
+              />
+            )}
           </div>
         );
       case 'elements':

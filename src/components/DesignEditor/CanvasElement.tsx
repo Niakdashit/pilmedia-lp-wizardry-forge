@@ -43,6 +43,14 @@ export interface CanvasElementProps {
     startDragging: () => void;
     stopDragging: () => void;
   };
+  // Optional map of custom renderers keyed by element.type
+  customRenderers?: Record<string, (args: {
+    element: any;
+    selectedDevice: DeviceType;
+    readOnly: boolean;
+    elementStyle: React.CSSProperties;
+    deviceProps: any;
+  }) => React.ReactNode>;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -62,7 +70,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   activeGroupId,
   campaign,
   extractedColors,
-  alignmentSystem
+  alignmentSystem,
+  customRenderers = {}
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -123,6 +132,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     () => getPropertiesForDevice(element, selectedDevice),
     [element, selectedDevice, getPropertiesForDevice]
   );
+
+  const isLaunchButton = useMemo(() => {
+    const role = (element as any)?.role;
+    return typeof role === 'string' && role.toLowerCase() === 'button';
+  }, [element]);
 
   // Report current bounds (canvas-space) to parent for accurate group/marquee calculations
   const reportBounds = useCallback((override?: { x?: number; y?: number; width?: number; height?: number }) => {
@@ -243,6 +257,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     if (activeGroupId && (element as any)?.parentGroupId === activeGroupId) {
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+    if (isLaunchButton) {
+      e.stopPropagation();
+      e.preventDefault();
       return;
     }
     const isMultiSelect = e.ctrlKey || e.metaKey;
@@ -389,11 +408,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
-    if (readOnly) return; // Disable entering edit mode in read-only
+    if (readOnly || isLaunchButton) return; // Disable entering edit mode for fixed button
     if (element.type === 'text' || element.type === 'shape') {
       setIsEditing(true);
     }
-  }, [element.type, readOnly]);
+  }, [element.type, readOnly, isLaunchButton]);
 
 
   // Commit edits on blur/Enter without re-rendering per keystroke
@@ -1080,9 +1099,11 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       minHeight: element.type === 'image' ? `${element.height || 100}px` : 'auto'
     } : {};
 
-    switch (element.type) {
+    const defaultRender: React.ReactNode = (() => {
+      switch (element.type) {
       case 'text': {
         const getTextStyle = (): React.CSSProperties => {
+          const customCSS = (element as any)?.customCSS || {};
           const parsePx = (v: any, fallback: number = 0) => {
             if (v == null) return fallback;
             if (typeof v === 'number') return v;
@@ -1135,9 +1156,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           }
 
           // Add custom CSS from effects
-          if (element.customCSS) {
-            // Do not scale custom CSS; let container transform handle visual scaling
-            Object.assign(baseStyle, element.customCSS);
+          if (customCSS) {
+            // Allow gradient backgrounds and flex alignment from customCSS
+            Object.assign(baseStyle, customCSS);
           }
 
           return baseStyle;
@@ -1279,14 +1300,31 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         );
       default:
         return <div className={`w-20 h-20 bg-gray-300 ${readOnly ? '' : 'cursor-move'}`} style={elementStyle} />;
+      }
+    })();
+
+    if (customRenderers && typeof customRenderers[element.type] === 'function') {
+      try {
+        return customRenderers[element.type]({
+          element,
+          selectedDevice,
+          readOnly: Boolean(readOnly),
+          elementStyle,
+          deviceProps
+        });
+      } catch (error) {
+        console.warn('Custom renderer threw an error for element', element.id, error);
+      }
     }
-  }, [element, deviceProps, isEditing, handleContentEditableInput, handleTextKeyDown, handleTextBlur, readOnly]);
+
+    return defaultRender;
+  }, [element, deviceProps, isEditing, handleContentEditableInput, handleTextKeyDown, handleTextBlur, readOnly, customRenderers, selectedDevice]);
 
   return (
     <div
       ref={elementRef}
       className={`absolute ${
-        isSelected && !readOnly
+        isSelected && !readOnly && !isLaunchButton
           ? (hideControls
               ? ''
               : 'ring-2 ring-[hsl(var(--primary))]')
@@ -1300,7 +1338,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         zIndex: element.zIndex || 1,
         transition: (isDragging || isRotating || isResizing) ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
-        cursor: readOnly ? 'default' : (isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab')),
+        cursor: readOnly ? 'default' : (isLaunchButton ? 'default' : (isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab'))),
         pointerEvents: readOnly ? 'none' : 'auto',
       }}
       onPointerDown={readOnly ? undefined : handlePointerDown}
@@ -1314,7 +1352,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       {renderElement}
 
       {/* Selection handles - masqués pendant le drag */}
-      {isSelected && !isDragging && !isResizing && !readOnly && !hideControls && !isEditing && (
+      {isSelected && !isDragging && !isResizing && !readOnly && !hideControls && !isEditing && !isLaunchButton && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1000 }}>
           {/* Corner handles - for proportional scaling */}
           <div 

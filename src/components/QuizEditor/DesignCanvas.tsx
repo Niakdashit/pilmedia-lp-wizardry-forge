@@ -14,7 +14,6 @@ import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
-import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
@@ -25,7 +24,10 @@ import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveL
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 
+type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
+
 export interface DesignCanvasProps {
+  screenId?: CanvasScreenId;
   selectedDevice: DeviceType;
   elements: any[];
   onElementsChange: (elements: any[]) => void;
@@ -33,6 +35,15 @@ export interface DesignCanvasProps {
     type: 'color' | 'image';
     value: string;
   };
+  overlayElements?: Array<{
+    id: string;
+    type: 'text' | 'image';
+    content?: string;
+    text?: string;
+    src?: string;
+    alt?: string;
+    style: React.CSSProperties;
+  }>;
   campaign?: any;
   onCampaignChange?: (campaign: any) => void;
   zoom?: number;
@@ -78,14 +89,18 @@ export interface DesignCanvasProps {
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
   containerClassName?: string;
+  hideInlineQuizPreview?: boolean;
+  elementFilter?: (element: any) => boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
+  screenId = 'screen1',
   selectedDevice,
   elements,
   onElementsChange,
   background,
   campaign,
+  overlayElements,
   onCampaignChange,
   zoom = 1,
   onZoomChange,
@@ -122,7 +137,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   updateQuizConfig,
   getCanonicalConfig,
   quizModalConfig,
-  extractedColors
+  extractedColors,
+  hideInlineQuizPreview = false,
+  elementFilter
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -232,15 +249,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
-    return elements.map((el: any) => {
+    const visibleElements = elements.filter((el: any) => {
+      const targetScreen = (el?.screenId ?? 'screen1') as CanvasScreenId;
+      const screenMatches = screenId === 'all' || targetScreen === 'all' || targetScreen === screenId;
+      if (!screenMatches) return false;
+      if (typeof elementFilter === 'function' && !elementFilter(el)) return false;
+      return true;
+    });
+
+    return visibleElements.map((el: any) => {
       const mb = measuredBounds[el.id];
       const x = (mb?.x != null) ? mb.x : Number(el.x) || 0;
       const y = (mb?.y != null) ? mb.y : Number(el.y) || 0;
       const width = (mb?.width != null) ? mb.width : Math.max(20, Number(el.width) || 100);
       const height = (mb?.height != null) ? mb.height : Math.max(20, Number(el.height) || 30);
-      return { id: String(el.id), x, y, width, height };
+      return { id: String(el.id), x, y, width, height, screenId: el?.screenId ?? null };
     });
-  }, [elements, measuredBounds]);
+  }, [elements, measuredBounds, elementFilter, screenId]);
 
   // Stable origin bounds for resize interactions to prevent drift
   const multiResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -431,7 +456,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const { applySnapping } = useSmartSnapping({
     containerRef: activeCanvasRef,
     gridSize: 20,
-    snapTolerance: 3 // Réduit pour plus de précision
+    snapTolerance: 3, // Réduit pour plus de précision
+    elements: alignmentElements
   });
 
   // Store centralisé pour la grille
@@ -637,8 +663,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
     const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
     const intensity = activityType === 'drag' ? 0.8 : 0.5;
+    try {
+      recordActivity(activityType, intensity);
+    } catch {}
     updateAutoSaveData(campaign, activityType, intensity);
-  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
+  }, [elements, onElementsChange, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -1009,7 +1038,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const newFontSize = isText ? Math.max(8, Math.round((currentFontSize as number) * Math.min(nw/sw, nh/sh))) : undefined;
 
         // Apply snapping and canvas clamp on absolute position
-        const snapped = applySnapping(newAbsX, newAbsY, newW, newH, String(el.id));
+        const snapped = applySnapping(newAbsX, newAbsY, newW, newH, String(el.id), { screenId });
         let ax = snapped.x, ay = snapped.y;
         // Clamp
         const maxX = Math.max(0, (effectiveCanvasSize.width || 0) - newW);
@@ -1175,7 +1204,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     });
 
     onElementsChange(updated);
-  }, [elements, onElementsChange, selectedElements, selectedDevice, getPropertiesForDevice, applySnapping, effectiveCanvasSize]);
+  }, [elements, onElementsChange, selectedElements, selectedDevice, getPropertiesForDevice, effectiveCanvasSize, screenId]);
 
 
   // Zoom au pincement (pinch) sur écrans tactiles
@@ -1509,43 +1538,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     updateThreshold: 16 // 60fps
   });
 
-  // Hooks optimisés pour snapping (gardé pour compatibilité)
-  // 🚀 Drag & drop ultra-fluide pour une expérience premium
-  useUltraFluidDragDrop({
-    containerRef: activeCanvasRef,
-    snapToGrid: showGridLines,
-    gridSize: 20,
-    enableInertia: true,
-    enabled: !readOnly,
-    onDragStart: (elementId, position) => {
-      // Enregistrer l'activité de début de drag
-      recordActivity('drag', 0.9);
-      // Marquer les éléments affectés pour le rendu optimisé
-      const element = elementById.get(elementId);
-      if (element) {
-        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
-      }
-      elementCache.set(`drag-start-${elementId}`, { position, timestamp: Date.now() });
-    },
-    onDragMove: (elementId, position, velocity) => {
-      // Optimiser le rendu en marquant seulement les éléments nécessaires
-      const element = elementById.get(elementId);
-      if (element) {
-        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
-      }
-      const moveKey = `drag-move-${elementId}-${Math.floor(position.x/2)}-${Math.floor(position.y/2)}`;
-      elementCache.set(moveKey, { position, velocity, timestamp: Date.now() });
-    },
-    onDragEnd: (elementId, position) => {
-      // Finaliser le drag avec mise à jour des données
-      const element = elementById.get(elementId);
-      if (element) {
-        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
-      }
-      handleElementUpdate(elementId, { x: position.x, y: position.y });
-    }
-  });
-
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
     return elements.map(element => ({
@@ -1590,9 +1582,78 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
       const za = typeof a.zIndex === 'number' ? a.zIndex : 0;
       const zb = typeof b.zIndex === 'number' ? b.zIndex : 0;
-      return za - zb; // plus petit d'abord, plus grand rendu en dernier (au-dessus)
+      if (za !== zb) {
+        return za - zb; // plus petit d'abord, plus grand rendu en dernier (au-dessus)
+      }
+      if (a?.id === 'quiz-template' && b?.id !== 'quiz-template') return -1;
+      if (b?.id === 'quiz-template' && a?.id !== 'quiz-template') return 1;
+      return 0;
     });
   }, [elementsWithResponsive]);
+
+  const renderableElements = useMemo(() => {
+    const screenedElements = typeof elementFilter === 'function'
+      ? elementsSortedByZIndex.filter(elementFilter)
+      : elementsSortedByZIndex;
+
+    if (screenId === 'all') {
+      return screenedElements;
+    }
+
+    return screenedElements.filter((element: any) => {
+      const targetScreen: CanvasScreenId = (element?.screenId as CanvasScreenId) || 'screen1';
+      if (targetScreen === 'all') return true;
+      return targetScreen === screenId;
+    });
+  }, [elementsSortedByZIndex, elementFilter, screenId]);
+
+  const resolvedQuizTemplateId = useMemo(() => {
+    return (
+      quizModalConfig?.templateId ||
+      (campaign as any)?.gameConfig?.quiz?.templateId ||
+      (campaign as any)?.design?.quizConfig?.templateId ||
+      'image-quiz'
+    );
+  }, [quizModalConfig?.templateId, campaign]);
+
+  const quizCampaignForRenderer = useMemo(() => {
+    if (campaign) return campaign;
+    return {
+      gameConfig: {
+        quiz: {
+          templateId: resolvedQuizTemplateId,
+          questions: []
+        }
+      },
+      design: {
+        quizConfig: {
+          templateId: resolvedQuizTemplateId
+        }
+      }
+    };
+  }, [campaign, resolvedQuizTemplateId]);
+
+  const customElementRenderers = useMemo(() => ({
+    'quiz-template': ({ elementStyle }: any) => (
+      <div className="relative w-full h-full" style={elementStyle} data-canvas-ui="quiz-template">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <TemplatedQuiz
+            campaign={quizCampaignForRenderer}
+            device={selectedDevice}
+            disabled={readOnly}
+            templateId={resolvedQuizTemplateId}
+          />
+        </div>
+      </div>
+    )
+  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly]);
+
+  const handleElementTap = useCallback((element: any) => {
+    if (!element || readOnly) return;
+    if (element.id === 'quiz-template') {
+      onQuizPanelChange?.(true);
+    }
+  }, [onQuizPanelChange, readOnly]);
 
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
@@ -1838,6 +1899,33 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
               
+              {overlayElements && overlayElements.length > 0 && (
+                <div className="absolute inset-0 pointer-events-none" data-canvas-ui="static-overlay">
+                  {overlayElements.map((element) => {
+                    if (element.type === 'image' && element.src) {
+                      return (
+                        <img
+                          key={element.id}
+                          src={element.src}
+                          alt={element.alt || ''}
+                          style={{ ...element.style, pointerEvents: 'none' }}
+                          className="select-none"
+                        />
+                      );
+                    }
+                    return (
+                      <div
+                        key={element.id}
+                        style={{ ...element.style, pointerEvents: 'none' }}
+                        className="select-text"
+                      >
+                        {element.content || element.text || ''}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Clouds */}
               
               
@@ -1891,41 +1979,44 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 
                 console.log('🎯 Campaign object for TemplatedQuiz:', campaignToUse);
                 
+                const shouldRenderInlinePreview = !hideInlineQuizPreview && (!elements.some(el => el.id === 'quiz-template'));
+
                 return (
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onPointerDown={(e) => {
-                      // Empêcher toute interaction de déplacement/redimensionnement depuis la preview
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onQuizPanelChange?.(true);
-                      }
-                    }}
-                    onClick={(e) => {
-                      if (readOnly) return;
-                      e.stopPropagation();
-                      console.log('🔘 Clic sur le quiz: ouverture du panneau Configuration (sans déplacement/redimensionnement)');
-                      onQuizPanelChange?.(true);
-                    }}
-                    className="w-full h-full flex items-center justify-center cursor-pointer"
-                  >
-                    {/* Afficher l'aperçu inline uniquement si l'élément positionné n'existe pas encore */}
-                    {(!elements.some(el => el.id === 'quiz-template')) && (
-                      <TemplatedQuiz
-                        campaign={campaignToUse}
-                        device={selectedDevice}
-                        disabled={readOnly}
-                        templateId={quizModalConfig?.templateId || campaignToUse?.gameConfig?.quiz?.templateId || campaignToUse?.design?.quizConfig?.templateId || 'image-quiz'}
-                      />
+                  <div className="w-full h-full flex items-center justify-center">
+                    {shouldRenderInlinePreview && (
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onPointerDown={(e) => {
+                          // Empêcher toute interaction de déplacement/redimensionnement depuis la preview
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onQuizPanelChange?.(true);
+                          }
+                        }}
+                        onClick={(e) => {
+                          if (readOnly) return;
+                          e.stopPropagation();
+                          console.log('🔘 Clic sur le quiz: ouverture du panneau Configuration (sans déplacement/redimensionnement)');
+                          onQuizPanelChange?.(true);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <TemplatedQuiz
+                          campaign={campaignToUse}
+                          device={selectedDevice}
+                          disabled={readOnly}
+                          templateId={quizModalConfig?.templateId || campaignToUse?.gameConfig?.quiz?.templateId || campaignToUse?.design?.quizConfig?.templateId || 'image-quiz'}
+                        />
+                      </div>
                     )}
                   </div>
                 );
@@ -1945,7 +2036,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
-            {elementsSortedByZIndex
+            {renderableElements
               .filter((element: any) => {
                 // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
                 const elementWithProps = {
@@ -2024,6 +2115,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               return (
                 <CanvasElement 
                   key={element.id} 
+                  screenId={screenId}
                   element={elementForCanvas} 
                   selectedDevice={selectedDevice}
                   isSelected={
@@ -2037,9 +2129,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   readOnly={readOnly}
                   onMeasureBounds={handleMeasureBounds}
                   onAddElement={(newElement) => {
-                    const updatedElements = [...elements, newElement];
+                    const elementScreen: CanvasScreenId = (newElement?.screenId as CanvasScreenId) || (screenId === 'all' ? 'screen1' : screenId);
+                    const enrichedElement = {
+                      ...newElement,
+                      screenId: elementScreen
+                    };
+                    const updatedElements = [...elements, enrichedElement];
                     onElementsChange(updatedElements);
-                    handleElementSelect(newElement.id);
+                    handleElementSelect(enrichedElement.id);
                   }}
                   elements={elements}
                   // New: pass selection context flags
@@ -2056,6 +2153,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     startDragging,
                     stopDragging
                   }}
+                  customRenderers={customElementRenderers}
+                  onTap={handleElementTap}
                 />
               );
             })}
@@ -2117,7 +2216,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       bounds.y + dy,
                       bounds.width,
                       bounds.height,
-                      (selectedElements || []).map((e: any) => e.id)
+                      (selectedElements || []).map((e: any) => e.id),
+                      { screenId }
                     );
                     const adjDx = snapped.x - bounds.x;
                     const adjDy = snapped.y - bounds.y;
@@ -2248,7 +2348,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         groupBounds.y + deltaY,
                         groupBounds.width,
                         groupBounds.height,
-                        groupElements.map(el => el.id)
+                        groupElements.map(el => el.id),
+                        { screenId }
                       );
                       const adjDx = snapped.x - groupBounds.x;
                       const adjDy = snapped.y - groupBounds.y;

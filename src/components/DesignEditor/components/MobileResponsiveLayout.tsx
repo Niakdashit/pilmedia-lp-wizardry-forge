@@ -93,31 +93,14 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
   const mIsMobile = isMobile;
   const mIsTablet = isTablet;
   
-  // Détection de la taille de fenêtre pour la responsivité
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
-
   // Afficher l'UI mobile dans ces cas:
   // 1. Appareil mobile réel (pas tablette)
   // 2. Device selector en mode mobile/tablette (selectedDevice)
   // 3. Force explicite mobile/tablette (forceDeviceType)
-  // 4. Fenêtre en format 9:16
   const showMobileUI = mIsMobile || 
                       selectedDevice === 'mobile' || selectedDevice === 'tablet' ||
-                      forceDeviceType === 'mobile' || forceDeviceType === 'tablet' ||
-                      isWindowMobile;
+                      forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
   
-  // Détection de la taille de fenêtre
-  useEffect(() => {
-    const updateWindowSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    updateWindowSize();
-    window.addEventListener('resize', updateWindowSize);
-    return () => window.removeEventListener('resize', updateWindowSize);
-  }, []);
-
   // Debug logging pour l'affichage mobile
   React.useEffect(() => {
     console.log('📱 MobileResponsiveLayout - UI Mobile decision:', {
@@ -126,10 +109,9 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
       selectedDevice,
       forceDeviceType,
       showMobileUI,
-      effectiveDeviceType,
-      isWindowMobile
+      effectiveDeviceType
     });
-  }, [mIsMobile, mIsTablet, selectedDevice, forceDeviceType, showMobileUI, effectiveDeviceType, isWindowMobile]);
+  }, [mIsMobile, mIsTablet, selectedDevice, forceDeviceType, showMobileUI, effectiveDeviceType]);
   
   console.log('🔍 Device detection debug:', {
     mIsMobile,

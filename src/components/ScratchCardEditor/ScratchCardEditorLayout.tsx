@@ -1510,20 +1510,26 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
-                setShowEffectsInSidebar(true);
-                setShowAnimationsInSidebar(false);
-                setShowAnimationsInSidebar(false);
+                if (!isWindowMobile) {
+                  setShowEffectsInSidebar(true);
+                  setShowAnimationsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                }
               }}
               onShowAnimationsPanel={() => {
-                setShowAnimationsInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
+                if (!isWindowMobile) {
+                  setShowAnimationsInSidebar(true);
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                }
               }}
               onShowPositionPanel={() => {
-                setShowDesignInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowDesignInSidebar(false);
+                if (!isWindowMobile) {
+                  setShowDesignInSidebar(true);
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowDesignInSidebar(false);
+                }
               }}
               onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
                 // Met à jour le contexte immédiatement même si le panneau est déjà ouvert

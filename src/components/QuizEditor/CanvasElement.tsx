@@ -9,10 +9,11 @@ import { useEditorStore } from '../../stores/editorStore';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { getCanvasViewport } from './core/Transform';
 import { createPreciseDrag } from './core/Drag';
-import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { usePinchResize } from './hooks/usePinchResize';
 import { usePrizeLogic } from '../../hooks/usePrizeLogic';
 import type { CampaignConfig } from '../../types/PrizeSystem';
+
+type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
 // Professional drag & drop implementation - Excalidraw/Canva precision
 
@@ -43,6 +44,7 @@ export interface CanvasElementProps {
     startDragging: () => void;
     stopDragging: () => void;
   };
+  screenId?: CanvasScreenId;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -62,7 +64,8 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   activeGroupId,
   campaign,
   extractedColors,
-  alignmentSystem
+  alignmentSystem,
+  screenId
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -214,13 +217,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const normalize180 = useCallback((deg: number) => {
     return ((deg + 180) % 360 + 360) % 360 - 180;
   }, []);
-
-  // Smart snapping integration for alignment guides and snapping during drag
-  const { applySnapping } = useSmartSnapping({
-    containerRef: containerRef as React.RefObject<HTMLDivElement>,
-    gridSize: 20,
-    snapTolerance: 3
-  });
 
   // Global clipboard from store
   const clipboard = useEditorStore(state => state.clipboard);
@@ -385,7 +381,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
     // Démarrer le drag professionnel
     enhancedOnPointerDown(e.nativeEvent, el);
-  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, applySnapping, activeGroupId, element, schedulePostCommitMeasure]);
+  }, [element.id, onSelect, containerRef, onUpdate, deviceProps, isDragging, readOnly, activeGroupId, element, schedulePostCommitMeasure]);
 
   // Optimized text editing handlers with useCallback - MOVED BEFORE renderElement
   const handleDoubleClick = useCallback(() => {
@@ -1284,6 +1280,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           : ''
       }`}
       data-element-id={element.id}
+      data-screen-id={screenId ?? undefined}
       style={{
         transform: `translate(${Number(deviceProps.x) || 0}px, ${Number(deviceProps.y) || 0}px) rotate(${typeof element.rotation === 'number' ? element.rotation : 0}deg)`,
         transformOrigin: 'center center',

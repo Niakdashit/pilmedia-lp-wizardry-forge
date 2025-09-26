@@ -10,16 +10,27 @@ interface SnapGuide {
   isCenter?: boolean;
 }
 
+interface SnapElement {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  screenId?: string | null;
+}
+
 interface UseSmartSnappingProps {
   containerRef: React.RefObject<HTMLElement> | React.RefObject<HTMLDivElement> | ((instance: HTMLDivElement | null) => void);
   gridSize?: number;
   snapTolerance?: number;
+  elements?: SnapElement[];
 }
 
 export const useSmartSnapping = ({
   containerRef,
   gridSize = 10,
-  snapTolerance = 3
+  snapTolerance = 3,
+  elements: overrideElements
 }: UseSmartSnappingProps) => {
   // We no longer rely on the `showGridLines` flag for snapping so the
   // magnetic grid is always active. The editor store is still queried for
@@ -28,6 +39,18 @@ export const useSmartSnapping = ({
 
   // Get all elements for snapping calculations
   const allElements = useMemo(() => {
+    if (overrideElements && overrideElements.length) {
+      return overrideElements.map(el => ({
+        id: el.id,
+        type: 'custom',
+        x: Number.isFinite(el.x) ? el.x : 0,
+        y: Number.isFinite(el.y) ? el.y : 0,
+        width: Number.isFinite(el.width) ? el.width : 100,
+        height: Number.isFinite(el.height) ? el.height : 30,
+        screenId: el.screenId ?? null
+      }));
+    }
+
     const elements: any[] = [];
     const customTexts = campaign?.design?.customTexts || {};
     const customImages = campaign?.design?.customImages || {};
@@ -40,7 +63,8 @@ export const useSmartSnapping = ({
         x: element.desktop?.x || element.x || 0,
         y: element.desktop?.y || element.y || 0,
         width: element.desktop?.width || element.width || 100,
-        height: element.desktop?.height || element.height || 30
+        height: element.desktop?.height || element.height || 30,
+        screenId: element.screenId ?? null
       });
     });
 
@@ -52,12 +76,13 @@ export const useSmartSnapping = ({
         x: element.desktop?.x || element.x || 0,
         y: element.desktop?.y || element.y || 0,
         width: element.desktop?.width || element.width || 100,
-        height: element.desktop?.height || element.height || 100
+        height: element.desktop?.height || element.height || 100,
+        screenId: element.screenId ?? null
       });
     });
 
     return elements;
-  }, [campaign?.design?.customTexts, campaign?.design?.customImages]);
+  }, [overrideElements, campaign?.design?.customTexts, campaign?.design?.customImages]);
 
   // Calculate snap guides
   // Caches for zoom and grid computations
@@ -131,7 +156,8 @@ export const useSmartSnapping = ({
   const calculateSnapGuides = useCallback((
     draggedElement: { x: number; y: number; width: number; height: number },
     excludeId?: string | string[],
-    metrics?: { z: number; containerWidth: number; containerHeight: number; tol: number }
+    metrics?: { z: number; containerWidth: number; containerHeight: number; tol: number },
+    options?: { screenId?: string | null }
   ): SnapGuide[] => {
     const guides: SnapGuide[] = [];
     
@@ -140,6 +166,7 @@ export const useSmartSnapping = ({
     const m = metrics ?? getContainerMetrics();
     const { z, containerWidth, containerHeight, tol } = m;
     const excludeSet = new Set<string>(Array.isArray(excludeId) ? excludeId : excludeId ? [excludeId] : []);
+    const targetScreen = options?.screenId ?? null;
 
     // Grid snapping – always active for a magnetic grid experience.
     const { xs, ys } = getGridLines(containerWidth, containerHeight);
@@ -161,6 +188,12 @@ export const useSmartSnapping = ({
     // Element snapping
     allElements.forEach(element => {
       if (excludeSet.has(element.id)) return;
+      if (targetScreen && overrideElements && overrideElements.length) {
+        const elementScreen = element.screenId ?? null;
+        if (elementScreen && elementScreen !== 'all' && elementScreen !== targetScreen) {
+          return;
+        }
+      }
 
       const elementLeft = element.x;
       const elementRight = element.x + element.width;
@@ -254,7 +287,7 @@ export const useSmartSnapping = ({
     }
 
     return guides;
-  }, [allElements, gridSize, snapTolerance, containerRef]);
+  }, [allElements, gridSize, snapTolerance, containerRef, overrideElements]);
 
   // Apply snapping to position avec priorité au centre
   const applySnapping = useCallback((
@@ -262,10 +295,11 @@ export const useSmartSnapping = ({
     y: number,
     width: number = 100,
     height: number = 30,
-    excludeId?: string | string[]
+    excludeId?: string | string[],
+    options?: { screenId?: string | null }
   ) => {
     const metrics = getContainerMetrics();
-    const guides = calculateSnapGuides({ x, y, width, height }, excludeId, metrics);
+    const guides = calculateSnapGuides({ x, y, width, height }, excludeId, metrics, options);
     const z = metrics.z;
     const baseTol = metrics.tol;
     

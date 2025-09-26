@@ -1219,22 +1219,28 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               extractedColors={extractedColors}
               containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
               // Sidebar panel triggers
-              onShowEffectsPanel={() => {
-                setShowEffectsInSidebar(true);
-                setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
-              }}
-              onShowAnimationsPanel={() => {
-                setShowAnimationsInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowPositionInSidebar(false);
-              }}
-              onShowPositionPanel={() => {
-                setShowPositionInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowDesignInSidebar(false);
-              }}
+onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+onShowAnimationsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+onShowPositionPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowPositionInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowDesignInSidebar(false);
+                        }
+                      }}
               onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
                 // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
                 if (context) {

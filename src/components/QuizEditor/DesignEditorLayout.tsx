@@ -26,6 +26,120 @@ import { quizTemplates } from '../../types/quizTemplates';
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
 
+const LAUNCH_BUTTON_FALLBACK_GRADIENT = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
+const LAUNCH_BUTTON_DEFAULT_TEXT_COLOR = '#ffffff';
+const LAUNCH_BUTTON_DEFAULT_PADDING = '14px 28px';
+const LAUNCH_BUTTON_DEFAULT_SHADOW = '0 12px 30px rgba(132, 27, 96, 0.35)';
+
+const resolveDimensionToPx = (value: any): string | undefined => {
+  if (value == null) return undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return `${value}px`;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return undefined;
+};
+
+const parseDimensionNumber = (value: any): number | undefined => {
+  if (value == null) return undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const match = value.match(/-?\d*\.?\d+/);
+    if (match) {
+      const parsed = parseFloat(match[0]);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+  }
+  return undefined;
+};
+
+const resolveDimensionNumber = (candidates: any[], fallback: number): number => {
+  for (const candidate of candidates) {
+    const parsed = parseDimensionNumber(candidate);
+    if (parsed !== undefined) return parsed;
+  }
+  return fallback;
+};
+
+const buildLaunchButtonStyles = (
+  buttonElement: any | undefined,
+  quizStyleOverrides: Record<string, any>,
+  quizConfig: {
+    buttonBackgroundColor: string;
+    buttonTextColor: string;
+    buttonHoverBackgroundColor: string;
+    buttonActiveBackgroundColor: string;
+    borderRadius: number | string;
+  }
+): React.CSSProperties => {
+  const baseBorderRadius =
+    quizStyleOverrides.borderRadius ||
+    (typeof quizConfig.borderRadius === 'number'
+      ? `${quizConfig.borderRadius}px`
+      : quizConfig.borderRadius) ||
+    '9999px';
+
+  const baseStyles: React.CSSProperties = {
+    background: quizStyleOverrides.buttonBackgroundColor || quizConfig.buttonBackgroundColor || LAUNCH_BUTTON_FALLBACK_GRADIENT,
+    color: quizStyleOverrides.buttonTextColor || quizConfig.buttonTextColor || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+    padding: quizStyleOverrides.buttonPadding || LAUNCH_BUTTON_DEFAULT_PADDING,
+    borderRadius: baseBorderRadius,
+    boxShadow: quizStyleOverrides.buttonBoxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW,
+    display: quizStyleOverrides.buttonDisplay || 'inline-flex',
+    alignItems: quizStyleOverrides.buttonAlignItems || 'center',
+    justifyContent: quizStyleOverrides.buttonJustifyContent || 'center',
+    minWidth: quizStyleOverrides.buttonMinWidth,
+    minHeight: quizStyleOverrides.buttonMinHeight,
+    width: quizStyleOverrides.buttonWidth,
+    height: quizStyleOverrides.buttonHeight,
+    textTransform: quizStyleOverrides.buttonTextTransform,
+    fontWeight: quizStyleOverrides.buttonFontWeight || 600
+  };
+
+  if (!buttonElement) {
+    return baseStyles;
+  }
+
+  const customCSS = (buttonElement as any)?.customCSS || {};
+  const elementStyle = (buttonElement as any)?.style || {};
+
+  return {
+    ...baseStyles,
+    background: customCSS.background || elementStyle.background || baseStyles.background,
+    color: customCSS.color || elementStyle.color || baseStyles.color,
+    padding: customCSS.padding || elementStyle.padding || baseStyles.padding,
+    borderRadius: customCSS.borderRadius || elementStyle.borderRadius || baseStyles.borderRadius,
+    boxShadow: customCSS.boxShadow || elementStyle.boxShadow || baseStyles.boxShadow,
+    display: customCSS.display || elementStyle.display || baseStyles.display,
+    alignItems: customCSS.alignItems || elementStyle.alignItems || baseStyles.alignItems,
+    justifyContent: customCSS.justifyContent || elementStyle.justifyContent || baseStyles.justifyContent,
+    minWidth:
+      customCSS.minWidth ||
+      elementStyle.minWidth ||
+      baseStyles.minWidth ||
+      resolveDimensionToPx((buttonElement as any)?.width),
+    minHeight:
+      customCSS.minHeight ||
+      elementStyle.minHeight ||
+      baseStyles.minHeight ||
+      resolveDimensionToPx((buttonElement as any)?.height),
+    width:
+      customCSS.width ||
+      elementStyle.width ||
+      baseStyles.width ||
+      resolveDimensionToPx((buttonElement as any)?.width),
+    height:
+      customCSS.height ||
+      elementStyle.height ||
+      baseStyles.height ||
+      resolveDimensionToPx((buttonElement as any)?.height),
+    textTransform: customCSS.textTransform || elementStyle.textTransform || baseStyles.textTransform,
+    fontWeight: customCSS.fontWeight || elementStyle.fontWeight || baseStyles.fontWeight
+  } as React.CSSProperties;
+};
+
 interface QuizEditorLayoutProps {
   mode?: 'template' | 'campaign';
   hiddenTabs?: string[];
@@ -116,12 +230,199 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
+  const buttonNormalizedRef = useRef(false);
+
+  useEffect(() => {
+    if (!canvasElements.length) return;
+    const hasMissingScreen = canvasElements.some((element) => !element?.screenId);
+    if (!hasMissingScreen) return;
+
+    setCanvasElements((prev) => {
+      let mutated = false;
+      const updated = prev.map((element) => {
+        if (element?.screenId) return element;
+
+        mutated = true;
+        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+        if (role.includes('exit-message')) {
+          return { ...element, screenId: 'screen3' as const };
+        }
+        if (
+          role.includes('form') ||
+          role.includes('contact') ||
+          role.includes('lead') ||
+          role.includes('info') ||
+          role.includes('screen2')
+        ) {
+          return { ...element, screenId: 'screen2' as const };
+        }
+        return { ...element, screenId: 'screen1' as const };
+      });
+
+      return mutated ? updated : prev;
+    });
+  }, [canvasElements]);
+
+  const centerButtonElement = useCallback((button: any) => {
+    if (!button) return button;
+    const css = { ...(button.customCSS || {}) };
+    const deviceSpecific = (button?.[selectedDevice] || {}) as Record<string, any>;
+
+    const btnWidth = resolveDimensionNumber([
+      css.width,
+      css.minWidth,
+      deviceSpecific?.width,
+      deviceSpecific?.minWidth,
+      button.width,
+      button.minWidth
+    ], 220);
+
+    const btnHeight = resolveDimensionNumber([
+      css.height,
+      css.minHeight,
+      deviceSpecific?.height,
+      deviceSpecific?.minHeight,
+      button.height,
+      button.minHeight
+    ], 56);
+
+    const { width: canvasWidth, height: canvasHeight } = getDeviceDimensions(selectedDevice);
+    const x = Math.round((canvasWidth - btnWidth) / 2);
+    const y = Math.round((canvasHeight - btnHeight) / 2);
+
+    const centered: any = {
+      ...button,
+      customCSS: css,
+      x,
+      y
+    };
+
+    if (selectedDevice !== 'desktop') {
+      centered[selectedDevice] = {
+        ...(button?.[selectedDevice] || {}),
+        x,
+        y
+      };
+    }
+
+    return centered;
+  }, [selectedDevice]);
+
+  useEffect(() => {
+    if (canvasElements.some(el => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return;
+
+    setCanvasElements(prev => {
+      if (prev.some(el => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return prev;
+
+      const gradient = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
+      const { width, height } = getDeviceDimensions(selectedDevice);
+      const buttonWidth = 220;
+      const buttonHeight = 56;
+
+      const newButton = {
+        id: `button-${Date.now()}`,
+        type: 'text',
+        role: 'button',
+        content: 'Participer',
+        screenId: 'screen1' as const,
+        x: Math.round((width - buttonWidth) / 2),
+        y: Math.round((height - buttonHeight) / 2),
+        width: buttonWidth,
+        height: buttonHeight,
+        fontSize: 20,
+        fontWeight: '600',
+        textAlign: 'center',
+        customCSS: {
+          background: gradient,
+          color: '#ffffff',
+          padding: '14px 28px',
+          borderRadius: '9999px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: `${buttonWidth}px`,
+          minHeight: `${buttonHeight}px`,
+          boxShadow: '0 12px 30px rgba(132, 27, 96, 0.35)'
+        }
+      };
+
+      return [...prev, centerButtonElement(newButton)];
+    });
+  }, [canvasElements, centerButtonElement, selectedDevice]);
+
+  useEffect(() => {
+    if (buttonNormalizedRef.current) return;
+
+    const gradient = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
+    let mutated = false;
+
+    const updated = canvasElements.map((el: any) => {
+      if (!(typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return el;
+
+      const customCSS = el.customCSS || {};
+      if (Object.keys(customCSS).length > 0) return el;
+
+      mutated = true;
+      const btnWidth = Number(el.width) || 220;
+      const btnHeight = Number(el.height) || 56;
+
+      return {
+        ...el,
+        customCSS: {
+          background: gradient,
+          color: '#ffffff',
+          padding: '14px 28px',
+          borderRadius: '9999px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: `${btnWidth}px`,
+          minHeight: `${btnHeight}px`,
+          width: `${btnWidth}px`,
+          height: `${btnHeight}px`,
+          boxShadow: '0 12px 30px rgba(132, 27, 96, 0.35)'
+        }
+      };
+    });
+
+    if (mutated) {
+      buttonNormalizedRef.current = true;
+      setCanvasElements(updated);
+    } else if (canvasElements.some(el => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) {
+      buttonNormalizedRef.current = true;
+    }
+  }, [canvasElements]);
+
   // Sauvegarder le zoom à chaque changement pour persistance entre modes
   useEffect(() => {
     try {
       localStorage.setItem(`editor-zoom-${selectedDevice}`, String(canvasZoom));
     } catch {}
   }, [canvasZoom, selectedDevice]);
+
+  useEffect(() => {
+    setCanvasElements(prev => {
+      let mutated = false;
+      const updated = prev.map((el: any) => {
+        if (!(typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return el;
+        const centered = centerButtonElement(el);
+        const currentDeviceState = (selectedDevice !== 'desktop') ? (el?.[selectedDevice] || {}) : {};
+        const centeredDeviceState = (selectedDevice !== 'desktop') ? (centered?.[selectedDevice] || {}) : {};
+        const needsUpdate = (
+          el.x !== centered.x ||
+          el.y !== centered.y ||
+          (selectedDevice !== 'desktop' && (
+            (currentDeviceState.x ?? el.x) !== (centeredDeviceState.x ?? centered.x) ||
+            (currentDeviceState.y ?? el.y) !== (centeredDeviceState.y ?? centered.y)
+          ))
+        );
+        if (!needsUpdate) return el;
+        mutated = true;
+        return centered;
+      });
+      return mutated ? updated : prev;
+    });
+  }, [selectedDevice, centerButtonElement]);
 
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
@@ -373,8 +674,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
   const handleAddElement = (element: any) => {
+    const resolvedScreenId = element?.screenId
+      || (currentScreen === 'screen2'
+        ? 'screen2'
+        : currentScreen === 'screen3' ? 'screen3' : 'screen1');
+    const enrichedElement = element?.screenId ? element : { ...element, screenId: resolvedScreenId };
     setCanvasElements(prev => {
-      const newArr = [...prev, element];
+      const newArr = [...prev, enrichedElement];
       setTimeout(() => {
         addToHistory({
           campaignConfig: { ...campaignConfig },
@@ -384,7 +690,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       }, 0);
       return newArr;
     });
-    setSelectedElement(element);
+    setSelectedElement(enrichedElement);
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
@@ -510,6 +816,17 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       const workingUpdates: Record<string, any> = { ...updates };
       const devicePatch: Record<string, any> = {};
 
+      const isLaunchButton = typeof selectedElement.role === 'string' && selectedElement.role.toLowerCase() === 'button';
+
+      if (isLaunchButton) {
+        delete workingUpdates.x;
+        delete workingUpdates.y;
+        if (isDeviceScoped) {
+          delete workingUpdates.width;
+          delete workingUpdates.height;
+        }
+      }
+
       if (isDeviceScoped) {
         for (const key of deviceScopedKeys) {
           if (workingUpdates[key] !== undefined) {
@@ -519,7 +836,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         }
       }
 
-      const updatedElement = {
+      let updatedElement: any = {
         ...selectedElement,
         ...workingUpdates,
         ...(isDeviceScoped
@@ -531,6 +848,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             }
           : {})
       };
+
+      if (isLaunchButton) {
+        updatedElement = centerButtonElement(updatedElement);
+      }
 
       setCanvasElements(prev => {
         const newArr = prev.map(el =>
@@ -744,6 +1065,380 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     }
   }, [selectedElement, handleAddElement]);
   
+  const quizStyleOverrides = useMemo<Record<string, any>>(() => {
+    return (campaignConfig?.design?.quizConfig?.style || {}) as Record<string, any>;
+  }, [campaignConfig]);
+
+  const buttonElement = useMemo(() => {
+    return canvasElements.find(el => el.type === 'text' && el.role === 'button');
+  }, [canvasElements]);
+
+  const exitMessageElement = useMemo(() => {
+    return canvasElements.find(el => el.type === 'text' && typeof el?.role === 'string' && el.role.toLowerCase() === 'exit-message');
+  }, [canvasElements]);
+
+  const launchButtonStyles = useMemo(() => {
+    return buildLaunchButtonStyles(buttonElement, quizStyleOverrides, {
+      buttonBackgroundColor: quizConfig.buttonBackgroundColor,
+      buttonTextColor: quizConfig.buttonTextColor,
+      buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
+      buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor,
+      borderRadius: quizConfig.borderRadius
+    });
+  }, [buttonElement, quizStyleOverrides, quizConfig]);
+
+  const launchButtonText = (buttonElement as any)?.content || 'Participer';
+
+  const centerExitMessageElement = useCallback((element: any) => {
+    if (!element) return element;
+
+    const css = { ...(element.customCSS || {}) };
+    const deviceSpecific = (element?.[selectedDevice] || {}) as Record<string, any>;
+
+    const messageWidth = resolveDimensionNumber([
+      css.width,
+      css.minWidth,
+      deviceSpecific?.width,
+      deviceSpecific?.minWidth,
+      element.width,
+      element.minWidth
+    ], Math.min(getDeviceDimensions(selectedDevice).width - 32, 420));
+
+    const messageHeight = resolveDimensionNumber([
+      css.height,
+      css.minHeight,
+      deviceSpecific?.height,
+      deviceSpecific?.minHeight,
+      element.height,
+      element.minHeight
+    ], 180);
+
+    const { width: canvasWidth, height: canvasHeight } = getDeviceDimensions(selectedDevice);
+    const x = Math.round((canvasWidth - messageWidth) / 2);
+    const y = Math.round((canvasHeight - messageHeight) / 2);
+
+    const centered: any = {
+      ...element,
+      customCSS: css,
+      x,
+      y,
+      width: messageWidth,
+      height: messageHeight
+    };
+
+    if (selectedDevice !== 'desktop') {
+      centered[selectedDevice] = {
+        ...(element?.[selectedDevice] || {}),
+        x,
+        y
+      };
+    }
+
+    return centered;
+  }, [selectedDevice]);
+
+  useEffect(() => {
+    const hasExitMessage = canvasElements.some((el) => typeof el?.role === 'string' && el.role.toLowerCase() === 'exit-message');
+    if (hasExitMessage) return;
+
+    const { width: canvasWidth } = getDeviceDimensions(selectedDevice);
+    const defaultWidth = Math.min(Math.max(320, Math.round(canvasWidth * 0.65)), canvasWidth - 32);
+    const defaultHeight = 200;
+
+    const exitElement = centerExitMessageElement({
+      id: `exit-message-${Date.now()}`,
+      type: 'text',
+      role: 'exit-message',
+      content: 'Merci pour votre participation !',
+      screenId: 'screen3' as const,
+      width: defaultWidth,
+      height: defaultHeight,
+      fontSize: 28,
+      textAlign: 'center',
+      customCSS: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '32px',
+        borderRadius: '24px',
+        background: 'rgba(255, 255, 255, 0.9)',
+        color: '#111827',
+        boxShadow: '0 24px 60px rgba(17, 24, 39, 0.18)',
+        fontWeight: '600',
+        letterSpacing: '0.02em'
+      }
+    });
+
+    setCanvasElements((prev) => [...prev, exitElement]);
+  }, [canvasElements, centerExitMessageElement, selectedDevice, setCanvasElements]);
+  
+  const emitQuizStyleUpdate = useCallback((detail: Record<string, any>) => {
+    if (!detail || Object.keys(detail).length === 0) return;
+    try {
+      const target = document.getElementById('quiz-preview-container') || window;
+      const event = new CustomEvent('quizStyleUpdate', { detail });
+      const dispatched = target.dispatchEvent(event);
+      if (!dispatched) {
+        const fallback = new CustomEvent('quizStyleUpdateFallback', { detail });
+        target.dispatchEvent(fallback);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'émission de quizStyleUpdate pour le bouton:', error);
+    }
+  }, []);
+
+  const updateCampaignQuizStyle = useCallback((changes: Record<string, any>) => {
+    setCampaignConfig((prev: any) => {
+      const next = { ...(prev || {}) };
+      const design = { ...(next.design || {}) };
+      const quizDesign = { ...(design.quizConfig || {}) };
+      const style = { ...(quizDesign.style || {}) };
+
+      Object.entries(changes).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') {
+          delete style[key];
+        } else {
+          (style as any)[key] = value;
+        }
+      });
+
+      next.design = {
+        ...design,
+        quizConfig: {
+          ...quizDesign,
+          style
+        }
+      };
+
+      return next;
+    });
+  }, [setCampaignConfig]);
+
+  const handleLaunchButtonStyleChange = useCallback((styles: Partial<React.CSSProperties>) => {
+    if (!styles || Object.keys(styles).length === 0) return;
+
+    let snapshotElements: any[] | null = null;
+
+    setCanvasElements(prev => {
+      let mutated = false;
+      const updated = prev.map(el => {
+        if (!(el.type === 'text' && el.role === 'button')) return el;
+        const currentCSS = { ...(el.customCSS || {}) };
+        const nextCSS: Record<string, any> = { ...currentCSS };
+
+        const apply = (key: keyof React.CSSProperties, value: any, fallback?: any) => {
+          const effective = value !== undefined ? value : fallback;
+          if (effective === undefined || effective === null || effective === '') {
+            delete nextCSS[key];
+          } else {
+            nextCSS[key] = effective;
+          }
+        };
+
+        if ('background' in styles) apply('background', styles.background, LAUNCH_BUTTON_FALLBACK_GRADIENT);
+        if ('color' in styles) apply('color', styles.color, LAUNCH_BUTTON_DEFAULT_TEXT_COLOR);
+        if ('padding' in styles) apply('padding', styles.padding, LAUNCH_BUTTON_DEFAULT_PADDING);
+        if ('borderRadius' in styles) {
+          const radius = styles.borderRadius;
+          const normalized = typeof radius === 'number' ? `${radius}px` : radius;
+          apply('borderRadius', normalized, '9999px');
+        }
+        if ('boxShadow' in styles) apply('boxShadow', styles.boxShadow, LAUNCH_BUTTON_DEFAULT_SHADOW);
+        if ('textTransform' in styles) apply('textTransform', styles.textTransform);
+        if ('fontWeight' in styles) apply('fontWeight', styles.fontWeight, 600);
+
+        const currentString = JSON.stringify(currentCSS);
+        const nextString = JSON.stringify(nextCSS);
+
+        const centered = centerButtonElement({ ...el, customCSS: nextCSS });
+        const currentDeviceState = (selectedDevice !== 'desktop') ? (el?.[selectedDevice] || {}) : {};
+        const centeredDeviceState = (selectedDevice !== 'desktop') ? (centered?.[selectedDevice] || {}) : {};
+
+        const needsCssUpdate = currentString !== nextString;
+        const needsPositionUpdate = (
+          el.x !== centered.x ||
+          el.y !== centered.y ||
+          (selectedDevice !== 'desktop' && (
+            (currentDeviceState.x ?? el.x) !== (centeredDeviceState.x ?? centered.x) ||
+            (currentDeviceState.y ?? el.y) !== (centeredDeviceState.y ?? centered.y)
+          ))
+        );
+
+        if (!needsCssUpdate && !needsPositionUpdate) return el;
+
+        mutated = true;
+        return centered;
+      });
+
+      if (!mutated) {
+        snapshotElements = null;
+        return prev;
+      }
+
+      snapshotElements = JSON.parse(JSON.stringify(updated));
+      return updated;
+    });
+
+    if (snapshotElements) {
+      const elementsSnapshot = snapshotElements;
+      setTimeout(() => {
+        addToHistory({
+          campaignConfig: { ...campaignConfig },
+          canvasElements: elementsSnapshot,
+          canvasBackground: { ...canvasBackground }
+        }, 'launch_button_style');
+      }, 0);
+    }
+
+    const quizStyleDetail: Record<string, any> = {};
+
+    if (styles.background !== undefined) {
+      const backgroundValue = styles.background || LAUNCH_BUTTON_FALLBACK_GRADIENT;
+      setQuizConfig(prev => ({ ...prev, buttonBackgroundColor: backgroundValue }));
+      updateCampaignQuizStyle({ buttonBackgroundColor: backgroundValue });
+      quizStyleDetail.buttonBackgroundColor = backgroundValue;
+    }
+
+    if (styles.color !== undefined) {
+      const textColorValue = styles.color || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR;
+      setQuizConfig(prev => ({ ...prev, buttonTextColor: textColorValue }));
+      updateCampaignQuizStyle({ buttonTextColor: textColorValue });
+      quizStyleDetail.buttonTextColor = textColorValue;
+    }
+
+    if (styles.borderRadius !== undefined) {
+      const radiusValue = typeof styles.borderRadius === 'number'
+        ? styles.borderRadius
+        : parseFloat(String(styles.borderRadius).replace('px', ''));
+      const normalizedRadius = typeof styles.borderRadius === 'number'
+        ? `${styles.borderRadius}px`
+        : (styles.borderRadius as string) || '9999px';
+      if (!Number.isNaN(radiusValue)) {
+        setQuizConfig(prev => ({ ...prev, borderRadius: radiusValue }));
+      }
+      updateCampaignQuizStyle({ borderRadius: normalizedRadius });
+      quizStyleDetail.borderRadius = normalizedRadius;
+    }
+
+    if (styles.padding !== undefined) {
+      const paddingValue = styles.padding || LAUNCH_BUTTON_DEFAULT_PADDING;
+      updateCampaignQuizStyle({ buttonPadding: paddingValue });
+      quizStyleDetail.buttonPadding = paddingValue;
+    }
+
+    if (styles.boxShadow !== undefined) {
+      const shadowValue = styles.boxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW;
+      updateCampaignQuizStyle({ buttonBoxShadow: shadowValue });
+      quizStyleDetail.buttonBoxShadow = shadowValue;
+    }
+
+    if (styles.textTransform !== undefined) {
+      const transformValue = styles.textTransform || undefined;
+      updateCampaignQuizStyle({ buttonTextTransform: transformValue });
+      quizStyleDetail.buttonTextTransform = transformValue;
+    }
+
+    if (styles.fontWeight !== undefined) {
+      const fontWeightValue = styles.fontWeight || undefined;
+      updateCampaignQuizStyle({ buttonFontWeight: fontWeightValue });
+      quizStyleDetail.buttonFontWeight = fontWeightValue;
+    }
+
+    Object.keys(quizStyleDetail).forEach((key) => {
+      if (quizStyleDetail[key] === undefined) {
+        delete quizStyleDetail[key];
+      }
+    });
+
+    emitQuizStyleUpdate(quizStyleDetail);
+  }, [
+    addToHistory,
+    campaignConfig,
+    canvasBackground,
+    centerButtonElement,
+    emitQuizStyleUpdate,
+    updateCampaignQuizStyle,
+    setCanvasElements,
+    setQuizConfig,
+    selectedDevice
+  ]);
+
+  const handleLaunchButtonTextChange = useCallback((text: string) => {
+    let snapshotElements: any[] | null = null;
+
+    setCanvasElements(prev => {
+      let mutated = false;
+      const updated = prev.map(el => {
+        if (el.type === 'text' && el.role === 'button') {
+          if (el.content === text) {
+            const centeredExisting = centerButtonElement(el);
+            const currentDeviceState = (selectedDevice !== 'desktop') ? (el?.[selectedDevice] || {}) : {};
+            const centeredDeviceState = (selectedDevice !== 'desktop') ? (centeredExisting?.[selectedDevice] || {}) : {};
+            const needsPositionUpdate = (
+              el.x !== centeredExisting.x ||
+              el.y !== centeredExisting.y ||
+              (selectedDevice !== 'desktop' && (
+                (currentDeviceState.x ?? el.x) !== (centeredDeviceState.x ?? centeredExisting.x) ||
+                (currentDeviceState.y ?? el.y) !== (centeredDeviceState.y ?? centeredExisting.y)
+              ))
+            );
+            if (!needsPositionUpdate) return el;
+            mutated = true;
+            return centeredExisting;
+          }
+          mutated = true;
+          return centerButtonElement({
+            ...el,
+            content: text
+          });
+        }
+        return el;
+      });
+
+      if (!mutated) {
+        snapshotElements = null;
+        return prev;
+      }
+
+      snapshotElements = JSON.parse(JSON.stringify(updated));
+      return updated;
+    });
+
+    if (snapshotElements) {
+      const elementsSnapshot = snapshotElements;
+      setTimeout(() => {
+        addToHistory({
+          campaignConfig: { ...campaignConfig },
+          canvasElements: elementsSnapshot,
+          canvasBackground: { ...canvasBackground }
+        }, 'launch_button_text');
+      }, 0);
+    }
+
+    updateCampaignQuizStyle({ buttonLabel: text });
+  }, [
+    addToHistory,
+    campaignConfig,
+    canvasBackground,
+    centerButtonElement,
+    selectedDevice,
+    setCanvasElements,
+    updateCampaignQuizStyle
+  ]);
+
+  const handleLaunchButtonReset = useCallback(() => {
+    handleLaunchButtonStyleChange({
+      background: LAUNCH_BUTTON_FALLBACK_GRADIENT,
+      color: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+      padding: LAUNCH_BUTTON_DEFAULT_PADDING,
+      borderRadius: '9999px',
+      boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW,
+      textTransform: undefined,
+      fontWeight: 600
+    });
+    handleLaunchButtonTextChange('Participer');
+  }, [handleLaunchButtonStyleChange, handleLaunchButtonTextChange]);
+  
   // Synchronisation avec le store
   useEffect(() => {
     setPreviewDevice(selectedDevice);
@@ -753,8 +1448,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const campaignData = useMemo(() => {
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
-    const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
-    
+    const buttonElementLocal = buttonElement;
+    const fallbackButtonText = buttonElementLocal?.content || quizStyleOverrides.buttonLabel || 'Participer';
+
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
@@ -813,6 +1509,67 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       device: selectedDevice
     });
 
+    const buttonCustomStyles = launchButtonStyles;
+
+    const screenSources = [
+      (campaignState as any)?.screens,
+      (campaignConfig as any)?.screens,
+      (campaignConfig as any)?.design?.screens
+    ].find((screens): screens is any[] => Array.isArray(screens)) || [];
+
+    const fallbackExitContent = (exitMessageElement as any)?.content?.trim() || 'Merci pour votre participation !';
+
+    const defaultScreens = [
+      {
+        title: 'Testez vos connaissances !',
+        description: 'Répondez aux questions et découvrez votre score',
+        buttonText: fallbackButtonText
+      },
+      {
+        title: 'Vos informations',
+        description: '',
+        buttonText: 'Continuer'
+      },
+      {
+        title: '',
+        description: '',
+        buttonText: 'Valider'
+      },
+      {
+        confirmationTitle: 'Merci pour votre participation !',
+        confirmationMessage: fallbackExitContent,
+        description: fallbackExitContent,
+        replayButtonText: 'Rejouer'
+      }
+    ];
+
+    const normalizedScreens = defaultScreens.map((defaults, index) => {
+      const existing = screenSources[index] || {};
+      const merged: Record<string, any> = { ...defaults, ...existing };
+
+      if (index === 0) {
+        merged.title = titleElement?.content || merged.title;
+        merged.description = descriptionElement?.content || merged.description;
+        merged.buttonText = fallbackButtonText;
+      }
+
+      if (index === 3) {
+        const exitContent = (exitMessageElement as any)?.content?.trim();
+        if (exitContent) {
+          merged.confirmationMessage = exitContent;
+          merged.description = exitContent;
+        }
+        if (!merged.confirmationTitle) {
+          merged.confirmationTitle = defaults.confirmationTitle;
+        }
+        if (!merged.replayButtonText) {
+          merged.replayButtonText = defaults.replayButtonText;
+        }
+      }
+
+      return merged;
+    });
+
     return {
       id: 'quiz-design-preview',
       type: 'quiz',
@@ -859,22 +1616,28 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
           questions: configuredQuestions,
           timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
           templateId: quizConfig.templateId,
-          buttonLabel: buttonElement?.content || 'Commencer le quiz'
+          buttonLabel: fallbackButtonText,
+          buttonStyles: buttonCustomStyles
         }
       },
       buttonConfig: {
-        text: buttonElement?.content || 'Commencer le quiz',
+        text: fallbackButtonText,
         color: primaryColor,
-        textColor: buttonElement?.style?.color || '#ffffff',
-        borderRadius: campaignConfig.borderRadius || '8px'
+        textColor:
+          buttonCustomStyles?.color ||
+          (buttonElementLocal as any)?.style?.color ||
+          quizStyleOverrides.buttonTextColor ||
+          quizConfig.buttonTextColor ||
+          '#ffffff',
+        borderRadius:
+          buttonCustomStyles?.borderRadius as any ||
+          quizStyleOverrides.borderRadius ||
+          (typeof quizConfig.borderRadius === 'number' ? `${quizConfig.borderRadius}px` : quizConfig.borderRadius) ||
+          '8px',
+        styles: buttonCustomStyles
       },
-      screens: [
-        {
-          title: titleElement?.content || 'Testez vos connaissances !',
-          description: descriptionElement?.content || 'Répondez aux questions et découvrez votre score',
-          buttonText: buttonElement?.content || 'Commencer'
-        }
-      ],
+      screens: normalizedScreens,
+      resultScreen: normalizedScreens[3],
       // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
       formFields: ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
@@ -890,7 +1653,18 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
+  }, [
+    canvasElements,
+    canvasBackground,
+    campaignConfig,
+    extractedColors,
+    selectedDevice,
+    wheelModalConfig,
+    campaignState,
+    launchButtonStyles,
+    quizStyleOverrides,
+    quizConfig
+  ]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -1487,6 +2261,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
+                launchButtonStyles={launchButtonStyles}
+                launchButtonText={launchButtonText}
+                onLaunchButtonStyleChange={handleLaunchButtonStyleChange}
+                onLaunchButtonTextChange={handleLaunchButtonTextChange}
+                onLaunchButtonReset={handleLaunchButtonReset}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
@@ -1771,12 +2550,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
             <DesignCanvas
+              screenId="screen1"
               ref={canvasRef}
               selectedDevice={selectedDevice}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
               background={canvasBackground}
-                  campaign={campaignData}
+              campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
@@ -1789,47 +2569,62 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               extractedColors={extractedColors}
               quizModalConfig={quizModalConfig}
               containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+              hideInlineQuizPreview
+              elementFilter={(element: any) => {
+                const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                return !role.includes('exit-message');
+              }}
               // Sidebar panel triggers
               onShowEffectsPanel={() => {
-                setShowEffectsInSidebar(true);
-                setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
+                if (!isWindowMobile) {
+                  setShowEffectsInSidebar(true);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
+                }
               }}
               onShowAnimationsPanel={() => {
-                setShowAnimationsInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowPositionInSidebar(false);
+                if (!isWindowMobile) {
+                  setShowAnimationsInSidebar(true);
+                  setShowEffectsInSidebar(false);
+                  setShowPositionInSidebar(false);
+                }
               }}
               onShowPositionPanel={() => {
-                setShowPositionInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowDesignInSidebar(false);
+                if (!isWindowMobile) {
+                  setShowPositionInSidebar(true);
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowDesignInSidebar(false);
+                }
               }}
               onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
-                if (context) {
-                  setDesignColorContext(context);
-                }
-                // Toujours ouvrir/forcer l'onglet Design
-                setShowDesignInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
+                if (!isWindowMobile) {
+                  // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                  if (context) {
+                    setDesignColorContext(context);
+                  }
+                  // Toujours ouvrir/forcer l'onglet Design
+                  setShowDesignInSidebar(true);
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
 
-                if (sidebarRef.current) {
-                  sidebarRef.current.setActiveTab('background');
+                  if (sidebarRef.current) {
+                    sidebarRef.current.setActiveTab('background');
+                  }
                 }
               }}
               onOpenElementsTab={() => {
-                // Utiliser la même logique que onForceElementsTab
-                if (sidebarRef.current) {
-                  sidebarRef.current.setActiveTab('elements');
+                if (!isWindowMobile) {
+                  // Utiliser la même logique que onForceElementsTab
+                  if (sidebarRef.current) {
+                    sidebarRef.current.setActiveTab('elements');
+                  }
+                  // Fermer les autres panneaux
+                  setShowEffectsInSidebar(false);
+                  setShowAnimationsInSidebar(false);
+                  setShowPositionInSidebar(false);
                 }
-                // Fermer les autres panneaux
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
               }}
               // Mobile sidebar integrations
               onAddElement={handleAddElement}
@@ -1867,6 +2662,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
@@ -1884,22 +2680,32 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       extractedColors={extractedColors}
                       quizModalConfig={quizModalConfig}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return !role.includes('exit-message');
+                      }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
-                        setShowEffectsInSidebar(true);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
                       }}
                       onShowAnimationsPanel={() => {
-                        setShowAnimationsInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
                       }}
                       onShowPositionPanel={() => {
-                        setShowPositionInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowDesignInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowPositionInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowDesignInSidebar(false);
+                        }
                       }}
                       onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
                         // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
@@ -1964,6 +2770,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
@@ -1981,22 +2788,32 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       extractedColors={extractedColors}
                       quizModalConfig={quizModalConfig}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return role.includes('exit-message');
+                      }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
-                        setShowEffectsInSidebar(true);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
                       }}
                       onShowAnimationsPanel={() => {
-                        setShowAnimationsInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
                       }}
                       onShowPositionPanel={() => {
-                        setShowPositionInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowDesignInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowPositionInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowDesignInSidebar(false);
+                        }
                       }}
                       onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
                         // Met à jour le contexte immédiatement même si le panneau est déjà ouvert

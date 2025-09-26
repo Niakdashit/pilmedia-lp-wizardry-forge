@@ -1601,7 +1601,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 flex flex-col items-center ${isWindowMobile ? 'justify-start -mt-20' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 flex flex-col items-center justify-start ${isWindowMobile ? '-mt-20' : 'pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         // Props pour la sidebar mobile
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
