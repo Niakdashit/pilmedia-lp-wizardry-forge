@@ -14,7 +14,7 @@ interface TextPanelProps {
 }
 
 // Polices organisées par catégories - Enrichies avec de nouvelles Google Fonts
-const fontCategories = [{
+export const fontCategories = [{
   name: "Business",
   fonts: [
     'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Nunito Sans', 'Inter', 'Poppins', 'Work Sans', 'IBM Plex Sans',

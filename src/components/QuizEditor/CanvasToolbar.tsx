@@ -37,14 +37,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   onOpenElementsTab,
   canvasRef
 }) => {
-  const [showAlignmentMenu, setShowAlignmentMenu] = useState(false);
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [showPositionPanel, setShowPositionPanel] = useState(false);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showBorderRadiusDropdown, setShowBorderRadiusDropdown] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const effectsPanelRef = useRef<HTMLDivElement>(null);
-  const alignmentMenuRef = useRef<HTMLDivElement>(null);
   const borderRadiusRef = useRef<HTMLDivElement>(null);
   const borderModalRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +52,32 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       detail: { hide, reason }
     });
     document.dispatchEvent(evt);
+  };
+
+  // Send inline format event to the active text editor; fallback to element-level if nothing handles it
+  const applyInlineOrElement = (action: 'bold' | 'italic' | 'underline', elementToggle: () => void) => {
+    try {
+      const maybeModuleId = typeof selectedElement?.id === 'string' && selectedElement.id.startsWith('modular-text-')
+        ? selectedElement.id.replace('modular-text-', '')
+        : null;
+      const moduleContainer = maybeModuleId
+        ? (document.querySelector(`[data-module-id="${maybeModuleId}"][data-module-role="body"]`) as HTMLElement | null)
+        : null;
+      const container = moduleContainer || (document.querySelector(`[data-element-id="${selectedElement?.id}"] [data-element-type="text"]`) as HTMLElement | null);
+      const sel = window.getSelection();
+      if (container && sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (container.contains(range.commonAncestorContainer)) {
+          // Ensure editor keeps focus and use execCommand to toggle formatting
+          container.focus();
+          document.execCommand(action);
+          const html = container.innerHTML;
+          onElementUpdate({ richHtml: html, content: container.textContent || selectedElement.content || '' });
+          return;
+        }
+      }
+    } catch {}
+    elementToggle();
   };
 
   // Fermer les dropdowns quand on clique ailleurs
@@ -70,7 +94,6 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       if (!clickedInsideAny) {
         setShowBorderRadiusDropdown(false);
         setShowBorderModal(false);
-        setShowAlignmentMenu(false);
         if (showEffectsPanel) setShowEffectsPanel(false);
         // Always restore selection visibility when dropdowns close due to outside click
         dispatchAdjustingSelection(false, 'borderRadius');
@@ -163,6 +186,32 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   const currentAlignment = selectedElement.textAlign || 'left';
   const currentAlignmentOption = alignmentOptions.find(opt => opt.value === currentAlignment) || alignmentOptions[0];
   const CurrentAlignIcon = currentAlignmentOption.icon;
+
+  // Cycle alignment on each click: left -> center -> right -> justify -> left
+  const cycleAlignment = () => {
+    if (isShape) return; // not applicable for shapes
+    const order = ['left', 'center', 'right', 'justify'] as const;
+    const idx = order.indexOf((currentAlignment as any) ?? 'left');
+    const next = order[(idx + 1) % order.length];
+    // Update selected element alignment (text element in canvas)
+    onElementUpdate({ 
+      textAlign: next,
+      style: {
+        ...selectedElement?.style,
+        textAlign: next
+      }
+    });
+    // Also broadcast to the quiz module so question/options align immediately
+    try {
+      const evt = new CustomEvent('quizStyleUpdate', {
+        detail: {
+          questionTextAlign: next,
+          optionsTextAlign: next
+        }
+      } as any);
+      window.dispatchEvent(evt);
+    } catch {}
+  };
 
 
   return (
@@ -324,11 +373,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
 
       {/* Text Formatting */}
       <button 
-        onClick={() => onElementUpdate({ 
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => applyInlineOrElement('bold', () => onElementUpdate({ 
           fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
-        })}
+        }))}
         className={`p-1 rounded sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontWeight === 'bold' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
+          selectedElement.fontWeight === 'bold' ? 'bg-[#841b60] text-white' : ''
         }`}
         title="Gras (Ctrl+B)"
       >
@@ -336,11 +386,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       </button>
       
       <button 
-        onClick={() => onElementUpdate({ 
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => applyInlineOrElement('italic', () => onElementUpdate({ 
           fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
-        })}
+        }))}
         className={`p-1 rounded sm:p-1.5 hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontStyle === 'italic' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
+          selectedElement.fontStyle === 'italic' ? 'bg-[#841b60] text-white' : ''
         }`}
         title="Italique (Ctrl+I)"
       >
@@ -348,11 +399,12 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       </button>
       
       <button 
-        onClick={() => onElementUpdate({ 
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => applyInlineOrElement('underline', () => onElementUpdate({ 
           textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
-        })}
+        }))}
         className={`p-1 rounded sm:p-1.5 hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.textDecoration === 'underline' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : ''
+          selectedElement.textDecoration === 'underline' ? 'bg-[#841b60] text-white' : ''
         }`}
         title="Souligné (Ctrl+U)"
       >
@@ -361,44 +413,17 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
 
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
-      {/* Text Alignment */}
+      {/* Text Alignment: click to cycle (left -> center -> right -> justify) */}
       <div className="relative">
         <button 
-          onClick={() => isShape ? null : setShowAlignmentMenu(!showAlignmentMenu)}
-          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-          title={`Alignement: ${currentAlignmentOption.label}`}
+          onClick={cycleAlignment}
+          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-[#841b60] text-white"
+          title={`Alignement: ${currentAlignmentOption.label} (cliquer pour changer)`}
           disabled={isShape}
           style={{ opacity: isShape ? 0.5 : 1 }}
         >
           <CurrentAlignIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <ChevronDown className="w-3 h-3" />
         </button>
-      
-        {!isShape && showAlignmentMenu && (
-          <div 
-            ref={alignmentMenuRef}
-            className="absolute top-full left-0 mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-50 min-w-[120px] animate-in slide-in-from-top-2 duration-200"
-          >
-            {alignmentOptions.map(option => {
-              const IconComponent = option.icon;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    onElementUpdate({ textAlign: option.value });
-                    setShowAlignmentMenu(false);
-                  }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-gray-600 transition-colors duration-150 first:rounded-t-lg last:rounded-b-lg ${
-                    currentAlignment === option.value ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'text-gray-200'
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="text-sm">{option.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       <div className="h-6 w-px bg-gray-500 mx-3" />

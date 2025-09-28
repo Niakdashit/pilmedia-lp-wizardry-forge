@@ -39,11 +39,11 @@ const ScratchGameGrid: React.FC<ScratchGameGridProps> = ({
   const effectiveCards = maxCards ? cards.slice(0, maxCards) : cards;
   const resolvedCols = Math.max(1, gridConfig?.cols || effectiveCards.length);
   const resolvedRows = Math.max(1, gridConfig?.rows || Math.ceil(effectiveCards.length / resolvedCols));
-  const resolvedGap = typeof gridConfig?.gap === 'number' ? gridConfig.gap : 24;
+  const resolvedGap = typeof gridConfig?.gap === 'number' ? gridConfig.gap : 16;
   const cardShape = gridConfig?.cardShape;
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-6">
+    <div className="w-full h-full flex items-center justify-center p-3">
       <div
         className="w-full max-w-[1200px]"
         style={{

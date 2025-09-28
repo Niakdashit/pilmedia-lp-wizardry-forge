@@ -36,6 +36,9 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
     width?: string;
     mobileWidth?: string;
     height?: string;
+    // New: alignments controlled from toolbar
+    questionTextAlign?: 'left' | 'center' | 'right' | 'justify';
+    optionsTextAlign?: 'left' | 'center' | 'right' | 'justify';
   }
 
   // Écouter les mises à jour de style du quiz
@@ -412,7 +415,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
   // Removed unused hover color utility function (fixed syntax)
 
   const questionStyle: React.CSSProperties = {
-    textAlign: template.questionStyle.textAlign || 'left',
+    textAlign: (currentStyles.questionTextAlign || campaign?.design?.quizConfig?.style?.questionTextAlign || template.questionStyle.textAlign || 'left') as any,
     fontSize: `${template.questionStyle.fontSize || 16}px`,
     fontWeight: template.questionStyle.fontWeight || 600,
     margin: '0 0 16px 0',
@@ -537,7 +540,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 padding: template.captionStyle?.padding || '8px 10px',
                 fontWeight: 800,
                 textTransform: 'uppercase' as const,
-                textAlign: 'center' as const,
+                textAlign: ((currentStyles.optionsTextAlign || campaign?.design?.quizConfig?.style?.optionsTextAlign || 'center')) as any,
                 boxShadow: '0 3px 0 rgba(0,0,0,0.25)',
                 marginTop: '8px',
                 fontSize: '14px',
@@ -548,7 +551,10 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 minHeight: '44px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: (() => {
+                  const a = (currentStyles.optionsTextAlign || campaign?.design?.quizConfig?.style?.optionsTextAlign || 'center');
+                  return a === 'left' ? 'flex-start' : a === 'right' ? 'flex-end' : a === 'justify' ? 'space-between' : 'center';
+                })()
               }}>
                 {letters[index]}. {answer.text || `Option ${index + 1}`}
               </div>
@@ -589,7 +595,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 transition: 'all 0.2s ease',
                 // S'assurer que le texte est correctement aligné et peut s'étendre
                 alignItems: 'center',
-                textAlign: 'left',
+                textAlign: (currentStyles.optionsTextAlign || campaign?.design?.quizConfig?.style?.optionsTextAlign || 'left') as any,
                 // Permettre le retour à la ligne
                 whiteSpace: 'normal',
                 wordWrap: 'break-word',
@@ -655,12 +661,10 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
               background: template.header.backgroundColor,
               display: 'flex',
               alignItems: 'center',
-              justifyContent:
-                template.header.align === 'left'
-                  ? 'flex-start'
-                  : template.header.align === 'right'
-                  ? 'flex-end'
-                  : 'center',
+              justifyContent: (() => {
+                const a = (currentStyles.questionTextAlign || campaign?.design?.quizConfig?.style?.questionTextAlign || (template.header.align as 'left'|'center'|'right') || 'center');
+                return a === 'left' ? 'flex-start' : a === 'right' ? 'flex-end' : 'center';
+              })(),
               padding: '0 16px',
               // Suivre exactement l'arrondi du conteneur pour couvrir parfaitement les coins
               borderRadius: `${unifiedBorderRadius} ${unifiedBorderRadius} 0 0`,
@@ -678,7 +682,7 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 width: '100%',
-                textAlign: (template.header.align as 'left' | 'center' | 'right') || 'center'
+                textAlign: (currentStyles.questionTextAlign || campaign?.design?.quizConfig?.style?.questionTextAlign || (template.header.align as 'left' | 'center' | 'right') || 'center') as any
               }}
             >
               {currentQuestion.question || template.header.text || ''}

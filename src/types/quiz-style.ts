@@ -9,6 +9,9 @@ export interface QuizStyleProps {
   buttonHoverBackgroundColor?: string;
   buttonActiveBackgroundColor?: string;
   borderRadius?: string;
+  // Newly added alignment fields for question and options text
+  questionTextAlign?: 'left' | 'center' | 'right' | 'justify';
+  optionsTextAlign?: 'left' | 'center' | 'right' | 'justify';
 }
 
 // Type pour l'événement de mise à jour des styles

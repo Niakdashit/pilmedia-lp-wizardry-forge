@@ -356,7 +356,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 4px; /* Minimal padding to prevent edge cropping */
+          padding: 2px; /* Minimal padding to prevent edge cropping */
           overflow: hidden;
           position: relative;
           min-height: 0;
@@ -373,7 +373,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           width: 100%;
           height: 100%;
           flex: 1;
-          max-width: calc(100vw - 8px); /* Account for minimal padding */
+          max-width: calc(100vw - 4px); /* Account for minimal padding */
           max-height: calc(100vh - 120px); /* Account for safe areas and UI */
         }
 

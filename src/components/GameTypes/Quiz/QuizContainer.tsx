@@ -138,7 +138,7 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
         style={getContainerStyle()}
       >
         {/* Progress Bar */}
-        <div className="px-8 pt-8 pb-4">
+        <div className="px-4 pt-4 pb-2">
           <QuizProgress 
             current={currentQuestionIndex + 1} 
             total={questions.length}
@@ -147,14 +147,14 @@ const QuizContainer: React.FC<QuizContainerProps> = ({
         </div>
 
         {/* Question Content */}
-        <div className="px-8 pb-8">
+        <div className="px-4 pb-4">
           <QuizQuestion 
             question={currentQuestion} 
             design={design}
           />
 
           {/* Options */}
-          <div className="space-y-4 mb-8">
+          <div className="space-y-3 mb-4">
             {currentQuestion.options?.map((option: any, index: number) => (
               <QuizOption
                 key={option.id}

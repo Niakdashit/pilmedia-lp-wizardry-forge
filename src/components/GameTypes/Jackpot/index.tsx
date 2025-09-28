@@ -136,7 +136,7 @@ const Jackpot: React.FC<JackpotProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '12px',
+    padding: '8px',
     position: 'relative',
     ...getBorderStyles(),
   };
@@ -174,7 +174,7 @@ const Jackpot: React.FC<JackpotProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-3">
+    <div className="flex flex-col items-center justify-center space-y-2">
       {/* Conteneur des slots avec effets 3D */}
       <div style={slotsContainerStyle}>
         <div style={innerZoneStyle}>

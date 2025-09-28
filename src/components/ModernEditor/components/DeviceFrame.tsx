@@ -14,7 +14,7 @@ interface DeviceFrameProps {
 const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   if (device === 'desktop') {
     return (
-      <div className="w-full h-full p-4">
+      <div className="w-full h-full p-1">
         <div 
           className="bg-white rounded-xl shadow-lg border border-gray-200/50 w-full h-full flex items-center justify-center overflow-hidden transition-all duration-300"
           style={{
@@ -52,7 +52,7 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children }) => {
   const styles = getDeviceStyles();
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-2">
+    <div className="w-full h-full flex items-center justify-center p-1">
       <div 
         className={`${styles.frame} transition-all duration-300 hover:shadow-3xl`}
         style={{

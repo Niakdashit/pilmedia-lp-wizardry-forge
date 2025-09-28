@@ -1,11 +1,14 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Save, X, ChevronRight } from 'lucide-react';
+import { User, LogOut, Save, X } from 'lucide-react';
+
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 import GradientBand from '../shared/GradientBand';
+import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
+import { createEmptyModularPage } from '@/types/modularEditor';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -20,6 +23,8 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
+import type { Section, SectionLayout, Module, ScreenId, ModularPage } from '@/types/modularEditor';
+import { createEmptySection } from '@/types/modularEditor';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
 
@@ -31,40 +36,8 @@ const LAUNCH_BUTTON_DEFAULT_TEXT_COLOR = '#ffffff';
 const LAUNCH_BUTTON_DEFAULT_PADDING = '14px 28px';
 const LAUNCH_BUTTON_DEFAULT_SHADOW = '0 12px 30px rgba(132, 27, 96, 0.35)';
 
-const resolveDimensionToPx = (value: any): string | undefined => {
-  if (value == null) return undefined;
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return `${value}px`;
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  return undefined;
-};
-
-const parseDimensionNumber = (value: any): number | undefined => {
-  if (value == null) return undefined;
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const match = value.match(/-?\d*\.?\d+/);
-    if (match) {
-      const parsed = parseFloat(match[0]);
-      return Number.isFinite(parsed) ? parsed : undefined;
-    }
-  }
-  return undefined;
-};
-
-const resolveDimensionNumber = (candidates: any[], fallback: number): number => {
-  for (const candidate of candidates) {
-    const parsed = parseDimensionNumber(candidate);
-    if (parsed !== undefined) return parsed;
-  }
-  return fallback;
-};
-
 const buildLaunchButtonStyles = (
-  buttonElement: any | undefined,
+  buttonModule: BlocBouton | undefined,
   quizStyleOverrides: Record<string, any>,
   quizConfig: {
     buttonBackgroundColor: string;
@@ -74,19 +47,48 @@ const buildLaunchButtonStyles = (
     borderRadius: number | string;
   }
 ): React.CSSProperties => {
-  const baseBorderRadius =
+  const moduleStyles =
+    buttonModule && buttonModule.type === 'BlocBouton'
+      ? {
+          background: buttonModule.background,
+          color: buttonModule.textColor,
+          padding: buttonModule.padding,
+          borderRadius:
+            typeof buttonModule.borderRadius === 'number'
+              ? `${buttonModule.borderRadius}px`
+              : buttonModule.borderRadius,
+          boxShadow: buttonModule.boxShadow
+        }
+      : {};
+
+  const resolvedBorderRadius =
     quizStyleOverrides.borderRadius ||
+    moduleStyles.borderRadius ||
     (typeof quizConfig.borderRadius === 'number'
       ? `${quizConfig.borderRadius}px`
       : quizConfig.borderRadius) ||
     '9999px';
 
-  const baseStyles: React.CSSProperties = {
-    background: quizStyleOverrides.buttonBackgroundColor || quizConfig.buttonBackgroundColor || LAUNCH_BUTTON_FALLBACK_GRADIENT,
-    color: quizStyleOverrides.buttonTextColor || quizConfig.buttonTextColor || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
-    padding: quizStyleOverrides.buttonPadding || LAUNCH_BUTTON_DEFAULT_PADDING,
-    borderRadius: baseBorderRadius,
-    boxShadow: quizStyleOverrides.buttonBoxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW,
+  return {
+    background:
+      moduleStyles.background ||
+      quizStyleOverrides.buttonBackgroundColor ||
+      quizConfig.buttonBackgroundColor ||
+      LAUNCH_BUTTON_FALLBACK_GRADIENT,
+    color:
+      moduleStyles.color ||
+      quizStyleOverrides.buttonTextColor ||
+      quizConfig.buttonTextColor ||
+      LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+    padding:
+      moduleStyles.padding ||
+      quizStyleOverrides.buttonPadding ||
+      LAUNCH_BUTTON_DEFAULT_PADDING,
+    borderRadius: resolvedBorderRadius,
+    boxShadow:
+      moduleStyles.boxShadow ||
+      quizStyleOverrides.buttonBoxShadow ||
+      LAUNCH_BUTTON_DEFAULT_SHADOW,
     display: quizStyleOverrides.buttonDisplay || 'inline-flex',
     alignItems: quizStyleOverrides.buttonAlignItems || 'center',
     justifyContent: quizStyleOverrides.buttonJustifyContent || 'center',
@@ -96,47 +98,6 @@ const buildLaunchButtonStyles = (
     height: quizStyleOverrides.buttonHeight,
     textTransform: quizStyleOverrides.buttonTextTransform,
     fontWeight: quizStyleOverrides.buttonFontWeight || 600
-  };
-
-  if (!buttonElement) {
-    return baseStyles;
-  }
-
-  const customCSS = (buttonElement as any)?.customCSS || {};
-  const elementStyle = (buttonElement as any)?.style || {};
-
-  return {
-    ...baseStyles,
-    background: customCSS.background || elementStyle.background || baseStyles.background,
-    color: customCSS.color || elementStyle.color || baseStyles.color,
-    padding: customCSS.padding || elementStyle.padding || baseStyles.padding,
-    borderRadius: customCSS.borderRadius || elementStyle.borderRadius || baseStyles.borderRadius,
-    boxShadow: customCSS.boxShadow || elementStyle.boxShadow || baseStyles.boxShadow,
-    display: customCSS.display || elementStyle.display || baseStyles.display,
-    alignItems: customCSS.alignItems || elementStyle.alignItems || baseStyles.alignItems,
-    justifyContent: customCSS.justifyContent || elementStyle.justifyContent || baseStyles.justifyContent,
-    minWidth:
-      customCSS.minWidth ||
-      elementStyle.minWidth ||
-      baseStyles.minWidth ||
-      resolveDimensionToPx((buttonElement as any)?.width),
-    minHeight:
-      customCSS.minHeight ||
-      elementStyle.minHeight ||
-      baseStyles.minHeight ||
-      resolveDimensionToPx((buttonElement as any)?.height),
-    width:
-      customCSS.width ||
-      elementStyle.width ||
-      baseStyles.width ||
-      resolveDimensionToPx((buttonElement as any)?.width),
-    height:
-      customCSS.height ||
-      elementStyle.height ||
-      baseStyles.height ||
-      resolveDimensionToPx((buttonElement as any)?.height),
-    textTransform: customCSS.textTransform || elementStyle.textTransform || baseStyles.textTransform,
-    fontWeight: customCSS.fontWeight || elementStyle.fontWeight || baseStyles.fontWeight
   } as React.CSSProperties;
 };
 
@@ -230,8 +191,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  const buttonNormalizedRef = useRef(false);
-
   useEffect(() => {
     if (!canvasElements.length) return;
     const hasMissingScreen = canvasElements.some((element) => !element?.screenId);
@@ -263,166 +222,12 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     });
   }, [canvasElements]);
 
-  const centerButtonElement = useCallback((button: any) => {
-    if (!button) return button;
-    const css = { ...(button.customCSS || {}) };
-    const deviceSpecific = (button?.[selectedDevice] || {}) as Record<string, any>;
-
-    const btnWidth = resolveDimensionNumber([
-      css.width,
-      css.minWidth,
-      deviceSpecific?.width,
-      deviceSpecific?.minWidth,
-      button.width,
-      button.minWidth
-    ], 220);
-
-    const btnHeight = resolveDimensionNumber([
-      css.height,
-      css.minHeight,
-      deviceSpecific?.height,
-      deviceSpecific?.minHeight,
-      button.height,
-      button.minHeight
-    ], 56);
-
-    const { width: canvasWidth, height: canvasHeight } = getDeviceDimensions(selectedDevice);
-    const x = Math.round((canvasWidth - btnWidth) / 2);
-    const y = Math.round((canvasHeight - btnHeight) / 2);
-
-    const centered: any = {
-      ...button,
-      customCSS: css,
-      x,
-      y
-    };
-
-    if (selectedDevice !== 'desktop') {
-      centered[selectedDevice] = {
-        ...(button?.[selectedDevice] || {}),
-        x,
-        y
-      };
-    }
-
-    return centered;
-  }, [selectedDevice]);
-
-  useEffect(() => {
-    if (canvasElements.some(el => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return;
-
-    setCanvasElements(prev => {
-      if (prev.some(el => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return prev;
-
-      const gradient = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
-      const { width, height } = getDeviceDimensions(selectedDevice);
-      const buttonWidth = 220;
-      const buttonHeight = 56;
-
-      const newButton = {
-        id: `button-${Date.now()}`,
-        type: 'text',
-        role: 'button',
-        content: 'Participer',
-        screenId: 'screen1' as const,
-        x: Math.round((width - buttonWidth) / 2),
-        y: Math.round((height - buttonHeight) / 2),
-        width: buttonWidth,
-        height: buttonHeight,
-        fontSize: 20,
-        fontWeight: '600',
-        textAlign: 'center',
-        customCSS: {
-          background: gradient,
-          color: '#ffffff',
-          padding: '14px 28px',
-          borderRadius: '9999px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: `${buttonWidth}px`,
-          minHeight: `${buttonHeight}px`,
-          boxShadow: '0 12px 30px rgba(132, 27, 96, 0.35)'
-        }
-      };
-
-      return [...prev, centerButtonElement(newButton)];
-    });
-  }, [canvasElements, centerButtonElement, selectedDevice]);
-
-  useEffect(() => {
-    if (buttonNormalizedRef.current) return;
-
-    const gradient = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
-    let mutated = false;
-
-    const updated = canvasElements.map((el: any) => {
-      if (!(typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return el;
-
-      const customCSS = el.customCSS || {};
-      if (Object.keys(customCSS).length > 0) return el;
-
-      mutated = true;
-      const btnWidth = Number(el.width) || 220;
-      const btnHeight = Number(el.height) || 56;
-
-      return {
-        ...el,
-        customCSS: {
-          background: gradient,
-          color: '#ffffff',
-          padding: '14px 28px',
-          borderRadius: '9999px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: `${btnWidth}px`,
-          minHeight: `${btnHeight}px`,
-          width: `${btnWidth}px`,
-          height: `${btnHeight}px`,
-          boxShadow: '0 12px 30px rgba(132, 27, 96, 0.35)'
-        }
-      };
-    });
-
-    if (mutated) {
-      buttonNormalizedRef.current = true;
-      setCanvasElements(updated);
-    } else if (canvasElements.some(el => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) {
-      buttonNormalizedRef.current = true;
-    }
-  }, [canvasElements]);
-
   // Sauvegarder le zoom à chaque changement pour persistance entre modes
   useEffect(() => {
     try {
       localStorage.setItem(`editor-zoom-${selectedDevice}`, String(canvasZoom));
     } catch {}
   }, [canvasZoom, selectedDevice]);
-
-  useEffect(() => {
-    setCanvasElements(prev => {
-      let mutated = false;
-      const updated = prev.map((el: any) => {
-        if (!(typeof el?.role === 'string' && el.role.toLowerCase().includes('button'))) return el;
-        const centered = centerButtonElement(el);
-        const currentDeviceState = (selectedDevice !== 'desktop') ? (el?.[selectedDevice] || {}) : {};
-        const centeredDeviceState = (selectedDevice !== 'desktop') ? (centered?.[selectedDevice] || {}) : {};
-        const needsUpdate = (
-          el.x !== centered.x ||
-          el.y !== centered.y ||
-          (selectedDevice !== 'desktop' && (
-            (currentDeviceState.x ?? el.x) !== (centeredDeviceState.x ?? centered.x) ||
-            (currentDeviceState.y ?? el.y) !== (centeredDeviceState.y ?? centered.y)
-          ))
-        );
-        if (!needsUpdate) return el;
-        mutated = true;
-        return centered;
-      });
-      return mutated ? updated : prev;
-    });
-  }, [selectedDevice, centerButtonElement]);
 
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
@@ -513,10 +318,31 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
+  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
+  
+  // Debug wrapper pour setSelectedElement
+  const debugSetSelectedElement = (element: any) => {
+    console.log('🎯 setSelectedElement called:', {
+      element: element?.id || element?.type || 'null',
+      elementType: element?.type,
+      hasElement: !!element,
+      timestamp: new Date().toISOString()
+    });
+    setSelectedElement(element);
+  };
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
   
   // État pour tracker la position de scroll (quel écran est visible)
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
+  // Modular editor JSON state
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const selectedModule: Module | null = useMemo(() => {
+    if (!selectedModuleId) return null;
+    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+    return allModules.find((module) => module.id === selectedModuleId) || null;
+  }, [selectedModuleId, modularPage.screens]);
   
   // Détecter la position de scroll pour changer le bouton
   useEffect(() => {
@@ -525,7 +351,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
     const handleScroll = () => {
       const scrollTop = canvasScrollArea.scrollTop;
-      const scrollHeight = canvasScrollArea.scrollHeight;
       const clientHeight = canvasScrollArea.clientHeight;
       
       // Calculer les seuils pour 3 écrans
@@ -545,6 +370,284 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     canvasScrollArea.addEventListener('scroll', handleScroll);
     return () => canvasScrollArea.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Initialize modular page from campaignConfig if present
+  useEffect(() => {
+    const mp = (campaignConfig as any)?.design?.quizModules as ModularPage | undefined;
+    if (mp && mp.screens) {
+      setModularPage(mp);
+    }
+  }, [campaignConfig]);
+
+  // Helper to persist modularPage into campaignConfig (and mark modified)
+  const persistModular = useCallback((nextOrUpdater: ModularPage | ((prev: ModularPage) => ModularPage)) => {
+    let computedNext: ModularPage = typeof nextOrUpdater === 'function'
+      ? createEmptyModularPage()
+      : nextOrUpdater;
+
+    setModularPage((prev) => {
+      computedNext = typeof nextOrUpdater === 'function'
+        ? (nextOrUpdater as (prev: ModularPage) => ModularPage)(prev)
+        : nextOrUpdater;
+      return computedNext;
+    });
+
+    setCampaignConfig((prev: any) => {
+      const updated = {
+        ...(prev || {}),
+        design: {
+          ...(prev?.design || {}),
+          quizModules: { ...computedNext, _updatedAt: Date.now() }
+        }
+      };
+      return updated;
+    });
+    try { setIsModified(true); } catch {}
+  }, [setIsModified]);
+
+  // Modular handlers
+  const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
+    const safeModule = module.type === 'BlocBouton' ? module : { ...module };
+
+    persistModular((prev) => {
+      const nextScreens: ModularPage['screens'] = {
+        ...prev.screens,
+        [screen]: [...(prev.screens[screen] || []), safeModule]
+      };
+
+      const baseSections: Record<ScreenId, Section[]> = { screen1: [], screen2: [], screen3: [] };
+      (Object.keys(prev.screens) as ScreenId[]).forEach((screenKey) => {
+        baseSections[screenKey] = [...(baseSections[screenKey] || []), ...((prev.screens?.[screenKey] as any) ? [] : [])];
+      });
+
+      let nextSections: ModularPage['sections'] = {
+        screen1: prev.sections?.screen1 ? prev.sections.screen1.map((section) => ({
+          ...section,
+          modules: section.modules.map((column) => [...column])
+        })) : [],
+        screen2: prev.sections?.screen2 ? prev.sections.screen2.map((section) => ({
+          ...section,
+          modules: section.modules.map((column) => [...column])
+        })) : [],
+        screen3: prev.sections?.screen3 ? prev.sections.screen3.map((section) => ({
+          ...section,
+          modules: section.modules.map((column) => [...column])
+        })) : []
+      };
+
+      const screenSections = nextSections?.[screen];
+      if (Array.isArray(screenSections) && screenSections.length > 0) {
+        const targetSectionIndex = Math.max(0, screenSections.length - 1);
+        const targetSection = screenSections[targetSectionIndex];
+        if (targetSection) {
+          const targetColumnIndex = targetSection.modules.reduce((bestIdx, column, idx, arr) => {
+            const bestLen = Array.isArray(arr[bestIdx]) ? arr[bestIdx].length : Number.POSITIVE_INFINITY;
+            const currentLen = Array.isArray(column) ? column.length : Number.POSITIVE_INFINITY;
+            if (currentLen < bestLen) {
+              return idx;
+            }
+            return bestIdx;
+          }, 0);
+
+          if (!Array.isArray(targetSection.modules[targetColumnIndex])) {
+            targetSection.modules[targetColumnIndex] = [];
+          }
+          targetSection.modules[targetColumnIndex].push(safeModule);
+        }
+      }
+
+      const sanitizedSections: Record<ScreenId, Section[]> = {
+        screen1: nextSections.screen1?.map((section) => ({
+          ...section,
+          modules: section.modules.map((column) => Array.isArray(column) ? column : [])
+        })) ?? [],
+        screen2: nextSections.screen2?.map((section) => ({
+          ...section,
+          modules: section.modules.map((column) => Array.isArray(column) ? column : [])
+        })) ?? [],
+        screen3: nextSections.screen3?.map((section) => ({
+          ...section,
+          modules: section.modules.map((column) => Array.isArray(column) ? column : [])
+        })) ?? []
+      };
+
+      const hasSections = Object.values(sanitizedSections).some((sectionsForScreen) => sectionsForScreen.length > 0);
+      const finalSections = hasSections ? sanitizedSections : undefined;
+
+      return {
+        screens: nextScreens,
+        sections: finalSections,
+        _updatedAt: Date.now()
+      };
+    });
+  }, [persistModular]);
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Sections: add/update/move (persisted across all screens)
+  const handleAddSection = useCallback((screen: ScreenId, layout: SectionLayout) => {
+    const currentSections = (modularPage as any).sections || {} as Record<ScreenId, Section[]>;
+    const id = `sec-${Date.now()}-${Math.floor(Math.random() * 999)}`;
+    const existingSectionsForScreen = currentSections?.[screen] || [];
+    const isFirstSectionForScreen = existingSectionsForScreen.length === 0;
+
+    let newSection = createEmptySection(id, layout);
+
+    if (isFirstSectionForScreen) {
+      const legacyModules = modularPage.screens?.[screen] || [];
+      if (legacyModules.length > 0) {
+        const distributed = newSection.modules.map((col) => [...col]);
+        legacyModules.forEach((module, index) => {
+          const targetColumn = distributed.length > 0 ? index % distributed.length : 0;
+          distributed[targetColumn].push(module);
+        });
+        newSection = {
+          ...newSection,
+          modules: distributed
+        };
+      }
+    }
+
+    const nextSections: Record<ScreenId, Section[]> = {
+      ...(currentSections || {}),
+      [screen]: [...existingSectionsForScreen, newSection]
+    };
+    persistModular({ screens: modularPage.screens, sections: nextSections, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleSectionModuleUpdate = useCallback((id: string, patch: Partial<Module>) => {
+    const currentSections = (modularPage as any).sections || {} as Record<ScreenId, Section[]>;
+    const nextSections: Record<ScreenId, Section[]> = {} as any;
+    (Object.keys(currentSections) as ScreenId[]).forEach((scr) => {
+      nextSections[scr] = (currentSections[scr] || []).map((sec) => ({
+        ...sec,
+        modules: sec.modules.map(col => col.map(m => m.id === id ? ({ ...m, ...patch }) as Module : m))
+      }));
+    });
+    persistModular({ screens: modularPage.screens, sections: nextSections, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleSectionModuleMove = useCallback((payload: { moduleId: string; fromSectionId: string; fromColumnIndex: number; fromIndex: number; toSectionId: string; toColumnIndex: number; toIndex: number; }) => {
+    const currentSections = (modularPage as any).sections || {} as Record<ScreenId, Section[]>;
+    // Deep clone minimal
+    const nextSections: Record<ScreenId, Section[]> = {} as any;
+    (Object.keys(currentSections) as ScreenId[]).forEach((scr) => {
+      nextSections[scr] = (currentSections[scr] || []).map((sec) => ({
+        ...sec,
+        modules: sec.modules.map(col => [...col])
+      }));
+    });
+    const locate = (sectionId: string): { screen: ScreenId; idx: number } | null => {
+      for (const scr of Object.keys(nextSections) as ScreenId[]) {
+        const idx = (nextSections[scr] || []).findIndex(s => s.id === sectionId);
+        if (idx >= 0) return { screen: scr, idx };
+      }
+      return null;
+    };
+    const fromLoc = locate(payload.fromSectionId);
+    const toLoc = locate(payload.toSectionId);
+    if (!fromLoc || !toLoc) return;
+    const fromSec = nextSections[fromLoc.screen][fromLoc.idx];
+    const toSec = nextSections[toLoc.screen][toLoc.idx];
+    const fromCol = fromSec.modules[payload.fromColumnIndex] || [];
+    const toCol = toSec.modules[payload.toColumnIndex] || [];
+    const [item] = fromCol.splice(payload.fromIndex, 1);
+    if (!item) return;
+    const insertIndex = Math.max(0, Math.min(payload.toIndex, toCol.length));
+    toCol.splice(insertIndex, 0, item);
+    persistModular({ screens: modularPage.screens, sections: nextSections, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as Module : m));
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const ensuredBlocBoutonRef = useRef(false);
+  const createDefaultBlocBouton = useCallback((): BlocBouton => ({
+    id: `BlocBouton-${Date.now()}`,
+    type: 'BlocBouton',
+    label: 'Participer',
+    href: '#',
+    align: 'center',
+    borderRadius: 9999,
+    background: LAUNCH_BUTTON_FALLBACK_GRADIENT,
+    textColor: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+    padding: LAUNCH_BUTTON_DEFAULT_PADDING,
+    boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
+  }), []);
+
+  useEffect(() => {
+    if (ensuredBlocBoutonRef.current) return;
+    const hasBlocBouton = Object.values(modularPage.screens).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasBlocBouton) {
+      const defaultModule = createDefaultBlocBouton();
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      const targetScreen = currentScreen || 'screen1';
+      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), defaultModule];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+    ensuredBlocBoutonRef.current = true;
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
+
+  useEffect(() => {
+    const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
+    if (!legacyButton) return;
+
+    const hasModule = Object.values(modularPage.screens).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasModule) {
+      const newModule: BlocBouton = {
+        ...createDefaultBlocBouton(),
+        label: legacyButton.content || legacyButton.text || 'Participer',
+        background: legacyButton.customCSS?.background || LAUNCH_BUTTON_FALLBACK_GRADIENT,
+        textColor: legacyButton.customCSS?.color || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+        padding: legacyButton.customCSS?.padding || LAUNCH_BUTTON_DEFAULT_PADDING,
+        boxShadow: legacyButton.customCSS?.boxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW,
+        borderRadius: (() => {
+          const cssRadius = legacyButton.customCSS?.borderRadius;
+          if (typeof cssRadius === 'number') return cssRadius;
+          if (typeof cssRadius === 'string') {
+            const parsed = parseFloat(cssRadius.replace('px', ''));
+            if (!Number.isNaN(parsed)) return parsed;
+          }
+          return 9999;
+        })()
+      };
+      const targetScreen = (legacyButton.screenId as ScreenId) || currentScreen || 'screen1';
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), newModule];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+    setCanvasElements((prev) => prev.filter((el) => el !== legacyButton));
+  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
+
+  const handleDeleteModule = useCallback((id: string) => {
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
+      const arr = [...(nextScreens[s] || [])];
+      const idx = arr.findIndex((m) => m.id === id);
+      if (idx >= 0) {
+        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapWith >= 0 && swapWith < arr.length) {
+          const tmp = arr[swapWith];
+          arr[swapWith] = arr[idx];
+          arr[idx] = tmp;
+          nextScreens[s] = arr;
+        }
+      }
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
@@ -810,22 +913,41 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
   const handleElementUpdate = (updates: any) => {
+    console.log('🔄 handleElementUpdate called:', {
+      updates,
+      selectedElementId: selectedElement?.id,
+      selectedElementType: selectedElement?.type,
+      selectedElementRole: (selectedElement as any)?.role,
+      hasSelectedElement: !!selectedElement,
+      totalElements: canvasElements.length
+    });
+
+    const isModuleText = (selectedElement as any)?.role === 'module-text' && (selectedElement as any)?.moduleId;
+    if (isModuleText) {
+      const moduleId = (selectedElement as any).moduleId as string;
+      const patch: Partial<Module> & Record<string, any> = {};
+
+      if (updates.fontFamily) patch.bodyFontFamily = updates.fontFamily;
+      if (updates.color) patch.bodyColor = updates.color;
+      if (updates.fontSize) patch.bodyFontSize = updates.fontSize;
+      if (updates.fontWeight) patch.bodyBold = updates.fontWeight === 'bold';
+      if (updates.fontStyle) patch.bodyItalic = updates.fontStyle === 'italic';
+      if (updates.textDecoration) patch.bodyUnderline = updates.textDecoration?.includes('underline');
+      if (updates.textAlign) patch.align = updates.textAlign;
+
+      if (Object.keys(patch).length > 0) {
+        handleUpdateModule(moduleId, patch);
+      }
+
+      setSelectedElement((prev: any) => (prev ? { ...prev, ...updates } : prev));
+      return;
+    }
+
     if (selectedElement) {
       const deviceScopedKeys = ['x', 'y', 'width', 'height', 'fontSize', 'textAlign'];
       const isDeviceScoped = selectedDevice !== 'desktop';
       const workingUpdates: Record<string, any> = { ...updates };
       const devicePatch: Record<string, any> = {};
-
-      const isLaunchButton = typeof selectedElement.role === 'string' && selectedElement.role.toLowerCase() === 'button';
-
-      if (isLaunchButton) {
-        delete workingUpdates.x;
-        delete workingUpdates.y;
-        if (isDeviceScoped) {
-          delete workingUpdates.width;
-          delete workingUpdates.height;
-        }
-      }
 
       if (isDeviceScoped) {
         for (const key of deviceScopedKeys) {
@@ -849,10 +971,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
           : {})
       };
 
-      if (isLaunchButton) {
-        updatedElement = centerButtonElement(updatedElement);
-      }
-
       setCanvasElements(prev => {
         const newArr = prev.map(el =>
           el.id === selectedElement.id ? updatedElement : el
@@ -864,8 +982,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             canvasBackground: { ...canvasBackground }
           }, 'element_update');
         }, 0);
+        console.log('🎯 Elements updated, new array:', newArr);
         return newArr;
       });
+      console.log('🎯 Setting selected element to:', updatedElement);
       setSelectedElement(updatedElement);
     }
   };
@@ -1069,109 +1189,61 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return (campaignConfig?.design?.quizConfig?.style || {}) as Record<string, any>;
   }, [campaignConfig]);
 
-  const buttonElement = useMemo(() => {
-    return canvasElements.find(el => el.type === 'text' && el.role === 'button');
-  }, [canvasElements]);
+  const buttonModule = useMemo(() => {
+    return (Object.values(modularPage.screens).flat() as BlocBouton[]).find((module) => module.type === 'BlocBouton');
+  }, [modularPage.screens]);
+
+  useEffect(() => {
+    const role = (selectedElement as any)?.role;
+    const moduleId = (selectedElement as any)?.moduleId as string | undefined;
+    const isModularRole = role === 'module-button' || role === 'module-image' || role === 'module-video';
+    if (moduleId && isModularRole) {
+      setSelectedModuleId(moduleId);
+      setPreviousSidebarTab(activeSidebarTab);
+      setActiveSidebarTab('elements');
+      return;
+    }
+    if (!isModularRole) {
+      setSelectedModuleId(null);
+      setActiveSidebarTab(previousSidebarTab || 'elements');
+    }
+  }, [selectedElement, activeSidebarTab, previousSidebarTab]);
 
   const exitMessageElement = useMemo(() => {
-    return canvasElements.find(el => el.type === 'text' && typeof el?.role === 'string' && el.role.toLowerCase() === 'exit-message');
+    return canvasElements.find(
+      (el) => el.type === 'text' && typeof el?.role === 'string' && el.role.toLowerCase() === 'exit-message'
+    );
   }, [canvasElements]);
 
+  const campaignQuizStyle = (campaignConfig?.design?.quizConfig?.style ?? {}) as Record<string, any>;
+
   const launchButtonStyles = useMemo(() => {
-    return buildLaunchButtonStyles(buttonElement, quizStyleOverrides, {
-      buttonBackgroundColor: quizConfig.buttonBackgroundColor,
-      buttonTextColor: quizConfig.buttonTextColor,
+    const base = buildLaunchButtonStyles(buttonModule, quizStyleOverrides, {
+      buttonBackgroundColor:
+        typeof quizStyleOverrides.buttonBackgroundColor === 'string' && quizStyleOverrides.buttonBackgroundColor.length > 0
+          ? quizStyleOverrides.buttonBackgroundColor
+          : ((campaignQuizStyle as any)?.buttonBackgroundColor as string | undefined) || LAUNCH_BUTTON_FALLBACK_GRADIENT,
+      buttonTextColor:
+        typeof quizStyleOverrides.buttonTextColor === 'string' && quizStyleOverrides.buttonTextColor.length > 0
+          ? quizStyleOverrides.buttonTextColor
+          : (quizConfig.buttonTextColor || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR),
       buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
       buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor,
       borderRadius: quizConfig.borderRadius
     });
-  }, [buttonElement, quizStyleOverrides, quizConfig]);
-
-  const launchButtonText = (buttonElement as any)?.content || 'Participer';
-
-  const centerExitMessageElement = useCallback((element: any) => {
-    if (!element) return element;
-
-    const css = { ...(element.customCSS || {}) };
-    const deviceSpecific = (element?.[selectedDevice] || {}) as Record<string, any>;
-
-    const messageWidth = resolveDimensionNumber([
-      css.width,
-      css.minWidth,
-      deviceSpecific?.width,
-      deviceSpecific?.minWidth,
-      element.width,
-      element.minWidth
-    ], Math.min(getDeviceDimensions(selectedDevice).width - 32, 420));
-
-    const messageHeight = resolveDimensionNumber([
-      css.height,
-      css.minHeight,
-      deviceSpecific?.height,
-      deviceSpecific?.minHeight,
-      element.height,
-      element.minHeight
-    ], 180);
-
-    const { width: canvasWidth, height: canvasHeight } = getDeviceDimensions(selectedDevice);
-    const x = Math.round((canvasWidth - messageWidth) / 2);
-    const y = Math.round((canvasHeight - messageHeight) / 2);
-
-    const centered: any = {
-      ...element,
-      customCSS: css,
-      x,
-      y,
-      width: messageWidth,
-      height: messageHeight
-    };
-
-    if (selectedDevice !== 'desktop') {
-      centered[selectedDevice] = {
-        ...(element?.[selectedDevice] || {}),
-        x,
-        y
-      };
+    if (exitMessageElement) {
+      return {
+        ...base,
+        display: 'none'
+      } satisfies React.CSSProperties;
     }
+    return base;
+  }, [buttonModule, quizStyleOverrides, campaignQuizStyle, quizConfig.buttonHoverBackgroundColor, quizConfig.buttonActiveBackgroundColor, quizConfig.borderRadius, exitMessageElement]);
 
-    return centered;
-  }, [selectedDevice]);
+  const launchButtonText = useMemo(() => {
+    return buttonModule?.label || (quizStyleOverrides.buttonLabel as string | undefined) || 'Participer';
+  }, [buttonModule, quizStyleOverrides.buttonLabel]);
 
-  useEffect(() => {
-    const hasExitMessage = canvasElements.some((el) => typeof el?.role === 'string' && el.role.toLowerCase() === 'exit-message');
-    if (hasExitMessage) return;
-
-    const { width: canvasWidth } = getDeviceDimensions(selectedDevice);
-    const defaultWidth = Math.min(Math.max(320, Math.round(canvasWidth * 0.65)), canvasWidth - 32);
-    const defaultHeight = 200;
-
-    const exitElement = centerExitMessageElement({
-      id: `exit-message-${Date.now()}`,
-      type: 'text',
-      role: 'exit-message',
-      content: 'Merci pour votre participation !',
-      screenId: 'screen3' as const,
-      width: defaultWidth,
-      height: defaultHeight,
-      fontSize: 28,
-      textAlign: 'center',
-      customCSS: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '32px',
-        borderRadius: '24px',
-        background: 'rgba(255, 255, 255, 0.9)',
-        color: '#111827',
-        boxShadow: '0 24px 60px rgba(17, 24, 39, 0.18)',
-        fontWeight: '600',
-        letterSpacing: '0.02em'
-      }
-    });
-
-    setCanvasElements((prev) => [...prev, exitElement]);
-  }, [canvasElements, centerExitMessageElement, selectedDevice, setCanvasElements]);
-  
   const emitQuizStyleUpdate = useCallback((detail: Record<string, any>) => {
     if (!detail || Object.keys(detail).length === 0) return;
     try {
@@ -1216,91 +1288,29 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   const handleLaunchButtonStyleChange = useCallback((styles: Partial<React.CSSProperties>) => {
     if (!styles || Object.keys(styles).length === 0) return;
+    const targetModule = buttonModule;
+    if (!targetModule) return;
 
-    let snapshotElements: any[] | null = null;
-
-    setCanvasElements(prev => {
-      let mutated = false;
-      const updated = prev.map(el => {
-        if (!(el.type === 'text' && el.role === 'button')) return el;
-        const currentCSS = { ...(el.customCSS || {}) };
-        const nextCSS: Record<string, any> = { ...currentCSS };
-
-        const apply = (key: keyof React.CSSProperties, value: any, fallback?: any) => {
-          const effective = value !== undefined ? value : fallback;
-          if (effective === undefined || effective === null || effective === '') {
-            delete nextCSS[key];
-          } else {
-            nextCSS[key] = effective;
-          }
-        };
-
-        if ('background' in styles) apply('background', styles.background, LAUNCH_BUTTON_FALLBACK_GRADIENT);
-        if ('color' in styles) apply('color', styles.color, LAUNCH_BUTTON_DEFAULT_TEXT_COLOR);
-        if ('padding' in styles) apply('padding', styles.padding, LAUNCH_BUTTON_DEFAULT_PADDING);
-        if ('borderRadius' in styles) {
-          const radius = styles.borderRadius;
-          const normalized = typeof radius === 'number' ? `${radius}px` : radius;
-          apply('borderRadius', normalized, '9999px');
-        }
-        if ('boxShadow' in styles) apply('boxShadow', styles.boxShadow, LAUNCH_BUTTON_DEFAULT_SHADOW);
-        if ('textTransform' in styles) apply('textTransform', styles.textTransform);
-        if ('fontWeight' in styles) apply('fontWeight', styles.fontWeight, 600);
-
-        const currentString = JSON.stringify(currentCSS);
-        const nextString = JSON.stringify(nextCSS);
-
-        const centered = centerButtonElement({ ...el, customCSS: nextCSS });
-        const currentDeviceState = (selectedDevice !== 'desktop') ? (el?.[selectedDevice] || {}) : {};
-        const centeredDeviceState = (selectedDevice !== 'desktop') ? (centered?.[selectedDevice] || {}) : {};
-
-        const needsCssUpdate = currentString !== nextString;
-        const needsPositionUpdate = (
-          el.x !== centered.x ||
-          el.y !== centered.y ||
-          (selectedDevice !== 'desktop' && (
-            (currentDeviceState.x ?? el.x) !== (centeredDeviceState.x ?? centered.x) ||
-            (currentDeviceState.y ?? el.y) !== (centeredDeviceState.y ?? centered.y)
-          ))
-        );
-
-        if (!needsCssUpdate && !needsPositionUpdate) return el;
-
-        mutated = true;
-        return centered;
-      });
-
-      if (!mutated) {
-        snapshotElements = null;
-        return prev;
-      }
-
-      snapshotElements = JSON.parse(JSON.stringify(updated));
-      return updated;
-    });
-
-    if (snapshotElements) {
-      const elementsSnapshot = snapshotElements;
-      setTimeout(() => {
-        addToHistory({
-          campaignConfig: { ...campaignConfig },
-          canvasElements: elementsSnapshot,
-          canvasBackground: { ...canvasBackground }
-        }, 'launch_button_style');
-      }, 0);
-    }
-
+    const patch: Partial<BlocBouton> = {};
     const quizStyleDetail: Record<string, any> = {};
 
     if (styles.background !== undefined) {
-      const backgroundValue = styles.background || LAUNCH_BUTTON_FALLBACK_GRADIENT;
+      const backgroundValue: string =
+        typeof styles.background === 'string' && styles.background.length > 0
+          ? styles.background
+          : LAUNCH_BUTTON_FALLBACK_GRADIENT;
+      patch.background = backgroundValue;
       setQuizConfig(prev => ({ ...prev, buttonBackgroundColor: backgroundValue }));
       updateCampaignQuizStyle({ buttonBackgroundColor: backgroundValue });
       quizStyleDetail.buttonBackgroundColor = backgroundValue;
     }
 
     if (styles.color !== undefined) {
-      const textColorValue = styles.color || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR;
+      const textColorValue: string =
+        typeof styles.color === 'string' && styles.color.length > 0
+          ? styles.color
+          : LAUNCH_BUTTON_DEFAULT_TEXT_COLOR;
+      patch.textColor = textColorValue;
       setQuizConfig(prev => ({ ...prev, buttonTextColor: textColorValue }));
       updateCampaignQuizStyle({ buttonTextColor: textColorValue });
       quizStyleDetail.buttonTextColor = textColorValue;
@@ -1310,24 +1320,23 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       const radiusValue = typeof styles.borderRadius === 'number'
         ? styles.borderRadius
         : parseFloat(String(styles.borderRadius).replace('px', ''));
-      const normalizedRadius = typeof styles.borderRadius === 'number'
-        ? `${styles.borderRadius}px`
-        : (styles.borderRadius as string) || '9999px';
-      if (!Number.isNaN(radiusValue)) {
-        setQuizConfig(prev => ({ ...prev, borderRadius: radiusValue }));
-      }
-      updateCampaignQuizStyle({ borderRadius: normalizedRadius });
-      quizStyleDetail.borderRadius = normalizedRadius;
+      const normalizedRadius = Number.isNaN(radiusValue) ? 9999 : radiusValue;
+      patch.borderRadius = normalizedRadius;
+      setQuizConfig(prev => ({ ...prev, borderRadius: normalizedRadius }));
+      updateCampaignQuizStyle({ borderRadius: `${normalizedRadius}px` });
+      quizStyleDetail.borderRadius = `${normalizedRadius}px`;
     }
 
     if (styles.padding !== undefined) {
-      const paddingValue = styles.padding || LAUNCH_BUTTON_DEFAULT_PADDING;
+      const paddingValue = typeof styles.padding === 'number' ? `${styles.padding}px` : styles.padding || LAUNCH_BUTTON_DEFAULT_PADDING;
+      patch.padding = paddingValue;
       updateCampaignQuizStyle({ buttonPadding: paddingValue });
       quizStyleDetail.buttonPadding = paddingValue;
     }
 
     if (styles.boxShadow !== undefined) {
       const shadowValue = styles.boxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW;
+      patch.boxShadow = shadowValue;
       updateCampaignQuizStyle({ buttonBoxShadow: shadowValue });
       quizStyleDetail.buttonBoxShadow = shadowValue;
     }
@@ -1344,87 +1353,16 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       quizStyleDetail.buttonFontWeight = fontWeightValue;
     }
 
-    Object.keys(quizStyleDetail).forEach((key) => {
-      if (quizStyleDetail[key] === undefined) {
-        delete quizStyleDetail[key];
-      }
-    });
-
+    handleUpdateModule(targetModule.id, patch);
     emitQuizStyleUpdate(quizStyleDetail);
-  }, [
-    addToHistory,
-    campaignConfig,
-    canvasBackground,
-    centerButtonElement,
-    emitQuizStyleUpdate,
-    updateCampaignQuizStyle,
-    setCanvasElements,
-    setQuizConfig,
-    selectedDevice
-  ]);
+  }, [buttonModule, handleUpdateModule, updateCampaignQuizStyle, emitQuizStyleUpdate, setQuizConfig]);
 
   const handleLaunchButtonTextChange = useCallback((text: string) => {
-    let snapshotElements: any[] | null = null;
-
-    setCanvasElements(prev => {
-      let mutated = false;
-      const updated = prev.map(el => {
-        if (el.type === 'text' && el.role === 'button') {
-          if (el.content === text) {
-            const centeredExisting = centerButtonElement(el);
-            const currentDeviceState = (selectedDevice !== 'desktop') ? (el?.[selectedDevice] || {}) : {};
-            const centeredDeviceState = (selectedDevice !== 'desktop') ? (centeredExisting?.[selectedDevice] || {}) : {};
-            const needsPositionUpdate = (
-              el.x !== centeredExisting.x ||
-              el.y !== centeredExisting.y ||
-              (selectedDevice !== 'desktop' && (
-                (currentDeviceState.x ?? el.x) !== (centeredDeviceState.x ?? centeredExisting.x) ||
-                (currentDeviceState.y ?? el.y) !== (centeredDeviceState.y ?? centeredExisting.y)
-              ))
-            );
-            if (!needsPositionUpdate) return el;
-            mutated = true;
-            return centeredExisting;
-          }
-          mutated = true;
-          return centerButtonElement({
-            ...el,
-            content: text
-          });
-        }
-        return el;
-      });
-
-      if (!mutated) {
-        snapshotElements = null;
-        return prev;
-      }
-
-      snapshotElements = JSON.parse(JSON.stringify(updated));
-      return updated;
-    });
-
-    if (snapshotElements) {
-      const elementsSnapshot = snapshotElements;
-      setTimeout(() => {
-        addToHistory({
-          campaignConfig: { ...campaignConfig },
-          canvasElements: elementsSnapshot,
-          canvasBackground: { ...canvasBackground }
-        }, 'launch_button_text');
-      }, 0);
-    }
-
+    const targetModule = buttonModule;
+    if (!targetModule) return;
+    handleUpdateModule(targetModule.id, { label: text });
     updateCampaignQuizStyle({ buttonLabel: text });
-  }, [
-    addToHistory,
-    campaignConfig,
-    canvasBackground,
-    centerButtonElement,
-    selectedDevice,
-    setCanvasElements,
-    updateCampaignQuizStyle
-  ]);
+  }, [buttonModule, handleUpdateModule, updateCampaignQuizStyle]);
 
   const handleLaunchButtonReset = useCallback(() => {
     handleLaunchButtonStyleChange({
@@ -1448,8 +1386,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const campaignData = useMemo(() => {
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
-    const buttonElementLocal = buttonElement;
-    const fallbackButtonText = buttonElementLocal?.content || quizStyleOverrides.buttonLabel || 'Participer';
+    const fallbackButtonText = launchButtonText;
 
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
@@ -1517,7 +1454,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       (campaignConfig as any)?.design?.screens
     ].find((screens): screens is any[] => Array.isArray(screens)) || [];
 
-    const fallbackExitContent = (exitMessageElement as any)?.content?.trim() || 'Merci pour votre participation !';
+    const fallbackExitContent = (exitMessageElement as any)?.content?.trim() || '';
 
     const defaultScreens = [
       {
@@ -1536,7 +1473,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         buttonText: 'Valider'
       },
       {
-        confirmationTitle: 'Merci pour votre participation !',
+        confirmationTitle: fallbackExitContent,
         confirmationMessage: fallbackExitContent,
         description: fallbackExitContent,
         replayButtonText: 'Rejouer'
@@ -1625,7 +1562,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         color: primaryColor,
         textColor:
           buttonCustomStyles?.color ||
-          (buttonElementLocal as any)?.style?.color ||
           quizStyleOverrides.buttonTextColor ||
           quizConfig.buttonTextColor ||
           '#ffffff',
@@ -2089,16 +2025,28 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       }
     },
     onAlignTextLeft: () => {
+      if (selectedElement?.role === 'module-text' && (selectedElement as any)?.moduleId) {
+        handleUpdateModule((selectedElement as any).moduleId, { align: 'left' } as any);
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'left' });
       }
     },
     onAlignTextCenter: () => {
+      if (selectedElement?.role === 'module-text' && (selectedElement as any)?.moduleId) {
+        handleUpdateModule((selectedElement as any).moduleId, { align: 'center' } as any);
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'center' });
       }
     },
     onAlignTextRight: () => {
+      if (selectedElement?.role === 'module-text' && (selectedElement as any)?.moduleId) {
+        handleUpdateModule((selectedElement as any).moduleId, { align: 'right' } as any);
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'right' });
       }
@@ -2243,6 +2191,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
                 onElementUpdate={handleElementUpdate}
+                // Modular editor wiring
+                currentScreen={currentScreen}
+                onAddModule={handleAddModule}
+                onAddSection={handleAddSection}
                 showEffectsPanel={showEffectsInSidebar}
                 onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
@@ -2257,15 +2209,27 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     setShowDesignInSidebar(false);
                   }
                 }}
+                activeTab={activeSidebarTab}
+                onActiveTabChange={(tabId) => {
+                  const nextTab = tabId || 'elements';
+                  setActiveSidebarTab(nextTab);
+                  setPreviousSidebarTab(nextTab);
+                  if (nextTab !== 'background') {
+                    setShowDesignInSidebar(false);
+                  }
+                }}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
-                onSelectedElementsChange={setSelectedElements}
+                onSelectedElementsChange={(elements) => setSelectedElements(elements)}
                 onAddToHistory={addToHistory}
                 launchButtonStyles={launchButtonStyles}
                 launchButtonText={launchButtonText}
                 onLaunchButtonStyleChange={handleLaunchButtonStyleChange}
                 onLaunchButtonTextChange={handleLaunchButtonTextChange}
                 onLaunchButtonReset={handleLaunchButtonReset}
+                selectedModuleId={selectedModuleId}
+                selectedModule={selectedModule}
+                onModuleUpdate={handleUpdateModule}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
@@ -2285,25 +2249,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
                   setQuizConfig(prev => ({
                     ...prev,
-                    templateId,
-                    width: desktop,
-                    mobileWidth: mobile
-                  }));
-
-                  setCampaignConfig((current: any) => ({
-                    ...current,
-                    design: {
-                      ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
-                        templateId,
-                        style: {
-                          ...(current.design.quizConfig?.style || {}),
-                          width: desktop,
-                          mobileWidth: mobile
-                        }
-                      }
-                    }
+                    templateId
                   }));
 
                   try {
@@ -2549,22 +2495,25 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             <div className="flex-1 canvas-scroll-area relative z-20">
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
-            <DesignCanvas
-              screenId="screen1"
-              ref={canvasRef}
-              selectedDevice={selectedDevice}
-              elements={canvasElements}
-              onElementsChange={setCanvasElements}
-              background={canvasBackground}
-              campaign={campaignData}
-              onCampaignChange={handleCampaignConfigChange}
-              zoom={canvasZoom}
-              onZoomChange={setCanvasZoom}
-              selectedElement={selectedElement}
-              onSelectedElementChange={setSelectedElement}
-              selectedElements={selectedElements}
-              onSelectedElementsChange={setSelectedElements}
-              onElementUpdate={handleElementUpdate}
+              <DesignCanvas
+                screenId="screen1"
+                ref={canvasRef}
+                selectedDevice={selectedDevice}
+                elements={canvasElements}
+                onElementsChange={setCanvasElements}
+                background={canvasBackground}
+                campaign={campaignData}
+                onCampaignChange={handleCampaignConfigChange}
+                zoom={canvasZoom}
+                onZoomChange={setCanvasZoom}
+                selectedElement={selectedElement}
+                onSelectedElementChange={setSelectedElement}
+                selectedElements={selectedElements}
+                onSelectedElementsChange={setSelectedElements}
+                onElementUpdate={handleElementUpdate}
+                modularSections={modularPage.sections?.screen1}
+                onSectionModuleUpdate={handleSectionModuleUpdate}
+                onSectionModuleMove={handleSectionModuleMove}
               // Quiz sync props
               extractedColors={extractedColors}
               quizModalConfig={quizModalConfig}
@@ -2640,6 +2589,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               // Quiz panels
               showQuizPanel={showQuizPanel}
               onQuizPanelChange={setShowQuizPanel}
+              // Modular page (screen1)
+              modularModules={modularPage.screens.screen1}
+              onModuleUpdate={handleUpdateModule}
+              onModuleDelete={handleDeleteModule}
+              onModuleMove={handleMoveModule}
             />
                 
                 {/* Deuxième Canvas */}
@@ -2679,6 +2633,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       // Quiz sync props
                       extractedColors={extractedColors}
                       quizModalConfig={quizModalConfig}
+                      modularSections={modularPage.sections?.screen2}
+                      onSectionModuleUpdate={handleSectionModuleUpdate}
+                      onSectionModuleMove={handleSectionModuleMove}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
@@ -2697,14 +2654,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                           setShowAnimationsInSidebar(true);
                           setShowEffectsInSidebar(false);
                           setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowPositionPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowPositionInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowAnimationsInSidebar(false);
-                          setShowDesignInSidebar(false);
                         }
                       }}
                       onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
@@ -2746,6 +2695,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       // Quiz panels
                       showQuizPanel={showQuizPanel}
                       onQuizPanelChange={setShowQuizPanel}
+                      // Modular page (screen2)
+                      modularModules={modularPage.screens.screen2}
+                      onModuleUpdate={handleUpdateModule}
+                      onModuleDelete={handleDeleteModule}
+                      onModuleMove={handleMoveModule}
                     />
                   </div>
                 </div>
@@ -2787,6 +2741,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       // Quiz sync props
                       extractedColors={extractedColors}
                       quizModalConfig={quizModalConfig}
+                      modularSections={modularPage.sections?.screen3}
+                      onSectionModuleUpdate={handleSectionModuleUpdate}
+                      onSectionModuleMove={handleSectionModuleMove}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';

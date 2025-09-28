@@ -206,12 +206,51 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       }
     };
     document.addEventListener('uiAdjustingSelection', onAdjust as EventListener);
+    // Inline formatting event listener
+    const onInlineFormat = (e: Event) => {
+      if (!isSelected) return;
+      const detail = (e as CustomEvent<{ action: 'bold'|'italic'|'underline' }>).detail;
+      if (!detail) return;
+      const action = detail.action;
+      const container = textRef.current as HTMLElement | null;
+      if (!container) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      // Ensure selection is within this text element
+      const within = container.contains(range.commonAncestorContainer as Node);
+      if (!within) return;
+      // Build wrapper element
+      let wrapper: HTMLElement;
+      if (action === 'bold') wrapper = document.createElement('strong');
+      else if (action === 'italic') wrapper = document.createElement('em');
+      else { wrapper = document.createElement('span'); wrapper.style.textDecoration = 'underline'; }
+      try {
+        // Prefer surroundContents when valid
+        range.surroundContents(wrapper);
+      } catch {
+        const frag = range.cloneContents();
+        wrapper.appendChild(frag);
+        range.deleteContents();
+        range.insertNode(wrapper);
+      }
+      // Normalize selection and persist richHtml
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(wrapper);
+      sel.addRange(newRange);
+      const html = container.innerHTML;
+      onUpdate(element.id, { richHtml: html, content: container.textContent ?? element.content });
+      try { (window as any).__lastInlineHandled__ = true; } catch {}
+    };
+    window.addEventListener('applyInlineFormat', onInlineFormat as EventListener);
     return () => {
       document.removeEventListener('uiAdjustingSelection', onAdjust as EventListener);
+      window.removeEventListener('applyInlineFormat', onInlineFormat as EventListener);
       // Ensure controls are restored on unmount
       setTempHideControls(false);
     };
-  }, []);
+  }, [isSelected, onUpdate, element.id]);
 
   // Normalize angle to [-180, 180] inclusive (keep -180 and 180 as is)
   const normalize180 = useCallback((deg: number) => {
@@ -392,20 +431,27 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   }, [element.type, readOnly]);
 
 
-  // Commit edits on blur/Enter without re-rendering per keystroke
+  // Commit edits on blur/Enter; persist rich HTML when present and plain text for search/index
   const commitEditingContent = useCallback(() => {
-    const newText = (editingTextRef.current ?? '').replace(/\n/g, '');
-    const current = element.content ?? '';
-    if (newText !== current) {
-      onUpdate(element.id, { content: newText });
+    const el = textRef.current;
+    const html = el ? el.innerHTML : undefined;
+    const newText = (el?.textContent ?? editingTextRef.current ?? '').replace(/\n/g, '');
+    const payload: any = { content: newText };
+    if (html && html.trim() !== '') {
+      payload.richHtml = html;
     }
-  }, [element.content, element.id, onUpdate]);
+    onUpdate(element.id, payload);
+  }, [element.id, onUpdate]);
 
   const handleTextKeyDown = useCallback((e: React.KeyboardEvent) => {
     const isMac = navigator.platform.toUpperCase().includes('MAC');
     const isMod = isMac ? (e.metaKey as boolean) : (e.ctrlKey as boolean);
 
     if (isMod) {
+      // When editing a text contentEditable, let the browser handle inline formatting (Cmd/Ctrl+B/I/U)
+      if (isEditing && element.type === 'text') {
+        return;
+      }
       const key = e.key.toLowerCase();
 
       if (key === 'b') {
@@ -482,22 +528,29 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setIsEditing(false);
   }, [commitEditingContent]);
 
-  // ContentEditable input handler to persist content changes
+  // ContentEditable input handler: track plain text and persist rich HTML live for toolbar inline actions
   const handleContentEditableInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    const newText = (e.currentTarget.textContent ?? '').replace(/\n/g, '');
+    const target = e.currentTarget as HTMLDivElement;
+    const newText = (target.textContent ?? '').replace(/\n/g, '');
     editingTextRef.current = newText;
-  }, []);
+    // Persist rich HTML so inline bold/italic/underline is not lost
+    const html = target.innerHTML;
+    onUpdate(element.id, { richHtml: html });
+  }, [element.id, onUpdate]);
 
   // Autofocus editable div and place caret at end on entering edit mode
   React.useEffect(() => {
     if (isEditing && !readOnly) {
       const el = textRef.current;
       if (el) {
-        // Initialize editing buffer with current content (no placeholder during edit)
-        const initial = (element.content ?? '');
-        editingTextRef.current = initial;
-        if (el.textContent !== initial) {
-          el.textContent = initial;
+        // Initialize editing DOM with richHtml when available, else plain content
+        const initialHtml = (element as any).richHtml as string | undefined;
+        const initialText = (element.content ?? '');
+        editingTextRef.current = initialText;
+        if (initialHtml && initialHtml.trim() !== '') {
+          if (el.innerHTML !== initialHtml) el.innerHTML = initialHtml;
+        } else if (el.textContent !== initialText) {
+          el.textContent = initialText;
         }
         el.focus();
         try {
@@ -510,7 +563,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         } catch {}
       }
     }
-  }, [isEditing, readOnly, element.content]);
+  }, [isEditing, readOnly, element.content, (element as any).richHtml]);
 
   const handleAlign = useCallback((alignment: string) => {
     if (!containerRef?.current) return;
@@ -1173,7 +1226,12 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             draggable={false}
             data-element-type="text"
           >
-            {element.content || 'Texte'}
+            {(element as any).richHtml ? (
+              // Keep initial children empty; actual HTML is injected in effect to preserve cursor
+              null
+            ) : (
+              element.content || 'Texte'
+            )}
           </div>
         ) : (
           <div
@@ -1182,8 +1240,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }
             style={getTextStyle()}
             data-element-type="text"
+            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: (element as any).richHtml } } : {})}
           >
-            {element.content || 'Texte'}
+            {(!(element as any).richHtml || (element as any).richHtml.trim() === '') ? (element.content || 'Texte') : null}
           </div>
         );
       }

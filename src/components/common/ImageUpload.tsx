@@ -1,6 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Upload, X } from 'lucide-react';
+import { optimizeImageForSegment } from '../../utils/imageOptimizer';
 
 interface ImageUploadProps {
   value: string;
@@ -29,18 +30,43 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        onChange(result);
-      };
-      reader.onerror = () => {
-        console.error('Error reading file');
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Preserve transparency when possible: PNG/WebP/SVG keep alpha.
+        const mime = file.type || '';
+        const isGif = mime === 'image/gif';
+        const supportsAlpha = /image\/(png|webp|svg\+xml)/.test(mime);
+
+        if (isGif) {
+          // Do not optimize GIFs to avoid flattening animation; just load as-is
+          const reader = new FileReader();
+          reader.onload = () => {
+            onChange(reader.result as string);
+          };
+          reader.onerror = () => {
+            console.error('Error reading file');
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // Use canvas optimization. For alpha-capable sources, export as PNG to keep transparency
+          const optimized = await optimizeImageForSegment(file, {
+            maxWidth: 2048,
+            maxHeight: 2048,
+            quality: 0.9,
+            format: supportsAlpha ? 'png' : 'jpeg'
+          });
+          onChange(optimized.dataUrl);
+        }
+      } catch (err) {
+        console.error('Error optimizing image', err);
+        // Fallback to raw file read
+        const reader = new FileReader();
+        reader.onload = () => onChange(reader.result as string);
+        reader.onerror = () => console.error('Error reading file');
+        reader.readAsDataURL(file);
+      }
     }
     // Reset input value to allow selecting the same file again
     e.target.value = '';

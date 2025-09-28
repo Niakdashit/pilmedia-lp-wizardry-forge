@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Upload, Pipette } from 'lucide-react';
 import ColorThief from 'colorthief';
+import { fontCategories } from './TextPanel';
 
 interface BackgroundPanelProps {
   onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
@@ -22,12 +23,25 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   onElementUpdate,
   colorEditingContext = 'fill'
 }) => {
+  console.log('🎨 BackgroundPanel component received props:', {
+    selectedElementId: selectedElement?.id,
+    selectedElementType: selectedElement?.type,
+    hasOnElementUpdate: !!onElementUpdate,
+    colorEditingContext,
+    timestamp: new Date().toISOString()
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [customColor, setCustomColor] = useState('#FF0000');
+  const availableFontCategories = useMemo(() => fontCategories, []);
+  const [selectedFontCategory, setSelectedFontCategory] = useState(() => availableFontCategories[0]);
 
   // Vérifier si un élément est sélectionné
-  const isTextSelected = selectedElement && selectedElement.type === 'text';
+  const isTextSelected = selectedElement && (
+    selectedElement.type === 'text' ||
+    selectedElement.type === 'BlocTexte' ||
+    selectedElement.elementType === 'text'
+  );
   const isShapeSelected = selectedElement && selectedElement.type === 'shape';
   
   // Déterminer la couleur actuelle en fonction de la sélection et du contexte
@@ -50,27 +64,53 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     }
     return currentBackground?.type === 'color' ? currentBackground.value : undefined;
   };
+  
+  console.log('🎨 BackgroundPanel render:', {
+    selectedElement: selectedElement?.id || selectedElement?.type,
+    selectedElementType: selectedElement?.type,
+    isTextSelected,
+    isShapeSelected,
+    colorEditingContext,
+    currentColor: getCurrentColor(),
+    hasOnElementUpdate: !!onElementUpdate,
+    timestamp: new Date().toISOString()
+  });
 
   // Fonction pour appliquer une couleur
   const applyColor = (color: string) => {
+    console.log('🎨 applyColor called:', {
+      color,
+      isTextSelected,
+      isShapeSelected,
+      colorEditingContext,
+      hasOnElementUpdate: !!onElementUpdate,
+      selectedElement: selectedElement?.id || selectedElement?.type
+    });
+    
     if (isTextSelected && onElementUpdate) {
       // Texte: bordure optionnelle, sinon couleur du texte
       if (colorEditingContext === 'border') {
+        console.log('🎨 Updating text border color:', color);
         onElementUpdate({ borderColor: color });
       } else {
+        console.log('🎨 Updating text color:', color);
         onElementUpdate({ color });
       }
     } else if (isShapeSelected && onElementUpdate) {
       // Forme: selon le contexte
       if (colorEditingContext === 'border') {
+        console.log('🎨 Updating shape border color:', color);
         onElementUpdate({ borderColor: color });
       } else if (colorEditingContext === 'text') {
+        console.log('🎨 Updating shape text color:', color);
         onElementUpdate({ textColor: color });
       } else {
+        console.log('🎨 Updating shape background color:', color);
         onElementUpdate({ backgroundColor: color });
       }
     } else {
       // Appliquer à l'arrière-plan (toujours fill)
+      console.log('🎨 Updating background color:', color);
       onBackgroundChange({ type: 'color', value: color });
     }
   };
@@ -249,6 +289,60 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           ))}
         </div>
       </div>
+
+      {/* FONT CATEGORIES SECTION - MOVED FROM POLICES TAB */}
+      {isTextSelected && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-gray-700">CATÉGORIES DE POLICES</h3>
+            <span className="text-[11px] text-gray-400">Appliquer à la sélection</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {availableFontCategories.map((category) => (
+              <button
+                key={category.name}
+                type="button"
+                onClick={() => setSelectedFontCategory(category)}
+                className={`p-2 text-xs rounded transition-all duration-200 ${
+                  selectedFontCategory.name === category.name
+                    ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold text-gray-700">{selectedFontCategory?.name || 'Aucune'}</h4>
+            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
+              {(selectedFontCategory?.fonts || []).map((font) => {
+                const isActiveFont = selectedElement?.fontFamily === font;
+                return (
+                  <button
+                    key={font}
+                    type="button"
+                    onClick={() => onElementUpdate?.({ fontFamily: font })}
+                    className={`p-3 border rounded text-left transition-colors group ${
+                      isActiveFont
+                        ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                        : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+                    }`}
+                  >
+                    <span style={{ fontFamily: font }} className="text-lg font-medium group-hover:text-white">
+                      {font}
+                    </span>
+                    <span className="block text-[11px] mt-1 text-gray-500 group-hover:text-white/80">
+                      {selectedFontCategory.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Extracted Colors */}
       {extractedColors.length > 0 && (

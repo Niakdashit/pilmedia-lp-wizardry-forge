@@ -23,8 +23,24 @@ import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopu
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
+import ModularCanvas from './modules/ModularCanvas';
+import SectionedModularCanvas from './modules/SectionedModularCanvas';
+import type { Module, Section } from '@/types/modularEditor';
+import { createEmptySection } from '@/types/modularEditor';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
+
+const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
+  desktop: 56,
+  tablet: 40,
+  mobile: 28
+};
+
+const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
+  desktop: 32,
+  tablet: 28,
+  mobile: 24
+};
 
 export interface DesignCanvasProps {
   screenId?: CanvasScreenId;
@@ -91,6 +107,23 @@ export interface DesignCanvasProps {
   containerClassName?: string;
   hideInlineQuizPreview?: boolean;
   elementFilter?: (element: any) => boolean;
+  // Modular editor props
+  modularModules?: Module[];
+  onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
+  onModuleDelete?: (id: string) => void;
+  onModuleMove?: (id: string, dir: 'up' | 'down') => void;
+  // Section-based modular editor props (takes precedence if provided)
+  modularSections?: Section[];
+  onSectionModuleUpdate?: (id: string, patch: Partial<Module>) => void;
+  onSectionModuleMove?: (payload: {
+    moduleId: string;
+    fromSectionId: string;
+    fromColumnIndex: number;
+    fromIndex: number;
+    toSectionId: string;
+    toColumnIndex: number;
+    toIndex: number;
+  }) => void;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -139,7 +172,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   quizModalConfig,
   extractedColors,
   hideInlineQuizPreview = false,
-  elementFilter
+  elementFilter,
+  // Modular editor props
+  modularModules,
+  onModuleUpdate,
+  onModuleDelete,
+  onModuleMove,
+  // Section-based modular editor props
+  modularSections,
+  onSectionModuleUpdate,
+  onSectionModuleMove
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -176,6 +218,51 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Precise DOM-measured bounds per element (canvas-space units)
   const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Local Sections State (fallback if parent doesn't provide modularSections)
+  const [localSections, setLocalSections] = useState<Section[]>([]);
+
+  // Listen to sidebar fallback event to add a section
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ screen: string; layout: any }>; // screen reserved for future multi-screen
+      const layout = ce?.detail?.layout as any;
+      if (!layout) return;
+      const id = `sec-${Date.now()}-${Math.floor(Math.random() * 999)}`;
+      const section = createEmptySection(id, layout);
+      setLocalSections(prev => [...prev, section]);
+    };
+    window.addEventListener('quiz:addSection', handler as EventListener);
+    return () => window.removeEventListener('quiz:addSection', handler as EventListener);
+  }, []);
+
+  const effectiveSections: Section[] | undefined = Array.isArray(modularSections) && modularSections.length > 0
+    ? modularSections
+    : (localSections.length > 0 ? localSections : undefined);
+
+  const handleLocalSectionModuleUpdate = useCallback((id: string, patch: Partial<Module>) => {
+    setLocalSections(prev => prev.map(sec => ({
+      ...sec,
+      modules: sec.modules.map(col => col.map(m => m.id === id ? { ...m, ...patch } : m))
+    })));
+  }, []);
+
+  const handleLocalMoveModule = useCallback((payload: { moduleId: string; fromSectionId: string; fromColumnIndex: number; fromIndex: number; toSectionId: string; toColumnIndex: number; toIndex: number; }) => {
+    setLocalSections(prev => {
+      const clone = prev.map(s => ({ ...s, modules: s.modules.map(col => [...col]) }));
+      const fromS = clone.find(s => s.id === payload.fromSectionId);
+      const toS = clone.find(s => s.id === payload.toSectionId);
+      if (!fromS || !toS) return prev;
+      const fromCol = fromS.modules[payload.fromColumnIndex] || [];
+      const toCol = toS.modules[payload.toColumnIndex] || [];
+      const [item] = fromCol.splice(payload.fromIndex, 1);
+      if (!item) return prev;
+      const insertIndex = Math.max(0, Math.min(payload.toIndex, toCol.length));
+      toCol.splice(insertIndex, 0, item);
+      return clone;
+    });
+  }, []);
+
   // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
 
@@ -192,6 +279,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
     return canvasSize;
   }, [selectedDevice, canvasSize]);
+
+  const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
+  const safeZoneRadius = useMemo(() => SAFE_ZONE_RADIUS[selectedDevice] ?? SAFE_ZONE_RADIUS.desktop, [selectedDevice]);
 
   // Collect measured bounds from children (CanvasElement)
   const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
@@ -482,11 +572,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Handlers optimisés avec snapping et cache intelligent (moved earlier)
   const handleElementUpdate = useCallback((id: string, updates: any) => {
+    const targetElement = elementById.get(id);
+
     // Utiliser la fonction externe si disponible
     if (externalOnElementUpdate && selectedElement === id) {
-      // Appeler le handler externe pour la synchronisation/side-effects,
-      // mais continuer la mise à jour locale pour garantir le re-render (ex: zIndex)
-      try { externalOnElementUpdate(updates); } catch {}
+      try {
+        externalOnElementUpdate({
+          ...updates,
+          _previousColor: targetElement?.color
+        });
+      } catch {}
     }
 
     // 🎯 Gérer les mises à jour de style pour les templates de quiz
@@ -652,6 +747,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         });
       }
       
+      // Propagate controls to modular modules when applicable
+      if (el.id.startsWith('modular-text-')) {
+        const moduleId = el.id.replace('modular-text-', '');
+        const module = modularModules?.find((m) => m.id === moduleId && m.type === 'BlocTexte');
+        if (module) {
+          const patch: Partial<Module> & Record<string, any> = {};
+          if (workingUpdates.fontFamily) patch.bodyFontFamily = workingUpdates.fontFamily;
+          if (workingUpdates.color) patch.bodyColor = workingUpdates.color;
+          if (workingUpdates.fontSize) patch.bodyFontSize = workingUpdates.fontSize;
+          if (workingUpdates.fontWeight) patch.bodyBold = workingUpdates.fontWeight === 'bold';
+          if (workingUpdates.fontStyle) patch.bodyItalic = workingUpdates.fontStyle === 'italic';
+          if (workingUpdates.textDecoration) patch.bodyUnderline = workingUpdates.textDecoration?.includes('underline');
+          if (Object.keys(patch).length > 0) onModuleUpdate?.(moduleId, patch);
+        }
+      }
+
       return base;
     });
 
@@ -1737,7 +1848,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center ${isWindowMobile ? 'justify-start -mt-20' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center ${isWindowMobile ? 'justify-start pt-12' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
@@ -1752,24 +1863,96 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canRedo={canRedo}
         onClearSelection={handleClearSelection}
       >
-        {/* Canvas Toolbar - Show for text and shape elements */}
-        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile' && (
-          <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
-            <CanvasToolbar 
-              selectedElement={{
-                ...selectedElementData,
-                ...getPropertiesForDevice(selectedElementData, selectedDevice)
-              }} 
-              onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
-              onShowEffectsPanel={onShowEffectsPanel}
-              onShowAnimationsPanel={onShowAnimationsPanel}
-              onShowPositionPanel={onShowPositionPanel}
-              onShowDesignPanel={onShowDesignPanel}
-              onOpenElementsTab={onOpenElementsTab}
-              canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
-            />
-          </div>
-        )}
+        {/* Canvas Toolbar - Show for text/shape elements OR modular text selection */}
+        {(() => {
+          if (readOnly) return false;
+          const isModuleText = (externalSelectedElement as any)?.role === 'module-text' && (externalSelectedElement as any)?.moduleId;
+          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || isModuleText;
+          if (!shouldShow) return false;
+
+          // Build a synthetic selected element for module text to drive the toolbar UI
+          let toolbarSelected: any = selectedElementData;
+          let onToolbarElementUpdate = (updates: any) => {
+            // Default: apply to the single selected canvas element
+            if (selectedElement) {
+              handleElementUpdate(selectedElement, updates);
+              return;
+            }
+          };
+
+          if (isModuleText) {
+            const modId = (externalSelectedElement as any).moduleId as string;
+            const currentMod = Array.isArray(modularModules) ? modularModules.find((m: any) => m.id === modId) : undefined;
+            const align = (currentMod as any)?.align || 'left';
+            const bodyFontSize = (currentMod as any)?.bodyFontSize ?? 14;
+            const bodyBold = !!(currentMod as any)?.bodyBold;
+            const bodyItalic = !!(currentMod as any)?.bodyItalic;
+            const bodyUnderline = !!(currentMod as any)?.bodyUnderline;
+
+            toolbarSelected = {
+              id: `modular-text-${modId}`,
+              type: 'text',
+              textAlign: align,
+              fontSize: bodyFontSize,
+              fontWeight: bodyBold ? 'bold' : 'normal',
+              fontStyle: bodyItalic ? 'italic' : 'normal',
+              textDecoration: bodyUnderline ? 'underline' : 'none',
+              style: { fontSize: `${bodyFontSize}px` }
+            };
+
+            onToolbarElementUpdate = (updates: any) => {
+              if (!currentMod) return;
+              const patch: any = {};
+              if (typeof updates.textAlign !== 'undefined') patch.align = updates.textAlign;
+              if (typeof updates.fontSize !== 'undefined') patch.bodyFontSize = updates.fontSize;
+              if (typeof updates.fontWeight !== 'undefined') patch.bodyBold = updates.fontWeight === 'bold';
+              if (typeof updates.fontStyle !== 'undefined') patch.bodyItalic = updates.fontStyle === 'italic';
+              if (typeof updates.textDecoration !== 'undefined') patch.bodyUnderline = updates.textDecoration === 'underline';
+              // Inline rich-text coming from toolbar (apply to body by default)
+              if (typeof updates.richHtml !== 'undefined') {
+                patch.bodyRichHtml = updates.richHtml;
+                // Remove global flags so they don't override inline spans
+                patch.bodyBold = false;
+                patch.bodyItalic = false;
+                patch.bodyUnderline = false;
+              }
+              if (typeof updates.content !== 'undefined') patch.body = updates.content;
+              onModuleUpdate?.(modId, patch);
+            };
+          } else if (selectedElementData) {
+            toolbarSelected = {
+              ...selectedElementData,
+              ...getPropertiesForDevice(selectedElementData, selectedDevice)
+            };
+            // If multiple selection is active, apply updates to all selected text elements
+            onToolbarElementUpdate = (updates: any) => {
+              const list = Array.isArray(selectedElements) ? selectedElements : [];
+              const textIds = list.filter((el: any) => el?.type === 'text').map((el: any) => el.id);
+              if (textIds.length > 1) {
+                for (const id of textIds) {
+                  handleElementUpdate(id, updates);
+                }
+              } else if (selectedElement) {
+                handleElementUpdate(selectedElement, updates);
+              }
+            };
+          }
+
+          return (
+            <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
+              <CanvasToolbar 
+                selectedElement={toolbarSelected}
+                onElementUpdate={onToolbarElementUpdate}
+                onShowEffectsPanel={onShowEffectsPanel}
+                onShowAnimationsPanel={onShowAnimationsPanel}
+                onShowPositionPanel={onShowPositionPanel}
+                onShowDesignPanel={onShowDesignPanel}
+                onOpenElementsTab={onOpenElementsTab}
+                canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+              />
+            </div>
+          );
+        })()}
         
         <div 
           ref={containerRef} 
@@ -1804,12 +1987,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         >
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
-            className="flex justify-center items-center"
-            style={{
-              width: 'fit-content',
-              height: 'fit-content',
-              minHeight: 'auto'
-            }}
+          ref={containerRef} 
+          className="flex justify-center w-full"
+          style={{
+            width: 'fit-content',
+            minHeight: '100vh',
+            overflowY: 'auto',
+            alignItems: 'flex-start'
+          }}
           >
             <div 
               ref={activeCanvasRef}
@@ -1870,6 +2055,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   hasStyleToCopy={selectedElement !== null}
                 />
               )}
+              {/* Safe zone overlay to keep modules away from hard edges */}
+              <div
+                className="pointer-events-none absolute inset-0 z-[6]"
+                aria-hidden="true"
+              >
+                <div
+                  className="absolute border border-dashed border-white/60"
+                  style={{
+                    inset: `${safeZonePadding}px`,
+                    borderRadius: `${safeZoneRadius}px`,
+                    boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                  }}
+                />
+              </div>
+
               <GridOverlay 
                 canvasSize={effectiveCanvasSize}
                 showGrid={selectedDevice !== 'mobile' && showGridLines}
@@ -1959,6 +2159,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
               {/* Quiz avec template sélectionné */}
               {(() => {
+                if (screenId === 'screen3') {
+                  return null;
+                }
                 // Créer un objet campaign temporaire avec le templateId depuis l'état local
                 const tempCampaign = campaign || {
                   gameConfig: {
@@ -2034,6 +2237,107 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
             </div>
+
+            {/* Modular stacked content (HubSpot-like) */}
+            {/* New: Section-based modular content takes precedence when provided */}
+            {Array.isArray(modularSections) && modularSections.length > 0 && screenId !== 'screen3' && (
+              <div
+                className="w-full flex justify-center mb-6"
+                style={{
+                  paddingLeft: safeZonePadding,
+                  paddingRight: safeZonePadding,
+                  paddingTop: safeZonePadding,
+                  paddingBottom: safeZonePadding,
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                  <SectionedModularCanvas
+                    sections={modularSections}
+                    device={selectedDevice}
+                    onUpdate={(id, patch) => onSectionModuleUpdate?.(id, patch)}
+                    onMoveModule={onSectionModuleMove}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Legacy: flat modular modules (single column stacked) */}
+            {Array.isArray(modularModules) && modularModules.length > 0 && screenId !== 'screen3' && (
+              <div
+                className="w-full flex justify-center mb-6"
+                style={{
+                  paddingLeft: safeZonePadding,
+                  paddingRight: safeZonePadding,
+                  paddingTop: safeZonePadding,
+                  paddingBottom: safeZonePadding,
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                  <ModularCanvas
+                    screen={screenId as any}
+                    modules={modularModules}
+                    device={selectedDevice}
+                    onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                    onDelete={(id) => onModuleDelete?.(id)}
+                    onMove={(id, dir) => onModuleMove?.(id, dir)}
+                    onSelect={(m) => {
+                      try {
+                        const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                        window.dispatchEvent(evt);
+                      } catch {}
+                      if (m.type === 'BlocBouton') {
+                        onSelectedElementChange?.({
+                          id: `modular-button-${m.id}`,
+                          type: 'button',
+                          role: 'module-button',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
+                      if (m.type === 'BlocImage') {
+                        onSelectedElementChange?.({
+                          id: `modular-image-${m.id}`,
+                          type: 'image',
+                          role: 'module-image',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
+                      if (m.type === 'BlocVideo') {
+                        onSelectedElementChange?.({
+                          id: `modular-video-${m.id}`,
+                          type: 'video',
+                          role: 'module-video',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
+                      onSelectedElementChange?.({
+                        id: `modular-text-${m.id}`,
+                        type: 'text',
+                        role: 'module-text',
+                        moduleId: m.id,
+                        screenId
+                      } as any);
+                      onShowDesignPanel?.('text');
+                    }}
+                    selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
+                      || (externalSelectedElement as any)?.role === 'module-image'
+                      || (externalSelectedElement as any)?.role === 'module-video')
+                      ? (externalSelectedElement as any)?.moduleId
+                      : undefined}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
             {renderableElements

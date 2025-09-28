@@ -41,13 +41,13 @@ const FormPreview: React.FC<FormPreviewProps> = ({
   const getSizeStyles = () => {
     switch (gameSize) {
       case 'small':
-        return { maxWidth: '300px', padding: '24px' };
+        return { maxWidth: '300px', padding: '16px' };
       case 'large':
-        return { maxWidth: '600px', padding: '32px' };
+        return { maxWidth: '600px', padding: '20px' };
       case 'xlarge':
-        return { maxWidth: '800px', padding: '40px' };
+        return { maxWidth: '800px', padding: '24px' };
       default:
-        return { maxWidth: '450px', padding: '24px' };
+        return { maxWidth: '450px', padding: '16px' };
     }
   };
 

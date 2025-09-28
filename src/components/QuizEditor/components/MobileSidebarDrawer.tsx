@@ -150,6 +150,8 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             onBackgroundChange={onBackgroundChange || (() => {})} 
             onExtractedColorsChange={onExtractedColorsChange}
             currentBackground={currentBackground}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
           />
         );
       case 'layers':
