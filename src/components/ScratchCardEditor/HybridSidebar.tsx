@@ -268,10 +268,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   React.useEffect(() => {
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = activeTab ? tabs.some(t => t.id === activeTab) : false;
-    if (!activeIsVisible) {
+    const ephemeral = ['effects', 'animations', 'position', 'scratch'];
+    const isEphemeral = activeTab ? ephemeral.includes(activeTab) : false;
+    if (!activeIsVisible && !isEphemeral) {
       _setActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs]);
+  }, [tabs, activeTab]);
 
   const prefetchTab = (tabId: string) => {
     if (tabId === 'position') {

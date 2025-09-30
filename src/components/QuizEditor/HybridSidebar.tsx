@@ -203,6 +203,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab]);
+
+  // Auto-expand when opening the transient Effects panel
+  React.useEffect(() => {
+    if (showEffectsPanel && isCollapsed) {
+      setIsCollapsed(false);
+    }
+  }, [showEffectsPanel, isCollapsed]);
   const [internalActiveTab, setInternalActiveTab] = useState<string | null>('elements');
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
@@ -412,12 +419,17 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   React.useEffect(() => {
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
-    const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
+    const activeIsEphemeralOpen = (
+      (internalActiveTab === 'effects' && showEffectsPanel) ||
+      (internalActiveTab === 'animations' && showAnimationsPanel) ||
+      (internalActiveTab === 'position' && showPositionPanel) ||
+      (internalActiveTab === 'quiz' && showQuizPanel)
+    );
 
-    if (!activeIsVisible && !isTransientQuiz) {
+    if (!activeIsVisible && !activeIsEphemeralOpen) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel]);
+  }, [tabs, internalActiveTab, showEffectsPanel, showAnimationsPanel, showPositionPanel, showQuizPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {

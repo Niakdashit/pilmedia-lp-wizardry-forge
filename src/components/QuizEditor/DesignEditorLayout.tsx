@@ -2607,11 +2607,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowEffectsInSidebar(true);
-                          setShowAnimationsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
+                        setShowEffectsInSidebar(true);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
                       }}
                       onShowAnimationsPanel={() => {
                         if (!isWindowMobile) {
@@ -2711,13 +2709,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                         return role.includes('exit-message');
                       }}
                       // Sidebar panel triggers
-                      onShowEffectsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowEffectsInSidebar(true);
-                          setShowAnimationsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
+                       onShowEffectsPanel={() => {
+                         setShowEffectsInSidebar(true);
+                         setShowAnimationsInSidebar(false);
+                         setShowPositionInSidebar(false);
+                       }}
                       onShowAnimationsPanel={() => {
                         if (!isWindowMobile) {
                           setShowAnimationsInSidebar(true);
