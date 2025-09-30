@@ -376,13 +376,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = activeCanvasRef.current;
+    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null);
     if (!canvas) return;
 
     let initialDistance = 0;
     let initialZoom = 1;
     let isPinching = false;
-    let lastTouchTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -413,17 +412,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           
           // Appliquer le zoom avec une transition fluide
           requestAnimationFrame(() => {
-            onZoomChange(newZoom);
+            onZoomChange?.(newZoom);
           });
         }
         e.preventDefault();
       }
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
+    const handleTouchEnd = (_e: TouchEvent) => {
       if (isPinching) {
         isPinching = false;
-        lastTouchTime = Date.now();
       }
     };
 
@@ -839,6 +837,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onZoomChange(clamped);
     }
   }, [onZoomChange]);
+
+  // Keep references to avoid TS6133 when externally wired
+  useEffect(() => { void deviceDefaultZoom; void handleZoomChange; }, [deviceDefaultZoom, handleZoomChange]);
 
 
   // Compute canvas-space coordinates from a pointer event
@@ -1642,6 +1643,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     maxRegions: 50,
     updateThreshold: 16 // 60fps
   });
+  void markRegionsDirty;
 
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
@@ -1954,7 +1956,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' ? activeCanvasRef.current : null;
+            const canvasEl = typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom

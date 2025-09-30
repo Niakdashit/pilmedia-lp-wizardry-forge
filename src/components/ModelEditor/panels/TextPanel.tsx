@@ -208,10 +208,8 @@ const TextPanel: React.FC<TextPanelProps> = ({
   // Insérer un template composite (plusieurs calques de texte)
   const addComposite = (composite: any) => {
     const currentCanvas = getDeviceDimensions(selectedDevice);
-    const defaultTextSize = { width: 200, height: 40 };
     const topOffset = 50;
     const existingTextElements = elements.filter(el => el.type === 'text');
-    const baseIndex = existingTextElements.length;
     const layers = [...(composite?.layers || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
     layers.forEach((layer: any, idx: number) => {
       const layerBaseFontSize = layer?.preset?.fontSize || 24;
@@ -226,10 +224,10 @@ const TextPanel: React.FC<TextPanelProps> = ({
       const estimatedLayerWidth = estimateTextWidth(layerText, layerFontSize, layer?.preset?.fontWeight || 'normal', layer?.preset?.fontFamily || 'Open Sans');
     const baseHorizontalCenter = Math.max(0, (currentCanvas.width - estimatedLayerWidth) / 2);
     const currentStackedOffset = existingTextElements.reduce((offset, el) => {
-      const baseFont = el.fontSize ?? desktopFontSize;
+      const baseFont = el.fontSize ?? layerDesktopFontSize;
       const perDevice = (el as any)[selectedDevice];
       const y = perDevice?.y ?? el.y ?? topOffset;
-      const height = (typeof baseFont === 'number' ? baseFont : desktopFontSize) * 1.2;
+      const height = (typeof baseFont === 'number' ? baseFont : layerDesktopFontSize) * 1.2;
       return Math.max(offset, y + height + 32);
     }, topOffset);
     const baseVertical = currentStackedOffset + Math.round(idx * (layerFontSize * 1.2));

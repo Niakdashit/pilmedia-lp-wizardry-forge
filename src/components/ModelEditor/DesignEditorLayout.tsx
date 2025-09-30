@@ -906,14 +906,14 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       },
       screens: [
         {
-          title: titleElement?.content || currentCampaignState?.screens?.[1]?.title || 'Tentez votre chance !',
-          description: descriptionElement?.content || currentCampaignState?.screens?.[1]?.description || 'Faites tourner les rouleaux et décrochez le jackpot',
-          buttonText: buttonElement?.content || currentCampaignState?.screens?.[1]?.buttonText || 'SPIN'
+          title: titleElement?.content || (currentCampaignState as any)?.screens?.[1]?.title || 'Tentez votre chance !',
+          description: descriptionElement?.content || (currentCampaignState as any)?.screens?.[1]?.description || 'Faites tourner les rouleaux et décrochez le jackpot',
+          buttonText: buttonElement?.content || (currentCampaignState as any)?.screens?.[1]?.buttonText || 'SPIN'
         },
         {
-          title: currentCampaignState?.screens?.[1]?.title || titleElement?.content || 'Vos informations',
-          description: currentCampaignState?.screens?.[1]?.description || descriptionElement?.content || 'Remplissez le formulaire pour participer',
-          buttonText: currentCampaignState?.buttonConfig?.text || buttonElement?.content || 'Participer'
+          title: (currentCampaignState as any)?.screens?.[1]?.title || titleElement?.content || 'Vos informations',
+          description: (currentCampaignState as any)?.screens?.[1]?.description || descriptionElement?.content || 'Remplissez le formulaire pour participer',
+          buttonText: (currentCampaignState as any)?.buttonConfig?.text || buttonElement?.content || 'Participer'
         }
       ],
       // Champs de contact dynamiques avec synchronisation en temps réel

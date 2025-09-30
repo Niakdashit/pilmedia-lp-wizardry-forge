@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
   ChevronRight,
@@ -169,6 +169,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     setActiveTab: setEditorActiveTab,
     setPanelState: setEditorPanelState
   } = useEditorState();
+  void editorType; void editorShowJackpotPanel;
   
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
@@ -674,13 +675,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             <div className="h-full overflow-y-auto">
               <JackpotConfigPanel
                 onBack={() => onJackpotPanelChange?.(false)}
-                reelSymbols={campaign?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒']}
-                selectedTemplate={campaign?.gameConfig?.jackpot?.template || 'jackpot-frame'}
-                borderColor={campaign?.gameConfig?.jackpot?.borderColor || '#ffd700'}
-                backgroundColor={campaign?.gameConfig?.jackpot?.backgroundColor || '#ffffff'}
-                textColor={campaign?.gameConfig?.jackpot?.textColor || '#333333'}
-                customFrame={campaign?.gameConfig?.jackpot?.customFrame}
-                customTemplateUrl={campaign?.gameConfig?.jackpot?.customTemplateUrl}
+                reelSymbols={(campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒']}
+                selectedTemplate={(campaign as any)?.gameConfig?.jackpot?.template || 'jackpot-frame'}
+                borderColor={(campaign as any)?.gameConfig?.jackpot?.borderColor || '#ffd700'}
+                backgroundColor={(campaign as any)?.gameConfig?.jackpot?.backgroundColor || '#ffffff'}
+                textColor={(campaign as any)?.gameConfig?.jackpot?.textColor || '#333333'}
+                customFrame={(campaign as any)?.gameConfig?.jackpot?.customFrame}
+                customTemplateUrl={(campaign as any)?.gameConfig?.jackpot?.customTemplateUrl}
                 onReelSymbolsChange={(symbols) => {
                   setCampaign((prev: any) => ({
                     ...prev,
@@ -796,7 +797,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <JackpotConfigPanel
             onBack={() => {
               onJackpotPanelChange?.(false);
-              _setActiveTab('elements');
+              setActiveTab('elements');
             }}
             reelSymbols={jackpotSymbols}
             onReelSymbolsChange={handleJackpotSymbolsChange}
