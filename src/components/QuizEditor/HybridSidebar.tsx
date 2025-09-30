@@ -203,14 +203,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab]);
-
-  // Ouvrir automatiquement le sidebar quand le panel Effets est activé
-  React.useEffect(() => {
-    if (showEffectsPanel && isCollapsed) {
-      setIsCollapsed(false);
-    }
-  }, [showEffectsPanel, isCollapsed]);
-
   const [internalActiveTab, setInternalActiveTab] = useState<string | null>('elements');
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
