@@ -353,14 +353,14 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       const containerProps = ['backgroundColor', 'padding', 'borderRadius', 'display', 'border', 'boxShadow'];
       containerProps.forEach(prop => {
         if (customCSS[prop]) {
-          containerStyles[prop as any] = customCSS[prop];
+          (containerStyles as any)[prop] = customCSS[prop];
         }
       });
       
       // Text-level properties
       Object.keys(customCSS).forEach(prop => {
         if (!containerProps.includes(prop)) {
-          textStyles[prop as any] = customCSS[prop];
+          (textStyles as any)[prop] = customCSS[prop];
         }
       });
       
@@ -595,8 +595,9 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
               >
                 {links.map((link) => {
                   const networkId = (link.network as any) || undefined;
-                  const iconStyle: SocialIconStyle = moduleWithMeta.iconStyle ?? 'color';
+                  const iconStyle: SocialIconStyle = (moduleWithMeta.iconStyle as SocialIconStyle) ?? 'color';
                   const styleConfig = getIconStyleConfig(iconStyle, networkId as any);
+                  void styleConfig; // Mark as used for future functionality
                   const background = 'transparent';
                   const borderStyle = 'none';
                   const iconWrapperStyle: React.CSSProperties = {

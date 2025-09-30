@@ -19,6 +19,9 @@ interface CanvasToolbarProps {
   onShowDesignPanel?: (context?: 'fill' | 'border' | 'text') => void;
   onOpenElementsTab?: () => void;
   onEffectsPanelChange?: (show: boolean) => void;
+  onShowEffectsPanel?: () => void;
+  onShowAnimationsPanel?: () => void;
+  onShowPositionPanel?: () => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
 

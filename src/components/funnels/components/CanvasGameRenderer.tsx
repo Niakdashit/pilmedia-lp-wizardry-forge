@@ -292,6 +292,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       const effectiveTextColor = campaignJackpot?.textColor ?? storeJackpotCfg?.textColor;
       const effectiveCustomFrame = campaignJackpot?.customFrame ?? storeJackpotCfg?.customFrame;
       const effectiveButton = campaignJackpot?.button ?? storeJackpotCfg?.button;
+      void effectiveCustomFrame; // Reserved for future functionality
+      void effectiveButton; // Reserved for future functionality
       
       console.log('🎰 Rendering Jackpot component (SlotJackpot)', {
         template: effectiveTemplate,

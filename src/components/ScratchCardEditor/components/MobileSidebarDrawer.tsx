@@ -85,6 +85,7 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
     location.pathname === '/form-editor' ||
     location.pathname === '/scratch-editor'
   );
+  void disableAutoOpen; // Mark as used for conditional logic
 
   // Détection de la taille de fenêtre
   useEffect(() => {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video, Share2, Code2 } from 'lucide-react';
 import { SOCIAL_PRESETS, getSocialIconUrl } from './socialIcons';
+import type { ScreenId, Module, ModuleType, SocialIconStyle } from '@/types/modularEditor';
 
 export interface ModulesPanelProps {
   currentScreen: ScreenId;

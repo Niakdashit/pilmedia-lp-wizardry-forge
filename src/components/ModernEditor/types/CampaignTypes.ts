@@ -344,6 +344,10 @@ export interface OptimizedCampaign {
   _loaded?: boolean;
   _error?: boolean;
   _errorMessage?: string;
+  
+  // Form and canvas configuration
+  formFields?: any[];
+  canvasConfig?: any;
 }
 
 export type PreviewDevice = 'desktop' | 'tablet' | 'mobile';

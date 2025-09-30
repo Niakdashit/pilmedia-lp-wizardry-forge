@@ -45,6 +45,7 @@ export interface CanvasElementProps {
     stopDragging: () => void;
   };
   screenId?: CanvasScreenId;
+  onTap?: (element: any) => void;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -64,8 +65,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   activeGroupId,
   campaign,
   extractedColors,
-  alignmentSystem,
-  screenId
+  alignmentSystem
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   

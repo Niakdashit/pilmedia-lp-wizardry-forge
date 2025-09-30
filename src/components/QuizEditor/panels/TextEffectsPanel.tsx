@@ -1381,10 +1381,11 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
                   <span 
                     className="text-sm font-bold text-gray-800"
                     style={{
-                      ...effect.css,
+                      ...effect.css as React.CSSProperties,
                       // Ensure all CSS properties are properly formatted for React
                       WebkitTextStroke: effect.css.WebkitTextStroke || undefined,
-                      textShadow: effect.css.textShadow || undefined
+                      textShadow: effect.css.textShadow || undefined,
+                      textAlign: (effect.css.textAlign as any) || undefined
                     }}
                   >
                     Ag

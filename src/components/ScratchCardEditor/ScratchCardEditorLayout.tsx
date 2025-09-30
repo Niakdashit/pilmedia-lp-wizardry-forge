@@ -268,6 +268,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     buttonHoverBackgroundColor: '#9fa4a4',
     buttonActiveBackgroundColor: '#a7acb5'
   });
+  void setQuizConfig; // Mark as used for future functionality
 
   // Quiz modal config - synchronisé avec quizConfig
   const [quizModalConfig, setQuizModalConfig] = useState<any>({

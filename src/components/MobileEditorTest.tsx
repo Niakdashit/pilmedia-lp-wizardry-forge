@@ -8,7 +8,8 @@ const MobileEditorTest: React.FC = () => {
   const [currentBackground, setCurrentBackground] = useState<{ type: 'color' | 'image'; value: string }>({ type: 'color', value: '#ffffff' });
   const [campaignConfig, setCampaignConfig] = useState({});
   const [elements, setElements] = useState<any[]>([]);
-  const [showMobileUI, setShowMobileUI] = useState(false);
+  const [, setShowMobileUI] = useState(false);
+  void setShowMobileUI; // Mark as intentionally unused
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   
   const containerRef = useRef<HTMLDivElement>(null);

@@ -2324,7 +2324,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         moduleId: m.id,
                         screenId
                       } as any);
-                      onShowDesignPanel?.('text');
+                      onShowDesignPanel?.();
                     }}
                     selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
                       || (externalSelectedElement as any)?.role === 'module-image'
@@ -2418,7 +2418,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               return (
                 <CanvasElement 
                   key={element.id} 
-                  screenId={screenId}
                   element={elementForCanvas} 
                   selectedDevice={selectedDevice}
                   isSelected={

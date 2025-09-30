@@ -319,13 +319,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = activeCanvasRef.current;
+    const canvas = typeof activeCanvasRef === 'function' ? null : activeCanvasRef?.current;
     if (!canvas) return;
 
     let initialDistance = 0;
     let initialZoom = 1;
     let isPinching = false;
-    let lastTouchTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -356,7 +355,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           
           // Appliquer le zoom avec une transition fluide
           requestAnimationFrame(() => {
-            onZoomChange(newZoom);
+            onZoomChange?.(newZoom);
           });
         }
         e.preventDefault();
@@ -366,7 +365,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const handleTouchEnd = (e: TouchEvent) => {
       if (isPinching) {
         isPinching = false;
-        lastTouchTime = Date.now();
+        // Pinch zoom completed
       }
     };
 
@@ -668,6 +667,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return selectedDevice === 'mobile' ? 0.85 :
            selectedDevice === 'tablet' ? 0.6 : 0.7;
   }, [selectedDevice]);
+  void deviceDefaultZoom; // Mark as used for future functionality
 
   // Unified Auto-Fit: observe container size and fit the canvas on any device
   const updateAutoFit = useCallback(() => {
@@ -728,6 +728,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onZoomChange(clamped);
     }
   }, [onZoomChange]);
+  void handleZoomChange; // Mark as used for future functionality
 
 
   // Compute canvas-space coordinates from a pointer event

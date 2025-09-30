@@ -9,7 +9,6 @@ import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
 import { FieldConfig } from '../forms/DynamicContactForm';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasElement from '../ModelEditor/CanvasElement';
-import DesignCanvas from '../ModelEditor/DesignCanvas';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
@@ -45,7 +44,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     type: 'color',
     value: '#ffffff'
   });
-  const [formPreviewZoom, setFormPreviewZoom] = useState(() => {
+  const [, setFormPreviewZoom] = useState(() => {
     const device: 'desktop' | 'tablet' | 'mobile' = previewMode;
     const stored = getStoredZoom(device);
     return stored ?? getDefaultPreviewZoom(device);
@@ -320,7 +319,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 onSelect={() => {}}
                 onUpdate={() => {}}
                 onDelete={() => {}}
-                containerRef={null}
+                containerRef={undefined}
                 readOnly={true}
                 onMeasureBounds={() => {}}
                 onAddElement={() => {}}
@@ -330,7 +329,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 activeGroupId={null}
                 campaign={liveCampaign}
                 extractedColors={[]}
-                alignmentSystem={null}
+                alignmentSystem={undefined}
               />
             );
           })}
@@ -387,7 +386,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 onSelect={() => {}}
                 onUpdate={() => {}}
                 onDelete={() => {}}
-                containerRef={null}
+                containerRef={undefined}
                 readOnly={true}
                 onMeasureBounds={() => {}}
                 onAddElement={() => {}}
@@ -397,7 +396,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 activeGroupId={null}
                 campaign={liveCampaign}
                 extractedColors={[]}
-                alignmentSystem={null}
+                alignmentSystem={undefined}
               />
             );
           })}
