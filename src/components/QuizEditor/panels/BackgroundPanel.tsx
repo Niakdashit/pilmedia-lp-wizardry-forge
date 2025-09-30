@@ -74,6 +74,11 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const [customColor, setCustomColor] = useState('#FF0000');
   const availableFontCategories = useMemo(() => fontCategories, []);
   const [selectedFontCategory, setSelectedFontCategory] = useState(() => availableFontCategories[0]);
+  
+  // États pour personnaliser les couleurs des effets rapides
+  const [effectBackgroundColor, setEffectBackgroundColor] = useState<string>('#FFD700');
+  const [effectTextColor, setEffectTextColor] = useState<string>('#000000');
+  const [currentEffectId, setCurrentEffectId] = useState<string | null>(null);
 
   // Vérifier si un élément est sélectionné
   const isTextSelected = selectedElement && (
@@ -166,13 +171,27 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
 
   const currentQuickEffectId = selectedElement?.advancedStyle?.id || 'none';
 
-  const applyQuickEffect = (effectId: string) => {
+  const applyQuickEffect = (effectId: string, customBgColor?: string, customTextColor?: string) => {
     const effect = QUICK_TEXT_EFFECTS.find((fx) => fx.id === effectId);
     if (!effect) return;
 
-    const effectCss = effectId === 'background' && selectedElement?.color
-      ? { ...effect.style, color: selectedElement.color }
-      : effect.style;
+    // Mémoriser l'effet actuel
+    setCurrentEffectId(effectId);
+    
+    // Si on a des couleurs personnalisées, les utiliser
+    let effectCss = { ...effect.style };
+    if (customBgColor) {
+      effectCss.backgroundColor = customBgColor;
+      setEffectBackgroundColor(customBgColor);
+    } else if (effect.style.backgroundColor) {
+      setEffectBackgroundColor(effect.style.backgroundColor as string);
+    }
+    if (customTextColor) {
+      effectCss.color = customTextColor;
+      setEffectTextColor(customTextColor);
+    } else if (effect.style.color) {
+      setEffectTextColor(effect.style.color as string);
+    }
 
     const baseUpdates = effectId === 'none'
       ? {
@@ -430,6 +449,69 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               );
             })}
           </div>
+          
+          {/* Personnalisation des couleurs de l'effet */}
+          {currentEffectId && currentEffectId !== 'none' && (
+            <div className="mt-4 p-4 border border-gray-300 rounded-lg bg-white space-y-3">
+              <h4 className="text-sm font-semibold text-gray-700">Personnaliser l'effet</h4>
+              
+              {/* Couleur de fond */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">Couleur de fond</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={effectBackgroundColor}
+                    onChange={(e) => {
+                      const newBgColor = e.target.value;
+                      setEffectBackgroundColor(newBgColor);
+                      applyQuickEffect(currentEffectId, newBgColor, effectTextColor);
+                    }}
+                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={effectBackgroundColor}
+                    onChange={(e) => {
+                      const newBgColor = e.target.value;
+                      setEffectBackgroundColor(newBgColor);
+                      applyQuickEffect(currentEffectId, newBgColor, effectTextColor);
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                    placeholder="#FFD700"
+                  />
+                </div>
+              </div>
+              
+              {/* Couleur de texte */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">Couleur de texte</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={effectTextColor}
+                    onChange={(e) => {
+                      const newTextColor = e.target.value;
+                      setEffectTextColor(newTextColor);
+                      applyQuickEffect(currentEffectId, effectBackgroundColor, newTextColor);
+                    }}
+                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={effectTextColor}
+                    onChange={(e) => {
+                      const newTextColor = e.target.value;
+                      setEffectTextColor(newTextColor);
+                      applyQuickEffect(currentEffectId, effectBackgroundColor, newTextColor);
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
