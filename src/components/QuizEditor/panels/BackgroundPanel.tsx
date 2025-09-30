@@ -47,6 +47,7 @@ interface BackgroundPanelProps {
   extractedColors?: string[];
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
+  onModuleUpdate?: (id: string, patch: any) => void;
   // 'fill' applies text color or shape background; 'border' applies shape borderColor
   colorEditingContext?: 'fill' | 'border' | 'text';
 }
@@ -58,6 +59,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   extractedColors = [],
   selectedElement,
   onElementUpdate,
+  onModuleUpdate,
   colorEditingContext = 'fill'
 }) => {
   console.log('🎨 BackgroundPanel component received props:', {
@@ -198,7 +200,18 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           content: selectedElement?.content ?? ''
         };
 
-    if (onElementUpdate) {
+    // Check if this is a modular element (Module type)
+    const isModularElement = selectedElement && selectedElement.type === 'BlocTexte' && selectedElement.id;
+    
+    if (isModularElement && onModuleUpdate) {
+      // Update module directly
+      onModuleUpdate(selectedElement.id, {
+        customCSS: baseUpdates.customCSS,
+        advancedStyle: baseUpdates.advancedStyle,
+        advancedStyleParams: baseUpdates.advancedStyleParams,
+        textEffect: baseUpdates.textEffect
+      });
+    } else if (onElementUpdate) {
       onElementUpdate(baseUpdates);
     } else {
       const updateEvent = new CustomEvent('applyTextEffect', { detail: baseUpdates });

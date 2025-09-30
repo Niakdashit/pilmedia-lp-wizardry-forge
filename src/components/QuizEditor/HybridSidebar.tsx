@@ -610,6 +610,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             extractedColors={extractedColors}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
+            onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
           />
         );
