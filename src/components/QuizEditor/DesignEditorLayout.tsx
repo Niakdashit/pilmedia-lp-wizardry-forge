@@ -2175,8 +2175,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
-                showEffectsPanel={showEffectsInSidebar}
-                onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
@@ -2607,9 +2605,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
-                        setShowEffectsInSidebar(true);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
                       }}
                       onShowAnimationsPanel={() => {
                         if (!isWindowMobile) {
@@ -2709,11 +2709,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                         return role.includes('exit-message');
                       }}
                       // Sidebar panel triggers
-                       onShowEffectsPanel={() => {
-                         setShowEffectsInSidebar(true);
-                         setShowAnimationsInSidebar(false);
-                         setShowPositionInSidebar(false);
-                       }}
+                      onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
                       onShowAnimationsPanel={() => {
                         if (!isWindowMobile) {
                           setShowAnimationsInSidebar(true);
