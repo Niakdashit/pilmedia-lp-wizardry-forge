@@ -24,9 +24,7 @@ import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveL
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
-import SectionedModularCanvas from './modules/SectionedModularCanvas';
-import type { Module, Section } from '@/types/modularEditor';
-import { createEmptySection } from '@/types/modularEditor';
+import type { Module } from '@/types/modularEditor';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
@@ -112,18 +110,7 @@ export interface DesignCanvasProps {
   onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
   onModuleDelete?: (id: string) => void;
   onModuleMove?: (id: string, dir: 'up' | 'down') => void;
-  // Section-based modular editor props (takes precedence if provided)
-  modularSections?: Section[];
-  onSectionModuleUpdate?: (id: string, patch: Partial<Module>) => void;
-  onSectionModuleMove?: (payload: {
-    moduleId: string;
-    fromSectionId: string;
-    fromColumnIndex: number;
-    fromIndex: number;
-    toSectionId: string;
-    toColumnIndex: number;
-    toIndex: number;
-  }) => void;
+  onModuleDuplicate?: (id: string) => void;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -178,10 +165,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleUpdate,
   onModuleDelete,
   onModuleMove,
-  // Section-based modular editor props
-  modularSections,
-  onSectionModuleUpdate,
-  onSectionModuleMove
+  onModuleDuplicate
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -217,51 +201,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Precise DOM-measured bounds per element (canvas-space units)
   const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Local Sections State (fallback if parent doesn't provide modularSections)
-  const [localSections, setLocalSections] = useState<Section[]>([]);
-
-  // Listen to sidebar fallback event to add a section
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const ce = e as CustomEvent<{ screen: string; layout: any }>; // screen reserved for future multi-screen
-      const layout = ce?.detail?.layout as any;
-      if (!layout) return;
-      const id = `sec-${Date.now()}-${Math.floor(Math.random() * 999)}`;
-      const section = createEmptySection(id, layout);
-      setLocalSections(prev => [...prev, section]);
-    };
-    window.addEventListener('quiz:addSection', handler as EventListener);
-    return () => window.removeEventListener('quiz:addSection', handler as EventListener);
-  }, []);
-
-  const effectiveSections: Section[] | undefined = Array.isArray(modularSections) && modularSections.length > 0
-    ? modularSections
-    : (localSections.length > 0 ? localSections : undefined);
-
-  const handleLocalSectionModuleUpdate = useCallback((id: string, patch: Partial<Module>) => {
-    setLocalSections(prev => prev.map(sec => ({
-      ...sec,
-      modules: sec.modules.map(col => col.map(m => m.id === id ? { ...m, ...patch } : m))
-    })));
-  }, []);
-
-  const handleLocalMoveModule = useCallback((payload: { moduleId: string; fromSectionId: string; fromColumnIndex: number; fromIndex: number; toSectionId: string; toColumnIndex: number; toIndex: number; }) => {
-    setLocalSections(prev => {
-      const clone = prev.map(s => ({ ...s, modules: s.modules.map(col => [...col]) }));
-      const fromS = clone.find(s => s.id === payload.fromSectionId);
-      const toS = clone.find(s => s.id === payload.toSectionId);
-      if (!fromS || !toS) return prev;
-      const fromCol = fromS.modules[payload.fromColumnIndex] || [];
-      const toCol = toS.modules[payload.toColumnIndex] || [];
-      const [item] = fromCol.splice(payload.fromIndex, 1);
-      if (!item) return prev;
-      const insertIndex = Math.max(0, Math.min(payload.toIndex, toCol.length));
-      toCol.splice(insertIndex, 0, item);
-      return clone;
-    });
-  }, []);
 
   // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
@@ -628,6 +567,35 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
     // Copier pour ne pas muter l'argument
     const workingUpdates: Record<string, any> = { ...updates };
+
+    // Merge nested style objects instead of overwriting wholesale so effects accumulate correctly
+    if (workingUpdates.style && targetElement?.style) {
+      workingUpdates.style = {
+        ...targetElement.style,
+        ...workingUpdates.style
+      };
+    }
+
+    if (workingUpdates.customCSS && targetElement?.customCSS) {
+      workingUpdates.customCSS = {
+        ...targetElement.customCSS,
+        ...workingUpdates.customCSS
+      };
+    }
+
+    if (workingUpdates.advancedStyle) {
+      const previousAdvanced = targetElement?.advancedStyle || {};
+      const nextAdvanced = workingUpdates.advancedStyle || {};
+      workingUpdates.advancedStyle = {
+        ...previousAdvanced,
+        ...nextAdvanced,
+        css: {
+          ...(previousAdvanced as any).css,
+          ...(nextAdvanced as any).css
+        },
+        params: nextAdvanced.params ?? (previousAdvanced as any).params
+      };
+    }
     const devicePatch: Record<string, any> = {};
 
     // Appliquer le nouveau système d'alignement si c'est un déplacement
@@ -1591,12 +1559,29 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Écouteur d'événement pour l'application des effets de texte depuis le panneau latéral
   useEffect(() => {
     const handleApplyTextEffect = (event: CustomEvent) => {
-      console.log('🎯 Événement applyTextEffect reçu:', event.detail);
-      if (selectedElement) {
-        console.log('✅ Application de l\'effet au texte sélectionné:', selectedElement);
-        handleElementUpdate(selectedElement, event.detail);
-      } else {
-        console.log('❌ Aucun élément sélectionné pour appliquer l\'effet');
+      const currentSelected = selectedElement || externalSelectedElement?.id;
+      
+      if (currentSelected) {
+        
+        // Préparer les mises à jour en fusionnant avec les styles existants
+        const element = elementById.get(currentSelected);
+        const updates = {
+          ...event.detail,
+          style: {
+            ...(element?.style || {}),
+            ...(event.detail.style || {})
+          },
+          // S'assurer que customCSS est bien transmis
+          customCSS: event.detail.customCSS,
+          // S'assurer que advancedStyle est bien transmis
+          advancedStyle: event.detail.advancedStyle,
+          // S'assurer que textEffect est bien transmis
+          textEffect: event.detail.textEffect,
+          // S'assurer que textShape est bien transmis
+          textShape: event.detail.textShape
+        };
+        
+        handleElementUpdate(currentSelected, updates);
       }
     };
 
@@ -1604,7 +1589,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => {
       window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
     };
-  }, [selectedElement]);
+  }, [selectedElement, externalSelectedElement, handleElementUpdate, elementById]);
 
   // Écouteur d'événement pour afficher le popup d'animation
   useEffect(() => {
@@ -1988,7 +1973,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
           ref={containerRef} 
-          className="flex justify-center w-full"
+          className="canvas-scroll-area flex justify-center w-full"
           style={{
             width: 'fit-content',
             minHeight: '100vh',
@@ -2005,6 +1990,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minWidth: `${effectiveCanvasSize.width}px`,
                 minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
+                // Shift content down on mobile so toolbar does not overlap the top of the canvas
+                marginTop: selectedDevice === 'mobile' ? 96 : 0,
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
                 transformOrigin: 'center top',
                 touchAction: 'none',
@@ -2185,7 +2172,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const shouldRenderInlinePreview = !hideInlineQuizPreview && (!elements.some(el => el.id === 'quiz-template'));
 
                 return (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className={`w-full h-full flex justify-center ${selectedDevice === 'mobile' ? 'items-start pt-24' : 'items-center'}`}>
                     {shouldRenderInlinePreview && (
                       <div
                         role="button"
@@ -2239,31 +2226,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             </div>
 
             {/* Modular stacked content (HubSpot-like) */}
-            {/* New: Section-based modular content takes precedence when provided */}
-            {Array.isArray(modularSections) && modularSections.length > 0 && screenId !== 'screen3' && (
-              <div
-                className="w-full flex justify-center mb-6"
-                style={{
-                  paddingLeft: safeZonePadding,
-                  paddingRight: safeZonePadding,
-                  paddingTop: safeZonePadding,
-                  paddingBottom: safeZonePadding,
-                  boxSizing: 'border-box'
-                }}
-              >
-                <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
-                  <SectionedModularCanvas
-                    sections={modularSections}
-                    device={selectedDevice}
-                    onUpdate={(id, patch) => onSectionModuleUpdate?.(id, patch)}
-                    onMoveModule={onSectionModuleMove}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Legacy: flat modular modules (single column stacked) */}
-            {Array.isArray(modularModules) && modularModules.length > 0 && screenId !== 'screen3' && (
+            {Array.isArray(modularModules) && modularModules.length > 0 && (
               <div
                 className="w-full flex justify-center mb-6"
                 style={{
@@ -2282,6 +2245,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
                     onDelete={(id) => onModuleDelete?.(id)}
                     onMove={(id, dir) => onModuleMove?.(id, dir)}
+                    onDuplicate={(id) => onModuleDuplicate?.(id)}
                     onSelect={(m) => {
                       try {
                         const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
@@ -2309,11 +2273,33 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onOpenElementsTab?.();
                         return;
                       }
+                      if (m.type === 'BlocReseauxSociaux') {
+                        onSelectedElementChange?.({
+                          id: `modular-social-${m.id}`,
+                          type: 'social',
+                          role: 'module-social',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
                       if (m.type === 'BlocVideo') {
                         onSelectedElementChange?.({
                           id: `modular-video-${m.id}`,
                           type: 'video',
                           role: 'module-video',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
+                      if (m.type === 'BlocHtml') {
+                        onSelectedElementChange?.({
+                          id: `modular-html-${m.id}`,
+                          type: 'html',
+                          role: 'module-html',
                           moduleId: m.id,
                           screenId
                         } as any);
@@ -2331,7 +2317,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     }}
                     selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
                       || (externalSelectedElement as any)?.role === 'module-image'
-                      || (externalSelectedElement as any)?.role === 'module-video')
+                      || (externalSelectedElement as any)?.role === 'module-video'
+                      || (externalSelectedElement as any)?.role === 'module-social'
+                      || (externalSelectedElement as any)?.role === 'module-html')
                       ? (externalSelectedElement as any)?.moduleId
                       : undefined}
                   />

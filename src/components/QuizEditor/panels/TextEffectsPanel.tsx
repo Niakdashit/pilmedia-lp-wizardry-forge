@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface TextEffectsPanelProps {
   onBack: () => void;
@@ -96,6 +96,21 @@ const textEffects = [
       padding: '8px 16px',
       borderRadius: '4px'
     }
+  },
+  {
+    id: 'yellow-button',
+    name: 'Bouton Jaune',
+    css: {
+      backgroundColor: '#FFD700',
+      color: '#000000',
+      fontWeight: 'bold',
+      padding: '10px 24px',
+      borderRadius: '24px',
+      textAlign: 'center',
+      display: 'inline-block',
+      minWidth: '120px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    }
   }
 ];
 
@@ -154,6 +169,89 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
   };
+
+  // Appliquer automatiquement les réglages en évitant les boucles infinies
+  useEffect(() => {
+    if (!selectedElement) {
+      lastAppliedSignatureRef.current = '';
+      return;
+    }
+
+    if (selectedEffect === 'none') {
+      lastAppliedSignatureRef.current = '';
+      return;
+    }
+
+    const signature = JSON.stringify({
+      effect: selectedEffect,
+      shadowOffset,
+      shadowDirection,
+      shadowBlur,
+      shadowTransparency,
+      shadowColor,
+      outlineThickness,
+      outlineColor,
+      backgroundRoundness,
+      backgroundSpread,
+      backgroundTransparency,
+      backgroundColor,
+      elevationStrength,
+      elevationBlur,
+      elevationTransparency,
+      elevationColor,
+      gradientStart,
+      gradientEnd,
+      gradientAngle,
+      glitchColorA,
+      glitchColorB,
+      neonColorA,
+      neonColorB,
+      effectColor,
+      hollowThickness,
+      elementColor: selectedElement?.color,
+      elementFontSize: selectedElement?.fontSize
+    });
+
+    if (lastAppliedSignatureRef.current === signature) {
+      return;
+    }
+
+    lastAppliedSignatureRef.current = signature;
+
+    const effect = textEffects.find((e) => e.id === selectedEffect);
+    if (effect) {
+      updateEffectWithCurrentSettings(effect);
+    }
+  }, [
+    selectedEffect,
+    shadowOffset,
+    shadowDirection,
+    shadowBlur,
+    shadowTransparency,
+    shadowColor,
+    outlineThickness,
+    outlineColor,
+    backgroundRoundness,
+    backgroundSpread,
+    backgroundTransparency,
+    backgroundColor,
+    elevationStrength,
+    elevationBlur,
+    elevationTransparency,
+    elevationColor,
+    gradientStart,
+    gradientEnd,
+    gradientAngle,
+    glitchColorA,
+    glitchColorB,
+    neonColorA,
+    neonColorB,
+    effectColor,
+    hollowThickness,
+    selectedElement?.color,
+    selectedElement?.fontSize,
+    onElementUpdate
+  ]);
 
   // (removed colorToRgb; using currentColor strategy for live updates)
 
@@ -238,27 +336,16 @@ const TextEffectsPanel: React.FC<TextEffectsPanelProps> = ({
     if (typeof p.hollowThickness === 'number') setHollowThickness(p.hollowThickness);
   }, [selectedElement]);
 
-  // Mettre à jour l'effet en temps réel quand les contrôles changent
-  useEffect(() => {
-    if (selectedEffect !== 'none') {
-      const effect = textEffects.find(e => e.id === selectedEffect);
-      if (effect) {
-        updateEffectWithCurrentSettings(effect);
-      }
-    }
-  }, [selectedEffect, shadowOffset, shadowDirection, shadowBlur, shadowTransparency, shadowColor, 
-      outlineThickness, outlineColor, backgroundRoundness, backgroundSpread, backgroundTransparency, 
-      backgroundColor, effectColor, gradientStart, gradientEnd, gradientAngle, glitchColorA, glitchColorB, neonColorA, neonColorB,
-      elevationStrength, elevationBlur, elevationTransparency, elevationColor, hollowThickness, selectedElement?.color, selectedElement?.fontSize]);
+  const lastAppliedSignatureRef = useRef<string>('');
 
   const applyEffect = (effect: any) => {
+    lastAppliedSignatureRef.current = '';
     setSelectedEffect(effect.id);
-    updateEffectWithCurrentSettings(effect);
   };
 
   const updateEffectWithCurrentSettings = (effect: any) => {
     let combinedCSS = { ...effect.css };
-    
+
     // Appliquer les ajustements spécifiques selon l'effet
     switch (effect.id) {
       case 'shadow':

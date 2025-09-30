@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Type, Shapes, Upload, Search } from 'lucide-react';
+import { Type, Shapes, Search } from 'lucide-react';
 import TextPanel from './TextPanel';
 import { shapes, ShapeDefinition } from '../shapes/shapeLibrary';
 
@@ -16,12 +16,11 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   const SHAPE_PREVIEW_COLOR = '#b1b1b1';
   const [activeTab, setActiveTab] = useState('text');
   const [searchQuery, setSearchQuery] = useState('');
-  const [uploadedImages, setUploadedImages] = useState<any[]>([]);
+  // uploads removed
 
   const categories = [
     { id: 'text', label: 'Texte', icon: Type },
-    { id: 'shapes', label: 'Formes', icon: Shapes },
-    { id: 'uploads', label: 'Uploads', icon: Upload }
+    { id: 'shapes', label: 'Formes', icon: Shapes }
   ];
 
   const handleAddShape = (shape: ShapeDefinition) => {
@@ -50,22 +49,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
     onAddElement(element);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const imageUrl = event.target?.result as string;
-        const newImage = {
-          id: Date.now(),
-          url: imageUrl,
-          name: file.name
-        };
-        setUploadedImages(prev => [...prev, newImage]);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // uploads handlers removed
 
   const renderContent = () => {
     switch (activeTab) {
@@ -124,68 +108,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
           </div>
         );
 
-      case 'uploads':
-        return (
-          <div className="space-y-4">
-            {/* Upload */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[hsl(var(--primary))] transition-colors">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">Glissez une image ou</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="inline-block px-4 py-2 bg-[hsl(var(--primary))] text-white rounded-md text-sm font-medium cursor-pointer hover:bg-[hsl(var(--primary-dark))] transition-colors"
-              >
-                Parcourir
-              </label>
-            </div>
-
-            {/* Images uploadées */}
-            {uploadedImages.length > 0 && (
-              <div className="mt-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Vos images</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {uploadedImages.map((image) => (
-                    <button
-                      key={image.id}
-                      onClick={() => {
-                        const element = {
-                          id: `image-${Date.now()}`,
-                          type: 'image',
-                          src: image.url,
-                          x: 100,
-                          y: 100,
-                          width: 150,
-                          height: 100
-                        };
-                        onAddElement(element);
-                      }}
-                      className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[hsl(var(--primary))] transition-colors"
-                    >
-                      <img
-                        src={image.url}
-                        alt={image.name}
-                        className="w-full h-20 object-cover"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
-                        <span className="text-white text-xs opacity-0 group-hover:opacity-100">
-                          Ajouter
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
+      // uploads tab removed
 
       default:
         return null;
@@ -195,25 +118,31 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   return (
     <div className="p-4">
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-4">
-        {categories.map((category) => {
-          const Icon = category.icon;
-          return (
-            <button
-              key={category.id}
-              onClick={() => setActiveTab(category.id)}
-              className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 ${
-                activeTab === category.id
-                  ? 'text-[hsl(var(--primary))] border-b-2 border-[hsl(var(--primary))]'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{category.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {(() => {
+        const visibleCategories = categories; // shapes tab still present in QuizEditor; adjust if needed later
+        if (visibleCategories.length <= 1) return null;
+        return (
+          <div className="flex border-b border-gray-200 mb-4">
+            {visibleCategories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveTab(category.id)}
+                  className={`px-4 py-2 text-sm font-medium flex items-center space-x-2 ${
+                    activeTab === category.id
+                      ? 'text-[hsl(var(--primary))] border-b-2 border-[hsl(var(--primary))]'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{category.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Search - Seulement affiché pour les formes */}
       {activeTab === 'shapes' && (

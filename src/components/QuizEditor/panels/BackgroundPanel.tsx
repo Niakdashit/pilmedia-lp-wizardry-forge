@@ -60,7 +60,8 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       if (colorEditingContext === 'text') {
         return selectedElement.textColor || '#000000';
       }
-      return selectedElement.backgroundColor || '#3B82F6';
+      // Replace old blue fallback by a neutral border token to keep brand consistency
+      return selectedElement.backgroundColor || 'hsl(var(--border))';
     }
     return currentBackground?.type === 'color' ? currentBackground.value : undefined;
   };
@@ -197,32 +198,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         className="sr-only"
       />
 
-      {/* Indicateur de ce qui sera modifié */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-800 font-medium">
-          {isTextSelected ? (
-            <>
-              📝 Modification du texte sélectionné
-              <span className="block text-xs text-blue-600 mt-1">
-                {colorEditingContext === 'border' 
-                  ? 'Les couleurs seront appliquées à la bordure du texte (si supportée)'
-                  : `Les couleurs seront appliquées au texte "${selectedElement.text || 'Texte'}"`}
-              </span>
-            </>
-          ) : (
-            <>
-              {isShapeSelected ? '⬛ Modification de la forme sélectionnée' : '🖼️ Modification de l\'arrière-plan'}
-              <span className="block text-xs text-blue-600 mt-1">
-                {isShapeSelected
-                  ? (colorEditingContext === 'border' 
-                      ? 'Les couleurs seront appliquées à la bordure de la forme'
-                      : 'Les couleurs seront appliquées au remplissage de la forme')
-                  : 'Les couleurs seront appliquées à l\'arrière-plan du design'}
-              </span>
-            </>
-          )}
-        </p>
-      </div>
+      {/* Indicateur retiré par demande */}
 
       {/* Upload Background Image - Seulement si pas de texte sélectionné */}
       {!isTextSelected && (
@@ -295,7 +271,6 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm text-gray-700">CATÉGORIES DE POLICES</h3>
-            <span className="text-[11px] text-gray-400">Appliquer à la sélection</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {availableFontCategories.map((category) => (

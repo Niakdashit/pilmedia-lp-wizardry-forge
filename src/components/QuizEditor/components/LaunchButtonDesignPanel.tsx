@@ -241,6 +241,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
                 value={verticalPadding}
                 onChange={(event) => handlePaddingChange('vertical', Number(event.target.value))}
                 className="mt-2 w-full"
+                style={{ accentColor: '#841b60' }}
               />
               <span className="mt-1 block text-right text-[0.65rem] text-gray-500">{verticalPadding}px</span>
             </label>
@@ -255,6 +256,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
                 value={horizontalPadding}
                 onChange={(event) => handlePaddingChange('horizontal', Number(event.target.value))}
                 className="mt-2 w-full"
+                style={{ accentColor: '#841b60' }}
               />
               <span className="mt-1 block text-right text-[0.65rem] text-gray-500">{horizontalPadding}px</span>
             </label>
@@ -270,6 +272,7 @@ const LaunchButtonDesignPanel: React.FC<LaunchButtonDesignPanelProps> = ({
               value={borderRadius}
               onChange={(event) => handleBorderRadiusChange(Number(event.target.value))}
               className="mt-2 w-full"
+              style={{ accentColor: '#841b60' }}
             />
             <span className="mt-1 block text-right text-[0.65rem] text-gray-500">{borderRadius}px</span>
           </label>

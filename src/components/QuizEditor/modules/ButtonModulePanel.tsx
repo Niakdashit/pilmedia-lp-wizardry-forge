@@ -4,21 +4,41 @@ import type { BlocBouton } from '@/types/modularEditor';
 interface ButtonModulePanelProps {
   module: BlocBouton;
   onUpdate: (patch: Partial<BlocBouton>) => void;
+  onBack?: () => void;
 }
 
-const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate }) => {
-  const vPad = typeof module.paddingVertical === 'number' ? module.paddingVertical : 14;
-  const hPad = typeof module.paddingHorizontal === 'number' ? module.paddingHorizontal : 28;
+const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate, onBack }) => {
   const radius = typeof module.borderRadius === 'number' ? module.borderRadius : 200;
   const label = module.label || 'Participer';
   const bg = module.background || '#ad0071';
   const txt = module.textColor || '#ffffff';
   const isUpper = !!module.uppercase;
   const isBold = !!module.bold;
+  const width = module.layoutWidth || 'full';
+  const isValidHexColor = (color: string) => {
+    return typeof color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(color);
+  };
+
+  const borderWidth = typeof module.borderWidth === 'number' ? module.borderWidth : 0;
+  const borderColor = module.borderColor || '#000000';
   const isLaunchButton = (label || '').trim().toLowerCase() === 'participer';
 
   return (
     <div className="h-full overflow-y-auto pb-12">
+      {onBack && (
+        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <button
+            type="button"
+            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
+            onClick={onBack}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour aux éléments
+          </button>
+        </div>
+      )}
       <div className="px-4 py-5 space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-900">Bouton de lancement</h3>
@@ -32,6 +52,8 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate 
               paddingVertical: 14,
               paddingHorizontal: 28,
               borderRadius: 200,
+              borderWidth: 0,
+              borderColor: '#000000',
               uppercase: false,
               bold: false,
               boxShadow: '0 12px 30px rgba(132,27,96,0.35)'
@@ -39,6 +61,34 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate 
           >
             Réinitialiser
           </button>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Largeur</label>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { id: 'full', label: '1/1' },
+              { id: 'half', label: '1/2' },
+              { id: 'twoThirds', label: '2/3' },
+              { id: 'third', label: '1/3' }
+            ].map(({ id, label: widthLabel }) => {
+              const isActive = width === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onUpdate({ layoutWidth: id as BlocBouton['layoutWidth'] })}
+                  className={`flex items-center justify-center rounded-lg border px-3 py-2 text-[11px] font-semibold transition ${
+                    isActive
+                      ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                      : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
+                  }`}
+                >
+                  {widthLabel}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -67,53 +117,40 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate 
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur de fond / gradient</label>
-            <input
-              type="text"
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
-              value={bg}
-              onChange={(e) => onUpdate({ background: e.target.value })}
-              placeholder="#ad0071 ou linear-gradient(...)"
-            />
-            <div className="mt-2 h-8 rounded" style={{ background: bg }} />
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur de fond</label>
+            <div className="mt-1 space-y-2">
+              <input
+                type="color"
+                className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                value={isValidHexColor(bg) ? bg : '#ad0071'}
+                onChange={(e) => onUpdate({ background: e.target.value })}
+              />
+              <input
+                type="text"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+                value={bg}
+                onChange={(e) => onUpdate({ background: e.target.value })}
+                placeholder="#ad0071"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur du texte</label>
-            <input
-              type="text"
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
-              value={txt}
-              onChange={(e) => onUpdate({ textColor: e.target.value })}
-              placeholder="#ffffff"
-            />
-            <div className="mt-2 h-8 rounded border" style={{ background: txt }} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Padding vertical</label>
-            <input
-              type="range"
-              min={0}
-              max={48}
-              value={vPad}
-              onChange={(e) => onUpdate({ paddingVertical: Number(e.target.value) })}
-              className="w-full"
-            />
-            <div className="text-[11px] text-gray-500">{vPad}px</div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Padding horizontal</label>
-            <input
-              type="range"
-              min={0}
-              max={64}
-              value={hPad}
-              onChange={(e) => onUpdate({ paddingHorizontal: Number(e.target.value) })}
-              className="w-full"
-            />
-            <div className="text-[11px] text-gray-500">{hPad}px</div>
+            <div className="mt-1 space-y-2">
+              <input
+                type="color"
+                className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                value={isValidHexColor(txt) ? txt : '#ffffff'}
+                onChange={(e) => onUpdate({ textColor: e.target.value })}
+              />
+              <input
+                type="text"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+                value={txt}
+                onChange={(e) => onUpdate({ textColor: e.target.value })}
+                placeholder="#ffffff"
+              />
+            </div>
           </div>
         </div>
 
@@ -132,9 +169,42 @@ const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate 
           />
         </div>
 
+        <div>
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Épaisseur de bordure</label>
+            <span className="text-[11px] text-gray-600">{borderWidth}px</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={20}
+            value={borderWidth}
+            onChange={(e) => onUpdate({ borderWidth: Number(e.target.value) })}
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur de bordure</label>
+          <div className="mt-1 space-y-2">
+            <input
+              type="color"
+              className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+              value={isValidHexColor(borderColor) ? borderColor : '#000000'}
+              onChange={(e) => onUpdate({ borderColor: e.target.value })}
+            />
+            <input
+              type="text"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+              value={borderColor}
+              onChange={(e) => onUpdate({ borderColor: e.target.value })}
+              placeholder="#000000"
+            />
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">
           <button
-            type="button"
             onClick={() => onUpdate({ uppercase: !isUpper })}
             className={`px-3 py-1.5 rounded text-xs ${isUpper ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'}`}
           >

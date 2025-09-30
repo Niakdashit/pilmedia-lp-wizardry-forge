@@ -1,6 +1,6 @@
 import React from 'react';
-import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video } from 'lucide-react';
-import type { ModuleType, ScreenId, Module } from '@/types/modularEditor';
+import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video, Share2, Code2 } from 'lucide-react';
+import { SOCIAL_PRESETS, getSocialIconUrl } from './socialIcons';
 
 export interface ModulesPanelProps {
   currentScreen: ScreenId;
@@ -18,6 +18,7 @@ const createModule = (type: ModuleType): Module => {
         body: 'Nouveau texte',
         bodyFontSize: 48,
         minHeight: 220,
+        layoutWidth: 'full',
         accentColor: '#0ea5b7',
         cardBackground: '#e6f4f9',
         cardBorderColor: '#0ea5b7',
@@ -39,14 +40,75 @@ const createModule = (type: ModuleType): Module => {
         align: 'center',
         minHeight: 260,
         borderRadius: 8,
-        objectFit: 'contain'
+        objectFit: 'contain',
+        layoutWidth: 'full'
       };
     case 'BlocBouton':
-      return { id, type, label: 'Call to Action', href: '#', variant: 'primary', borderRadius: 9999, spacingTop: 16, spacingBottom: 16, align: 'center', minHeight: 140 };
+      return {
+        id,
+        type,
+        label: 'Call to Action',
+        href: '#',
+        variant: 'primary',
+        borderRadius: 9999,
+        spacingTop: 16,
+        spacingBottom: 16,
+        align: 'center',
+        minHeight: 140,
+        layoutWidth: 'full'
+      };
     case 'BlocSeparateur':
-      return { id, type, thickness: 1, color: '#e5e7eb', widthPercent: 100, spacingTop: 8, spacingBottom: 8, minHeight: 80 };
+      return { id, type, spacingTop: 8, spacingBottom: 8, minHeight: 80, layoutWidth: 'full' };
     case 'BlocVideo':
-      return { id, type, src: 'https://www.youtube.com/embed/dQw4w9WgXcQ', title: 'Vidéo', spacingTop: 16, spacingBottom: 16, minHeight: 320 };
+      return {
+        id,
+        type,
+        src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        title: 'Vidéo',
+        spacingTop: 16,
+        spacingBottom: 16,
+        minHeight: 320,
+      };
+    case 'BlocReseauxSociaux': {
+      const networks = ['facebook', 'linkedin', 'x', 'instagram'] as const;
+      return {
+        id,
+        type,
+        title: undefined,
+        description: undefined,
+        spacingTop: 12,
+        spacingBottom: 12,
+        layout: 'list',
+        displayMode: 'icons',
+        iconSize: 48,
+        iconSpacing: 12,
+        iconStyle: 'squareNeutral' as SocialIconStyle,
+        layoutWidth: 'full',
+        minHeight: 120,
+        links: networks.map((network) => {
+          const preset = SOCIAL_PRESETS[network];
+          return {
+            id: `${id}-${network}`,
+            label: preset.label,
+            url: preset.defaultUrl,
+            network,
+            icon: network,
+            iconUrl: getSocialIconUrl(network),
+          };
+        })
+      };
+    }
+    case 'BlocHtml':
+      return {
+        id,
+        type: 'BlocHtml' as const,
+        html: '<div style="text-align:center; padding:16px;">\n  <h3>Bloc HTML</h3>\n  <p>Ajoutez votre code HTML personnalisé ici.</p>\n</div>',
+        spacingTop: 16,
+        spacingBottom: 16,
+        layoutWidth: 'full',
+        minHeight: 200,
+        backgroundColor: '#f8fafc'
+      };
   }
 };
 
@@ -54,8 +116,10 @@ const items: Array<{ id: ModuleType; label: string; icon: React.ComponentType<an
   { id: 'BlocTexte', label: 'Bloc Texte', icon: Type },
   { id: 'BlocImage', label: 'Bloc Image', icon: ImgIcon },
   { id: 'BlocBouton', label: 'Bloc Bouton', icon: Link2 },
-  { id: 'BlocSeparateur', label: 'Séparateur', icon: SeparatorHorizontal },
-  { id: 'BlocVideo', label: 'Bloc Vidéo', icon: Video }
+  { id: 'BlocSeparateur', label: 'Espace', icon: SeparatorHorizontal },
+  { id: 'BlocVideo', label: 'Bloc Vidéo', icon: Video },
+  { id: 'BlocReseauxSociaux', label: 'Réseaux sociaux', icon: Share2 },
+  { id: 'BlocHtml', label: 'Bloc HTML', icon: Code2 }
 ];
 
 const ModulesPanel: React.FC<ModulesPanelProps> = ({ currentScreen, onAdd }) => {

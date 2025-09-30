@@ -6,7 +6,14 @@ export type ModuleType =
   | 'BlocImage'
   | 'BlocBouton'
   | 'BlocSeparateur'
-  | 'BlocVideo';
+  | 'BlocVideo'
+  | 'BlocReseauxSociaux'
+  | 'BlocHtml';
+
+export type SocialIconStyle =
+  | 'color'
+  | 'grey'
+  | 'black';
 
 export type ScreenId = 'screen1' | 'screen2' | 'screen3';
 
@@ -19,6 +26,7 @@ export interface BaseModule {
   backgroundColor?: string;
   align?: 'left' | 'center' | 'right';
   minHeight?: number; // px
+  layoutWidth?: 'full' | 'half' | 'third' | 'twoThirds';
 }
 
 export interface BlocTexte extends BaseModule {
@@ -71,6 +79,8 @@ export interface BlocBouton extends BaseModule {
   bold?: boolean;
   paddingVertical?: number; // px, used to build padding string if set
   paddingHorizontal?: number; // px, used to build padding string if set
+  borderWidth?: number; // px
+  borderColor?: string;
 }
 
 export interface BlocSeparateur extends BaseModule {
@@ -89,7 +99,40 @@ export interface BlocVideo extends BaseModule {
   width?: number; // px max-width for the video box
 }
 
-export type Module = BlocTexte | BlocImage | BlocBouton | BlocSeparateur | BlocVideo;
+export interface BlocReseauxSociaux extends BaseModule {
+  type: 'BlocReseauxSociaux';
+  title?: string;
+  description?: string;
+  layout?: 'grid' | 'list';
+  displayMode?: 'icons' | 'buttons';
+  iconSize?: number;
+  iconSpacing?: number;
+  iconStyle?: SocialIconStyle;
+  links: Array<{
+    id: string;
+    label: string;
+    url: string;
+    network?: 'facebook' | 'linkedin' | 'instagram' | 'twitter' | 'tiktok' | 'x';
+    icon?: 'facebook' | 'instagram' | 'linkedin' | 'twitter' | 'tiktok' | 'x' | string;
+    iconSvg?: string;
+    iconUrl?: string;
+  }>;
+}
+
+export interface BlocHtml extends BaseModule {
+  type: 'BlocHtml';
+  html: string;
+  language?: string;
+}
+
+export type Module =
+  | BlocTexte
+  | BlocImage
+  | BlocBouton
+  | BlocSeparateur
+  | BlocVideo
+  | BlocReseauxSociaux
+  | BlocHtml;
 
 export interface ModularScreen {
   screenId: ScreenId;
@@ -97,9 +140,7 @@ export interface ModularScreen {
 }
 
 export interface ModularPage {
-  screens: Record<ScreenId, Module[]>; // ordered list per screen (legacy flat list)
-  // Optional: new section-based structure per screen. When present, it takes precedence in UIs that support sections.
-  sections?: Record<ScreenId, Section[]>;
+  screens: Record<ScreenId, Module[]>; // ordered list per screen
   _updatedAt?: number;
 }
 
@@ -111,57 +152,3 @@ export const createEmptyModularPage = (): ModularPage => ({
   },
   _updatedAt: Date.now()
 });
-
-// ────────────────────────────────────────────────────────────────────────────────
-// New: Section-based modular layout
-// A Section arranges columns of modules per row (like HubSpot/Email builders).
-// Up to 3 columns on Desktop, up to 2 columns on Mobile in a single row.
-
-// Preset layout identifiers
-// "1"  => single column (100%)
-// "2"  => two equal columns (50/50)
-// "3"  => three equal columns on desktop (33/33/33) → on mobile rendered as 2 cols auto-flow
-// "1-2" => asymmetric (1/3 + 2/3)
-// "2-1" => asymmetric (2/3 + 1/3)
-export type SectionLayout = '1' | '2' | '3' | '1-2' | '2-1';
-
-export interface ColumnConfig {
-  // Optional min width in px for the column content area
-  minWidth?: number;
-  // Optional max width in px for the column content area
-  maxWidth?: number;
-}
-
-export interface SectionBase {
-  id: string; // unique id for the section
-  layout: SectionLayout;
-  // Per-device column limits (defaults: desktop: up to 3, mobile: up to 2)
-  columnsDesktop?: number; // 1..3 (enforced to layout max)
-  columnsMobile?: number;  // 1..2 (enforced to layout max)
-  gutter?: number; // gap between columns (px)
-  paddingY?: number; // vertical padding (px)
-  backgroundColor?: string;
-  // Optional column-level configs (length equals effective column count for layout)
-  columns?: ColumnConfig[];
-}
-
-// A Section contains N columns, each column holds a vertical stack of modules
-export interface Section extends SectionBase {
-  // Modules per column; modules[0] is for the first column, etc.
-  modules: Module[][];
-}
-
-export const createEmptySection = (id: string, layout: SectionLayout = '1'): Section => {
-  const columns = layout === '1' ? 1 : layout === '2' ? 2 : layout === '3' ? 3 : 2; // 1-2 or 2-1 → 2 columns
-  return {
-    id,
-    layout,
-    columnsDesktop: Math.min(columns, 3),
-    columnsMobile: Math.min(columns, 2),
-    gutter: 16,
-    paddingY: 12,
-    backgroundColor: 'transparent',
-    columns: Array.from({ length: columns }, () => ({})),
-    modules: Array.from({ length: columns }, () => [])
-  };
-};

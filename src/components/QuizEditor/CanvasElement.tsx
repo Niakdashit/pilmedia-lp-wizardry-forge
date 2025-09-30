@@ -75,15 +75,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     setCampaign: () => {} // Read-only
   });
   
-  console.log('🎨 CanvasElement: Campaign segments for wheel', {
-    elementType: element.type,
-    campaignId: campaign?.id,
-    campaignSegments,
-    segmentCount: campaignSegments.length,
-    campaignWheelConfig: (campaign as any)?.wheelConfig?.segments,
-    lastUpdate: (campaign as any)?._lastUpdate,
-    extractedColors: extractedColors
-  });
   
   // 📱 Hook d'optimisation tactile pour mobile/tablette
   const touchOptimization = useTouchOptimization({
@@ -110,11 +101,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     },
     onResizeStart: () => {
       setIsResizing(true);
-      console.log('🤏 Pinch resize started for element:', element.id);
     },
     onResizeEnd: () => {
       setIsResizing(false);
-      console.log('🤏 Pinch resize ended for element:', element.id);
     },
     minScale: 0.5,
     maxScale: 3,
@@ -584,7 +573,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     }
     
     onUpdate(element.id, { x: newX });
-    console.log('Element aligned:', alignment, newX);
   }, [element, deviceProps, containerRef, onUpdate]);
 
   // Optimized resize handler with useCallback - Enhanced for mobile/tablet
@@ -1022,27 +1010,23 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   const minZ = React.useMemo(() => (allEls.length ? Math.min(...allEls.map(getZ)) : getZ(element)), [allEls, element]);
 
   const bringToFront = useCallback(() => {
-    console.log('🔝 bringToFront called for element:', element.id, 'current zIndex:', element.zIndex, 'maxZ:', maxZ);
     onUpdate(element.id, { zIndex: (maxZ || 1) + 1 });
   }, [onUpdate, element.id, maxZ]);
 
   const bringForward = useCallback(() => {
     const current = getZ(element);
-    console.log('⬆️ bringForward called for element:', element.id, 'current zIndex:', current, 'new zIndex:', current + 1);
     onUpdate(element.id, { zIndex: current + 1 });
   }, [onUpdate, element]);
 
   const sendBackward = useCallback(() => {
     const current = getZ(element);
     const newZ = Math.max(1, current - 1);
-    console.log('⬇️ sendBackward called for element:', element.id, 'current zIndex:', current, 'new zIndex:', newZ);
     onUpdate(element.id, { zIndex: newZ });
   }, [onUpdate, element]);
 
   const sendToBack = useCallback(() => {
     const target = (minZ || 1) - 1;
     const newZ = Math.max(0, target);
-    console.log('🔻 sendToBack called for element:', element.id, 'current zIndex:', element.zIndex, 'minZ:', minZ, 'new zIndex:', newZ);
     onUpdate(element.id, { zIndex: newZ });
   }, [onUpdate, element.id, minZ]);
 
@@ -1183,10 +1167,61 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             baseStyle.textShadow = `${parsePx(ts.offsetX, 0)}px ${parsePx(ts.offsetY, 0)}px ${parsePx(ts.blur, 0)}px ${ts.color}`;
           }
 
-          // Add custom CSS from effects
+          // Add custom CSS from effects (do this last to ensure it has priority)
           if (element.customCSS) {
-            // Do not scale custom CSS; let container transform handle visual scaling
+            // Force application of important CSS properties
             Object.assign(baseStyle, element.customCSS);
+            
+            // Ensure critical properties are applied with !important if needed
+            if (element.customCSS.backgroundColor) {
+              baseStyle.backgroundColor = element.customCSS.backgroundColor;
+            }
+            if (element.customCSS.color) {
+              baseStyle.color = element.customCSS.color;
+            }
+            if (element.customCSS.textShadow) {
+              baseStyle.textShadow = element.customCSS.textShadow;
+            }
+            if (element.customCSS.padding) {
+              baseStyle.padding = element.customCSS.padding;
+            }
+            if (element.customCSS.borderRadius) {
+              baseStyle.borderRadius = element.customCSS.borderRadius;
+            }
+            if (element.customCSS.display) {
+              baseStyle.display = element.customCSS.display;
+            }
+            if (element.customCSS.boxSizing) {
+              baseStyle.boxSizing = element.customCSS.boxSizing;
+            }
+          }
+
+          // Also check for advancedStyle CSS
+          if (element.advancedStyle?.css) {
+            Object.assign(baseStyle, element.advancedStyle.css);
+            
+            // Force application of important CSS properties from advancedStyle
+            if (element.advancedStyle.css.backgroundColor) {
+              baseStyle.backgroundColor = element.advancedStyle.css.backgroundColor;
+            }
+            if (element.advancedStyle.css.color) {
+              baseStyle.color = element.advancedStyle.css.color;
+            }
+            if (element.advancedStyle.css.textShadow) {
+              baseStyle.textShadow = element.advancedStyle.css.textShadow;
+            }
+            if (element.advancedStyle.css.padding) {
+              baseStyle.padding = element.advancedStyle.css.padding;
+            }
+            if (element.advancedStyle.css.borderRadius) {
+              baseStyle.borderRadius = element.advancedStyle.css.borderRadius;
+            }
+            if (element.advancedStyle.css.display) {
+              baseStyle.display = element.advancedStyle.css.display;
+            }
+            if (element.advancedStyle.css.boxSizing) {
+              baseStyle.boxSizing = element.advancedStyle.css.boxSizing;
+            }
           }
 
           return baseStyle;
@@ -1355,7 +1390,6 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🖱️ Canvas element right-click detected:', element.id);
       }}
     >
       {renderElement}

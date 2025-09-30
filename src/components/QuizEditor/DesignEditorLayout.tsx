@@ -23,8 +23,6 @@ import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
-import type { Section, SectionLayout, Module, ScreenId, ModularPage } from '@/types/modularEditor';
-import { createEmptySection } from '@/types/modularEditor';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
 
@@ -261,7 +259,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const canvasRef = useRef<HTMLDivElement>(null);
   
   // État pour gérer l'affichage des panneaux dans la sidebar
-  const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
@@ -344,31 +341,54 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
   
-  // Détecter la position de scroll pour changer le bouton
+  // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
-    const canvasScrollArea = document.querySelector('.canvas-scroll-area');
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
     if (!canvasScrollArea) return;
 
-    const handleScroll = () => {
-      const scrollTop = canvasScrollArea.scrollTop;
-      const clientHeight = canvasScrollArea.clientHeight;
-      
-      // Calculer les seuils pour 3 écrans
-      const screenHeight = clientHeight;
-      const screen1End = screenHeight * 0.33;
-      const screen2End = screenHeight * 0.66;
-      
-      if (scrollTop < screen1End) {
-        setCurrentScreen('screen1');
-      } else if (scrollTop < screen2End) {
-        setCurrentScreen('screen2');
-      } else {
-        setCurrentScreen('screen3');
-      }
+    const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
+    if (anchors.length === 0) return;
+
+    const computeNearestScreen = () => {
+      const areaRect = canvasScrollArea.getBoundingClientRect();
+      const areaCenter = areaRect.top + areaRect.height / 2;
+
+      let closestId: 'screen1' | 'screen2' | 'screen3' = 'screen1';
+      let closestDistance = Infinity;
+
+      anchors.forEach((anchor) => {
+        const screenId = (anchor.dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3' | undefined) ?? 'screen1';
+        const rect = anchor.getBoundingClientRect();
+        const anchorCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(anchorCenter - areaCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestId = screenId;
+        }
+      });
+
+      setCurrentScreen((prev) => (prev === closestId ? prev : closestId));
     };
 
-    canvasScrollArea.addEventListener('scroll', handleScroll);
-    return () => canvasScrollArea.removeEventListener('scroll', handleScroll);
+    // Calcule initial après montage
+    requestAnimationFrame(computeNearestScreen);
+
+    const handleScroll = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    const handleResize = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      canvasScrollArea.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Initialize modular page from campaignConfig if present
@@ -380,24 +400,14 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   }, [campaignConfig]);
 
   // Helper to persist modularPage into campaignConfig (and mark modified)
-  const persistModular = useCallback((nextOrUpdater: ModularPage | ((prev: ModularPage) => ModularPage)) => {
-    let computedNext: ModularPage = typeof nextOrUpdater === 'function'
-      ? createEmptyModularPage()
-      : nextOrUpdater;
-
-    setModularPage((prev) => {
-      computedNext = typeof nextOrUpdater === 'function'
-        ? (nextOrUpdater as (prev: ModularPage) => ModularPage)(prev)
-        : nextOrUpdater;
-      return computedNext;
-    });
-
+  const persistModular = useCallback((next: ModularPage) => {
+    setModularPage(next);
     setCampaignConfig((prev: any) => {
       const updated = {
         ...(prev || {}),
         design: {
           ...(prev?.design || {}),
-          quizModules: { ...computedNext, _updatedAt: Date.now() }
+          quizModules: { ...next, _updatedAt: Date.now() }
         }
       };
       return updated;
@@ -405,157 +415,58 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     try { setIsModified(true); } catch {}
   }, [setIsModified]);
 
+  const scrollToScreen = useCallback((screen: ScreenId): boolean => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return false;
+    const anchor = canvasScrollArea.querySelector(`[data-screen-anchor="${screen}"]`) as HTMLElement | null;
+    if (!anchor) return false;
+
+    const anchorTop = anchor.offsetTop;
+    const centerOffset = Math.max(0, (canvasScrollArea.clientHeight - anchor.clientHeight) / 2);
+    const target = anchorTop - centerOffset;
+    const maxScroll = canvasScrollArea.scrollHeight - canvasScrollArea.clientHeight;
+    const clamped = Math.min(Math.max(target, 0), Math.max(maxScroll, 0));
+
+    canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
+    return true;
+  }, []);
+
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
-    const safeModule = module.type === 'BlocBouton' ? module : { ...module };
+    setModularPage((prev) => {
+      const prevScreenModules = prev.screens[screen] || [];
+      const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
 
-    persistModular((prev) => {
-      const nextScreens: ModularPage['screens'] = {
-        ...prev.screens,
-        [screen]: [...(prev.screens[screen] || []), safeModule]
-      };
-
-      const baseSections: Record<ScreenId, Section[]> = { screen1: [], screen2: [], screen3: [] };
-      (Object.keys(prev.screens) as ScreenId[]).forEach((screenKey) => {
-        baseSections[screenKey] = [...(baseSections[screenKey] || []), ...((prev.screens?.[screenKey] as any) ? [] : [])];
-      });
-
-      let nextSections: ModularPage['sections'] = {
-        screen1: prev.sections?.screen1 ? prev.sections.screen1.map((section) => ({
-          ...section,
-          modules: section.modules.map((column) => [...column])
-        })) : [],
-        screen2: prev.sections?.screen2 ? prev.sections.screen2.map((section) => ({
-          ...section,
-          modules: section.modules.map((column) => [...column])
-        })) : [],
-        screen3: prev.sections?.screen3 ? prev.sections.screen3.map((section) => ({
-          ...section,
-          modules: section.modules.map((column) => [...column])
-        })) : []
-      };
-
-      const screenSections = nextSections?.[screen];
-      if (Array.isArray(screenSections) && screenSections.length > 0) {
-        const targetSectionIndex = Math.max(0, screenSections.length - 1);
-        const targetSection = screenSections[targetSectionIndex];
-        if (targetSection) {
-          const targetColumnIndex = targetSection.modules.reduce((bestIdx, column, idx, arr) => {
-            const bestLen = Array.isArray(arr[bestIdx]) ? arr[bestIdx].length : Number.POSITIVE_INFINITY;
-            const currentLen = Array.isArray(column) ? column.length : Number.POSITIVE_INFINITY;
-            if (currentLen < bestLen) {
-              return idx;
-            }
-            return bestIdx;
-          }, 0);
-
-          if (!Array.isArray(targetSection.modules[targetColumnIndex])) {
-            targetSection.modules[targetColumnIndex] = [];
-          }
-          targetSection.modules[targetColumnIndex].push(safeModule);
+      let updatedModules: Module[];
+      if (isParticiperButton) {
+        // Participer est supposé unique et restera en fin de tableau
+        updatedModules = [...prevScreenModules, module];
+      } else {
+        const participateIndex = prevScreenModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
+        if (participateIndex >= 0) {
+          updatedModules = [
+            module,
+            ...prevScreenModules.slice(0, participateIndex),
+            prevScreenModules[participateIndex],
+            ...prevScreenModules.slice(participateIndex + 1)
+          ];
+        } else {
+          updatedModules = [module, ...prevScreenModules];
         }
       }
 
-      const sanitizedSections: Record<ScreenId, Section[]> = {
-        screen1: nextSections.screen1?.map((section) => ({
-          ...section,
-          modules: section.modules.map((column) => Array.isArray(column) ? column : [])
-        })) ?? [],
-        screen2: nextSections.screen2?.map((section) => ({
-          ...section,
-          modules: section.modules.map((column) => Array.isArray(column) ? column : [])
-        })) ?? [],
-        screen3: nextSections.screen3?.map((section) => ({
-          ...section,
-          modules: section.modules.map((column) => Array.isArray(column) ? column : [])
-        })) ?? []
-      };
-
-      const hasSections = Object.values(sanitizedSections).some((sectionsForScreen) => sectionsForScreen.length > 0);
-      const finalSections = hasSections ? sanitizedSections : undefined;
-
-      return {
-        screens: nextScreens,
-        sections: finalSections,
+      const next: ModularPage = {
+        screens: {
+          ...prev.screens,
+          [screen]: updatedModules
+        },
         _updatedAt: Date.now()
       };
+
+      persistModular(next);
+      return next;
     });
   }, [persistModular]);
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Sections: add/update/move (persisted across all screens)
-  const handleAddSection = useCallback((screen: ScreenId, layout: SectionLayout) => {
-    const currentSections = (modularPage as any).sections || {} as Record<ScreenId, Section[]>;
-    const id = `sec-${Date.now()}-${Math.floor(Math.random() * 999)}`;
-    const existingSectionsForScreen = currentSections?.[screen] || [];
-    const isFirstSectionForScreen = existingSectionsForScreen.length === 0;
-
-    let newSection = createEmptySection(id, layout);
-
-    if (isFirstSectionForScreen) {
-      const legacyModules = modularPage.screens?.[screen] || [];
-      if (legacyModules.length > 0) {
-        const distributed = newSection.modules.map((col) => [...col]);
-        legacyModules.forEach((module, index) => {
-          const targetColumn = distributed.length > 0 ? index % distributed.length : 0;
-          distributed[targetColumn].push(module);
-        });
-        newSection = {
-          ...newSection,
-          modules: distributed
-        };
-      }
-    }
-
-    const nextSections: Record<ScreenId, Section[]> = {
-      ...(currentSections || {}),
-      [screen]: [...existingSectionsForScreen, newSection]
-    };
-    persistModular({ screens: modularPage.screens, sections: nextSections, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleSectionModuleUpdate = useCallback((id: string, patch: Partial<Module>) => {
-    const currentSections = (modularPage as any).sections || {} as Record<ScreenId, Section[]>;
-    const nextSections: Record<ScreenId, Section[]> = {} as any;
-    (Object.keys(currentSections) as ScreenId[]).forEach((scr) => {
-      nextSections[scr] = (currentSections[scr] || []).map((sec) => ({
-        ...sec,
-        modules: sec.modules.map(col => col.map(m => m.id === id ? ({ ...m, ...patch }) as Module : m))
-      }));
-    });
-    persistModular({ screens: modularPage.screens, sections: nextSections, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleSectionModuleMove = useCallback((payload: { moduleId: string; fromSectionId: string; fromColumnIndex: number; fromIndex: number; toSectionId: string; toColumnIndex: number; toIndex: number; }) => {
-    const currentSections = (modularPage as any).sections || {} as Record<ScreenId, Section[]>;
-    // Deep clone minimal
-    const nextSections: Record<ScreenId, Section[]> = {} as any;
-    (Object.keys(currentSections) as ScreenId[]).forEach((scr) => {
-      nextSections[scr] = (currentSections[scr] || []).map((sec) => ({
-        ...sec,
-        modules: sec.modules.map(col => [...col])
-      }));
-    });
-    const locate = (sectionId: string): { screen: ScreenId; idx: number } | null => {
-      for (const scr of Object.keys(nextSections) as ScreenId[]) {
-        const idx = (nextSections[scr] || []).findIndex(s => s.id === sectionId);
-        if (idx >= 0) return { screen: scr, idx };
-      }
-      return null;
-    };
-    const fromLoc = locate(payload.fromSectionId);
-    const toLoc = locate(payload.toSectionId);
-    if (!fromLoc || !toLoc) return;
-    const fromSec = nextSections[fromLoc.screen][fromLoc.idx];
-    const toSec = nextSections[toLoc.screen][toLoc.idx];
-    const fromCol = fromSec.modules[payload.fromColumnIndex] || [];
-    const toCol = toSec.modules[payload.toColumnIndex] || [];
-    const [item] = fromCol.splice(payload.fromIndex, 1);
-    if (!item) return;
-    const insertIndex = Math.max(0, Math.min(payload.toIndex, toCol.length));
-    toCol.splice(insertIndex, 0, item);
-    persistModular({ screens: modularPage.screens, sections: nextSections, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
 
   const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
@@ -648,6 +559,54 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     });
     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
   }, [modularPage, persistModular]);
+
+  const handleDuplicateModule = useCallback((id: string) => {
+    type ModuleWithMeta = Module & { moduleId?: string; label?: string };
+
+    const nextScreens: Record<ScreenId, Module[]> = { ...modularPage.screens };
+    let moduleToDuplicate: ModuleWithMeta | null = null;
+    let foundScreenId: ScreenId | null = null;
+    let originalIndex = -1;
+
+    for (const screenId of Object.keys(nextScreens) as ScreenId[]) {
+      const modules = nextScreens[screenId] ?? [];
+      const index = modules.findIndex((m) => m.id === id);
+      if (index >= 0) {
+        moduleToDuplicate = modules[index] as ModuleWithMeta;
+        foundScreenId = screenId;
+        originalIndex = index;
+        break;
+      }
+    }
+
+    if (!moduleToDuplicate || !foundScreenId || originalIndex < 0) {
+      console.warn(`⚠️ Impossible de trouver le module à dupliquer (ID: ${id})`);
+      return;
+    }
+
+    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const duplicatedModule: ModuleWithMeta = {
+      ...moduleToDuplicate,
+      id: newId
+    };
+
+    if (typeof moduleToDuplicate.label === 'string' && moduleToDuplicate.label.trim().length > 0) {
+      duplicatedModule.label = `${moduleToDuplicate.label} (copie)`;
+    }
+
+    if (typeof moduleToDuplicate.moduleId === 'string' && moduleToDuplicate.moduleId.trim().length > 0) {
+      duplicatedModule.moduleId = newId;
+    }
+
+    const currentModules = nextScreens[foundScreenId] ?? [];
+    const updatedModules = [...currentModules];
+    updatedModules.splice(originalIndex + 1, 0, duplicatedModule);
+    nextScreens[foundScreenId] = updatedModules;
+
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+
+    console.log(`✅ Module dupliqué avec succès (${id} → ${duplicatedModule.id})`);
+  }, [modularPage.screens, persistModular]);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
@@ -1193,21 +1152,41 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return (Object.values(modularPage.screens).flat() as BlocBouton[]).find((module) => module.type === 'BlocBouton');
   }, [modularPage.screens]);
 
+  const lastModuleSelectionRef = useRef<string | null>(null);
+
   useEffect(() => {
     const role = (selectedElement as any)?.role;
     const moduleId = (selectedElement as any)?.moduleId as string | undefined;
-    const isModularRole = role === 'module-button' || role === 'module-image' || role === 'module-video';
-    if (moduleId && isModularRole) {
+    const isModularRole =
+      role === 'module-button' ||
+      role === 'module-image' ||
+      role === 'module-video' ||
+      role === 'module-social' ||
+      role === 'module-html';
+
+    if (!moduleId || !isModularRole) {
+      lastModuleSelectionRef.current = null;
+      setSelectedModuleId(null);
+      if (!isModularRole) {
+        setActiveSidebarTab(previousSidebarTab || 'elements');
+      }
+      return;
+    }
+
+    const isNewSelection = moduleId !== lastModuleSelectionRef.current;
+
+    if (isNewSelection) {
+      lastModuleSelectionRef.current = moduleId;
       setSelectedModuleId(moduleId);
       setPreviousSidebarTab(activeSidebarTab);
       setActiveSidebarTab('elements');
       return;
     }
-    if (!isModularRole) {
-      setSelectedModuleId(null);
-      setActiveSidebarTab(previousSidebarTab || 'elements');
+
+    if (activeSidebarTab === 'elements' && selectedModuleId !== moduleId) {
+      setSelectedModuleId(moduleId);
     }
-  }, [selectedElement, activeSidebarTab, previousSidebarTab]);
+  }, [selectedElement, activeSidebarTab, previousSidebarTab, selectedModuleId]);
 
   const exitMessageElement = useMemo(() => {
     return canvasElements.find(
@@ -2194,9 +2173,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
-                onAddSection={handleAddSection}
-                showEffectsPanel={showEffectsInSidebar}
-                onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
@@ -2204,11 +2180,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 showQuizPanel={showQuizPanel}
                 onQuizPanelChange={setShowQuizPanel}
                 showDesignPanel={showDesignInSidebar}
-                onDesignPanelChange={(isOpen) => {
-                  if (!isOpen) {
-                    setShowDesignInSidebar(false);
-                  }
-                }}
+                onDesignPanelChange={setShowDesignInSidebar}
                 activeTab={activeSidebarTab}
                 onActiveTabChange={(tabId) => {
                   const nextTab = tabId || 'elements';
@@ -2230,6 +2202,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 selectedModuleId={selectedModuleId}
                 selectedModule={selectedModule}
                 onModuleUpdate={handleUpdateModule}
+                onSelectedModuleChange={setSelectedModuleId}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
@@ -2495,109 +2468,99 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             <div className="flex-1 canvas-scroll-area relative z-20">
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
-              <DesignCanvas
-                screenId="screen1"
-                ref={canvasRef}
-                selectedDevice={selectedDevice}
-                elements={canvasElements}
-                onElementsChange={setCanvasElements}
-                background={canvasBackground}
-                campaign={campaignData}
-                onCampaignChange={handleCampaignConfigChange}
-                zoom={canvasZoom}
-                onZoomChange={setCanvasZoom}
-                selectedElement={selectedElement}
-                onSelectedElementChange={setSelectedElement}
-                selectedElements={selectedElements}
-                onSelectedElementsChange={setSelectedElements}
-                onElementUpdate={handleElementUpdate}
-                modularSections={modularPage.sections?.screen1}
-                onSectionModuleUpdate={handleSectionModuleUpdate}
-                onSectionModuleMove={handleSectionModuleMove}
-              // Quiz sync props
-              extractedColors={extractedColors}
-              quizModalConfig={quizModalConfig}
-              containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-              hideInlineQuizPreview
-              elementFilter={(element: any) => {
-                const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                return !role.includes('exit-message');
-              }}
-              // Sidebar panel triggers
-              onShowEffectsPanel={() => {
-                if (!isWindowMobile) {
-                  setShowEffectsInSidebar(true);
-                  setShowAnimationsInSidebar(false);
-                  setShowPositionInSidebar(false);
-                }
-              }}
-              onShowAnimationsPanel={() => {
-                if (!isWindowMobile) {
-                  setShowAnimationsInSidebar(true);
-                  setShowEffectsInSidebar(false);
-                  setShowPositionInSidebar(false);
-                }
-              }}
-              onShowPositionPanel={() => {
-                if (!isWindowMobile) {
-                  setShowPositionInSidebar(true);
-                  setShowEffectsInSidebar(false);
-                  setShowAnimationsInSidebar(false);
-                  setShowDesignInSidebar(false);
-                }
-              }}
-              onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                if (!isWindowMobile) {
-                  // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
-                  if (context) {
-                    setDesignColorContext(context);
-                  }
-                  // Toujours ouvrir/forcer l'onglet Design
-                  setShowDesignInSidebar(true);
-                  setShowEffectsInSidebar(false);
-                  setShowAnimationsInSidebar(false);
-                  setShowPositionInSidebar(false);
+                <div data-screen-anchor="screen1" className="relative">
+                  <DesignCanvas
+                    screenId="screen1"
+                    ref={canvasRef}
+                    selectedDevice={selectedDevice}
+                    elements={canvasElements}
+                    onElementsChange={setCanvasElements}
+                    background={canvasBackground}
+                    campaign={campaignData}
+                    onCampaignChange={handleCampaignConfigChange}
+                    zoom={canvasZoom}
+                    onZoomChange={setCanvasZoom}
+                    selectedElement={selectedElement}
+                    onSelectedElementChange={debugSetSelectedElement}
+                    selectedElements={selectedElements}
+                    onSelectedElementsChange={setSelectedElements}
+                    onElementUpdate={handleElementUpdate}
+                    // Quiz sync props
+                    extractedColors={extractedColors}
+                    quizModalConfig={quizModalConfig}
+                    containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                    hideInlineQuizPreview
+                    elementFilter={(element: any) => {
+                      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                      return !role.includes('exit-message');
+                    }}
+                    // Sidebar panel triggers
+                    onShowAnimationsPanel={() => {
+                      if (!isWindowMobile) {
+                        setShowAnimationsInSidebar(true);
+                        setShowPositionInSidebar(false);
+                      }
+                    }}
+                    onShowPositionPanel={() => {
+                      if (!isWindowMobile) {
+                        setShowPositionInSidebar(true);
+                        setShowAnimationsInSidebar(false);
+                        setShowDesignInSidebar(false);
+                      }
+                    }}
+                    onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                      if (!isWindowMobile) {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
 
-                  if (sidebarRef.current) {
-                    sidebarRef.current.setActiveTab('background');
-                  }
-                }
-              }}
-              onOpenElementsTab={() => {
-                if (!isWindowMobile) {
-                  // Utiliser la même logique que onForceElementsTab
-                  if (sidebarRef.current) {
-                    sidebarRef.current.setActiveTab('elements');
-                  }
-                  // Fermer les autres panneaux
-                  setShowEffectsInSidebar(false);
-                  setShowAnimationsInSidebar(false);
-                  setShowPositionInSidebar(false);
-                }
-              }}
-              // Mobile sidebar integrations
-              onAddElement={handleAddElement}
-              onBackgroundChange={handleBackgroundChange}
-              onExtractedColorsChange={handleExtractedColorsChange}
-              // Group selection wiring
-              selectedGroupId={selectedGroupId as any}
-              onSelectedGroupChange={setSelectedGroupId as any}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-              // Quiz panels
-              showQuizPanel={showQuizPanel}
-              onQuizPanelChange={setShowQuizPanel}
-              // Modular page (screen1)
-              modularModules={modularPage.screens.screen1}
-              onModuleUpdate={handleUpdateModule}
-              onModuleDelete={handleDeleteModule}
-              onModuleMove={handleMoveModule}
-            />
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }
+                    }}
+                    onOpenElementsTab={() => {
+                      if (!isWindowMobile) {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }
+                    }}
+                    // Mobile sidebar integrations
+                    onAddElement={handleAddElement}
+                    onBackgroundChange={handleBackgroundChange}
+                    onExtractedColorsChange={handleExtractedColorsChange}
+                    // Group selection wiring
+                    selectedGroupId={selectedGroupId as any}
+                    onSelectedGroupChange={setSelectedGroupId as any}
+                    onUndo={undo}
+                    onRedo={redo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                    // Quiz panels
+                    showQuizPanel={showQuizPanel}
+                    onQuizPanelChange={setShowQuizPanel}
+                    // Modular page (screen1)
+                    modularModules={modularPage.screens.screen1}
+                    onModuleUpdate={handleUpdateModule}
+                    onModuleDelete={handleDeleteModule}
+                    onModuleMove={handleMoveModule}
+                    onModuleDuplicate={handleDuplicateModule}
+                  />
+                </div>
                 
                 {/* Deuxième Canvas */}
-                <div className="mt-4 relative">
+                <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
                     className="absolute inset-0 z-0"
@@ -2633,9 +2596,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       // Quiz sync props
                       extractedColors={extractedColors}
                       quizModalConfig={quizModalConfig}
-                      modularSections={modularPage.sections?.screen2}
-                      onSectionModuleUpdate={handleSectionModuleUpdate}
-                      onSectionModuleMove={handleSectionModuleMove}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
@@ -2677,7 +2637,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                           sidebarRef.current.setActiveTab('elements');
                         }
                         // Fermer les autres panneaux
-                        setShowEffectsInSidebar(false);
                         setShowAnimationsInSidebar(false);
                         setShowPositionInSidebar(false);
                       }}
@@ -2700,12 +2659,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onModuleUpdate={handleUpdateModule}
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
+                      onModuleDuplicate={handleDuplicateModule}
                     />
                   </div>
                 </div>
 
                 {/* Troisième Canvas */}
-                <div className="mt-4 relative">
+                <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
                     className="absolute inset-0 z-0"
@@ -2741,9 +2701,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       // Quiz sync props
                       extractedColors={extractedColors}
                       quizModalConfig={quizModalConfig}
-                      modularSections={modularPage.sections?.screen3}
-                      onSectionModuleUpdate={handleSectionModuleUpdate}
-                      onSectionModuleMove={handleSectionModuleMove}
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
@@ -2811,6 +2768,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       // Quiz panels
                       showQuizPanel={showQuizPanel}
                       onQuizPanelChange={setShowQuizPanel}
+                      // Modular page (screen3)
+                      modularModules={modularPage.screens.screen3}
+                      onModuleUpdate={handleUpdateModule}
+                      onModuleDelete={handleDeleteModule}
+                      onModuleMove={handleMoveModule}
                     />
                   </div>
                 </div>
@@ -2825,29 +2787,14 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 maxZoom={1}
                 step={0.05}
                 onNavigateToScreen2={() => {
-                  const canvasScrollArea = document.querySelector('.canvas-scroll-area');
-                  if (canvasScrollArea) {
-                    const clientHeight = canvasScrollArea.clientHeight;
-                    
-                    if (currentScreen === 'screen1') {
-                      // Aller à l'écran 2
-                      canvasScrollArea.scrollTo({
-                        top: clientHeight * 0.5,
-                        behavior: 'smooth'
-                      });
-                    } else if (currentScreen === 'screen2') {
-                      // Aller à l'écran 3
-                      canvasScrollArea.scrollTo({
-                        top: canvasScrollArea.scrollHeight,
-                        behavior: 'smooth'
-                      });
-                    } else {
-                      // Retourner à l'écran 1
-                      canvasScrollArea.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                      });
-                    }
+                  const nextScreen = currentScreen === 'screen1'
+                    ? 'screen2'
+                    : currentScreen === 'screen2'
+                      ? 'screen3'
+                      : 'screen1';
+                  const scrolled = scrollToScreen(nextScreen);
+                  if (scrolled) {
+                    setCurrentScreen(nextScreen);
                   }
                 }}
                 currentScreen={currentScreen}
@@ -2858,7 +2805,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+        <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
             onClick={() => navigate('/dashboard')}
             className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"

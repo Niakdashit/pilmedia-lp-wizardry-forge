@@ -5,6 +5,7 @@ import type { BlocVideo } from '@/types/modularEditor';
 interface VideoModulePanelProps {
   module: BlocVideo;
   onUpdate: (patch: Partial<BlocVideo>) => void;
+  onBack?: () => void;
 }
 
 const alignmentOptions: Array<{ id: BlocVideo['align']; label: string; icon: React.ComponentType<any> }> = [
@@ -13,13 +14,28 @@ const alignmentOptions: Array<{ id: BlocVideo['align']; label: string; icon: Rea
   { id: 'right', label: 'Droite', icon: AlignRight }
 ];
 
-const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate }) => {
+const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, onBack }) => {
   const currentRadius = typeof module.borderRadius === 'number' ? module.borderRadius : 0;
   const currentAlign = module.align || 'center';
   const currentFit = module.objectFit || 'cover';
+  const currentWidth = module.layoutWidth || 'full';
 
   return (
     <div className="h-full overflow-y-auto pb-12">
+      {onBack && (
+        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <button
+            type="button"
+            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
+            onClick={onBack}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour aux éléments
+          </button>
+        </div>
+      )}
       <div className="px-4 py-5">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
@@ -32,6 +48,29 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate })
         </div>
 
         <div className="space-y-8">
+          <section className="space-y-3">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Largeur</h4>
+            <div className="grid grid-cols-4 gap-2">
+              {[{ id: 'full', label: '1/1' }, { id: 'half', label: '1/2' }, { id: 'twoThirds', label: '2/3' }, { id: 'third', label: '1/3' }].map(({ id, label }) => {
+                const isActive = currentWidth === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => onUpdate({ layoutWidth: id as BlocVideo['layoutWidth'] })}
+                    className={`flex items-center justify-center rounded-lg border px-3 py-2 text-[11px] font-semibold transition ${
+                      isActive
+                        ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                        : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <section className="space-y-3">
             <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Source</h4>
             <label className="block">

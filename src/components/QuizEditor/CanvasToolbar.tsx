@@ -8,43 +8,52 @@ import {
   AlignRight, 
   AlignJustify, 
   ChevronDown,
-  Type,
-  Wand2,
-  Play,
-  Move3D
+  Type
 } from 'lucide-react';
-import TextEffectsPanel from './panels/TextEffectsPanel';
-import PositionPanel from './panels/PositionPanel';
+import { Wand2 } from 'lucide-react';
+import SimpleTextEffectsModal from './panels/SimpleTextEffectsModal';
 
 interface CanvasToolbarProps {
   selectedElement: any;
   onElementUpdate: (updates: any) => void;
-  onShowEffectsPanel?: () => void;
-  onShowAnimationsPanel?: () => void;
-  onShowPositionPanel?: () => void;
   onShowDesignPanel?: (context?: 'fill' | 'border' | 'text') => void;
   onOpenElementsTab?: () => void;
+  onEffectsPanelChange?: (show: boolean) => void;
   canvasRef?: React.RefObject<HTMLDivElement>;
 }
 
 const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
   selectedElement,
   onElementUpdate,
-  onShowEffectsPanel,
-  onShowAnimationsPanel,
-  onShowPositionPanel,
   onShowDesignPanel,
   onOpenElementsTab,
   canvasRef
 }) => {
-  const [showEffectsPanel, setShowEffectsPanel] = useState(false);
-  const [showPositionPanel, setShowPositionPanel] = useState(false);
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showBorderRadiusDropdown, setShowBorderRadiusDropdown] = useState(false);
+  const [showEffectsModal, setShowEffectsModal] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const effectsPanelRef = useRef<HTMLDivElement>(null);
   const borderRadiusRef = useRef<HTMLDivElement>(null);
   const borderModalRef = useRef<HTMLDivElement>(null);
+
+  // Gérer la sélection d'un effet de texte
+  const handleEffectSelect = (effect: any) => {
+    // Créer un événement personnalisé pour appliquer l'effet
+    const updateEvent = new CustomEvent('applyTextEffect', {
+      detail: {
+        customCSS: effect.id === 'none' ? undefined : effect.css,
+        advancedStyle: effect.id === 'none' ? undefined : {
+          css: effect.css
+        },
+        textEffect: effect.id === 'none' ? undefined : effect.id,
+        // Conserver le contenu existant
+        content: selectedElement.content
+      }
+    });
+    
+    // Déclencher l'événement
+    window.dispatchEvent(updateEvent);
+  };
 
   // Helper to broadcast UI selection hide/show while adjusting values
   const dispatchAdjustingSelection = (hide: boolean, reason: 'borderRadius' | 'border' | 'generic' = 'generic') => {
@@ -85,16 +94,14 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       const insideToolbar = !!toolbarRef.current?.contains(target);
-      const insideEffects = !!effectsPanelRef.current?.contains(target);
       const insideBorderRadius = !!borderRadiusRef.current?.contains(target);
       const insideBorderModal = !!borderModalRef.current?.contains(target);
 
-      const clickedInsideAny = insideToolbar || insideEffects || insideBorderRadius || insideBorderModal;
+      const clickedInsideAny = insideToolbar || insideBorderRadius || insideBorderModal;
 
       if (!clickedInsideAny) {
         setShowBorderRadiusDropdown(false);
         setShowBorderModal(false);
-        if (showEffectsPanel) setShowEffectsPanel(false);
         // Always restore selection visibility when dropdowns close due to outside click
         dispatchAdjustingSelection(false, 'borderRadius');
         dispatchAdjustingSelection(false, 'border');
@@ -103,7 +110,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showEffectsPanel]);
+  }, []);
 
   if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'shape')) {
     return null;
@@ -411,6 +418,17 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         <Underline className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </button>
 
+      {/* Bouton Effets */}
+      {!isShape && (
+        <button 
+          onClick={() => setShowEffectsModal(true)}
+          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150"
+          title="Effets de texte"
+        >
+          <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </button>
+      )}
+
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
       {/* Text Alignment: click to cycle (left -> center -> right -> justify) */}
@@ -426,92 +444,8 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         </button>
       </div>
 
-      <div className="h-6 w-px bg-gray-500 mx-3" />
-
-      {/* Advanced Tools */}
-      <button 
-        onClick={() => {
-          if (onShowEffectsPanel) {
-            onShowEffectsPanel();
-          } else {
-            // Fallback pour compatibilité
-            setShowEffectsPanel(!showEffectsPanel);
-          }
-        }}
-        className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
-        title="Effets de texte"
-      >
-        <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden sm:inline text-sm">Effets</span>
-      </button>
-      
-      <button 
-        onClick={() => {
-          if (onShowAnimationsPanel) {
-            onShowAnimationsPanel();
-          }
-        }}
-        className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
-        title="Animations de texte"
-      >
-        <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden sm:inline text-sm">Animer</span>
-      </button>
-      
-      <button 
-        onClick={() => {
-          if (onShowPositionPanel) {
-            onShowPositionPanel();
-          } else {
-            // Fallback pour compatibilité
-            setShowPositionPanel(!showPositionPanel);
-          }
-        }}
-        className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1"
-        title="Position et transformation"
-      >
-        <Move3D className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden sm:inline text-sm">Position</span>
-      </button>
-
       </div>
       
-      {/* Panneau flottant de fallback - Seulement si onShowEffectsPanel n'est pas disponible */}
-      {!onShowEffectsPanel && showEffectsPanel && (
-        <div 
-          ref={effectsPanelRef}
-          className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-80 max-h-96 overflow-y-auto animate-in slide-in-from-top-2 duration-200"
-          style={{
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <TextEffectsPanel 
-            onBack={() => setShowEffectsPanel(false)}
-            selectedElement={selectedElement}
-            onElementUpdate={(updates) => {
-              onElementUpdate(updates);
-            }}
-          />
-        </div>
-      )}
-      
-      {/* Panneau de position - Fallback pour compatibilité */}
-      {!onShowPositionPanel && showPositionPanel && (
-        <div 
-          className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-80 max-h-96 overflow-y-auto animate-in slide-in-from-top-2 duration-200"
-          style={{
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <PositionPanel 
-            onBack={() => setShowPositionPanel(false)}
-            selectedElement={selectedElement}
-            onElementUpdate={onElementUpdate}
-            canvasRef={canvasRef}
-          />
-        </div>
-      )}
-
       {/* Border Radius Modal */}
       {isShape && showBorderRadiusDropdown && (
         <div ref={borderRadiusRef} className="absolute top-full left-0 mt-2 bg-gray-800 rounded-lg shadow-lg p-3 z-20 min-w-[240px]">
@@ -654,6 +588,14 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           )}
         </div>
       )}
+
+      {/* Modale des effets de texte */}
+      <SimpleTextEffectsModal
+        isOpen={showEffectsModal}
+        onClose={() => setShowEffectsModal(false)}
+        onSelectEffect={handleEffectSelect}
+        selectedElement={selectedElement}
+      />
     </div>
   );
 });
