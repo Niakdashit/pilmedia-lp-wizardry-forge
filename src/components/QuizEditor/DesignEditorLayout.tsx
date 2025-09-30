@@ -2047,61 +2047,18 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   });
 
   return (
+    <div
+      className="min-h-screen w-full"
+      style={{
+        backgroundImage:
+          'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
+        backgroundBlendMode: 'screen, screen, lighten, normal',
+        backgroundColor: '#3D2E72',
+        padding: '0 9px 9px 9px',
+        boxSizing: 'border-box'
+      }}
+    >
     <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
-      {/* Bande dégradée avec logo et icônes */}
-      <GradientBand className="transform translate-y-[0.4vh]">
-        {mode === 'template' ? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginTop: '-122px',
-              marginLeft: '24px'
-            }}
-          >
-            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-text">
-              Edition de template
-            </span>
-          </div>
-        ) : (
-          <img 
-            src="/logo.png" 
-            alt="Prosplay Logo" 
-            style={{
-              height: '93px',
-              width: 'auto',
-              filter: 'brightness(0) invert(1)',
-              maxWidth: '468px',
-              marginTop: '-120px',
-              marginLeft: '1.5%',
-              padding: 0
-            }} 
-          />
-        )}
-        <div style={{
-          display: 'flex',
-          gap: '16px',
-          alignItems: 'center',
-          marginTop: '-122px',
-          marginRight: '24px'
-        }}>
-          <button 
-            onClick={() => {}}
-            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
-            title="Mon compte"
-          >
-            <User className="w-4 h-4" />
-          </button>
-          <button 
-            onClick={() => {}}
-            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
-            title="Déconnexion"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </GradientBand>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2467,7 +2424,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
             {/* Canvas Scrollable Area */}
-            <div className="flex-1 canvas-scroll-area relative z-20">
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px]">
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
@@ -2828,6 +2785,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         </div>
       )}
     </MobileStableEditor>
+    </div>
   );
 };
 

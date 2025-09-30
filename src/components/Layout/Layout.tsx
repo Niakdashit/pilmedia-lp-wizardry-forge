@@ -23,87 +23,63 @@ const Layout: React.FC = () => {
   // Sidebar is permanently collapsed; no body scroll lock is needed
 
   return (
-    <div className="flex min-h-screen bg-gray-50 w-full relative" style={{ overflow: 'hidden' }}>
-      {/* Bande dégradée circulaire - Header avec Logo */}
-      <div 
-        className="fixed top-0 left-0 right-0 h-[5cm]"
+    <div
+      className="flex min-h-screen w-full relative"
+      style={{
+        overflow: 'hidden',
+        backgroundImage:
+          'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
+        backgroundBlendMode: 'screen, screen, lighten, normal',
+        backgroundColor: '#3D2E72',
+      }}
+    >
+      <header
+        className="absolute z-40 flex items-center justify-between px-7"
         style={{
-          background: 'radial-gradient(circle at 0% 0%, #b41b60, #841b60 70%)',
-          overflow: 'hidden',
-          padding: '2px 32px 24px',
-          zIndex: 1,
-          boxShadow: '0 14px 34px rgba(0, 0, 0, 0.67)'
+          left: '9px',
+          right: '9px',
+          top: 'calc(1.16cm - 56px)',
+          height: '72px'
         }}
       >
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px'
-        }}>
-          <img 
-            src={headerLogo} 
-            alt="Prosplay Logo" 
-            style={{
-              height: '93px',
-              width: 'auto',
-              filter: 'brightness(0) invert(1)',
-              maxWidth: '468px',
-              marginTop: '-120px',
-              marginLeft: '1.5%',
-              padding: 0
-            }} 
-          />
-          <div style={{
-            display: 'flex',
-            gap: '16px',
-            alignItems: 'center',
-            marginTop: '-122px',
-            marginRight: '24px'
-          }}>
-            <button 
-              onClick={handleAccount}
-              className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
-              title="Mon compte"
-              style={{
-                borderRadius: '50%',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              <User className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
-              title="Déconnexion"
-              style={{
-                borderRadius: '50%',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+        <img 
+          src={headerLogo} 
+          alt="Prosplay Logo" 
+          style={{
+            height: '72px',
+            width: 'auto',
+            filter: 'brightness(0) invert(1)',
+            maxWidth: '468px'
+          }} 
+        />
+        <div className="flex items-center gap-2.5">
+          <button 
+            onClick={handleAccount}
+            className="text-white/90 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors duration-200"
+            title="Mon compte"
+          >
+            <User className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="text-white/90 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors duration-200"
+            title="Déconnexion"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
-      </div>
+      </header>
       
       {/* Carré rouge avec border-radius - Contenu principal */}
       <div 
         className="fixed z-20"
         style={{
-          borderRadius: '28px 28px 0 0',
+          borderRadius: '28px',
           margin: '0',
           top: '1.16cm', /* Augmenté de 15% supplémentaire par rapport à 1.37cm */
-          bottom: '0',
-          left: '0',
-          right: '0',
+          bottom: '9px',
+          left: '9px',
+          right: '9px',
           boxSizing: 'border-box',
           backgroundColor: '#f9fafb',
         }}
@@ -112,9 +88,13 @@ const Layout: React.FC = () => {
       {/* Layout principal avec sidebar et contenu */}
       <div className="relative z-30 w-full flex flex-1" style={{ 
         marginTop: '1.16cm',
-        height: 'calc(100vh - 1.16cm)',
+        height: 'calc(100vh - 1.16cm - 9px)',
         overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        borderRadius: '28px',
+        overflow: 'hidden',
+        marginLeft: '9px',
+        marginRight: '9px'
       }}>
         <Sidebar />
         
