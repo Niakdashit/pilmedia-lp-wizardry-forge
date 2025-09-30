@@ -3,6 +3,43 @@ import { Upload, Pipette } from 'lucide-react';
 import ColorThief from 'colorthief';
 import { fontCategories } from './TextPanel';
 
+const QUICK_TEXT_EFFECTS: Array<{ id: string; name: string; style: React.CSSProperties }> = [
+  {
+    id: 'none',
+    name: 'Aucun effet',
+    style: {
+      backgroundColor: '#1f2937',
+      borderRadius: '8px',
+      color: '#ffffff',
+      padding: '8px 12px'
+    }
+  },
+  {
+    id: 'background',
+    name: 'Fond surligné',
+    style: {
+      backgroundColor: 'rgba(251,255,0,1)',
+      color: '#000000',
+      borderRadius: '6px',
+      padding: '8px 16px',
+      display: 'inline-block'
+    }
+  },
+  {
+    id: 'yellow-button',
+    name: 'Bouton jaune',
+    style: {
+      backgroundColor: '#FFD700',
+      color: '#000000',
+      fontWeight: 'bold',
+      padding: '10px 24px',
+      borderRadius: '9999px',
+      display: 'inline-block',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.12)'
+    }
+  }
+];
+
 interface BackgroundPanelProps {
   onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
@@ -124,6 +161,50 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
     '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98'
   ];
+
+  const currentQuickEffectId = selectedElement?.advancedStyle?.id || 'none';
+
+  const applyQuickEffect = (effectId: string) => {
+    const effect = QUICK_TEXT_EFFECTS.find((fx) => fx.id === effectId);
+    if (!effect) {
+      return;
+    }
+
+    const effectCss = effectId === 'background' && selectedElement?.color
+      ? {
+          ...effect.style,
+          color: selectedElement.color
+        }
+      : effect.style;
+
+    const baseUpdates = effectId === 'none'
+      ? {
+          customCSS: undefined,
+          advancedStyle: undefined,
+          advancedStyleParams: undefined,
+          textEffect: undefined,
+          content: selectedElement?.content ?? ''
+        }
+      : {
+          customCSS: effectCss,
+          advancedStyle: {
+            id: effectId,
+            name: effect.name,
+            category: 'effect',
+            css: effectCss
+          },
+          advancedStyleParams: undefined,
+          textEffect: effectId,
+          content: selectedElement?.content ?? ''
+        };
+
+    if (onElementUpdate) {
+      onElementUpdate(baseUpdates);
+    } else {
+      const updateEvent = new CustomEvent('applyTextEffect', { detail: baseUpdates });
+      window.dispatchEvent(updateEvent);
+    }
+  };
 
   const extractColorsFromImage = async (imageUrl: string) => {
     return new Promise<string[]>((resolve) => {
@@ -315,6 +396,38 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick text effects (formerly modal) */}
+      {isTextSelected && (
+        <div className="space-y-3">
+          <h3 className="font-semibold text-sm text-gray-700">EFFETS RAPIDES</h3>
+          <div className="space-y-2">
+            {QUICK_TEXT_EFFECTS.map((effect) => {
+              const isActive = currentQuickEffectId === effect.id;
+              return (
+                <button
+                  key={effect.id}
+                  type="button"
+                  onClick={() => applyQuickEffect(effect.id)}
+                  className={`w-full flex items-center justify-between p-3 border rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white shadow-lg'
+                      : 'border-gray-200 bg-gray-900/40 hover:border-[hsl(var(--primary))] hover:bg-gray-800/80 text-gray-100'
+                  }`}
+                >
+                  <span className="text-sm font-medium">{effect.name}</span>
+                  <span
+                    className="ml-4 rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
+                    style={effect.style}
+                  >
+                    Aperçu
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

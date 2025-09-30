@@ -10,8 +10,6 @@ import {
   ChevronDown,
   Type
 } from 'lucide-react';
-import { Wand2 } from 'lucide-react';
-import SimpleTextEffectsModal from './panels/SimpleTextEffectsModal';
 
 interface CanvasToolbarProps {
   selectedElement: any;
@@ -34,29 +32,9 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
 }) => {
   const [showBorderModal, setShowBorderModal] = useState(false);
   const [showBorderRadiusDropdown, setShowBorderRadiusDropdown] = useState(false);
-  const [showEffectsModal, setShowEffectsModal] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const borderRadiusRef = useRef<HTMLDivElement>(null);
   const borderModalRef = useRef<HTMLDivElement>(null);
-
-  // Gérer la sélection d'un effet de texte
-  const handleEffectSelect = (effect: any) => {
-    // Créer un événement personnalisé pour appliquer l'effet
-    const updateEvent = new CustomEvent('applyTextEffect', {
-      detail: {
-        customCSS: effect.id === 'none' ? undefined : effect.css,
-        advancedStyle: effect.id === 'none' ? undefined : {
-          css: effect.css
-        },
-        textEffect: effect.id === 'none' ? undefined : effect.id,
-        // Conserver le contenu existant
-        content: selectedElement.content
-      }
-    });
-    
-    // Déclencher l'événement
-    window.dispatchEvent(updateEvent);
-  };
 
   // Helper to broadcast UI selection hide/show while adjusting values
   const dispatchAdjustingSelection = (hide: boolean, reason: 'borderRadius' | 'border' | 'generic' = 'generic') => {
@@ -421,17 +399,6 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         <Underline className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </button>
 
-      {/* Bouton Effets */}
-      {!isShape && (
-        <button 
-          onClick={() => setShowEffectsModal(true)}
-          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150"
-          title="Effets de texte"
-        >
-          <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </button>
-      )}
-
       <div className="h-6 w-px bg-gray-500 mx-3" />
 
       {/* Text Alignment: click to cycle (left -> center -> right -> justify) */}
@@ -592,13 +559,6 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
         </div>
       )}
 
-      {/* Modale des effets de texte */}
-      <SimpleTextEffectsModal
-        isOpen={showEffectsModal}
-        onClose={() => setShowEffectsModal(false)}
-        onSelectEffect={handleEffectSelect}
-        selectedElement={selectedElement}
-      />
     </div>
   );
 });

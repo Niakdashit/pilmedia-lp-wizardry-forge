@@ -21,7 +21,6 @@ export const fontCategories = [{
   fonts: ['Dancing Script', 'Great Vibes', 'Allura', 'Satisfy', 'Kaushan Script', 'Tangerine']
 }];
 
-// Component intentionally returns null - functionality moved elsewhere
 const TextPanel: React.FC = () => {
   return null;
 };

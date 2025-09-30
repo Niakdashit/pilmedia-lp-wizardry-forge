@@ -1577,7 +1577,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           }
         } else {
           // Regular element update
-          const element = elementById.get(currentSelected);
+          const element = elementById.get(currentSelected) || externalSelectedElement || null;
           const updates = {
             ...event.detail,
             style: {
@@ -1600,6 +1600,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
     };
   }, [selectedElement, externalSelectedElement, handleElementUpdate, elementById, modularModules, onModuleUpdate]);
+
+  // Keep local selection id in sync when parent changes selected element instance
+  useEffect(() => {
+    if (externalSelectedElement?.id && externalSelectedElement.id !== selectedElement) {
+      setSelectedElement(externalSelectedElement.id);
+    }
+    if (!externalSelectedElement && selectedElement) {
+      setSelectedElement(null);
+    }
+  }, [externalSelectedElement, selectedElement]);
 
   // Écouteur d'événement pour afficher le popup d'animation
   useEffect(() => {
