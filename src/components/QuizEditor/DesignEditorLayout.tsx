@@ -2175,6 +2175,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
+                showEffectsPanel={showEffectsInSidebar}
+                onEffectsPanelChange={setShowEffectsInSidebar}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
