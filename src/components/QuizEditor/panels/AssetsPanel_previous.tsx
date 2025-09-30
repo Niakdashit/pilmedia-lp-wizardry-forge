@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TextPanel from './TextPanel';
 
 interface AssetsPanelProps {
   onAddElement: (element: any) => void;

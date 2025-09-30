@@ -1761,6 +1761,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onQuizPanelChange?.(true);
     }
   }, [onQuizPanelChange, readOnly]);
+  void handleElementTap; // Reserved for future touch interaction features
 
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
@@ -2456,7 +2457,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     stopDragging
                   }}
                   customRenderers={customElementRenderers}
-                  onTap={handleElementTap}
                 />
               );
             })}

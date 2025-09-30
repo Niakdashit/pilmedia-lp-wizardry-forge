@@ -65,7 +65,9 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   activeGroupId,
   campaign,
   extractedColors,
-  alignmentSystem
+  alignmentSystem,
+  screenId,
+  onTap
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
