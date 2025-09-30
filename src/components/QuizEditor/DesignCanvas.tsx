@@ -1562,26 +1562,35 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const currentSelected = selectedElement || externalSelectedElement?.id;
       
       if (currentSelected) {
-        
-        // Préparer les mises à jour en fusionnant avec les styles existants
-        const element = elementById.get(currentSelected);
-        const updates = {
-          ...event.detail,
-          style: {
-            ...(element?.style || {}),
-            ...(event.detail.style || {})
-          },
-          // S'assurer que customCSS est bien transmis
-          customCSS: event.detail.customCSS,
-          // S'assurer que advancedStyle est bien transmis
-          advancedStyle: event.detail.advancedStyle,
-          // S'assurer que textEffect est bien transmis
-          textEffect: event.detail.textEffect,
-          // S'assurer que textShape est bien transmis
-          textShape: event.detail.textShape
-        };
-        
-        handleElementUpdate(currentSelected, updates);
+        // Check if this is a module (starts with 'modular-text-')
+        if (currentSelected.startsWith('modular-text-') && onModuleUpdate) {
+          const moduleId = currentSelected.replace('modular-text-', '');
+          const module = modularModules?.find((m) => m.id === moduleId && m.type === 'BlocTexte');
+          
+          if (module) {
+            // Update module with advanced CSS styles
+            onModuleUpdate(module.id, {
+              customCSS: event.detail.customCSS,
+              advancedStyle: event.detail.advancedStyle
+            });
+          }
+        } else {
+          // Regular element update
+          const element = elementById.get(currentSelected);
+          const updates = {
+            ...event.detail,
+            style: {
+              ...(element?.style || {}),
+              ...(event.detail.style || {})
+            },
+            customCSS: event.detail.customCSS,
+            advancedStyle: event.detail.advancedStyle,
+            textEffect: event.detail.textEffect,
+            textShape: event.detail.textShape
+          };
+          
+          handleElementUpdate(currentSelected, updates);
+        }
       }
     };
 
@@ -1589,7 +1598,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => {
       window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
     };
-  }, [selectedElement, externalSelectedElement, handleElementUpdate, elementById]);
+  }, [selectedElement, externalSelectedElement, handleElementUpdate, elementById, modularModules, onModuleUpdate]);
 
   // Écouteur d'événement pour afficher le popup d'animation
   useEffect(() => {

@@ -45,12 +45,17 @@ export interface BlocTexte extends BaseModule {
   bodyBold?: boolean;
   bodyItalic?: boolean;
   bodyUnderline?: boolean;
+  bodyColor?: string; // text color
+  bodyFontFamily?: string; // font family
   accentColor?: string; // vertical bar color at the left
   cardBackground?: string; // background color of the card
   cardBorderColor?: string; // border color of the card
   cardBorderWidth?: number; // px
   cardRadius?: number; // px
   padding?: number; // px internal padding
+  // Advanced text effects
+  customCSS?: Record<string, any>; // Advanced CSS styles (gradients, shadows, etc.)
+  advancedStyle?: any; // Reference to the advanced style applied
   // Backward compatibility
   html?: string; // rich text html
   text?: string; // fallback plain text

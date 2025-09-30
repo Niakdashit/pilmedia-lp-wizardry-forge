@@ -343,6 +343,27 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       // Title style removed (no title field rendered)
       const baseBodyFontSize = (m as any).bodyFontSize as number | undefined;
       const scaledBodyFontSize = baseBodyFontSize ? Math.max(8, Math.round(baseBodyFontSize * deviceScale)) : undefined;
+      
+      // Separate container styles (background, padding, borders) from text styles
+      const customCSS = (m as any).customCSS || {};
+      const containerStyles: React.CSSProperties = {};
+      const textStyles: React.CSSProperties = {};
+      
+      // Container-level properties (create a "button" effect)
+      const containerProps = ['backgroundColor', 'padding', 'borderRadius', 'display', 'border', 'boxShadow'];
+      containerProps.forEach(prop => {
+        if (customCSS[prop]) {
+          containerStyles[prop as any] = customCSS[prop];
+        }
+      });
+      
+      // Text-level properties
+      Object.keys(customCSS).forEach(prop => {
+        if (!containerProps.includes(prop)) {
+          textStyles[prop as any] = customCSS[prop];
+        }
+      });
+      
       const bodyStyle: React.CSSProperties = {
         fontSize: scaledBodyFontSize ? `${scaledBodyFontSize}px` : undefined,
         fontWeight: (m as any).bodyBold ? '600' as any : undefined,
@@ -351,11 +372,17 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         lineHeight: 1.6,
         fontFamily: (m as any).bodyFontFamily || (m as any).fontFamily || 'Open Sans',
         color: (m as any).bodyColor || '#154b66',
-        textAlign: (m.align || 'left') as any
+        textAlign: (m.align || 'left') as any,
+        // Apply text-level advanced CSS styles
+        ...textStyles
       };
       const align = m.align || 'left';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
       const maxTextWidth = (m as any).width ?? 800; // clamp default text width
+      
+      // If there are container styles, wrap the content in a container
+      const hasContainerStyles = Object.keys(containerStyles).length > 0;
+      
       return (
         <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
@@ -377,6 +404,11 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
                   placeholder="Votre texte ici"
                 />
               )
+            ) : hasContainerStyles ? (
+              // Wrap editor in styled container for effects like "Bouton Jaune"
+              <div style={{ display: 'inline-block', ...containerStyles }}>
+                <BodyEditor m={m} style={bodyStyle} onUpdate={onUpdate} isMobile={isMobileDevice} />
+              </div>
             ) : (
               // Only a multi-line body editor; no title field
               <BodyEditor m={m} style={bodyStyle} onUpdate={onUpdate} isMobile={isMobileDevice} />
