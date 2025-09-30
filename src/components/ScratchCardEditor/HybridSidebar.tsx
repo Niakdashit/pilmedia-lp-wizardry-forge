@@ -145,26 +145,34 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     let newActiveTab = activeTab;
     let shouldUpdate = false;
 
-    const panelStates = [
-      { key: 'effects', active: showEffectsPanel, prevActive: prev.showEffectsPanel },
-      { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
-      { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
-      { key: 'scratch', active: showScratchPanel, prevActive: prev.showScratchPanel },
-      { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
-    ];
-
-    if (showDesignPanel && !prev.showDesignPanel) {
+    // Priority order: effects > animations > position > scratch > background
+    if (showEffectsPanel && !prev.showEffectsPanel) {
+      newActiveTab = 'effects';
+      shouldUpdate = true;
+    } else if (showAnimationsPanel && !prev.showAnimationsPanel) {
+      newActiveTab = 'animations';
+      shouldUpdate = true;
+    } else if (showPositionPanel && !prev.showPositionPanel) {
+      newActiveTab = 'position';
+      shouldUpdate = true;
+    } else if (showScratchPanel && !prev.showScratchPanel) {
+      newActiveTab = 'scratch';
+      shouldUpdate = true;
+    } else if (showDesignPanel && !prev.showDesignPanel) {
       newActiveTab = 'background';
       shouldUpdate = true;
-    } else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background');
-      if (activatedPanel) {
-        newActiveTab = activatedPanel.key;
-        shouldUpdate = true;
-      } else if (panelStates.some(p => p.key === activeTab && !p.active && p.prevActive)) {
-        newActiveTab = 'elements';
-        shouldUpdate = true;
-      }
+    } else if (activeTab === 'effects' && !showEffectsPanel && prev.showEffectsPanel) {
+      newActiveTab = 'elements';
+      shouldUpdate = true;
+    } else if (activeTab === 'animations' && !showAnimationsPanel && prev.showAnimationsPanel) {
+      newActiveTab = 'elements';
+      shouldUpdate = true;
+    } else if (activeTab === 'position' && !showPositionPanel && prev.showPositionPanel) {
+      newActiveTab = 'elements';
+      shouldUpdate = true;
+    } else if (activeTab === 'scratch' && !showScratchPanel && prev.showScratchPanel) {
+      newActiveTab = 'elements';
+      shouldUpdate = true;
     }
 
     if (shouldUpdate && newActiveTab !== activeTab) {
