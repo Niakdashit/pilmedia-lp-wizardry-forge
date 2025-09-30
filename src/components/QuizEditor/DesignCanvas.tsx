@@ -1561,6 +1561,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     const handleApplyTextEffect = (event: CustomEvent) => {
       const currentSelected = selectedElement || externalSelectedElement?.id;
+      console.log('🎯 applyTextEffect reçu (QuizEditor)', {
+        currentSelected,
+        detail: event.detail
+      });
       
       if (currentSelected) {
         // Check if this is a module (starts with 'modular-text-')
@@ -1568,6 +1572,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           const moduleId = currentSelected.replace('modular-text-', '');
           const module = modularModules?.find((m) => m.id === moduleId && m.type === 'BlocTexte');
           
+          console.log('🧩 applyTextEffect route=module?', { isModule: !!module, moduleId });
           if (module) {
             // Update module with advanced CSS styles
             onModuleUpdate(module.id, {
@@ -1589,6 +1594,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             textEffect: event.detail.textEffect,
             textShape: event.detail.textShape
           };
+          console.log('🧱 applyTextEffect route=element', { elementId: currentSelected, updates });
           
           handleElementUpdate(currentSelected, updates);
         }

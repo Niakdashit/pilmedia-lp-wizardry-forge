@@ -168,15 +168,10 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
 
   const applyQuickEffect = (effectId: string) => {
     const effect = QUICK_TEXT_EFFECTS.find((fx) => fx.id === effectId);
-    if (!effect) {
-      return;
-    }
+    if (!effect) return;
 
     const effectCss = effectId === 'background' && selectedElement?.color
-      ? {
-          ...effect.style,
-          color: selectedElement.color
-        }
+      ? { ...effect.style, color: selectedElement.color }
       : effect.style;
 
     const baseUpdates = effectId === 'none'
@@ -200,23 +195,16 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           content: selectedElement?.content ?? ''
         };
 
-    // Check if this is a modular element (Module type)
-    const isModularElement = selectedElement && selectedElement.type === 'BlocTexte' && selectedElement.id;
-    
-    if (isModularElement && onModuleUpdate) {
-      // Update module directly
-      onModuleUpdate(selectedElement.id, {
-        customCSS: baseUpdates.customCSS,
-        advancedStyle: baseUpdates.advancedStyle,
-        advancedStyleParams: baseUpdates.advancedStyleParams,
-        textEffect: baseUpdates.textEffect
-      });
-    } else if (onElementUpdate) {
-      onElementUpdate(baseUpdates);
-    } else {
-      const updateEvent = new CustomEvent('applyTextEffect', { detail: baseUpdates });
-      window.dispatchEvent(updateEvent);
-    }
+    // Centralize routing through DesignCanvas listener so modules/elements are handled correctly
+    console.log('🎨 Dispatching applyTextEffect from BackgroundPanel', {
+      effectId,
+      selectedElementSummary: {
+        id: (selectedElement as any)?.id || selectedElement,
+        type: (selectedElement as any)?.type,
+      }
+    });
+    const updateEvent = new CustomEvent('applyTextEffect', { detail: baseUpdates });
+    window.dispatchEvent(updateEvent);
   };
 
   const extractColorsFromImage = async (imageUrl: string) => {
