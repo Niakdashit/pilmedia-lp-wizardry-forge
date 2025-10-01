@@ -1,21 +1,25 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Save, X } from 'lucide-react';
+import { User, LogOut, Save, X } from 'lucide-react';
+
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
+import GradientBand from '../shared/GradientBand';
+import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
+import { createEmptyModularPage } from '@/types/modularEditor';
 
 import ZoomSlider from './components/ZoomSlider';
-import DesignCanvas from './DesignCanvas';
+const DesignCanvas = lazy(() => import('./DesignCanvas'));
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
-// Model Editor doesn't need wheel config sync
+// Quiz Editor doesn't need wheel config sync
 // import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import EditorStateCleanup from '../EditorStateCleanup';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -25,14 +29,82 @@ import { quizTemplates } from '../../types/quizTemplates';
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
 
-interface ModelEditorLayoutProps {
+const LAUNCH_BUTTON_FALLBACK_GRADIENT = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
+const LAUNCH_BUTTON_DEFAULT_TEXT_COLOR = '#ffffff';
+const LAUNCH_BUTTON_DEFAULT_PADDING = '14px 28px';
+const LAUNCH_BUTTON_DEFAULT_SHADOW = '0 12px 30px rgba(132, 27, 96, 0.35)';
+
+const buildLaunchButtonStyles = (
+  buttonModule: BlocBouton | undefined,
+  quizStyleOverrides: Record<string, any>,
+  quizConfig: {
+    buttonBackgroundColor: string;
+    buttonTextColor: string;
+    buttonHoverBackgroundColor: string;
+    buttonActiveBackgroundColor: string;
+    borderRadius: number | string;
+  }
+): React.CSSProperties => {
+  const moduleStyles =
+    buttonModule && buttonModule.type === 'BlocBouton'
+      ? {
+          background: buttonModule.background,
+          color: buttonModule.textColor,
+          padding: buttonModule.padding,
+          borderRadius:
+            typeof buttonModule.borderRadius === 'number'
+              ? `${buttonModule.borderRadius}px`
+              : buttonModule.borderRadius,
+          boxShadow: buttonModule.boxShadow
+        }
+      : {};
+
+  const resolvedBorderRadius =
+    quizStyleOverrides.borderRadius ||
+    moduleStyles.borderRadius ||
+    (typeof quizConfig.borderRadius === 'number'
+      ? `${quizConfig.borderRadius}px`
+      : quizConfig.borderRadius) ||
+    '9999px';
+
+  return {
+    background:
+      moduleStyles.background ||
+      quizStyleOverrides.buttonBackgroundColor ||
+      quizConfig.buttonBackgroundColor ||
+      LAUNCH_BUTTON_FALLBACK_GRADIENT,
+    color:
+      moduleStyles.color ||
+      quizStyleOverrides.buttonTextColor ||
+      quizConfig.buttonTextColor ||
+      LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+    padding:
+      moduleStyles.padding ||
+      quizStyleOverrides.buttonPadding ||
+      LAUNCH_BUTTON_DEFAULT_PADDING,
+    borderRadius: resolvedBorderRadius,
+    boxShadow:
+      moduleStyles.boxShadow ||
+      quizStyleOverrides.buttonBoxShadow ||
+      LAUNCH_BUTTON_DEFAULT_SHADOW,
+    display: quizStyleOverrides.buttonDisplay || 'inline-flex',
+    alignItems: quizStyleOverrides.buttonAlignItems || 'center',
+    justifyContent: quizStyleOverrides.buttonJustifyContent || 'center',
+    minWidth: quizStyleOverrides.buttonMinWidth,
+    minHeight: quizStyleOverrides.buttonMinHeight,
+    width: quizStyleOverrides.buttonWidth,
+    height: quizStyleOverrides.buttonHeight,
+    textTransform: quizStyleOverrides.buttonTextTransform,
+    fontWeight: quizStyleOverrides.buttonFontWeight || 600
+  } as React.CSSProperties;
+};
+
+interface QuizEditorLayoutProps {
   mode?: 'template' | 'campaign';
   hiddenTabs?: string[];
-  // When true, show the form preview overlay (30% right) on canvas hover
-  showFormOverlay?: boolean;
 }
 
-const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs, showFormOverlay = false }) => {
+const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
@@ -42,9 +114,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
 
-  // Hook pour surveiller les changements du store en temps réel
-  const storeCampaign = useEditorStore((state) => state.campaign);
-  
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();
@@ -114,9 +183,42 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
-    { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+    mode === 'template'
+      ? { type: 'color', value: '#4ECDC4' }
+      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
+
+  useEffect(() => {
+    if (!canvasElements.length) return;
+    const hasMissingScreen = canvasElements.some((element) => !element?.screenId);
+    if (!hasMissingScreen) return;
+
+    setCanvasElements((prev) => {
+      let mutated = false;
+      const updated = prev.map((element) => {
+        if (element?.screenId) return element;
+
+        mutated = true;
+        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+        if (role.includes('exit-message')) {
+          return { ...element, screenId: 'screen3' as const };
+        }
+        if (
+          role.includes('form') ||
+          role.includes('contact') ||
+          role.includes('lead') ||
+          role.includes('info') ||
+          role.includes('screen2')
+        ) {
+          return { ...element, screenId: 'screen2' as const };
+        }
+        return { ...element, screenId: 'screen1' as const };
+      });
+
+      return mutated ? updated : prev;
+    });
+  }, [canvasElements]);
 
   // Sauvegarder le zoom à chaque changement pour persistance entre modes
   useEffect(() => {
@@ -157,17 +259,17 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   const canvasRef = useRef<HTMLDivElement>(null);
   
   // État pour gérer l'affichage des panneaux dans la sidebar
-  const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
+  const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
+  void showEffectsInSidebar; // Used in callbacks below
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
   const [designColorContext, setDesignColorContext] = useState<'fill' | 'border' | 'text'>('fill');
   // Inline QuizConfigPanel visibility (controlled at layout level)
   const [showQuizPanel, setShowQuizPanel] = useState(false);
-  const [showJackpotPanel, setShowJackpotPanel] = useState(false);
   const [campaignConfig, setCampaignConfig] = useState<any>({
     design: {
       quizConfig: {
@@ -215,7 +317,298 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
+  const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
+  
+  // Debug wrapper pour setSelectedElement
+  const debugSetSelectedElement = (element: any) => {
+    console.log('🎯 setSelectedElement called:', {
+      element: element?.id || element?.type || 'null',
+      elementType: element?.type,
+      hasElement: !!element,
+      timestamp: new Date().toISOString()
+    });
+    setSelectedElement(element);
+  };
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
+  
+  // État pour tracker la position de scroll (quel écran est visible)
+  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
+  // Modular editor JSON state
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  const selectedModule: Module | null = useMemo(() => {
+    if (!selectedModuleId) return null;
+    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+    return allModules.find((module) => module.id === selectedModuleId) || null;
+  }, [selectedModuleId, modularPage.screens]);
+  
+  // Détecter la position de scroll pour changer l'écran courant
+  useEffect(() => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return;
+
+    const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
+    if (anchors.length === 0) return;
+
+    const computeNearestScreen = () => {
+      const areaRect = canvasScrollArea.getBoundingClientRect();
+      const areaCenter = areaRect.top + areaRect.height / 2;
+
+      let closestId: 'screen1' | 'screen2' | 'screen3' = 'screen1';
+      let closestDistance = Infinity;
+
+      anchors.forEach((anchor) => {
+        const screenId = (anchor.dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3' | undefined) ?? 'screen1';
+        const rect = anchor.getBoundingClientRect();
+        const anchorCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(anchorCenter - areaCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestId = screenId;
+        }
+      });
+
+      setCurrentScreen((prev) => (prev === closestId ? prev : closestId));
+    };
+
+    // Calcule initial après montage
+    requestAnimationFrame(computeNearestScreen);
+
+    const handleScroll = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    const handleResize = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      canvasScrollArea.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Initialize modular page from campaignConfig if present
+  useEffect(() => {
+    const mp = (campaignConfig as any)?.design?.quizModules as ModularPage | undefined;
+    if (mp && mp.screens) {
+      setModularPage(mp);
+    }
+  }, [campaignConfig]);
+
+  // Helper to persist modularPage into campaignConfig (and mark modified)
+  const persistModular = useCallback((next: ModularPage) => {
+    setModularPage(next);
+    setCampaignConfig((prev: any) => {
+      const updated = {
+        ...(prev || {}),
+        design: {
+          ...(prev?.design || {}),
+          quizModules: { ...next, _updatedAt: Date.now() }
+        }
+      };
+      return updated;
+    });
+    try { setIsModified(true); } catch {}
+  }, [setIsModified]);
+
+  const scrollToScreen = useCallback((screen: ScreenId): boolean => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return false;
+    const anchor = canvasScrollArea.querySelector(`[data-screen-anchor="${screen}"]`) as HTMLElement | null;
+    if (!anchor) return false;
+
+    const anchorTop = anchor.offsetTop;
+    const centerOffset = Math.max(0, (canvasScrollArea.clientHeight - anchor.clientHeight) / 2);
+    const target = anchorTop - centerOffset;
+    const maxScroll = canvasScrollArea.scrollHeight - canvasScrollArea.clientHeight;
+    const clamped = Math.min(Math.max(target, 0), Math.max(maxScroll, 0));
+
+    canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
+    return true;
+  }, []);
+
+  // Modular handlers
+  const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
+    setModularPage((prev) => {
+      const prevScreenModules = prev.screens[screen] || [];
+      const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
+
+      let updatedModules: Module[];
+      if (isParticiperButton) {
+        // Participer est supposé unique et restera en fin de tableau
+        updatedModules = [...prevScreenModules, module];
+      } else {
+        const participateIndex = prevScreenModules.findIndex((m) => m.type === 'BlocBouton' && (m as BlocBouton).label?.trim().toLowerCase() === 'participer');
+        if (participateIndex >= 0) {
+          updatedModules = [
+            module,
+            ...prevScreenModules.slice(0, participateIndex),
+            prevScreenModules[participateIndex],
+            ...prevScreenModules.slice(participateIndex + 1)
+          ];
+        } else {
+          updatedModules = [module, ...prevScreenModules];
+        }
+      }
+
+      const next: ModularPage = {
+        screens: {
+          ...prev.screens,
+          [screen]: updatedModules
+        },
+        _updatedAt: Date.now()
+      };
+
+      persistModular(next);
+      return next;
+    });
+  }, [persistModular]);
+
+  const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as Module : m));
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const ensuredBlocBoutonRef = useRef(false);
+  const createDefaultBlocBouton = useCallback((): BlocBouton => ({
+    id: `BlocBouton-${Date.now()}`,
+    type: 'BlocBouton',
+    label: 'Participer',
+    href: '#',
+    align: 'center',
+    borderRadius: 9999,
+    background: LAUNCH_BUTTON_FALLBACK_GRADIENT,
+    textColor: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+    padding: LAUNCH_BUTTON_DEFAULT_PADDING,
+    boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
+  }), []);
+
+  useEffect(() => {
+    if (ensuredBlocBoutonRef.current) return;
+    const hasBlocBouton = Object.values(modularPage.screens).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasBlocBouton) {
+      const defaultModule = createDefaultBlocBouton();
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      const targetScreen = currentScreen || 'screen1';
+      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), defaultModule];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+    ensuredBlocBoutonRef.current = true;
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
+
+  useEffect(() => {
+    const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
+    if (!legacyButton) return;
+
+    const hasModule = Object.values(modularPage.screens).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasModule) {
+      const newModule: BlocBouton = {
+        ...createDefaultBlocBouton(),
+        label: legacyButton.content || legacyButton.text || 'Participer',
+        background: legacyButton.customCSS?.background || LAUNCH_BUTTON_FALLBACK_GRADIENT,
+        textColor: legacyButton.customCSS?.color || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+        padding: legacyButton.customCSS?.padding || LAUNCH_BUTTON_DEFAULT_PADDING,
+        boxShadow: legacyButton.customCSS?.boxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW,
+        borderRadius: (() => {
+          const cssRadius = legacyButton.customCSS?.borderRadius;
+          if (typeof cssRadius === 'number') return cssRadius;
+          if (typeof cssRadius === 'string') {
+            const parsed = parseFloat(cssRadius.replace('px', ''));
+            if (!Number.isNaN(parsed)) return parsed;
+          }
+          return 9999;
+        })()
+      };
+      const targetScreen = (legacyButton.screenId as ScreenId) || currentScreen || 'screen1';
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), newModule];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+    setCanvasElements((prev) => prev.filter((el) => el !== legacyButton));
+  }, [canvasElements, modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
+
+  const handleDeleteModule = useCallback((id: string) => {
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
+    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
+      const arr = [...(nextScreens[s] || [])];
+      const idx = arr.findIndex((m) => m.id === id);
+      if (idx >= 0) {
+        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapWith >= 0 && swapWith < arr.length) {
+          const tmp = arr[swapWith];
+          arr[swapWith] = arr[idx];
+          arr[idx] = tmp;
+          nextScreens[s] = arr;
+        }
+      }
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleDuplicateModule = useCallback((id: string) => {
+    type ModuleWithMeta = Module & { moduleId?: string; label?: string };
+
+    const nextScreens: Record<ScreenId, Module[]> = { ...modularPage.screens };
+    let moduleToDuplicate: ModuleWithMeta | null = null;
+    let foundScreenId: ScreenId | null = null;
+    let originalIndex = -1;
+
+    for (const screenId of Object.keys(nextScreens) as ScreenId[]) {
+      const modules = nextScreens[screenId] ?? [];
+      const index = modules.findIndex((m) => m.id === id);
+      if (index >= 0) {
+        moduleToDuplicate = modules[index] as ModuleWithMeta;
+        foundScreenId = screenId;
+        originalIndex = index;
+        break;
+      }
+    }
+
+    if (!moduleToDuplicate || !foundScreenId || originalIndex < 0) {
+      console.warn(`⚠️ Impossible de trouver le module à dupliquer (ID: ${id})`);
+      return;
+    }
+
+    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const duplicatedModule: ModuleWithMeta = {
+      ...moduleToDuplicate,
+      id: newId
+    };
+
+    if (typeof moduleToDuplicate.label === 'string' && moduleToDuplicate.label.trim().length > 0) {
+      duplicatedModule.label = `${moduleToDuplicate.label} (copie)`;
+    }
+
+    if (typeof moduleToDuplicate.moduleId === 'string' && moduleToDuplicate.moduleId.trim().length > 0) {
+      duplicatedModule.moduleId = newId;
+    }
+
+    const currentModules = nextScreens[foundScreenId] ?? [];
+    const updatedModules = [...currentModules];
+    updatedModules.splice(originalIndex + 1, 0, duplicatedModule);
+    nextScreens[foundScreenId] = updatedModules;
+
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+
+    console.log(`✅ Module dupliqué avec succès (${id} → ${duplicatedModule.id})`);
+  }, [modularPage.screens, persistModular]);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
@@ -240,19 +633,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [showFunnel, setShowFunnel] = useState(false);
-  useEffect(() => {
-    if (!showFunnel) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setShowFunnel(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showFunnel]);
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
   );
@@ -271,15 +651,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       localStorage.setItem('previewButtonSide', previewButtonSide);
     } catch {}
   }, [previewButtonSide]);
-
-  // Sur la page de form editor, activer immédiatement l'onglet "Jeu"
-  useEffect(() => {
-    if (showFormOverlay && sidebarRef.current) {
-      try {
-        sidebarRef.current.setActiveTab('game');
-      } catch {}
-    }
-  }, [showFormOverlay]);
 
   // Activer la saisie directe sur double-clic pour tous les curseurs (input[type="range"]) de l'éditeur
   useEffect(() => {
@@ -367,8 +738,13 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
   const handleAddElement = (element: any) => {
+    const resolvedScreenId = element?.screenId
+      || (currentScreen === 'screen2'
+        ? 'screen2'
+        : currentScreen === 'screen3' ? 'screen3' : 'screen1');
+    const enrichedElement = element?.screenId ? element : { ...element, screenId: resolvedScreenId };
     setCanvasElements(prev => {
-      const newArr = [...prev, element];
+      const newArr = [...prev, enrichedElement];
       setTimeout(() => {
         addToHistory({
           campaignConfig: { ...campaignConfig },
@@ -378,7 +754,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       }, 0);
       return newArr;
     });
-    setSelectedElement(element);
+    setSelectedElement(enrichedElement);
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
@@ -498,6 +874,36 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
   const handleElementUpdate = (updates: any) => {
+    console.log('🔄 handleElementUpdate called:', {
+      updates,
+      selectedElementId: selectedElement?.id,
+      selectedElementType: selectedElement?.type,
+      selectedElementRole: (selectedElement as any)?.role,
+      hasSelectedElement: !!selectedElement,
+      totalElements: canvasElements.length
+    });
+
+    const isModuleText = (selectedElement as any)?.role === 'module-text' && (selectedElement as any)?.moduleId;
+    if (isModuleText) {
+      const moduleId = (selectedElement as any).moduleId as string;
+      const patch: Partial<Module> & Record<string, any> = {};
+
+      if (updates.fontFamily) patch.bodyFontFamily = updates.fontFamily;
+      if (updates.color) patch.bodyColor = updates.color;
+      if (updates.fontSize) patch.bodyFontSize = updates.fontSize;
+      if (updates.fontWeight) patch.bodyBold = updates.fontWeight === 'bold';
+      if (updates.fontStyle) patch.bodyItalic = updates.fontStyle === 'italic';
+      if (updates.textDecoration) patch.bodyUnderline = updates.textDecoration?.includes('underline');
+      if (updates.textAlign) patch.align = updates.textAlign;
+
+      if (Object.keys(patch).length > 0) {
+        handleUpdateModule(moduleId, patch);
+      }
+
+      setSelectedElement((prev: any) => (prev ? { ...prev, ...updates } : prev));
+      return;
+    }
+
     if (selectedElement) {
       const deviceScopedKeys = ['x', 'y', 'width', 'height', 'fontSize', 'textAlign'];
       const isDeviceScoped = selectedDevice !== 'desktop';
@@ -513,7 +919,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         }
       }
 
-      const updatedElement = {
+      let updatedElement: any = {
         ...selectedElement,
         ...workingUpdates,
         ...(isDeviceScoped
@@ -537,8 +943,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             canvasBackground: { ...canvasBackground }
           }, 'element_update');
         }, 0);
+        console.log('🎯 Elements updated, new array:', newArr);
         return newArr;
       });
+      console.log('🎯 Setting selected element to:', updatedElement);
       setSelectedElement(updatedElement);
     }
   };
@@ -738,6 +1146,218 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     }
   }, [selectedElement, handleAddElement]);
   
+  const quizStyleOverrides = useMemo<Record<string, any>>(() => {
+    return (campaignConfig?.design?.quizConfig?.style || {}) as Record<string, any>;
+  }, [campaignConfig]);
+
+  const buttonModule = useMemo(() => {
+    return (Object.values(modularPage.screens).flat() as BlocBouton[]).find((module) => module.type === 'BlocBouton');
+  }, [modularPage.screens]);
+
+  const lastModuleSelectionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const role = (selectedElement as any)?.role;
+    const moduleId = (selectedElement as any)?.moduleId as string | undefined;
+    const isModularRole =
+      role === 'module-button' ||
+      role === 'module-image' ||
+      role === 'module-video' ||
+      role === 'module-social' ||
+      role === 'module-html';
+
+    if (!moduleId || !isModularRole) {
+      lastModuleSelectionRef.current = null;
+      setSelectedModuleId(null);
+      if (!isModularRole) {
+        setActiveSidebarTab(previousSidebarTab || 'elements');
+      }
+      return;
+    }
+
+    const isNewSelection = moduleId !== lastModuleSelectionRef.current;
+
+    if (isNewSelection) {
+      lastModuleSelectionRef.current = moduleId;
+      setSelectedModuleId(moduleId);
+      setPreviousSidebarTab(activeSidebarTab);
+      setActiveSidebarTab('elements');
+      return;
+    }
+
+    if (activeSidebarTab === 'elements' && selectedModuleId !== moduleId) {
+      setSelectedModuleId(moduleId);
+    }
+  }, [selectedElement, activeSidebarTab, previousSidebarTab, selectedModuleId]);
+
+  const exitMessageElement = useMemo(() => {
+    return canvasElements.find(
+      (el) => el.type === 'text' && typeof el?.role === 'string' && el.role.toLowerCase() === 'exit-message'
+    );
+  }, [canvasElements]);
+
+  const campaignQuizStyle = (campaignConfig?.design?.quizConfig?.style ?? {}) as Record<string, any>;
+
+  const launchButtonStyles = useMemo(() => {
+    const base = buildLaunchButtonStyles(buttonModule, quizStyleOverrides, {
+      buttonBackgroundColor:
+        typeof quizStyleOverrides.buttonBackgroundColor === 'string' && quizStyleOverrides.buttonBackgroundColor.length > 0
+          ? quizStyleOverrides.buttonBackgroundColor
+          : ((campaignQuizStyle as any)?.buttonBackgroundColor as string | undefined) || LAUNCH_BUTTON_FALLBACK_GRADIENT,
+      buttonTextColor:
+        typeof quizStyleOverrides.buttonTextColor === 'string' && quizStyleOverrides.buttonTextColor.length > 0
+          ? quizStyleOverrides.buttonTextColor
+          : (quizConfig.buttonTextColor || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR),
+      buttonHoverBackgroundColor: quizConfig.buttonHoverBackgroundColor,
+      buttonActiveBackgroundColor: quizConfig.buttonActiveBackgroundColor,
+      borderRadius: quizConfig.borderRadius
+    });
+    if (exitMessageElement) {
+      return {
+        ...base,
+        display: 'none'
+      } satisfies React.CSSProperties;
+    }
+    return base;
+  }, [buttonModule, quizStyleOverrides, campaignQuizStyle, quizConfig.buttonHoverBackgroundColor, quizConfig.buttonActiveBackgroundColor, quizConfig.borderRadius, exitMessageElement]);
+
+  const launchButtonText = useMemo(() => {
+    return buttonModule?.label || (quizStyleOverrides.buttonLabel as string | undefined) || 'Participer';
+  }, [buttonModule, quizStyleOverrides.buttonLabel]);
+
+  const emitQuizStyleUpdate = useCallback((detail: Record<string, any>) => {
+    if (!detail || Object.keys(detail).length === 0) return;
+    try {
+      const target = document.getElementById('quiz-preview-container') || window;
+      const event = new CustomEvent('quizStyleUpdate', { detail });
+      const dispatched = target.dispatchEvent(event);
+      if (!dispatched) {
+        const fallback = new CustomEvent('quizStyleUpdateFallback', { detail });
+        target.dispatchEvent(fallback);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'émission de quizStyleUpdate pour le bouton:', error);
+    }
+  }, []);
+
+  const updateCampaignQuizStyle = useCallback((changes: Record<string, any>) => {
+    setCampaignConfig((prev: any) => {
+      const next = { ...(prev || {}) };
+      const design = { ...(next.design || {}) };
+      const quizDesign = { ...(design.quizConfig || {}) };
+      const style = { ...(quizDesign.style || {}) };
+
+      Object.entries(changes).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') {
+          delete style[key];
+        } else {
+          (style as any)[key] = value;
+        }
+      });
+
+      next.design = {
+        ...design,
+        quizConfig: {
+          ...quizDesign,
+          style
+        }
+      };
+
+      return next;
+    });
+  }, [setCampaignConfig]);
+
+  const handleLaunchButtonStyleChange = useCallback((styles: Partial<React.CSSProperties>) => {
+    if (!styles || Object.keys(styles).length === 0) return;
+    const targetModule = buttonModule;
+    if (!targetModule) return;
+
+    const patch: Partial<BlocBouton> = {};
+    const quizStyleDetail: Record<string, any> = {};
+
+    if (styles.background !== undefined) {
+      const backgroundValue: string =
+        typeof styles.background === 'string' && styles.background.length > 0
+          ? styles.background
+          : LAUNCH_BUTTON_FALLBACK_GRADIENT;
+      patch.background = backgroundValue;
+      setQuizConfig(prev => ({ ...prev, buttonBackgroundColor: backgroundValue }));
+      updateCampaignQuizStyle({ buttonBackgroundColor: backgroundValue });
+      quizStyleDetail.buttonBackgroundColor = backgroundValue;
+    }
+
+    if (styles.color !== undefined) {
+      const textColorValue: string =
+        typeof styles.color === 'string' && styles.color.length > 0
+          ? styles.color
+          : LAUNCH_BUTTON_DEFAULT_TEXT_COLOR;
+      patch.textColor = textColorValue;
+      setQuizConfig(prev => ({ ...prev, buttonTextColor: textColorValue }));
+      updateCampaignQuizStyle({ buttonTextColor: textColorValue });
+      quizStyleDetail.buttonTextColor = textColorValue;
+    }
+
+    if (styles.borderRadius !== undefined) {
+      const radiusValue = typeof styles.borderRadius === 'number'
+        ? styles.borderRadius
+        : parseFloat(String(styles.borderRadius).replace('px', ''));
+      const normalizedRadius = Number.isNaN(radiusValue) ? 9999 : radiusValue;
+      patch.borderRadius = normalizedRadius;
+      setQuizConfig(prev => ({ ...prev, borderRadius: normalizedRadius }));
+      updateCampaignQuizStyle({ borderRadius: `${normalizedRadius}px` });
+      quizStyleDetail.borderRadius = `${normalizedRadius}px`;
+    }
+
+    if (styles.padding !== undefined) {
+      const paddingValue = typeof styles.padding === 'number' ? `${styles.padding}px` : styles.padding || LAUNCH_BUTTON_DEFAULT_PADDING;
+      patch.padding = paddingValue;
+      updateCampaignQuizStyle({ buttonPadding: paddingValue });
+      quizStyleDetail.buttonPadding = paddingValue;
+    }
+
+    if (styles.boxShadow !== undefined) {
+      const shadowValue = styles.boxShadow || LAUNCH_BUTTON_DEFAULT_SHADOW;
+      patch.boxShadow = shadowValue;
+      updateCampaignQuizStyle({ buttonBoxShadow: shadowValue });
+      quizStyleDetail.buttonBoxShadow = shadowValue;
+    }
+
+    if (styles.textTransform !== undefined) {
+      const transformValue = styles.textTransform || undefined;
+      updateCampaignQuizStyle({ buttonTextTransform: transformValue });
+      quizStyleDetail.buttonTextTransform = transformValue;
+    }
+
+    if (styles.fontWeight !== undefined) {
+      const fontWeightValue = styles.fontWeight || undefined;
+      updateCampaignQuizStyle({ buttonFontWeight: fontWeightValue });
+      quizStyleDetail.buttonFontWeight = fontWeightValue;
+    }
+
+    handleUpdateModule(targetModule.id, patch);
+    emitQuizStyleUpdate(quizStyleDetail);
+  }, [buttonModule, handleUpdateModule, updateCampaignQuizStyle, emitQuizStyleUpdate, setQuizConfig]);
+
+  const handleLaunchButtonTextChange = useCallback((text: string) => {
+    const targetModule = buttonModule;
+    if (!targetModule) return;
+    handleUpdateModule(targetModule.id, { label: text });
+    updateCampaignQuizStyle({ buttonLabel: text });
+  }, [buttonModule, handleUpdateModule, updateCampaignQuizStyle]);
+
+  const handleLaunchButtonReset = useCallback(() => {
+    handleLaunchButtonStyleChange({
+      background: LAUNCH_BUTTON_FALLBACK_GRADIENT,
+      color: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
+      padding: LAUNCH_BUTTON_DEFAULT_PADDING,
+      borderRadius: '9999px',
+      boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW,
+      textTransform: undefined,
+      fontWeight: 600
+    });
+    handleLaunchButtonTextChange('Participer');
+  }, [handleLaunchButtonStyleChange, handleLaunchButtonTextChange]);
+  
   // Synchronisation avec le store
   useEffect(() => {
     setPreviewDevice(selectedDevice);
@@ -747,18 +1367,12 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   const campaignData = useMemo(() => {
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
-    const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
-    
-    // Synchronisation forcée avec le store en temps réel pour le form-editor
-    const currentCampaignState = storeCampaign;
-    
+    const fallbackButtonText = launchButtonText;
+
     const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
-
-    // Fallback secondaire: template jackpot persisté localement
-    const lsJackpotTemplate = (typeof window !== 'undefined') ? localStorage.getItem('jackpotTemplate') : null;
 
     // Primary color used by quiz buttons and participation form
     const toRgb = (color: string): { r: number; g: number; b: number } | null => {
@@ -813,9 +1427,70 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       device: selectedDevice
     });
 
+    const buttonCustomStyles = launchButtonStyles;
+
+    const screenSources = [
+      (campaignState as any)?.screens,
+      (campaignConfig as any)?.screens,
+      (campaignConfig as any)?.design?.screens
+    ].find((screens): screens is any[] => Array.isArray(screens)) || [];
+
+    const fallbackExitContent = (exitMessageElement as any)?.content?.trim() || '';
+
+    const defaultScreens = [
+      {
+        title: 'Testez vos connaissances !',
+        description: 'Répondez aux questions et découvrez votre score',
+        buttonText: fallbackButtonText
+      },
+      {
+        title: 'Vos informations',
+        description: '',
+        buttonText: 'Continuer'
+      },
+      {
+        title: '',
+        description: '',
+        buttonText: 'Valider'
+      },
+      {
+        confirmationTitle: fallbackExitContent,
+        confirmationMessage: fallbackExitContent,
+        description: fallbackExitContent,
+        replayButtonText: 'Rejouer'
+      }
+    ];
+
+    const normalizedScreens = defaultScreens.map((defaults, index) => {
+      const existing = screenSources[index] || {};
+      const merged: Record<string, any> = { ...defaults, ...existing };
+
+      if (index === 0) {
+        merged.title = titleElement?.content || merged.title;
+        merged.description = descriptionElement?.content || merged.description;
+        merged.buttonText = fallbackButtonText;
+      }
+
+      if (index === 3) {
+        const exitContent = (exitMessageElement as any)?.content?.trim();
+        if (exitContent) {
+          merged.confirmationMessage = exitContent;
+          merged.description = exitContent;
+        }
+        if (!merged.confirmationTitle) {
+          merged.confirmationTitle = defaults.confirmationTitle;
+        }
+        if (!merged.replayButtonText) {
+          merged.replayButtonText = defaults.replayButtonText;
+        }
+      }
+
+      return merged;
+    });
+
     return {
-      id: 'jackpot-design-preview',
-      type: 'jackpot',
+      id: 'quiz-design-preview',
+      type: 'quiz',
       design: {
         background: canvasBackground,
         customTexts: customTexts,
@@ -826,98 +1501,62 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
-        // Styles du formulaire depuis campaignState
-        ...(campaignState?.design || {}),
-        jackpotConfig: {
-          template: (() => {
-            // Priorité 1: campaignState (état local)
-            const stateTemplate = (campaignState?.gameConfig?.jackpot as any)?.template;
-            if (stateTemplate) return stateTemplate;
-            
-            // Priorité 2: store global (préservation entre modes)
-            const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
-            if (storeTemplate) return storeTemplate;
-
-            // Priorité 2b: localStorage (si disponible)
-            if (lsJackpotTemplate) return lsJackpotTemplate;
-            
-            // Priorité 3: fallback par défaut
-            return 'jackpot-frame';
-          })(),
-          symbols: (campaignState?.gameConfig?.jackpot as any)?.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
+        quizConfig: {
+          questionCount: campaignConfig?.design?.quizConfig?.questionCount || quizConfig.questionCount || 5,
+          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
+          templateId: quizConfig.templateId,
           style: {
-            borderColor: (campaignState?.gameConfig?.jackpot as any)?.style?.borderColor || primaryColor || '#ffd700',
-            backgroundColor: (campaignState?.gameConfig?.jackpot as any)?.style?.backgroundColor || '#ffffff',
-            textColor: (campaignState?.gameConfig?.jackpot as any)?.style?.textColor || '#333333'
-          },
-          button: {
-            text: (campaignState?.gameConfig?.jackpot as any)?.button?.text || 'SPIN',
-            colors: {
-              background: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.background || primaryColor || '#ffd700',
-              border: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.border || '#b8860b',
-              text: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.text || '#8b4513'
-            }
-          },
-          customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
-          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || ''
+            ...campaignConfig?.design?.quizConfig?.style,
+            buttonBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonBackgroundColor || quizConfig.buttonBackgroundColor,
+            buttonTextColor: campaignConfig?.design?.quizConfig?.style?.buttonTextColor || quizConfig.buttonTextColor,
+            buttonHoverBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonHoverBackgroundColor || quizConfig.buttonHoverBackgroundColor,
+            buttonActiveBackgroundColor: campaignConfig?.design?.quizConfig?.style?.buttonActiveBackgroundColor || quizConfig.buttonActiveBackgroundColor,
+            borderRadius: campaignConfig?.design?.quizConfig?.style?.borderRadius || `${quizConfig.borderRadius}px` || '8px',
+            // Styles pour le texte
+            textColor: campaignConfig?.design?.quizConfig?.style?.textColor || '#000000',
+            questionTextWrap: 'break-word',
+            answerTextWrap: 'break-word',
+            // Zoom/largeur - respecter les valeurs ajustées par le panel
+            width: campaignConfig?.design?.quizConfig?.style?.width || (quizConfig.width || initialTemplateWidths.desktop),
+            mobileWidth: campaignConfig?.design?.quizConfig?.style?.mobileWidth || (quizConfig.mobileWidth || initialTemplateWidths.mobile),
+            // Opacité de fond si définie
+            backgroundOpacity: campaignConfig?.design?.quizConfig?.style?.backgroundOpacity ?? 100,
+            // Mise en page responsive
+            questionPadding: '12px',
+            answerPadding: '12px 16px',
+            answerMargin: '8px 0',
+            answerMinHeight: 'auto'
+          }
         }
       },
       gameConfig: {
-        jackpot: {
-          template: (() => {
-            // Priorité 1: campaignState (état local)
-            const stateTemplate = (campaignState?.gameConfig?.jackpot as any)?.template;
-            if (stateTemplate) return stateTemplate;
-            
-            // Priorité 2: store global (préservation entre modes)
-            const storeTemplate = (useEditorStore.getState()?.campaign?.gameConfig?.jackpot as any)?.template;
-            if (storeTemplate) return storeTemplate;
-
-            // Priorité 2b: localStorage (si disponible)
-            if (lsJackpotTemplate) return lsJackpotTemplate;
-            
-            // Priorité 3: fallback par défaut
-            return 'jackpot-frame';
-          })(),
-          symbols: (campaignState?.gameConfig?.jackpot as any)?.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'],
-          style: {
-            borderColor: (campaignState?.gameConfig?.jackpot as any)?.style?.borderColor || primaryColor || '#ffd700',
-            backgroundColor: (campaignState?.gameConfig?.jackpot as any)?.style?.backgroundColor || '#ffffff',
-            textColor: (campaignState?.gameConfig?.jackpot as any)?.style?.textColor || '#333333'
-          },
-          button: {
-            text: (campaignState?.gameConfig?.jackpot as any)?.button?.text || 'SPIN',
-            colors: {
-              background: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.background || primaryColor || '#ffd700',
-              border: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.border || '#b8860b',
-              text: (campaignState?.gameConfig?.jackpot as any)?.button?.colors?.text || '#8b4513'
-            }
-          },
-          customFrame: (campaignState?.gameConfig?.jackpot as any)?.customFrame || {},
-          customTemplateUrl: (campaignState?.gameConfig?.jackpot as any)?.customTemplateUrl || '',
+        quiz: {
+          questions: configuredQuestions,
+          timeLimit: campaignConfig?.design?.quizConfig?.timeLimit || quizConfig.timeLimit || 30,
+          templateId: quizConfig.templateId,
+          buttonLabel: fallbackButtonText,
+          buttonStyles: buttonCustomStyles
         }
       },
       buttonConfig: {
-        text: buttonElement?.content || 'SPIN',
+        text: fallbackButtonText,
         color: primaryColor,
-        textColor: buttonElement?.style?.color || '#ffffff',
-        borderRadius: campaignConfig.borderRadius || '8px'
+        textColor:
+          buttonCustomStyles?.color ||
+          quizStyleOverrides.buttonTextColor ||
+          quizConfig.buttonTextColor ||
+          '#ffffff',
+        borderRadius:
+          buttonCustomStyles?.borderRadius as any ||
+          quizStyleOverrides.borderRadius ||
+          (typeof quizConfig.borderRadius === 'number' ? `${quizConfig.borderRadius}px` : quizConfig.borderRadius) ||
+          '8px',
+        styles: buttonCustomStyles
       },
-      screens: [
-        {
-          title: titleElement?.content || (currentCampaignState as any)?.screens?.[1]?.title || 'Tentez votre chance !',
-          description: descriptionElement?.content || (currentCampaignState as any)?.screens?.[1]?.description || 'Faites tourner les rouleaux et décrochez le jackpot',
-          buttonText: buttonElement?.content || (currentCampaignState as any)?.screens?.[1]?.buttonText || 'SPIN'
-        },
-        {
-          title: (currentCampaignState as any)?.screens?.[1]?.title || titleElement?.content || 'Vos informations',
-          description: (currentCampaignState as any)?.screens?.[1]?.description || descriptionElement?.content || 'Remplissez le formulaire pour participer',
-          buttonText: (currentCampaignState as any)?.buttonConfig?.text || buttonElement?.content || 'Participer'
-        }
-      ],
-      // Champs de contact dynamiques avec synchronisation en temps réel
-      formFields: currentCampaignState?.formFields || 
-        ((campaignState as any)?.formFields !== undefined)
+      screens: normalizedScreens,
+      resultScreen: normalizedScreens[3],
+      // Champs de contact dynamiques depuis le store (fallback uniquement si indéfini)
+      formFields: ((campaignState as any)?.formFields !== undefined)
         ? ((campaignState as any)?.formFields as any)
         : [
             { id: 'prenom', label: 'Prénom', type: 'text', required: true },
@@ -929,11 +1568,20 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         elements: canvasElements,
         background: canvasBackground,
         device: selectedDevice
-      },
-      // Debug: Ajouter les éléments directement pour le preview
-      elements: canvasElements
+      }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, storeCampaign]);
+  }, [
+    canvasElements,
+    canvasBackground,
+    campaignConfig,
+    extractedColors,
+    selectedDevice,
+    wheelModalConfig,
+    campaignState,
+    launchButtonStyles,
+    quizStyleOverrides,
+    quizConfig
+  ]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -943,7 +1591,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     const transformedCampaign = {
       ...campaignData,
       name: 'Ma Campagne',
-      type: ((showFormOverlay ? 'form' : campaignData.type) || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
+      type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
       design: {
         ...campaignData.design,
         background: typeof campaignData.design?.background === 'object'
@@ -964,7 +1612,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     if (signature !== lastTransformedSigRef.current) {
       if (process.env.NODE_ENV !== 'production') {
         console.debug('[DesignEditorLayout] setCampaign: content changed, merging into store');
-        console.debug('🎰 [DesignEditorLayout] Jackpot template in transformedCampaign:', (transformedCampaign as any)?.gameConfig?.jackpot?.template);
       }
       // Preserve existing wheel segments (including prizeId) to avoid overwriting
       // them with generated/fallback segments during preview sync.
@@ -989,33 +1636,12 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           } catch {}
         }
 
-        const result = {
+        return {
           ...prev,
           ...transformedCampaign,
           gameConfig: {
             ...prev.gameConfig,
             ...(transformedCampaign as any).gameConfig,
-            jackpot: (() => {
-              const prevJackpot = (prev.gameConfig?.jackpot as any) || {};
-              const nextJackpot = (((transformedCampaign as any)?.gameConfig?.jackpot) as any) || {};
-              const prevTemplate = prevJackpot?.template;
-              const nextTemplate = nextJackpot?.template;
-              
-              // Priorité absolue: localStorage pour éviter les resets
-              let effectiveTemplate = prevTemplate ?? nextTemplate;
-              try {
-                const lsTemplate = localStorage.getItem('jackpotTemplate');
-                if (lsTemplate) effectiveTemplate = lsTemplate;
-              } catch {}
-              
-              effectiveTemplate = effectiveTemplate ?? 'jackpot-frame';
-              
-              return {
-                ...prevJackpot,
-                ...nextJackpot,
-                template: effectiveTemplate
-              };
-            })(),
             wheel: {
               ...prev.gameConfig?.wheel,
               ...(transformedCampaign as any)?.gameConfig?.wheel,
@@ -1033,12 +1659,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             }
           }
         } as any;
-        
-        if (process.env.NODE_ENV !== 'production') {
-          console.debug('🎰 [DesignEditorLayout] Final merged jackpot template:', result?.gameConfig?.jackpot?.template);
-        }
-        
-        return result;
       });
       lastTransformedSigRef.current = signature;
     } else {
@@ -1173,9 +1793,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
       };
       const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
+      const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
 
       const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #841b60
-      const buttonText = luminance(primaryRgb) > 0.55 ? '#111111' : '#ffffff';
+      const buttonText = getTextOn(primaryRgb);
       const hoverHex = toHex(darken(primaryRgb, 0.12));
       const activeHex = toHex(darken(primaryRgb, 0.24));
 
@@ -1385,16 +2006,28 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       }
     },
     onAlignTextLeft: () => {
+      if (selectedElement?.role === 'module-text' && (selectedElement as any)?.moduleId) {
+        handleUpdateModule((selectedElement as any).moduleId, { align: 'left' } as any);
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'left' });
       }
     },
     onAlignTextCenter: () => {
+      if (selectedElement?.role === 'module-text' && (selectedElement as any)?.moduleId) {
+        handleUpdateModule((selectedElement as any).moduleId, { align: 'center' } as any);
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'center' });
       }
     },
     onAlignTextRight: () => {
+      if (selectedElement?.role === 'module-text' && (selectedElement as any)?.moduleId) {
+        handleUpdateModule((selectedElement as any).moduleId, { align: 'right' } as any);
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'right' });
       }
@@ -1413,26 +2046,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     }
   });
 
-  useEffect(() => {
-    const handleOpenQuizConfig = () => {
-      console.log('📋 Événement openQuizConfig reçu - Ouverture du panneau Quiz');
-      setShowQuizPanel(true);
-    };
-
-    const handleOpenJackpotConfig = () => {
-      console.log('🎰 Événement openJackpotConfig reçu - Ouverture du panneau Jackpot');
-      setShowJackpotPanel(true);
-    };
-
-    window.addEventListener('openQuizConfig', handleOpenQuizConfig);
-    window.addEventListener('openJackpotConfig', handleOpenJackpotConfig);
-    return () => {
-      window.removeEventListener('openQuizConfig', handleOpenQuizConfig);
-      window.removeEventListener('openJackpotConfig', handleOpenJackpotConfig);
-    };
-  }, []);
-
-
   return (
     <div
       className="min-h-screen w-full"
@@ -1445,10 +2058,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]">
-      {/* Nettoyage des états d'éditeur */}
-      <EditorStateCleanup />
-      
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
+
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
@@ -1477,94 +2088,35 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative rounded-br-[28px]">
-          {/* Overlay Preview: full live funnel (matches other editors) */}
-          {showFunnel && (() => {
-            const previewCampaign = {
-              ...campaignData, // Utiliser campaignData qui est synchronisé avec le store
-              type: (showFormOverlay ? 'form' : campaignData?.type) || 'wheel',
-              design: {
-                ...campaignData?.design,
-                background: canvasBackground
-              },
-              canvasConfig: {
-                elements: canvasElements,
-                background: canvasBackground
-              }
-            } as any;
-
-            // Pour le form-editor, afficher le formulaire en plein écran
-            if (showFormOverlay) {
-              const node = (
-                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-                  {/* Floating Edit Mode Button */}
-                  <button
-                    onClick={() => setShowFunnel(false)}
-                    className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
-                    style={{ top: 'calc(var(--editor-preview-toolbar-offset, 72px) + 16px)' }}
-                    aria-label="Retourner en mode édition"
-                  >
-                    Mode édition
-                </button>
-                <div className="relative w-full h-full">
-                  {/* Afficher le formulaire en plein écran comme les autres éditeurs */}
-                  <FunnelUnlockedGame 
-                    campaign={previewCampaign}
-                    previewMode={selectedDevice}
-                    wheelModalConfig={quizModalConfig}
-                  />
-                </div>
-                {/* Fallback exit control (bottom-left) */}
-                <button
-                  onClick={() => setShowFunnel(false)}
-                  className="absolute bottom-4 left-4 z-[100000] px-3 py-1.5 text-xs sm:text-sm bg-black/70 text-white rounded-md shadow-md"
-                  aria-label="Quitter l'aperçu (Échap)"
-                  title="Quitter l'aperçu (Échap)"
-                >
-                  Quitter l'aperçu (Échap)
-                </button>
-              </div>
-              );
-              return node;
-            }
-
-            // Pour les autres types de jeux, utiliser FunnelUnlockedGame
-            const node = (
-              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-                {/* Floating Edit Mode Button */}
-                <button
-                  onClick={() => setShowFunnel(false)}
-                  className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
-                  style={{ top: 'calc(var(--editor-preview-toolbar-offset, 72px) + 16px)' }}
-                  aria-label="Retourner en mode édition"
-                >
-                  Mode édition
-                </button>
-                <div className="relative w-full h-full">
-                  <FunnelUnlockedGame 
-                    campaign={previewCampaign}
-                    previewMode={selectedDevice}
-                    wheelModalConfig={quizModalConfig}
-                  />
-                </div>
-                {/* Fallback exit control (bottom-left) */}
-                <button
-                  onClick={() => setShowFunnel(false)}
-                  className="absolute bottom-4 left-4 z-[100000] px-3 py-1.5 text-xs sm:text-sm bg-black/70 text-white rounded-md shadow-md"
-                  aria-label="Quitter l'aperçu (Échap)"
-                  title="Quitter l'aperçu (Échap)"
-                >
-                  Quitter l'aperçu (Échap)
-                </button>
-              </div>
-            );
-            return node as any;
-          })()}
-          {/* Design Editor Mode */}
-          {!showFunnel && (
-            <>
+      <div className="flex-1 flex overflow-hidden relative">
+        {showFunnel ? (
+          /* Funnel Preview Mode */
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+            {/* Floating Edit Mode Button */}
+            <button
+              onClick={() => setShowFunnel(false)}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+            >
+              Mode édition
+            </button>
+            {campaignData?.type === 'quiz' ? (
+              <FunnelQuizParticipate
+                campaign={campaignData}
+                previewMode={selectedDevice}
+              />
+            ) : (
+              <FunnelUnlockedGame
+                campaign={campaignData}
+                previewMode={selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
+            )}
+          </div>
+        ) : (
+          /* Design Editor Mode */
+          <>
             {/* Hybrid Sidebar - Design & Technical (always vertical, with drawer from bottom) */}
-            <HybridSidebar
+              <HybridSidebar
                 ref={sidebarRef}
                 onAddElement={handleAddElement}
                 onBackgroundChange={handleBackgroundChange}
@@ -1577,27 +2129,40 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
                 onElementUpdate={handleElementUpdate}
-                showEffectsPanel={showEffectsInSidebar}
-                onEffectsPanelChange={setShowEffectsInSidebar}
+                // Modular editor wiring
+                currentScreen={currentScreen}
+                onAddModule={handleAddModule}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
                 showQuizPanel={showQuizPanel}
                 onQuizPanelChange={setShowQuizPanel}
-                showJackpotPanel={showJackpotPanel}
-                onJackpotPanelChange={setShowJackpotPanel}
                 showDesignPanel={showDesignInSidebar}
-                onDesignPanelChange={(isOpen) => {
-                  if (!isOpen) {
+                onDesignPanelChange={setShowDesignInSidebar}
+                activeTab={activeSidebarTab}
+                onActiveTabChange={(tabId) => {
+                  const nextTab = tabId || 'elements';
+                  setActiveSidebarTab(nextTab);
+                  setPreviousSidebarTab(nextTab);
+                  if (nextTab !== 'background') {
                     setShowDesignInSidebar(false);
                   }
                 }}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
-                onSelectedElementsChange={setSelectedElements}
+                onSelectedElementsChange={(elements) => setSelectedElements(elements)}
                 onAddToHistory={addToHistory}
-                // Quiz sync props
+                launchButtonStyles={launchButtonStyles}
+                launchButtonText={launchButtonText}
+                onLaunchButtonStyleChange={handleLaunchButtonStyleChange}
+                onLaunchButtonTextChange={handleLaunchButtonTextChange}
+                onLaunchButtonReset={handleLaunchButtonReset}
+                selectedModuleId={selectedModuleId}
+                selectedModule={selectedModule}
+                onModuleUpdate={handleUpdateModule}
+                onSelectedModuleChange={setSelectedModuleId}
+                // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}
                 quizDifficulty={quizConfig.difficulty}
@@ -1616,32 +2181,16 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
                   setQuizConfig(prev => ({
                     ...prev,
-                    templateId,
-                    width: desktop,
-                    mobileWidth: mobile
-                  }));
-
-                  setCampaignConfig((current: any) => ({
-                    ...current,
-                    design: {
-                      ...current.design,
-                      quizConfig: {
-                        ...current.design.quizConfig,
-                        templateId,
-                        style: {
-                          ...(current.design.quizConfig?.style || {}),
-                          width: desktop,
-                          mobileWidth: mobile
-                        }
-                      }
-                    }
+                    templateId
                   }));
 
                   try {
-                    const event = new CustomEvent('quizStyleUpdate', { detail: { width: desktop, mobileWidth: mobile } });
+                    const event = new CustomEvent('quizStyleUpdate', {
+                      detail: { width: desktop, mobileWidth: mobile }
+                    });
                     (document.getElementById('quiz-preview-container') || window).dispatchEvent(event);
                   } catch (error) {
-                    console.error('❌ Erreur lors de la diffusion de quizStyleUpdate après changement de template (ModelEditor):', error);
+                    console.error('❌ Erreur lors de la diffusion de quizStyleUpdate après changement de template:', error);
                   }
                 }}
                 // Gestion de la largeur du quiz
@@ -1715,7 +2264,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 }}
                 // Gestion de la largeur mobile du quiz
                 quizMobileWidth={typeof quizConfig.mobileWidth === 'string' ? quizConfig.mobileWidth : initialTemplateWidths.mobile}
-                onQuizMobileWidthChange={(width) => {
+                onQuizMobileWidthChange={(width: string) => {
                   // S'assurer que width est une chaîne avec 'px' à la fin
                   const normalizedWidth = width.endsWith('px') ? width : `${width}px`;
                   console.log('🔄 Mise à jour de la largeur mobile du quiz:', normalizedWidth);
@@ -1874,44 +2423,264 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 colorEditingContext={designColorContext}
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
-            {/* Main Canvas Area */}
-            <DesignCanvas
-              ref={canvasRef}
-              selectedDevice={selectedDevice}
-              elements={canvasElements}
-              onElementsChange={setCanvasElements}
-              background={canvasBackground}
-              campaign={campaignData}
-              onCampaignChange={handleCampaignConfigChange}
-              zoom={canvasZoom}
-              onZoomChange={setCanvasZoom}
-              selectedElement={selectedElement}
-              onSelectedElementChange={setSelectedElement}
-              selectedElements={selectedElements}
-              onSelectedElementsChange={setSelectedElements}
-              onElementUpdate={handleElementUpdate}
-              // Quiz sync props
-              extractedColors={extractedColors}
-              quizModalConfig={quizModalConfig}
-              containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-              // Show the form overlay only if requested by the page
-              showFormOverlay={showFormOverlay}
-              // Sidebar panel triggers
-onShowEffectsPanel={() => {
+            {/* Canvas Scrollable Area */}
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
+              <div className="min-h-full flex flex-col">
+                {/* Premier Canvas */}
+                <div data-screen-anchor="screen1" className="relative">
+                  <DesignCanvas
+                    screenId="screen1"
+                    ref={canvasRef}
+                    selectedDevice={selectedDevice}
+                    elements={canvasElements}
+                    onElementsChange={setCanvasElements}
+                    background={canvasBackground}
+                    campaign={campaignData}
+                    onCampaignChange={handleCampaignConfigChange}
+                    zoom={canvasZoom}
+                    onZoomChange={setCanvasZoom}
+                    selectedElement={selectedElement}
+                    onSelectedElementChange={debugSetSelectedElement}
+                    selectedElements={selectedElements}
+                    onSelectedElementsChange={setSelectedElements}
+                    onElementUpdate={handleElementUpdate}
+                    // Quiz sync props
+                    extractedColors={extractedColors}
+                    quizModalConfig={quizModalConfig}
+                    containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                    hideInlineQuizPreview
+                    elementFilter={(element: any) => {
+                      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                      return !role.includes('exit-message');
+                    }}
+                    // Sidebar panel triggers
+                    onShowAnimationsPanel={() => {
+                      if (!isWindowMobile) {
+                        setShowAnimationsInSidebar(true);
+                        setShowPositionInSidebar(false);
+                      }
+                    }}
+                    onShowPositionPanel={() => {
+                      if (!isWindowMobile) {
+                        setShowPositionInSidebar(true);
+                        setShowAnimationsInSidebar(false);
+                        setShowDesignInSidebar(false);
+                      }
+                    }}
+                    onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                      if (!isWindowMobile) {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }
+                    }}
+                    onOpenElementsTab={() => {
+                      if (!isWindowMobile) {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }
+                    }}
+                    // Mobile sidebar integrations
+                    onAddElement={handleAddElement}
+                    onBackgroundChange={handleBackgroundChange}
+                    onExtractedColorsChange={handleExtractedColorsChange}
+                    // Group selection wiring
+                    selectedGroupId={selectedGroupId as any}
+                    onSelectedGroupChange={setSelectedGroupId as any}
+                    onUndo={undo}
+                    onRedo={redo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                    // Quiz panels
+                    showQuizPanel={showQuizPanel}
+                    onQuizPanelChange={setShowQuizPanel}
+                    // Modular page (screen1)
+                    modularModules={modularPage.screens.screen1}
+                    onModuleUpdate={handleUpdateModule}
+                    onModuleDelete={handleDeleteModule}
+                    onModuleMove={handleMoveModule}
+                    onModuleDuplicate={handleDuplicateModule}
+                  />
+                </div>
+                
+                {/* Deuxième Canvas */}
+                <div className="mt-4 relative" data-screen-anchor="screen2">
+                  {/* Background pour éviter la transparence de la bande magenta */}
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  {/* Background supplémentaire pour l'espace entre les canvas */}
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{
+                      background: '#ffffff'
+                    }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      screenId="screen2"
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={canvasBackground}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      // Quiz sync props
+                      extractedColors={extractedColors}
+                      quizModalConfig={quizModalConfig}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return !role.includes('exit-message');
+                      }}
+                      // Sidebar panel triggers
+                      onShowEffectsPanel={() => {
                         if (!isWindowMobile) {
                           setShowEffectsInSidebar(true);
                           setShowAnimationsInSidebar(false);
                           setShowPositionInSidebar(false);
                         }
                       }}
-onShowAnimationsPanel={() => {
+                      onShowAnimationsPanel={() => {
                         if (!isWindowMobile) {
                           setShowAnimationsInSidebar(true);
                           setShowEffectsInSidebar(false);
                           setShowPositionInSidebar(false);
                         }
                       }}
-onShowPositionPanel={() => {
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      // Mobile sidebar integrations
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      // Group selection wiring
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      // Quiz panels
+                      showQuizPanel={showQuizPanel}
+                      onQuizPanelChange={setShowQuizPanel}
+                      // Modular page (screen2)
+                      modularModules={modularPage.screens.screen2}
+                      onModuleUpdate={handleUpdateModule}
+                      onModuleDelete={handleDeleteModule}
+                      onModuleMove={handleMoveModule}
+                      onModuleDuplicate={handleDuplicateModule}
+                    />
+                  </div>
+                </div>
+
+                {/* Troisième Canvas */}
+                <div className="mt-4 relative" data-screen-anchor="screen3">
+                  {/* Background pour éviter la transparence de la bande magenta */}
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  {/* Background supplémentaire pour l'espace entre les canvas */}
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{
+                      background: '#ffffff'
+                    }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      screenId="screen3"
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={canvasBackground}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      // Quiz sync props
+                      extractedColors={extractedColors}
+                      quizModalConfig={quizModalConfig}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return role.includes('exit-message');
+                      }}
+                      // Sidebar panel triggers
+                      onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowAnimationsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowPositionPanel={() => {
                         if (!isWindowMobile) {
                           setShowPositionInSidebar(true);
                           setShowEffectsInSidebar(false);
@@ -1919,49 +2688,56 @@ onShowPositionPanel={() => {
                           setShowDesignInSidebar(false);
                         }
                       }}
-              onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
-                if (context) {
-                  setDesignColorContext(context);
-                }
-                // Toujours ouvrir/forcer l'onglet Design
-                setShowDesignInSidebar(true);
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        // Met à jour le contexte immédiatement même si le panneau est déjà ouvert
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        // Toujours ouvrir/forcer l'onglet Design
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
 
-                if (sidebarRef.current) {
-                  sidebarRef.current.setActiveTab('background');
-                }
-              }}
-              onOpenElementsTab={() => {
-                // Utiliser la même logique que onForceElementsTab
-                if (sidebarRef.current) {
-                  sidebarRef.current.setActiveTab('elements');
-                }
-                // Fermer les autres panneaux
-                setShowEffectsInSidebar(false);
-                setShowAnimationsInSidebar(false);
-                setShowPositionInSidebar(false);
-              }}
-              // Mobile sidebar integrations
-              onAddElement={handleAddElement}
-              onBackgroundChange={handleBackgroundChange}
-              onExtractedColorsChange={handleExtractedColorsChange}
-              // Group selection wiring
-              selectedGroupId={selectedGroupId as any}
-              onSelectedGroupChange={setSelectedGroupId as any}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-              // Quiz panels
-              showQuizPanel={showQuizPanel}
-              onQuizPanelChange={setShowQuizPanel}
-              showJackpotPanel={showJackpotPanel}
-              onJackpotPanelChange={setShowJackpotPanel}
-            />
-            {/* Zoom Slider - Hidden when window is in mobile format */}
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      // Mobile sidebar integrations
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      // Group selection wiring
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      // Quiz panels
+                      showQuizPanel={showQuizPanel}
+                      onQuizPanelChange={setShowQuizPanel}
+                      // Modular page (screen3)
+                      modularModules={modularPage.screens.screen3}
+                      onModuleUpdate={handleUpdateModule}
+                      onModuleDelete={handleDeleteModule}
+                      onModuleMove={handleMoveModule}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Zoom Slider with integrated Screen navigation button */}
             {!isWindowMobile && (
               <ZoomSlider 
                 zoom={canvasZoom}
@@ -1969,10 +2745,22 @@ onShowPositionPanel={() => {
                 minZoom={0.1}
                 maxZoom={1}
                 step={0.05}
+                onNavigateToScreen2={() => {
+                  const nextScreen = currentScreen === 'screen1'
+                    ? 'screen2'
+                    : currentScreen === 'screen2'
+                      ? 'screen3'
+                      : 'screen1';
+                  const scrolled = scrollToScreen(nextScreen);
+                  if (scrolled) {
+                    setCurrentScreen(nextScreen);
+                  }
+                }}
+                currentScreen={currentScreen}
               />
             )}
           </>
-          )}
+        )}
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (
@@ -2001,4 +2789,4 @@ onShowPositionPanel={() => {
   );
 };
 
-export default ModelEditorLayout;
+export default QuizEditorLayout;

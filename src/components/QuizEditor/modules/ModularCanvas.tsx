@@ -383,6 +383,20 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       // If there are container styles, wrap the content in a container
       const hasContainerStyles = Object.keys(containerStyles).length > 0;
       
+      // Apply rotation to container if there are container styles, otherwise to text
+      const rotationStyle = typeof m.rotation === 'number' ? {
+        transform: `rotate(${m.rotation}deg)`,
+        transformOrigin: 'center center',
+        display: 'inline-block'
+      } : {};
+      
+      // If no container styles, apply rotation directly to bodyStyle
+      if (!hasContainerStyles && typeof m.rotation === 'number') {
+        bodyStyle.transform = `rotate(${m.rotation}deg)`;
+        bodyStyle.transformOrigin = 'center center';
+        bodyStyle.display = 'inline-block';
+      }
+      
       return (
         <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
@@ -405,12 +419,12 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
                 />
               )
             ) : hasContainerStyles ? (
-              // Wrap editor in styled container for effects like "Bouton Jaune"
-              <div style={{ display: 'inline-block', ...containerStyles }}>
+              // Wrap editor in styled container for effects like "Bouton Jaune" - apply rotation here
+              <div style={{ display: 'inline-block', ...containerStyles, ...rotationStyle }}>
                 <BodyEditor m={m} style={bodyStyle} onUpdate={onUpdate} isMobile={isMobileDevice} />
               </div>
             ) : (
-              // Only a multi-line body editor; no title field
+              // Only a multi-line body editor; no title field - rotation already in bodyStyle
               <BodyEditor m={m} style={bodyStyle} onUpdate={onUpdate} isMobile={isMobileDevice} />
             )}
             </div>

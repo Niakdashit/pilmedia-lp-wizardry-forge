@@ -43,9 +43,26 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
     onZoomChange(defaultZoom);
   };
 
+  // Position identique à QuizEditor: offset dynamique selon HybridSidebar
+  const [sidebarOffsetRem, setSidebarOffsetRem] = React.useState<number>(25);
+  React.useEffect(() => {
+    if (isRealMobile()) return;
+    const compute = () => {
+      const expanded = document.querySelector('[data-hybrid-sidebar="expanded"]');
+      const collapsed = document.querySelector('[data-hybrid-sidebar="collapsed"]');
+      if (expanded) return 25;
+      if (collapsed) return 5;
+      return 5;
+    };
+    setSidebarOffsetRem(compute());
+    const observer = new MutationObserver(() => setSidebarOffsetRem(compute()));
+    observer.observe(document.body, { subtree: true, childList: true, attributes: false });
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-white shadow-lg rounded-full px-4 py-2 flex items-center gap-3 border border-[hsl(var(--border))] backdrop-blur-sm">
+    <div className="fixed bottom-4 z-50" style={{ left: isRealMobile() ? 16 : `calc(${sidebarOffsetRem}rem + 1rem)` }}>
+      <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2 h-10">
         {/* Zoom Out Button */}
         <button
           onClick={handleZoomOut}
@@ -65,20 +82,13 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             step={step}
             value={zoom}
             onChange={handleSliderChange}
-            className="w-32 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer zoom-slider"
+            className="w-40 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer zoom-slider"
             style={{
               background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((zoom - minZoom) / (maxZoom - minZoom)) * 100}%, hsl(var(--border)) ${((zoom - minZoom) / (maxZoom - minZoom)) * 100}%, hsl(var(--border)) 100%)`
             }}
           />
-          
-          {/* Zoom Percentage */}
-          <button
-            onClick={handleResetZoom}
-            className="min-w-[50px] text-sm font-medium text-[hsl(var(--sidebar-text))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))] rounded px-2 py-1 transition-all duration-200"
-            title="Reset zoom (100%)"
-          >
-            {zoomPercent}%
-          </button>
+          {/* cacher l'affichage du pourcentage pour coller à QuizEditor */}
+          <span className="hidden">{zoomPercent}%</span>
         </div>
 
         {/* Zoom In Button */}
@@ -110,20 +120,18 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #3b82f6;
+            background: #841b60;
             cursor: pointer;
             border: 2px solid #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
 
           .zoom-slider::-moz-range-thumb {
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #3b82f6;
+            background: #841b60;
             cursor: pointer;
             border: 2px solid #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border: none;
           }
         `

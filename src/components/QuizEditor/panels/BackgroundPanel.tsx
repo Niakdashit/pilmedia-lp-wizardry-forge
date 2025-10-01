@@ -1,43 +1,22 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Upload, Pipette } from 'lucide-react';
+import { Upload, Pipette, RotateCw } from 'lucide-react';
 import ColorThief from 'colorthief';
 import { fontCategories } from './TextPanel';
 
-const QUICK_TEXT_EFFECTS: Array<{ id: string; name: string; style: React.CSSProperties }> = [
-  {
-    id: 'none',
-    name: 'Aucun effet',
-    style: {
-      backgroundColor: '#1f2937',
-      borderRadius: '8px',
-      color: '#ffffff',
-      padding: '8px 12px'
-    }
-  },
-  {
-    id: 'background',
-    name: 'Fond surligné',
-    style: {
-      backgroundColor: 'rgba(251,255,0,1)',
-      color: '#000000',
-      borderRadius: '6px',
-      padding: '8px 16px',
-      display: 'inline-block'
-    }
-  },
-  {
-    id: 'yellow-button',
-    name: 'Bouton jaune',
-    style: {
-      backgroundColor: '#FFD700',
-      color: '#000000',
-      fontWeight: 'bold',
-      padding: '10px 24px',
-      borderRadius: '9999px',
-      display: 'inline-block',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.12)'
-    }
-  }
+type QuickFx = { id: string; name: string; style: React.CSSProperties; category?: 'style' | 'shape' };
+const QUICK_TEXT_EFFECTS: QuickFx[] = [
+  // Style
+  { id: 'none', name: 'Aucun', category: 'style', style: {} },
+  { id: 'shadow', name: 'Ombres', category: 'style', style: { textShadow: '0 2px 4px rgba(0,0,0,0.35)' } },
+  { id: 'elevation', name: 'Élévation', category: 'style', style: { textShadow: '0 8px 24px rgba(0,0,0,0.35)' } },
+  { id: 'outline', name: 'Contour', category: 'style', style: { WebkitTextStroke: '1.5px #111', color: '#fff' } as React.CSSProperties },
+  { id: 'bevel', name: 'Biseautage', category: 'style', style: { textShadow: '1px 1px 0 #cfcfcf, -1px -1px 0 #ffffff, 1px -1px 0 #e5e5e5, -1px 1px 0 #e5e5e5' } },
+  { id: 'border', name: 'Bordure', category: 'style', style: { border: '2px solid currentColor', padding: '8px 12px', borderRadius: '8px', display: 'inline-block' } },
+  { id: 'echo', name: 'Écho', category: 'style', style: { textShadow: '2px 2px 0 rgba(0,0,0,0.25), 4px 4px 0 rgba(0,0,0,0.15)' } },
+  { id: 'glitch', name: 'Glitch', category: 'style', style: { textShadow: '2px 0 #00e5ff, -2px 0 #ff00aa' } },
+  { id: 'neon', name: 'Néon', category: 'style', style: { color: '#fff', textShadow: '0 0 6px #ff00e6, 0 0 14px #ff00e6, 0 0 24px #ff00e6' } },
+  { id: 'background', name: 'Arrière-plan', category: 'style', style: { backgroundColor: 'rgba(0,0,0,0.08)', color: '#111', padding: '8px 12px', borderRadius: '6px', display: 'inline-block' } },
+  
 ];
 
 interface BackgroundPanelProps {
@@ -74,11 +53,75 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const [customColor, setCustomColor] = useState('#FF0000');
   const availableFontCategories = useMemo(() => fontCategories, []);
   const [selectedFontCategory, setSelectedFontCategory] = useState(() => availableFontCategories[0]);
+  // Sous-onglets: Style (par défaut) et Effets
+  const [activeSubTab, setActiveSubTab] = useState<'style' | 'effects'>('style');
   
   // États pour personnaliser les couleurs des effets rapides
   const [effectBackgroundColor, setEffectBackgroundColor] = useState<string>('#FFD700');
   const [effectTextColor, setEffectTextColor] = useState<string>('#000000');
   const [currentEffectId, setCurrentEffectId] = useState<string | null>(null);
+  // Réglages Ombres
+  const [shadowDistance, setShadowDistance] = useState<number>(50);
+  const [shadowAngle, setShadowAngle] = useState<number>(-45);
+  const [shadowBlur, setShadowBlur] = useState<number>(0);
+  const [shadowOpacity, setShadowOpacity] = useState<number>(40);
+  const [shadowColor, setShadowColor] = useState<string>('#000000');
+  // Réglages Écho
+  const [echoDistance, setEchoDistance] = useState<number>(50);
+  const [echoAngle, setEchoAngle] = useState<number>(-45);
+  const [echoColor, setEchoColor] = useState<string>('#000000');
+  // Réglages Néon
+  const [neonIntensity, setNeonIntensity] = useState<number>(50);
+  const [neonColor, setNeonColor] = useState<string>('#ff00e6');
+  const [neonTextColor, setNeonTextColor] = useState<string>('#ffffff');
+  // Réglage Élévation
+  const [elevationIntensity, setElevationIntensity] = useState<number>(50);
+  // Réglage Contour
+  const [outlineThickness, setOutlineThickness] = useState<number>(50);
+  const [outlineColor, setOutlineColor] = useState<string>('#111111');
+  // Réglages Biseautage
+  const [bevelThickness, setBevelThickness] = useState<number>(50);
+  const [bevelDistance, setBevelDistance] = useState<number>(50);
+  const [bevelAngle, setBevelAngle] = useState<number>(-45);
+  const [bevelColor, setBevelColor] = useState<string>('#808080');
+  // Réglages Bordure (cadre autour du texte)
+  const [boxBorderThickness, setBoxBorderThickness] = useState<number>(2 * 10); // map 0..100 -> 0..10px; default ~20 => 2px
+  const [boxBorderColor, setBoxBorderColor] = useState<string>('#111111');
+  const [boxBorderRadius, setBoxBorderRadius] = useState<number>(8 * (100/24)); // valeur par défaut ~8px sur échelle 0..24
+  // Réglages Arrière-plan
+  const [bgRadius, setBgRadius] = useState<number>(50); // 0..100 -> 0..24px
+  const [bgGap, setBgGap] = useState<number>(50); // 0..100 -> 0..24px padding Y, + proportionnel X
+  const [bgAlpha, setBgAlpha] = useState<number>(100); // 0..100 -> 0..1
+  const [bgColor, setBgColor] = useState<string>('#FFD700');
+  const [bgTextColor, setBgTextColor] = useState<string>('#111111');
+
+  const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+    const h = hex.replace('#', '');
+    if (h.length === 3) {
+      const r = parseInt(h[0] + h[0], 16);
+      const g = parseInt(h[1] + h[1], 16);
+      const b = parseInt(h[2] + h[2], 16);
+      return { r, g, b };
+    }
+    if (h.length === 6) {
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      return { r, g, b };
+    }
+    return null;
+  };
+
+  // Rotation logique en degrés (affichée et appliquée)
+  const [rotationDeg, setRotationDeg] = useState<number>(0);
+  // Valeur du slider avec sensibilité réduite (facteur 2)
+  const SENSITIVITY = 2; // 2x plus lent sans perdre la précision au degré
+  const [uiRotation, setUiRotation] = useState<number>(0);
+  React.useEffect(() => {
+    const cur = typeof (selectedElement as any)?.rotation === 'number' ? (selectedElement as any).rotation : 0;
+    setRotationDeg(cur);
+    setUiRotation(cur * SENSITIVITY);
+  }, [selectedElement?.id, (selectedElement as any)?.rotation]);
 
   // Vérifier si un élément est sélectionné
   const isTextSelected = selectedElement && (
@@ -170,6 +213,13 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   ];
 
   const currentQuickEffectId = selectedElement?.advancedStyle?.id || 'none';
+  // Utiliser l'état local si présent pour un feedback immédiat dans l'UI
+  const effectiveEffectId = currentEffectId ?? currentQuickEffectId;
+  React.useEffect(() => {
+    if (!currentEffectId) {
+      setCurrentEffectId(currentQuickEffectId);
+    }
+  }, [currentQuickEffectId, currentEffectId]);
 
   const applyQuickEffect = (effectId: string, customBgColor?: string, customTextColor?: string) => {
     const effect = QUICK_TEXT_EFFECTS.find((fx) => fx.id === effectId);
@@ -179,7 +229,118 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     setCurrentEffectId(effectId);
     
     // Si on a des couleurs personnalisées, les utiliser
-    let effectCss = { ...effect.style };
+    let effectCss = { ...effect.style } as React.CSSProperties;
+    if (effectId === 'shadow') {
+      // Calculer l'ombre depuis les paramètres
+      const rad = (shadowAngle * Math.PI) / 180;
+      const dx = Math.round(Math.cos(rad) * shadowDistance * 0.4); // facteur d'échelle doux
+      const dy = Math.round(Math.sin(rad) * shadowDistance * 0.4);
+      const rgb = hexToRgb(shadowColor) || { r: 0, g: 0, b: 0 };
+      const a = Math.max(0, Math.min(1, shadowOpacity / 100));
+      effectCss.textShadow = `${dx}px ${dy}px ${shadowBlur}px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
+    }
+    if (effectId === 'echo') {
+      // Écho: plusieurs couches nettes (sans flou) le long d'un angle
+      const rad = (echoAngle * Math.PI) / 180;
+      const rgb = hexToRgb(echoColor) || { r: 0, g: 0, b: 0 };
+      const max = Math.max(0, Math.min(100, echoDistance));
+      const totalOffset = Math.round(4 + (max / 100) * 24); // 4..28 px
+      const steps = 4; // nombre de couches
+      const parts: string[] = [];
+      for (let i = 1; i <= steps; i++) {
+        const f = i / steps; // 0.25, 0.5, 0.75, 1
+        const dx = Math.round(Math.cos(rad) * totalOffset * f);
+        const dy = Math.round(Math.sin(rad) * totalOffset * f);
+        // Opacité décroissante
+        const a = [0.35, 0.27, 0.20, 0.14][i - 1] ?? 0.12;
+        parts.push(`${dx}px ${dy}px 0 rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`);
+      }
+      effectCss.textShadow = parts.join(', ');
+    }
+    if (effectId === 'neon') {
+      // Néon: plusieurs halos concentriques autour de la couleur choisie
+      const level = Math.max(0, Math.min(100, neonIntensity));
+      const t = level / 100; // 0..1
+      const base = hexToRgb(neonColor) || { r: 255, g: 0, b: 230 };
+      // Trois à cinq couches en fonction de l'intensité
+      const layers = [
+        { blur: Math.round(4 + 8 * t), a: 0.65 },
+        { blur: Math.round(10 + 18 * t), a: 0.45 },
+        { blur: Math.round(20 + 34 * t), a: 0.30 },
+        { blur: Math.round(34 + 46 * t), a: 0.20 },
+        { blur: Math.round(48 + 64 * t), a: 0.12 },
+      ];
+      const parts = layers.map(l => `0 0 ${l.blur}px rgba(${base.r}, ${base.g}, ${base.b}, ${l.a})`);
+      effectCss.textShadow = parts.join(', ');
+      // Couleur du texte (coeur du néon)
+      effectCss.color = neonTextColor || '#ffffff';
+    }
+    if (effectId === 'elevation') {
+      // Élévation: halo doux autour du texte, basé sur l'intensité
+      // On génère plusieurs couches concentriques
+      const base = Math.max(0, Math.min(100, elevationIntensity));
+      const blur1 = Math.round(6 + base * 0.12);   // 6..18
+      const blur2 = Math.round(14 + base * 0.24);  // 14..38
+      const blur3 = Math.round(24 + base * 0.36);  // 24..60
+      const a1 = 0.25;
+      const a2 = 0.18;
+      const a3 = 0.12;
+      effectCss.textShadow = `0 2px ${blur1}px rgba(0,0,0,${a1}), 0 4px ${blur2}px rgba(0,0,0,${a2}), 0 8px ${blur3}px rgba(0,0,0,${a3})`;
+    }
+    if (effectId === 'outline') {
+      // Contour progressif: mapping linéaire 0..100 -> 0.5..8px (continu)
+      const clamped = Math.max(0, Math.min(100, outlineThickness));
+      const minPx = 0.5;
+      const maxPx = 8;
+      const px = minPx + (clamped / 100) * (maxPx - minPx);
+      (effectCss as any).WebkitTextStroke = `${px.toFixed(2)}px ${outlineColor}`;
+      effectCss.color = '#ffffff';
+      // Fallback pour navigateurs sans -webkit-text-stroke: 4 ombres fines
+      if (!("WebkitTextStroke" in document.documentElement.style)) {
+        const c = outlineColor;
+        const p = px.toFixed(2);
+        effectCss.textShadow = `-${p}px 0 ${c}, ${p}px 0 ${c}, 0 -${p}px ${c}, 0 ${p}px ${c}`;
+      }
+    }
+    if (effectId === 'bevel') {
+      // Biseautage: superposition de couches claires/sombres selon un angle
+      const t = Math.max(0, Math.min(100, bevelThickness));
+      const d = Math.max(0, Math.min(100, bevelDistance));
+      const steps = Math.max(3, Math.round(3 + (t / 100) * 7)); // 3..10 couches
+      const distPx = (d / 100) * 6; // 0..6px
+      const rad = (bevelAngle * Math.PI) / 180;
+      const base = hexToRgb(bevelColor) || { r: 128, g: 128, b: 128 };
+      const blend = (a: number, b: number, p: number) => Math.round(a * (1 - p) + b * p);
+      const light = { r: blend(base.r, 255, 0.6), g: blend(base.g, 255, 0.6), b: blend(base.b, 255, 0.6) };
+      const dark = { r: blend(base.r, 0, 0.6), g: blend(base.g, 0, 0.6), b: blend(base.b, 0, 0.6) };
+      const parts: string[] = [];
+      for (let i = 1; i <= steps; i++) {
+        const f = i / steps;
+        const dx = Math.cos(rad) * distPx * f;
+        const dy = Math.sin(rad) * distPx * f;
+        parts.push(`${dx.toFixed(2)}px ${dy.toFixed(2)}px 0 rgba(${dark.r}, ${dark.g}, ${dark.b}, ${Math.max(0, 0.45 - f * 0.25)})`);
+        parts.push(`${(-dx).toFixed(2)}px ${(-dy).toFixed(2)}px 0 rgba(${light.r}, ${light.g}, ${light.b}, ${Math.max(0, 0.55 - f * 0.25)})`);
+      }
+      effectCss.textShadow = parts.join(', ');
+      (effectCss as any).WebkitTextStroke = `${(0.5 + (t / 100) * 0.5).toFixed(2)}px rgba(0,0,0,0.6)`; // léger trait
+    }
+    if (effectId === 'background') {
+      // Arrière-plan: pastille derrière le texte, arrondi stable quel que soit la taille de police
+      const rPx = Math.round((Math.max(0, Math.min(100, bgRadius)) / 100) * 24); // 0..24px
+      const gap = Math.round((Math.max(0, Math.min(100, bgGap)) / 100) * 24); // 0..24px
+      const alpha = Math.max(0, Math.min(1, bgAlpha / 100));
+      const rgb = hexToRgb(bgColor) || { r: 255, g: 215, b: 0 };
+      // Hauteur minimale pour que le rayon ne soit pas visuellement réduit quand le texte est petit
+      const minH = Math.max(28, 2 * rPx + 2 * gap); // au moins 28px, sinon 2*rayon + padding vertical
+      effectCss.display = 'inline-flex';
+      (effectCss as any).alignItems = 'center';
+      (effectCss as any).justifyContent = 'center';
+      (effectCss as any).minHeight = `${minH}px`;
+      effectCss.borderRadius = `${rPx}px`;
+      effectCss.padding = `${gap}px ${Math.round(gap * 1.5)}px`;
+      effectCss.backgroundColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+      effectCss.color = bgTextColor || '#111111';
+    }
     if (customBgColor) {
       effectCss.backgroundColor = customBgColor;
       setEffectBackgroundColor(customBgColor);
@@ -299,10 +460,62 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         className="sr-only"
       />
 
-      {/* Indicateur retiré par demande */}
+      {/* Sous-onglets */}
+      <div className="flex border-b border-[hsl(var(--sidebar-border))] mb-2">
+        <button
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeSubTab === 'style'
+              ? 'text-[hsl(var(--sidebar-text-primary))] border-b-2 border-[hsl(var(--sidebar-active))]'
+              : 'text-[hsl(var(--sidebar-text))] hover:text-[hsl(var(--sidebar-text-primary))]'
+          }`}
+          onClick={() => setActiveSubTab('style')}
+        >
+          Style
+        </button>
+        <button
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeSubTab === 'effects'
+              ? 'text-[hsl(var(--sidebar-text-primary))] border-b-2 border-[hsl(var(--sidebar-active))]'
+              : 'text-[hsl(var(--sidebar-text))] hover:text-[hsl(var(--sidebar-text-primary))]'
+          }`}
+          onClick={() => setActiveSubTab('effects')}
+        >
+          Effets
+        </button>
+      </div>
 
-      {/* Upload Background Image - Seulement si pas de texte sélectionné */}
-      {!isTextSelected && (
+      {/* Action rapide: Rotation (curseur) - uniquement dans le sous-onglet Effets */}
+      {activeSubTab === 'effects' && (
+        <div className="mb-3">
+          <label className="text-xs font-medium text-gray-600 flex items-center gap-1.5 mb-1">
+            <RotateCw className="w-3.5 h-3.5" />
+            Rotation
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={-180 * SENSITIVITY}
+              max={180 * SENSITIVITY}
+              step={1}
+              value={uiRotation}
+              onChange={(e) => {
+                const raw = Number(e.target.value);
+                setUiRotation(raw);
+                const val = Math.round(raw / SENSITIVITY);
+                setRotationDeg(val);
+                if (selectedElement && onElementUpdate) {
+                  onElementUpdate({ rotation: val });
+                }
+              }}
+              className="flex-1"
+              disabled={!selectedElement}
+            />
+            <div className="w-14 text-right text-xs text-gray-700">{Math.round(rotationDeg)}°</div>
+          </div>
+        </div>
+      )}
+
+      {activeSubTab === 'style' && !isTextSelected && (
         <div>
           <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
           <button
@@ -316,7 +529,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         </div>
       )}
 
-      {/* Solid Colors */}
+      {activeSubTab === 'style' && (
       <div>
         <h3 className="font-semibold text-sm text-gray-700 mb-3">
           {isShapeSelected
@@ -366,9 +579,10 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           ))}
         </div>
       </div>
+      )}
 
-      {/* FONT CATEGORIES SECTION - MOVED FROM POLICES TAB */}
-      {isTextSelected && (
+      {/* FONT CATEGORIES - seulement en Style et si texte sélectionné */}
+      {activeSubTab === 'style' && isTextSelected && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm text-gray-700">CATÉGORIES DE POLICES</h3>
@@ -420,103 +634,531 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         </div>
       )}
 
-      {/* Quick text effects (formerly modal) */}
-      {isTextSelected && (
-        <div className="space-y-3">
-          <h3 className="font-semibold text-sm text-gray-700">EFFETS RAPIDES</h3>
-          <div className="space-y-2">
-            {QUICK_TEXT_EFFECTS.map((effect) => {
-              const isActive = currentQuickEffectId === effect.id;
+      {/* Effets rapides */}
+      {activeSubTab === 'effects' && isTextSelected && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            {QUICK_TEXT_EFFECTS.filter(fx => (fx.category ?? 'style') === 'style').map((effect) => {
+              const isActive = effectiveEffectId === effect.id;
               return (
-                <button
-                  key={effect.id}
-                  type="button"
-                  onClick={() => applyQuickEffect(effect.id)}
-                  className={`w-full flex items-center justify-between p-3 border rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white shadow-lg'
-                      : 'border-gray-200 bg-gray-900/40 hover:border-[hsl(var(--primary))] hover:bg-gray-800/80 text-gray-100'
-                  }`}
-                >
-                  <span className="text-sm font-medium">{effect.name}</span>
-                  <span
-                    className="ml-4 rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
-                    style={effect.style}
+                <React.Fragment key={effect.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentEffectId(effect.id);
+                      // Appliquer juste après pour que l'UI affiche le panneau inline immédiatement
+                      requestAnimationFrame(() => applyQuickEffect(effect.id));
+                    }}
+                    className={`w-full p-3 border rounded-lg text-left transition-all duration-200 ${
+                      isActive
+                        ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-[hsl(var(--primary))] hover:bg-gray-50 text-gray-900'
+                    }`}
                   >
-                    Aperçu
-                  </span>
-                </button>
+                    <div className="w-full h-10 flex items-center justify-center rounded" style={effect.style}>
+                      <span className="font-medium">Ag</span>
+                    </div>
+                    <div className="mt-2 text-xs font-medium">{effect.name}</div>
+                  </button>
+
+                  {/* Réglages inline pour Ombres */}
+                  {isActive && effect.id === 'shadow' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Distance */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Distance</label>
+                          <div className="flex items-center gap-3">
+                            <input type="range" min={0} max={100} step={1} value={shadowDistance}
+                              onChange={(e) => { setShadowDistance(Number(e.target.value)); applyQuickEffect('shadow'); }}
+                              className="flex-1" />
+                            <div className="w-12 text-right text-xs text-gray-700">{shadowDistance}</div>
+                          </div>
+                        </div>
+                        {/* Angle */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Angle</label>
+                          <div className="flex items-center gap-3">
+                            <input type="range" min={-180} max={180} step={1} value={shadowAngle}
+                              onChange={(e) => { setShadowAngle(Number(e.target.value)); applyQuickEffect('shadow'); }}
+                              className="flex-1" />
+                            <div className="w-12 text-right text-xs text-gray-700">{shadowAngle}</div>
+                          </div>
+                        </div>
+                        {/* Flou */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Flou</label>
+                          <div className="flex items-center gap-3">
+                            <input type="range" min={0} max={50} step={1} value={shadowBlur}
+                              onChange={(e) => { setShadowBlur(Number(e.target.value)); applyQuickEffect('shadow'); }}
+                              className="flex-1" />
+                            <div className="w-12 text-right text-xs text-gray-700">{shadowBlur}</div>
+                          </div>
+                        </div>
+                        {/* Transparence */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Transparence</label>
+                          <div className="flex items-center gap-3">
+                            <input type="range" min={0} max={100} step={1} value={shadowOpacity}
+                              onChange={(e) => { setShadowOpacity(Number(e.target.value)); applyQuickEffect('shadow'); }}
+                              className="flex-1" />
+                            <div className="w-12 text-right text-xs text-gray-700">{shadowOpacity}</div>
+                          </div>
+                        </div>
+                        {/* Couleur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input type="color" value={shadowColor}
+                              onChange={(e) => { setShadowColor(e.target.value); applyQuickEffect('shadow'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer" />
+                            <input type="text" value={shadowColor}
+                              onChange={(e) => { setShadowColor(e.target.value); applyQuickEffect('shadow'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm" placeholder="#000000" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Arrière-plan */}
+                  {isActive && effect.id === 'background' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Arrondissement des coins */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Arrondissement des coins</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={bgRadius}
+                              onChange={(e) => { setBgRadius(Number(e.target.value)); applyQuickEffect('background'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{Math.round((bgRadius/100)*24)}px</div>
+                          </div>
+                        </div>
+                        {/* Écart */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Écart</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={bgGap}
+                              onChange={(e) => { setBgGap(Number(e.target.value)); applyQuickEffect('background'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{Math.round((bgGap/100)*24)}px</div>
+                          </div>
+                        </div>
+                        {/* Transparence */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Transparence</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={bgAlpha}
+                              onChange={(e) => { setBgAlpha(Number(e.target.value)); applyQuickEffect('background'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{bgAlpha}</div>
+                          </div>
+                        </div>
+                        {/* Couleur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={bgColor}
+                              onChange={(e) => { setBgColor(e.target.value); applyQuickEffect('background'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={bgColor}
+                              onChange={(e) => { setBgColor(e.target.value); applyQuickEffect('background'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#FFD700"
+                            />
+                          </div>
+                        </div>
+                        {/* Couleur du texte */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur du texte</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={bgTextColor}
+                              onChange={(e) => { setBgTextColor(e.target.value); applyQuickEffect('background'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={bgTextColor}
+                              onChange={(e) => { setBgTextColor(e.target.value); applyQuickEffect('background'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#111111"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Néon */}
+                  {isActive && effect.id === 'neon' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Intensité */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Intensité</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={neonIntensity}
+                              onChange={(e) => { setNeonIntensity(Number(e.target.value)); applyQuickEffect('neon'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{neonIntensity}</div>
+                          </div>
+                        </div>
+                        {/* Couleur du néon */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur du néon</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={neonColor}
+                              onChange={(e) => { setNeonColor(e.target.value); applyQuickEffect('neon'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={neonColor}
+                              onChange={(e) => { setNeonColor(e.target.value); applyQuickEffect('neon'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#ff00e6"
+                            />
+                          </div>
+                        </div>
+                        {/* Couleur du texte */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur du texte</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={neonTextColor}
+                              onChange={(e) => { setNeonTextColor(e.target.value); applyQuickEffect('neon'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={neonTextColor}
+                              onChange={(e) => { setNeonTextColor(e.target.value); applyQuickEffect('neon'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#ffffff"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Écho */}
+                  {isActive && effect.id === 'echo' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Distance */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Distance</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={echoDistance}
+                              onChange={(e) => { setEchoDistance(Number(e.target.value)); applyQuickEffect('echo'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{echoDistance}</div>
+                          </div>
+                        </div>
+                        {/* Angle */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Angle</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={-180}
+                              max={180}
+                              step={1}
+                              value={echoAngle}
+                              onChange={(e) => { setEchoAngle(Number(e.target.value)); applyQuickEffect('echo'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{echoAngle}</div>
+                          </div>
+                        </div>
+                        {/* Couleur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={echoColor}
+                              onChange={(e) => { setEchoColor(e.target.value); applyQuickEffect('echo'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={echoColor}
+                              onChange={(e) => { setEchoColor(e.target.value); applyQuickEffect('echo'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#000000"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Bordure (cadre) */}
+                  {isActive && effect.id === 'border' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Épaisseur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Épaisseur</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={boxBorderThickness}
+                              onChange={(e) => { setBoxBorderThickness(Number(e.target.value)); applyQuickEffect('border'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{Math.round((boxBorderThickness/100)*10)}px</div>
+                          </div>
+                        </div>
+                        {/* Arrondi des coins */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Arrondi des coins</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={boxBorderRadius}
+                              onChange={(e) => { setBoxBorderRadius(Number(e.target.value)); applyQuickEffect('border'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{Math.round((boxBorderRadius/100)*24)}px</div>
+                          </div>
+                        </div>
+                        {/* Couleur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={boxBorderColor}
+                              onChange={(e) => { setBoxBorderColor(e.target.value); applyQuickEffect('border'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={boxBorderColor}
+                              onChange={(e) => { setBoxBorderColor(e.target.value); applyQuickEffect('border'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#111111"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Biseautage */}
+                  {isActive && effect.id === 'bevel' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Épaisseur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Épaisseur</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={bevelThickness}
+                              onChange={(e) => { setBevelThickness(Number(e.target.value)); applyQuickEffect('bevel'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{bevelThickness}</div>
+                          </div>
+                        </div>
+                        {/* Distance */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Distance</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={bevelDistance}
+                              onChange={(e) => { setBevelDistance(Number(e.target.value)); applyQuickEffect('bevel'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{bevelDistance}</div>
+                          </div>
+                        </div>
+                        {/* Angle */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Angle</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={-180}
+                              max={180}
+                              step={1}
+                              value={bevelAngle}
+                              onChange={(e) => { setBevelAngle(Number(e.target.value)); applyQuickEffect('bevel'); }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{bevelAngle}</div>
+                          </div>
+                        </div>
+                        {/* Couleur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={bevelColor}
+                              onChange={(e) => { setBevelColor(e.target.value); applyQuickEffect('bevel'); }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={bevelColor}
+                              onChange={(e) => { setBevelColor(e.target.value); applyQuickEffect('bevel'); }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#808080"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Contour */}
+                  {isActive && effect.id === 'outline' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Épaisseur */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Épaisseur</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={outlineThickness}
+                              onChange={(e) => {
+                                setOutlineThickness(Number(e.target.value));
+                                applyQuickEffect('outline');
+                              }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{outlineThickness}</div>
+                          </div>
+                        </div>
+
+                        {/* Couleur du contour */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Couleur</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={outlineColor}
+                              onChange={(e) => {
+                                setOutlineColor(e.target.value);
+                                applyQuickEffect('outline');
+                              }}
+                              className="w-10 h-8 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={outlineColor}
+                              onChange={(e) => {
+                                setOutlineColor(e.target.value);
+                                applyQuickEffect('outline');
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="#111111"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Réglages inline pour Élévation */}
+                  {isActive && effect.id === 'elevation' && (
+                    <div className="col-span-2 mt-2 p-3 border rounded-lg bg-white">
+                      <div className="space-y-4">
+                        {/* Intensité */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Intensité</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={elevationIntensity}
+                              onChange={(e) => {
+                                setElevationIntensity(Number(e.target.value));
+                                applyQuickEffect('elevation');
+                              }}
+                              className="flex-1"
+                            />
+                            <div className="w-12 text-right text-xs text-gray-700">{elevationIntensity}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
               );
             })}
           </div>
-          
-          {/* Personnalisation des couleurs de l'effet */}
-          {currentEffectId && currentEffectId !== 'none' && (
-            <div className="mt-4 p-4 border border-gray-300 rounded-lg bg-white space-y-3">
-              <h4 className="text-sm font-semibold text-gray-700">Personnaliser l'effet</h4>
-              
-              {/* Couleur de fond */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-600">Couleur de fond</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={effectBackgroundColor}
-                    onChange={(e) => {
-                      const newBgColor = e.target.value;
-                      setEffectBackgroundColor(newBgColor);
-                      applyQuickEffect(currentEffectId, newBgColor, effectTextColor);
-                    }}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={effectBackgroundColor}
-                    onChange={(e) => {
-                      const newBgColor = e.target.value;
-                      setEffectBackgroundColor(newBgColor);
-                      applyQuickEffect(currentEffectId, newBgColor, effectTextColor);
-                    }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                    placeholder="#FFD700"
-                  />
-                </div>
-              </div>
-              
-              {/* Couleur de texte */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-600">Couleur de texte</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={effectTextColor}
-                    onChange={(e) => {
-                      const newTextColor = e.target.value;
-                      setEffectTextColor(newTextColor);
-                      applyQuickEffect(currentEffectId, effectBackgroundColor, newTextColor);
-                    }}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={effectTextColor}
-                    onChange={(e) => {
-                      const newTextColor = e.target.value;
-                      setEffectTextColor(newTextColor);
-                      applyQuickEffect(currentEffectId, effectBackgroundColor, newTextColor);
-                    }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                    placeholder="#000000"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Personnalisation globale supprimée (les contrôles spécifiques s'affichent inline sous la carte active) */}
         </div>
       )}
 
-      {/* Extracted Colors */}
-      {extractedColors.length > 0 && (
+      {/* Couleurs extraites - sous-onglet Style */}
+      {activeSubTab === 'style' && extractedColors.length > 0 && (
         <div>
           <h3 className="font-semibold text-sm text-gray-700 mb-3">COULEURS EXTRAITES</h3>
           <div className="grid grid-cols-5 gap-2">

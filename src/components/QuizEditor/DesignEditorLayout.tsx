@@ -886,20 +886,27 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     const isModuleText = (selectedElement as any)?.role === 'module-text' && (selectedElement as any)?.moduleId;
     if (isModuleText) {
       const moduleId = (selectedElement as any).moduleId as string;
-      const patch: Partial<Module> & Record<string, any> = {};
 
-      if (updates.fontFamily) patch.bodyFontFamily = updates.fontFamily;
-      if (updates.color) patch.bodyColor = updates.color;
-      if (updates.fontSize) patch.bodyFontSize = updates.fontSize;
-      if (updates.fontWeight) patch.bodyBold = updates.fontWeight === 'bold';
-      if (updates.fontStyle) patch.bodyItalic = updates.fontStyle === 'italic';
-      if (updates.textDecoration) patch.bodyUnderline = updates.textDecoration?.includes('underline');
-      if (updates.textAlign) patch.align = updates.textAlign;
-
-      if (Object.keys(patch).length > 0) {
-        handleUpdateModule(moduleId, patch);
+      // Route ALL updates to the module (including rotation)
+      const modulePatch: Partial<Module> & Record<string, any> = {};
+      if (updates.fontFamily) modulePatch.bodyFontFamily = updates.fontFamily;
+      if (updates.color) modulePatch.bodyColor = updates.color;
+      if (updates.fontSize) modulePatch.bodyFontSize = updates.fontSize;
+      if (updates.fontWeight) modulePatch.bodyBold = updates.fontWeight === 'bold';
+      if (updates.fontStyle) modulePatch.bodyItalic = updates.fontStyle === 'italic';
+      if (updates.textDecoration) modulePatch.bodyUnderline = updates.textDecoration?.includes('underline');
+      if (updates.textAlign) modulePatch.align = updates.textAlign;
+      
+      // Add rotation to module
+      if (typeof updates.rotation === 'number') {
+        modulePatch.rotation = updates.rotation;
       }
 
+      if (Object.keys(modulePatch).length > 0) {
+        handleUpdateModule(moduleId, modulePatch);
+      }
+
+      // Update local selectedElement to reflect changes
       setSelectedElement((prev: any) => (prev ? { ...prev, ...updates } : prev));
       return;
     }
@@ -2058,7 +2065,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2424,7 +2431,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
             {/* Canvas Scrollable Area */}
-            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px]">
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">

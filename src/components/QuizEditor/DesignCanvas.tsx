@@ -361,6 +361,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
+  
+
   // Détection de la taille de fenêtre
   useEffect(() => {
     const updateWindowSize = () => {
@@ -745,6 +747,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     } catch {}
     updateAutoSaveData(campaign, activityType, intensity);
   }, [elements, onElementsChange, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
+
+  // Listen for text effects coming from BackgroundPanel and apply them to the current selection
+  useEffect(() => {
+    const onApplyTextEffect = (ev: Event) => {
+      const e = ev as CustomEvent<any>;
+      const detail = e.detail || {};
+      if (selectedElement) {
+        try {
+          handleElementUpdate(selectedElement, detail);
+        } catch (err) {
+          console.warn('applyTextEffect handler failed', err);
+        }
+      }
+    };
+    window.addEventListener('applyTextEffect', onApplyTextEffect as EventListener);
+    return () => window.removeEventListener('applyTextEffect', onApplyTextEffect as EventListener);
+  }, [selectedElement, handleElementUpdate]);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -2024,7 +2043,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 transformOrigin: 'center top',
                 touchAction: 'none',
                 userSelect: 'none',
-                willChange: 'transform'
+                willChange: 'transform',
+                // Improve perceived sharpness for sans-serif like Open Sans
+                WebkitFontSmoothing: 'subpixel-antialiased' as any,
+                textRendering: 'optimizeLegibility',
+                fontSynthesis: 'none'
               }}
               onClickCapture={(e) => {
                 // Clear selection only when clicking on empty canvas, not on elements

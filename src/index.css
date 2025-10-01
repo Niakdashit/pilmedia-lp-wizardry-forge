@@ -526,9 +526,14 @@ html, body {
     background: transparent;
     /* allow parent .divide-x to render separators; do not override borders here */
   }
-  .toolbar-compact .sidebar-tab-horizontal {
-    text-align: center;
-    justify-content: center;
+  .mobile-optimized .sidebar-content {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Forcer l'absence de border-radius sur le coin inférieur gauche du panneau latéral */
+  .sidebar-panel {
+    border-bottom-left-radius: 0 !important;
   }
 
   .toolbar-compact .sidebar-tab-horizontal:hover {

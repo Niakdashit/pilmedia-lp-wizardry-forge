@@ -27,6 +27,7 @@ export interface BaseModule {
   align?: 'left' | 'center' | 'right';
   minHeight?: number; // px
   layoutWidth?: 'full' | 'half' | 'third' | 'twoThirds';
+  rotation?: number; // degrees (-180 to 180)
 }
 
 export interface BlocTexte extends BaseModule {
