@@ -74,8 +74,8 @@ const MemoryPreview: React.FC<MemoryPreviewProps> = ({ config = {} }) => {
                 isMatched 
                   ? 'bg-green-200 border-green-400' 
                   : isFlipped 
-                  ? 'bg-white border-[#d4dbe8]' 
-                  : 'bg-gradient-to-br from-[#d4dbe8] to-[#b41b60] border-[#d4dbe8]'
+                  ? 'bg-white border-[#841b60]' 
+                  : 'bg-gradient-to-br from-[#841b60] to-[#b41b60] border-[#841b60]'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -86,7 +86,7 @@ const MemoryPreview: React.FC<MemoryPreviewProps> = ({ config = {} }) => {
               transition={{ duration: 0.3 }}
             >
               {isFlipped && (
-                <div className="text-[#d4dbe8] flex items-center justify-center">
+                <div className="text-[#841b60] flex items-center justify-center">
                   {getThemeContent(card)}
                 </div>
               )}

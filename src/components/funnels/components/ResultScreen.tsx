@@ -77,7 +77,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
             onClick={onReset} 
             className="inline-flex items-center justify-center px-6 py-2 font-medium rounded-[2px] transition-colors"
             style={{
-              backgroundColor: primaryColor || campaign.design?.primaryColor || '#d4dbe8',
+              backgroundColor: primaryColor || campaign.design?.primaryColor || '#841b60',
               color: accentColor || campaign.design?.accentColor || '#ffffff'
             }}
           >
@@ -90,7 +90,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
               target="_blank" 
               rel="noopener noreferrer" 
               className="text-sm underline hover:opacity-80"
-              style={{ color: campaign.design?.primaryColor || '#d4dbe8' }}
+              style={{ color: campaign.design?.primaryColor || '#841b60' }}
             >
               {resultScreen?.secondaryCtaText || "Découvrir nos offres"}
             </a>

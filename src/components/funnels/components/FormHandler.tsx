@@ -25,7 +25,7 @@ const FormHandler: React.FC<FormHandlerProps> = ({
   // Récupérer les couleurs de design de la campagne
   const design = campaign.design || {};
   const customColors = design.customColors || {};
-  const buttonColor = customColors.primary || design.buttonColor || "#d4dbe8";
+  const buttonColor = customColors.primary || design.buttonColor || "#841b60";
   const borderColor = customColors.primary || design.borderColor || "#E5E7EB";
   const focusColor = buttonColor;
 

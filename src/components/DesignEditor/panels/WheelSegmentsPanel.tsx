@@ -21,7 +21,7 @@ interface Segment {
 }
 
 const defaultColorPalette = [
-  '#d4dbe8', '#4ecdc4', '#45b7d1', '#96ceb4', 
+  '#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', 
   '#feca57', '#ff9ff3', '#ff6b6b', '#48dbfb',
   '#1dd1a1', '#ff9f43', '#5f27cd', '#54a0ff'
 ];

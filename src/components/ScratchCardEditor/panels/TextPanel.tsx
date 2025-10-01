@@ -253,13 +253,13 @@ const TextPanel: React.FC<TextPanelProps> = ({
       {/* Onglets: Combinaisons (templates) vs Polices (catégories) */}
       <div className="grid grid-cols-2 gap-2">
         <button
-          className={`p-2 text-sm rounded transition-all ${activeTab === 'combinaisons' ? 'bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+          className={`p-2 text-sm rounded transition-all ${activeTab === 'combinaisons' ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
           onClick={() => setActiveTab('combinaisons')}
         >
           Combinaisons
         </button>
         <button
-          className={`p-2 text-sm rounded transition-all ${activeTab === 'polices' ? 'bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+          className={`p-2 text-sm rounded transition-all ${activeTab === 'polices' ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
           onClick={() => setActiveTab('polices')}
         >
           Polices
@@ -272,7 +272,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
       <div className="space-y-6">
           {/* Bouton d'ajout simple */}
           <div>
-            <button onClick={() => addText()} className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:text-white transition-colors flex items-center justify-center group">
+            <button onClick={() => addText()} className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex items-center justify-center group">
               <Type className="w-5 h-5 mr-2 text-gray-600 group-hover:text-white" />
               <span className="text-sm text-gray-600 group-hover:text-white">Ajouter du texte</span>
             </button>
@@ -298,7 +298,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
                   <button
                     key={p.id}
                     onClick={() => addText({ ...p.preset, text: p.sample }, p.stylePreset)}
-                    className="p-3 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:text-white transition-colors text-left group"
+                    className="p-3 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left group"
                   >
                     <div
                       className="text-2xl font-bold leading-tight group-hover:text-white"
@@ -326,7 +326,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
                   <button
                     key={p.id}
                     onClick={() => addComposite(p)}
-                    className="p-3 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:text-white transition-colors text-left group"
+                    className="p-3 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left group"
                   >
                     <div className="relative h-16">
                       {p.layers.map((layer: any, idx: number) => (
@@ -364,7 +364,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
                   {fontCategories.map((category, index) => (
                     <button
                       key={index}
-                      className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${selectedCategory.name === category.name ? 'bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                      className={`p-2 text-xs rounded cursor-pointer transition-all duration-200 ${selectedCategory.name === category.name ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                       onClick={() => setSelectedCategory(category)}
                     >
                       {category.name}
@@ -381,7 +381,7 @@ const TextPanel: React.FC<TextPanelProps> = ({
                     <button
                       key={font}
                       onClick={() => addText({ text: 'Texte stylé', fontFamily: font, fontSize: 24 })}
-                      className="p-2 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:text-white transition-colors text-left group"
+                      className="p-2 border border-gray-200 rounded hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors text-left group"
                     >
                       <span style={{ fontFamily: font }} className="text-xl group-hover:text-white">{font}</span>
                       <p className="text-xs text-gray-500 mt-1 group-hover:text-white">{selectedCategory.name}</p>

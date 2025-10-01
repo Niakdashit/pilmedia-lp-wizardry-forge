@@ -33,7 +33,7 @@ const GameSizeSelector: React.FC<GameSizeSelectorProps> = ({
             onClick={() => onSizeChange(key as GameSize)}
             className={`p-3 text-left border rounded-lg transition-colors ${
               selectedSize === key
-                ? 'border-[#d4dbe8] bg-[#d4dbe8]/5 text-[#d4dbe8]'
+                ? 'border-[#841b60] bg-[#841b60]/5 text-[#841b60]'
                 : 'border-gray-300 hover:border-gray-400'
             }`}
           >

@@ -41,13 +41,13 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           <Tag className="w-4 h-4 mr-2" />
           Nom de la campagne
         </label>
-        <input type="text" value={campaign.name || ''} onChange={e => handleInputChange('name', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" placeholder="Ma nouvelle campagne" />
+        <input type="text" value={campaign.name || ''} onChange={e => handleInputChange('name', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" placeholder="Ma nouvelle campagne" />
       </div>
 
       {/* Description */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">Description</label>
-        <textarea value={campaign.description || ''} onChange={e => handleInputChange('description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" rows={3} placeholder="Description de la campagne..." />
+        <textarea value={campaign.description || ''} onChange={e => handleInputChange('description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" rows={3} placeholder="Description de la campagne..." />
       </div>
 
       {/* URL */}
@@ -56,7 +56,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           <Globe className="w-4 h-4 mr-2" />
           URL de la campagne
         </label>
-        <input type="url" value={campaign.url || ''} onChange={e => handleInputChange('url', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" placeholder="https://example.com/campagne" />
+        <input type="url" value={campaign.url || ''} onChange={e => handleInputChange('url', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" placeholder="https://example.com/campagne" />
       </div>
 
       {/* Dates */}
@@ -66,14 +66,14 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             <Calendar className="w-4 h-4 mr-2" />
             Date de début
           </label>
-          <input type="date" value={campaign.startDate || ''} onChange={e => handleInputChange('startDate', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" />
+          <input type="date" value={campaign.startDate || ''} onChange={e => handleInputChange('startDate', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
         </div>
         <div className="space-y-2">
           <label className="flex items-center text-sm font-medium text-gray-700">
             <Calendar className="w-4 h-4 mr-2" />
             Date de fin
           </label>
-          <input type="date" value={campaign.endDate || ''} onChange={e => handleInputChange('endDate', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" />
+          <input type="date" value={campaign.endDate || ''} onChange={e => handleInputChange('endDate', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
         </div>
       </div>
 
@@ -84,14 +84,14 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
             <Clock className="w-4 h-4 mr-2" />
             Heure de début
           </label>
-          <input type="time" value={campaign.startTime || '09:00'} onChange={e => handleInputChange('startTime', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" />
+          <input type="time" value={campaign.startTime || '09:00'} onChange={e => handleInputChange('startTime', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
         </div>
         <div className="space-y-2">
           <label className="flex items-center text-sm font-medium text-gray-700">
             <Clock className="w-4 h-4 mr-2" />
             Heure de fin
           </label>
-          <input type="time" value={campaign.endTime || '18:00'} onChange={e => handleInputChange('endTime', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" />
+          <input type="time" value={campaign.endTime || '18:00'} onChange={e => handleInputChange('endTime', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent" />
         </div>
       </div>
 
@@ -101,7 +101,7 @@ const ModernGeneralTab: React.FC<ModernGeneralTabProps> = ({
           <Activity className="w-4 h-4 mr-2" />
           Statut
         </label>
-        <select value={campaign.status || 'draft'} onChange={e => handleInputChange('status', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent">
+        <select value={campaign.status || 'draft'} onChange={e => handleInputChange('status', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent">
           {statusOptions.map(option => <option key={option.value} value={option.value}>
               {option.label}
             </option>)}

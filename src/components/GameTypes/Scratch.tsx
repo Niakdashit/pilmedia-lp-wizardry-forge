@@ -167,7 +167,7 @@ const Scratch: React.FC<ScratchProps> = ({
         {isRevealed && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg">
-              <p className="text-xl font-bold text-[#d4dbe8]">
+              <p className="text-xl font-bold text-[#841b60]">
                 {scratchResult === 'win'
                   ? config?.winMessage || 'Félicitations !'
                   : config?.loseMessage || 'Pas de chance ! Réessayez !'}
@@ -229,7 +229,7 @@ const Scratch: React.FC<ScratchProps> = ({
           onChange={(e) =>
             onConfigChange({ ...config, maskShape: e.target.value })
           }
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
         >
           <option value="rectangle">Rectangle</option>
           <option value="circle">Cercle</option>
@@ -266,7 +266,7 @@ const Scratch: React.FC<ScratchProps> = ({
                   requiredScratchPercent: parseInt(e.target.value),
                 })
               }
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#d4dbe8]"
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#841b60]"
             />
           </div>
           <div className="w-16 relative">
@@ -281,7 +281,7 @@ const Scratch: React.FC<ScratchProps> = ({
                   requiredScratchPercent: parseInt(e.target.value),
                 })
               }
-              className="w-full pl-2 pr-8 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
+              className="w-full pl-2 pr-8 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
             />
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
               %
@@ -305,7 +305,7 @@ const Scratch: React.FC<ScratchProps> = ({
               onChange={(e) =>
                 onConfigChange({ ...config, winMessage: e.target.value })
               }
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               placeholder="Message de victoire"
             />
           </div>
@@ -325,7 +325,7 @@ const Scratch: React.FC<ScratchProps> = ({
               onChange={(e) =>
                 onConfigChange({ ...config, loseMessage: e.target.value })
               }
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
               placeholder="Message de défaite"
             />
           </div>

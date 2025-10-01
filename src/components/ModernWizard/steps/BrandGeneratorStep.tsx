@@ -38,7 +38,7 @@ const BrandGeneratorStep: React.FC<BrandGeneratorStepProps> = ({
     <div className="space-y-8">
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-gray-100/50">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-r from-[#841b60] to-[#6d164f] rounded-full flex items-center justify-center mx-auto mb-4">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-[#141e29] mb-3">
@@ -76,7 +76,7 @@ const BrandGeneratorStep: React.FC<BrandGeneratorStepProps> = ({
           <button
             onClick={() => setShowGenerator(true)}
             disabled={isGenerating}
-            className="flex-1 px-8 py-4 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-2"
+            className="flex-1 px-8 py-4 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-2"
           >
             <Sparkles className="w-5 h-5" />
             Generate from Brand URL
@@ -93,7 +93,7 @@ const BrandGeneratorStep: React.FC<BrandGeneratorStepProps> = ({
         <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={onPrev}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#d4dbe8] hover:text-white transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back

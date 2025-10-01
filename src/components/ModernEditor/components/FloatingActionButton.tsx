@@ -49,7 +49,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         {/* Main add button */}
         <button
           onClick={onToggleMenu}
-          className="w-14 h-14 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] hover:from-[#6d164f] hover:to-[#d4dbe8] text-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center transform hover:scale-105"
+          className="w-14 h-14 bg-gradient-to-r from-[#841b60] to-[#6d164f] hover:from-[#6d164f] hover:to-[#841b60] text-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center transform hover:scale-105"
           type="button"
         >
           <Plus className={`w-6 h-6 transition-transform duration-300 ${showAddMenu ? 'rotate-45' : ''}`} />

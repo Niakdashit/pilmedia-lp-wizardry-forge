@@ -794,7 +794,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
           return toHex(accentRgb);
         }
       }
-      return '#d4dbe8';
+      return '#841b60';
     })();
     const secondaryColor = '#ffffff';
 
@@ -1056,10 +1056,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       const currentWheelConfig = currentConfig?.design?.wheelConfig || {};
       const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
       const shouldUpdateBorderColor = isClassicBorder && 
-        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#d4dbe8');
+        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
       
       // Couleurs principales à utiliser
-      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#d4dbe8';
+      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#841b60';
       const secondaryColor = '#ffffff'; // Toujours blanc pour les segments secondaires
       const accentColor = colors[2] || currentConfig?.design?.brandColors?.accent || '#45b7d1';
       
@@ -1110,7 +1110,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
       const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
 
-      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #d4dbe8
+      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #841b60
       const buttonText = getTextOn(primaryRgb);
       const hoverHex = toHex(darken(primaryRgb, 0.12));
       const activeHex = toHex(darken(primaryRgb, 0.24));
@@ -1397,7 +1397,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className={`absolute top-2 ${previewButtonSide === 'left' ? 'left-2' : 'right-2'} z-50 px-2 py-1 bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              className={`absolute top-2 ${previewButtonSide === 'left' ? 'left-2' : 'right-2'} z-50 px-2 py-1 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
             >
               Mode édition
             </button>
@@ -1553,7 +1553,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
           </button>
           <button
             onClick={handleSaveAndContinue}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
             title="Sauvegarder et continuer"
           >
             <Save className="w-4 h-4 mr-1" />

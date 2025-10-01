@@ -32,7 +32,7 @@ const BrandPanel: React.FC<BrandPanelProps> = ({ onAddElement }) => {
   return (
     <div className="p-4 space-y-6">
       <div>
-        <button className="w-full p-4 bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] transition-colors flex items-center justify-center">
+        <button className="w-full p-4 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors flex items-center justify-center">
           <Plus className="w-5 h-5 mr-2" />
           Créer un kit de marque
         </button>

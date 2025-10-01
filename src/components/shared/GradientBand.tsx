@@ -14,8 +14,8 @@ const GradientBand: React.FC<GradientBandProps> = ({ children, className = '', h
   const defaultPng = '/assets/branding/top-gradient-band.png';
 
   const backgroundImage = imageSrc
-    ? `url(${imageSrc}), radial-gradient(circle at 0% 0%, #b41b60, #d4dbe8 70%)`
-    : `url(${defaultSvg}), url(${defaultPng}), radial-gradient(circle at 0% 0%, #b41b60, #d4dbe8 70%)`;
+    ? `url(${imageSrc}), radial-gradient(circle at 0% 0%, #b41b60, #841b60 70%)`
+    : `url(${defaultSvg}), url(${defaultPng}), radial-gradient(circle at 0% 0%, #b41b60, #841b60 70%)`;
   const backgroundSize = imageSrc ? 'cover, auto' : 'cover, cover, auto';
   const backgroundRepeat = imageSrc ? 'no-repeat, no-repeat' : 'no-repeat, no-repeat, no-repeat';
   const backgroundPosition = imageSrc ? 'center, center' : 'center, center, center';

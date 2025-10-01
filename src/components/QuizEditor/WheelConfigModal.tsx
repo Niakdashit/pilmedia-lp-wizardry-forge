@@ -104,7 +104,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
     });
   };
 
-  const colorPalette = ['#d4dbe8', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+  const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
 
   const setSegmentCount = (targetCount: number) => {
     let count = Math.max(2, Math.floor(targetCount));
@@ -236,7 +236,7 @@ const WheelConfigModal: React.FC<WheelConfigModalProps> = React.memo(({
                   type="text"
                   value={wheelBorderColor}
                   onChange={(e) => onBorderColorChange(e.target.value)}
-                  placeholder="#d4dbe8"
+                  placeholder="#841b60"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
                 />
               </div>

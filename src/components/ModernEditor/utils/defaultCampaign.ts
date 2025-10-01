@@ -38,8 +38,8 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
   gameSize: 'medium' as 'small' | 'medium' | 'large' | 'xlarge',
   gamePosition: 'center' as 'top' | 'center' | 'bottom' | 'left' | 'right',
   buttonConfig: {
-    color: '#d4dbe8',
-    borderColor: '#d4dbe8',
+    color: '#841b60',
+    borderColor: '#841b60',
     borderWidth: 1,
     borderRadius: 8,
     size: 'medium' as 'small' | 'medium' | 'large',
@@ -49,10 +49,10 @@ export const getDefaultCampaign = (campaignType: CampaignType, isNewCampaign: bo
   },
   design: {
     background: '#f8fafc',
-    primaryColor: '#d4dbe8',
+    primaryColor: '#841b60',
     secondaryColor: '#ffffff',
     titleColor: '#000000',
-    buttonColor: '#d4dbe8',
+    buttonColor: '#841b60',
     fontFamily: 'Inter',
     borderRadius: '0.5rem',
     textStyles: {

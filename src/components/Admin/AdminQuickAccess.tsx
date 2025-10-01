@@ -28,9 +28,9 @@ const AdminQuickAccess: React.FC = () => {
       description: 'Tableau de bord analytique',
       icon: BarChart3,
       href: '/admin/analytics',
-      color: 'bg-[#d4dbe8] hover:bg-[#6d164f]',
+      color: 'bg-[#841b60] hover:bg-[#6d164f]',
       iconBg: 'bg-[#fce7f3]',
-      iconColor: 'text-[#d4dbe8]'
+      iconColor: 'text-[#841b60]'
     },
     {
       title: 'Paramètres',

@@ -17,7 +17,7 @@ const PreviewDeviceButtons: React.FC<PreviewDeviceButtonsProps> = ({
         onClick={() => onDeviceChange('desktop')}
         className={`p-2 rounded-md transition-colors ${
           selectedDevice === 'desktop' 
-            ? 'bg-white shadow-sm text-[#d4dbe8]' 
+            ? 'bg-white shadow-sm text-[#841b60]' 
             : 'text-gray-600 hover:text-gray-900'
         }`}
         title="Desktop"
@@ -28,7 +28,7 @@ const PreviewDeviceButtons: React.FC<PreviewDeviceButtonsProps> = ({
         onClick={() => onDeviceChange('mobile')}
         className={`p-2 rounded-md transition-colors ${
           selectedDevice === 'mobile' 
-            ? 'bg-white shadow-sm text-[#d4dbe8]' 
+            ? 'bg-white shadow-sm text-[#841b60]' 
             : 'text-gray-600 hover:text-gray-900'
         }`}
         title="Mobile"

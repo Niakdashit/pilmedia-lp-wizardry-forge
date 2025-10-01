@@ -43,7 +43,7 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
                 onClick={() => onTabChange(tab.id)}
                 className={`relative w-full flex flex-col items-center p-3 rounded-2xl transition-all duration-300 group ${
                   isActive 
-                    ? 'bg-gradient-to-br from-[#d4dbe8] to-[#6d164f] text-white shadow-lg transform scale-105' 
+                    ? 'bg-gradient-to-br from-[#841b60] to-[#6d164f] text-white shadow-lg transform scale-105' 
                     : 'text-gray-600 hover:bg-white hover:text-gray-900 hover:shadow-md'
                 }`}
               >
@@ -75,7 +75,7 @@ const ModernEditorSidebar: React.FC<ModernEditorSidebarProps> = ({
       
       {/* Bottom gradient */}
       <div className="px-3 pb-2">
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#d4dbe8]/30 to-transparent"></div>
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#841b60]/30 to-transparent"></div>
       </div>
     </div>
   );

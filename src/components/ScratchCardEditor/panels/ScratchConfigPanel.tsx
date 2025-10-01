@@ -93,7 +93,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                   onClick={() => setActiveSection(section.id as any)}
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeSection === section.id
-                      ? 'bg-[#d4dbe8] text-white'
+                      ? 'bg-[#841b60] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -121,7 +121,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                       type="number"
                       value={scratchConfig.scratchArea?.x || 50}
                       onChange={(e) => handleScratchAreaChange('x', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -132,7 +132,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                       type="number"
                       value={scratchConfig.scratchArea?.y || 50}
                       onChange={(e) => handleScratchAreaChange('y', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -146,7 +146,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                       type="number"
                       value={scratchConfig.scratchArea?.width || 300}
                       onChange={(e) => handleScratchAreaChange('width', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -157,7 +157,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                       type="number"
                       value={scratchConfig.scratchArea?.height || 200}
                       onChange={(e) => handleScratchAreaChange('height', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -228,7 +228,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                     <textarea
                       value={scratchConfig.revealedContent?.value || 'Félicitations!'}
                       onChange={(e) => handleRevealedContentChange('value', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                       rows={3}
                       placeholder="Entrez le texte à révéler..."
                     />
@@ -266,7 +266,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                           />
                           <label
                             htmlFor="content-upload"
-                            className="inline-block px-4 py-2 bg-[#d4dbe8] text-white rounded-md text-sm font-medium cursor-pointer hover:bg-[#6d1650] transition-colors"
+                            className="inline-block px-4 py-2 bg-[#841b60] text-white rounded-md text-sm font-medium cursor-pointer hover:bg-[#6d1650] transition-colors"
                           >
                             Parcourir
                           </label>
@@ -298,7 +298,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                         onClick={() => handleConfigChange({ scratchTexture: texture.id })}
                         className={`p-3 rounded-lg border-2 transition-all ${
                           scratchConfig.scratchTexture === texture.id
-                            ? 'border-[#d4dbe8] ring-2 ring-[#d4dbe8]/20'
+                            ? 'border-[#841b60] ring-2 ring-[#841b60]/20'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -352,7 +352,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                               type="text"
                               value={c.text || ''}
                               onChange={(e) => handleCardTextChange(c.id, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                             />
                           </div>
                         ))}
@@ -383,7 +383,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                                   handleConfigChange({ cards });
                                 }
                               }}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                             >
                               <option value="">— Aucun (perdant)</option>
                               {prizes.map((p: any) => (
@@ -411,7 +411,7 @@ const ScratchConfigPanel: React.FC<ScratchConfigPanelProps> = ({
                           type="text"
                           value={scratchConfig.overlayColor || '#E3C6B7'}
                           onChange={(e) => handleConfigChange({ overlayColor: e.target.value })}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                         />
                       </div>
                     </div>

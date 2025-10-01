@@ -70,7 +70,7 @@ const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template, onUse, 
           {onUse && (
             <button
               onClick={() => onUse(template)}
-              className="absolute bottom-2 right-2 px-2.5 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute bottom-2 right-2 px-2.5 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
             >
               Utiliser
             </button>
@@ -127,7 +127,7 @@ const AdminTemplateCard: React.FC<AdminTemplateCardProps> = ({ template, onUse, 
             {onUse && (
               <button
                 onClick={() => onUse(template)}
-                className="px-2.5 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg hover:opacity-95 transition-colors"
+                className="px-2.5 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:opacity-95 transition-colors"
               >
                 Utiliser ce modèle
               </button>

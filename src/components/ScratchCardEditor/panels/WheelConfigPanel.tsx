@@ -102,7 +102,7 @@ const WheelConfigPanel: React.FC<WheelConfigPanelProps> = React.memo(({
                 type="text"
                 value={wheelBorderColor}
                 onChange={(e) => onBorderColorChange(e.target.value)}
-                placeholder="#d4dbe8"
+                placeholder="#841b60"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent"
               />
             </div>

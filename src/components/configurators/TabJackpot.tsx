@@ -162,7 +162,7 @@ const TabJackpot: React.FC<TabJackpotProps> = ({ campaign, setCampaign }) => {
             type="text"
             value={buttonText}
             onChange={(e) => updateButton({ text: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
           />
         </div>
 

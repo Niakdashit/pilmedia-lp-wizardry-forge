@@ -233,7 +233,7 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
                   key={template.id}
                   className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                     selectedTemplate === template.id
-                      ? 'border-[#d4dbe8] bg-white shadow-lg'
+                      ? 'border-[#841b60] bg-white shadow-lg'
                       : hoveredTemplate === template.id
                       ? 'border-gray-300 bg-gray-50'
                       : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
@@ -244,7 +244,7 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
                 >
                   {/* Selection indicator */}
                   {selectedTemplate === template.id && (
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d4dbe8 0%, #a21d6b 100%)' }}>
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)' }}>
                       <Check className="w-4 h-4 text-white" />
                     </div>
                   )}
@@ -255,7 +255,7 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
                         ? 'text-white'
                         : 'bg-gray-100 text-gray-400'
                     }`} style={selectedTemplate === template.id ? {
-                      background: 'linear-gradient(135deg, #d4dbe8 0%, #a21d6b 100%)'
+                      background: 'linear-gradient(135deg, #841b60 0%, #a21d6b 100%)'
                     } : {}}>
                       <Image className="w-5 h-5" />
                     </div>
@@ -365,7 +365,7 @@ const JackpotConfigPanel: React.FC<JackpotConfigPanelProps> = ({
                       checked={!!customFrame?.showBorder}
                       onChange={(e) => onCustomFrameChange?.({ showBorder: e.target.checked })}
                     />
-                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#d4dbe8]"></div>
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#841b60]"></div>
                   </label>
                 </div>
 

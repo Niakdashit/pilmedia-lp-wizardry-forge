@@ -94,7 +94,7 @@ const Toolbar: React.FC<{
                 type="button"
                 onClick={() => onWidthChange(option.id)}
                 className={`${isMobile ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-[11px]'} font-semibold uppercase tracking-wide rounded-md transition-colors
-                  ${isActive ? 'bg-[#d4dbe8] text-white shadow-sm shadow-[#d4dbe8]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
+                  ${isActive ? 'bg-[#841b60] text-white shadow-sm shadow-[#841b60]/40' : 'bg-white/70 text-gray-600 hover:bg-white/90 hover:text-gray-900'}`}
                 aria-label={`Largeur ${option.label}`}
               >
                 {option.label}
@@ -493,7 +493,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             onClick={(e) => e.preventDefault()}
             className={`inline-flex items-center justify-center px-6 py-3 text-sm transition-transform hover:-translate-y-[1px] ${((m as any).uppercase) ? 'uppercase' : ''} ${((m as any).bold) ? 'font-bold' : 'font-semibold'} ${((m as any).boxShadow) ? 'shadow-[0_12px_30px_rgba(132,27,96,0.35)]' : ''}`}
             style={{
-              background: (m as any).background || 'linear-gradient(to bottom right, #d4dbe8, #b41b60)',
+              background: (m as any).background || 'linear-gradient(to bottom right, #841b60, #b41b60)',
               color: (m as any).textColor || '#ffffff',
               borderRadius: `${m.borderRadius ?? 9999}px`,
               border: `${(m as any).borderWidth ?? 0}px solid ${(m as any).borderColor || '#000000'}`,

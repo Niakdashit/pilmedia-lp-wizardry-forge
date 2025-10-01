@@ -41,7 +41,7 @@ const SegmentEditor: React.FC<SegmentEditorProps> = ({
           />
           <input
             type="color"
-            value={seg.color || '#d4dbe8'}
+            value={seg.color || '#841b60'}
             onChange={e => onSegmentChange(index, 'color', e.target.value)}
             className="w-10 h-10 border rounded"
           />

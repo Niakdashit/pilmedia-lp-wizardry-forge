@@ -4,15 +4,15 @@ export const getWheelPreviewConfig = (campaign: any) => {
   const centerLogo = campaign?.design?.centerLogo || campaign?.config?.roulette?.centerImage;
   const theme = campaign?.config?.roulette?.theme || 'default';
 
-  const borderColor = campaign?.config?.roulette?.borderColor || '#d4dbe8';
+  const borderColor = campaign?.config?.roulette?.borderColor || '#841b60';
   const borderOutlineColor = campaign?.config?.roulette?.borderOutlineColor || '#FFD700';
 
   const customColors = campaign?.design?.customColors;
 
   const buttonConfig = campaign?.buttonConfig || {
-    color: customColors?.primary || '#d4dbe8',
+    color: customColors?.primary || '#841b60',
     textColor: customColors?.primary || '#ffffff',
-    borderColor: customColors?.primary || '#d4dbe8',
+    borderColor: customColors?.primary || '#841b60',
     borderWidth: 1,
     borderRadius: 8,
     size: 'medium',

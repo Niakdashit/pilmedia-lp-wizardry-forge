@@ -25,8 +25,8 @@ const MobileTabRoulette: React.FC<MobileTabRouletteProps> = ({
   const [centerImage, setCenterImage] = useState<File | null>(mobileRouletteConfig.centerImage || null);
   const [desiredCount, setDesiredCount] = useState<number>(segments.length || 3);
   const [theme, setTheme] = useState<'default' | 'promo' | 'food' | 'casino' | 'child' | 'gaming' | 'luxury' | 'halloween' | 'noel'>(mobileRouletteConfig.theme || 'default');
-  const [borderColor, setBorderColor] = useState<string>(mobileRouletteConfig.borderColor || '#d4dbe8');
-  const [pointerColor, setPointerColor] = useState<string>(mobileRouletteConfig.pointerColor || '#d4dbe8');
+  const [borderColor, setBorderColor] = useState<string>(mobileRouletteConfig.borderColor || '#841b60');
+  const [pointerColor, setPointerColor] = useState<string>(mobileRouletteConfig.pointerColor || '#841b60');
 
   const updateMobileRouletteConfig = (newSegments: Segment[], center: File | null, newTheme?: string, newBorderColor?: string, newPointerColor?: string) => {
     setSegments(newSegments);
@@ -137,7 +137,7 @@ const MobileTabRoulette: React.FC<MobileTabRouletteProps> = ({
         />
         <button
           onClick={addSegment}
-          className="bg-gradient-to-br from-[#d4dbe8] to-[#b41b60] text-white px-4 py-2 rounded shadow"
+          className="bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white px-4 py-2 rounded shadow"
         >
           + Ajouter un segment
         </button>

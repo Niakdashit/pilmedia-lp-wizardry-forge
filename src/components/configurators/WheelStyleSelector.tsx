@@ -22,7 +22,7 @@ const WheelStyleSelector: React.FC<WheelStyleSelectorProps> = ({ selectedStyle, 
             key={file}
             onClick={() => setSelectedStyle(file)}
             className={`border p-2 rounded-lg cursor-pointer hover:shadow-md transition ${
-              selectedStyle === file ? 'border-[#d4dbe8] ring-2 ring-[#d4dbe8]' : 'border-gray-300'
+              selectedStyle === file ? 'border-[#841b60] ring-2 ring-[#841b60]' : 'border-gray-300'
             }`}
           >
             <img

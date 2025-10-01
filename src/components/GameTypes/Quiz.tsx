@@ -20,7 +20,7 @@ const Quiz: React.FC<QuizProps> = ({
   isPreview = false, 
   config = {}, 
   onFinish,
-  buttonColor = '#d4dbe8',
+  buttonColor = '#841b60',
   buttonLabel = 'Commencer le quiz',
   design = {},
   className = '',
