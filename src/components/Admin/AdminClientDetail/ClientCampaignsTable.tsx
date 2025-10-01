@@ -51,7 +51,7 @@ const ClientCampaignsTable: React.FC<ClientCampaignsTableProps> = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h3 className="text-lg font-semibold text-gray-900">Campagnes du Client</h3>
           <select
-            className="w-full sm:w-auto border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#841b60] text-sm bg-white"
+            className="w-full sm:w-auto border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] text-sm bg-white"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >

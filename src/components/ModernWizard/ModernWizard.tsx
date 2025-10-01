@@ -152,7 +152,7 @@ const ModernWizard: React.FC = () => {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-[#841b60] to-[#6d164f] h-2 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] h-2 rounded-full transition-all duration-500"
               style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
             />
           </div>

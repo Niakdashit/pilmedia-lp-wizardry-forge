@@ -795,7 +795,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
           return toHex(accentRgb);
         }
       }
-      return '#841b60';
+      return '#d4dbe8';
     })();
     const secondaryColor = '#ffffff';
 
@@ -1121,10 +1121,10 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       const currentWheelConfig = currentConfig?.design?.wheelConfig || {};
       const isClassicBorder = (currentWheelConfig?.borderStyle || 'classic') === 'classic';
       const shouldUpdateBorderColor = isClassicBorder && 
-        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#841b60');
+        (!currentWheelConfig?.borderColor || currentWheelConfig.borderColor === '#d4dbe8');
       
       // Couleurs principales à utiliser
-      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#841b60';
+      const primaryColor = colors[0] || currentConfig?.design?.brandColors?.primary || '#d4dbe8';
       const secondaryColor = '#ffffff'; // Toujours blanc pour les segments secondaires
       const accentColor = colors[2] || currentConfig?.design?.brandColors?.accent || '#45b7d1';
       
@@ -1174,7 +1174,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       };
       const darken = (rgb: { r: number; g: number; b: number }, pct: number) => ({ r: rgb.r * (1 - pct), g: rgb.g * (1 - pct), b: rgb.b * (1 - pct) });
 
-      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #841b60
+      const primaryRgb = toRgb(primaryColor) || { r: 132, g: 27, b: 96 }; // fallback #d4dbe8
       const buttonText = luminance(primaryRgb) > 0.55 ? '#111111' : '#ffffff';
       const hoverHex = toHex(darken(primaryRgb, 0.12));
       const activeHex = toHex(darken(primaryRgb, 0.24));
@@ -1500,7 +1500,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}
-                    className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
+                    className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
                     style={{ top: 'calc(var(--editor-preview-toolbar-offset, 72px) + 16px)' }}
                     aria-label="Retourner en mode édition"
                   >
@@ -1534,7 +1534,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 {/* Floating Edit Mode Button */}
                 <button
                   onClick={() => setShowFunnel(false)}
-                  className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
+                  className={`absolute ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-100`}
                   style={{ top: 'calc(var(--editor-preview-toolbar-offset, 72px) + 16px)' }}
                   aria-label="Retourner en mode édition"
                 >
@@ -1987,7 +1987,7 @@ onShowPositionPanel={() => {
           </button>
           <button
             onClick={handleSaveAndContinue}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
             title="Sauvegarder et continuer"
           >
             <Save className="w-4 h-4 mr-1" />

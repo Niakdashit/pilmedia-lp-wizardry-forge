@@ -144,7 +144,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           onClick={onPreviewToggle}
           className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${
             isPreviewMode 
-              ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border-[#841b60]' 
+              ? 'bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white border-[#d4dbe8]' 
               : 'border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -168,7 +168,7 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
             </button>
             <button 
               onClick={onSave}
-              className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors"
+              className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] transition-colors"
             >
               <Save className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">{saveDesktopLabel}</span>

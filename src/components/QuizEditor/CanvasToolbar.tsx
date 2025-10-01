@@ -366,7 +366,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontWeight: selectedElement.fontWeight === 'bold' ? 'normal' : 'bold' 
         }))}
         className={`p-1 rounded sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontWeight === 'bold' ? 'bg-[#841b60] text-white' : ''
+          selectedElement.fontWeight === 'bold' ? 'bg-[#d4dbe8] text-white' : ''
         }`}
         title="Gras (Ctrl+B)"
       >
@@ -379,7 +379,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           fontStyle: selectedElement.fontStyle === 'italic' ? 'normal' : 'italic' 
         }))}
         className={`p-1 rounded sm:p-1.5 hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.fontStyle === 'italic' ? 'bg-[#841b60] text-white' : ''
+          selectedElement.fontStyle === 'italic' ? 'bg-[#d4dbe8] text-white' : ''
         }`}
         title="Italique (Ctrl+I)"
       >
@@ -392,7 +392,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
           textDecoration: selectedElement.textDecoration === 'underline' ? 'none' : 'underline' 
         }))}
         className={`p-1 rounded sm:p-1.5 hover:bg-gray-700 transition-colors duration-150 ${
-          selectedElement.textDecoration === 'underline' ? 'bg-[#841b60] text-white' : ''
+          selectedElement.textDecoration === 'underline' ? 'bg-[#d4dbe8] text-white' : ''
         }`}
         title="Souligné (Ctrl+U)"
       >
@@ -405,7 +405,7 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
       <div className="relative">
         <button 
           onClick={cycleAlignment}
-          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-[#841b60] text-white"
+          className="p-1 sm:p-1.5 rounded hover:bg-gray-700 transition-colors duration-150 flex items-center space-x-1 bg-[#d4dbe8] text-white"
           title={`Alignement: ${currentAlignmentOption.label} (cliquer pour changer)`}
           disabled={isShape}
           style={{ opacity: isShape ? 0.5 : 1 }}

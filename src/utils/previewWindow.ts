@@ -141,7 +141,7 @@ export class PreviewWindowManager {
                 // Configuration unifiée de la roue via le service
                 const wheelConfig = {
                     borderStyle: campaign.design?.wheelBorderStyle || campaign.design?.wheelConfig?.borderStyle || 'classic',
-                    borderColor: campaign.design?.wheelConfig?.borderColor || '#841b60',
+                    borderColor: campaign.design?.wheelConfig?.borderColor || '#d4dbe8',
                     scale: campaign.design?.wheelConfig?.scale || 1,
                     customColors: campaign.design?.customColors || {
                         primary: campaign.design?.brandColors?.primary || '#8b5cf6',

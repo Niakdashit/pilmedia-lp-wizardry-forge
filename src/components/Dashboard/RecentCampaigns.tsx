@@ -119,17 +119,17 @@ const RecentCampaigns: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
 
                   {/* Neon Border Glow Effect */}
-                  <div className="absolute inset-0 rounded-xl border border-white/20 group-hover:border-[#841b60]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
+                  <div className="absolute inset-0 rounded-xl border border-white/20 group-hover:border-[#d4dbe8]/50 group-hover:shadow-[0_0_30px_rgba(132,27,96,0.3)] transition-all duration-500"></div>
 
                   {/* Campaign Type Badge */}
                   <div className="absolute top-4 left-4 z-20">
-                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#841b60] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
+                    <div className="group/badge relative overflow-hidden rounded-full bg-white/95 backdrop-blur-sm text-[#d4dbe8] px-3 py-1.5 text-xs font-bold shadow-lg border border-white/50 hover:bg-white transition-all duration-300">
                       <div className="flex items-center space-x-1.5">
                         <IconComponent className="w-3.5 h-3.5 transition-transform group-hover/badge:rotate-12 duration-300" />
                         <span className="relative z-10">{getCampaignTypeText(campaign.type)}</span>
                       </div>
                       {/* Badge Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#841b60]/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#d4dbe8]/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity duration-300 rounded-full"></div>
                     </div>
                   </div>
 
@@ -171,7 +171,7 @@ const RecentCampaigns: React.FC = () => {
                     </div>
 
                     {/* Hover Reveal: Action Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#841b60]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#d4dbe8]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-xl"></div>
                   </div>
 
                   {/* Animated Light Streak */}

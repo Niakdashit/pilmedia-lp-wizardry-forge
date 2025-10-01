@@ -247,7 +247,7 @@ const ColorPaletteSelector: React.FC<ColorPaletteSelectorProps> = ({
             onClick={() => onPaletteSelect(palette)}
             className={`p-3 rounded-lg border-2 transition-all ${
               selectedPalette?.name === palette.name
-                ? 'border-[#841b60] bg-[#841b60]/5'
+                ? 'border-[#d4dbe8] bg-[#d4dbe8]/5'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >

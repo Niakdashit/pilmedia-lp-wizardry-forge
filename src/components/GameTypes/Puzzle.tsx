@@ -76,7 +76,7 @@ const Puzzle: React.FC<PuzzleProps> = ({ config = {}, onConfigChange, isPreview,
           <select
             value={config?.gridSize || 9}
             onChange={(e) => onConfigChange({ ...config, gridSize: parseInt(e.target.value) })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
           >
             <option value="9">3x3</option>
             <option value="16">4x4</option>
@@ -91,7 +91,7 @@ const Puzzle: React.FC<PuzzleProps> = ({ config = {}, onConfigChange, isPreview,
           <select
             value={config?.difficulty || 'medium'}
             onChange={(e) => onConfigChange({ ...config, difficulty: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60]"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8]"
           >
             <option value="easy">Facile</option>
             <option value="medium">Moyen</option>
@@ -116,7 +116,7 @@ const Puzzle: React.FC<PuzzleProps> = ({ config = {}, onConfigChange, isPreview,
           <motion.div
             key={index}
             className={`aspect-square rounded-sm cursor-move ${
-              piece === pieces.length - 1 ? 'invisible' : 'bg-gradient-to-br from-[#841b60] to-[#b41b60]'
+              piece === pieces.length - 1 ? 'invisible' : 'bg-gradient-to-br from-[#d4dbe8] to-[#b41b60]'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

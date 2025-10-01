@@ -69,7 +69,7 @@ const PuzzleGameConfig: React.FC<PuzzleGameConfigProps> = ({
               onClick={() => handlePuzzleChange('pieces', size.value)}
               className={`w-full p-3 text-left rounded-lg border-2 transition-all ${
                 campaign.gameConfig?.puzzle?.pieces === size.value
-                  ? 'border-[#841b60] bg-[#841b60]/10'
+                  ? 'border-[#d4dbe8] bg-[#d4dbe8]/10'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -95,7 +95,7 @@ const PuzzleGameConfig: React.FC<PuzzleGameConfigProps> = ({
               handlePuzzleChange('image', url);
             }
           }}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
         />
         {campaign.gameConfig?.puzzle?.image && (
           <div className="mt-2">
@@ -133,7 +133,7 @@ const PuzzleGameConfig: React.FC<PuzzleGameConfigProps> = ({
               handlePuzzleChange('backgroundImage', url);
             }
           }}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
         />
         {campaign.gameConfig?.puzzle?.backgroundImage && (
           <div className="mt-2">

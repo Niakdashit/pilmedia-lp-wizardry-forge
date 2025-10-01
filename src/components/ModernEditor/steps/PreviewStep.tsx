@@ -19,7 +19,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <Eye className="w-6 h-6 mr-2 text-[#841b60]" />
+            <Eye className="w-6 h-6 mr-2 text-[#d4dbe8]" />
             Aperçu et test
           </h2>
           <p className="text-gray-600">Testez votre campagne sur différents appareils</p>
@@ -73,7 +73,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
           </button>
           <button
             onClick={onNext}
-            className="px-8 py-3 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+            className="px-8 py-3 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
           >
             Publier
           </button>

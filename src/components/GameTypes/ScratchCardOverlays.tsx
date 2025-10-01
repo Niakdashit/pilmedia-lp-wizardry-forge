@@ -27,7 +27,7 @@ const ScratchCardOverlays: React.FC<ScratchCardOverlaysProps> = ({
       )}
 
       {isSelected && !canScratch && !locked && (
-        <div className="absolute inset-0 bg-[#841b60]/20 flex items-center justify-center text-[#841b60] text-sm font-semibold">
+        <div className="absolute inset-0 bg-[#d4dbe8]/20 flex items-center justify-center text-[#d4dbe8] text-sm font-semibold">
           Carte sélectionnée
         </div>
       )}

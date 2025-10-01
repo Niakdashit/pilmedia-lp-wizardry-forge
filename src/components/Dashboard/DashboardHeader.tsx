@@ -64,7 +64,7 @@ const DashboardHeader: React.FC = () => {
             {/* Section "Qu'allez-vous créer aujourd'hui ?" */}
             <div className="w-full">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold mb-2 text-[#841b60] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
+                <h2 className="text-xl font-bold mb-2 text-[#d4dbe8] drop-shadow-sm">Qu'allez-vous créer aujourd'hui ?</h2>
               </div>
 
               {/* Container pour desktop avec flex center */}
@@ -98,7 +98,7 @@ const DashboardHeader: React.FC = () => {
                           className="w-[3.375rem] h-[3.375rem] rounded-full"
                         />
                       </div>
-                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                      <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#d4dbe8] transition-colors text-center drop-shadow-sm">
                         {game.label}
                       </span>
                     </Link>;
@@ -142,7 +142,7 @@ const DashboardHeader: React.FC = () => {
                             className="w-[3.375rem] h-[3.375rem] rounded-full"
                           />
                         </div>
-                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#841b60] transition-colors text-center drop-shadow-sm">
+                        <span className="mt-2 text-xs font-medium text-gray-700 group-hover:text-[#d4dbe8] transition-colors text-center drop-shadow-sm">
                           {game.label}
                         </span>
                       </Link>

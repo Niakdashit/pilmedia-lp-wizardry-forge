@@ -86,7 +86,7 @@ const TemplatesEditor: React.FC = () => {
           <h1 className="text-xl font-semibold text-gray-900">Modèles</h1>
           <button
             onClick={() => navigate('/template-editor')}
-            className="inline-flex items-center px-3 py-2 rounded-lg bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white hover:opacity-95"
+            className="inline-flex items-center px-3 py-2 rounded-lg bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white hover:opacity-95"
           >
             Créer un modèle
           </button>

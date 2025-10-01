@@ -153,7 +153,7 @@ export class WheelConfigService {
   ): WheelConfig {
     const defaults = {
       borderStyle: 'classic',
-      borderColor: '#841b60',
+      borderColor: '#d4dbe8',
       borderWidth: 12,
       scale: 1,
       size: 200,
@@ -194,7 +194,7 @@ export class WheelConfigService {
       : '';
     const borderFallbackHex = WheelConfigService.parseToHex(
       modalConfig.borderColor || designConfig.borderColor || defaults.borderColor
-    ) || '#841b60';
+    ) || '#d4dbe8';
     const primaryColor = extractedPrimaryHex && WheelConfigService.isNearWhiteColor(extractedPrimaryHex)
       ? borderFallbackHex
       : (extractedPrimaryHex || borderFallbackHex);
@@ -460,7 +460,7 @@ export class WheelConfigService {
     
     const updatedSegments = segments.map((segment, index) => {
       // Mettre à jour uniquement les segments avec la couleur par défaut violette
-      if (segment.color === '#841b60') {
+      if (segment.color === '#d4dbe8') {
         console.log(`🔧 updateSegmentColors: Updating segment ${segment.id} from ${segment.color} to ${primaryColor}`);
         return { ...segment, color: primaryColor };
       }

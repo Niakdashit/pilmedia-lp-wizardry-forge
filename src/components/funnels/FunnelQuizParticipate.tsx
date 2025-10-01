@@ -22,7 +22,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
   const participateLabel = campaign?.buttonConfig?.text || campaign?.screens?.[0]?.buttonText || 'Participer';
   const participateStyles = useMemo(() => {
-    const gradientFallback = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
+    const gradientFallback = 'radial-gradient(circle at 0% 0%, #d4dbe8, #b41b60)';
     const buttonStyles = campaign?.gameConfig?.quiz?.buttonStyles || campaign?.buttonConfig?.styles || {};
 
     const style: React.CSSProperties = {

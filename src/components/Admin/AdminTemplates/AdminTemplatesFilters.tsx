@@ -27,7 +27,7 @@ const AdminTemplatesFilters: React.FC<AdminTemplatesFiltersProps> = ({
             <input
               type="text"
               placeholder="Rechercher par nom, description ou tags..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] text-sm sm:text-base"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] text-sm sm:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -41,7 +41,7 @@ const AdminTemplatesFilters: React.FC<AdminTemplatesFiltersProps> = ({
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <select
-                className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#841b60] text-sm bg-white min-w-0 flex-1 sm:flex-none"
+                className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] text-sm bg-white min-w-0 flex-1 sm:flex-none"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
               >
@@ -52,7 +52,7 @@ const AdminTemplatesFilters: React.FC<AdminTemplatesFiltersProps> = ({
               </select>
 
               <select
-                className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#841b60] text-sm bg-white min-w-0 flex-1 sm:flex-none"
+                className="border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#d4dbe8] text-sm bg-white min-w-0 flex-1 sm:flex-none"
                 value={filterVisibility}
                 onChange={(e) => setFilterVisibility(e.target.value)}
               >

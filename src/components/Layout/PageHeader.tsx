@@ -15,8 +15,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   size = 'sm'
 }) => {
   const titleClass = size === 'sm'
-    ? 'text-2xl font-bold mb-4 text-[#841b60] drop-shadow-sm'
-    : 'text-3xl md:text-4xl font-bold mb-6 text-[#841b60] drop-shadow-sm';
+    ? 'text-2xl font-bold mb-4 text-[#d4dbe8] drop-shadow-sm'
+    : 'text-3xl md:text-4xl font-bold mb-6 text-[#d4dbe8] drop-shadow-sm';
   const actionsClass = size === 'sm'
     ? 'flex flex-wrap justify-center gap-3'
     : 'flex flex-wrap justify-center gap-4';

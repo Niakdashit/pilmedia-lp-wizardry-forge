@@ -29,7 +29,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <Share2 className="w-6 h-6 mr-2 text-[#841b60]" />
+            <Share2 className="w-6 h-6 mr-2 text-[#d4dbe8]" />
             Publication et partage
           </h2>
           <p className="text-gray-600">Publiez votre campagne et partagez-la avec votre audience</p>
@@ -49,7 +49,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
               <button
                 onClick={handlePublish}
                 disabled={isPublishing}
-                className="px-8 py-4 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg disabled:opacity-50"
+                className="px-8 py-4 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg disabled:opacity-50"
               >
                 {isPublishing ? 'Publication en cours...' : 'Publier la campagne'}
               </button>
@@ -78,7 +78,7 @@ const PublishStep: React.FC<PublishStepProps> = ({
                 <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
                   <Copy className="w-4 h-4" />
                 </button>
-                <button className="px-4 py-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors">
+                <button className="px-4 py-2 bg-gradient-to-br from-[#d4dbe8] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors">
                   <ExternalLink className="w-4 h-4" />
                 </button>
               </div>

@@ -130,7 +130,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #841b60;
+            background: #d4dbe8;
             cursor: pointer;
             border: 2px solid #ffffff;
           }
@@ -139,7 +139,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #841b60;
+            background: #d4dbe8;
             cursor: pointer;
             border: 2px solid #ffffff;
             border: none;

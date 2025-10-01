@@ -74,7 +74,7 @@ const FontPanel: React.FC<FontPanelProps> = ({
               onClick={() => setSelectedFontCategory(category)}
               className={`p-2 text-xs rounded transition-all duration-200 ${
                 selectedFontCategory.name === category.name
-                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
+                  ? 'bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >
@@ -102,8 +102,8 @@ const FontPanel: React.FC<FontPanelProps> = ({
                   disabled={disabled}
                   className={`p-3 border rounded text-left transition-colors group ${
                     isActiveFont
-                      ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white'
-                      : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white'
+                      ? 'border-[hsl(var(--primary))] bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] text-white'
+                      : 'border-gray-200 hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#d4dbe8,_#b41b60)] hover:text-white'
                   } ${disabled ? 'opacity-60 cursor-not-allowed hover:border-gray-200 hover:bg-transparent hover:text-gray-500' : ''}`}
                 >
                   <span style={{ fontFamily: font }} className={`text-lg font-medium ${disabled ? 'text-gray-600' : 'group-hover:text-white'}`}>

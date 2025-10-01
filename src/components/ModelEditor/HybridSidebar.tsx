@@ -578,7 +578,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // - hover: #3f3f46 -> hsl(240 5% 26%)
   // - icon default: #d1d5db -> hsl(220 9% 72%)
   // - icon active/text primary: #ffffff -> hsl(0 0% 100%)
-  // - active background (approx mid of gradient #841b60 -> #b41b60): use #9e1b60 -> hsl(326 70% 37%)
+  // - active background (approx mid of gradient #d4dbe8 -> #b41b60): use #9e1b60 -> hsl(326 70% 37%)
   // - active accent/border: #b41b60 -> hsl(336 75% 41%)
   const themeVars: React.CSSProperties = {
     // Container/backgrounds

@@ -46,7 +46,7 @@ const GameBubble: React.FC<GameBubbleProps> = ({
         w-24 h-24 rounded-3xl flex items-center justify-center
         transition-all duration-300 group-hover:shadow-2xl
         ${isSelected 
-          ? 'bg-gradient-to-br from-[#841b60] to-[#6d164f] shadow-2xl shadow-[#841b60]/50' 
+          ? 'bg-gradient-to-br from-[#d4dbe8] to-[#6d164f] shadow-2xl shadow-[#d4dbe8]/50' 
           : 'bg-white/20 backdrop-blur-xl border border-white/30 group-hover:bg-white/30'
         }
       `}>
@@ -60,7 +60,7 @@ const GameBubble: React.FC<GameBubbleProps> = ({
 
       {/* Selection ring (static) */}
       {isSelected && (
-        <div className="absolute inset-0 rounded-3xl border-2 border-[#841b60]"></div>
+        <div className="absolute inset-0 rounded-3xl border-2 border-[#d4dbe8]"></div>
       )}
 
       {/* Tooltip */}
@@ -75,7 +75,7 @@ const GameBubble: React.FC<GameBubbleProps> = ({
       {/* Floating particles (removed animations) */}
       {isSelected && (
         <>
-          <div className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
+          <div className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-br from-[#d4dbe8] to-[#b41b60] rounded-full"></div>
           <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-violet-400 rounded-full"></div>
         </>
       )}

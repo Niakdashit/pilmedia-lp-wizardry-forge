@@ -6,7 +6,7 @@
 
 /* Variables CSS pour les couleurs de marque - Format HSL */
 :root {
-  --brand-primary: 309 78% 31%;      /* #841b60 en HSL */
+  --brand-primary: 309 78% 31%;      /* #d4dbe8 en HSL */
   --brand-secondary: 0 0% 100%;      /* #ffffff en HSL */
   --brand-accent: 202 45% 91%;       /* #ebf4f7 en HSL */
   --brand-text: 0 0% 100%;           /* #ffffff en HSL */
@@ -15,7 +15,7 @@
   --sidebar-bg: 0 0% 100%;           /* Fond blanc pur */
   --sidebar-surface: 0 0% 98%;       /* Surface légèrement grisée */
   --sidebar-hover: 309 78% 97%;      /* Hover très subtil avec teinte violette */
-  --sidebar-active: 309 78% 31%;     /* #841b60 - Couleur principale pour les éléments actifs */
+  --sidebar-active: 309 78% 31%;     /* #d4dbe8 - Couleur principale pour les éléments actifs */
   --sidebar-active-bg: 309 78% 97%;  /* Background actif très subtil */
   --sidebar-border: 0 0% 92%;        /* Bordures grises claires */
   --sidebar-text: 0 0% 15%;          /* Texte sombre pour contraste */
@@ -27,7 +27,7 @@
   --sidebar-glow: 309 78% 31% / 0.15; /* Lueur violette subtile */
   
   /* Variables complémentaires pour cohérence */
-  --primary: 309 78% 31%;            /* #841b60 */
+  --primary: 309 78% 31%;            /* #d4dbe8 */
   --secondary: 0 0% 100%;            /* #ffffff */
   --accent: 202 45% 91%;             /* #ebf4f7 pour les éléments atténués */
   --background: 0 0% 100%;

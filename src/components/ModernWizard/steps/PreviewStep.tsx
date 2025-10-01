@@ -174,7 +174,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={prevStep}
-            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#841b60] hover:text-white transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-[#d4dbe8] hover:text-white transition-colors"
             type="button"
           >
             Retour

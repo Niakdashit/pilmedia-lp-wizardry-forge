@@ -63,9 +63,9 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+              <div className="w-20 h-20 bg-gradient-to-r from-[#d4dbe8] via-purple-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 relative">
                 <Sparkles className="w-10 h-10 text-white" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 rounded-full animate-pulse opacity-50"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#d4dbe8] via-purple-600 to-indigo-600 rounded-full animate-pulse opacity-50"></div>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-3">
                 Générateur de Campagnes Studio
@@ -122,7 +122,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://exemple.com"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent transition-all"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
@@ -151,7 +151,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
                 <button
                   onClick={handleGenerate}
                   disabled={!url}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#d4dbe8] via-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
                   Générer Campagne Studio
@@ -165,7 +165,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
         return (
           <div className="text-center py-16">
             <div className="relative mb-8">
-              <Loader2 className="w-16 h-16 text-[#841b60] animate-spin mx-auto" />
+              <Loader2 className="w-16 h-16 text-[#d4dbe8] animate-spin mx-auto" />
               <div className="absolute inset-0 w-16 h-16 border-4 border-purple-200 rounded-full mx-auto"></div>
             </div>
             <h3 className="text-2xl font-semibold text-gray-900 mb-4">
@@ -173,7 +173,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
             </h3>
             <div className="space-y-3 text-gray-600 max-w-md mx-auto">
               <div className="flex items-center justify-center gap-2 animate-pulse">
-                <div className="w-2 h-2 bg-gradient-to-br from-[#841b60] to-[#b41b60] rounded-full"></div>
+                <div className="w-2 h-2 bg-gradient-to-br from-[#d4dbe8] to-[#b41b60] rounded-full"></div>
                 <span>Analyse du site web et extraction du logo</span>
               </div>
               <div className="flex items-center justify-center gap-2 animate-pulse" style={{animationDelay: '0.5s'}}>
@@ -344,7 +344,7 @@ const BrandGameGenerator: React.FC<BrandGameGeneratorProps> = ({
               </button>
               <button
                 onClick={handleApply}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#841b60] via-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 font-medium"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#d4dbe8] via-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 font-medium"
               >
                 <ArrowRight className="w-5 h-5" />
                 Appliquer dans l'Éditeur

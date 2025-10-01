@@ -1,7 +1,7 @@
 
 export const getThemeColors = (theme: string): string[] => {
   switch (theme) {
-    case 'promo': return ['#FFD700', '#841b60', '#FF6F61'];
+    case 'promo': return ['#FFD700', '#d4dbe8', '#FF6F61'];
     case 'food': return ['#f4d35e', '#ee964b', '#e63946'];
     case 'casino': return ['#000000', '#FFD700', '#FF0000'];
     case 'child': return ['#fcd5ce', '#cdb4db', '#b5ead7'];

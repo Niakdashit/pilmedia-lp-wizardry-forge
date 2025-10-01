@@ -26,7 +26,7 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
           <button
             type="button"
-            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
+            className="flex items-center gap-2 text-sm text-[#d4dbe8] hover:underline"
             onClick={onBack}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,8 +60,8 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
                     onClick={() => onUpdate({ layoutWidth: id as BlocVideo['layoutWidth'] })}
                     className={`flex items-center justify-center rounded-lg border px-3 py-2 text-[11px] font-semibold transition ${
                       isActive
-                        ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
-                        : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
+                        ? 'border-[#d4dbe8] bg-[#d4dbe8]/10 text-[#d4dbe8] shadow-sm shadow-[#d4dbe8]/30'
+                        : 'border-gray-200 text-gray-600 hover:border-[#d4dbe8]/40 hover:text-[#d4dbe8]'
                     }`}
                   >
                     {label}
@@ -80,7 +80,7 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
                 value={module.src || ''}
                 onChange={(e) => onUpdate({ src: e.target.value })}
                 placeholder="https://www.youtube.com/embed/…"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#d4dbe8] focus:ring-[#d4dbe8]"
               />
             </label>
             <label className="block">
@@ -90,7 +90,7 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
                 value={module.title || ''}
                 onChange={(e) => onUpdate({ title: e.target.value })}
                 placeholder="Titre de la vidéo"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#d4dbe8] focus:ring-[#d4dbe8]"
               />
             </label>
           </section>
@@ -103,8 +103,8 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
                 onClick={() => onUpdate({ objectFit: 'cover' })}
                 className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
                   currentFit === 'cover'
-                    ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60]'
-                    : 'border-gray-200 text-gray-600 hover:border-[#841b60]/50 hover:text-[#841b60]'
+                    ? 'border-[#d4dbe8] bg-[#d4dbe8]/10 text-[#d4dbe8]'
+                    : 'border-gray-200 text-gray-600 hover:border-[#d4dbe8]/50 hover:text-[#d4dbe8]'
                 }`}
               >
                 <Square className="w-4 h-4" />
@@ -115,8 +115,8 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
                 onClick={() => onUpdate({ objectFit: 'contain' })}
                 className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
                   currentFit === 'contain'
-                    ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60]'
-                    : 'border-gray-200 text-gray-600 hover:border-[#841b60]/50 hover:text-[#841b60]'
+                    ? 'border-[#d4dbe8] bg-[#d4dbe8]/10 text-[#d4dbe8]'
+                    : 'border-gray-200 text-gray-600 hover:border-[#d4dbe8]/50 hover:text-[#d4dbe8]'
                 }`}
               >
                 <Square className="w-4 h-4" />
@@ -145,7 +145,7 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
               <button
                 type="button"
                 onClick={() => onUpdate({ borderRadius: 0 })}
-                className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-[#841b60] hover:text-[#841b60] transition"
+                className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-600 hover:border-[#d4dbe8] hover:text-[#d4dbe8] transition"
               >
                 Réinitialiser
               </button>
@@ -164,8 +164,8 @@ const VideoModulePanel: React.FC<VideoModulePanelProps> = ({ module, onUpdate, o
                     onClick={() => onUpdate({ align: id })}
                     className={`flex flex-col items-center rounded-lg border px-3 py-2 text-xs transition ${
                       isActive
-                        ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60]'
-                        : 'border-gray-200 text-gray-600 hover:border-[#841b60]/50 hover:text-[#841b60]'
+                        ? 'border-[#d4dbe8] bg-[#d4dbe8]/10 text-[#d4dbe8]'
+                        : 'border-gray-200 text-gray-600 hover:border-[#d4dbe8]/50 hover:text-[#d4dbe8]'
                     }`}
                   >
                     <Icon className="w-4 h-4 mb-1" />

@@ -76,7 +76,7 @@ const MemoryGameConfig: React.FC<MemoryGameConfigProps> = ({
               onClick={() => handleMemoryChange('difficulty', diff.value)}
               className={`w-full p-3 text-left rounded-lg border-2 transition-all ${
                 campaign.gameConfig?.memory?.difficulty === diff.value
-                  ? 'border-[#841b60] bg-[#841b60]/10'
+                  ? 'border-[#d4dbe8] bg-[#d4dbe8]/10'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -96,7 +96,7 @@ const MemoryGameConfig: React.FC<MemoryGameConfigProps> = ({
         <select
           value={campaign.gameConfig?.memory?.theme || 'animals'}
           onChange={(e) => handleMemoryChange('theme', e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
         >
           {themes.map((theme) => (
             <option key={theme.value} value={theme.value}>
@@ -114,7 +114,7 @@ const MemoryGameConfig: React.FC<MemoryGameConfigProps> = ({
             id="timer"
             checked={campaign.gameConfig?.memory?.timer || false}
             onChange={(e) => handleMemoryChange('timer', e.target.checked)}
-            className="rounded border-gray-300 text-[#841b60] focus:ring-[#841b60]"
+            className="rounded border-gray-300 text-[#d4dbe8] focus:ring-[#d4dbe8]"
           />
           <label htmlFor="timer" className="flex items-center text-sm font-medium text-gray-700">
             <Clock className="w-4 h-4 mr-1" />
@@ -131,7 +131,7 @@ const MemoryGameConfig: React.FC<MemoryGameConfigProps> = ({
               onChange={(e) => handleMemoryChange('timeLimit', parseInt(e.target.value))}
               min="30"
               max="300"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
             />
           </div>
         )}
@@ -150,7 +150,7 @@ const MemoryGameConfig: React.FC<MemoryGameConfigProps> = ({
               handleMemoryChange('backgroundImage', url);
             }
           }}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
         />
         {campaign.gameConfig?.memory?.backgroundImage && (
           <div className="mt-2">

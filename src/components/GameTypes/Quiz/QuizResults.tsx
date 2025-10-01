@@ -45,7 +45,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   };
 
   const buttonStyle = {
-    backgroundColor: design.primaryColor || '#841b60',
+    backgroundColor: design.primaryColor || '#d4dbe8',
     color: design.buttonTextColor || '#ffffff',
     borderRadius: design.borderRadius || '12px'
   };
@@ -91,7 +91,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <div className="text-5xl font-bold" style={{ color: design.primaryColor || '#841b60' }}>
+        <div className="text-5xl font-bold" style={{ color: design.primaryColor || '#d4dbe8' }}>
           {score}/{totalQuestions}
         </div>
         <div className="text-xl" style={{ color: design.textColor || '#6b7280' }}>

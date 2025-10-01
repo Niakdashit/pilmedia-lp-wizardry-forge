@@ -35,7 +35,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
 }) => {
   const gameBackgroundImage = getCampaignBackgroundImage(campaign, previewMode);
   const buttonLabel = campaign.gameConfig?.[campaign.type]?.buttonLabel || campaign.buttonConfig?.text;
-  const buttonColor = campaign.buttonConfig?.color || campaign.gameConfig?.[campaign.type]?.buttonColor || '#841b60';
+  const buttonColor = campaign.buttonConfig?.color || campaign.gameConfig?.[campaign.type]?.buttonColor || '#d4dbe8';
   const contrastBg = mobileConfig?.contrastBackground || campaign.screens?.[2]?.contrastBackground;
 
   const gameSize: GameSize = (campaign.gameSize && Object.keys(GAME_SIZES).includes(campaign.gameSize)) 

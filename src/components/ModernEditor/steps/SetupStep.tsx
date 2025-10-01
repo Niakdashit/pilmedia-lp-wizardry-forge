@@ -19,7 +19,7 @@ const SetupStep: React.FC<SetupStepProps> = ({
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <Settings className="w-6 h-6 mr-2 text-[#841b60]" />
+            <Settings className="w-6 h-6 mr-2 text-[#d4dbe8]" />
             Configuration générale
           </h2>
           <p className="text-gray-600">Définissez les paramètres de base de votre campagne</p>
@@ -37,7 +37,7 @@ const SetupStep: React.FC<SetupStepProps> = ({
         <div className="flex justify-end pt-6 border-t border-gray-200">
           <button
             onClick={onNext}
-            className="px-8 py-3 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+            className="px-8 py-3 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
           >
             Continuer
           </button>

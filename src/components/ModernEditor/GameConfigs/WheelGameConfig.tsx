@@ -15,7 +15,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
   const segments = campaign.gameConfig?.wheel?.segments || campaign.config?.roulette?.segments || [];
 
   // Palette de couleurs réutilisable pour les nouveaux segments
-  const colorPalette = ['#841b60', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+  const colorPalette = ['#d4dbe8', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
 
   const updateWheelConfig = (updates: any) => {
     setCampaign((prev: any) => {
@@ -174,7 +174,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             <select 
               value={campaign.gameConfig?.wheel?.speed || 'medium'} 
               onChange={e => updateWheelConfig({ speed: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
             >
               <option value="slow">Lente</option>
               <option value="medium">Moyenne</option>
@@ -190,7 +190,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             <select 
               value={campaign.gameConfig?.wheel?.mode || 'random'} 
               onChange={e => updateWheelConfig({ mode: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
             >
               <option value="random">Aléatoire</option>
               <option value="instant_winner">Gagnant instantané</option>
@@ -211,7 +211,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
               max="1"
               value={campaign.gameConfig?.wheel?.winProbability || 0.1}
               onChange={e => updateWheelConfig({ winProbability: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent" 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" 
             />
           </div>
         )}
@@ -224,7 +224,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
             type="text" 
             value={campaign.gameConfig?.wheel?.buttonLabel || 'Faire tourner'}
             onChange={e => updateWheelConfig({ buttonLabel: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#841b60] focus:border-transparent" 
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent" 
             placeholder="Faire tourner" 
           />
         </div>
@@ -241,7 +241,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
               step={2}
               value={segments.length || 0}
               onChange={(e) => setSegmentCount(parseInt(e.target.value || '0', 10))}
-              className="w-24 px-3 py-1 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
+              className="w-24 px-3 py-1 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#d4dbe8] focus:border-transparent"
             />
           </div>
         </div>
@@ -258,7 +258,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
           <div className="flex space-x-2">
             <button
               onClick={addSegmentPair}
-              className="px-3 py-1 text-sm bg-gradient-to-br from-[#841b60] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
+              className="px-3 py-1 text-sm bg-gradient-to-br from-[#d4dbe8] to-[#b41b60] text-white rounded-lg hover:bg-[#6d164f] transition-colors"
             >
               + Ajouter une paire
             </button>
@@ -311,7 +311,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
                 <div className={`w-3 h-3 rounded-full ${isLosingSegment ? 'bg-red-400' : 'bg-green-400'}`} />
                 <input 
                   type="color" 
-                  value={segment.color || '#841b60'}
+                  value={segment.color || '#d4dbe8'}
                   onChange={e => updateSegment(index, 'color', e.target.value)}
                   className="w-8 h-8 rounded border border-gray-300" 
                 />
@@ -320,7 +320,7 @@ const WheelGameConfig: React.FC<WheelGameConfigProps> = ({
                   value={segment.label || ''}
                   onChange={e => updateSegment(index, 'label', e.target.value)}
                   placeholder={isLosingSegment ? "Texte perdant" : "Texte gagnant"}
-                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#841b60] focus:border-transparent" 
+                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[#d4dbe8] focus:border-transparent" 
                 />
                 <input 
                   type="color" 

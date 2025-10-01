@@ -19,7 +19,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2">
-        <Sparkles className="w-6 h-6 text-[#841b60]" />
+        <Sparkles className="w-6 h-6 text-[#d4dbe8]" />
         <h3 className="text-lg font-semibold text-gray-900">Assistant IA</h3>
       </div>
       
@@ -29,13 +29,13 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Décrivez votre campagne idéale..."
           rows={4}
-          className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-[#841b60] resize-none"
+          className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-[#d4dbe8] resize-none"
         />
         
         <button
           onClick={onGenerate}
           disabled={!prompt.trim() || isGenerating}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-[#841b60] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-[#d4dbe8] to-[#6d164f] text-white rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50"
         >
           {isGenerating ? (
             <>
@@ -66,7 +66,7 @@ const AIAssistantSidebar: React.FC<AIAssistantSidebarProps> = ({
             <button
               key={index}
               onClick={() => setPrompt(suggestion)}
-              className="w-full text-left px-3 py-2 bg-gray-50 hover:bg-[#841b60]/5 rounded-lg text-sm text-gray-700 transition-colors"
+              className="w-full text-left px-3 py-2 bg-gray-50 hover:bg-[#d4dbe8]/5 rounded-lg text-sm text-gray-700 transition-colors"
             >
               {suggestion}
             </button>
