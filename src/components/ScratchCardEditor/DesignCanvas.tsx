@@ -459,6 +459,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
+          // Émettre un événement de synchronisation pour les autres canvas
+          window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
         } catch {}
       }
     };
@@ -480,6 +482,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url);
+          // Émettre un événement de synchronisation pour les autres canvas
+          window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId } }));
         } catch {}
       }
     };
@@ -489,17 +493,33 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Charger toutes les images de fond au montage initial (une seule fois)
   useEffect(() => {
-    try {
-      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-      const loadedBackgrounds: Record<string, string | null> = {};
-      
-      devices.forEach(device => {
-        const saved = sessionStorage.getItem(`sc-bg-${device}-${screenId}`);
-        loadedBackgrounds[device] = saved || null;
-      });
-      
-      setDeviceBackgrounds(loadedBackgrounds);
-    } catch {}
+    const loadAllBackgrounds = () => {
+      try {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const loadedBackgrounds: Record<string, string | null> = {};
+        
+        devices.forEach(device => {
+          const saved = sessionStorage.getItem(`sc-bg-${device}-${screenId}`);
+          loadedBackgrounds[device] = saved || null;
+        });
+        
+        setDeviceBackgrounds(loadedBackgrounds);
+      } catch {}
+    };
+
+    // Charger au montage
+    loadAllBackgrounds();
+
+    // Écouter les changements de storage pour synchroniser entre les différents canvas
+    const handleStorageSync = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail;
+      if (detail?.screenId === screenId) {
+        loadAllBackgrounds();
+      }
+    };
+
+    window.addEventListener('sc-bg-sync', handleStorageSync as EventListener);
+    return () => window.removeEventListener('sc-bg-sync', handleStorageSync as EventListener);
   }, [screenId]); // Uniquement au changement de screenId, pas de selectedDevice
 
   // Hydrate local per-screen background on mount and when screenId or device changes (session-only)
