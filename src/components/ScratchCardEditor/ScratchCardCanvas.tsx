@@ -34,8 +34,10 @@ const ScratchCardCanvas: React.FC<ScratchCardCanvasProps> = ({
     const viewportWidth = windowSize.width;
     const viewportHeight = windowSize.height;
 
-    const isMobile = selectedDevice === 'mobile' || viewportWidth < 768;
-    const isTablet = selectedDevice === 'tablet' || (viewportWidth >= 768 && viewportWidth < 1024);
+    // IMPORTANT: Ne pas dégrader le layout desktop selon la taille de la fenêtre.
+    // On s'appuie uniquement sur selectedDevice pour déterminer le mode.
+    const isMobile = selectedDevice === 'mobile';
+    const isTablet = selectedDevice === 'tablet';
 
     // Local copy que l'on peut modifier
     const localGrid = { ...grid };

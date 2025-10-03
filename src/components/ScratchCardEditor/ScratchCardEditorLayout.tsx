@@ -308,6 +308,47 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setCanvasZoom(getDefaultZoom(device));
   }, []);
 
+  // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans (desktop/tablette/mobile)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string } | undefined;
+      const url = detail?.url;
+      if (!url) return;
+      // Mettre à jour le background local de l'éditeur
+      setCanvasBackground({ type: 'image', value: url });
+      // Mettre à jour la campagne globale (design desktop + mobile)
+      try {
+        setCampaign((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            name: prev.name || 'Campaign',
+            design: {
+              ...(prev.design || {}),
+              backgroundImage: url,
+              mobileBackgroundImage: url
+            },
+            _lastUpdate: Date.now()
+          };
+        });
+      } catch {}
+      // Mettre à jour la config locale utilisée par l'éditeur si présente
+      setCampaignConfig((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          design: {
+            ...(prev.design || {}),
+            backgroundImage: url,
+            mobileBackgroundImage: url
+          }
+        };
+      });
+    };
+    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
+  }, [setCampaign]);
+
   // Détection de la taille de fenêtre
   useEffect(() => {
     const updateWindowSize = () => {
@@ -2290,6 +2331,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   campaign={campaignData}
                   previewMode={selectedDevice}
                   wheelModalConfig={wheelModalConfig}
+                  launchButtonStyles={launchButtonStyles}
                 />
               )}
             </div>

@@ -21,13 +21,15 @@ interface FunnelUnlockedGameProps {
   mobileConfig?: any;
   wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   onReset?: () => void;
+  launchButtonStyles?: React.CSSProperties;
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   campaign,
   previewMode = 'desktop',
   mobileConfig,
-  wheelModalConfig
+  wheelModalConfig,
+  launchButtonStyles
 }) => {
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
@@ -122,7 +124,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             normalizedBackground ??
             storeCampaign.design?.background ??
             campaign.design?.background
-        }
+        },
+        // Préserver les messages personnalisés
+        scratchResultMessages: storeCampaign.scratchResultMessages || campaign.scratchResultMessages
       });
     } else {
       setLiveCampaign(campaign);
@@ -187,22 +191,31 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return 0.7;
   }
 
-  // Background style avec synchronisation en temps réel (comme FunnelQuizParticipate)
+  // Helper: lire un éventuel override local (par écran et par appareil) depuis sessionStorage
+  const getPerScreenBg = (screen: 'screen1' | 'screen2' | 'screen3', device: 'desktop' | 'tablet' | 'mobile'): string | null => {
+    try {
+      const url = sessionStorage.getItem(`sc-bg-${device}-${screen}`);
+      if (url && typeof url === 'string' && url.length > 0) return url;
+    } catch {}
+    return null;
+  };
+
+  // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
   const backgroundStyle: React.CSSProperties = useMemo(() => {
+    const perScreenUrl = getPerScreenBg(currentScreen, previewMode);
+    if (perScreenUrl) {
+      return { background: `url(${perScreenUrl}) center/cover no-repeat` };
+    }
     const canvasBackground = liveCampaign?.canvasConfig?.background || liveCampaign?.design?.background || campaign?.design?.background;
     return {
       background: canvasBackground?.type === 'image'
         ? `url(${canvasBackground.value}) center/cover no-repeat`
         : canvasBackground?.value || campaign?.design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
     };
-  }, [liveCampaign?.canvasConfig?.background, liveCampaign?.design?.background, campaign?.design?.background, forceUpdate]);
+  }, [currentScreen, previewMode, liveCampaign?.canvasConfig?.background, liveCampaign?.design?.background, campaign?.design?.background, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié (comme FunnelQuizParticipate)
-  // Force update when modularPage changes
-  const modularPage = useMemo(() => {
-    return liveCampaign?.modularPage || campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
-  }, [liveCampaign?.modularPage, campaign?.modularPage, forceUpdate]);
-  
+  const modularPage = liveCampaign?.modularPage || campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
@@ -328,9 +341,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           <div className="relative z-10 h-full flex items-center justify-center">
             <ResultScreen 
               gameResult={gameResult} 
-              campaign={campaign} 
+              campaign={liveCampaign} 
               mobileConfig={mobileConfig} 
-              onReset={handleReset} 
+              onReset={handleReset}
+              launchButtonStyles={launchButtonStyles}
             />
           </div>
         </div>
@@ -409,22 +423,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
           {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') */}
           {gameResult !== null && (
-            <div className="relative z-10 h-full flex flex-col items-center justify-center gap-6 p-8">
-              {/* Message de résultat */}
-              <div className="text-center">
-                <h2 className="text-3xl font-bold mb-4">
-                  {gameResult === 'win' ? '🎉 Félicitations !' : '😔 Dommage...'}
-                </h2>
-                <p className="text-lg text-gray-600 mb-6">
-                  {gameResult === 'win' 
-                    ? 'Vous avez gagné !' 
-                    : 'Vous avez perdu. Réessayez votre chance !'}
-                </p>
-              </div>
-
-              {/* Modules screen3 si présents */}
+            <div className="relative z-10 h-full">
               {modules3.length > 0 && (
-                <div className="w-full flex flex-col items-center justify-center gap-6">
+                <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
                   <QuizModuleRenderer 
                     modules={modules3}
                     previewMode={true}
@@ -433,14 +434,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   />
                 </div>
               )}
-
-              {/* Bouton Rejouer par défaut */}
-              <button
-                onClick={handleReset}
-                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-lg"
-              >
-                🔄 Rejouer
-              </button>
             </div>
           )}
         </div>
@@ -453,6 +446,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           participationLoading={participationLoading}
           onClose={() => setShowFormModal(false)}
           onSubmit={handleFormSubmit}
+          launchButtonStyles={launchButtonStyles}
         />
       </div>
     );
@@ -601,6 +595,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           participationLoading={participationLoading}
           onClose={() => setShowFormModal(false)}
           onSubmit={handleFormSubmit}
+          launchButtonStyles={launchButtonStyles}
         />
       </div>
     );
@@ -631,6 +626,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           setShowFormModal(false);
         }}
         onSubmit={handleFormSubmit}
+        launchButtonStyles={launchButtonStyles}
       />
     </div>
   );

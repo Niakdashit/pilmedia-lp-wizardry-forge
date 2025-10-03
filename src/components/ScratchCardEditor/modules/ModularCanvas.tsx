@@ -829,7 +829,9 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
         className="flex flex-col gap-0"
         style={{
           minHeight: single ? minHeightPx : undefined,
-          justifyContent: 'flex-start'
+          // Par défaut (édition) : centrer verticalement s'il n'y a qu'un seul module
+          // Dès qu'un second module est ajouté, repasser en haut
+          justifyContent: single ? 'center' : 'flex-start'
         }}
       >
         {rows.map((row, rowIndex) => {

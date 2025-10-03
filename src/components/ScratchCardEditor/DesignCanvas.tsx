@@ -183,6 +183,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   );
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Local override for per-screen background image (when applying only to current screen)
+  const [localScreenBgUrl, setLocalScreenBgUrl] = useState<string | null>(null);
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
@@ -438,6 +440,47 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
   }, [localZoom, onZoomChange, activeCanvasRef]);
+
+  // Listen for per-screen background apply and store a local override for this canvas screen & device
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: 'screen1' | 'screen2' | 'screen3'; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
+      if (!detail || typeof detail.url !== 'string') return;
+      if (detail.screenId === (screenId as any) && detail.device === selectedDevice) {
+        setLocalScreenBgUrl(detail.url);
+        try { sessionStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url); } catch {}
+      }
+    };
+    window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Listen for device-scoped apply to all screens; apply to this screen if device matches
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
+      if (!detail || typeof detail.url !== 'string') return;
+      if (detail.device === selectedDevice) {
+        setLocalScreenBgUrl(detail.url);
+        try { sessionStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url); } catch {}
+      }
+    };
+    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Hydrate local per-screen background on mount and when screenId or device changes (session-only)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
+      if (saved && typeof saved === 'string') {
+        setLocalScreenBgUrl(saved);
+      } else {
+        // Aucun override pour ce couple (device, screen): remettre à null
+        setLocalScreenBgUrl(null);
+      }
+    } catch {}
+  }, [screenId, selectedDevice]);
 
   // Optimisation mobile pour une expérience tactile parfaite
 
@@ -2076,7 +2119,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             <div 
               className="absolute inset-0" 
               style={{
-                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                background: localScreenBgUrl
+                  ? `url(${localScreenBgUrl}) center/cover no-repeat`
+                  : (background?.type === 'image'
+                      ? `url(${background.value}) center/cover no-repeat`
+                      : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)')
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();

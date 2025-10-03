@@ -10,6 +10,7 @@ interface FormHandlerProps {
   fields: FieldConfig[];
   participationLoading: boolean;
   onSubmit: (formData: Record<string, string>) => Promise<void>;
+  launchButtonStyles?: React.CSSProperties;
 }
 
 const FormHandler: React.FC<FormHandlerProps> = ({
@@ -18,13 +19,13 @@ const FormHandler: React.FC<FormHandlerProps> = ({
   campaign,
   fields,
   participationLoading,
-  onSubmit
+  onSubmit,
+  launchButtonStyles
 }) => {
   if (!showFormModal) return null;
 
   // Récupérer les couleurs de design de la campagne
   const design = campaign.design || {};
-  const customColors = design.customColors || {};
   // Forcer le noir par défaut, ignorer les anciennes valeurs magenta
   const buttonColor = "#000000";
   const borderColor = design.borderColor || "#E5E7EB";
@@ -56,6 +57,7 @@ const FormHandler: React.FC<FormHandlerProps> = ({
         }}
         inputBorderColor={borderColor}
         inputFocusColor={focusColor}
+        launchButtonStyles={launchButtonStyles}
       />
     </Modal>
   );

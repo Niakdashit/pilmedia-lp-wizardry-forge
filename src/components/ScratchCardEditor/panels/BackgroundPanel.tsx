@@ -29,6 +29,10 @@ interface BackgroundPanelProps {
   onModuleUpdate?: (id: string, patch: any) => void;
   // 'fill' applies text color or shape background; 'border' applies shape borderColor
   colorEditingContext?: 'fill' | 'border' | 'text';
+  // Current modular screen to target per-screen background application
+  currentScreen?: 'screen1' | 'screen2' | 'screen3';
+  // Current editor device to scope backgrounds per device (desktop/tablet/mobile)
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
@@ -39,7 +43,9 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   selectedElement,
   onElementUpdate,
   onModuleUpdate,
-  colorEditingContext = 'fill'
+  colorEditingContext = 'fill',
+  currentScreen,
+  selectedDevice
 }) => {
   console.log('🎨 BackgroundPanel component received props:', {
     selectedElementId: selectedElement?.id,
@@ -55,6 +61,8 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const [selectedFontCategory, setSelectedFontCategory] = useState(() => availableFontCategories[0]);
   // Sous-onglets: Style (par défaut) et Effets
   const [activeSubTab, setActiveSubTab] = useState<'style' | 'effects'>('style');
+  // Option: appliquer l'image de fond à tous les écrans (desktop/tablette/mobile)
+  const [applyToAllScreens, setApplyToAllScreens] = useState<boolean>(false);
   
   // États pour personnaliser les couleurs des effets rapides
   const [effectBackgroundColor, setEffectBackgroundColor] = useState<string>('#FFD700');
@@ -422,7 +430,19 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
-        onBackgroundChange({ type: 'image', value: imageUrl });
+        // Si la case est cochée, appliquer à tous les écrans MAIS uniquement pour l'appareil courant (device-scoped)
+        if (applyToAllScreens) {
+          if (typeof window !== 'undefined') {
+            const evt = new CustomEvent('applyBackgroundAllScreens', { detail: { url: imageUrl, device: selectedDevice } });
+            window.dispatchEvent(evt);
+          }
+        } else {
+          // Sinon, ne pas toucher au background global: appliquer uniquement à l'écran courant
+          if (typeof window !== 'undefined' && currentScreen) {
+            const evt2 = new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: imageUrl, screenId: currentScreen, device: selectedDevice } });
+            window.dispatchEvent(evt2);
+          }
+        }
         
         // Extract colors from the uploaded image
         const extractedColors = await extractColorsFromImage(imageUrl);
@@ -532,6 +552,15 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
             <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image</span>
             <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
           </button>
+          <label className="mt-3 flex items-center gap-2 select-none">
+            <input
+              type="checkbox"
+              className="w-4 h-4"
+              checked={applyToAllScreens}
+              onChange={(e) => setApplyToAllScreens(e.target.checked)}
+            />
+            <span className="text-sm text-gray-700">Appliquer à tous les écrans</span>
+          </label>
         </div>
       )}
 

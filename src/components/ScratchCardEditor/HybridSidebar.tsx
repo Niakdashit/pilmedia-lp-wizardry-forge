@@ -5,7 +5,8 @@ import {
   Plus,
   Gamepad2,
   Palette,
-  FormInput
+  FormInput,
+  MessageSquare
 } from 'lucide-react';
 import BackgroundPanel from './panels/BackgroundPanel';
 import CompositeElementsPanel from './modules/CompositeElementsPanel';
@@ -19,6 +20,7 @@ import CartePanel from './panels/CartePanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import ScratchCardGamePanel from './panels/ScratchCardGamePanel';
+import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
@@ -397,7 +399,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       label: 'Formulaire', 
       icon: FormInput
     },
-    { id: 'game', label: 'Jeu', icon: Gamepad2 }
+    { id: 'game', label: 'Jeu', icon: Gamepad2 },
+    { id: 'messages', label: 'Messages', icon: MessageSquare }
   ];
   
   // Vérifier si hiddenTabs est défini et est un tableau
@@ -615,6 +618,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onElementUpdate={updateForBackground}
             onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
+            currentScreen={currentScreen}
+            selectedDevice={selectedDevice}
           />
         );
       case 'elements':
@@ -737,6 +742,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               setCampaign={setCampaign as any}
             />
           </div>
+        );
+      case 'messages':
+        return (
+          <MessagesPanel
+            campaign={campaign}
+            setCampaign={setCampaign}
+          />
         );
       default:
         return null;

@@ -23,7 +23,43 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
   });
   const [activeTab, setActiveTab] = useState<'grid' | 'scratch' | 'cards' | 'logic'>('logic');
   const scratchConfig = useScratchCardStore((state) => state.config);
-  const updateConfig = useScratchCardStore((state) => state.updateConfig);
+  const updateStoreConfig = useScratchCardStore((state) => state.updateConfig);
+  const updateStoreMaxCards = useScratchCardStore((state) => state.updateMaxCards);
+  
+  // Initialiser le store une seule fois au montage
+  const isInitialMount = React.useRef(true);
+  
+  React.useEffect(() => {
+    if (isInitialMount.current && campaign?.scratchConfig) {
+      updateStoreConfig(campaign.scratchConfig);
+      isInitialMount.current = false;
+    }
+  }, [campaign?.scratchConfig, updateStoreConfig]);
+
+  // Synchroniser la campagne uniquement quand c'est nécessaire
+  const prevScratchConfig = React.useRef(scratchConfig);
+  
+  React.useEffect(() => {
+    if (!setCampaign) return;
+    
+    // Vérifier si les données ont vraiment changé
+    if (JSON.stringify(prevScratchConfig.current) === JSON.stringify(scratchConfig)) {
+      return;
+    }
+    
+    prevScratchConfig.current = scratchConfig;
+    
+    setCampaign((prev: any) => ({
+      ...prev,
+      name: prev?.name || 'Campaign',
+      scratchConfig: { ...scratchConfig }
+    }));
+  }, [scratchConfig, setCampaign]);
+  
+  // Mise à jour de la configuration via le store
+  const updateConfig = React.useCallback((updates: any) => {
+    updateStoreConfig(updates);
+  }, [updateStoreConfig]);
 
   const tabs = [
     { id: 'grid', label: 'Grille', icon: Grid3x3 },
@@ -40,7 +76,8 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
   ];
 
   const handleGridChange = (maxCards: number) => {
-    updateConfig({ maxCards });
+    // Utiliser la logique dédiée qui normalise rows/cols
+    updateStoreMaxCards(maxCards as 3 | 4 | 6);
   };
 
   const handleBrushSizeChange = (radius: number) => {
@@ -103,7 +140,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 px-4 pt-4 pb-2 border-b">
+      <div className="grid grid-cols-4 gap-2 px-4 pt-4 pb-2 border-b">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
