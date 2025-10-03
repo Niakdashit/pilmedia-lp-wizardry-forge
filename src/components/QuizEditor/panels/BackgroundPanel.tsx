@@ -200,6 +200,12 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       // Appliquer à l'arrière-plan (toujours fill)
       console.log('🎨 Updating background color:', color);
       onBackgroundChange({ type: 'color', value: color });
+      
+      // Émettre un événement pour synchroniser avec TemplatedQuiz et FunnelQuizParticipate
+      const event = new CustomEvent('quizStyleUpdate', {
+        detail: { backgroundColor: color }
+      });
+      window.dispatchEvent(event);
     }
   };
 

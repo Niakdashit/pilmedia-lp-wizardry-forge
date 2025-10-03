@@ -2357,6 +2357,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onOpenElementsTab?.();
                         return;
                       }
+                      if (m.type === 'BlocCarte') {
+                        onSelectedElementChange?.({
+                          id: `modular-carte-${m.id}`,
+                          type: 'carte',
+                          role: 'module-carte',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
                       onSelectedElementChange?.({
                         id: `modular-text-${m.id}`,
                         type: 'text',
@@ -2370,7 +2381,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       || (externalSelectedElement as any)?.role === 'module-image'
                       || (externalSelectedElement as any)?.role === 'module-video'
                       || (externalSelectedElement as any)?.role === 'module-social'
-                      || (externalSelectedElement as any)?.role === 'module-html')
+                      || (externalSelectedElement as any)?.role === 'module-html'
+                      || (externalSelectedElement as any)?.role === 'module-carte')
                       ? (externalSelectedElement as any)?.moduleId
                       : undefined}
                   />

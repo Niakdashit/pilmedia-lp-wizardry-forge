@@ -80,6 +80,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   const desktopWidthValue = React.useMemo(() => activeTemplate?.style?.containerWidth ?? 450, [activeTemplate]);
   const mobileWidthValue = React.useMemo(() => activeTemplate?.style?.containerWidth ?? 450, [activeTemplate]);
 
+
   // Permettre la saisie directe au double-clic sur un input range spécifique
   const handleRangeDblClick = (e: React.MouseEvent<HTMLInputElement>, opts?: { kind?: 'percent' | 'px' | 'scale' }) => {
     const input = e.currentTarget;
@@ -129,7 +130,14 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
     input.dispatchEvent(new Event('change', { bubbles: true }));
   };
 
-  // Unused prompt function
+  // Double-clic sur la boîte de valeur (pour % et px)
+  // const promptNumber = (label: string, initial: string) => {
+  //   const raw = window.prompt(label, initial);
+  //   if (raw == null) return null;
+  //   const normalized = raw.replace(/\s+/g, '').replace(',', '.').replace('%', '').replace('px', '');
+  //   const num = Number(normalized);
+  //   return Number.isNaN(num) ? null : num;
+  // };
 
   return (
     <div className="h-full flex flex-col">
@@ -177,7 +185,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 max="100"
                 step="1"
                 value={backgroundOpacity}
-                onChange={(e) => onBackgroundOpacityChange?.(parseInt(e.target.value))}
+                onChange={(e) => {
+                  const newOpacity = parseInt(e.target.value);
+                  onBackgroundOpacityChange?.(newOpacity);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { backgroundOpacity: newOpacity }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 data-suffix="%"
                 aria-label="Transparence (%)"
@@ -231,7 +247,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={backgroundColor || '#ffffff'}
-                onChange={(e) => onBackgroundColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onBackgroundColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { backgroundColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur de fond"
               />
@@ -253,7 +277,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={textColor || '#111111'}
-                onChange={(e) => onTextColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onTextColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { textColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur du texte"
               />
@@ -276,7 +308,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={buttonBackgroundColor}
-                onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onButtonBackgroundColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { buttonBackgroundColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur de fond des boutons"
               />
@@ -299,7 +339,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={buttonTextColor}
-                onChange={(e) => onButtonTextColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onButtonTextColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { buttonTextColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur du texte des boutons"
               />
@@ -439,10 +487,10 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   max="2"
                   step="0.1"
                   value={(() => {
-                    // Convertir la largeur en échelle de zoom (base 800px = 100%)
+                    // Convertir la largeur en échelle de zoom (base = largeur du template)
                     if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                     const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                    return isNaN(numValue) ? 1 : numValue / desktopWidthValue;
+                    return isNaN(numValue) || desktopWidthValue <= 0 ? 1 : numValue / desktopWidthValue;
                   })()}
                   onChange={(e) => {
                     const scale = parseFloat(e.target.value);
@@ -459,14 +507,14 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                       const scale = (() => {
                         if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                         const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                        return isNaN(numValue) ? 1 : numValue / desktopWidthValue;
+                        return isNaN(numValue) || desktopWidthValue <= 0 ? 1 : numValue / desktopWidthValue;
                       })();
                       return ((scale - 0.5) / (2 - 0.5)) * 100;
                     })()}%, #e5e7eb ${(() => {
                       const scale = (() => {
                         if (quizWidth === '100%' || quizWidth === 'auto') return 1;
                         const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                        return isNaN(numValue) ? 1 : numValue / desktopWidthValue;
+                        return isNaN(numValue) || desktopWidthValue <= 0 ? 1 : numValue / desktopWidthValue;
                       })();
                       return ((scale - 0.5) / (2 - 0.5)) * 100;
                     })()}%, #e5e7eb 100%)`
@@ -479,7 +527,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     defaultValue={(() => {
                       if (quizWidth === '100%' || quizWidth === 'auto') return 100;
                       const numValue = parseInt((quizWidth || `${desktopWidthValue}px`).replace(/px|%/, ''));
-                      const scale = isNaN(numValue) ? 1 : numValue / desktopWidthValue;
+                      const scale = isNaN(numValue) || desktopWidthValue <= 0 ? 1 : numValue / desktopWidthValue;
                       return Math.round(scale * 100);
                     })()}
                     min={50}
@@ -512,7 +560,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                     {(() => {
                       if (quizWidth === '100%' || quizWidth === 'auto') return '100%';
                       const numValue = parseInt(quizWidth.replace(/px|%/, ''));
-                      const scale = isNaN(numValue) ? 1 : numValue / desktopWidthValue;
+                      const scale = isNaN(numValue) || desktopWidthValue <= 0 ? 1 : numValue / desktopWidthValue;
                       return `${Math.round(scale * 100)}%`;
                   })()}
                   </div>
@@ -558,7 +606,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                           console.log('🎨 Track fill calculation - quizMobileWidth:', quizMobileWidth);
                           if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
                           const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                          const scale = isNaN(numValue) ? 1 : numValue / mobileWidthValue;
+                          const scale = isNaN(numValue) || mobileWidthValue <= 0 ? 1 : numValue / mobileWidthValue;
                           const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
                           console.log('🎨 Track fill - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
                           return percentage;
@@ -574,7 +622,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                           console.log('🎯 Thumb position calculation - quizMobileWidth:', quizMobileWidth);
                           if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return ((1 - 0.3) / (1.5 - 0.3)) * 100; // 1.0 scale midpoint
                           const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                          const scale = isNaN(numValue) ? 1 : numValue / mobileWidthValue;
+                          const scale = isNaN(numValue) || mobileWidthValue <= 0 ? 1 : numValue / mobileWidthValue;
                           const percentage = ((scale - 0.3) / (1.5 - 0.3)) * 100;
                           console.log('🎯 Thumb position - numValue:', numValue, 'scale:', scale, 'percentage:', percentage);
                           return percentage;
@@ -611,7 +659,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   {(() => {
                     if (quizMobileWidth === '100%' || quizMobileWidth === 'auto') return '100%';
                     const numValue = parseInt(quizMobileWidth.replace(/px|%/, ''));
-                    const scale = isNaN(numValue) ? 1 : numValue / mobileWidthValue;
+                    const scale = isNaN(numValue) || mobileWidthValue <= 0 ? 1 : numValue / mobileWidthValue;
                     return `${Math.round(scale * 100)}%`;
                   })()}
                 </div>

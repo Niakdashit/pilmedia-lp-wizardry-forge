@@ -93,9 +93,18 @@ const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  console.log('🎨 CanvasToolbar received:', {
+    selectedElement,
+    type: selectedElement?.type,
+    id: selectedElement?.id
+  });
+
   if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'shape')) {
+    console.log('❌ CanvasToolbar: Not showing (wrong type or no element)');
     return null;
   }
+  
+  console.log('✅ CanvasToolbar: Showing toolbar!');
 
   // Même interface pour texte et formes
   const isShape = selectedElement.type === 'shape';

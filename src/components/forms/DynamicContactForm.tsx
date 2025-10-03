@@ -33,7 +33,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   className = "",
   textStyles,
   inputBorderColor = "#E5E7EB",
-  inputFocusColor = "#841b60",
+  inputFocusColor = "#000000",
   inputBorderRadius = "2px"
 }) => {
   // Stabilize defaultValues to avoid identity changes causing effects to loop

@@ -8,7 +8,8 @@ export type ModuleType =
   | 'BlocSeparateur'
   | 'BlocVideo'
   | 'BlocReseauxSociaux'
-  | 'BlocHtml';
+  | 'BlocHtml'
+  | 'BlocCarte';
 
 export type SocialIconStyle =
   | 'color'
@@ -131,6 +132,21 @@ export interface BlocHtml extends BaseModule {
   language?: string;
 }
 
+export interface BlocCarte extends BaseModule {
+  type: 'BlocCarte';
+  title?: string;
+  description?: string;
+  children: Module[]; // Modules contenus dans la carte
+  cardBackground?: string;
+  cardBorderColor?: string;
+  cardBorderWidth?: number;
+  cardRadius?: number;
+  padding?: number;
+  boxShadow?: string;
+  maxWidth?: number; // px
+  textColor?: string; // Couleur du texte (titre + description)
+}
+
 export type Module =
   | BlocTexte
   | BlocImage
@@ -138,7 +154,8 @@ export type Module =
   | BlocSeparateur
   | BlocVideo
   | BlocReseauxSociaux
-  | BlocHtml;
+  | BlocHtml
+  | BlocCarte;
 
 export interface ModularScreen {
   screenId: ScreenId;

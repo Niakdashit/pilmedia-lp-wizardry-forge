@@ -3,17 +3,17 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from '../DesignEditor/CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
-import ScratchCardCanvas from './ScratchCardCanvas';
 import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
 import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
-// Scratch editor doesn't use quiz settings button
 import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
+import ScratchCardCanvas from './ScratchCardCanvas';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
+import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
@@ -26,22 +26,8 @@ import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
 import type { Module } from '@/types/modularEditor';
 
-type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
-
-const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
-  desktop: 56,
-  tablet: 40,
-  mobile: 28
-};
-
-const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
-  desktop: 32,
-  tablet: 28,
-  mobile: 24
-};
-
 export interface DesignCanvasProps {
-  screenId?: CanvasScreenId;
+  screenId?: 'screen1' | 'screen2' | 'screen3'; // Pour le système multi-écrans
   selectedDevice: DeviceType;
   elements: any[];
   onElementsChange: (elements: any[]) => void;
@@ -49,15 +35,6 @@ export interface DesignCanvasProps {
     type: 'color' | 'image';
     value: string;
   };
-  overlayElements?: Array<{
-    id: string;
-    type: 'text' | 'image';
-    content?: string;
-    text?: string;
-    src?: string;
-    alt?: string;
-    style: React.CSSProperties;
-  }>;
   campaign?: any;
   onCampaignChange?: (campaign: any) => void;
   zoom?: number;
@@ -103,9 +80,7 @@ export interface DesignCanvasProps {
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
   containerClassName?: string;
-  hideInlineQuizPreview?: boolean;
-  elementFilter?: (element: any) => boolean;
-  // Modular editor props
+  // Modular editor props (comme QuizEditor)
   modularModules?: Module[];
   onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
   onModuleDelete?: (id: string) => void;
@@ -113,14 +88,25 @@ export interface DesignCanvasProps {
   onModuleDuplicate?: (id: string) => void;
 }
 
+const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
+  desktop: 56,
+  tablet: 40,
+  mobile: 28
+};
+
+const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
+  desktop: 32,
+  tablet: 28,
+  mobile: 24
+};
+
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
-  screenId = 'screen1',
+  screenId = 'screen1', // Par défaut screen1 pour la rétrocompatibilité
   selectedDevice,
   elements,
   onElementsChange,
   background,
   campaign,
-  overlayElements,
   onCampaignChange,
   zoom = 1,
   onZoomChange,
@@ -158,14 +144,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   getCanonicalConfig,
   quizModalConfig,
   extractedColors,
-  hideInlineQuizPreview = false,
-  elementFilter,
   // Modular editor props
   modularModules,
   onModuleUpdate,
   onModuleDelete,
   onModuleMove,
-  onModuleDuplicate
+  onModuleDuplicate,
 }, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -186,21 +170,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0});
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   // Marquee selection state
   const [isMarqueeActive, setIsMarqueeActive] = useState(false);
   const marqueeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
   
   // Détection de la taille de fenêtre pour la responsivité
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
-  const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
 
   // Suppress the next click-clear after a marquee drag completes
   const suppressNextClickClearRef = useRef(false);
-
-  // Precise DOM-measured bounds per element (canvas-space units)
-  const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
 
   // Intégration du système auto-responsive (doit être défini avant effectiveCanvasSize)
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
@@ -209,6 +190,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const canvasSize = useMemo(() => {
     return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
+
+  const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
+  const safeZoneRadius = useMemo(() => SAFE_ZONE_RADIUS[selectedDevice] ?? SAFE_ZONE_RADIUS.desktop, [selectedDevice]);
 
   // Forcer un format mobile 9:16 sans bordures ni encoches
   const effectiveCanvasSize = useMemo(() => {
@@ -219,8 +203,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return canvasSize;
   }, [selectedDevice, canvasSize]);
 
-  const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
-  const safeZoneRadius = useMemo(() => SAFE_ZONE_RADIUS[selectedDevice] ?? SAFE_ZONE_RADIUS.desktop, [selectedDevice]);
+  // Precise DOM-measured bounds per element (canvas-space units)
+  const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
 
   // Collect measured bounds from children (CanvasElement)
   const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
@@ -278,23 +262,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Derive simplified alignment bounds preferring measured layout when available
   const alignmentElements = useMemo(() => {
-    const visibleElements = elements.filter((el: any) => {
-      const targetScreen = (el?.screenId ?? 'screen1') as CanvasScreenId;
-      const screenMatches = screenId === 'all' || targetScreen === 'all' || targetScreen === screenId;
-      if (!screenMatches) return false;
-      if (typeof elementFilter === 'function' && !elementFilter(el)) return false;
-      return true;
-    });
-
-    return visibleElements.map((el: any) => {
+    return elements.map((el: any) => {
       const mb = measuredBounds[el.id];
       const x = (mb?.x != null) ? mb.x : Number(el.x) || 0;
       const y = (mb?.y != null) ? mb.y : Number(el.y) || 0;
       const width = (mb?.width != null) ? mb.width : Math.max(20, Number(el.width) || 100);
       const height = (mb?.height != null) ? mb.height : Math.max(20, Number(el.height) || 30);
-      return { id: String(el.id), x, y, width, height, screenId: el?.screenId ?? null };
+      return { id: String(el.id), x, y, width, height };
     });
-  }, [elements, measuredBounds, elementFilter, screenId]);
+  }, [elements, measuredBounds]);
 
   // Stable origin bounds for resize interactions to prevent drift
   const multiResizeOriginRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -351,17 +327,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     const updateHeight = () => {
-      const toolbar = document.getElementById('mobile-toolbar');
-      const height = toolbar?.getBoundingClientRect().height || 0;
-      // Using the height value to prevent unused warning
-      console.debug('Mobile toolbar height:', height);
+      // const toolbar = document.getElementById('mobile-toolbar');
+      // setMobileToolbarHeight(toolbar?.getBoundingClientRect().height || 0);
     };
     updateHeight();
     window.addEventListener('resize', updateHeight);
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
-
-  
 
   // Détection de la taille de fenêtre
   useEffect(() => {
@@ -378,7 +350,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null);
+    const canvas = typeof activeCanvasRef === 'function' ? null : activeCanvasRef?.current;
     if (!canvas) return;
 
     let initialDistance = 0;
@@ -421,9 +393,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       }
     };
 
-    const handleTouchEnd = (_e: TouchEvent) => {
+    const handleTouchEnd = (e: TouchEvent) => {
       if (isPinching) {
         isPinching = false;
+        // Pinch zoom completed
       }
     };
 
@@ -485,8 +458,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   const { applySnapping } = useSmartSnapping({
     containerRef: activeCanvasRef,
     gridSize: 20,
-    snapTolerance: 3, // Réduit pour plus de précision
-    elements: alignmentElements
+    snapTolerance: 3 // Réduit pour plus de précision
   });
 
   // Store centralisé pour la grille
@@ -511,16 +483,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Handlers optimisés avec snapping et cache intelligent (moved earlier)
   const handleElementUpdate = useCallback((id: string, updates: any) => {
-    const targetElement = elementById.get(id);
-
     // Utiliser la fonction externe si disponible
     if (externalOnElementUpdate && selectedElement === id) {
-      try {
-        externalOnElementUpdate({
-          ...updates,
-          _previousColor: targetElement?.color
-        });
-      } catch {}
+      // Appeler le handler externe pour la synchronisation/side-effects,
+      // mais continuer la mise à jour locale pour garantir le re-render (ex: zIndex)
+      try { externalOnElementUpdate(updates); } catch {}
     }
 
     // 🎯 Gérer les mises à jour de style pour les templates de quiz
@@ -567,35 +534,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
     // Copier pour ne pas muter l'argument
     const workingUpdates: Record<string, any> = { ...updates };
-
-    // Merge nested style objects instead of overwriting wholesale so effects accumulate correctly
-    if (workingUpdates.style && targetElement?.style) {
-      workingUpdates.style = {
-        ...targetElement.style,
-        ...workingUpdates.style
-      };
-    }
-
-    if (workingUpdates.customCSS && targetElement?.customCSS) {
-      workingUpdates.customCSS = {
-        ...targetElement.customCSS,
-        ...workingUpdates.customCSS
-      };
-    }
-
-    if (workingUpdates.advancedStyle) {
-      const previousAdvanced = targetElement?.advancedStyle || {};
-      const nextAdvanced = workingUpdates.advancedStyle || {};
-      workingUpdates.advancedStyle = {
-        ...previousAdvanced,
-        ...nextAdvanced,
-        css: {
-          ...(previousAdvanced as any).css,
-          ...(nextAdvanced as any).css
-        },
-        params: nextAdvanced.params ?? (previousAdvanced as any).params
-      };
-    }
     const devicePatch: Record<string, any> = {};
 
     // Appliquer le nouveau système d'alignement si c'est un déplacement
@@ -715,22 +653,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         });
       }
       
-      // Propagate controls to modular modules when applicable
-      if (el.id.startsWith('modular-text-')) {
-        const moduleId = el.id.replace('modular-text-', '');
-        const module = modularModules?.find((m) => m.id === moduleId && m.type === 'BlocTexte');
-        if (module) {
-          const patch: Partial<Module> & Record<string, any> = {};
-          if (workingUpdates.fontFamily) patch.bodyFontFamily = workingUpdates.fontFamily;
-          if (workingUpdates.color) patch.bodyColor = workingUpdates.color;
-          if (workingUpdates.fontSize) patch.bodyFontSize = workingUpdates.fontSize;
-          if (workingUpdates.fontWeight) patch.bodyBold = workingUpdates.fontWeight === 'bold';
-          if (workingUpdates.fontStyle) patch.bodyItalic = workingUpdates.fontStyle === 'italic';
-          if (workingUpdates.textDecoration) patch.bodyUnderline = workingUpdates.textDecoration?.includes('underline');
-          if (Object.keys(patch).length > 0) onModuleUpdate?.(moduleId, patch);
-        }
-      }
-
       return base;
     });
 
@@ -742,28 +664,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
     const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
     const intensity = activityType === 'drag' ? 0.8 : 0.5;
-    try {
-      recordActivity(activityType, intensity);
-    } catch {}
     updateAutoSaveData(campaign, activityType, intensity);
-  }, [elements, onElementsChange, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
-
-  // Listen for text effects coming from BackgroundPanel and apply them to the current selection
-  useEffect(() => {
-    const onApplyTextEffect = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const detail = e.detail || {};
-      if (selectedElement) {
-        try {
-          handleElementUpdate(selectedElement, detail);
-        } catch (err) {
-          console.warn('applyTextEffect handler failed', err);
-        }
-      }
-    };
-    window.addEventListener('applyTextEffect', onApplyTextEffect as EventListener);
-    return () => window.removeEventListener('applyTextEffect', onApplyTextEffect as EventListener);
-  }, [selectedElement, handleElementUpdate]);
+  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
 
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
@@ -796,6 +698,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return selectedDevice === 'mobile' ? 0.85 :
            selectedDevice === 'tablet' ? 0.6 : 0.7;
   }, [selectedDevice]);
+  void deviceDefaultZoom; // Mark as used for future functionality
 
   // Unified Auto-Fit: observe container size and fit the canvas on any device
   const updateAutoFit = useCallback(() => {
@@ -856,9 +759,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onZoomChange(clamped);
     }
   }, [onZoomChange]);
-
-  // Keep references to avoid TS6133 when externally wired
-  useEffect(() => { void deviceDefaultZoom; void handleZoomChange; }, [deviceDefaultZoom, handleZoomChange]);
+  void handleZoomChange; // Mark as used for future functionality
 
 
   // Compute canvas-space coordinates from a pointer event
@@ -875,6 +776,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Begin marquee when clicking empty background
   const handleBackgroundPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (readOnly) return;
+    
+    // Check if the click is on a scratch card - if so, don't start marquee selection
+    const target = e.target as HTMLElement;
+    if (target.closest('.sc-card') || target.closest('[class*="sc-"]')) {
+      return;
+    }
+    
     // Allow marquee on all devices; treat touch specially
     // Only react to primary mouse button, but allow touch regardless of e.button
     if (e.pointerType !== 'touch' && e.button !== 0) return;
@@ -1137,7 +1045,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const newFontSize = isText ? Math.max(8, Math.round((currentFontSize as number) * Math.min(nw/sw, nh/sh))) : undefined;
 
         // Apply snapping and canvas clamp on absolute position
-        const snapped = applySnapping(newAbsX, newAbsY, newW, newH, String(el.id), { screenId });
+        const snapped = applySnapping(newAbsX, newAbsY, newW, newH, String(el.id));
         let ax = snapped.x, ay = snapped.y;
         // Clamp
         const maxX = Math.max(0, (effectiveCanvasSize.width || 0) - newW);
@@ -1303,7 +1211,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     });
 
     onElementsChange(updated);
-  }, [elements, onElementsChange, selectedElements, selectedDevice, getPropertiesForDevice, effectiveCanvasSize, screenId]);
+  }, [elements, onElementsChange, selectedElements, selectedDevice, getPropertiesForDevice, applySnapping, effectiveCanvasSize]);
 
 
   // Zoom au pincement (pinch) sur écrans tactiles
@@ -1579,17 +1487,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Écouteur d'événement pour l'application des effets de texte depuis le panneau latéral
   useEffect(() => {
     const handleApplyTextEffect = (event: CustomEvent) => {
-      const currentSelected = selectedElement || externalSelectedElement?.id;
-      console.log('🎯 applyTextEffect reçu (QuizEditor)', {
-        currentSelected,
-        detail: event.detail
-      });
+      console.log('🎯 Événement applyTextEffect reçu:', event.detail);
+      const currentSelected = selectedElement || (externalSelectedElement as any)?.id;
       
       if (currentSelected) {
         // Check if this is a module (starts with 'modular-text-')
         if (currentSelected.startsWith('modular-text-') && onModuleUpdate) {
           const moduleId = currentSelected.replace('modular-text-', '');
-          const module = modularModules?.find((m) => m.id === moduleId && m.type === 'BlocTexte');
+          const module = modularModules?.find((m: any) => m.id === moduleId && m.type === 'BlocTexte');
           
           console.log('🧩 applyTextEffect route=module?', { isModule: !!module, moduleId });
           if (module) {
@@ -1601,11 +1506,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           }
         } else {
           // Regular element update
-          const element = elementById.get(currentSelected) || externalSelectedElement || null;
           const updates = {
             ...event.detail,
             style: {
-              ...(element?.style || {}),
+              ...(elementById.get(currentSelected)?.style || {}),
               ...(event.detail.style || {})
             },
             customCSS: event.detail.customCSS,
@@ -1617,6 +1521,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           
           handleElementUpdate(currentSelected, updates);
         }
+      } else {
+        console.log('❌ Aucun élément sélectionné pour appliquer l\'effet');
       }
     };
 
@@ -1625,16 +1531,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
     };
   }, [selectedElement, externalSelectedElement, handleElementUpdate, elementById, modularModules, onModuleUpdate]);
-
-  // Keep local selection id in sync when parent changes selected element instance
-  useEffect(() => {
-    if (externalSelectedElement?.id && externalSelectedElement.id !== selectedElement) {
-      setSelectedElement(externalSelectedElement.id);
-    }
-    if (!externalSelectedElement && selectedElement) {
-      setSelectedElement(null);
-    }
-  }, [externalSelectedElement, selectedElement]);
 
   // Écouteur d'événement pour afficher le popup d'animation
   useEffect(() => {
@@ -1678,7 +1574,43 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     maxRegions: 50,
     updateThreshold: 16 // 60fps
   });
-  void markRegionsDirty;
+
+  // Hooks optimisés pour snapping (gardé pour compatibilité)
+  // 🚀 Drag & drop ultra-fluide pour une expérience premium
+  useUltraFluidDragDrop({
+    containerRef: activeCanvasRef,
+    snapToGrid: showGridLines,
+    gridSize: 20,
+    enableInertia: true,
+    enabled: !readOnly,
+    onDragStart: (elementId, position) => {
+      // Enregistrer l'activité de début de drag
+      recordActivity('drag', 0.9);
+      // Marquer les éléments affectés pour le rendu optimisé
+      const element = elementById.get(elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      elementCache.set(`drag-start-${elementId}`, { position, timestamp: Date.now() });
+    },
+    onDragMove: (elementId, position, velocity) => {
+      // Optimiser le rendu en marquant seulement les éléments nécessaires
+      const element = elementById.get(elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      const moveKey = `drag-move-${elementId}-${Math.floor(position.x/2)}-${Math.floor(position.y/2)}`;
+      elementCache.set(moveKey, { position, velocity, timestamp: Date.now() });
+    },
+    onDragEnd: (elementId, position) => {
+      // Finaliser le drag avec mise à jour des données
+      const element = elementById.get(elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      handleElementUpdate(elementId, { x: position.x, y: position.y });
+    }
+  });
 
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
@@ -1701,102 +1633,31 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return applyAutoResponsive(responsiveElements);
   }, [responsiveElements, applyAutoResponsive]);
 
-  // Note: elementsWithAbsolute computed but not used in render to prevent unused warning  
-  React.useMemo(() => {
-    const result = elementsWithResponsive.map((el: any) => {
-      const parentId = (el as any).parentGroupId;
-      if (!parentId) return el;
-      const parentProps = devicePropsById.get(parentId);
-      if (!parentProps) return el;
-      const childProps = getPropertiesForDevice(el, selectedDevice);
-      return {
-        ...el,
-        x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
-        y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
-      };
-    });
-    console.debug('Elements with absolute positioning:', result.length);
-    return result;
-  }, [elementsWithResponsive, devicePropsById, selectedDevice, getPropertiesForDevice]);
+  // Calculer des positions ABSOLUES pour les éléments enfants de groupe
+  // (x,y absolus = x,y relatifs à leur groupe + position absolue du groupe)
+  // const elementsWithAbsolute = useMemo(() => {
+  //   return elementsWithResponsive.map((el: any) => {
+  //     const parentId = (el as any).parentGroupId;
+  //     if (!parentId) return el;
+  //     const parentProps = devicePropsById.get(parentId);
+  //     if (!parentProps) return el;
+  //     const childProps = getPropertiesForDevice(el, selectedDevice);
+  //     return {
+  //       ...el,
+  //       x: (Number(childProps.x) || 0) + (Number(parentProps.x) || 0),
+  //       y: (Number(childProps.y) || 0) + (Number(parentProps.y) || 0)
+  //     };
+  //   });
+  // }, [elementsWithResponsive, devicePropsById, getPropertiesForDevice, selectedDevice]);
 
   // Tri mémoïsé par zIndex pour le rendu du canvas
   const elementsSortedByZIndex = useMemo(() => {
     return elementsWithResponsive.slice().sort((a: any, b: any) => {
       const za = typeof a.zIndex === 'number' ? a.zIndex : 0;
       const zb = typeof b.zIndex === 'number' ? b.zIndex : 0;
-      if (za !== zb) {
-        return za - zb; // plus petit d'abord, plus grand rendu en dernier (au-dessus)
-      }
-      if (a?.id === 'quiz-template' && b?.id !== 'quiz-template') return -1;
-      if (b?.id === 'quiz-template' && a?.id !== 'quiz-template') return 1;
-      return 0;
+      return za - zb; // plus petit d'abord, plus grand rendu en dernier (au-dessus)
     });
   }, [elementsWithResponsive]);
-
-  const renderableElements = useMemo(() => {
-    const screenedElements = typeof elementFilter === 'function'
-      ? elementsSortedByZIndex.filter(elementFilter)
-      : elementsSortedByZIndex;
-
-    if (screenId === 'all') {
-      return screenedElements;
-    }
-
-    return screenedElements.filter((element: any) => {
-      const targetScreen: CanvasScreenId = (element?.screenId as CanvasScreenId) || 'screen1';
-      if (targetScreen === 'all') return true;
-      return targetScreen === screenId;
-    });
-  }, [elementsSortedByZIndex, elementFilter, screenId]);
-
-  const resolvedQuizTemplateId = useMemo(() => {
-    return (
-      quizModalConfig?.templateId ||
-      (campaign as any)?.gameConfig?.quiz?.templateId ||
-      (campaign as any)?.design?.quizConfig?.templateId ||
-      'image-quiz'
-    );
-  }, [quizModalConfig?.templateId, campaign]);
-
-  const quizCampaignForRenderer = useMemo(() => {
-    if (campaign) return campaign;
-    return {
-      gameConfig: {
-        quiz: {
-          templateId: resolvedQuizTemplateId,
-          questions: []
-        }
-      },
-      design: {
-        quizConfig: {
-          templateId: resolvedQuizTemplateId
-        }
-      }
-    };
-  }, [campaign, resolvedQuizTemplateId]);
-
-  const customElementRenderers = useMemo(() => ({
-    'quiz-template': ({ elementStyle }: any) => (
-      <div className="relative w-full h-full" style={elementStyle} data-canvas-ui="quiz-template">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <TemplatedQuiz
-            campaign={quizCampaignForRenderer}
-            device={selectedDevice}
-            disabled={readOnly}
-            templateId={resolvedQuizTemplateId}
-          />
-        </div>
-      </div>
-    )
-  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly]);
-
-  const handleElementTap = useCallback((element: any) => {
-    if (!element || readOnly) return;
-    if (element.id === 'quiz-template') {
-      onQuizPanelChange?.(true);
-    }
-  }, [onQuizPanelChange, readOnly]);
-  void handleElementTap; // Reserved for future touch interaction features
 
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
@@ -1880,7 +1741,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center ${isWindowMobile ? 'justify-start pt-12' : 'justify-center pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-start ${isWindowMobile ? '-mt-20' : 'pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}
@@ -1895,12 +1756,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canRedo={canRedo}
         onClearSelection={handleClearSelection}
       >
-        {/* Canvas Toolbar - Show for text/shape elements OR modular text selection */}
+        {/* Canvas Toolbar - Show for text and shape elements */}
         {(() => {
-          if (readOnly) return false;
+          if (readOnly) return null;
           const isModuleText = (externalSelectedElement as any)?.role === 'module-text' && (externalSelectedElement as any)?.moduleId;
           const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || isModuleText;
-          if (!shouldShow) return false;
+          
+          console.log('🔧 CanvasToolbar Debug:', {
+            readOnly,
+            externalSelectedElement,
+            isModuleText,
+            selectedElementData,
+            selectedDevice,
+            shouldShow,
+            modularModules: modularModules?.length
+          });
+          
+          if (!shouldShow) return null;
 
           // Build a synthetic selected element for module text to drive the toolbar UI
           let toolbarSelected: any = selectedElementData;
@@ -1933,7 +1805,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             };
 
             onToolbarElementUpdate = (updates: any) => {
-              if (!currentMod) return;
+              if (!currentMod || !onModuleUpdate) return;
               const patch: any = {};
               if (typeof updates.textAlign !== 'undefined') patch.align = updates.textAlign;
               if (typeof updates.fontSize !== 'undefined') patch.bodyFontSize = updates.fontSize;
@@ -1948,36 +1820,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 patch.bodyItalic = false;
                 patch.bodyUnderline = false;
               }
-              if (typeof updates.content !== 'undefined') patch.body = updates.content;
-              onModuleUpdate?.(modId, patch);
-            };
-          } else if (selectedElementData) {
-            toolbarSelected = {
-              ...selectedElementData,
-              ...getPropertiesForDevice(selectedElementData, selectedDevice)
-            };
-            // If multiple selection is active, apply updates to all selected text elements
-            onToolbarElementUpdate = (updates: any) => {
-              const list = Array.isArray(selectedElements) ? selectedElements : [];
-              const textIds = list.filter((el: any) => el?.type === 'text').map((el: any) => el.id);
-              if (textIds.length > 1) {
-                for (const id of textIds) {
-                  handleElementUpdate(id, updates);
-                }
-              } else if (selectedElement) {
-                handleElementUpdate(selectedElement, updates);
-              }
+              onModuleUpdate(modId, patch);
             };
           }
 
           return (
-            <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
+            <div className="z-50 absolute top-4 left-1/2 transform -translate-x-1/2 pointer-events-auto">
               <CanvasToolbar 
-                selectedElement={toolbarSelected}
+                selectedElement={toolbarSelected ? {
+                  ...toolbarSelected,
+                  ...getPropertiesForDevice(toolbarSelected, selectedDevice)
+                } : undefined} 
                 onElementUpdate={onToolbarElementUpdate}
-                onShowEffectsPanel={onShowEffectsPanel}
-                onShowAnimationsPanel={onShowAnimationsPanel}
-                onShowPositionPanel={onShowPositionPanel}
                 onShowDesignPanel={onShowDesignPanel}
                 onOpenElementsTab={onOpenElementsTab}
                 canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
@@ -1992,7 +1846,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null;
+            const canvasEl = typeof activeCanvasRef === 'function' ? null : activeCanvasRef.current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -2019,14 +1873,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         >
           {/* Canvas wrapper pour maintenir le centrage avec zoom */}
           <div 
-          ref={containerRef} 
-          className="canvas-scroll-area flex justify-center w-full"
-          style={{
-            width: 'fit-content',
-            minHeight: '100vh',
-            overflowY: 'auto',
-            alignItems: 'flex-start'
-          }}
+            className="flex justify-center items-center"
+            style={{
+              width: 'fit-content',
+              height: 'fit-content',
+              minHeight: 'auto'
+            }}
           >
             <div 
               ref={activeCanvasRef}
@@ -2037,17 +1889,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minWidth: `${effectiveCanvasSize.width}px`,
                 minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
-                // Shift content down on mobile so toolbar does not overlap the top of the canvas
-                marginTop: selectedDevice === 'mobile' ? 96 : 0,
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
                 transformOrigin: 'center top',
                 touchAction: 'none',
                 userSelect: 'none',
-                willChange: 'transform',
-                // Improve perceived sharpness for sans-serif like Open Sans
-                WebkitFontSmoothing: 'subpixel-antialiased' as any,
-                textRendering: 'optimizeLegibility',
-                fontSynthesis: 'none'
+                willChange: 'transform'
               }}
               onClickCapture={(e) => {
                 // Clear selection only when clicking on empty canvas, not on elements
@@ -2079,6 +1925,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
               }}
               onPointerDown={(e) => {
+                // Don't handle background events if clicking on scratch cards
+                const target = e.target as HTMLElement;
+                if (target.closest('.sc-card') || target.closest('[class*="sc-"]')) {
+                  return;
+                }
                 e.stopPropagation();
                 handleBackgroundPointerDown(e);
               }}
@@ -2093,7 +1944,31 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   hasStyleToCopy={selectedElement !== null}
                 />
               )}
-              {/* Safe zone overlay to keep modules away from hard edges */}
+              
+              {/* Scratch Card Game Canvas - Seulement sur l'écran de jeu (screen2) */}
+              {screenId === 'screen2' && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  style={{ zIndex: 10000 }}
+                >
+                  <div className="pointer-events-auto">
+                    <ScratchCardCanvas 
+                      previewMode={false}
+                      selectedDevice={selectedDevice}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <GridOverlay 
+                canvasSize={effectiveCanvasSize}
+                showGrid={selectedDevice !== 'mobile' && showGridLines}
+                gridSize={20}
+                opacity={0.15}
+                zoom={localZoom}
+              />
+
+              {/* Safe zone overlay pour les modules */}
               <div
                 className="pointer-events-none absolute inset-0 z-[6]"
                 aria-hidden="true"
@@ -2107,14 +1982,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   }}
                 />
               </div>
-
-              <GridOverlay 
-                canvasSize={effectiveCanvasSize}
-                showGrid={selectedDevice !== 'mobile' && showGridLines}
-                gridSize={20}
-                opacity={0.15}
-                zoom={localZoom}
-              />
               
               {/* Smart Alignment Guides - Système refactorisé uniquement */}
               <SmartAlignmentGuides
@@ -2137,33 +2004,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
               
-              {overlayElements && overlayElements.length > 0 && (
-                <div className="absolute inset-0 pointer-events-none" data-canvas-ui="static-overlay">
-                  {overlayElements.map((element) => {
-                    if (element.type === 'image' && element.src) {
-                      return (
-                        <img
-                          key={element.id}
-                          src={element.src}
-                          alt={element.alt || ''}
-                          style={{ ...element.style, pointerEvents: 'none' }}
-                          className="select-none"
-                        />
-                      );
-                    }
-                    return (
-                      <div
-                        key={element.id}
-                        style={{ ...element.style, pointerEvents: 'none' }}
-                        className="select-text"
-                      >
-                        {element.content || element.text || ''}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
               {/* Clouds */}
               
               
@@ -2195,23 +2035,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Scratch Card Game Canvas - Seulement sur l'écran de jeu (screen2) */}
-              {screenId === 'screen2' && (
-                <div 
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                  style={{ zIndex: 10000 }}
-                >
-                  <div className="pointer-events-auto">
-                    <ScratchCardCanvas 
-                      previewMode={false}
-                      selectedDevice={selectedDevice}
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Quiz avec template sélectionné */}
+              {/* Suppression du calque d'interception qui bloquait les interactions du canvas */}
+
+              {/* Bouton configuration quiz supprimé */}
             </div>
 
-            {/* Modular stacked content (HubSpot-like) */}
+            {/* Modular stacked content (comme QuizEditor) */}
             {Array.isArray(modularModules) && modularModules.length > 0 && (
               <div
                 className="w-full flex justify-center mb-6"
@@ -2326,9 +2156,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             )}
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
-            {renderableElements
+            {elementsSortedByZIndex
               .filter((element: any) => {
-                // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
+                if (screenId && element.screenId && element.screenId !== screenId) {
+                  return false;
+                }
+                return true;
+              })
+              .filter((element: any) => {
+                // S'assurer que l'élément a des dimensions numériques pour la virtualisation
                 const elementWithProps = {
                   ...element,
                   ...getPropertiesForDevice(element, selectedDevice)
@@ -2418,14 +2254,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   readOnly={readOnly}
                   onMeasureBounds={handleMeasureBounds}
                   onAddElement={(newElement) => {
-                    const elementScreen: CanvasScreenId = (newElement?.screenId as CanvasScreenId) || (screenId === 'all' ? 'screen1' : screenId);
-                    const enrichedElement = {
-                      ...newElement,
-                      screenId: elementScreen
-                    };
-                    const updatedElements = [...elements, enrichedElement];
+                    const updatedElements = [...elements, newElement];
                     onElementsChange(updatedElements);
-                    handleElementSelect(enrichedElement.id);
+                    handleElementSelect(newElement.id);
                   }}
                   elements={elements}
                   // New: pass selection context flags
@@ -2442,7 +2273,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     startDragging,
                     stopDragging
                   }}
-                  customRenderers={customElementRenderers}
                 />
               );
             })}
@@ -2456,7 +2286,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   top: marqueeRect.y,
                   width: marqueeRect.w,
                   height: marqueeRect.h,
-                  zIndex: 2000,
+                  zIndex: 5000, // Above scratch cards
                   boxShadow: '0 0 0 1px rgba(59,130,246,0.4) inset'
                 }}
               />
@@ -2504,8 +2334,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       bounds.y + dy,
                       bounds.width,
                       bounds.height,
-                      (selectedElements || []).map((e: any) => e.id),
-                      { screenId }
+                      (selectedElements || []).map((e: any) => e.id)
                     );
                     const adjDx = snapped.x - bounds.x;
                     const adjDy = snapped.y - bounds.y;
@@ -2560,8 +2389,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 />
               );
             })()}
-
-            </div>
 
             {/* Selection overlay (visual layer, not interactive yet) */}
             <div 
@@ -2636,8 +2463,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         groupBounds.y + deltaY,
                         groupBounds.width,
                         groupBounds.height,
-                        groupElements.map(el => el.id),
-                        { screenId }
+                        groupElements.map(el => el.id)
                       );
                       const adjDx = snapped.x - groupBounds.x;
                       const adjDy = snapped.y - groupBounds.y;
@@ -2700,12 +2526,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         )}
         
         
-
-        
-        
-        
-
-        
         {/* Popup contextuel d'animation */}
         {showAnimationPopup && selectedAnimation && (
           <AnimationSettingsPopup
@@ -2721,6 +2541,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             visible={showAnimationPopup}
           />
         )}
+        </div>
       </MobileResponsiveLayout>
     </DndProvider>
   );
