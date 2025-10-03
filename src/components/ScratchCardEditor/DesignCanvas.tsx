@@ -448,16 +448,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.screenId === (screenId as any) && detail.device === selectedDevice) {
         setLocalScreenBgUrl(detail.url);
-        // Stocker pour l'appareil actuel ET pour tous les autres appareils
+        // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
-          // Stocker aussi pour les autres appareils pour éviter la perte lors du changement d'aperçu
-          const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-          devices.forEach(device => {
-            if (device !== selectedDevice) {
-              sessionStorage.setItem(`sc-bg-${device}-${detail.screenId}`, detail.url);
-            }
-          });
         } catch {}
       }
     };
@@ -472,16 +465,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.device === selectedDevice) {
         setLocalScreenBgUrl(detail.url);
-        // Stocker pour l'appareil actuel ET pour tous les autres appareils
+        // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url);
-          // Stocker aussi pour les autres appareils pour éviter la perte lors du changement d'aperçu
-          const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
-          devices.forEach(device => {
-            if (device !== selectedDevice) {
-              sessionStorage.setItem(`sc-bg-${device}-${screenId}`, detail.url);
-            }
-          });
         } catch {}
       }
     };
@@ -495,9 +481,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const saved = sessionStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
       if (saved && typeof saved === 'string') {
         setLocalScreenBgUrl(saved);
+      } else {
+        // Remettre à null pour ce device s'il n'a pas d'image spécifique
+        // Cela permet à chaque appareil d'avoir sa propre image distincte
+        setLocalScreenBgUrl(null);
       }
-      // Ne pas remettre à null si aucune image n'est trouvée pour ce device
-      // Cela permet de conserver l'image uploadée même en changeant d'aperçu
     } catch {}
   }, [screenId, selectedDevice]);
 
