@@ -183,8 +183,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   );
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  // Local override for per-screen background image (when applying only to current screen)
-  const [localScreenBgUrl, setLocalScreenBgUrl] = useState<string | null>(null);
+  // Local override for per-screen background images (stored per device to maintain distinct images)
+  const [deviceBackgrounds, setDeviceBackgrounds] = useState<Record<string, string | null>>({
+    desktop: null,
+    tablet: null,
+    mobile: null
+  });
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
@@ -447,7 +451,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: 'screen1' | 'screen2' | 'screen3'; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.screenId === (screenId as any) && detail.device === selectedDevice) {
-        setLocalScreenBgUrl(detail.url);
+        // Mettre à jour l'état pour l'appareil spécifique
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [selectedDevice]: detail.url
+        }));
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
@@ -464,7 +472,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.device === selectedDevice) {
-        setLocalScreenBgUrl(detail.url);
+        // Mettre à jour l'état pour l'appareil spécifique
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [selectedDevice]: detail.url
+        }));
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url);
@@ -475,16 +487,37 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
+  // Charger toutes les images de fond au montage initial (une seule fois)
+  useEffect(() => {
+    try {
+      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+      const loadedBackgrounds: Record<string, string | null> = {};
+      
+      devices.forEach(device => {
+        const saved = sessionStorage.getItem(`sc-bg-${device}-${screenId}`);
+        loadedBackgrounds[device] = saved || null;
+      });
+      
+      setDeviceBackgrounds(loadedBackgrounds);
+    } catch {}
+  }, [screenId]); // Uniquement au changement de screenId, pas de selectedDevice
+
   // Hydrate local per-screen background on mount and when screenId or device changes (session-only)
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
       if (saved && typeof saved === 'string') {
-        setLocalScreenBgUrl(saved);
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [selectedDevice]: saved
+        }));
       } else {
         // Remettre à null pour ce device s'il n'a pas d'image spécifique
         // Cela permet à chaque appareil d'avoir sa propre image distincte
-        setLocalScreenBgUrl(null);
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [selectedDevice]: null
+        }));
       }
     } catch {}
   }, [screenId, selectedDevice]);
@@ -2126,8 +2159,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             <div 
               className="absolute inset-0" 
               style={{
-                background: localScreenBgUrl
-                  ? `url(${localScreenBgUrl}) center/cover no-repeat`
+                background: deviceBackgrounds[selectedDevice]
+                  ? `url(${deviceBackgrounds[selectedDevice]}) center/cover no-repeat`
                   : (background?.type === 'image'
                       ? `url(${background.value}) center/cover no-repeat`
                       : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)')
