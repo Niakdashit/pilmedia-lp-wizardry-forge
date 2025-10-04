@@ -60,6 +60,23 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       window.removeEventListener('modularModuleSelected', handleStyleUpdate);
     };
   }, []);
+
+  // Écouter les MAJ d'image de fond (DesignCanvas) pour forcer le re-render du preview
+  React.useEffect(() => {
+    const handleBgSync = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail;
+      console.log('🔄 [FunnelUnlockedGame] Background sync event:', detail);
+      setForceUpdate(prev => prev + 1);
+    };
+    window.addEventListener('sc-bg-sync', handleBgSync);
+    window.addEventListener('applyBackgroundAllScreens', handleBgSync);
+    window.addEventListener('applyBackgroundCurrentScreen', handleBgSync);
+    return () => {
+      window.removeEventListener('sc-bg-sync', handleBgSync);
+      window.removeEventListener('applyBackgroundAllScreens', handleBgSync);
+      window.removeEventListener('applyBackgroundCurrentScreen', handleBgSync);
+    };
+  }, []);
   
   const [formPreviewElements, setFormPreviewElements] = useState<any[]>([]);
   const [formPreviewBackground, setFormPreviewBackground] = useState<{ type: 'color' | 'image'; value: string }>({

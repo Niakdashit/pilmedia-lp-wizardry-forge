@@ -353,6 +353,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
+  const storeCampaign = useEditorStore(state => state.campaign);
 
   // Mesure dynamique de la hauteur de la toolbar mobile
   useEffect(() => {
@@ -560,6 +561,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     
     loadAllBackgrounds();
   }, [selectedDevice, screenId]); // Recharger quand device OU screen change
+
+  // Fallback: si aucune image en sessionStorage, utiliser design de campagne (par device)
+  useEffect(() => {
+    const design: any = (storeCampaign as any)?.design || {};
+    const fromDesign = selectedDevice === 'mobile' ? design.mobileBackgroundImage : design.backgroundImage;
+    if (fromDesign && !deviceBackgrounds[selectedDevice]) {
+      setDeviceBackgrounds(prev => ({ ...prev, [selectedDevice]: fromDesign }));
+    }
+  }, [storeCampaign?.design, selectedDevice]);
 
   // Optimisation mobile pour une expérience tactile parfaite
 
