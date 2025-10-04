@@ -2424,8 +2424,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     style={{
                       paddingLeft: safeZonePadding,
                       paddingRight: safeZonePadding,
-                      paddingTop: safeZonePadding,
-                      paddingBottom: safeZonePadding,
+                      paddingTop: safeZonePadding + logoVisualHeight,
+                      paddingBottom: safeZonePadding + footerVisualHeight,
                       boxSizing: 'border-box'
                     }}
                   >
