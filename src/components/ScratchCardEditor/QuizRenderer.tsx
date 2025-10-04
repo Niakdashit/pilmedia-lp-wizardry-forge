@@ -545,7 +545,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               textAlign: 'center',
               padding: '16px'
             }}>
-              Cliquez pour ajouter un logo
+              <strong>Logo</strong>
             </div>
           ) : null}
         </div>
@@ -606,7 +606,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               textAlign: 'center',
               padding: '16px'
             }}>
-              Cliquez pour ajouter un logo
+              <strong>Logo</strong>
             </div>
           ) : null}
         </div>
