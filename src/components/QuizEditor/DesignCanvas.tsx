@@ -2376,6 +2376,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onOpenElementsTab?.();
                         return;
                       }
+                      if (m.type === 'BlocLogo') {
+                        onSelectedElementChange?.({
+                          id: `modular-logo-${m.id}`,
+                          type: 'logo',
+                          role: 'module-logo',
+                          moduleId: m.id,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                        return;
+                      }
                       onSelectedElementChange?.({
                         id: `modular-text-${m.id}`,
                         type: 'text',
@@ -2385,14 +2396,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       } as any);
                       onShowDesignPanel?.();
                     }}
-                    selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
+                    selectedModuleId={(
+                      (externalSelectedElement as any)?.role === 'module-text'
                       || (externalSelectedElement as any)?.role === 'module-image'
                       || (externalSelectedElement as any)?.role === 'module-video'
                       || (externalSelectedElement as any)?.role === 'module-social'
                       || (externalSelectedElement as any)?.role === 'module-html'
-                      || (externalSelectedElement as any)?.role === 'module-carte')
-                      ? (externalSelectedElement as any)?.moduleId
-                      : undefined}
+                      || (externalSelectedElement as any)?.role === 'module-carte'
+                      || (externalSelectedElement as any)?.role === 'module-logo'
+                    ) ? (externalSelectedElement as any)?.moduleId : undefined}
                   />
                 </div>
               </div>

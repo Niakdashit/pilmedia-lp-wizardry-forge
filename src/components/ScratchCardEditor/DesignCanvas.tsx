@@ -2390,13 +2390,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                               const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
                               window.dispatchEvent(evt);
                             } catch {}
+                            onSelectedElementChange?.({
+                              id: `modular-logo-${m.id}`,
+                              type: 'logo',
+                              role: 'module-logo',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
                           }}
                           selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
                             || (externalSelectedElement as any)?.role === 'module-image'
                             || (externalSelectedElement as any)?.role === 'module-video'
                             || (externalSelectedElement as any)?.role === 'module-social'
                             || (externalSelectedElement as any)?.role === 'module-html'
-                            || (externalSelectedElement as any)?.role === 'module-carte')
+                            || (externalSelectedElement as any)?.role === 'module-carte'
+                            || (externalSelectedElement as any)?.role === 'module-logo')
                             ? (externalSelectedElement as any)?.moduleId
                             : undefined}
                         />
@@ -2513,7 +2522,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           || (externalSelectedElement as any)?.role === 'module-video'
                           || (externalSelectedElement as any)?.role === 'module-social'
                           || (externalSelectedElement as any)?.role === 'module-html'
-                          || (externalSelectedElement as any)?.role === 'module-carte')
+                          || (externalSelectedElement as any)?.role === 'module-carte'
+                          || (externalSelectedElement as any)?.role === 'module-logo')
                           ? (externalSelectedElement as any)?.moduleId
                           : undefined}
                       />
