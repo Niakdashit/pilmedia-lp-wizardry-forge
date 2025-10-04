@@ -2181,7 +2181,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 minHeight: `${effectiveCanvasSize.height}px`,
                 flexShrink: 0,
                 // Shift content down on mobile so toolbar does not overlap the top of the canvas
-                marginTop: selectedDevice === 'mobile' ? 96 : 0,
+                marginTop: selectedDevice === 'mobile' ? (isWindowMobile ? 0 : 96) : 0,
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${localZoom})`,
                 transformOrigin: 'center top',
                 touchAction: 'none',
