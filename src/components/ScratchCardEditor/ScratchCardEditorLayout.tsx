@@ -1388,7 +1388,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       role === 'module-video' ||
       role === 'module-social' ||
       role === 'module-html' ||
-      role === 'module-carte';
+      role === 'module-carte' ||
+      role === 'module-logo';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;
