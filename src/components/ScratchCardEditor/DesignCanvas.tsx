@@ -2369,7 +2369,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             {/* Modular stacked content (HubSpot-like) */}
             {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
               const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
-              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo');
+              const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
+              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
               const logoBandHeight = logoModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
               return (
                 <>
@@ -2529,6 +2530,40 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       />
                     </div>
                   </div>
+
+                  {/* Footer band at the bottom (non-movable) */}
+                  {footerModules.length > 0 && (
+                    <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                        <ModularCanvas
+                          screen={screenId as any}
+                          modules={footerModules}
+                          device={selectedDevice}
+                          onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                          onDelete={(id) => onModuleDelete?.(id)}
+                          onMove={() => { /* BlocPiedDePage non déplaçable */ }}
+                          onDuplicate={(id) => onModuleDuplicate?.(id)}
+                          onSelect={(m) => {
+                            try {
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                              window.dispatchEvent(evt);
+                            } catch {}
+                            onSelectedElementChange?.({
+                              id: `modular-footer-${m.id}`,
+                              type: 'footer',
+                              role: 'module-footer',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                          }}
+                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-footer')
+                            ? (externalSelectedElement as any)?.moduleId
+                            : undefined}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()}

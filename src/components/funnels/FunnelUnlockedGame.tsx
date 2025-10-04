@@ -270,9 +270,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
 
-  // Séparer les modules Logo pour l'écran 1 afin de répliquer le placement "absolu top" de l'éditeur
+  // Séparer les modules Logo et Footer pour l'écran 1
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
-  const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo');
+  const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
+  const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
   const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
 
   useEffect(() => {
@@ -443,6 +444,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   />
                 )}
               </div>
+
+              {/* Bande footer absolue en bas */}
+              {footerModules1.length > 0 && (
+                <div className="absolute left-0 bottom-0 w-full z-20" style={{ pointerEvents: 'none' }}>
+                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                    <QuizModuleRenderer 
+                      modules={footerModules1}
+                      previewMode={true}
+                      device={previewMode}
+                    />
+                  </div>
+                </div>
+              )}
             </>
           )}
 

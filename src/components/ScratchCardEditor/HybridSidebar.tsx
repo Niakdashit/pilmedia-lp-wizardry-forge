@@ -13,6 +13,7 @@ import CompositeElementsPanel from './modules/CompositeElementsPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import ImageModulePanel from './modules/ImageModulePanel';
 import LogoModulePanel from './modules/LogoModulePanel';
+import FooterModulePanel from './modules/FooterModulePanel';
 import ButtonModulePanel from './modules/ButtonModulePanel';
 import VideoModulePanel from './modules/VideoModulePanel';
 import SocialModulePanel from './modules/SocialModulePanel';
@@ -25,7 +26,7 @@ import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
-import type { Module, BlocImage, BlocCarte, BlocLogo } from '@/types/modularEditor';
+import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -678,6 +679,21 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             <LogoModulePanel
               module={selectedModule as BlocLogo}
               onUpdate={(patch: Partial<BlocLogo>) => {
+                onModuleUpdate(selectedModule.id, patch);
+              }}
+              onBack={() => {
+                onSelectedModuleChange?.(null);
+                setActiveTab('elements');
+              }}
+            />
+          );
+        }
+        
+        if (selectedModule?.type === 'BlocPiedDePage' && onModuleUpdate) {
+          return (
+            <FooterModulePanel
+              module={selectedModule as BlocPiedDePage}
+              onUpdate={(patch: Partial<BlocPiedDePage>) => {
                 onModuleUpdate(selectedModule.id, patch);
               }}
               onBack={() => {

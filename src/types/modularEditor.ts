@@ -10,7 +10,8 @@ export type ModuleType =
   | 'BlocReseauxSociaux'
   | 'BlocHtml'
   | 'BlocCarte'
-  | 'BlocLogo';
+  | 'BlocLogo'
+  | 'BlocPiedDePage';
 
 export type SocialIconStyle =
   | 'color'
@@ -158,6 +159,16 @@ export interface BlocLogo extends BaseModule {
   bandPadding?: number; // px - padding vertical de la bande
 }
 
+export interface BlocPiedDePage extends BaseModule {
+  type: 'BlocPiedDePage';
+  logoUrl?: string;
+  logoWidth?: number; // px
+  logoHeight?: number; // px
+  bandHeight?: number; // px - hauteur de la bande
+  bandColor?: string; // couleur de fond de la bande
+  bandPadding?: number; // px - padding vertical de la bande
+}
+
 export type Module =
   | BlocTexte
   | BlocImage
@@ -167,7 +178,8 @@ export type Module =
   | BlocReseauxSociaux
   | BlocHtml
   | BlocCarte
-  | BlocLogo;
+  | BlocLogo
+  | BlocPiedDePage;
 
 export interface ModularScreen {
   screenId: ScreenId;

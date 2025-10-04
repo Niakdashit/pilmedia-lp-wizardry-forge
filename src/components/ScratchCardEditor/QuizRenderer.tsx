@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo } from '@/types/modularEditor';
+import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
 
 interface QuizModuleRendererProps {
@@ -525,6 +525,67 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             <img
               src={logoModule.logoUrl}
               alt="Logo"
+              style={{
+                maxWidth: logoWidth,
+                maxHeight: logoHeight,
+                objectFit: 'contain'
+              }}
+            />
+          ) : !previewMode ? (
+            <div style={{
+              width: logoWidth,
+              height: logoHeight,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px dashed #cbd5e0',
+              borderRadius: '8px',
+              color: '#a0aec0',
+              fontSize: '14px',
+              textAlign: 'center',
+              padding: '16px'
+            }}>
+              Cliquez pour ajouter un logo
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
+    // BlocPiedDePage
+    if (m.type === 'BlocPiedDePage') {
+      const footerModule = m as BlocPiedDePage;
+      const bandHeight = footerModule.bandHeight ?? 60;
+      const bandColor = footerModule.bandColor ?? '#ffffff';
+      const bandPadding = footerModule.bandPadding ?? 16;
+      const logoWidth = footerModule.logoWidth ?? 120;
+      const logoHeight = footerModule.logoHeight ?? 120;
+      const align = footerModule.align || 'center';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+
+      return (
+        <div 
+          key={m.id} 
+          style={{ 
+            backgroundColor: bandColor,
+            height: bandHeight,
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent,
+            padding: `${bandPadding}px`,
+            paddingTop: (footerModule as any).spacingTop ?? 0,
+            paddingBottom: (footerModule as any).spacingBottom ?? 0,
+            position: 'relative'
+          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
+        >
+          {footerModule.logoUrl ? (
+            <img
+              src={footerModule.logoUrl}
+              alt="Footer logo"
               style={{
                 maxWidth: logoWidth,
                 maxHeight: logoHeight,
