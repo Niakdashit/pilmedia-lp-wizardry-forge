@@ -614,8 +614,12 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
+  // Séparer les modules Logo des autres modules
+  const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
+  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo'), [modules]);
+  
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
-  const single = modules.length === 1;
+  const single = regularModules.length === 1;
   const minHeightPx = device === 'mobile' ? 420 : device === 'tablet' ? 520 : 640;
   const rows = React.useMemo(() => {
     const grouped: Array<Array<{ module: Module; index: number }>> = [];
@@ -624,7 +628,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
 
     const MAX_ROW_UNITS = 6;
 
-    modules.forEach((module, index) => {
+    regularModules.forEach((module, index) => {
       const width = module.layoutWidth || 'full';
       const span = width === 'third' ? 2 : width === 'twoThirds' ? 4 : width === 'half' ? 3 : 6;
 
@@ -646,20 +650,46 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
 
     if (current.length > 0) grouped.push(current);
     return grouped;
-  }, [modules]);
+  }, [regularModules]);
 
   return (
-    <div className="w-full max-w-[1500px] mx-auto" data-modular-zone="1">
-      <div
-        className="flex flex-col gap-0"
-        style={{
-          minHeight: single ? minHeightPx : undefined,
-          // Par défaut (édition) : centrer verticalement s'il n'y a qu'un seul module
-          // Dès qu'un second module est ajouté, repasser en haut
-          justifyContent: single ? 'center' : 'flex-start'
-        }}
-      >
-        {rows.map((row, rowIndex) => {
+    <div className="w-full" data-modular-zone="1">
+      {/* Modules Logo - positionnés en pleine largeur au-dessus */}
+      {logoModules.map((m) => (
+        <div 
+          key={m.id}
+          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(m);
+          }}
+        >
+          <Toolbar
+            visible={selectedModuleId === m.id}
+            layoutWidth="full"
+            onWidthChange={() => {}}
+            onDelete={() => onDelete(m.id)}
+            expanded={openToolbarFor === m.id}
+            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+            isMobile={device === 'mobile'}
+          />
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+        </div>
+      ))}
+      
+      {/* Modules réguliers - dans le conteneur centré avec max-width */}
+      <div className="w-full max-w-[1500px] mx-auto">
+        <div
+          className="flex flex-col gap-0"
+          style={{
+            minHeight: single ? minHeightPx : undefined,
+            // Par défaut (édition) : centrer verticalement s'il n'y a qu'un seul module
+            // Dès qu'un second module est ajouté, repasser en haut
+            justifyContent: single ? 'center' : 'flex-start'
+          }}
+        >
+          {rows.map((row, rowIndex) => {
           const isMobileView = device === 'mobile';
           const hasSplit = row.some(({ module }) => (module.layoutWidth || 'full') !== 'full');
           return (
@@ -909,10 +939,11 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             </div>
           );
         })}
+        </div>
+        {regularModules.length === 0 && logoModules.length === 0 && (
+          <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
+        )}
       </div>
-      {modules.length === 0 && (
-        <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
-      )}
     </div>
   );
 };
