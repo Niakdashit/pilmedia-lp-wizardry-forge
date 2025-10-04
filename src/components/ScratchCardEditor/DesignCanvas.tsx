@@ -354,6 +354,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Use global clipboard from Zustand
   const clipboard = useEditorStore(state => state.clipboard);
   const storeCampaign = useEditorStore(state => state.campaign);
+  const updateDesign = useEditorStore(state => state.updateDesign);
 
   // Mesure dynamique de la hauteur de la toolbar mobile
   useEffect(() => {
@@ -467,6 +468,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
         } catch {}
+        // Mettre aussi à jour le design global (par device) pour la persistance et le preview
+        try {
+          updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
+        } catch {}
       }
     };
     window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
@@ -506,6 +511,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId } }));
+        } catch {}
+        // Mettre aussi à jour le design global (par device) pour la persistance et le preview
+        try {
+          updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
         } catch {}
       }
     };
