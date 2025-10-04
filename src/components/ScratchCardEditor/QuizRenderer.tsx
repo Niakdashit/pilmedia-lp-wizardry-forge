@@ -602,7 +602,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               textAlign: 'center',
               padding: '16px'
             }}>
-              <strong>Logo</strong>
+              <strong>Pied de page</strong>
             </div>
           ) : null}
         </div>
