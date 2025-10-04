@@ -2371,8 +2371,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
               const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
               const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-              const logoBandHeight = logoModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
-              const footerBandHeight = footerModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
+              const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
+                const h = (m?.bandHeight ?? 60);
+                const p = (m?.bandPadding ?? 16) * 2;
+                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
+                return Math.max(acc, h + p + extra);
+              }, 0);
+              const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
+                const h = (m?.bandHeight ?? 60);
+                const p = (m?.bandPadding ?? 16) * 2;
+                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
+                return Math.max(acc, h + p + extra);
+              }, 0);
               return (
                 <>
                   {/* Absolute, full-width logo band at the very top (non-movable) */}
@@ -2428,7 +2438,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   >
                     {/* Spacer to prevent overlap with the absolute logo band */}
                     {logoModules.length > 0 && (
-                      <div style={{ height: logoBandHeight }} />
+                      <div style={{ height: logoVisualHeight }} />
                     )}
                     <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
                       <ModularCanvas
@@ -2530,7 +2540,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           : undefined}
                       />
                       {footerModules.length > 0 && (
-                        <div style={{ height: footerBandHeight }} />
+                        <div style={{ height: footerVisualHeight }} />
                       )}
                     </div>
                   </div>
