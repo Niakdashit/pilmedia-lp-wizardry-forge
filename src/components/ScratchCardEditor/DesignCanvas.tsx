@@ -2372,6 +2372,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
               const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
               const logoBandHeight = logoModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
+              const footerBandHeight = footerModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
               return (
                 <>
                   {/* Absolute, full-width logo band at the very top (non-movable) */}
@@ -2528,6 +2529,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           ? (externalSelectedElement as any)?.moduleId
                           : undefined}
                       />
+                      {footerModules.length > 0 && (
+                        <div style={{ height: footerBandHeight }} />
+                      )}
                     </div>
                   </div>
 
