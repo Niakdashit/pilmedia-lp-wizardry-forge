@@ -2740,17 +2740,15 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                         }
                       }
                     }}
-                    onOpenElementsTab={() => {
-                      if (!isWindowMobile) {
-                        // Utiliser la même logique que onForceElementsTab
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        // Fermer les autres panneaux
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }
-                    }}
+                     onOpenElementsTab={() => {
+                       // Toujours ouvrir l'onglet Éléments, même en mode mobile/portrait
+                       if (sidebarRef.current) {
+                         sidebarRef.current.setActiveTab('elements');
+                       }
+                       // Fermer les autres panneaux
+                       setShowAnimationsInSidebar(false);
+                       setShowPositionInSidebar(false);
+                     }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
                     onBackgroundChange={handleBackgroundChange}

@@ -2582,15 +2582,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       }
                     }}
                     onOpenElementsTab={() => {
-                      if (!isWindowMobile) {
-                        // Utiliser la même logique que onForceElementsTab
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        // Fermer les autres panneaux
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                      // Toujours ouvrir l'onglet Éléments, même en mode mobile/portrait
+                      if (sidebarRef.current) {
+                        sidebarRef.current.setActiveTab('elements');
                       }
+                      // Fermer les autres panneaux
+                      setShowAnimationsInSidebar(false);
+                      setShowPositionInSidebar(false);
                     }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
