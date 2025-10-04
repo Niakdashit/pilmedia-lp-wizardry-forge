@@ -269,6 +269,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
+  const hasLogoScreen1 = Array.isArray(modules) && modules.some((m: any) => m?.type === 'BlocLogo');
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -410,7 +411,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
           {/* ÉCRAN 1 : Avant le jeu */}
           {currentScreen === 'screen1' && (
-            <div className="relative z-10 h-full flex flex-col items-center justify-center gap-6 p-8">
+            <div className={`relative z-10 h-full flex flex-col items-center ${hasLogoScreen1 ? 'justify-start' : 'justify-center'} gap-6 p-8`}>
               {modules.length > 0 && (
                 <QuizModuleRenderer 
                   modules={modules}
