@@ -452,16 +452,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: 'screen1' | 'screen2' | 'screen3'; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
-      if (detail.screenId === (screenId as any) && detail.device === selectedDevice) {
-        console.log(`📤 [${screenId}] Uploading background for ${selectedDevice}:`, detail.url?.substring(0, 50) + '...');
+      if (detail.screenId === (screenId as any)) {
+        const targetDevice = detail.device || selectedDevice;
+        console.log(`📤 [${screenId}] Uploading background for ${targetDevice}:`, detail.url?.substring(0, 50) + '...');
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
-          [selectedDevice]: detail.url || null
+          [targetDevice]: detail.url || null
         }));
-        // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
-        try { 
-          localStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
+        // Stocker pour l'appareil ciblé pour conserver des images distinctes par device
+        try {
+          localStorage.setItem(`sc-bg-${targetDevice}-${detail.screenId}`, detail.url);
           console.log(`🔔 [${screenId}] Emitting sc-bg-sync event for ${detail.screenId}`);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
@@ -493,15 +494,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
-      if (detail.device === selectedDevice) {
+      const targetDevice = detail.device || selectedDevice;
+      if (detail.device === undefined || detail.device === targetDevice) {
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
-          [selectedDevice]: detail.url || null
+          [targetDevice]: detail.url || null
         }));
-        // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
-        try { 
-          localStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url);
+        // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
+        try {
+          localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId } }));
         } catch {}
