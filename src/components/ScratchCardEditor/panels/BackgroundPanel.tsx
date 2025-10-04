@@ -554,13 +554,17 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
 
       {activeSubTab === 'style' && !isTextSelected && (
         <div>
-          <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
+          <h3 className="font-semibold text-sm text-gray-700 mb-3">
+            IMAGE DE FOND ({selectedDevice === 'mobile' ? 'MOBILE' : 'DESKTOP/TABLET'})
+          </h3>
           <button
             onClick={triggerFileUpload}
             className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-[hsl(var(--primary))] hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:text-white transition-colors flex flex-col items-center group"
           >
             <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
-            <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image</span>
+            <span className="text-sm text-gray-600 group-hover:text-white">
+              {selectedDevice === 'mobile' ? 'Télécharger pour Mobile' : 'Télécharger pour Desktop/Tablet'}
+            </span>
             <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
           </button>
           <label className="mt-3 flex items-center gap-2 select-none">

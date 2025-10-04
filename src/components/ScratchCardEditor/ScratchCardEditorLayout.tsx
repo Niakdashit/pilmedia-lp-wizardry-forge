@@ -308,46 +308,62 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setCanvasZoom(getDefaultZoom(device));
   }, []);
 
-  // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans (desktop/tablette/mobile)
+  // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail as { url?: string } | undefined;
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: string } | undefined;
       const url = detail?.url;
+      const targetDevice = detail?.device || 'desktop';
       if (!url) return;
-      // Mettre à jour le background local de l'éditeur
-      setCanvasBackground({ type: 'image', value: url });
-      // Mettre à jour la campagne globale (design desktop + mobile)
+      
+      // Mettre à jour le background local de l'éditeur seulement si c'est le device actuel
+      if (targetDevice === selectedDevice) {
+        setCanvasBackground({ type: 'image', value: url });
+      }
+      
+      // Mettre à jour la campagne globale selon le device ciblé
       try {
         setCampaign((prev: any) => {
           if (!prev) return prev;
+          const updatedDesign = { ...(prev.design || {}) };
+          
+          // Appliquer l'image uniquement au device approprié
+          if (targetDevice === 'mobile') {
+            updatedDesign.mobileBackgroundImage = url;
+          } else {
+            // Desktop et tablet partagent la même image
+            updatedDesign.backgroundImage = url;
+          }
+          
           return {
             ...prev,
             name: prev.name || 'Campaign',
-            design: {
-              ...(prev.design || {}),
-              backgroundImage: url,
-              mobileBackgroundImage: url
-            },
+            design: updatedDesign,
             _lastUpdate: Date.now()
           };
         });
       } catch {}
+      
       // Mettre à jour la config locale utilisée par l'éditeur si présente
       setCampaignConfig((prev: any) => {
         if (!prev) return prev;
+        const updatedDesign = { ...(prev.design || {}) };
+        
+        if (targetDevice === 'mobile') {
+          updatedDesign.mobileBackgroundImage = url;
+        } else {
+          updatedDesign.backgroundImage = url;
+        }
+        
         return {
           ...prev,
-          design: {
-            ...(prev.design || {}),
-            backgroundImage: url,
-            mobileBackgroundImage: url
-          }
+          design: updatedDesign
         };
       });
     };
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
     return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
-  }, [setCampaign]);
+  }, [setCampaign, selectedDevice]);
 
   // Détection de la taille de fenêtre
   useEffect(() => {

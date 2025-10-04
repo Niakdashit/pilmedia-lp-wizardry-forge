@@ -201,18 +201,38 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   };
 
   // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
+  // Sélectionne l'image de fond appropriée selon le device (desktop vs mobile)
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     const perScreenUrl = getPerScreenBg(currentScreen, previewMode);
     if (perScreenUrl) {
       return { background: `url(${perScreenUrl}) center/cover no-repeat` };
     }
-    const canvasBackground = liveCampaign?.canvasConfig?.background || liveCampaign?.design?.background || campaign?.design?.background;
+    
+    // Déterminer quelle image de fond utiliser selon le device
+    const design = liveCampaign?.design || campaign?.design;
+    let backgroundImageUrl: string | undefined;
+    
+    if (previewMode === 'mobile') {
+      // Priorité à mobileBackgroundImage pour mobile, sinon fallback sur backgroundImage
+      backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
+    } else {
+      // Desktop et tablet utilisent backgroundImage
+      backgroundImageUrl = design?.backgroundImage;
+    }
+    
+    // Si on a une URL d'image spécifique, l'utiliser
+    if (backgroundImageUrl) {
+      return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
+    }
+    
+    // Sinon, utiliser le background général (couleur ou gradient)
+    const canvasBackground = liveCampaign?.canvasConfig?.background || design?.background;
     return {
       background: canvasBackground?.type === 'image'
         ? `url(${canvasBackground.value}) center/cover no-repeat`
-        : canvasBackground?.value || campaign?.design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
+        : canvasBackground?.value || design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
     };
-  }, [currentScreen, previewMode, liveCampaign?.canvasConfig?.background, liveCampaign?.design?.background, campaign?.design?.background, forceUpdate]);
+  }, [currentScreen, previewMode, liveCampaign?.canvasConfig?.background, liveCampaign?.design, campaign?.design, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié (comme FunnelQuizParticipate)
   const modularPage = liveCampaign?.modularPage || campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
@@ -454,10 +474,22 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   // Pour les campagnes de type "form", afficher directement le formulaire en plein écran
   if (liveCampaign.type === 'form') {
+    // Sélectionner l'image de fond appropriée selon le device pour les formulaires
+    const design = liveCampaign?.design || campaign?.design;
+    let formBackgroundUrl: string | undefined;
+    
+    if (previewMode === 'mobile') {
+      formBackgroundUrl = design?.mobileBackgroundImage || design?.backgroundImage;
+    } else {
+      formBackgroundUrl = design?.backgroundImage;
+    }
+    
     const backgroundStyle: React.CSSProperties = {
-      background: formPreviewBackground?.type === 'image'
-        ? `url(${formPreviewBackground.value}) center/cover no-repeat`
-        : formPreviewBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+      background: formBackgroundUrl
+        ? `url(${formBackgroundUrl}) center/cover no-repeat`
+        : formPreviewBackground?.type === 'image'
+          ? `url(${formPreviewBackground.value}) center/cover no-repeat`
+          : formPreviewBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
     };
 
     return (
