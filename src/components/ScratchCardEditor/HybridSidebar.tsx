@@ -244,18 +244,17 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
     setActiveTab: (tab: string) => {
-      // If we just manually switched tabs, ignore external attempts to force back to 'elements'
+      // Always allow external calls to open the Elements tab (e.g., after selecting a module)
+      // and make sure the sidebar is expanded on mobile.
+      if (tab === 'elements') {
+        setIsCollapsed(false);
+      }
+
+      // Keep a soft guard for rapid repeat calls but do not block the switch
       if (Date.now() < ignoreExternalUntilRef.current && tab === 'elements') {
-        return;
+        ignoreExternalUntilRef.current = 0;
       }
-      // If no module is selected anymore, ignore external attempts to force Elements
-      if (tab === 'elements' && !selectedModuleId && !selectedModule) {
-        return;
-      }
-      // If a non-elements tab is currently active, block external ref-driven return to 'elements'
-      if (tab === 'elements' && internalActiveTab !== 'elements') {
-        return;
-      }
+
       setInternalActiveTab(tab);
       onActiveTabChange?.(tab);
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
@@ -271,7 +270,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onQuizPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, setIsCollapsed]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
