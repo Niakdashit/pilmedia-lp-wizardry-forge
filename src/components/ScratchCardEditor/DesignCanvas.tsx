@@ -9,6 +9,7 @@ import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
 import GridOverlay from '../DesignEditor/components/GridOverlay';
 // Scratch editor doesn't use quiz settings button
 import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';

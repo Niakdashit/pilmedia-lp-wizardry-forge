@@ -68,7 +68,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   }), [campaign?.design, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié
-  const modularPage = campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+  const campaignAny = campaign as any;
+  const modularPage = campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
@@ -82,7 +83,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     screen3: modules3.map((m: any) => ({ id: m.id, type: m.type })),
     campaignId: campaign?.id,
     fullModularPage: modularPage,
-    campaignModularPage: campaign?.modularPage
+    campaignModularPage: campaignAny?.modularPage
   });
 
   // Vérifier si une carte contient un bouton sur écran 1
@@ -113,12 +114,12 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   // Styles par défaut (hérités de gameConfig/buttonConfig) si aucun BlocBouton n'est présent
   const defaultParticipateStyles = useMemo(() => {
     const defaultBackground = '#000000';
-    const buttonStyles = campaign?.gameConfig?.quiz?.buttonStyles || campaign?.buttonConfig?.styles || {};
+    const buttonStyles = campaignAny?.gameConfig?.quiz?.buttonStyles || campaignAny?.buttonConfig?.styles || {};
     const style: React.CSSProperties = {
       background: buttonStyles.background || defaultBackground,
-      color: buttonStyles.color || campaign?.buttonConfig?.textColor || '#ffffff',
+      color: buttonStyles.color || campaignAny?.buttonConfig?.textColor || '#ffffff',
       padding: buttonStyles.padding || '14px 28px',
-      borderRadius: buttonStyles.borderRadius || campaign?.buttonConfig?.borderRadius || '9999px',
+      borderRadius: buttonStyles.borderRadius || campaignAny?.buttonConfig?.borderRadius || '9999px',
       boxShadow: buttonStyles.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
       display: 'inline-flex',
       alignItems: 'center',
@@ -147,7 +148,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     } as React.CSSProperties;
   }, [ctaModule, defaultParticipateStyles]);
 
-  const ctaLabel = ctaModule?.label || (campaign?.buttonConfig?.text || campaign?.screens?.[0]?.buttonText || 'Participer');
+  const ctaLabel = ctaModule?.label || (campaignAny?.buttonConfig?.text || campaignAny?.screens?.[0]?.buttonText || 'Participer');
   const ctaClassName = `rounded-lg transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/70 mt-4 ${ctaModule?.uppercase ? 'uppercase' : ''} ${ctaModule?.bold ? 'font-bold' : 'font-semibold'}`;
 
   const handleParticipate = () => {
@@ -231,7 +232,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
                   console.log('🎯 Quiz completed, showing form');
                   setShowFormModal(true);
                 }}
-                templateId={campaign?.gameConfig?.quiz?.templateId || 'image-quiz'}
+                templateId={campaignAny?.gameConfig?.quiz?.templateId || 'image-quiz'}
                 onAnswerSelected={(isCorrect: boolean) => {
                   if (isCorrect) {
                     setScore(prev => prev + 1);
@@ -245,8 +246,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         {/* Form phase - use modal component to keep look consistent */}
         <FormHandler
           showFormModal={showFormModal}
-          campaign={campaign}
-          fields={fields}
+          campaign={campaignAny}
+          fields={fields as any}
           participationLoading={participationLoading}
           onClose={() => setShowFormModal(false)}
           onSubmit={handleFormSubmit}
@@ -272,10 +273,10 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
               <div className="absolute inset-0 flex items-center justify-center z-10 px-4">
                 <div className="bg-white/90 backdrop-blur px-6 py-5 rounded-xl shadow max-w-md w-full text-center">
                   <div className="text-lg font-semibold text-gray-800 mb-2">
-                    {campaign?.screens?.[3]?.confirmationTitle || 'Merci pour votre participation !'}
+                    {campaignAny?.screens?.[3]?.confirmationTitle || 'Merci pour votre participation !'}
                   </div>
                   <div className="text-sm text-gray-700 mb-3 whitespace-pre-wrap break-words">
-                    {campaign?.screens?.[3]?.confirmationMessage || campaign?.screens?.[3]?.description || 'Votre participation a bien été enregistrée.'}
+                    {campaignAny?.screens?.[3]?.confirmationMessage || campaignAny?.screens?.[3]?.description || 'Votre participation a bien été enregistrée.'}
                   </div>
                   {showScore && (
                     <div className="text-sm text-gray-700 mb-3">Score: {score}</div>
