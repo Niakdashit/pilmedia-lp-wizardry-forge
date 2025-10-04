@@ -407,6 +407,18 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         </div>
       );
     }
+    case 'BlocLogo':
+      return (
+        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
+          <QuizModuleRenderer
+            modules={[m]}
+            previewMode={false}
+            device={device}
+            onModuleClick={() => {}}
+            onModuleUpdate={(_id, patch) => onUpdate(patch)}
+          />
+        </div>
+      );
     default:
       return null;
   }
