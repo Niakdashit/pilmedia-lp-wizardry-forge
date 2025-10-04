@@ -430,15 +430,23 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
+        console.log('🎨 [BackgroundPanel] Uploading image:', {
+          applyToAllScreens,
+          currentScreen,
+          selectedDevice,
+          imageUrlLength: imageUrl?.length
+        });
         // Si la case est cochée, appliquer à tous les écrans MAIS uniquement pour l'appareil courant (device-scoped)
         if (applyToAllScreens) {
           if (typeof window !== 'undefined') {
+            console.log('🎨 [BackgroundPanel] Dispatching applyBackgroundAllScreens for device:', selectedDevice);
             const evt = new CustomEvent('applyBackgroundAllScreens', { detail: { url: imageUrl, device: selectedDevice } });
             window.dispatchEvent(evt);
           }
         } else {
           // Sinon, ne pas toucher au background global: appliquer uniquement à l'écran courant
           if (typeof window !== 'undefined' && currentScreen) {
+            console.log('🎨 [BackgroundPanel] Dispatching applyBackgroundCurrentScreen for screen:', currentScreen, 'device:', selectedDevice);
             const evt2 = new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: imageUrl, screenId: currentScreen, device: selectedDevice } });
             window.dispatchEvent(evt2);
           }
