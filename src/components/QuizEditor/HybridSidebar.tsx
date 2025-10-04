@@ -11,6 +11,7 @@ import BackgroundPanel from './panels/BackgroundPanel';
 import CompositeElementsPanel from './modules/CompositeElementsPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import ImageModulePanel from './modules/ImageModulePanel';
+import LogoModulePanel from './modules/LogoModulePanel';
 import ButtonModulePanel from './modules/ButtonModulePanel';
 import VideoModulePanel from './modules/VideoModulePanel';
 import SocialModulePanel from './modules/SocialModulePanel';
@@ -22,7 +23,7 @@ import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
-import type { Module, BlocImage, BlocCarte } from '@/types/modularEditor';
+import type { Module, BlocImage, BlocCarte, BlocLogo } from '@/types/modularEditor';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -656,6 +657,21 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             <ImageModulePanel
               module={selectedModule as BlocImage}
               onUpdate={(patch: Partial<BlocImage>) => {
+                onModuleUpdate(selectedModule.id, patch);
+              }}
+              onBack={() => {
+                onSelectedModuleChange?.(null);
+                setActiveTab('elements');
+              }}
+            />
+          );
+        }
+        
+        if (selectedModule?.type === 'BlocLogo' && onModuleUpdate) {
+          return (
+            <LogoModulePanel
+              module={selectedModule as BlocLogo}
+              onUpdate={(patch: Partial<BlocLogo>) => {
                 onModuleUpdate(selectedModule.id, patch);
               }}
               onBack={() => {

@@ -147,6 +147,22 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
           }
         ]
       };
+    case 'BlocLogo':
+      return {
+        id,
+        type: 'BlocLogo' as const,
+        logoUrl: '',
+        logoWidth: 120,
+        logoHeight: 120,
+        bandHeight: 120,
+        bandColor: '#ffffff',
+        bandPadding: 16,
+        align: 'center',
+        spacingTop: 0,
+        spacingBottom: 0,
+        layoutWidth: 'full',
+        minHeight: 120
+      };
   }
 };
 
@@ -155,6 +171,7 @@ const items: Array<{ id: ModuleType; label: string; icon: React.ComponentType<an
   { id: 'BlocImage', label: 'Bloc Image', icon: ImgIcon },
   { id: 'BlocBouton', label: 'Bloc Bouton', icon: Link2 },
   { id: 'BlocCarte', label: 'Carte', icon: Square },
+  { id: 'BlocLogo', label: 'Logo', icon: ImgIcon },
   { id: 'BlocSeparateur', label: 'Espace', icon: SeparatorHorizontal },
   { id: 'BlocVideo', label: 'Bloc Vidéo', icon: Video },
   { id: 'BlocReseauxSociaux', label: 'Réseaux sociaux', icon: Share2 },

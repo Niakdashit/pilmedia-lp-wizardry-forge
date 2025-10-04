@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte } from '@/types/modularEditor';
+import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
 
 interface QuizModuleRendererProps {
@@ -487,6 +487,65 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      );
+    }
+
+    // BlocLogo
+    if (m.type === 'BlocLogo') {
+      const logoModule = m as BlocLogo;
+      const bandHeight = logoModule.bandHeight ?? 120;
+      const bandColor = logoModule.bandColor ?? '#ffffff';
+      const bandPadding = logoModule.bandPadding ?? 16;
+      const logoWidth = logoModule.logoWidth ?? 120;
+      const logoHeight = logoModule.logoHeight ?? 120;
+      const align = logoModule.align || 'center';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+
+      return (
+        <div 
+          key={m.id} 
+          style={{ 
+            ...commonStyle,
+            backgroundColor: bandColor,
+            height: bandHeight,
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent,
+            padding: `${bandPadding}px`,
+            paddingTop: (logoModule as any).spacingTop ?? 0,
+            paddingBottom: (logoModule as any).spacingBottom ?? 0
+          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
+        >
+          {logoModule.logoUrl ? (
+            <img
+              src={logoModule.logoUrl}
+              alt="Logo"
+              style={{
+                maxWidth: logoWidth,
+                maxHeight: logoHeight,
+                objectFit: 'contain'
+              }}
+            />
+          ) : !previewMode ? (
+            <div style={{
+              width: logoWidth,
+              height: logoHeight,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px dashed #cbd5e0',
+              borderRadius: '8px',
+              color: '#a0aec0',
+              fontSize: '14px',
+              textAlign: 'center',
+              padding: '16px'
+            }}>
+              Cliquez pour ajouter un logo
+            </div>
+          ) : null}
         </div>
       );
     }
