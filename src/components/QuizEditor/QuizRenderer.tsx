@@ -506,16 +506,18 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         <div 
           key={m.id} 
           style={{ 
-            ...commonStyle,
             backgroundColor: bandColor,
             height: bandHeight,
-            width: '100%',
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent,
             padding: `${bandPadding}px`,
             paddingTop: (logoModule as any).spacingTop ?? 0,
-            paddingBottom: (logoModule as any).spacingBottom ?? 0
+            paddingBottom: (logoModule as any).spacingBottom ?? 0,
+            position: 'relative'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
