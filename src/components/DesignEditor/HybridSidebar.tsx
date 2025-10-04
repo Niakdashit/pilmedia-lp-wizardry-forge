@@ -126,11 +126,33 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onForceElementsTab,
   colorEditingContext
 }: HybridSidebarProps, ref) => {
+  // Détection du format 9:16 (fenêtre portrait)
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile' || isWindowMobile);
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
+  
+  // Détection de la taille de fenêtre
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    updateWindowSize();
+    window.addEventListener('resize', updateWindowSize);
+    return () => window.removeEventListener('resize', updateWindowSize);
+  }, []);
+  
+  // Forcer le collapse en format 9:16
+  useEffect(() => {
+    if (isWindowMobile) {
+      setIsCollapsed(true);
+    }
+  }, [isWindowMobile]);
   
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
@@ -148,20 +170,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       userAgent: ua,
       isMobileUA: /Mobi|Android/i.test(ua),
       windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
+      windowHeight: typeof window !== 'undefined' ? window.innerHeight : 'N/A',
+      isWindowMobile,
       selectedDevice,
-      willCollapse: deviceOverride === null && /Mobi|Android/i.test(ua),
+      willCollapse: deviceOverride === null && (/Mobi|Android/i.test(ua) || isWindowMobile),
       deviceOverride
     });
 
-    if (deviceOverride === 'desktop') {
+    if (deviceOverride === 'desktop' && !isWindowMobile) {
       setIsCollapsed(false);
       return;
     }
 
-    if (/Mobi|Android/i.test(ua)) {
+    if (/Mobi|Android/i.test(ua) || isWindowMobile) {
       setIsCollapsed(true);
     }
-  }, [onForceElementsTab, selectedDevice]);
+  }, [onForceElementsTab, selectedDevice, isWindowMobile]);
   // Default to 'Design' tab on entry
   const [activeTab, _setActiveTab] = useState<string | null>('background');
 
