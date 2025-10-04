@@ -308,6 +308,21 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setCanvasZoom(getDefaultZoom(device));
   }, []);
 
+  // Recharger l'image de fond correcte depuis la campaign quand on change de device
+  useEffect(() => {
+    if (campaignState?.design) {
+      const design = campaignState.design as any;
+      const bgImage = selectedDevice === 'mobile' 
+        ? design.mobileBackgroundImage 
+        : design.backgroundImage;
+      
+      if (bgImage) {
+        console.log(`🔄 Switching to ${selectedDevice}, loading background:`, bgImage.substring(0, 50) + '...');
+        setCanvasBackground({ type: 'image', value: bgImage });
+      }
+    }
+  }, [selectedDevice, campaignState?.design]);
+
   // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
   useEffect(() => {
     const handler = (e: Event) => {

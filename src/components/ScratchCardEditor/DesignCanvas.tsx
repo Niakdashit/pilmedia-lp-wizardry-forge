@@ -471,6 +471,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
   }, [screenId, selectedDevice]);
 
+  // Recharger l'image de fond depuis sessionStorage quand on change de device
+  useEffect(() => {
+    try {
+      const storedBg = sessionStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
+      if (storedBg) {
+        console.log(`🔄 [${screenId}] Reloading background for ${selectedDevice}:`, storedBg.substring(0, 50) + '...');
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [selectedDevice]: storedBg
+        }));
+      }
+    } catch (e) {
+      console.error('Error loading background from sessionStorage:', e);
+    }
+  }, [selectedDevice, screenId]);
+
   // Listen for device-scoped apply to all screens; apply to this screen if device matches
   useEffect(() => {
     const handler = (e: Event) => {
