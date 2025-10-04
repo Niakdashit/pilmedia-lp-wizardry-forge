@@ -983,6 +983,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     autoFitEnabledRef.current = false;
   }, [enableInternalAutoFit, updateAutoFit]);
 
+  // Re-fit when switching device (e.g., desktop ↔ mobile) so the full canvas is visible
+  useEffect(() => {
+    if (!enableInternalAutoFit) return;
+    autoFitEnabledRef.current = true;
+    updateAutoFit();
+    autoFitEnabledRef.current = false;
+  }, [selectedDevice, enableInternalAutoFit, updateAutoFit]);
+
   // Do not auto-fit on resizes anymore; keep user's zoom unchanged
   useEffect(() => {
     // intentionally left blank
@@ -1020,11 +1028,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (readOnly) return;
     // Allow marquee on all devices; treat touch specially
     // Only react to primary mouse button, but allow touch regardless of e.button
-    if (e.pointerType !== 'touch' && e.button !== 0) return;
     if (e.pointerType === 'touch') {
-      // Prevent native gestures from interfering with marquee start
-      e.preventDefault();
+      // Allow pinch-to-zoom; no marquee selection on touch
+      return;
     }
+    if (e.button !== 0) return;
     // Start suppression so the subsequent synthetic click won't clear selection
     suppressNextClickClearRef.current = true;
     console.debug('🟦 Marquee start (pointerdown)', { clientX: e.clientX, clientY: e.clientY });
