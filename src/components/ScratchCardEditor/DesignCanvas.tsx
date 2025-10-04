@@ -461,7 +461,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         }));
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
-          sessionStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
+          localStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
           console.log(`🔔 [${screenId}] Emitting sc-bg-sync event for ${detail.screenId}`);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
@@ -475,7 +475,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Recharger l'image de fond depuis sessionStorage quand on change de device
   useEffect(() => {
     try {
-      const storedBg = sessionStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
+      const storedBg = localStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
       if (storedBg) {
         console.log(`🔄 [${screenId}] Reloading background for ${selectedDevice}:`, storedBg.substring(0, 50) + '...');
         setDeviceBackgrounds(prev => ({
@@ -501,7 +501,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         }));
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
-          sessionStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url);
+          localStorage.setItem(`sc-bg-${selectedDevice}-${screenId}`, detail.url);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId } }));
         } catch {}
@@ -519,7 +519,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const loadedBackgrounds: Record<string, string | null> = {};
         
         devices.forEach(device => {
-          const saved = sessionStorage.getItem(`sc-bg-${device}-${screenId}`);
+          const saved = localStorage.getItem(`sc-bg-${device}-${screenId}`);
           loadedBackgrounds[device] = saved || null;
         });
         
@@ -550,7 +550,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         const loadedBackgrounds: Record<string, string | null> = {};
         
         devices.forEach(device => {
-          const saved = sessionStorage.getItem(`sc-bg-${device}-${screenId}`);
+          const saved = localStorage.getItem(`sc-bg-${device}-${screenId}`);
           loadedBackgrounds[device] = saved || null;
         });
         

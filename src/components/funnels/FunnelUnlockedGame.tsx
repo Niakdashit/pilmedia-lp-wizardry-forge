@@ -77,6 +77,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       window.removeEventListener('applyBackgroundCurrentScreen', handleBgSync);
     };
   }, []);
+
+  // Synchronize with localStorage changes (cross-frame) for background overrides
+  React.useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key.startsWith('sc-bg-')) {
+        console.log('🔄 [FunnelUnlockedGame] storage change:', e.key);
+        setForceUpdate(prev => prev + 1);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
   
   const [formPreviewElements, setFormPreviewElements] = useState<any[]>([]);
   const [formPreviewBackground, setFormPreviewBackground] = useState<{ type: 'color' | 'image'; value: string }>({
@@ -211,7 +224,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Helper: lire un éventuel override local (par écran et par appareil) depuis sessionStorage
   const getPerScreenBg = (screen: 'screen1' | 'screen2' | 'screen3', device: 'desktop' | 'tablet' | 'mobile'): string | null => {
     try {
-      const url = sessionStorage.getItem(`sc-bg-${device}-${screen}`);
+      const url = localStorage.getItem(`sc-bg-${device}-${screen}`);
       if (url && typeof url === 'string' && url.length > 0) return url;
     } catch {}
     return null;
