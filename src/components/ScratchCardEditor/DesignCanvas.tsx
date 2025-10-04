@@ -455,7 +455,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
-          [selectedDevice]: detail.url
+          [selectedDevice]: detail.url || null
         }));
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
@@ -479,7 +479,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
-          [selectedDevice]: detail.url
+          [selectedDevice]: detail.url || null
         }));
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 

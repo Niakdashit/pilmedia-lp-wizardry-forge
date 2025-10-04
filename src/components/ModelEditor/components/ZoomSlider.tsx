@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, RotateCcw } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { isRealMobile } from '@/utils/isRealMobile';
 
 interface ZoomSliderProps {
@@ -43,9 +43,6 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
     onZoomChange(newZoom);
   };
 
-  const handleResetZoom = () => {
-    onZoomChange(defaultZoom);
-  };
 
   // Position et offset identiques à QuizEditor
   const [sidebarOffsetRem, setSidebarOffsetRem] = React.useState<number>(25);

@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
 // Scratch editor uses FunnelUnlockedGame for preview
-import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -1643,7 +1643,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       device: selectedDevice
     });
 
-    const buttonCustomStyles = launchButtonStyles;
+    
 
     const screenSources = [
       (campaignState as any)?.screens,
@@ -1677,7 +1677,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       }
     ];
 
-    const normalizedScreens = defaultScreens.map((defaults, index) => {
+    defaultScreens.map((defaults, index) => {
       const existing = screenSources[index] || {};
       const merged: Record<string, any> = { ...defaults, ...existing };
 
@@ -2339,7 +2339,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
             <div className="w-full h-full pointer-events-auto">
               {campaignData?.type === 'quiz' ? (
                 <FunnelQuizParticipate
-                  campaign={campaignData}
+                  campaign={campaignData as any}
                   previewMode={selectedDevice}
                 />
               ) : (

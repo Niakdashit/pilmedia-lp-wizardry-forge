@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import FormHandler from './components/FormHandler';
-import type { Campaign } from '../../types/campaign';
+import type { Tables } from '@/integrations/supabase/types';
 import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
 import { useParticipations } from '../../hooks/useParticipations';
 
 interface FunnelQuizParticipateProps {
-  campaign: Campaign;
+  campaign: Tables<'campaigns'>;
   previewMode: 'mobile' | 'tablet' | 'desktop';
 }
 
@@ -20,7 +20,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const [participationLoading, setParticipationLoading] = useState<boolean>(false);
   const [forceUpdate, setForceUpdate] = useState(0);
 
-  const showScore = !!campaign?.gameConfig?.quiz?.showScore;
+  const showScore = !!(campaign?.game_config as any)?.quiz?.showScore;
   
   // Écouter les mises à jour de style pour forcer le re-render
   React.useEffect(() => {
@@ -38,31 +38,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     };
   }, []);
 
-  const participateLabel = campaign?.buttonConfig?.text || campaign?.screens?.[0]?.buttonText || 'Participer';
-  const participateStyles = useMemo(() => {
-    const defaultBackground = '#000000';
-    const buttonStyles = campaign?.gameConfig?.quiz?.buttonStyles || campaign?.buttonConfig?.styles || {};
-
-    const style: React.CSSProperties = {
-      background: buttonStyles.background || defaultBackground,
-      color: buttonStyles.color || campaign?.buttonConfig?.textColor || '#ffffff',
-      padding: buttonStyles.padding || '14px 28px',
-      borderRadius: buttonStyles.borderRadius || campaign?.buttonConfig?.borderRadius || '9999px',
-      boxShadow: buttonStyles.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
-      display: buttonStyles.display || 'inline-flex',
-      alignItems: buttonStyles.alignItems || 'center',
-      justifyContent: buttonStyles.justifyContent || 'center',
-      minWidth: buttonStyles.minWidth,
-      minHeight: buttonStyles.minHeight,
-      width: buttonStyles.width,
-      height: buttonStyles.height,
-      fontWeight: 600
-    };
-
-    return style;
-  }, [campaign]);
-
-  const rawReplayButton = campaign?.screens?.[3]?.replayButtonText;
+  const rawReplayButton = (campaign as any)?.screens?.[3]?.replayButtonText;
   const shouldRenderReplayButton = rawReplayButton !== '';
   const replayButtonLabel = (() => {
     if (!shouldRenderReplayButton) return '';
@@ -78,18 +54,18 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const { createParticipation } = useParticipations();
 
   const fields = useMemo(() => (
-    (campaign?.formFields && Array.isArray(campaign.formFields)) ? campaign.formFields : [
+    (campaign?.form_fields && Array.isArray(campaign.form_fields)) ? campaign.form_fields : [
       { id: 'prenom', label: 'Prénom', type: 'text', required: true },
       { id: 'nom', label: 'Nom', type: 'text', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true }
     ]
-  ), [campaign?.formFields]);
+  ), [campaign?.form_fields]);
 
   const backgroundStyle: React.CSSProperties = useMemo(() => ({
-    background: campaign.design?.background?.type === 'image'
-      ? `url(${campaign.design.background.value}) center/cover no-repeat`
-      : campaign.design?.background?.value || '#ffffff'
-  }), [campaign?.design?.background, forceUpdate]);
+    background: (campaign.design as any)?.background?.type === 'image'
+      ? `url(${(campaign.design as any).background.value}) center/cover no-repeat`
+      : (campaign.design as any)?.background?.value || '#ffffff'
+  }), [campaign?.design, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié
   const modularPage = campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };

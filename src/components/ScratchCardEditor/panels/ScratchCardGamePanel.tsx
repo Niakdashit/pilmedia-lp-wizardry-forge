@@ -17,7 +17,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
   campaign,
   setCampaign
 }) => {
-  const { prizes, addPrize, updatePrize, removePrize } = usePrizeLogic({ 
+  const { prizes, addPrize, removePrize } = usePrizeLogic({ 
     campaign: campaign as any, 
     setCampaign: setCampaign as any
   });
@@ -205,8 +205,8 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                 <label className="text-sm text-gray-600">Rayon (px)</label>
                 <input
                   type="number"
-                  value={scratchConfig.grid?.radius || 24}
-                  onChange={(e) => updateConfig({ grid: { ...scratchConfig.grid, radius: parseInt(e.target.value) || 24 } })}
+                  value={scratchConfig.grid?.borderRadius || 24}
+                  onChange={(e) => updateConfig({ grid: { ...scratchConfig.grid, borderRadius: parseInt(e.target.value) || 24 } })}
                   className="w-full mt-1 px-3 py-2 border rounded-lg"
                 />
               </div>
@@ -287,8 +287,8 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                         <input
                           type="radio"
                           name={`card-${index}-cover-type`}
-                          checked={card?.cover?.type !== 'image'}
-                          onChange={() => handleCardCoverChange(index, 'color', card?.cover?.value || '#C0C0C0')}
+                        checked={card?.cover?.type !== 'image'}
+                        onChange={() => handleCardCoverChange(index, 'color', (card?.cover?.type === 'color' ? card.cover.value : '#C0C0C0'))}
                         />
                         <span className="text-sm">Couleur unie</span>
                       </label>
@@ -296,8 +296,8 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                         <input
                           type="radio"
                           name={`card-${index}-cover-type`}
-                          checked={card?.cover?.type === 'image'}
-                          onChange={() => handleCardCoverChange(index, 'image', card?.cover?.url || '')}
+                        checked={card?.cover?.type === 'image'}
+                        onChange={() => handleCardCoverChange(index, 'image', (card?.cover?.type === 'image' ? card.cover.url : ''))}
                         />
                         <span className="text-sm">Image</span>
                       </label>
@@ -338,7 +338,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                     type="radio"
                     name="winner-type"
                     checked={scratchConfig.logic?.winnerReveal?.type !== 'image'}
-                    onChange={() => handleWinnerRevealChange('text', scratchConfig.logic?.winnerReveal?.value || 'Gagné !')}
+                    onChange={() => handleWinnerRevealChange('text', (scratchConfig.logic?.winnerReveal?.type === 'text' ? scratchConfig.logic.winnerReveal.value : 'Gagné !'))}
                   />
                   <span className="text-sm">Texte</span>
                 </label>
@@ -347,7 +347,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                     type="radio"
                     name="winner-type"
                     checked={scratchConfig.logic?.winnerReveal?.type === 'image'}
-                    onChange={() => handleWinnerRevealChange('image', scratchConfig.logic?.winnerReveal?.url || '')}
+                    onChange={() => handleWinnerRevealChange('image', (scratchConfig.logic?.winnerReveal?.type === 'image' ? scratchConfig.logic.winnerReveal.url : ''))}
                   />
                   <span className="text-sm">Image</span>
                 </label>
@@ -357,7 +357,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={scratchConfig.logic?.winnerReveal?.value || 'Gagné !'}
+                    value={scratchConfig.logic?.winnerReveal?.type === 'text' ? scratchConfig.logic.winnerReveal.value : 'Gagné !'}
                     onChange={(e) => handleWinnerRevealChange('text', e.target.value)}
                     placeholder="Gagné !"
                     className="flex-1 px-3 py-2 border rounded-lg"
@@ -382,7 +382,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                     type="radio"
                     name="loser-type"
                     checked={scratchConfig.logic?.loserReveal?.type !== 'image'}
-                    onChange={() => handleLoserRevealChange('text', scratchConfig.logic?.loserReveal?.value || 'Perdu')}
+                    onChange={() => handleLoserRevealChange('text', (scratchConfig.logic?.loserReveal?.type === 'text' ? scratchConfig.logic.loserReveal.value : 'Perdu'))}
                   />
                   <span className="text-sm">Texte</span>
                 </label>
@@ -391,7 +391,7 @@ const ScratchCardGamePanel: React.FC<ScratchCardGamePanelProps> = ({
                     type="radio"
                     name="loser-type"
                     checked={scratchConfig.logic?.loserReveal?.type === 'image'}
-                    onChange={() => handleLoserRevealChange('image', scratchConfig.logic?.loserReveal?.url || '')}
+                    onChange={() => handleLoserRevealChange('image', (scratchConfig.logic?.loserReveal?.type === 'image' ? scratchConfig.logic.loserReveal.url : ''))}
                   />
                   <span className="text-sm">Image</span>
                 </label>

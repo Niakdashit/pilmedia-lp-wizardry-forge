@@ -4,6 +4,8 @@ import type { BlocCarte } from '@/types/modularEditor';
 interface CartePanelProps {
   module: BlocCarte;
   onUpdate: (id: string, patch: Partial<BlocCarte>) => void;
+  onAddChild?: (parentId: string, childModule: any) => void;
+  onDeleteChild?: (parentId: string, childId: string) => void;
 }
 
 const CartePanel: React.FC<CartePanelProps> = ({ module, onUpdate }) => {

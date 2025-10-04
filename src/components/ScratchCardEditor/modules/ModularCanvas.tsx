@@ -143,7 +143,7 @@ const Toolbar: React.FC<{
 }
 
 // Dedicated body editor to preserve caret position and avoid content resets on each keystroke
-const BodyEditor: React.FC<{ m: Module; style: React.CSSProperties; onUpdate: (patch: Partial<Module>) => void; isMobile?: boolean }>
+// const BodyEditor: React.FC<{ m: Module; style: React.CSSProperties; onUpdate: (patch: Partial<Module>) => void; isMobile?: boolean }>
   = ({ m, style, onUpdate, isMobile = false }) => {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const isFocusedRef = React.useRef(false);
@@ -329,8 +329,8 @@ const BodyEditor: React.FC<{ m: Module; style: React.CSSProperties; onUpdate: (p
 };
 
 const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
-  const isMobileDevice = device === 'mobile';
-  const deviceScale = isMobileDevice ? 0.8 : 1;
+  // const isMobileDevice = device === 'mobile';
+  // const deviceScale = isMobileDevice ? 0.8 : 1;
 
   const commonStyle: React.CSSProperties = {
     background: m.backgroundColor,
@@ -587,7 +587,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             selectedModuleId={undefined}
             onModuleUpdate={(moduleId, patch) => {
               // Mettre à jour le module via le callback parent
-              onUpdate(moduleId, patch);
+              onUpdate({ ...patch } as any);
             }}
             className="w-full"
           />

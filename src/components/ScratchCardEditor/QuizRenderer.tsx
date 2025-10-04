@@ -126,7 +126,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
 
       const align = textModule.align || 'left';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
-      const maxTextWidth = textModule.width ?? 800;
+      const maxTextWidth = 800;
       
       const hasContainerStyles = Object.keys(containerStyles).length > 0;
       const rotationStyle = typeof textModule.rotation === 'number' ? {
@@ -141,7 +141,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         bodyStyle.display = 'inline-block';
       }
 
-      const content = textModule.body || textModule.text || textModule.label || 'Texte';
+      const content = textModule.body || textModule.text || 'Texte';
       const isEditing = editingModuleId === m.id && !previewMode;
 
       return (
@@ -322,7 +322,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             >
               <div className="relative" style={{ paddingTop: '56.25%' }}>
                 <iframe
-                  src={(videoModule as any).src || videoModule.videoUrl}
+                  src={(videoModule as any).src || ''}
                   title={(videoModule as any).title || 'Video'}
                   className="absolute inset-0 w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -461,7 +461,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                       const updatedChildren = (carteModule.children || []).map((c: Module) =>
                         c.id === childId ? { ...c, ...patch } : c
                       );
-                      onModuleUpdate(m.id, { children: updatedChildren });
+                      onModuleUpdate(m.id, { children: updatedChildren } as any);
                     }
                   };
 

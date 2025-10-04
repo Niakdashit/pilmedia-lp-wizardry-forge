@@ -68,8 +68,8 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const [applyToAllScreens, setApplyToAllScreens] = useState<boolean>(false);
   
   // États pour personnaliser les couleurs des effets rapides
-  const [effectBackgroundColor, setEffectBackgroundColor] = useState<string>('#FFD700');
-  const [effectTextColor, setEffectTextColor] = useState<string>('#000000');
+  // const [effectBackgroundColor, setEffectBackgroundColor] = useState<string>('#FFD700');
+  // const [effectTextColor, setEffectTextColor] = useState<string>('#000000');
   const [currentEffectId, setCurrentEffectId] = useState<string | null>(null);
   // Réglages Ombres
   const [shadowDistance, setShadowDistance] = useState<number>(50);
@@ -360,15 +360,13 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     }
     if (customBgColor) {
       effectCss.backgroundColor = customBgColor;
-      setEffectBackgroundColor(customBgColor);
     } else if (effect.style.backgroundColor) {
-      setEffectBackgroundColor(effect.style.backgroundColor as string);
+      // Use effect backgroundColor
     }
     if (customTextColor) {
       effectCss.color = customTextColor;
-      setEffectTextColor(customTextColor);
     } else if (effect.style.color) {
-      setEffectTextColor(effect.style.color as string);
+      // Use effect color
     }
 
     const baseUpdates = effectId === 'none'

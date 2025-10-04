@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Minus, Plus, ChevronDown } from 'lucide-react';
 import { isRealMobile } from '@/utils/isRealMobile';
 
 interface ZoomSliderProps {
@@ -39,9 +39,6 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
     onZoomChange(newZoom);
   };
 
-  const handleResetZoom = () => {
-    onZoomChange(defaultZoom);
-  };
 
   // Align position with QuizEditor: dynamic left offset based on HybridSidebar state
   const [sidebarOffsetRem, setSidebarOffsetRem] = React.useState<number>(25);
@@ -113,14 +110,6 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
 
         {/* Reset Zoom Button */}
         <div className="hidden w-px h-4 bg-gray-300 mx-1" />
-        <button
-          onClick={handleResetZoom}
-          className="hidden p-1 hover:bg-[hsl(var(--sidebar-hover))] rounded-full transition-all duration-200"
-          aria-label="Réinitialiser le zoom"
-          title="Réinitialiser le zoom"
-        >
-          <RotateCcw size={16} className="text-[hsl(var(--sidebar-icon))] hover:text-[hsl(var(--sidebar-icon-active))]" />
-        </button>
       </div>
 
       <style dangerouslySetInnerHTML={{
