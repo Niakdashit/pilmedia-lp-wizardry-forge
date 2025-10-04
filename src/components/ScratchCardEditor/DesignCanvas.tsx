@@ -25,6 +25,7 @@ import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveL
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
+import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
@@ -2389,35 +2390,27 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {logoModules.length > 0 && (
                     <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
-                        <ModularCanvas
-                          screen={screenId as any}
+                        <QuizModuleRenderer
                           modules={logoModules}
+                          previewMode={false}
                           device={selectedDevice}
-                          onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
-                          onDelete={(id) => onModuleDelete?.(id)}
-                          onMove={() => { /* BlocLogo non déplaçable */ }}
-                          onDuplicate={(id) => onModuleDuplicate?.(id)}
-                          onSelect={(m) => {
+                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
+                          onModuleClick={(moduleId) => {
                             try {
-                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                              const mod = (logoModules as any).find((mm: any) => mm.id === moduleId);
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
                               window.dispatchEvent(evt);
                             } catch {}
                             onSelectedElementChange?.({
-                              id: `modular-logo-${m.id}`,
+                              id: `modular-logo-${moduleId}`,
                               type: 'logo',
                               role: 'module-logo',
-                              moduleId: m.id,
+                              moduleId,
                               screenId
                             } as any);
                             onOpenElementsTab?.();
                           }}
-                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
-                            || (externalSelectedElement as any)?.role === 'module-image'
-                            || (externalSelectedElement as any)?.role === 'module-video'
-                            || (externalSelectedElement as any)?.role === 'module-social'
-                            || (externalSelectedElement as any)?.role === 'module-html'
-                            || (externalSelectedElement as any)?.role === 'module-carte'
-                            || (externalSelectedElement as any)?.role === 'module-logo')
+                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-logo')
                             ? (externalSelectedElement as any)?.moduleId
                             : undefined}
                         />
@@ -2549,24 +2542,22 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {footerModules.length > 0 && (
                     <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
-                        <ModularCanvas
-                          screen={screenId as any}
+                        <QuizModuleRenderer
                           modules={footerModules}
+                          previewMode={false}
                           device={selectedDevice}
-                          onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
-                          onDelete={(id) => onModuleDelete?.(id)}
-                          onMove={() => { /* BlocPiedDePage non déplaçable */ }}
-                          onDuplicate={(id) => onModuleDuplicate?.(id)}
-                          onSelect={(m) => {
+                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
+                          onModuleClick={(moduleId) => {
                             try {
-                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                              const mod = (footerModules as any).find((mm: any) => mm.id === moduleId);
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
                               window.dispatchEvent(evt);
                             } catch {}
                             onSelectedElementChange?.({
-                              id: `modular-footer-${m.id}`,
+                              id: `modular-footer-${moduleId}`,
                               type: 'footer',
                               role: 'module-footer',
-                              moduleId: m.id,
+                              moduleId,
                               screenId
                             } as any);
                             onOpenElementsTab?.();

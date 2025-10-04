@@ -626,7 +626,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
 
   // Séparer les modules Logo des autres modules
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo'), [modules]);
+  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
   const single = regularModules.length === 1;
