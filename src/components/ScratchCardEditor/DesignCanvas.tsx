@@ -2418,14 +2418,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     </div>
                   )}
 
-                  {/* Regular modules container; top padding removed when a logo exists */}
+                  {/* Regular modules container; padding adjusted when logo/footer exist */}
                   <div
                     className="w-full flex justify-center mb-6"
                     style={{
                       paddingLeft: safeZonePadding,
                       paddingRight: safeZonePadding,
                       paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
-                      paddingBottom: safeZonePadding,
+                      paddingBottom: footerModules.length > 0 ? 0 : safeZonePadding,
                       boxSizing: 'border-box'
                     }}
                   >
