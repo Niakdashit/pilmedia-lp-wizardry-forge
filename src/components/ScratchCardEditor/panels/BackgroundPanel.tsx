@@ -35,6 +35,7 @@ interface BackgroundPanelProps {
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
+// Updated with debug logs - v2
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
   onBackgroundChange, 
   onExtractedColorsChange,
@@ -47,11 +48,13 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   currentScreen,
   selectedDevice
 }) => {
-  console.log('🎨 BackgroundPanel component received props:', {
+  console.log('🎨🎨🎨 BackgroundPanel MOUNTED with props:', {
     selectedElementId: selectedElement?.id,
     selectedElementType: selectedElement?.type,
     hasOnElementUpdate: !!onElementUpdate,
     colorEditingContext,
+    currentScreen,
+    selectedDevice,
     timestamp: new Date().toISOString()
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
