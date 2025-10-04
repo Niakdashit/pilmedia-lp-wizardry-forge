@@ -269,7 +269,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
-  const hasLogoScreen1 = Array.isArray(modules) && modules.some((m: any) => m?.type === 'BlocLogo');
+
+  // Séparer les modules Logo pour l'écran 1 afin de répliquer le placement "absolu top" de l'éditeur
+  const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
+  const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo');
+  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 120), 0);
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -411,16 +415,35 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
           {/* ÉCRAN 1 : Avant le jeu */}
           {currentScreen === 'screen1' && (
-            <div className={`relative z-10 h-full flex flex-col items-center ${hasLogoScreen1 ? 'justify-start' : 'justify-center'} gap-6 p-8`}>
-              {modules.length > 0 && (
-                <QuizModuleRenderer 
-                  modules={modules}
-                  previewMode={true}
-                  device={previewMode}
-                  onButtonClick={handleGameButtonClick}
-                />
+            <>
+              {/* Bande logo absolue en haut (comme l'éditeur) */}
+              {logoModules1.length > 0 && (
+                <div className="absolute left-0 top-0 w-full z-20" style={{ pointerEvents: 'none' }}>
+                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                    <QuizModuleRenderer 
+                      modules={logoModules1}
+                      previewMode={true}
+                      device={previewMode}
+                    />
+                  </div>
+                </div>
               )}
-            </div>
+
+              {/* Contenu régulier sous la bande */}
+              <div className={`relative z-10 h-full flex flex-col items-center ${logoModules1.length > 0 ? 'justify-start' : 'justify-center'} gap-6 p-8`}>
+                {logoModules1.length > 0 && (
+                  <div style={{ height: logoBandHeight1 }} />
+                )}
+                {regularModules1.length > 0 && (
+                  <QuizModuleRenderer 
+                    modules={regularModules1}
+                    previewMode={true}
+                    device={previewMode}
+                    onButtonClick={handleGameButtonClick}
+                  />
+                )}
+              </div>
+            </>
           )}
 
           {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
