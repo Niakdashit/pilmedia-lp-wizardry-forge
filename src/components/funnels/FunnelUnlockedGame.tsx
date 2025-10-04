@@ -273,7 +273,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Séparer les modules Logo pour l'écran 1 afin de répliquer le placement "absolu top" de l'éditeur
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
   const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo');
-  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 120), 0);
+  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {

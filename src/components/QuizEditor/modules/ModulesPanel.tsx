@@ -154,7 +154,7 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
         logoUrl: '',
         logoWidth: 120,
         logoHeight: 120,
-        bandHeight: 120,
+        bandHeight: 60,
         bandColor: '#ffffff',
         bandPadding: 16,
         align: 'center',

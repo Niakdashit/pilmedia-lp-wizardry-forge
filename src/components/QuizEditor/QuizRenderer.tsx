@@ -494,7 +494,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as BlocLogo;
-      const bandHeight = logoModule.bandHeight ?? 120;
+      const bandHeight = logoModule.bandHeight ?? 60;
       const bandColor = logoModule.bandColor ?? '#ffffff';
       const bandPadding = logoModule.bandPadding ?? 16;
       const logoWidth = logoModule.logoWidth ?? 120;

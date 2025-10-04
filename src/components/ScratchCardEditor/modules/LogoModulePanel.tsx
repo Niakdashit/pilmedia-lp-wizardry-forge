@@ -17,7 +17,7 @@ const alignmentOptions: Array<{ id: BlocLogo['align']; label: string; icon: Reac
 
 const LogoModulePanel: React.FC<LogoModulePanelProps> = ({ module, onUpdate, onBack }) => {
   const currentAlign = module.align || 'center';
-  const bandHeight = module.bandHeight ?? 120;
+  const bandHeight = module.bandHeight ?? 60;
   const bandColor = module.bandColor ?? '#ffffff';
   const bandPadding = module.bandPadding ?? 16;
   const logoWidth = module.logoWidth ?? 120;

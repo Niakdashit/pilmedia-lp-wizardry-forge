@@ -2370,7 +2370,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
               const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
               const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo');
-              const logoBandHeight = logoModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 120), 0);
+              const logoBandHeight = logoModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
               return (
                 <>
                   {/* Absolute, full-width logo band at the very top (non-movable) */}
