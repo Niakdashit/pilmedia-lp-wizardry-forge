@@ -451,6 +451,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: 'screen1' | 'screen2' | 'screen3'; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.screenId === (screenId as any) && detail.device === selectedDevice) {
+        console.log(`📤 [${screenId}] Uploading background for ${selectedDevice}:`, detail.url?.substring(0, 50) + '...');
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
@@ -459,6 +460,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Stocker uniquement pour l'appareil actuel pour conserver les images distinctes par device
         try { 
           sessionStorage.setItem(`sc-bg-${selectedDevice}-${detail.screenId}`, detail.url);
+          console.log(`🔔 [${screenId}] Emitting sc-bg-sync event for ${detail.screenId}`);
           // Émettre un événement de synchronisation pour les autres canvas
           window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId: detail.screenId } }));
         } catch {}
@@ -522,25 +524,25 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('sc-bg-sync', handleStorageSync as EventListener);
   }, [screenId]); // Uniquement au changement de screenId, pas de selectedDevice
 
-  // Hydrate local per-screen background on mount and when screenId or device changes (session-only)
+  // Recharger les backgrounds quand on change de device pour s'assurer d'avoir les bonnes données
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(`sc-bg-${selectedDevice}-${screenId}`);
-      if (saved && typeof saved === 'string') {
-        setDeviceBackgrounds(prev => ({
-          ...prev,
-          [selectedDevice]: saved
-        }));
-      } else {
-        // Remettre à null pour ce device s'il n'a pas d'image spécifique
-        // Cela permet à chaque appareil d'avoir sa propre image distincte
-        setDeviceBackgrounds(prev => ({
-          ...prev,
-          [selectedDevice]: null
-        }));
-      }
-    } catch {}
-  }, [screenId, selectedDevice]);
+    const loadAllBackgrounds = () => {
+      try {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const loadedBackgrounds: Record<string, string | null> = {};
+        
+        devices.forEach(device => {
+          const saved = sessionStorage.getItem(`sc-bg-${device}-${screenId}`);
+          loadedBackgrounds[device] = saved || null;
+        });
+        
+        console.log(`🖼️ [${screenId}] Loading backgrounds for device ${selectedDevice}:`, loadedBackgrounds);
+        setDeviceBackgrounds(loadedBackgrounds);
+      } catch {}
+    };
+    
+    loadAllBackgrounds();
+  }, [selectedDevice, screenId]); // Recharger quand device OU screen change
 
   // Optimisation mobile pour une expérience tactile parfaite
 
