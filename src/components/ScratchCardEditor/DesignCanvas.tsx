@@ -2367,118 +2367,162 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             </div>
 
             {/* Modular stacked content (HubSpot-like) */}
-            {Array.isArray(modularModules) && modularModules.length > 0 && (
-              <div
-                className="w-full flex justify-center mb-6"
-                style={{
-                  paddingLeft: safeZonePadding,
-                  paddingRight: safeZonePadding,
-                  paddingTop: safeZonePadding,
-                  paddingBottom: safeZonePadding,
-                  boxSizing: 'border-box'
-                }}
-              >
-                <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
-                  <ModularCanvas
-                    screen={screenId as any}
-                    modules={modularModules}
-                    device={selectedDevice}
-                    onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
-                    onDelete={(id) => onModuleDelete?.(id)}
-                    onMove={(id, dir) => onModuleMove?.(id, dir)}
-                    onDuplicate={(id) => onModuleDuplicate?.(id)}
-                    onSelect={(m) => {
-                      try {
-                        const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
-                        window.dispatchEvent(evt);
-                      } catch {}
-                      if (m.type === 'BlocBouton') {
-                        onSelectedElementChange?.({
-                          id: `modular-button-${m.id}`,
-                          type: 'button',
-                          role: 'module-button',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
-                      if (m.type === 'BlocImage') {
-                        onSelectedElementChange?.({
-                          id: `modular-image-${m.id}`,
-                          type: 'image',
-                          role: 'module-image',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
-                      if (m.type === 'BlocReseauxSociaux') {
-                        onSelectedElementChange?.({
-                          id: `modular-social-${m.id}`,
-                          type: 'social',
-                          role: 'module-social',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
-                      if (m.type === 'BlocVideo') {
-                        onSelectedElementChange?.({
-                          id: `modular-video-${m.id}`,
-                          type: 'video',
-                          role: 'module-video',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
-                      if (m.type === 'BlocHtml') {
-                        onSelectedElementChange?.({
-                          id: `modular-html-${m.id}`,
-                          type: 'html',
-                          role: 'module-html',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
-                      if (m.type === 'BlocCarte') {
-                        onSelectedElementChange?.({
-                          id: `modular-carte-${m.id}`,
-                          type: 'carte',
-                          role: 'module-carte',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
-                      onSelectedElementChange?.({
-                        id: `modular-text-${m.id}`,
-                        type: 'text',
-                        role: 'module-text',
-                        moduleId: m.id,
-                        screenId
-                      } as any);
-                      onShowDesignPanel?.();
+            {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
+              const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
+              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo');
+              const logoBandHeight = logoModules.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 120), 0);
+              return (
+                <>
+                  {/* Absolute, full-width logo band at the very top (non-movable) */}
+                  {logoModules.length > 0 && (
+                    <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                        <ModularCanvas
+                          screen={screenId as any}
+                          modules={logoModules}
+                          device={selectedDevice}
+                          onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                          onDelete={(id) => onModuleDelete?.(id)}
+                          onMove={() => { /* BlocLogo non déplaçable */ }}
+                          onDuplicate={(id) => onModuleDuplicate?.(id)}
+                          onSelect={(m) => {
+                            try {
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                              window.dispatchEvent(evt);
+                            } catch {}
+                          }}
+                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
+                            || (externalSelectedElement as any)?.role === 'module-image'
+                            || (externalSelectedElement as any)?.role === 'module-video'
+                            || (externalSelectedElement as any)?.role === 'module-social'
+                            || (externalSelectedElement as any)?.role === 'module-html'
+                            || (externalSelectedElement as any)?.role === 'module-carte')
+                            ? (externalSelectedElement as any)?.moduleId
+                            : undefined}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Regular modules container; top padding removed when a logo exists */}
+                  <div
+                    className="w-full flex justify-center mb-6"
+                    style={{
+                      paddingLeft: safeZonePadding,
+                      paddingRight: safeZonePadding,
+                      paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
+                      paddingBottom: safeZonePadding,
+                      boxSizing: 'border-box'
                     }}
-                    selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
-                      || (externalSelectedElement as any)?.role === 'module-image'
-                      || (externalSelectedElement as any)?.role === 'module-video'
-                      || (externalSelectedElement as any)?.role === 'module-social'
-                      || (externalSelectedElement as any)?.role === 'module-html'
-                      || (externalSelectedElement as any)?.role === 'module-carte')
-                      ? (externalSelectedElement as any)?.moduleId
-                      : undefined}
-                  />
-                </div>
-              </div>
-            )}
+                  >
+                    {/* Spacer to prevent overlap with the absolute logo band */}
+                    {logoModules.length > 0 && (
+                      <div style={{ height: logoBandHeight }} />
+                    )}
+                    <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                      <ModularCanvas
+                        screen={screenId as any}
+                        modules={regularModules}
+                        device={selectedDevice}
+                        onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                        onDelete={(id) => onModuleDelete?.(id)}
+                        onMove={(id, dir) => onModuleMove?.(id, dir)}
+                        onDuplicate={(id) => onModuleDuplicate?.(id)}
+                        onSelect={(m) => {
+                          try {
+                            const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                            window.dispatchEvent(evt);
+                          } catch {}
+                          if (m.type === 'BlocBouton') {
+                            onSelectedElementChange?.({
+                              id: `modular-button-${m.id}`,
+                              type: 'button',
+                              role: 'module-button',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocImage') {
+                            onSelectedElementChange?.({
+                              id: `modular-image-${m.id}`,
+                              type: 'image',
+                              role: 'module-image',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocReseauxSociaux') {
+                            onSelectedElementChange?.({
+                              id: `modular-social-${m.id}`,
+                              type: 'social',
+                              role: 'module-social',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocVideo') {
+                            onSelectedElementChange?.({
+                              id: `modular-video-${m.id}`,
+                              type: 'video',
+                              role: 'module-video',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocHtml') {
+                            onSelectedElementChange?.({
+                              id: `modular-html-${m.id}`,
+                              type: 'html',
+                              role: 'module-html',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocCarte') {
+                            onSelectedElementChange?.({
+                              id: `modular-carte-${m.id}`,
+                              type: 'carte',
+                              role: 'module-carte',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          onSelectedElementChange?.({
+                            id: `modular-text-${m.id}`,
+                            type: 'text',
+                            role: 'module-text',
+                            moduleId: m.id,
+                            screenId
+                          } as any);
+                          onShowDesignPanel?.();
+                        }}
+                        selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
+                          || (externalSelectedElement as any)?.role === 'module-image'
+                          || (externalSelectedElement as any)?.role === 'module-video'
+                          || (externalSelectedElement as any)?.role === 'module-social'
+                          || (externalSelectedElement as any)?.role === 'module-html'
+                          || (externalSelectedElement as any)?.role === 'module-carte')
+                          ? (externalSelectedElement as any)?.moduleId
+                          : undefined}
+                      />
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
             {renderableElements
