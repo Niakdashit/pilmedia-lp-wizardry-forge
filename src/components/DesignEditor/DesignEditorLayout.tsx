@@ -1164,6 +1164,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
+              enableInternalAutoFit={true}
               selectedElement={selectedElement}
               onSelectedElementChange={setSelectedElement}
               selectedElements={selectedElements}

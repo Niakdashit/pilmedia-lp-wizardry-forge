@@ -1885,6 +1885,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
+              enableInternalAutoFit={true}
               selectedElement={selectedElement}
               onSelectedElementChange={setSelectedElement}
               selectedElements={selectedElements}

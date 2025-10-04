@@ -2533,6 +2533,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
+                    enableInternalAutoFit={true}
                     onZoomChange={setCanvasZoom}
                     selectedElement={selectedElement}
                     onSelectedElementChange={debugSetSelectedElement}
@@ -2642,6 +2643,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -2747,6 +2749,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
