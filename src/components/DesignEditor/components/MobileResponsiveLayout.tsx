@@ -101,6 +101,18 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
                       selectedDevice === 'mobile' || selectedDevice === 'tablet' ||
                       forceDeviceType === 'mobile' || forceDeviceType === 'tablet';
   
+  // Debug logging pour l'affichage mobile
+  React.useEffect(() => {
+    console.log('📱 MobileResponsiveLayout - UI Mobile decision:', {
+      mIsMobile,
+      mIsTablet,
+      selectedDevice,
+      forceDeviceType,
+      showMobileUI,
+      effectiveDeviceType
+    });
+  }, [mIsMobile, mIsTablet, selectedDevice, forceDeviceType, showMobileUI, effectiveDeviceType]);
+  
   console.log('🔍 Device detection debug:', {
     mIsMobile,
     mIsTablet,

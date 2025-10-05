@@ -142,8 +142,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
       setLiveCampaign({
         ...storeCampaign,
-        // Prioriser modularPage de campaign pour synchronisation des modules
-        modularPage: campaign?.modularPage || (storeCampaign as any).modularPage,
         canvasConfig: {
           ...(campaign.canvasConfig || {}),
           ...(storeCampaign.canvasConfig || {}),
@@ -276,12 +274,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
   const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => {
-    const baseBandHeight = m?.bandHeight ?? 60;
-    // Réduire de 10% sur mobile uniquement
-    const h = previewMode === 'mobile' ? baseBandHeight * 0.9 : baseBandHeight;
-    return Math.max(acc, h);
-  }, 0);
+  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -432,7 +425,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                       modules={logoModules1}
                       previewMode={true}
                       device={previewMode}
-                      bandWidthMode="viewport"
                     />
                   </div>
                 </div>
@@ -448,7 +440,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     modules={regularModules1}
                     previewMode={true}
                     device={previewMode}
-                    bandWidthMode="viewport"
                     onButtonClick={handleGameButtonClick}
                   />
                 )}
@@ -462,7 +453,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                       modules={footerModules1}
                       previewMode={true}
                       device={previewMode}
-                      bandWidthMode="viewport"
                     />
                   </div>
                 </div>
@@ -480,7 +470,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     modules={modules2}
                     previewMode={true}
                     device={previewMode}
-                    bandWidthMode="viewport"
                   />
                 )}
               </div>
@@ -529,7 +518,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     modules={modules3}
                     previewMode={true}
                     device={previewMode}
-                    bandWidthMode="viewport"
                     onButtonClick={handleReset}
                   />
                 </div>

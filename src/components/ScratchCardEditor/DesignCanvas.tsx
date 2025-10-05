@@ -2373,17 +2373,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
               const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
               const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
-                const baseBandHeight = (m?.bandHeight ?? 60);
-                // Réduire de 10% sur mobile uniquement
-                const h = selectedDevice === 'mobile' ? baseBandHeight * 0.9 : baseBandHeight;
+                const h = (m?.bandHeight ?? 60);
                 const p = (m?.bandPadding ?? 16) * 2;
                 const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
                 return Math.max(acc, h + p + extra);
               }, 0);
               const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
-                const baseBandHeight = (m?.bandHeight ?? 60);
-                // Réduire de 10% sur mobile uniquement
-                const h = selectedDevice === 'mobile' ? baseBandHeight * 0.9 : baseBandHeight;
+                const h = (m?.bandHeight ?? 60);
                 const p = (m?.bandPadding ?? 16) * 2;
                 const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
                 return Math.max(acc, h + p + extra);
@@ -2393,12 +2389,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {/* Absolute, full-width logo band at the very top (non-movable) */}
                   {logoModules.length > 0 && (
                     <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
-                      <div className="w-full relative group" style={{ pointerEvents: 'auto' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={logoModules}
                           previewMode={false}
                           device={selectedDevice}
-                          bandWidthMode="container"
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
                             try {
@@ -2419,19 +2414,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             ? (externalSelectedElement as any)?.moduleId
                             : undefined}
                         />
-                        {/* Bouton de suppression */}
-                        {logoModules.map((m: any) => (
-                          <button
-                            key={`delete-${m.id}`}
-                            onClick={() => onModuleDelete?.(m.id)}
-                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                            title="Supprimer de tous les écrans"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        ))}
                       </div>
                     </div>
                   )}
@@ -2559,12 +2541,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {/* Footer band at the bottom (non-movable) */}
                   {footerModules.length > 0 && (
                     <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
-                      <div className="w-full relative group" style={{ pointerEvents: 'auto' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
                           previewMode={false}
                           device={selectedDevice}
-                          bandWidthMode="container"
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
                             try {
@@ -2585,19 +2566,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             ? (externalSelectedElement as any)?.moduleId
                             : undefined}
                         />
-                        {/* Bouton de suppression */}
-                        {footerModules.map((m: any) => (
-                          <button
-                            key={`delete-${m.id}`}
-                            onClick={() => onModuleDelete?.(m.id)}
-                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                            title="Supprimer de tous les écrans"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        ))}
                       </div>
                     </div>
                   )}

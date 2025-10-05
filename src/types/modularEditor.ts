@@ -159,19 +159,6 @@ export interface BlocLogo extends BaseModule {
   bandPadding?: number; // px - padding vertical de la bande
 }
 
-export interface FooterLink {
-  id: string;
-  text: string;
-  url: string;
-  openInNewTab?: boolean;
-}
-
-export interface FooterSocialLink {
-  id: string;
-  platform: 'facebook' | 'linkedin' | 'twitter' | 'instagram' | 'youtube' | 'tiktok';
-  url: string;
-}
-
 export interface BlocPiedDePage extends BaseModule {
   type: 'BlocPiedDePage';
   logoUrl?: string;
@@ -180,17 +167,6 @@ export interface BlocPiedDePage extends BaseModule {
   bandHeight?: number; // px - hauteur de la bande
   bandColor?: string; // couleur de fond de la bande
   bandPadding?: number; // px - padding vertical de la bande
-  // Texte et liens
-  footerText?: string; // Texte libre du footer
-  footerLinks?: FooterLink[]; // Liste de liens
-  textColor?: string; // Couleur du texte
-  linkColor?: string; // Couleur des liens
-  fontSize?: number; // Taille de police (px)
-  separator?: string; // Séparateur entre les liens (ex: '|')
-  // Réseaux sociaux
-  socialLinks?: FooterSocialLink[]; // Liste des réseaux sociaux
-  socialIconSize?: number; // Taille des icônes (px)
-  socialIconColor?: string; // Couleur des icônes
 }
 
 export type Module =
