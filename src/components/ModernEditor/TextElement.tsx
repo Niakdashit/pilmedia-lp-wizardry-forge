@@ -1,6 +1,6 @@
 
-import React, { useRef, useCallback } from 'react';
-import { Trash2, Target } from 'lucide-react';
+import React, { useRef, useCallback, useState } from 'react';
+import { Trash2, Target, Edit2 } from 'lucide-react';
 import { useFluidElementDrag } from './hooks/useFluidElementDrag';
 
 interface TextElementProps {
@@ -27,6 +27,11 @@ const TextElement: React.FC<TextElementProps> = ({
   previewDevice
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingText, setEditingText] = useState('');
+  const lastTapTimeRef = useRef<number>(0);
+  const lastClickTimeRef = useRef<number>(0);
+  const preventDragRef = useRef<boolean>(false);
 
   // Get current device-specific position and size
   const deviceConfig = getElementDeviceConfig(element);
@@ -133,10 +138,45 @@ const TextElement: React.FC<TextElementProps> = ({
   }, [element, sizeMap, hexToRgb]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (isEditing) return;
+
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickTimeRef.current;
+    
+    // Détection double-clic (< 300ms entre clics)
+    if (timeSinceLastClick > 0 && timeSinceLastClick < 300) {
+      console.log('Double-clic détecté - mode édition');
+      preventDragRef.current = true;
+      enterEditMode();
+      return;
+    }
+    
+    lastClickTimeRef.current = now;
+    preventDragRef.current = false;
+    
     console.log('Text element pointer down:', element.id);
     onSelect();
-    handleDragStart(e);
-  }, [onSelect, handleDragStart, element.id]);
+    
+    // Petit délai pour permettre la détection du double-clic
+    setTimeout(() => {
+      if (!preventDragRef.current) {
+        handleDragStart(e);
+      }
+    }, 50);
+  }, [onSelect, handleDragStart, element.id, isEditing]);
+
+  const handleTextEditSubmit = useCallback(() => {
+    if (editingText.trim()) {
+      onUpdate({ text: editingText, content: editingText });
+    }
+    setIsEditing(false);
+    setEditingText('');
+  }, [editingText, onUpdate]);
+
+  const enterEditMode = useCallback(() => {
+    setIsEditing(true);
+    setEditingText(element.content || element.text || '');
+  }, [element]);
 
   return (
     <div
@@ -146,6 +186,9 @@ const TextElement: React.FC<TextElementProps> = ({
         left: `${deviceConfig.x}px`,
         top: `${deviceConfig.y}px`,
         zIndex: isSelected ? 30 : 20,
+        cursor: isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab'),
+        userSelect: isEditing ? 'text' : 'none',
+        touchAction: isEditing ? 'auto' : 'none',
         ...(element.type === 'html' ? {
           minWidth: '200px',
           minHeight: '50px',
@@ -154,18 +197,52 @@ const TextElement: React.FC<TextElementProps> = ({
           backgroundColor: isSelected ? 'rgba(96, 165, 250, 0.1)' : 'transparent',
           padding: '8px',
           overflow: 'hidden',
-          wordWrap: 'break-word',
-          cursor: 'grab'
+          wordWrap: 'break-word'
         } : getTextStyles())
       }}
       onPointerDown={handlePointerDown}
+      onTouchEnd={(e) => {
+        const now = Date.now();
+        const timeSince = now - lastTapTimeRef.current;
+        if (timeSince > 0 && timeSince < 300) {
+          e.stopPropagation();
+          if (!isEditing) {
+            enterEditMode();
+          }
+        }
+        lastTapTimeRef.current = now;
+      }}
       className={`${
         isSelected 
           ? 'ring-2 ring-blue-500 shadow-lg' 
           : 'hover:ring-2 hover:ring-gray-300'
       }`}
     >
-      {element.type === 'html' ? (
+      {isEditing ? (
+        <input
+          type="text"
+          value={editingText}
+          onChange={(e) => setEditingText(e.target.value)}
+          onBlur={handleTextEditSubmit}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleTextEditSubmit();
+            }
+          }}
+          autoFocus
+          className="canvas-text-editor bg-transparent border-none outline-none w-full"
+          style={{
+            color: element.color || '#000000',
+            fontFamily: element.fontFamily || 'Open Sans, sans-serif',
+            fontSize: 'inherit',
+            fontWeight: 'inherit',
+            fontStyle: 'inherit',
+            lineHeight: 'inherit',
+            userSelect: 'text',
+            WebkitUserSelect: 'text'
+          }}
+        />
+      ) : element.type === 'html' ? (
         <div 
           dangerouslySetInnerHTML={{ __html: element.content }}
           style={{
@@ -180,8 +257,18 @@ const TextElement: React.FC<TextElementProps> = ({
         element.content || element.text
       )}
       
-      {isSelected && (
+      {isSelected && !isEditing && (
         <div className="absolute -top-10 left-0 flex space-x-1 bg-white rounded shadow-lg px-2 py-1 border">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              enterEditMode();
+            }}
+            className="p-1 hover:bg-green-100 text-green-600 rounded"
+            title="Éditer le texte"
+          >
+            <Edit2 className="w-3 h-3" />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();

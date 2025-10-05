@@ -158,7 +158,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             previewMode={false}
             device={device}
             onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
+            onModuleUpdate={(_id, patch) => onUpdate(m.id, patch)}
           />
         </div>
       );
@@ -413,7 +413,25 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           modules={[m]}
           previewMode={false}
           device={device}
+          bandWidthMode="container"
           onModuleClick={() => {}}
+          onModuleUpdate={(_id, patch) => onUpdate(patch)}
+        />
+      );
+    case 'BlocPiedDePage':
+      return (
+        <QuizModuleRenderer
+          modules={[m]}
+          previewMode={false}
+          device={device}
+          bandWidthMode="container"
+          onModuleClick={(moduleId) => {
+            // La sélection se fait déjà via le onClick du conteneur parent
+            // Mais on peut aussi la déclencher ici pour plus de robustesse
+            if (onSelect) {
+              onSelect(m);
+            }
+          }}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
         />
       );
@@ -612,9 +630,10 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
-  // Séparer les modules Logo des autres modules
+  // Séparer les modules Logo et Pied de page des autres modules
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo'), [modules]);
+  const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
+  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
   const single = regularModules.length === 1;
@@ -657,7 +676,6 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
         <div 
           key={m.id}
           className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(m);
@@ -936,10 +954,33 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           );
         })}
         </div>
-        {regularModules.length === 0 && logoModules.length === 0 && (
+        {regularModules.length === 0 && logoModules.length === 0 && footerModules.length === 0 && (
           <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
         )}
       </div>
+      
+      {/* Modules Pied de page - positionnés en pleine largeur en bas */}
+      {footerModules.map((m) => (
+        <div 
+          key={m.id}
+          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(m);
+          }}
+        >
+          <Toolbar
+            visible={selectedModuleId === m.id}
+            layoutWidth="full"
+            onWidthChange={() => {}}
+            onDelete={() => onDelete(m.id)}
+            expanded={openToolbarFor === m.id}
+            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+            isMobile={device === 'mobile'}
+          />
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+        </div>
+      ))}
     </div>
   );
 };
