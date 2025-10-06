@@ -1,427 +1,321 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { BlocPiedDePage, FooterLink, FooterSocialLink } from '@/types/modularEditor';
+import React from 'react';
+import { Footprints, AlignLeft, AlignCenter, AlignRight, Plus, Trash2 } from 'lucide-react';
+import type { BlocPiedDePage, FooterLink } from '@/types/modularEditor';
+import ImageUpload from '../../common/ImageUpload';
 
-export interface FooterModulePanelProps {
+interface FooterModulePanelProps {
   module: BlocPiedDePage;
-  onUpdate: (updates: Partial<BlocPiedDePage>) => void;
-  onBack: () => void;
+  onUpdate: (patch: Partial<BlocPiedDePage>) => void;
+  onBack?: () => void;
 }
+
+const alignmentOptions: Array<{ id: BlocPiedDePage['align']; label: string; icon: React.ComponentType<any> }> = [
+  { id: 'left', label: 'Gauche', icon: AlignLeft },
+  { id: 'center', label: 'Centre', icon: AlignCenter },
+  { id: 'right', label: 'Droite', icon: AlignRight }
+];
 
 const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate, onBack }) => {
   const currentAlign = module.align || 'center';
   const bandHeight = module.bandHeight ?? 60;
   const bandColor = module.bandColor ?? '#ffffff';
   const bandPadding = module.bandPadding ?? 16;
+  const logoWidth = module.logoWidth ?? 120;
+  const logoHeight = module.logoHeight ?? 120;
   const footerText = module.footerText ?? '';
   const footerLinks = module.footerLinks ?? [];
-  const textColor = module.textColor ?? '#000000';
+  const textColor = module.textColor ?? '#666666';
   const linkColor = module.linkColor ?? '#841b60';
   const fontSize = module.fontSize ?? 14;
   const separator = module.separator ?? '|';
-  const socialLinks = module.socialLinks ?? [];
-  const socialIconSize = module.socialIconSize ?? 24;
-  const socialIconColor = module.socialIconColor ?? '#000000';
 
-  const [activeTab, setActiveTab] = useState<'text' | 'links' | 'social'>('text');
-
-
-  const handleAddLink = () => {
+  const addFooterLink = () => {
     const newLink: FooterLink = {
       id: `link-${Date.now()}`,
       text: 'Nouveau lien',
-      url: 'https://',
-      openInNewTab: true
+      url: '#',
+      openInNewTab: false
     };
     onUpdate({ footerLinks: [...footerLinks, newLink] });
   };
 
-  const handleUpdateLink = (id: string, updates: Partial<FooterLink>) => {
+  const updateFooterLink = (linkId: string, updates: Partial<FooterLink>) => {
     const updatedLinks = footerLinks.map(link => 
-      link.id === id ? { ...link, ...updates } : link
+      link.id === linkId ? { ...link, ...updates } : link
     );
     onUpdate({ footerLinks: updatedLinks });
   };
 
-  const handleDeleteLink = (id: string) => {
-    const updatedLinks = footerLinks.filter(link => link.id !== id);
+  const removeFooterLink = (linkId: string) => {
+    const updatedLinks = footerLinks.filter(link => link.id !== linkId);
     onUpdate({ footerLinks: updatedLinks });
-  };
-
-  const handleAddSocialLink = (platform: FooterSocialLink['platform']) => {
-    const newSocialLink: FooterSocialLink = {
-      id: `social-${Date.now()}`,
-      platform,
-      url: 'https://'
-    };
-    onUpdate({ socialLinks: [...socialLinks, newSocialLink] });
-  };
-
-  const handleUpdateSocialLink = (id: string, updates: Partial<FooterSocialLink>) => {
-    const updatedSocialLinks = socialLinks.map(link => 
-      link.id === id ? { ...link, ...updates } : link
-    );
-    onUpdate({ socialLinks: updatedSocialLinks });
-  };
-
-  const handleDeleteSocialLink = (id: string) => {
-    const updatedSocialLinks = socialLinks.filter(link => link.id !== id);
-    onUpdate({ socialLinks: updatedSocialLinks });
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <h3 className="text-sm font-semibold">Pied de page</h3>
-      </div>
-
-      {/* Onglets */}
-      <div className="flex gap-1 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('text')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'text'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Texte
-        </button>
-        <button
-          onClick={() => setActiveTab('links')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'links'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Liens
-        </button>
-        <button
-          onClick={() => setActiveTab('social')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'social'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Réseaux sociaux
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {/* Onglet Texte */}
-        {activeTab === 'text' && (
-          <>
-            <div>
-              <Label className="text-xs">Texte du footer</Label>
-              <textarea
-                value={footerText}
-                onChange={(e) => onUpdate({ footerText: e.target.value })}
-                placeholder="Ex: © 2024 Mon entreprise. Tous droits réservés."
-                className="mt-1 w-full min-h-[80px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#841b60] text-sm"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Couleur du texte</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => onUpdate({ textColor: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={textColor}
-                  onChange={(e) => onUpdate({ textColor: e.target.value })}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Taille de police (px)</Label>
-              <Input
-                type="number"
-                value={fontSize}
-                onChange={(e) => onUpdate({ fontSize: parseInt(e.target.value) || 14 })}
-                className="mt-1"
-              />
-            </div>
-          </>
-        )}
-
-        {/* Onglet Liens */}
-        {activeTab === 'links' && (
-          <>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Liens du footer</Label>
-              <Button
-                onClick={handleAddLink}
-                size="sm"
-                variant="outline"
-                className="h-8"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Ajouter
-              </Button>
-            </div>
-
-            {footerLinks.length === 0 ? (
-              <div className="text-center py-8 text-sm text-gray-500">
-                Aucun lien. Cliquez sur "Ajouter" pour créer un lien.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {footerLinks.map((link) => (
-                  <div key={link.id} className="p-3 border border-gray-200 rounded-lg space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-semibold">Lien</Label>
-                      <Button
-                        onClick={() => handleDeleteLink(link.id)}
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs">Texte du lien</Label>
-                      <Input
-                        value={link.text}
-                        onChange={(e) => handleUpdateLink(link.id, { text: e.target.value })}
-                        placeholder="Ex: Politique de confidentialité"
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-xs">URL</Label>
-                      <Input
-                        value={link.url}
-                        onChange={(e) => handleUpdateLink(link.id, { url: e.target.value })}
-                        placeholder="https://..."
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`new-tab-${link.id}`}
-                        checked={link.openInNewTab ?? true}
-                        onChange={(e) => handleUpdateLink(link.id, { openInNewTab: e.target.checked })}
-                        className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
-                      />
-                      <label htmlFor={`new-tab-${link.id}`} className="text-xs text-gray-700 flex items-center gap-1">
-                        <ExternalLink className="w-3 h-3" />
-                        Ouvrir dans un nouvel onglet
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div>
-              <Label className="text-xs">Séparateur entre les liens</Label>
-              <Input
-                value={separator}
-                onChange={(e) => onUpdate({ separator: e.target.value })}
-                placeholder="Ex: | ou •"
-                className="mt-1"
-                maxLength={3}
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Couleur des liens</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type="color"
-                  value={linkColor}
-                  onChange={(e) => onUpdate({ linkColor: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={linkColor}
-                  onChange={(e) => onUpdate({ linkColor: e.target.value })}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Onglet Réseaux sociaux */}
-        {activeTab === 'social' && (
-          <>
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <Label className="text-xs">Liens des réseaux sociaux</Label>
-              </div>
-
-              {/* Liste des plateformes disponibles */}
-              <div className="space-y-2 mb-4">
-                <Label className="text-xs text-gray-600">Ajouter un réseau social</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['facebook', 'linkedin', 'twitter', 'instagram', 'youtube', 'tiktok'] as const).map((platform) => {
-                    const alreadyAdded = socialLinks.some(link => link.platform === platform);
-                    return (
-                      <Button
-                        key={platform}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => !alreadyAdded && handleAddSocialLink(platform)}
-                        disabled={alreadyAdded}
-                        className="capitalize"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        {platform === 'twitter' ? 'X' : platform}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Liste des réseaux sociaux ajoutés */}
-              {socialLinks.length > 0 && (
-                <div className="space-y-2">
-                  {socialLinks.map((socialLink) => (
-                    <div key={socialLink.id} className="p-3 border border-gray-200 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium capitalize">
-                          {socialLink.platform === 'twitter' ? 'X (Twitter)' : socialLink.platform}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteSocialLink(socialLink.id)}
-                          className="h-6 w-6"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div>
-                        <Label className="text-xs">URL</Label>
-                        <Input
-                          type="url"
-                          value={socialLink.url}
-                          onChange={(e) => handleUpdateSocialLink(socialLink.id, { url: e.target.value })}
-                          placeholder={`https://${socialLink.platform}.com/...`}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {socialLinks.length === 0 && (
-                <p className="text-xs text-gray-500 text-center py-4">
-                  Aucun réseau social ajouté. Cliquez sur un bouton ci-dessus pour en ajouter.
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label className="text-xs">Taille des icônes (px)</Label>
-              <Input
-                type="number"
-                value={socialIconSize}
-                onChange={(e) => onUpdate({ socialIconSize: parseInt(e.target.value) || 24 })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Couleur des icônes</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type="color"
-                  value={socialIconColor}
-                  onChange={(e) => onUpdate({ socialIconColor: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={socialIconColor}
-                  onChange={(e) => onUpdate({ socialIconColor: e.target.value })}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Paramètres communs */}
-        <div className="pt-4 border-t border-gray-200 space-y-4">
-          <div>
-            <Label className="text-xs">Hauteur de la bande (px)</Label>
-            <Input
-              type="number"
-              value={bandHeight}
-              onChange={(e) => onUpdate({ bandHeight: parseInt(e.target.value) || 60 })}
-              className="mt-1"
-            />
+    <div className="h-full overflow-y-auto pb-12">
+      {onBack && (
+        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <button
+            type="button"
+            className="flex items-center gap-2 text-sm text-[#841b60] hover:underline"
+            onClick={onBack}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour aux éléments
+          </button>
+        </div>
+      )}
+      <div className="px-4 py-5 space-y-8">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+            <Footprints className="w-4 h-4" />
           </div>
-
           <div>
-            <Label className="text-xs">Couleur de fond</Label>
-            <div className="flex gap-2 mt-1">
-              <Input
-                type="color"
-                value={bandColor}
-                onChange={(e) => onUpdate({ bandColor: e.target.value })}
-                className="w-16 h-10 p-1 cursor-pointer"
-              />
-              <Input
-                type="text"
-                value={bandColor}
-                onChange={(e) => onUpdate({ bandColor: e.target.value })}
-                className="flex-1"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs">Padding vertical (px)</Label>
-            <Input
-              type="number"
-              value={bandPadding}
-              onChange={(e) => onUpdate({ bandPadding: parseInt(e.target.value) || 16 })}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label className="text-xs mb-2 block">Alignement</Label>
-            <div className="flex gap-2">
-              {(['left', 'center', 'right'] as const).map((a) => (
-                <Button
-                  key={a}
-                  size="sm"
-                  variant={currentAlign === a ? 'default' : 'outline'}
-                  onClick={() => onUpdate({ align: a })}
-                  className="capitalize flex-1"
-                >
-                  {a === 'left' ? 'Gauche' : a === 'center' ? 'Centre' : 'Droite'}
-                </Button>
-              ))}
-            </div>
+            <p className="text-sm font-semibold text-gray-900">Pied de page</p>
+            <p className="text-xs text-gray-500">Personnalisez votre bande de pied de page</p>
           </div>
         </div>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Logo</h4>
+          <ImageUpload
+            value={module.logoUrl || ''}
+            onChange={(value) => onUpdate({ logoUrl: value })}
+            label="Télécharger votre logo"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Largeur du logo</h4>
+            <span className="text-xs font-semibold text-gray-600">{logoWidth}px</span>
+          </div>
+          <input
+            type="range"
+            min={40}
+            max={300}
+            value={logoWidth}
+            onChange={(e) => onUpdate({ logoWidth: Number(e.target.value) })}
+            className="w-full"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hauteur du logo</h4>
+            <span className="text-xs font-semibold text-gray-600">{logoHeight}px</span>
+          </div>
+          <input
+            type="range"
+            min={40}
+            max={300}
+            value={logoHeight}
+            onChange={(e) => onUpdate({ logoHeight: Number(e.target.value) })}
+            className="w-full"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Texte du pied de page</h4>
+          <textarea
+            value={footerText}
+            onChange={(e) => onUpdate({ footerText: e.target.value })}
+            placeholder="© 2024 Mon entreprise. Tous droits réservés."
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60] resize-none"
+            rows={3}
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Liens du pied de page</h4>
+            <button
+              type="button"
+              onClick={addFooterLink}
+              className="flex items-center gap-1 text-xs text-[#841b60] hover:underline"
+            >
+              <Plus className="w-3 h-3" />
+              Ajouter
+            </button>
+          </div>
+          <div className="space-y-2">
+            {footerLinks.map((link) => (
+              <div key={link.id} className="p-3 border border-gray-200 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <input
+                    type="text"
+                    value={link.text}
+                    onChange={(e) => updateFooterLink(link.id, { text: e.target.value })}
+                    placeholder="Texte du lien"
+                    className="flex-1 rounded border border-gray-300 px-2 py-1 text-xs focus:border-[#841b60] focus:ring-[#841b60]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFooterLink(link.id)}
+                    className="ml-2 text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+                <input
+                  type="url"
+                  value={link.url}
+                  onChange={(e) => updateFooterLink(link.id, { url: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-[#841b60] focus:ring-[#841b60]"
+                />
+                <label className="flex items-center gap-2 text-xs text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={link.openInNewTab || false}
+                    onChange={(e) => updateFooterLink(link.id, { openInNewTab: e.target.checked })}
+                    className="rounded border-gray-300 text-[#841b60] focus:ring-[#841b60]"
+                  />
+                  Ouvrir dans un nouvel onglet
+                </label>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Séparateur entre les liens</h4>
+          <input
+            type="text"
+            value={separator}
+            onChange={(e) => onUpdate({ separator: e.target.value })}
+            placeholder="|"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur de la bande</h4>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              value={bandColor}
+              onChange={(e) => onUpdate({ bandColor: e.target.value })}
+              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={bandColor}
+              onChange={(e) => onUpdate({ bandColor: e.target.value })}
+              placeholder="#ffffff"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur du texte</h4>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => onUpdate({ textColor: e.target.value })}
+              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={textColor}
+              onChange={(e) => onUpdate({ textColor: e.target.value })}
+              placeholder="#666666"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Couleur des liens</h4>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              value={linkColor}
+              onChange={(e) => onUpdate({ linkColor: e.target.value })}
+              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={linkColor}
+              onChange={(e) => onUpdate({ linkColor: e.target.value })}
+              placeholder="#841b60"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#841b60] focus:ring-[#841b60]"
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Taille de police</h4>
+            <span className="text-xs font-semibold text-gray-600">{fontSize}px</span>
+          </div>
+          <input
+            type="range"
+            min={10}
+            max={24}
+            value={fontSize}
+            onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+            className="w-full"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hauteur de la bande</h4>
+            <span className="text-xs font-semibold text-gray-600">{bandHeight}px</span>
+          </div>
+          <input
+            type="range"
+            min={60}
+            max={300}
+            value={bandHeight}
+            onChange={(e) => onUpdate({ bandHeight: Number(e.target.value) })}
+            className="w-full"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Espacement interne</h4>
+            <span className="text-xs font-semibold text-gray-600">{bandPadding}px</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={50}
+            value={bandPadding}
+            onChange={(e) => onUpdate({ bandPadding: Number(e.target.value) })}
+            className="w-full"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Alignement</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {alignmentOptions.map(({ id, label, icon: Icon }) => {
+              const isActive = currentAlign === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onUpdate({ align: id })}
+                  className={`flex flex-col items-center rounded-lg border px-3 py-2 text-[11px] leading-tight transition ${
+                    isActive
+                      ? 'border-[#841b60] bg-[#841b60]/10 text-[#841b60] shadow-sm shadow-[#841b60]/30'
+                      : 'border-gray-200 text-gray-600 hover:border-[#841b60]/40 hover:text-[#841b60]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mb-1" />
+                  <span className="font-semibold">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
       </div>
     </div>
   );
