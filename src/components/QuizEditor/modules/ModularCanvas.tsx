@@ -417,6 +417,16 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
         />
       );
+    case 'BlocPiedDePage':
+      return (
+        <QuizModuleRenderer
+          modules={[m]}
+          previewMode={false}
+          device={device}
+          onModuleClick={() => {}}
+          onModuleUpdate={(_id, patch) => onUpdate(patch)}
+        />
+      );
     default:
       return null;
   }
