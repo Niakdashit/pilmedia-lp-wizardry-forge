@@ -49,8 +49,7 @@
     <!-- Removed external script that may cause startup errors leading to blank screen
     <script src="https://cdn.gpteng.co/gptengineer@1.0.0.js" type="module" integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb" crossorigin="anonymous"></script>
     -->
-    <!-- Ensure Vite dev client loads before the main entry for React Fast Refresh -->
-    <script type="module" src="/@vite/client"></script>
+    <!-- Vite will inject HMR in dev automatically; keep only the main entry -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
