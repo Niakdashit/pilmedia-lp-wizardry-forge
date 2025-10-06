@@ -667,7 +667,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full flex flex-col h-full" data-modular-zone="1">
+    <div className="w-full flex flex-col min-h-full" data-modular-zone="1">
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
         <div 
@@ -693,9 +693,9 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
       ))}
       
       {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto flex-1 flex flex-col">
+      <div className="w-full max-w-[1500px] mx-auto" style={{ flex: regularModules.length > 0 ? '1' : 'initial' }}>
         <div
-          className="flex flex-col gap-0 flex-1"
+          className="flex flex-col gap-0"
           style={{
             minHeight: single ? minHeightPx : undefined,
             justifyContent: 'flex-start'
