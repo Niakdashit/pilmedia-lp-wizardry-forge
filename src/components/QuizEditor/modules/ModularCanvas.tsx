@@ -369,7 +369,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             {(m as any).html ? (
               <div
                 className="whitespace-pre-wrap text-sm text-slate-700"
-                dangerouslySetInnerHTML={{ __html: (m as any).html }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml((m as any).html) }}
               />
             ) : (
               <div className="text-sm italic text-slate-500">

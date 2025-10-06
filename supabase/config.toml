@@ -35,9 +35,3 @@ security_update_password_require_reauthentication = true
 [edge_runtime]
 enabled = true
 port = 54327
-
-[functions.studio-campaign-generator]
-verify_jwt = false
-
-[functions.openai-branding-generator]
-verify_jwt = false

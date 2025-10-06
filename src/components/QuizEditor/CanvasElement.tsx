@@ -1277,7 +1277,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }
             style={getTextStyle()}
             data-element-type="text"
-            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: (element as any).richHtml } } : {})}
+            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: sanitizeHtml((element as any).richHtml) } } : {})}
           >
             {(!(element as any).richHtml || (element as any).richHtml.trim() === '') ? (element.content || 'Texte') : null}
           </div>
