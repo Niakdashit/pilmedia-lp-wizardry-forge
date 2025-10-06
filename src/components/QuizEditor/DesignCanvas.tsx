@@ -2349,30 +2349,32 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return Math.max(acc, h + p + extra);
               }, 0);
               return (
-                <div
-                  className="w-full flex justify-center mb-6"
-                  style={{
-                    paddingLeft: safeZonePadding,
-                    paddingRight: safeZonePadding,
-                    paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
-                    paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  {/* Spacer to prevent overlap with the absolute logo band */}
-                  {logoModules.length > 0 && (
-                    <div style={{ height: logoVisualHeight }} />
-                  )}
-                  <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
-                    <ModularCanvas
-                      screen={screenId as any}
-                      modules={regularModules}
-                      device={selectedDevice}
-                      onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
-                      onDelete={(id) => onModuleDelete?.(id)}
-                      onMove={(id, dir) => onModuleMove?.(id, dir)}
-                      onDuplicate={(id) => onModuleDuplicate?.(id)}
-                      onSelect={(m) => {
+                <>
+                  {/* Regular modules container; padding adjusted when logo/footer exist */}
+                  <div
+                    className="w-full flex justify-center mb-6"
+                    style={{
+                      paddingLeft: safeZonePadding,
+                      paddingRight: safeZonePadding,
+                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
+                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    {/* Spacer to prevent overlap with the absolute logo band */}
+                    {logoModules.length > 0 && (
+                      <div style={{ height: logoVisualHeight }} />
+                    )}
+                    <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                      <ModularCanvas
+                        screen={screenId as any}
+                        modules={regularModules}
+                        device={selectedDevice}
+                        onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                        onDelete={(id) => onModuleDelete?.(id)}
+                        onMove={(id, dir) => onModuleMove?.(id, dir)}
+                        onDuplicate={(id) => onModuleDuplicate?.(id)}
+                        onSelect={(m) => {
                       try {
                         const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
                         window.dispatchEvent(evt);
@@ -2463,19 +2465,55 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       } as any);
                       onShowDesignPanel?.();
                     }}
-                    selectedModuleId={(
-                      (externalSelectedElement as any)?.role === 'module-text'
+                    selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
                       || (externalSelectedElement as any)?.role === 'module-image'
                       || (externalSelectedElement as any)?.role === 'module-video'
                       || (externalSelectedElement as any)?.role === 'module-social'
                       || (externalSelectedElement as any)?.role === 'module-html'
                       || (externalSelectedElement as any)?.role === 'module-carte'
-                      || (externalSelectedElement as any)?.role === 'module-logo'
-                    ) ? (externalSelectedElement as any)?.moduleId : undefined}
+                      || (externalSelectedElement as any)?.role === 'module-logo')
+                      ? (externalSelectedElement as any)?.moduleId
+                      : undefined}
                   />
+                  {footerModules.length > 0 && (
+                    <div style={{ height: footerVisualHeight }} />
+                  )}
                 </div>
               </div>
-            );
+
+              {/* Footer band at the bottom (non-movable) */}
+              {footerModules.length > 0 && (
+                <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                    <QuizModuleRenderer
+                      modules={footerModules}
+                      previewMode={false}
+                      device={selectedDevice}
+                      onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
+                      onModuleClick={(moduleId) => {
+                        try {
+                          const mod = (footerModules as any).find((mm: any) => mm.id === moduleId);
+                          const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
+                          window.dispatchEvent(evt);
+                        } catch {}
+                        onSelectedElementChange?.({
+                          id: `modular-footer-${moduleId}`,
+                          type: 'footer',
+                          role: 'module-footer',
+                          moduleId,
+                          screenId
+                        } as any);
+                        onOpenElementsTab?.();
+                      }}
+                      selectedModuleId={((externalSelectedElement as any)?.role === 'module-footer')
+                        ? (externalSelectedElement as any)?.moduleId
+                        : undefined}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+              );
             })()}
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
