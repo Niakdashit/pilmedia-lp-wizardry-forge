@@ -3,6 +3,7 @@ import { Trash2, GripVertical, MoveDiagonal, ChevronDown, Copy } from 'lucide-re
 import type { Module, ScreenId, SocialIconStyle } from '@/types/modularEditor';
 import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from './socialIcons';
 import type { DeviceType } from '@/utils/deviceDimensions';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { QuizModuleRenderer } from '../QuizRenderer';
 
 export interface ModularCanvasProps {

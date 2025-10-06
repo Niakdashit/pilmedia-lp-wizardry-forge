@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { RotateCw } from 'lucide-react';
 import ShapeRenderer from './components/ShapeRenderer';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';

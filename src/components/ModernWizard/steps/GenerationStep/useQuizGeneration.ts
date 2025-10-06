@@ -13,7 +13,7 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [debugInfo, setDebugInfo] = useState<string>('');
-  const [lastRawApiResponse, setLastRawApiResponse] = useState<string>(''); // Pour debug
+  const [lastRawApiResponse, setLastRawApiResponse] = useState<string>('');
 
   const getMockQuizData = () => ({
     intro: "Testez vos connaissances sur notre produit !",
@@ -46,11 +46,8 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
     setDebugInfo('Initialisation...');
 
     try {
-      setDebugInfo('Appel à l\'API Supabase (header apikey envoyé)');
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('🚀 [QuizGen] Appel API avec endpoint:', quizEndpoint);
-      }
-
+      setDebugInfo('Appel à l\'API Supabase via client');
+      
       const progressInterval = setInterval(() => {
         setProgress(prev => Math.min(prev + 10, 80));
       }, 500);
@@ -68,52 +65,17 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
         console.log('[QuizGen] Payload envoyé à l\'API:', payload);
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        controller.abort();
-      }, 12000);
-
-      // Ajout du header apikey !
-      const response = await fetch(quizEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Lovable-Quiz-Generator/1.0',
-          'Origin': window.location.origin,
-          'apikey': supabaseApiKey // Ajout !
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-        mode: 'cors'
+      // Use Supabase client to invoke edge function
+      const { data, error: invokeError } = await supabase.functions.invoke('quiz', {
+        body: payload,
       });
 
       clearInterval(progressInterval);
-      clearTimeout(timeoutId);
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[QuizGen] Réponse HTTP:', response);
-      }
-
-      let data;
-      let textBody = '';
-      try {
-        textBody = await response.text();
-        setLastRawApiResponse(textBody);
-        try {
-          data = JSON.parse(textBody);
-        } catch (jsonErr) {
-          console.error('[QuizGen] Échec parsing JSON:', jsonErr, textBody);
-          throw new Error("Échec parsing JSON de la réponse API.");
-        }
-      } catch (err) {
-        console.error('[QuizGen] Impossible de lire la réponse HTTP:', err);
-        throw new Error("Erreur réseau/réponse introuvable");
-      }
-
-      if (!response.ok || data?.error) {
-        console.error('[QuizGen] Erreur API:', data?.error || textBody);
-        setDebugInfo(data?.error ? String(data.error) : textBody);
-        setError(`Erreur API : ${data?.error || "appel échoué"}`);
+      if (invokeError) {
+        console.error('[QuizGen] Erreur API:', invokeError);
+        setDebugInfo(invokeError.message);
+        setError(`Erreur API : ${invokeError.message}`);
         updateWizardData({ generatedQuiz: getMockQuizData() });
         setProgress(100);
         setIsGenerating(false);
@@ -121,12 +83,13 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
         return;
       }
 
-      // Tout bon !
+      // Tout bon !
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[QuizGen] Réponse JSON reçue :', data);
+        console.log('[QuizGen] Réponse JSON reçue :', data);
       }
       setProgress(100);
       setDebugInfo('Réponse API OK. Quiz personnalisé reçu.');
+      setLastRawApiResponse(JSON.stringify(data));
       updateWizardData({ generatedQuiz: data });
 
     } catch (error: any) {
