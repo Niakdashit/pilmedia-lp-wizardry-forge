@@ -275,7 +275,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
   const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
   const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
-  const footerBandHeight1 = footerModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -432,7 +431,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               )}
 
               {/* Contenu régulier sous la bande */}
-              <div className={`relative z-10 h-full flex flex-col items-center ${logoModules1.length > 0 ? 'justify-start' : 'justify-center'} gap-6 p-8`} style={{ paddingBottom: footerModules1.length > 0 ? footerBandHeight1 : undefined }}>
+              <div className={`relative z-10 h-full flex flex-col items-center ${logoModules1.length > 0 ? 'justify-start' : 'justify-center'} gap-6 p-8`}>
                 {logoModules1.length > 0 && (
                   <div style={{ height: logoBandHeight1 }} />
                 )}
