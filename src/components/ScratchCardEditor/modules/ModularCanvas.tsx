@@ -426,6 +426,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           previewMode={false}
           device={device}
           bandWidthMode="container"
+          className="w-full gap-0 p-0"
           onModuleClick={(moduleId) => {
             if (onSelect) {
               onSelect(m);
@@ -962,11 +963,11 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
       
       {/* Modules Footer - positionnés en pleine largeur en bas, collés au bord inférieur */}
       {footerModules.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute bottom-0 left-0 right-0 m-0 p-0">
           {footerModules.map((m) => (
             <div 
               key={m.id}
-              className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+              className={`relative group m-0 p-0 ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
               style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
               onClick={(e) => {
                 e.stopPropagation();

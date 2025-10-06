@@ -28,7 +28,7 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
   const socialIconSize = module.socialIconSize ?? 24;
   const socialIconColor = module.socialIconColor ?? '#000000';
 
-  const [activeTab, setActiveTab] = useState<'logo' | 'text' | 'links' | 'social'>('logo');
+  const [activeTab, setActiveTab] = useState<'text' | 'links' | 'social'>('text');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,16 +95,6 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
       {/* Onglets */}
       <div className="flex gap-1 border-b border-gray-200">
         <button
-          onClick={() => setActiveTab('logo')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'logo'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Logo
-        </button>
-        <button
           onClick={() => setActiveTab('text')}
           className={`px-3 py-2 text-sm font-medium transition-colors ${
             activeTab === 'text'
@@ -137,125 +127,6 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
       </div>
 
       <div className="space-y-4">
-        {/* Onglet Logo */}
-        {activeTab === 'logo' && (
-          <>
-            <div>
-              <Label className="text-xs">Logo du footer</Label>
-              <div className="mt-2">
-                {module.logoUrl ? (
-                  <div className="space-y-2">
-                    <img
-                      src={module.logoUrl}
-                      alt="Logo"
-                      className="max-w-full h-auto max-h-32 object-contain border border-gray-200 rounded-lg p-2"
-                    />
-                    <Button
-                      onClick={() => onUpdate({ logoUrl: undefined })}
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Supprimer le logo
-                    </Button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                      <p className="text-xs text-gray-500">Cliquez pour télécharger un logo</p>
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                    />
-                  </label>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Largeur max du logo (px)</Label>
-              <Input
-                type="number"
-                value={logoWidth}
-                onChange={(e) => onUpdate({ logoWidth: parseInt(e.target.value) || 120 })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Hauteur max du logo (px)</Label>
-              <Input
-                type="number"
-                value={logoHeight}
-                onChange={(e) => onUpdate({ logoHeight: parseInt(e.target.value) || 120 })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Alignement</Label>
-              <div className="flex gap-2 mt-1">
-                {['left', 'center', 'right'].map((align) => (
-                  <button
-                    key={align}
-                    onClick={() => onUpdate({ align: align as 'left' | 'center' | 'right' })}
-                    className={`flex-1 px-3 py-2 text-xs border rounded-md transition-colors ${
-                      currentAlign === align
-                        ? 'bg-[#841b60] text-white border-[#841b60]'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {align === 'left' ? 'Gauche' : align === 'center' ? 'Centre' : 'Droite'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Couleur de fond</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type="color"
-                  value={bandColor}
-                  onChange={(e) => onUpdate({ bandColor: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={bandColor}
-                  onChange={(e) => onUpdate({ bandColor: e.target.value })}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Hauteur de la bande (px)</Label>
-              <Input
-                type="number"
-                value={bandHeight}
-                onChange={(e) => onUpdate({ bandHeight: parseInt(e.target.value) || 60 })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Espacement interne (px)</Label>
-              <Input
-                type="number"
-                value={bandPadding}
-                onChange={(e) => onUpdate({ bandPadding: parseInt(e.target.value) || 16 })}
-                className="mt-1"
-              />
-            </div>
-          </>
-        )}
-
         {/* Onglet Texte */}
         {activeTab === 'text' && (
           <>

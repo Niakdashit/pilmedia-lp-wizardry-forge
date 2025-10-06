@@ -2408,12 +2408,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
                   {/* Regular modules container; padding adjusted when logo/footer exist */}
                   <div
-                    className="w-full flex justify-center mb-6"
+                    className="w-full flex justify-center"
                     style={{
                       paddingLeft: safeZonePadding,
                       paddingRight: safeZonePadding,
                       paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
                       paddingBottom: footerModules.length > 0 ? 0 : safeZonePadding,
+                      marginBottom: footerModules.length > 0 ? 0 : '1.5rem',
                       boxSizing: 'border-box'
                     }}
                   >
@@ -2527,7 +2528,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
-                          previewMode={false}
+                          previewMode={true}
                           device={selectedDevice}
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {

@@ -658,11 +658,15 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
             paddingTop: (footerModule as any).spacingTop ?? bandPadding,
-            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
+            // En mode canvas (bandWidthMode === 'container'), on supprime le padding bas
+            // pour coller le pied de page au bord inférieur de la page
+            paddingBottom: bandWidthMode === 'container' ? 0 : (previewMode ? 0 : ((footerModule as any).spacingBottom ?? bandPadding)),
             paddingLeft: '64px',
             paddingRight: '64px',
             gap: '16px',
-            cursor: previewMode ? 'default' : 'pointer'
+            cursor: previewMode ? 'default' : 'pointer',
+            // Forcer aucune marge autour du bloc footer
+            margin: 0
           }}
           onClick={(e) => {
             if (!previewMode) {
@@ -810,7 +814,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center gap-6 w-full ${className}`}>
+    <div className={`flex flex-col items-center justify-center ${previewMode ? 'gap-0' : 'gap-6'} w-full ${className}`}>
       <style dangerouslySetInnerHTML={{
         __html: `
           .card-title, .card-description {
@@ -831,9 +835,27 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           .quiz-card p.card-description {
             color: var(--card-description-color, #6b7280) !important;
           }
+          
+          /* Espacement entre modules en mode preview */
+          ${previewMode ? `
+            .quiz-module-wrapper:not(:last-child) {
+              margin-bottom: 1.5rem;
+            }
+            .quiz-module-wrapper:has(+ [data-module-type="footer"]) {
+              margin-bottom: 0;
+            }
+          ` : ''}
         `
       }} />
-      {modules.map(renderModule)}
+      {modules.map((m, index) => (
+        <div 
+          key={m.id} 
+          className="quiz-module-wrapper w-full"
+          data-module-type={m.type === 'BlocPiedDePage' ? 'footer' : 'regular'}
+        >
+          {renderModule(m)}
+        </div>
+      ))}
     </div>
   );
 };
