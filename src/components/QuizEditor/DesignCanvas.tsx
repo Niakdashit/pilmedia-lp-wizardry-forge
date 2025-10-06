@@ -2475,7 +2475,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   />
                 </div>
               </div>
-            )}
+            );
+            })()}
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
             {renderableElements
