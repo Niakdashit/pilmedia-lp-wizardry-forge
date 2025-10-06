@@ -2382,6 +2382,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           modules={logoModules}
                           previewMode={false}
                           device={selectedDevice}
+                          bandWidthMode="container"
+                          className="w-full gap-0 p-0"
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
                             try {
@@ -2521,14 +2523,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     </div>
                   </div>
 
-                  {/* Footer band at the bottom (non-movable) */}
+                  {/* Footer band at the bottom (inline, like /quiz-editor) */}
                   {footerModules.length > 0 && (
-                    <div className="absolute left-0 w-full z-[1000]" style={{ pointerEvents: 'none', bottom: safeZonePadding }}>
-                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                    <div className="w-full flex justify-center" style={{ paddingLeft: safeZonePadding, paddingRight: safeZonePadding, paddingBottom: safeZonePadding, boxSizing: 'border-box' }}>
+                      <div className="w-full max-w-[1500px]">
                         <QuizModuleRenderer
                           modules={footerModules}
                           previewMode={false}
                           device={selectedDevice}
+                          bandWidthMode="container"
+                          className="w-full gap-0 p-0"
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
                             try {
