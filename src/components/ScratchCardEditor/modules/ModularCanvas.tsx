@@ -713,12 +713,13 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
         </div>
       ))}
       
-      {/* Modules réguliers - dans le conteneur centré avec max-width, avec padding pour éviter le chevauchement */}
-      <div className="w-full max-w-[1500px] mx-auto" style={{ paddingTop: (logoModules[0] ? ((logoModules[0] as any).bandHeight ?? 60) + 2 * (((logoModules[0] as any).bandPadding ?? 16)) : 0), paddingBottom: (footerModules[0] ? ((footerModules[0] as any).bandHeight ?? 60) + 2 * (((footerModules[0] as any).bandPadding ?? 16)) : 0) }}>
+      {/* Modules réguliers - dans le conteneur centré avec max-width */}
+      <div className="w-full max-w-[1500px] mx-auto">
         <div
           className="flex flex-col gap-0"
           style={{
             minHeight: single ? minHeightPx : undefined,
+            // Alignement cohérent avec la preview: toujours en haut
             justifyContent: 'flex-start'
           }}
         >

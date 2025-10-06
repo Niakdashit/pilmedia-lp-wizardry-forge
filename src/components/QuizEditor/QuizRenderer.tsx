@@ -508,7 +508,9 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           style={{ 
             backgroundColor: bandColor,
             height: bandHeight,
-            width: '100%',
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent,
@@ -565,7 +567,9 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           style={{ 
             backgroundColor: bandColor,
             height: bandHeight,
-            width: '100%',
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent,
