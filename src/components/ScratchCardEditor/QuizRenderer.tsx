@@ -634,7 +634,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
       const socialIconSize = footerModule.socialIconSize ?? 24;
       const socialIconColor = footerModule.socialIconColor ?? '#000000';
 
-      const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0 || socialLinks.length > 0;
+      const hasContent = footerModule.logoUrl || (footerText && footerText.trim()) || footerLinks.length > 0 || socialLinks.length > 0;
 
       // Ne pas afficher le footer vide en mode preview
       if (previewMode && !hasContent) {
