@@ -662,11 +662,15 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
             paddingTop: (footerModule as any).spacingTop ?? bandPadding,
-            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
+            // En mode canvas (bandWidthMode === 'container'), on supprime le padding bas
+            // pour coller le pied de page au bord inférieur de la page
+            paddingBottom: bandWidthMode === 'container' ? 0 : (previewMode ? 0 : ((footerModule as any).spacingBottom ?? bandPadding)),
             paddingLeft: '64px',
             paddingRight: '64px',
             gap: '16px',
-            cursor: previewMode ? 'default' : 'pointer'
+            cursor: previewMode ? 'default' : 'pointer',
+            // Forcer aucune marge autour du bloc footer
+            margin: 0
           }}
           onClick={(e) => {
             if (!previewMode) {
