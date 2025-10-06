@@ -166,12 +166,6 @@ export interface FooterLink {
   openInNewTab?: boolean;
 }
 
-export interface FooterSocialLink {
-  id: string;
-  platform: 'facebook' | 'linkedin' | 'twitter' | 'instagram' | 'youtube' | 'tiktok';
-  url: string;
-}
-
 export interface BlocPiedDePage extends BaseModule {
   type: 'BlocPiedDePage';
   logoUrl?: string;
@@ -187,10 +181,6 @@ export interface BlocPiedDePage extends BaseModule {
   linkColor?: string; // Couleur des liens
   fontSize?: number; // Taille de police (px)
   separator?: string; // Séparateur entre les liens (ex: '|')
-  // Réseaux sociaux
-  socialLinks?: FooterSocialLink[]; // Liste des réseaux sociaux
-  socialIconSize?: number; // Taille des icônes (px)
-  socialIconColor?: string; // Couleur des icônes
 }
 
 export type Module =

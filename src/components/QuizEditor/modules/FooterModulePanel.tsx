@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Upload, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { BlocPiedDePage, FooterLink, FooterSocialLink } from '@/types/modularEditor';
+import { BlocPiedDePage, FooterLink } from '@/types/modularEditor';
 
 export interface FooterModulePanelProps {
   module: BlocPiedDePage;
@@ -16,18 +16,26 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
   const bandHeight = module.bandHeight ?? 60;
   const bandColor = module.bandColor ?? '#ffffff';
   const bandPadding = module.bandPadding ?? 16;
+  const logoWidth = module.logoWidth ?? 120;
+  const logoHeight = module.logoHeight ?? 120;
   const footerText = module.footerText ?? '';
   const footerLinks = module.footerLinks ?? [];
   const textColor = module.textColor ?? '#000000';
   const linkColor = module.linkColor ?? '#841b60';
   const fontSize = module.fontSize ?? 14;
   const separator = module.separator ?? '|';
-  const socialLinks = module.socialLinks ?? [];
-  const socialIconSize = module.socialIconSize ?? 24;
-  const socialIconColor = module.socialIconColor ?? '#000000';
 
-  const [activeTab, setActiveTab] = useState<'text' | 'links' | 'social'>('text');
+  const [activeTab, setActiveTab] = useState<'logo' | 'text' | 'links'>('logo');
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      onUpdate({ logoUrl: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleAddLink = () => {
     const newLink: FooterLink = {
@@ -51,27 +59,6 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
     onUpdate({ footerLinks: updatedLinks });
   };
 
-  const handleAddSocialLink = (platform: FooterSocialLink['platform']) => {
-    const newSocialLink: FooterSocialLink = {
-      id: `social-${Date.now()}`,
-      platform,
-      url: 'https://'
-    };
-    onUpdate({ socialLinks: [...socialLinks, newSocialLink] });
-  };
-
-  const handleUpdateSocialLink = (id: string, updates: Partial<FooterSocialLink>) => {
-    const updatedSocialLinks = socialLinks.map(link => 
-      link.id === id ? { ...link, ...updates } : link
-    );
-    onUpdate({ socialLinks: updatedSocialLinks });
-  };
-
-  const handleDeleteSocialLink = (id: string) => {
-    const updatedSocialLinks = socialLinks.filter(link => link.id !== id);
-    onUpdate({ socialLinks: updatedSocialLinks });
-  };
-
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -83,6 +70,16 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
 
       {/* Onglets */}
       <div className="flex gap-1 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('logo')}
+          className={`px-3 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'logo'
+              ? 'border-b-2 border-[#841b60] text-[#841b60]'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Logo
+        </button>
         <button
           onClick={() => setActiveTab('text')}
           className={`px-3 py-2 text-sm font-medium transition-colors ${
@@ -103,19 +100,63 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
         >
           Liens
         </button>
-        <button
-          onClick={() => setActiveTab('social')}
-          className={`px-3 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'social'
-              ? 'border-b-2 border-[#841b60] text-[#841b60]'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Réseaux sociaux
-        </button>
       </div>
 
       <div className="space-y-4">
+        {/* Onglet Logo */}
+        {activeTab === 'logo' && (
+          <>
+            <div>
+              <Label className="text-xs">Logo</Label>
+              <div className="mt-2 space-y-2">
+                {module.logoUrl && (
+                  <div className="relative w-full h-32 border rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                    <img
+                      src={module.logoUrl}
+                      alt="Footer logo"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                )}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button variant="outline" size="sm" asChild>
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      {module.logoUrl ? 'Changer' : 'Ajouter'}
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs">Largeur logo (px)</Label>
+              <Input
+                type="number"
+                value={logoWidth}
+                onChange={(e) => onUpdate({ logoWidth: parseInt(e.target.value) || 120 })}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">Hauteur logo (px)</Label>
+              <Input
+                type="number"
+                value={logoHeight}
+                onChange={(e) => onUpdate({ logoHeight: parseInt(e.target.value) || 120 })}
+                className="mt-1"
+              />
+            </div>
+          </>
+        )}
+
         {/* Onglet Texte */}
         {activeTab === 'text' && (
           <>
@@ -257,107 +298,6 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
                   type="text"
                   value={linkColor}
                   onChange={(e) => onUpdate({ linkColor: e.target.value })}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Onglet Réseaux sociaux */}
-        {activeTab === 'social' && (
-          <>
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <Label className="text-xs">Liens des réseaux sociaux</Label>
-              </div>
-
-              {/* Liste des plateformes disponibles */}
-              <div className="space-y-2 mb-4">
-                <Label className="text-xs text-gray-600">Ajouter un réseau social</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['facebook', 'linkedin', 'twitter', 'instagram', 'youtube', 'tiktok'] as const).map((platform) => {
-                    const alreadyAdded = socialLinks.some(link => link.platform === platform);
-                    return (
-                      <Button
-                        key={platform}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => !alreadyAdded && handleAddSocialLink(platform)}
-                        disabled={alreadyAdded}
-                        className="capitalize"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        {platform === 'twitter' ? 'X' : platform}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Liste des réseaux sociaux ajoutés */}
-              {socialLinks.length > 0 && (
-                <div className="space-y-2">
-                  {socialLinks.map((socialLink) => (
-                    <div key={socialLink.id} className="p-3 border border-gray-200 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium capitalize">
-                          {socialLink.platform === 'twitter' ? 'X (Twitter)' : socialLink.platform}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteSocialLink(socialLink.id)}
-                          className="h-6 w-6"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div>
-                        <Label className="text-xs">URL</Label>
-                        <Input
-                          type="url"
-                          value={socialLink.url}
-                          onChange={(e) => handleUpdateSocialLink(socialLink.id, { url: e.target.value })}
-                          placeholder={`https://${socialLink.platform}.com/...`}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {socialLinks.length === 0 && (
-                <p className="text-xs text-gray-500 text-center py-4">
-                  Aucun réseau social ajouté. Cliquez sur un bouton ci-dessus pour en ajouter.
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label className="text-xs">Taille des icônes (px)</Label>
-              <Input
-                type="number"
-                value={socialIconSize}
-                onChange={(e) => onUpdate({ socialIconSize: parseInt(e.target.value) || 24 })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs">Couleur des icônes</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type="color"
-                  value={socialIconColor}
-                  onChange={(e) => onUpdate({ socialIconColor: e.target.value })}
-                  className="w-16 h-10 p-1 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={socialIconColor}
-                  onChange={(e) => onUpdate({ socialIconColor: e.target.value })}
                   className="flex-1"
                 />
               </div>
