@@ -25,7 +25,7 @@ import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveL
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
-import { QuizModuleRenderer } from './QuizRenderer';
+
 import type { Module } from '@/types/modularEditor';
 
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
@@ -2369,196 +2369,97 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
             {/* Modular stacked content (HubSpot-like) */}
             {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
-              const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
-              const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
-              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+              const hasLogoModule = modularModules.some((m: any) => m?.type === 'BlocLogo');
+              const hasFooterModule = modularModules.some((m: any) => m?.type === 'BlocPiedDePage');
               return (
-                <div className="relative w-full">
-                  {/* Absolute, full-width logo band at the very top (non-movable) */}
-                  {logoModules.length > 0 && (
-                    <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
-                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
-                        <QuizModuleRenderer
-                          modules={logoModules}
-                          previewMode={false}
-                          device={selectedDevice}
-                          bandWidthMode="container"
-                          className="w-full gap-0 p-0"
-                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
-                          onModuleClick={(moduleId) => {
-                            try {
-                              const mod = (logoModules as any).find((mm: any) => mm.id === moduleId);
-                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
-                              window.dispatchEvent(evt);
-                            } catch {}
-                            onSelectedElementChange?.({
-                              id: `modular-logo-${moduleId}`,
-                              type: 'logo',
-                              role: 'module-logo',
-                              moduleId,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                          }}
-                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-logo')
-                            ? (externalSelectedElement as any)?.moduleId
-                            : undefined}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Regular modules container; padding adjusted when logo/footer exist */}
+                <div
+                  className="w-full flex justify-center mb-6"
+                  style={{
+                    paddingLeft: safeZonePadding,
+                    paddingRight: safeZonePadding,
+                    paddingTop: hasLogoModule ? 0 : safeZonePadding,
+                    paddingBottom: hasFooterModule ? 0 : safeZonePadding,
+                    boxSizing: 'border-box'
+                  }}
+                >
                   <div
-                    className="w-full flex justify-center"
+                    className="w-full max-w-[1500px] flex flex-col"
                     style={{
-                      paddingLeft: safeZonePadding,
-                      paddingRight: safeZonePadding,
-                      paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
-                      paddingBottom: footerModules.length > 0 ? 0 : safeZonePadding,
-                      boxSizing: 'border-box'
+                      minHeight: Math.max(0, (effectiveCanvasSize?.height || 640) - ((hasLogoModule ? 0 : safeZonePadding) + (hasFooterModule ? 0 : safeZonePadding)))
                     }}
                   >
-                    {/* Spacer removed - logo is now flush at top */}
-                    <div className="w-full max-w-[1500px] flex flex-col" style={{ minHeight: Math.max(0, (effectiveCanvasSize?.height || 640) - ((logoModules.length > 0 ? 0 : safeZonePadding) + (footerModules.length > 0 ? 0 : safeZonePadding))) }}>
-                      <ModularCanvas
-                        screen={screenId as any}
-                        modules={regularModules}
-                        device={selectedDevice}
-                        onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
-                        onDelete={(id) => onModuleDelete?.(id)}
-                        onMove={(id, dir) => onModuleMove?.(id, dir)}
-                        onDuplicate={(id) => onModuleDuplicate?.(id)}
-                        onSelect={(m) => {
-                          try {
-                            const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
-                            window.dispatchEvent(evt);
-                          } catch {}
-                          if (m.type === 'BlocBouton') {
-                            onSelectedElementChange?.({
-                              id: `modular-button-${m.id}`,
-                              type: 'button',
-                              role: 'module-button',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocImage') {
-                            onSelectedElementChange?.({
-                              id: `modular-image-${m.id}`,
-                              type: 'image',
-                              role: 'module-image',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocReseauxSociaux') {
-                            onSelectedElementChange?.({
-                              id: `modular-social-${m.id}`,
-                              type: 'social',
-                              role: 'module-social',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocVideo') {
-                            onSelectedElementChange?.({
-                              id: `modular-video-${m.id}`,
-                              type: 'video',
-                              role: 'module-video',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocHtml') {
-                            onSelectedElementChange?.({
-                              id: `modular-html-${m.id}`,
-                              type: 'html',
-                              role: 'module-html',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocCarte') {
-                            onSelectedElementChange?.({
-                              id: `modular-carte-${m.id}`,
-                              type: 'carte',
-                              role: 'module-carte',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          onSelectedElementChange?.({
-                            id: `modular-text-${m.id}`,
-                            type: 'text',
-                            role: 'module-text',
-                            moduleId: m.id,
-                            screenId
-                          } as any);
-                          onShowDesignPanel?.();
-                        }}
-                        selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
-                          || (externalSelectedElement as any)?.role === 'module-image'
-                          || (externalSelectedElement as any)?.role === 'module-video'
-                          || (externalSelectedElement as any)?.role === 'module-social'
-                          || (externalSelectedElement as any)?.role === 'module-html'
-                          || (externalSelectedElement as any)?.role === 'module-carte'
-                          || (externalSelectedElement as any)?.role === 'module-logo')
-                          ? (externalSelectedElement as any)?.moduleId
-                          : undefined}
-                      />
-                      {/* Spacer removed - footer is now flush at bottom */}
-                    </div>
+                    <ModularCanvas
+                      screen={screenId as any}
+                      modules={modularModules}
+                      device={selectedDevice}
+                      onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                      onDelete={(id) => onModuleDelete?.(id)}
+                      onMove={(id, dir) => onModuleMove?.(id, dir)}
+                      onDuplicate={(id) => onModuleDuplicate?.(id)}
+                      onSelect={(m) => {
+                        try {
+                          const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                          window.dispatchEvent(evt);
+                        } catch {}
+                        if (m.type === 'BlocBouton') {
+                          onSelectedElementChange?.({ id: `modular-button-${m.id}`, type: 'button', role: 'module-button', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocImage') {
+                          onSelectedElementChange?.({ id: `modular-image-${m.id}`, type: 'image', role: 'module-image', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocReseauxSociaux') {
+                          onSelectedElementChange?.({ id: `modular-social-${m.id}`, type: 'social', role: 'module-social', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocVideo') {
+                          onSelectedElementChange?.({ id: `modular-video-${m.id}`, type: 'video', role: 'module-video', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocHtml') {
+                          onSelectedElementChange?.({ id: `modular-html-${m.id}`, type: 'html', role: 'module-html', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocCarte') {
+                          onSelectedElementChange?.({ id: `modular-carte-${m.id}`, type: 'carte', role: 'module-carte', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocLogo') {
+                          onSelectedElementChange?.({ id: `modular-logo-${m.id}`, type: 'logo', role: 'module-logo', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        if (m.type === 'BlocPiedDePage') {
+                          onSelectedElementChange?.({ id: `modular-footer-${m.id}`, type: 'footer', role: 'module-footer', moduleId: m.id, screenId } as any);
+                          onOpenElementsTab?.();
+                          return;
+                        }
+                        onSelectedElementChange?.({ id: `modular-text-${m.id}`, type: 'text', role: 'module-text', moduleId: m.id, screenId } as any);
+                        onShowDesignPanel?.();
+                      }}
+                      selectedModuleId={(
+                        (externalSelectedElement as any)?.role === 'module-text'
+                        || (externalSelectedElement as any)?.role === 'module-image'
+                        || (externalSelectedElement as any)?.role === 'module-video'
+                        || (externalSelectedElement as any)?.role === 'module-social'
+                        || (externalSelectedElement as any)?.role === 'module-html'
+                        || (externalSelectedElement as any)?.role === 'module-carte'
+                        || (externalSelectedElement as any)?.role === 'module-logo'
+                        || (externalSelectedElement as any)?.role === 'module-footer'
+                      ) ? (externalSelectedElement as any)?.moduleId : undefined}
+                    />
                   </div>
-
-                  {/* Footer band at the bottom (inline, like /quiz-editor) */}
-                  {footerModules.length > 0 && (
-                    <div className="w-full flex justify-center" style={{ paddingLeft: safeZonePadding, paddingRight: safeZonePadding, paddingBottom: safeZonePadding, boxSizing: 'border-box' }}>
-                      <div className="w-full max-w-[1500px]">
-                        <QuizModuleRenderer
-                          modules={footerModules}
-                          previewMode={false}
-                          device={selectedDevice}
-                          bandWidthMode="container"
-                          className="w-full gap-0 p-0"
-                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
-                          onModuleClick={(moduleId) => {
-                            try {
-                              const mod = (footerModules as any).find((mm: any) => mm.id === moduleId);
-                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
-                              window.dispatchEvent(evt);
-                            } catch {}
-                            onSelectedElementChange?.({
-                              id: `modular-footer-${moduleId}`,
-                              type: 'footer',
-                              role: 'module-footer',
-                              moduleId,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                          }}
-                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-footer')
-                            ? (externalSelectedElement as any)?.moduleId
-                            : undefined}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })()}
+
 
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
