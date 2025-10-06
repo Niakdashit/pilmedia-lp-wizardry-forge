@@ -425,7 +425,12 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           modules={[m]}
           previewMode={false}
           device={device}
-          onModuleClick={() => {}}
+          bandWidthMode="container"
+          onModuleClick={(moduleId) => {
+            if (onSelect) {
+              onSelect(m);
+            }
+          }}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
         />
       );
