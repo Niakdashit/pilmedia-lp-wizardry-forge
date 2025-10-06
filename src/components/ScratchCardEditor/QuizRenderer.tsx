@@ -43,7 +43,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const lastClickTime = useRef<Record<string, number>>({});
+  const _lastClickTime = useRef<Record<string, number>>({});
 
   // Fonctions de gestion de l'édition de texte
   const handleTextClick = useCallback((moduleId: string, event?: React.MouseEvent) => {

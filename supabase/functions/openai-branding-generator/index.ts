@@ -193,9 +193,10 @@ Analyse ce contenu web pour extraire l'univers de marque et génère une répons
 
   } catch (error) {
     console.error('💥 Error in openai-branding-generator:', error);
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
