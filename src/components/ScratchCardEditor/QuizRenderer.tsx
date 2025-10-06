@@ -568,17 +568,15 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             backgroundColor: bandColor,
             height: bandHeight,
             width: '100vw',
-            position: 'relative',
-            left: '50%',
-            right: '50%',
-            marginLeft: '-50vw',
-            marginRight: '-50vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent,
             padding: `${bandPadding}px`,
             paddingTop: (footerModule as any).spacingTop ?? 0,
-            paddingBottom: (footerModule as any).spacingBottom ?? 0
+            paddingBottom: (footerModule as any).spacingBottom ?? 0,
+            position: 'relative'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -593,13 +591,19 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
               }}
             />
           ) : !previewMode ? (
-            <span style={{
+            <div style={{
+              width: logoWidth,
+              height: logoHeight,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               color: '#a0aec0',
               fontSize: '14px',
-              whiteSpace: 'nowrap'
+              textAlign: 'center',
+              padding: '16px'
             }}>
               <strong>Pied de page</strong>
-            </span>
+            </div>
           ) : null}
         </div>
       );
