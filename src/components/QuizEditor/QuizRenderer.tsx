@@ -678,6 +678,26 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             }
           }}
         >
+          {/* Placeholder pour footer vide en mode édition */}
+          {!hasContent && !previewMode && (
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#a0aec0',
+                fontSize: '14px',
+                textAlign: 'center',
+                padding: '16px',
+                border: '2px dashed #cbd5e0',
+                borderRadius: '8px'
+              }}
+            >
+              <strong>Pied de page - Cliquez pour configurer</strong>
+            </div>
+          )}
+
           {/* Logo */}
           {footerModule.logoUrl && (
             <img

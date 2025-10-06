@@ -2528,7 +2528,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
-                          previewMode={true}
+                          previewMode={false}
                           device={selectedDevice}
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
