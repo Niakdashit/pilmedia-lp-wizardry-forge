@@ -2413,7 +2413,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       paddingLeft: safeZonePadding,
                       paddingRight: safeZonePadding,
                       paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
-                      paddingBottom: footerModules.length > 0 ? 0 : safeZonePadding,
+                      paddingBottom: safeZonePadding,
                       marginBottom: footerModules.length > 0 ? 0 : '1.5rem',
                       boxSizing: 'border-box'
                     }}
@@ -2524,7 +2524,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
                   {/* Footer band at the bottom (non-movable) */}
                   {footerModules.length > 0 && (
-                    <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                    <div className="absolute left-0 w-full z-[1000]" style={{ pointerEvents: 'none', bottom: safeZonePadding }}>
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
