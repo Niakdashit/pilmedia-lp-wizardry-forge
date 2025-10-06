@@ -568,17 +568,15 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             backgroundColor: bandColor,
             height: bandHeight,
             width: '100vw',
-            position: 'relative',
-            left: '50%',
-            right: '50%',
-            marginLeft: '-50vw',
-            marginRight: '-50vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent,
             padding: `${bandPadding}px`,
             paddingTop: (footerModule as any).spacingTop ?? 0,
-            paddingBottom: (footerModule as any).spacingBottom ?? 0
+            paddingBottom: (footerModule as any).spacingBottom ?? 0,
+            position: 'relative'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
