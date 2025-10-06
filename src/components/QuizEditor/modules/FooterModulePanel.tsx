@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Upload, Plus, Trash2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -16,8 +16,6 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
   const bandHeight = module.bandHeight ?? 60;
   const bandColor = module.bandColor ?? '#ffffff';
   const bandPadding = module.bandPadding ?? 16;
-  const logoWidth = module.logoWidth ?? 120;
-  const logoHeight = module.logoHeight ?? 120;
   const footerText = module.footerText ?? '';
   const footerLinks = module.footerLinks ?? [];
   const textColor = module.textColor ?? '#000000';
@@ -30,15 +28,6 @@ const FooterModulePanel: React.FC<FooterModulePanelProps> = ({ module, onUpdate,
 
   const [activeTab, setActiveTab] = useState<'text' | 'links' | 'social'>('text');
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      onUpdate({ logoUrl: reader.result as string });
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleAddLink = () => {
     const newLink: FooterLink = {

@@ -765,8 +765,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }
             }}
             onAddElement={onAddElement}
-            existingModules={allModules}
-            selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
           />
