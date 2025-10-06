@@ -629,8 +629,9 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
-  // Séparer les modules Logo des autres modules
+  // Séparer les modules Logo, Footer et réguliers
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
+  const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
   const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
@@ -668,7 +669,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full" data-modular-zone="1">
+    <div className="w-full relative" data-modular-zone="1" style={{ minHeight: '100vh' }}>
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
         <div 
@@ -954,33 +955,38 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           );
         })}
         </div>
-        {regularModules.length === 0 && logoModules.length === 0 && (
+        {regularModules.length === 0 && logoModules.length === 0 && footerModules.length === 0 && (
           <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
         )}
-        {/* BottomSlot: Footer en pleine largeur */}
-        {modules.filter((m) => m.type === 'BlocPiedDePage').map((m) => (
-          <div
-            key={m.id}
-            className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-            style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect?.(m);
-            }}
-          >
-            <Toolbar
-              visible={selectedModuleId === m.id}
-              layoutWidth="full"
-              onWidthChange={() => {}}
-              onDelete={() => onDelete(m.id)}
-              expanded={openToolbarFor === m.id}
-              onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-              isMobile={device === 'mobile'}
-            />
-            {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
-          </div>
-        ))}
       </div>
+      
+      {/* Modules Footer - positionnés en pleine largeur en bas, collés au bord inférieur */}
+      {footerModules.length > 0 && (
+        <div className="absolute bottom-0 left-0 right-0">
+          {footerModules.map((m) => (
+            <div 
+              key={m.id}
+              className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+              style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(m);
+              }}
+            >
+              <Toolbar
+                visible={selectedModuleId === m.id}
+                layoutWidth="full"
+                onWidthChange={() => {}}
+                onDelete={() => onDelete(m.id)}
+                expanded={openToolbarFor === m.id}
+                onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+                isMobile={device === 'mobile'}
+              />
+              {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
