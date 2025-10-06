@@ -663,13 +663,21 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full" data-modular-zone="1">
+    <div className="w-full relative" data-modular-zone="1">
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
-        <div 
+        <div
           key={m.id}
-          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+          className={`absolute top-0 left-0 right-0 z-50 ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{
+            width: '100%',
+            height: 'auto',
+            backgroundColor: 'transparent',
+            transform: 'translateZ(0)', // Force layer promotion
+            willChange: 'transform',
+            // Compenser le padding-top du conteneur parent
+            marginTop: '-24px' // Ajuster selon le padding du parent
+          }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(m);
