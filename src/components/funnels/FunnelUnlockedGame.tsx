@@ -142,8 +142,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
       setLiveCampaign({
         ...storeCampaign,
-        // Prioriser modularPage de campaign pour synchronisation des modules
-        modularPage: campaign?.modularPage || (storeCampaign as any).modularPage,
         canvasConfig: {
           ...(campaign.canvasConfig || {}),
           ...(storeCampaign.canvasConfig || {}),
