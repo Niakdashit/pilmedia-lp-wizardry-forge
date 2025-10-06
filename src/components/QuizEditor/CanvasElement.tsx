@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { RotateCw } from 'lucide-react';
 import ShapeRenderer from './components/ShapeRenderer';
-import { sanitizeHtml } from '@/lib/sanitize';
 import { SmartWheel } from '../SmartWheel';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { useTouchOptimization } from './hooks/useTouchOptimization';
@@ -1278,7 +1277,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             }
             style={getTextStyle()}
             data-element-type="text"
-            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: sanitizeHtml((element as any).richHtml) } } : {})}
+            {...(((element as any).richHtml && (element as any).richHtml.trim() !== '') ? { dangerouslySetInnerHTML: { __html: (element as any).richHtml } } : {})}
           >
             {(!(element as any).richHtml || (element as any).richHtml.trim() === '') ? (element.content || 'Texte') : null}
           </div>

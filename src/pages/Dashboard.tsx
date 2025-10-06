@@ -5,7 +5,15 @@ import PageContainer from '../components/Layout/PageContainer';
 
 const Dashboard: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/assets/branding/dashboard-gradient.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       <PageContainer className="bg-transparent">
         <DashboardHeader />
         

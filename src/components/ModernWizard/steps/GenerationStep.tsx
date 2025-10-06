@@ -23,6 +23,7 @@ const GenerationStep: React.FC<GenerationStepProps> = ({
     error,
     progress,
     debugInfo,
+    quizEndpoint,
     handleGenerate
   } = useQuizGeneration({ wizardData, updateWizardData, nextStep });
 
@@ -69,7 +70,7 @@ const GenerationStep: React.FC<GenerationStepProps> = ({
       </div>
 
       {/* API Status */}
-      <ApiStatusCard error={error} quizEndpoint="" />
+      <ApiStatusCard error={error} quizEndpoint={quizEndpoint} />
     </div>
   );
 };

@@ -60,9 +60,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: {

@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: 'es2020',
-    minify: 'esbuild',
+    minify: 'terser',
     sourcemap: mode === 'development',
   },
 }));

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { sanitizeHtml } from '@/lib/sanitize';
 
 export type RichTextEditorProps = {
   value: string;
@@ -41,10 +40,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
   useEffect(() => {
     if (!ref.current) return;
     if (suppressSyncRef.current || wasFocusedRef.current) return; // don't override during local edits
-    const sanitizedValue = sanitizeHtml(value || '');
-    if (ref.current.innerHTML !== sanitizedValue) {
-      ref.current.innerHTML = sanitizedValue;
-      setLocalHtml(sanitizedValue);
+    if (ref.current.innerHTML !== value) {
+      ref.current.innerHTML = value || '';
+      setLocalHtml(value || '');
     }
     // If it was focused before update, try to refocus and restore selection
     if (wasFocusedRef.current) {
@@ -63,7 +61,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     suppressSyncRef.current = true;
     document.execCommand(cmd, false, arg);
     if (ref.current) {
-      const html = sanitizeHtml(ref.current.innerHTML);
+      const html = ref.current.innerHTML;
       requestAnimationFrame(() => {
         onChange(html);
         suppressSyncRef.current = false;

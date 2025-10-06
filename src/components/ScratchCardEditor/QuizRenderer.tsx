@@ -14,10 +14,6 @@ interface QuizModuleRendererProps {
   inheritedTextColor?: string;
   // Callback pour mettre à jour un module (utilisé en mode édition)
   onModuleUpdate?: (moduleId: string, patch: Partial<Module>) => void;
-  // Contrôle le mode de largeur des bandes (logo/pied-de-page)
-  // 'viewport' => 100vw avec marges négatives pour déborder du conteneur
-  // 'container' => 100% de la largeur du conteneur parent (ex: dans le canvas)
-  bandWidthMode?: 'viewport' | 'container';
 }
 
 /**
@@ -36,36 +32,27 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   className = '',
   onButtonClick,
   inheritedTextColor,
-  onModuleUpdate,
-  bandWidthMode = 'viewport'
+  onModuleUpdate
 }) => {
   const isMobileDevice = device === 'mobile';
   const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const _lastClickTime = useRef<Record<string, number>>({});
 
   // Fonctions de gestion de l'édition de texte
-  const handleTextClick = useCallback((moduleId: string, event?: React.MouseEvent) => {
+  const handleTextClick = useCallback((moduleId: string) => {
     if (previewMode) return;
     setEditingModuleId(moduleId);
     setTimeout(() => {
       const ref = textRefs.current[moduleId];
       if (ref) {
         ref.focus();
-        // Ne pas sélectionner tout le texte, juste placer le curseur à la fin
         const range = document.createRange();
+        range.selectNodeContents(ref);
         const sel = window.getSelection();
         if (sel) {
           sel.removeAllRanges();
-          // Placer le curseur à la fin du texte
-          const textNode = ref.firstChild;
-          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-            const length = textNode.textContent?.length || 0;
-            range.setStart(textNode, length);
-            range.collapse(true);
-            sel.addRange(range);
-          }
+          sel.addRange(range);
         }
       }
     }, 0);
@@ -75,51 +62,9 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     setEditingModuleId(null);
   }, []);
 
-  // Gestionnaire du double-clic natif
-  const handleTextDoubleClick = useCallback((moduleId: string, event: React.MouseEvent) => {
-    if (previewMode) return;
-    console.log('🖱️ Double-clic natif détecté sur module:', moduleId);
-    event.stopPropagation();
-    event.preventDefault();
-    handleTextClick(moduleId);
-  }, [previewMode, handleTextClick]);
-
   const handleTextInput = useCallback((moduleId: string, content: string) => {
     if (onModuleUpdate) {
-      // Sauvegarder la position du curseur avant la mise à jour
-      const ref = textRefs.current[moduleId];
-      let cursorPosition = 0;
-      if (ref) {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          const preCaretRange = range.cloneRange();
-          preCaretRange.selectNodeContents(ref);
-          preCaretRange.setEnd(range.endContainer, range.endOffset);
-          cursorPosition = preCaretRange.toString().length;
-        }
-      }
-
       onModuleUpdate(moduleId, { body: content });
-
-      // Restaurer la position du curseur après la mise à jour
-      setTimeout(() => {
-        const ref = textRefs.current[moduleId];
-        if (ref) {
-          const textNode = ref.firstChild;
-          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-            const range = document.createRange();
-            const sel = window.getSelection();
-            const pos = Math.min(cursorPosition, textNode.textContent?.length || 0);
-            range.setStart(textNode, pos);
-            range.collapse(true);
-            if (sel) {
-              sel.removeAllRanges();
-              sel.addRange(range);
-            }
-          }
-        }
-      }, 0);
     }
   }, [onModuleUpdate]);
 
@@ -176,7 +121,6 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         // Utilise la couleur héritée si aucune couleur n'est définie pour le texte
         color: textModule.bodyColor || inheritedTextColor || '#154b66',
         textAlign: (textModule.align || 'left') as any,
-        direction: 'ltr', // Force l'écriture de gauche à droite (français)
         ...textStyles
       };
 
@@ -244,7 +188,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                   ) : (
                     <div 
                       style={bodyStyle}
-                      onDoubleClick={(e) => handleTextDoubleClick(m.id, e)}
+                      onClick={() => handleTextClick(m.id)}
                       className={!previewMode ? 'cursor-text' : ''}
                     >
                       {content}
@@ -282,7 +226,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 ) : (
                   <div 
                     style={bodyStyle}
-                    onDoubleClick={(e) => handleTextDoubleClick(m.id, e)}
+                    onClick={() => handleTextClick(m.id)}
                     className={!previewMode ? 'cursor-text' : ''}
                   >
                     {content}
@@ -550,9 +494,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as BlocLogo;
-      const baseBandHeight = logoModule.bandHeight ?? 60;
-      // Réduire de 10% sur mobile uniquement
-      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
+      const bandHeight = logoModule.bandHeight ?? 60;
       const bandColor = logoModule.bandColor ?? '#ffffff';
       const bandPadding = logoModule.bandPadding ?? 16;
       const logoWidth = logoModule.logoWidth ?? 120;
@@ -566,11 +508,9 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           style={{ 
             backgroundColor: bandColor,
             height: bandHeight,
-            width: bandWidthMode === 'container' ? '100%' : '100vw',
-            ...(bandWidthMode === 'container'
-              ? {}
-              : { marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }
-            ),
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent,
@@ -613,62 +553,36 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocPiedDePage
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
-      const baseBandHeight = footerModule.bandHeight ?? 60;
-      // Réduire de 10% sur mobile uniquement
-      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
+      const bandHeight = footerModule.bandHeight ?? 60;
       const bandColor = footerModule.bandColor ?? '#ffffff';
-      const bandPadding = footerModule.bandPadding ?? 24;
+      const bandPadding = footerModule.bandPadding ?? 16;
       const logoWidth = footerModule.logoWidth ?? 120;
       const logoHeight = footerModule.logoHeight ?? 120;
       const align = footerModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
-      
-      // Nouvelles propriétés
-      const footerText = footerModule.footerText ?? '';
-      const footerLinks = footerModule.footerLinks ?? [];
-      const textColor = footerModule.textColor ?? '#000000';
-      const linkColor = footerModule.linkColor ?? '#841b60';
-      const fontSize = footerModule.fontSize ?? 14;
-      const separator = footerModule.separator ?? '|';
-
-      const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0;
-
-      // Ne pas afficher le footer vide en mode preview
-      if (previewMode && !hasContent) {
-        return null;
-      }
 
       return (
         <div 
           key={m.id} 
           style={{ 
             backgroundColor: bandColor,
-            height: hasContent ? 'auto' : bandHeight,
-            minHeight: hasContent ? bandHeight : undefined,
-            width: bandWidthMode === 'container' ? '100%' : '100vw',
-            ...(bandWidthMode === 'container'
-              ? { position: 'relative' }
-              : { position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw' }
-            ),
+            height: bandHeight,
+            width: '100vw',
+            position: 'relative',
+            left: '50%',
+            right: '50%',
+            marginLeft: '-50vw',
+            marginRight: '-50vw',
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
-            justifyContent: 'center',
-            paddingTop: (footerModule as any).spacingTop ?? bandPadding,
-            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
-            paddingLeft: '64px',
-            paddingRight: '64px',
-            gap: '16px',
-            cursor: previewMode ? 'default' : 'pointer'
+            alignItems: 'center',
+            justifyContent,
+            padding: `${bandPadding}px`,
+            paddingTop: (footerModule as any).spacingTop ?? 0,
+            paddingBottom: (footerModule as any).spacingBottom ?? 0
           }}
-          onClick={(e) => {
-            if (!previewMode) {
-              onModuleClick?.(m.id);
-            }
-          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
-          {/* Logo */}
-          {footerModule.logoUrl && (
+          {footerModule.logoUrl ? (
             <img
               src={footerModule.logoUrl}
               alt="Footer logo"
@@ -678,65 +592,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 objectFit: 'contain'
               }}
             />
-          )}
-
-          {/* Texte du footer */}
-          {footerText && (
-            <div
-              style={{
-                color: textColor,
-                fontSize: `${fontSize}px`,
-                textAlign: align,
-                lineHeight: 1.5
-              }}
-            >
-              {footerText}
-            </div>
-          )}
-
-          {/* Liens du footer */}
-          {footerLinks.length > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '8px',
-                alignItems: 'center',
-                justifyContent,
-                fontSize: `${fontSize}px`
-              }}
-            >
-              {footerLinks.map((link, index) => (
-                <React.Fragment key={link.id}>
-                  <a
-                    href={link.url}
-                    target={link.openInNewTab ? '_blank' : '_self'}
-                    rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
-                    style={{
-                      color: linkColor,
-                      textDecoration: 'underline',
-                      cursor: 'pointer'
-                    }}
-                    onClick={(e) => {
-                      if (!previewMode) {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    {link.text}
-                  </a>
-                  {index < footerLinks.length - 1 && separator && (
-                    <span style={{ color: textColor, margin: '0 4px' }}>
-                      {separator}
-                    </span>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          )}
-
-          {/* Placeholder en mode édition */}
-          {!hasContent && !previewMode && (
+          ) : !previewMode ? (
             <span style={{
               color: '#a0aec0',
               fontSize: '14px',
@@ -744,7 +600,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             }}>
               <strong>Pied de page</strong>
             </span>
-          )}
+          ) : null}
         </div>
       );
     }

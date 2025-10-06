@@ -113,6 +113,7 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  // Callback pour forcer l'ouverture de l'onglet Elements
   onForceElementsTab?: () => void;
   // Tabs à masquer (par id: 'campaign', 'export', ...)
   hiddenTabs?: string[];
@@ -121,7 +122,6 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
-  allModules?: Module[];
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
@@ -179,8 +179,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onActiveTabChange,
   // modular editor
   currentScreen,
-  onAddModule,
-  allModules = []
+  onAddModule
 }: HybridSidebarProps, ref) => {
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -765,6 +764,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }
             }}
             onAddElement={onAddElement}
+            selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
           />
