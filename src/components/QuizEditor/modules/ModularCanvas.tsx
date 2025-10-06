@@ -622,9 +622,10 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
-  // Séparer les modules Logo des autres modules
+  // Séparer les modules Logo et Pied de page des autres modules
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo'), [modules]);
+  const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
+  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
   const single = regularModules.length === 1;
@@ -661,13 +662,37 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full" data-modular-zone="1">
-      {/* Modules Logo - positionnés en pleine largeur au-dessus */}
+    <div className="w-full relative" data-modular-zone="1">
+      {/* Modules Logo - positionnés en absolu tout en haut */}
       {logoModules.map((m) => (
         <div 
           key={m.id}
-          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+          className={`absolute top-0 left-1/2 -translate-x-1/2 group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{ width: '100vw', zIndex: 100 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(m);
+          }}
+        >
+          <Toolbar
+            visible={selectedModuleId === m.id}
+            layoutWidth="full"
+            onWidthChange={() => {}}
+            onDelete={() => onDelete(m.id)}
+            expanded={openToolbarFor === m.id}
+            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+            isMobile={device === 'mobile'}
+          />
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+        </div>
+      ))}
+
+      {/* Modules Pied de page - positionnés en absolu tout en bas */}
+      {footerModules.map((m) => (
+        <div 
+          key={m.id}
+          className={`absolute bottom-0 left-1/2 -translate-x-1/2 group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{ width: '100vw', zIndex: 100 }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(m);
