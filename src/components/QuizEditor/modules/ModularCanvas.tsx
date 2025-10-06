@@ -662,13 +662,13 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full relative" data-modular-zone="1">
+    <div className="w-full relative" data-modular-zone="1" style={{ height: '100%' }}>
       {/* Modules Logo - positionnés en absolu tout en haut */}
       {logoModules.map((m) => (
         <div 
           key={m.id}
           className={`absolute top-0 left-1/2 -translate-x-1/2 group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', zIndex: 100 }}
+          style={{ width: '100%', zIndex: 100 }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(m);
@@ -692,7 +692,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
         <div 
           key={m.id}
           className={`absolute bottom-0 left-1/2 -translate-x-1/2 group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', zIndex: 100 }}
+          style={{ width: '100%', zIndex: 100 }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(m);
@@ -711,8 +711,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
         </div>
       ))}
       
-      {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto">
+      {/* Modules réguliers - dans le conteneur centré avec max-width, avec padding pour éviter le chevauchement */}
+      <div className="w-full max-w-[1500px] mx-auto" style={{ paddingTop: (logoModules[0] ? ((logoModules[0] as any).bandHeight ?? 60) + 2 * (((logoModules[0] as any).bandPadding ?? 16)) : 0), paddingBottom: (footerModules[0] ? ((footerModules[0] as any).bandHeight ?? 60) + 2 * (((footerModules[0] as any).bandPadding ?? 16)) : 0) }}>
         <div
           className="flex flex-col gap-0"
           style={{
