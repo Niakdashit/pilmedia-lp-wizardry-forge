@@ -957,6 +957,29 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
         {regularModules.length === 0 && logoModules.length === 0 && (
           <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
         )}
+        {/* BottomSlot: Footer en pleine largeur */}
+        {modules.filter((m) => m.type === 'BlocPiedDePage').map((m) => (
+          <div
+            key={m.id}
+            className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+            style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect?.(m);
+            }}
+          >
+            <Toolbar
+              visible={selectedModuleId === m.id}
+              layoutWidth="full"
+              onWidthChange={() => {}}
+              onDelete={() => onDelete(m.id)}
+              expanded={openToolbarFor === m.id}
+              onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+              isMobile={device === 'mobile'}
+            />
+            {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          </div>
+        ))}
       </div>
     </div>
   );
