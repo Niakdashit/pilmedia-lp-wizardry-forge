@@ -203,6 +203,11 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // Détection de la taille de fenêtre pour la responsivité
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
+  
+  // Détection du ratio 9:16 ou moins pour padding adaptatif
+  const isNarrowRatio = windowSize.width > 0 && windowSize.height > 0 
+    ? (windowSize.height / windowSize.width) >= (16 / 9) 
+    : false;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -1389,7 +1394,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       role === 'module-social' ||
       role === 'module-html' ||
       role === 'module-carte' ||
-      role === 'module-logo';
+      role === 'module-logo' ||
+      role === 'module-footer';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;
@@ -2311,7 +2317,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]"}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : `h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden ${isNarrowRatio ? 'pt-[9px]' : 'pt-[1.25cm]'} pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]`}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (

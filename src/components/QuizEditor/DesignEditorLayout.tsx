@@ -1241,7 +1241,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       role === 'module-social' ||
       role === 'module-html' ||
       role === 'module-carte' ||
-      role === 'module-logo';
+      role === 'module-logo' ||
+      role === 'module-footer';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;

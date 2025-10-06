@@ -636,6 +636,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onElementUpdate={onElementUpdate}
             onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
+            currentScreen={currentScreen}
+            selectedDevice={selectedDevice}
           />
         );
       case 'elements':

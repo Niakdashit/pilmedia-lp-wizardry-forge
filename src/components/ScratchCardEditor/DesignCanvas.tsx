@@ -495,32 +495,53 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [selectedDevice, screenId]);
 
-  // Listen for device-scoped apply to all screens; apply to this screen if device matches
+  // Listen for device-scoped apply to all screens; apply to ALL screens for the specified device
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       const targetDevice = detail.device || selectedDevice;
-      if (detail.device === undefined || detail.device === targetDevice) {
-        // Mettre à jour l'état pour l'appareil spécifique
-        setDeviceBackgrounds(prev => ({
-          ...prev,
-          [targetDevice]: detail.url || null
-        }));
-        // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
-        try {
-          localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
-          // Émettre un événement de synchronisation pour les autres canvas
-          window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId } }));
-        } catch {}
-        // Mettre aussi à jour le design global (par device) pour la persistance et le preview
-        try {
-          updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
-        } catch {}
-      }
+      console.log(`🎨 [${screenId}] Received applyBackgroundAllScreens for device:`, targetDevice);
+      // Appliquer à TOUS les écrans (pas de vérification de screenId)
+      // Mettre à jour l'état pour l'appareil spécifique
+      setDeviceBackgrounds(prev => ({
+        ...prev,
+        [targetDevice]: detail.url || null
+      }));
+      // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
+      try {
+        localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
+        console.log(`✅ [${screenId}] Applied background to device ${targetDevice}`);
+      } catch {}
+      // Mettre aussi à jour le design global (par device) pour la persistance et le preview
+      try {
+        updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
+      } catch {}
     };
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
     return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Listen for clear backgrounds on other screens (when unchecking "apply to all")
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { device?: 'desktop' | 'tablet' | 'mobile'; keepScreenId?: string } | undefined;
+      if (!detail) return;
+      const targetDevice = detail.device || selectedDevice;
+      // Si ce n'est pas l'écran à conserver, supprimer le background pour ce device
+      if (detail.keepScreenId !== screenId) {
+        console.log(`🗑️ [${screenId}] Clearing background for device ${targetDevice}`);
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [targetDevice]: null
+        }));
+        try {
+          localStorage.removeItem(`sc-bg-${targetDevice}-${screenId}`);
+        } catch {}
+      }
+    };
+    window.addEventListener('clearBackgroundOtherScreens', handler as EventListener);
+    return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
   // Charger toutes les images de fond au montage initial (une seule fois)

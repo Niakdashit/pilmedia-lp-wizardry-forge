@@ -184,6 +184,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   );
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Local override for per-screen background images (stored per device to maintain distinct images)
+  const [deviceBackgrounds, setDeviceBackgrounds] = useState<Record<string, string | null>>({
+    desktop: null,
+    tablet: null,
+    mobile: null
+  });
   
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
@@ -439,6 +445,115 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
   }, [localZoom, onZoomChange, activeCanvasRef]);
+
+  // Listen for per-screen background apply and store a local override for this canvas screen & device
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: 'screen1' | 'screen2' | 'screen3'; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
+      if (!detail || typeof detail.url !== 'string') return;
+      if (detail.screenId === (screenId as any)) {
+        const targetDevice = detail.device || selectedDevice;
+        console.log(`📤 [${screenId}] Uploading background for ${targetDevice}:`, detail.url?.substring(0, 50) + '...');
+        // Mettre à jour l'état pour l'appareil spécifique
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [targetDevice]: detail.url || null
+        }));
+        // Stocker pour l'appareil ciblé pour conserver des images distinctes par device
+        try {
+          localStorage.setItem(`quiz-bg-${targetDevice}-${detail.screenId}`, detail.url);
+          console.log(`🔔 [${screenId}] Emitting quiz-bg-sync event for ${detail.screenId}`);
+          // Émettre un événement de synchronisation pour les autres canvas
+          window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: detail.screenId } }));
+        } catch {}
+      }
+    };
+    window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Listen for device-scoped apply to all screens; apply to ALL screens for the specified device
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
+      if (!detail || typeof detail.url !== 'string') return;
+      const targetDevice = detail.device || selectedDevice;
+      console.log(`🎨 [${screenId}] Received applyBackgroundAllScreens for device:`, targetDevice);
+      // Appliquer à TOUS les écrans (pas de vérification de screenId)
+      // Mettre à jour l'état pour l'appareil spécifique
+      setDeviceBackgrounds(prev => ({
+        ...prev,
+        [targetDevice]: detail.url || null
+      }));
+      // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
+      try {
+        localStorage.setItem(`quiz-bg-${targetDevice}-${screenId}`, detail.url);
+        console.log(`✅ [${screenId}] Applied background to device ${targetDevice}`);
+      } catch {}
+    };
+    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Listen for clear backgrounds on other screens (when unchecking "apply to all")
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { device?: 'desktop' | 'tablet' | 'mobile'; keepScreenId?: string } | undefined;
+      if (!detail) return;
+      const targetDevice = detail.device || selectedDevice;
+      // Si ce n'est pas l'écran à conserver, supprimer le background pour ce device
+      if (detail.keepScreenId !== screenId) {
+        console.log(`🗑️ [${screenId}] Clearing background for device ${targetDevice}`);
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [targetDevice]: null
+        }));
+        try {
+          localStorage.removeItem(`quiz-bg-${targetDevice}-${screenId}`);
+        } catch {}
+      }
+    };
+    window.addEventListener('clearBackgroundOtherScreens', handler as EventListener);
+    return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Charger toutes les images de fond au montage initial (une seule fois)
+  useEffect(() => {
+    const loadAllBackgrounds = () => {
+      try {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const loadedBackgrounds: Record<string, string | null> = {};
+        
+        devices.forEach(device => {
+          const saved = localStorage.getItem(`quiz-bg-${device}-${screenId}`);
+          loadedBackgrounds[device] = saved || null;
+        });
+        
+        console.log(`🖼️ [${screenId}] Loading backgrounds for device ${selectedDevice}:`, loadedBackgrounds);
+        setDeviceBackgrounds(loadedBackgrounds);
+      } catch {}
+    };
+
+    loadAllBackgrounds();
+  }, [screenId]);
+
+  // Synchroniser avec les autres canvas du même écran
+  useEffect(() => {
+    const handleStorageSync = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { screenId?: string } | undefined;
+      if (detail?.screenId === screenId) {
+        const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+        const loadedBackgrounds: Record<string, string | null> = {};
+        devices.forEach(device => {
+          const saved = localStorage.getItem(`quiz-bg-${device}-${screenId}`);
+          loadedBackgrounds[device] = saved || null;
+        });
+        setDeviceBackgrounds(loadedBackgrounds);
+      }
+    };
+    window.addEventListener('quiz-bg-sync', handleStorageSync as EventListener);
+    return () => window.removeEventListener('quiz-bg-sync', handleStorageSync as EventListener);
+  }, [screenId]);
 
   // Optimisation mobile pour une expérience tactile parfaite
 
@@ -2085,7 +2200,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             <div 
               className="absolute inset-0" 
               style={{
-                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                background: deviceBackgrounds[selectedDevice]
+                  ? `url(${deviceBackgrounds[selectedDevice]}) center/cover no-repeat`
+                  : (background?.type === 'image'
+                      ? `url(${background.value}) center/cover no-repeat`
+                      : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)')
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();

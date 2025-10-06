@@ -67,6 +67,23 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   // Option: appliquer l'image de fond à tous les écrans (desktop/tablette/mobile)
   const [applyToAllScreens, setApplyToAllScreens] = useState<boolean>(false);
   
+  // Gérer le changement de la checkbox
+  const handleApplyToAllScreensChange = (checked: boolean) => {
+    setApplyToAllScreens(checked);
+    
+    // Si on décoche, supprimer les images des autres écrans pour le device courant
+    if (!checked && typeof window !== 'undefined' && selectedDevice) {
+      console.log('🗑️ [BackgroundPanel] Clearing backgrounds from other screens for device:', selectedDevice);
+      const evt = new CustomEvent('clearBackgroundOtherScreens', { 
+        detail: { 
+          device: selectedDevice, 
+          keepScreenId: currentScreen 
+        } 
+      });
+      window.dispatchEvent(evt);
+    }
+  };
+  
   // États pour personnaliser les couleurs des effets rapides
   // const [effectBackgroundColor, setEffectBackgroundColor] = useState<string>('#FFD700');
   // const [effectTextColor, setEffectTextColor] = useState<string>('#000000');
@@ -570,7 +587,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
               type="checkbox"
               className="w-4 h-4"
               checked={applyToAllScreens}
-              onChange={(e) => setApplyToAllScreens(e.target.checked)}
+              onChange={(e) => handleApplyToAllScreensChange(e.target.checked)}
             />
             <span className="text-sm text-gray-700">Appliquer à tous les écrans</span>
           </label>
