@@ -142,7 +142,7 @@ const Toolbar: React.FC<{
   );
 }
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop', onSelect?: (module: Module) => void) => {
   // const isMobileDevice = device === 'mobile';
 
   const commonStyle: React.CSSProperties = {
@@ -667,7 +667,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full" data-modular-zone="1">
+    <div className="w-full flex flex-col h-full" data-modular-zone="1">
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
         <div 
@@ -688,14 +688,14 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
             isMobile={device === 'mobile'}
           />
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
         </div>
       ))}
       
       {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto">
+      <div className="w-full max-w-[1500px] mx-auto flex-1 flex flex-col">
         <div
-          className="flex flex-col gap-0"
+          className="flex flex-col gap-0 flex-1"
           style={{
             minHeight: single ? minHeightPx : undefined,
             justifyContent: 'flex-start'
@@ -930,7 +930,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                       <GripVertical className="h-3.5 w-3.5" />
                     </button>
                     <div className={paddingClass}>
-                      {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                      {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
                     </div>
                     <button
                       type="button"
@@ -977,7 +977,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
             isMobile={device === 'mobile'}
           />
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
         </div>
       ))}
     </div>

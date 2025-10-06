@@ -143,7 +143,7 @@ const Toolbar: React.FC<{
 }
 
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop', onSelect?: (module: Module) => void) => {
   // const isMobileDevice = device === 'mobile';
   // const deviceScale = isMobileDevice ? 0.8 : 1;
 
@@ -691,7 +691,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
             isMobile={device === 'mobile'}
           />
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
         </div>
       ))}
       
@@ -934,7 +934,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                       <GripVertical className="h-3.5 w-3.5" />
                     </button>
                     <div className={paddingClass}>
-                      {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                      {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
                     </div>
                     <button
                       type="button"
@@ -983,7 +983,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
                 isMobile={device === 'mobile'}
               />
-              {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+              {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
             </div>
           ))}
         </div>

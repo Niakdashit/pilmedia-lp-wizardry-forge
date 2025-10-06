@@ -2299,7 +2299,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   boxSizing: 'border-box'
                 }}
               >
-                <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                 <div className="w-full max-w-[1500px] flex flex-col" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
                   <ModularCanvas
                     screen={screenId as any}
                     modules={modularModules}
