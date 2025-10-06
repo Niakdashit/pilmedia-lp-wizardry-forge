@@ -14,6 +14,10 @@ interface QuizModuleRendererProps {
   inheritedTextColor?: string;
   // Callback pour mettre à jour un module (utilisé en mode édition)
   onModuleUpdate?: (moduleId: string, patch: Partial<Module>) => void;
+  // Contrôle le mode de largeur des bandes (logo/pied-de-page)
+  // 'viewport' => 100vw avec marges négatives pour déborder du conteneur
+  // 'container' => 100% de la largeur du conteneur parent (ex: dans le canvas)
+  bandWidthMode?: 'viewport' | 'container';
 }
 
 /**
@@ -32,27 +36,36 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   className = '',
   onButtonClick,
   inheritedTextColor,
-  onModuleUpdate
+  onModuleUpdate,
+  bandWidthMode = 'viewport'
 }) => {
   const isMobileDevice = device === 'mobile';
   const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const lastClickTime = useRef<Record<string, number>>({});
 
   // Fonctions de gestion de l'édition de texte
-  const handleTextClick = useCallback((moduleId: string) => {
+  const handleTextClick = useCallback((moduleId: string, event?: React.MouseEvent) => {
     if (previewMode) return;
     setEditingModuleId(moduleId);
     setTimeout(() => {
       const ref = textRefs.current[moduleId];
       if (ref) {
         ref.focus();
+        // Ne pas sélectionner tout le texte, juste placer le curseur à la fin
         const range = document.createRange();
-        range.selectNodeContents(ref);
         const sel = window.getSelection();
         if (sel) {
           sel.removeAllRanges();
-          sel.addRange(range);
+          // Placer le curseur à la fin du texte
+          const textNode = ref.firstChild;
+          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+            const length = textNode.textContent?.length || 0;
+            range.setStart(textNode, length);
+            range.collapse(true);
+            sel.addRange(range);
+          }
         }
       }
     }, 0);
@@ -62,9 +75,55 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     setEditingModuleId(null);
   }, []);
 
+  // Gestionnaire du double-clic natif
+  const handleTextDoubleClick = useCallback((moduleId: string, event: React.MouseEvent) => {
+    console.log('🖱️ [QuizRenderer] Double-clic reçu sur module:', moduleId, 'previewMode:', previewMode);
+    if (previewMode) {
+      console.log('🚫 [QuizRenderer] Ignoré car previewMode=true');
+      return;
+    }
+    console.log('✅ [QuizRenderer] Activation du mode édition');
+    event.stopPropagation();
+    event.preventDefault();
+    handleTextClick(moduleId);
+  }, [previewMode, handleTextClick]);
+
   const handleTextInput = useCallback((moduleId: string, content: string) => {
     if (onModuleUpdate) {
+      // Sauvegarder la position du curseur avant la mise à jour
+      const ref = textRefs.current[moduleId];
+      let cursorPosition = 0;
+      if (ref) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const preCaretRange = range.cloneRange();
+          preCaretRange.selectNodeContents(ref);
+          preCaretRange.setEnd(range.endContainer, range.endOffset);
+          cursorPosition = preCaretRange.toString().length;
+        }
+      }
+
       onModuleUpdate(moduleId, { body: content });
+
+      // Restaurer la position du curseur après la mise à jour
+      setTimeout(() => {
+        const ref = textRefs.current[moduleId];
+        if (ref) {
+          const textNode = ref.firstChild;
+          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            const pos = Math.min(cursorPosition, textNode.textContent?.length || 0);
+            range.setStart(textNode, pos);
+            range.collapse(true);
+            if (sel) {
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }
+      }, 0);
     }
   }, [onModuleUpdate]);
 
@@ -121,6 +180,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         // Utilise la couleur héritée si aucune couleur n'est définie pour le texte
         color: textModule.bodyColor || inheritedTextColor || '#154b66',
         textAlign: (textModule.align || 'left') as any,
+        direction: 'ltr', // Force l'écriture de gauche à droite (français)
         ...textStyles
       };
 
@@ -188,7 +248,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                   ) : (
                     <div 
                       style={bodyStyle}
-                      onClick={() => handleTextClick(m.id)}
+                      onDoubleClick={(e) => handleTextDoubleClick(m.id, e)}
                       className={!previewMode ? 'cursor-text' : ''}
                     >
                       {content}
@@ -226,7 +286,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 ) : (
                   <div 
                     style={bodyStyle}
-                    onClick={() => handleTextClick(m.id)}
+                    onDoubleClick={(e) => handleTextDoubleClick(m.id, e)}
                     className={!previewMode ? 'cursor-text' : ''}
                   >
                     {content}
@@ -494,7 +554,9 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as BlocLogo;
-      const bandHeight = logoModule.bandHeight ?? 60;
+      const baseBandHeight = logoModule.bandHeight ?? 60;
+      // Réduire de 10% sur mobile uniquement
+      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
       const bandColor = logoModule.bandColor ?? '#ffffff';
       const bandPadding = logoModule.bandPadding ?? 16;
       const logoWidth = logoModule.logoWidth ?? 120;
@@ -508,9 +570,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           style={{ 
             backgroundColor: bandColor,
             height: bandHeight,
-            width: '100vw',
-            marginLeft: 'calc(-50vw + 50%)',
-            marginRight: 'calc(-50vw + 50%)',
+            width: bandWidthMode === 'container' ? '100%' : '100vw',
+            ...(bandWidthMode === 'container'
+              ? {}
+              : { marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }
+            ),
             display: 'flex',
             alignItems: 'center',
             justifyContent,
@@ -553,36 +617,65 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocPiedDePage
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
-      const bandHeight = footerModule.bandHeight ?? 60;
+      const baseBandHeight = footerModule.bandHeight ?? 60;
+      // Réduire de 10% sur mobile uniquement
+      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
-      const bandPadding = footerModule.bandPadding ?? 16;
+      const bandPadding = footerModule.bandPadding ?? 24;
       const logoWidth = footerModule.logoWidth ?? 120;
       const logoHeight = footerModule.logoHeight ?? 120;
       const align = footerModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+      
+      // Nouvelles propriétés
+      const footerText = footerModule.footerText ?? '';
+      const footerLinks = footerModule.footerLinks ?? [];
+      const textColor = footerModule.textColor ?? '#000000';
+      const linkColor = footerModule.linkColor ?? '#841b60';
+      const fontSize = footerModule.fontSize ?? 14;
+      const separator = footerModule.separator ?? '|';
+      const socialLinks = footerModule.socialLinks ?? [];
+      const socialIconSize = footerModule.socialIconSize ?? 24;
+      const socialIconColor = footerModule.socialIconColor ?? '#000000';
+
+      const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0 || socialLinks.length > 0;
+
+      // Ne pas afficher le footer vide en mode preview
+      if (previewMode && !hasContent) {
+        return null;
+      }
 
       return (
         <div 
           key={m.id} 
           style={{ 
             backgroundColor: bandColor,
-            height: bandHeight,
-            width: '100vw',
-            position: 'relative',
-            left: '50%',
-            right: '50%',
-            marginLeft: '-50vw',
-            marginRight: '-50vw',
+            height: hasContent ? 'auto' : bandHeight,
+            minHeight: hasContent ? bandHeight : undefined,
+            width: bandWidthMode === 'container' ? '100%' : '100vw',
+            ...(bandWidthMode === 'container'
+              ? { position: 'relative' }
+              : { position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw' }
+            ),
             display: 'flex',
-            alignItems: 'center',
-            justifyContent,
-            padding: `${bandPadding}px`,
-            paddingTop: (footerModule as any).spacingTop ?? 0,
-            paddingBottom: (footerModule as any).spacingBottom ?? 0
+            flexDirection: 'column',
+            alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
+            justifyContent: 'center',
+            paddingTop: (footerModule as any).spacingTop ?? bandPadding,
+            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
+            paddingLeft: '64px',
+            paddingRight: '64px',
+            gap: '16px',
+            cursor: previewMode ? 'default' : 'pointer'
           }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={(e) => {
+            if (!previewMode) {
+              onModuleClick?.(m.id);
+            }
+          }}
         >
-          {footerModule.logoUrl ? (
+          {/* Logo */}
+          {footerModule.logoUrl && (
             <img
               src={footerModule.logoUrl}
               alt="Footer logo"
@@ -592,7 +685,119 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 objectFit: 'contain'
               }}
             />
-          ) : !previewMode ? (
+          )}
+
+          {/* Texte du footer */}
+          {footerText && (
+            <div
+              style={{
+                color: textColor,
+                fontSize: `${fontSize}px`,
+                textAlign: align,
+                lineHeight: 1.5
+              }}
+            >
+              {footerText}
+            </div>
+          )}
+
+          {/* Liens du footer */}
+          {footerLinks.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+                alignItems: 'center',
+                justifyContent,
+                fontSize: `${fontSize}px`
+              }}
+            >
+              {footerLinks.map((link, index) => (
+                <React.Fragment key={link.id}>
+                  <a
+                    href={link.url}
+                    target={link.openInNewTab ? '_blank' : '_self'}
+                    rel={link.openInNewTab ? 'noopener noreferrer' : undefined}
+                    style={{
+                      color: linkColor,
+                      textDecoration: 'underline',
+                      cursor: 'pointer'
+                    }}
+                    onClick={(e) => {
+                      if (!previewMode) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    {link.text}
+                  </a>
+                  {index < footerLinks.length - 1 && separator && (
+                    <span style={{ color: textColor, margin: '0 4px' }}>
+                      {separator}
+                    </span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+
+          {/* Réseaux sociaux */}
+          {socialLinks.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'center',
+                justifyContent
+              }}
+            >
+              {socialLinks.map((social) => {
+                const getSocialIcon = (platform: string) => {
+                  const icons: Record<string, string> = {
+                    facebook: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z',
+                    linkedin: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z',
+                    twitter: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z',
+                    instagram: 'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z',
+                    youtube: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z',
+                    tiktok: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z'
+                  };
+                  return icons[platform] || '';
+                };
+
+                return (
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      cursor: 'pointer'
+                    }}
+                    onClick={(e) => {
+                      if (!previewMode) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <svg
+                      width={socialIconSize}
+                      height={socialIconSize}
+                      viewBox="0 0 24 24"
+                      fill={socialIconColor}
+                      style={{ display: 'block' }}
+                    >
+                      <path d={getSocialIcon(social.platform)} />
+                    </svg>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Placeholder en mode édition */}
+          {!hasContent && !previewMode && (
             <span style={{
               color: '#a0aec0',
               fontSize: '14px',
@@ -600,7 +805,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             }}>
               <strong>Pied de page</strong>
             </span>
-          ) : null}
+          )}
         </div>
       );
     }

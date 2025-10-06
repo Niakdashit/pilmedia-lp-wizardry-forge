@@ -1234,14 +1234,17 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   useEffect(() => {
     const role = (selectedElement as any)?.role;
     const moduleId = (selectedElement as any)?.moduleId as string | undefined;
-    const isModularRole =
+    const isModularRole = 
+      role === 'module-text' ||
       role === 'module-button' ||
       role === 'module-image' ||
       role === 'module-video' ||
       role === 'module-social' ||
       role === 'module-html' ||
       role === 'module-carte' ||
-      role === 'module-logo';
+      role === 'module-logo' ||
+      role === 'module-footer' ||
+      role === 'module-header';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;
@@ -2228,6 +2231,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
+                allModules={[
+                  ...(modularPage.screens.screen1 || []),
+                  ...(modularPage.screens.screen2 || []),
+                  ...(modularPage.screens.screen3 || [])
+                ]}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
