@@ -179,6 +179,7 @@ interface ScratchCardEditorLayoutProps {
 
 const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -313,6 +314,25 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setSelectedDevice(device);
     setCanvasZoom(getDefaultZoom(device));
   }, []);
+
+  // Réinitialiser l'image de fond quand on change de route (uniquement si on vient d'une autre page)
+  const prevPathRef = useRef<string>('');
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const prevPath = prevPathRef.current;
+    
+    // Réinitialiser uniquement si on vient d'une autre page ET qu'il y a une image
+    if (prevPath && prevPath !== currentPath && canvasBackground.type === 'image') {
+      console.log('🧹 [ScratchEditor] Navigation détectée - réinitialisation du fond');
+      setCanvasBackground(
+        mode === 'template'
+          ? { type: 'color', value: '#4ECDC4' }
+          : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
+      );
+    }
+    
+    prevPathRef.current = currentPath;
+  }, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
 
   // Recharger l'image de fond correcte depuis la campaign quand on change de device
   useEffect(() => {
@@ -924,7 +944,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   }, []);
 
   // Chargement d'un modèle transmis via navigation state
-  const location = useLocation();
   useEffect(() => {
     const state = (location as any)?.state as any;
     const template = state?.templateCampaign;

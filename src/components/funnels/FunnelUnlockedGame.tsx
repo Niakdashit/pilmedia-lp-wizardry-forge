@@ -238,10 +238,27 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       return { background: `url(${perScreenUrl}) center/cover no-repeat` };
     }
     
-    // Déterminer quelle image de fond utiliser selon le device
     const design = liveCampaign?.design || campaign?.design;
-    let backgroundImageUrl: string | undefined;
+    const canvasBackground = liveCampaign?.canvasConfig?.background || design?.background;
     
+    // Debug: log pour voir ce qu'on reçoit
+    console.log('🖼️ [FunnelUnlockedGame] Background debug:', {
+      currentScreen,
+      previewMode,
+      designBackground: design?.background,
+      canvasBackground,
+      designBackgroundImage: design?.backgroundImage,
+      designMobileBackgroundImage: design?.mobileBackgroundImage
+    });
+    
+    // PRIORITÉ 1: Vérifier si design.background est un objet image
+    if (design?.background && typeof design.background === 'object' && design.background.type === 'image' && design.background.value) {
+      console.log('✅ [FunnelUnlockedGame] Using design.background.value:', design.background.value.substring(0, 50) + '...');
+      return { background: `url(${design.background.value}) center/cover no-repeat` };
+    }
+    
+    // PRIORITÉ 2: Vérifier les propriétés backgroundImage/mobileBackgroundImage
+    let backgroundImageUrl: string | undefined;
     if (previewMode === 'mobile') {
       // Priorité à mobileBackgroundImage pour mobile, sinon fallback sur backgroundImage
       backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
@@ -252,16 +269,20 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     
     // Si on a une URL d'image spécifique, l'utiliser
     if (backgroundImageUrl) {
+      console.log('✅ [FunnelUnlockedGame] Using backgroundImageUrl:', backgroundImageUrl.substring(0, 50) + '...');
       return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
     }
     
-    // Sinon, utiliser le background général (couleur ou gradient)
-    const canvasBackground = liveCampaign?.canvasConfig?.background || design?.background;
-    return {
-      background: canvasBackground?.type === 'image'
-        ? `url(${canvasBackground.value}) center/cover no-repeat`
-        : canvasBackground?.value || design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
-    };
+    // PRIORITÉ 3: Vérifier canvasBackground
+    if (canvasBackground?.type === 'image' && canvasBackground?.value) {
+      console.log('✅ [FunnelUnlockedGame] Using canvasBackground.value:', canvasBackground.value.substring(0, 50) + '...');
+      return { background: `url(${canvasBackground.value}) center/cover no-repeat` };
+    }
+    
+    // FALLBACK: Utiliser la couleur ou le gradient
+    const fallbackBg = canvasBackground?.value || design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
+    console.log('⚠️ [FunnelUnlockedGame] Using fallback background:', fallbackBg);
+    return { background: fallbackBg };
   }, [currentScreen, previewMode, liveCampaign?.canvasConfig?.background, liveCampaign?.design, campaign?.design, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié (comme FunnelQuizParticipate)

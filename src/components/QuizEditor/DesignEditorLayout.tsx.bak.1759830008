@@ -180,6 +180,12 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     setCanvasZoom(getDefaultZoom(device));
   };
 
+  // État pour tracker la position de scroll (quel écran est visible)
+  // Défini tôt pour être disponible dans les useEffect ci-dessous
+  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
+  // Modular editor JSON state (doit être au-dessus des hooks qui s'y réfèrent)
+  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
   const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
@@ -332,6 +338,36 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
     return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
   }, [setCampaign, selectedDevice]);
+
+  // Écoute l'événement pour appliquer l'image uniquement à l'écran courant (checkbox décochée)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: string; device?: string } | undefined;
+      const url = detail?.url;
+      const screenId = detail?.screenId;
+      const targetDevice = detail?.device || 'desktop';
+      
+      if (!url || !screenId) return;
+      
+      console.log('🎨 [QuizEditor] Received applyBackgroundCurrentScreen:', { 
+        url: url.substring(0, 50), 
+        screenId, 
+        targetDevice, 
+        selectedDevice,
+        currentScreen 
+      });
+      
+      // Appliquer uniquement si c'est le device actuel ET l'écran courant
+      if (targetDevice === selectedDevice && screenId === currentScreen) {
+        setCanvasBackground({ type: 'image', value: url });
+        console.log('✅ [QuizEditor] Image appliquée uniquement à l\'écran courant:', screenId);
+      } else {
+        console.log('⏭️ [QuizEditor] Image ignorée (écran différent ou device différent)');
+      }
+    };
+    window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+  }, [selectedDevice, currentScreen]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -395,6 +431,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [selectedElements, setSelectedElements] = useState<any[]>([]);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
   const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
@@ -408,13 +445,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       timestamp: new Date().toISOString()
     });
     setSelectedElement(element);
-  };
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
-  
+  };
   // État pour tracker la position de scroll (quel écran est visible)
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   // Modular editor JSON state
-  const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();

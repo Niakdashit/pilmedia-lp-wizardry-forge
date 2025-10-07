@@ -5,6 +5,7 @@ import FormHandler from './components/FormHandler';
 import type { Tables } from '@/integrations/supabase/types';
 import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
 import { useParticipations } from '../../hooks/useParticipations';
+import type { Module } from '@/types/modularEditor';
 
 interface FunnelQuizParticipateProps {
   campaign: Tables<'campaigns'>;
@@ -31,11 +32,43 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('quizStyleUpdateFallback', handleStyleUpdate);
+    window.addEventListener('modularModuleSelected', handleStyleUpdate);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
       window.removeEventListener('quizStyleUpdateFallback', handleStyleUpdate);
+      window.removeEventListener('modularModuleSelected', handleStyleUpdate);
     };
+  }, []);
+
+  // Écouter les MAJ d'image de fond (DesignCanvas) pour forcer le re-render du preview
+  React.useEffect(() => {
+    const handleBgSync = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail;
+      console.log('🔄 [FunnelQuizParticipate] Background sync event:', detail);
+      setForceUpdate(prev => prev + 1);
+    };
+    window.addEventListener('sc-bg-sync', handleBgSync);
+    window.addEventListener('applyBackgroundAllScreens', handleBgSync);
+    window.addEventListener('applyBackgroundCurrentScreen', handleBgSync);
+    return () => {
+      window.removeEventListener('sc-bg-sync', handleBgSync);
+      window.removeEventListener('applyBackgroundAllScreens', handleBgSync);
+      window.removeEventListener('applyBackgroundCurrentScreen', handleBgSync);
+    };
+  }, []);
+
+  // Synchronize with localStorage changes (cross-frame) for background overrides
+  React.useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key.startsWith('sc-bg-')) {
+        console.log('🔄 [FunnelQuizParticipate] storage change:', e.key);
+        setForceUpdate(prev => prev + 1);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const rawReplayButton = (campaign as any)?.screens?.[3]?.replayButtonText;
@@ -61,11 +94,49 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     ]
   ), [campaign?.form_fields]);
 
-  const backgroundStyle: React.CSSProperties = useMemo(() => ({
-    background: (campaign.design as any)?.background?.type === 'image'
-      ? `url(${(campaign.design as any).background.value}) center/cover no-repeat`
-      : (campaign.design as any)?.background?.value || '#ffffff'
-  }), [campaign?.design, forceUpdate]);
+  const backgroundStyle: React.CSSProperties = useMemo(() => {
+    const design = (campaign.design as any);
+    const canvasBackground = (campaign as any)?.canvasConfig?.background || design?.background;
+    
+    // Debug: log pour voir ce qu'on reçoit
+    console.log('🖼️ [FunnelQuizParticipate] Background debug:', {
+      previewMode,
+      designBackground: design?.background,
+      canvasBackground,
+      designBackgroundImage: design?.backgroundImage,
+      designMobileBackgroundImage: design?.mobileBackgroundImage
+    });
+    
+    // PRIORITÉ 1: Vérifier si design.background est un objet image
+    if (design?.background && typeof design.background === 'object' && design.background.type === 'image' && design.background.value) {
+      console.log('✅ [FunnelQuizParticipate] Using design.background.value:', design.background.value.substring(0, 50) + '...');
+      return { background: `url(${design.background.value}) center/cover no-repeat` };
+    }
+    
+    // PRIORITÉ 2: Vérifier les propriétés backgroundImage/mobileBackgroundImage
+    let backgroundImageUrl: string | undefined;
+    if (previewMode === 'mobile') {
+      backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
+    } else {
+      backgroundImageUrl = design?.backgroundImage;
+    }
+    
+    if (backgroundImageUrl) {
+      console.log('✅ [FunnelQuizParticipate] Using backgroundImageUrl:', backgroundImageUrl.substring(0, 50) + '...');
+      return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
+    }
+    
+    // PRIORITÉ 3: Vérifier canvasBackground
+    if (canvasBackground?.type === 'image' && canvasBackground?.value) {
+      console.log('✅ [FunnelQuizParticipate] Using canvasBackground.value:', canvasBackground.value.substring(0, 50) + '...');
+      return { background: `url(${canvasBackground.value}) center/cover no-repeat` };
+    }
+    
+    // FALLBACK: Utiliser la couleur ou le gradient
+    const fallbackBg = canvasBackground?.value || design?.background?.value || '#ffffff';
+    console.log('⚠️ [FunnelQuizParticipate] Using fallback background:', fallbackBg);
+    return { background: fallbackBg };
+  }, [campaign?.design, (campaign as any)?.canvasConfig?.background, previewMode, forceUpdate]);
 
   // Récupérer directement modularPage pour un rendu unifié
   const campaignAny = campaign as any;
@@ -73,6 +144,96 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
+
+  type LayoutWidth = NonNullable<Module['layoutWidth']>;
+  const layoutSpan: Record<LayoutWidth, number> = {
+    full: 6,
+    half: 3,
+    twoThirds: 4,
+    third: 2
+  };
+
+  const getModuleSpan = (module: Module): number => {
+    const width = (module.layoutWidth || 'full') as LayoutWidth;
+    return layoutSpan[width] ?? 6;
+  };
+
+  const buildRows = (mods: Module[]): Module[][] => {
+    const rows: Module[][] = [];
+    let current: Module[] = [];
+    let currentUnits = 0;
+    const MAX_ROW_UNITS = 6;
+
+    mods.forEach((module) => {
+      const span = getModuleSpan(module);
+      if (current.length > 0 && currentUnits + span > MAX_ROW_UNITS) {
+        rows.push(current);
+        current = [];
+        currentUnits = 0;
+      }
+
+      current.push(module);
+      currentUnits += span;
+
+      if (currentUnits === MAX_ROW_UNITS) {
+        rows.push(current);
+        current = [];
+        currentUnits = 0;
+      }
+    });
+
+    if (current.length > 0) {
+      rows.push(current);
+    }
+
+    return rows;
+  };
+
+  const renderModuleGrid = (mods: Module[], options?: { onButtonClick?: () => void; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+    if (!mods?.length) return null;
+
+    const device = options?.device || previewMode;
+    const isMobile = device === 'mobile';
+    const modulePaddingClass = isMobile ? 'p-0' : 'p-4';
+    const rows = buildRows(mods);
+
+    return (
+      <div className="w-full max-w-[1500px] mx-auto">
+        <div className="flex flex-col gap-6">
+          {rows.map((row, rowIndex) => {
+            const hasSplit = row.some((module) => getModuleSpan(module) !== 6);
+            return (
+              <div
+                key={`preview-row-${rowIndex}`}
+                className={`grid grid-cols-1 gap-4 md:gap-6 ${hasSplit ? 'md:grid-cols-6' : 'md:grid-cols-6'}`}
+              >
+                {row.map((module) => {
+                  const span = getModuleSpan(module);
+                  const spanClass = span === 6 ? 'md:col-span-6' : `md:col-span-${span}`;
+                  const paddingClass = module.type === 'BlocTexte'
+                    ? (isMobile ? 'px-0 py-0' : 'px-0 py-1')
+                    : modulePaddingClass;
+
+                  return (
+                    <div key={module.id} className={`w-full ${spanClass}`}>
+                      <div className={`w-full ${paddingClass}`}>
+                        <QuizModuleRenderer
+                          modules={[module]}
+                          previewMode={true}
+                          device={device}
+                          onButtonClick={options?.onButtonClick}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
   
   console.log('🔍 [FunnelQuizParticipate] Using modularPage:', {
     screen1Count: modules.length,
@@ -110,6 +271,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     : Array.isArray(modules)
     ? (modules as any[]).find((m) => m?.type === 'BlocBouton')
     : undefined;
+
+  const hasPrimaryCTA = Boolean(ctaModule);
 
   // Styles par défaut (hérités de gameConfig/buttonConfig) si aucun BlocBouton n'est présent
   const defaultParticipateStyles = useMemo(() => {
@@ -189,17 +352,10 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         {phase === 'participate' && (
           <div className="relative z-10 h-full flex flex-col items-center justify-center gap-6 p-8">
             {/* Render modules using unified QuizModuleRenderer */}
-            {modules.length > 0 && (
-              <QuizModuleRenderer 
-                modules={modules}
-                previewMode={true}
-                device={previewMode}
-                onButtonClick={handleParticipate}
-              />
-            )}
+            {renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })}
             
-            {/* Bouton Participer - masqué si une carte contient déjà un bouton */}
-            {!carteWithButton && (
+            {/* Bouton Participer - affiché uniquement si aucun CTA modulaire n'est présent */}
+            {!hasPrimaryCTA && (
               <button
                 onClick={handleParticipate}
                 className={ctaClassName}
@@ -215,13 +371,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         {phase === 'quiz' && (
           <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 gap-6">
             {/* Modules de l'écran 2 */}
-            {modules2.length > 0 && (
-              <QuizModuleRenderer 
-                modules={modules2}
-                previewMode={true}
-                device={previewMode}
-              />
-            )}
+            {renderModuleGrid(modules2 as Module[], { device: previewMode })}
             <div className="w-full max-w-2xl">
               {/* Utiliser le composant TemplatedQuiz pour afficher le quiz */}
               <TemplatedQuiz
@@ -259,12 +409,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
             {/* Modules de l'écran 3 */}
             {modules3.length > 0 && (
               <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
-                <QuizModuleRenderer 
-                  modules={modules3}
-                  previewMode={true}
-                  device={previewMode}
-                  onButtonClick={handleReplay}
-                />
+                {renderModuleGrid(modules3 as Module[], { onButtonClick: handleReplay, device: previewMode })}
               </div>
             )}
 
