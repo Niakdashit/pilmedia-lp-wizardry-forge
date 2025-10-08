@@ -376,6 +376,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           user_email: formData.email
         });
       }
+      console.log('✅ Form validated! Setting formValidated to true');
       setFormValidated(true);
       setShowFormModal(false);
       setShowValidationMessage(true);
@@ -591,7 +592,13 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               </div>
 
               {/* Game Component (Roue ou Cartes selon le type) */}
-              <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 50 }}>
+              <div 
+                className="absolute inset-0 flex items-center justify-center" 
+                style={{ 
+                  zIndex: formValidated ? 100 : 50,
+                  pointerEvents: formValidated ? 'auto' : 'none'
+                }}
+              >
                 {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
                   <GameRenderer
                     campaign={liveCampaign}
@@ -600,7 +607,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     previewMode={previewMode}
                     mobileConfig={mobileConfig}
                     onGameFinish={handleGameFinish}
-                    onGameStart={() => console.log('Game started')}
+                    onGameStart={() => console.log('🎮 Game started')}
                     onGameButtonClick={handleCardClick}
                   />
                 ) : (
@@ -617,6 +624,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   className="absolute inset-0 cursor-pointer" 
                   style={{ zIndex: 999999, backgroundColor: 'transparent' }}
                   onClick={(e) => {
+                    console.log('🚫 Overlay clicked - opening form modal');
                     e.preventDefault();
                     e.stopPropagation();
                     handleCardClick();
@@ -632,6 +640,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     handleCardClick();
                   }}
                 />
+              )}
+              {formValidated && (
+                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 9999, background: 'lime', padding: '5px', fontSize: '12px' }}>
+                  ✅ Form validated - Wheel should be clickable
+                </div>
               )}
             </>
           )}
