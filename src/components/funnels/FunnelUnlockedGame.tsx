@@ -592,25 +592,23 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
               {/* Game Component (Roue ou Cartes selon le type) */}
               <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 50 }}>
-                <div className={formValidated ? 'pointer-events-auto' : 'pointer-events-none'}>
-                  {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
-                    <GameRenderer
-                      campaign={liveCampaign}
-                      formValidated={formValidated}
-                      showValidationMessage={false}
-                      previewMode={previewMode}
-                      mobileConfig={mobileConfig}
-                      onGameFinish={handleGameFinish}
-                      onGameStart={() => console.log('Game started')}
-                      onGameButtonClick={handleCardClick}
-                    />
-                  ) : (
-                    <ScratchCardCanvas 
-                      selectedDevice={previewMode}
-                      previewMode={!formValidated}
-                    />
-                  )}
-                </div>
+                {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
+                  <GameRenderer
+                    campaign={liveCampaign}
+                    formValidated={formValidated}
+                    showValidationMessage={false}
+                    previewMode={previewMode}
+                    mobileConfig={mobileConfig}
+                    onGameFinish={handleGameFinish}
+                    onGameStart={() => console.log('Game started')}
+                    onGameButtonClick={handleCardClick}
+                  />
+                ) : (
+                  <ScratchCardCanvas 
+                    selectedDevice={previewMode}
+                    previewMode={!formValidated}
+                  />
+                )}
               </div>
               
               {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
