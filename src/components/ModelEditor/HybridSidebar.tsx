@@ -9,9 +9,7 @@ import {
   Palette
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
-import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
-import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
+import { BackgroundPanel, AssetsPanel, TextEffectsPanel } from '@/components/shared';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';

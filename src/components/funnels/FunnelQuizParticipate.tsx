@@ -7,6 +7,18 @@ import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
 import { useParticipations } from '../../hooks/useParticipations';
 import type { Module } from '@/types/modularEditor';
 
+const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 56,
+  tablet: 40,
+  mobile: 28
+};
+
+const SAFE_ZONE_RADIUS: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 40,
+  tablet: 32,
+  mobile: 24
+};
+
 interface FunnelQuizParticipateProps {
   campaign: Tables<'campaigns'>;
   previewMode: 'mobile' | 'tablet' | 'desktop';
@@ -85,6 +97,9 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   })();
 
   const { createParticipation } = useParticipations();
+
+  const safeZonePadding = SAFE_ZONE_PADDING[previewMode] ?? SAFE_ZONE_PADDING.desktop;
+  const safeZoneRadius = SAFE_ZONE_RADIUS[previewMode] ?? SAFE_ZONE_RADIUS.desktop;
 
   const fields = useMemo(() => (
     (campaign?.form_fields && Array.isArray(campaign.form_fields)) ? campaign.form_fields : [
@@ -198,7 +213,7 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
     const rows = buildRows(mods);
 
     return (
-      <div className="w-full max-w-[1500px] mx-auto">
+      <div className="w-full max-w-[1500px]">
         <div className="flex flex-col gap-6">
           {rows.map((row, rowIndex) => {
             const hasSplit = row.some((module) => getModuleSpan(module) !== 6);
@@ -346,11 +361,24 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   return (
     <div className="w-full h-[100dvh] min-h-[100dvh]">
       <div className="relative w-full h-full">
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute border border-dashed border-white/60"
+            style={{
+              inset: safeZonePadding,
+              borderRadius: safeZoneRadius,
+              boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+            }}
+          />
+        </div>
         <div className="absolute inset-0" style={backgroundStyle} />
 
         {/* Participate phase */}
         {phase === 'participate' && (
-          <div className="relative z-10 h-full flex flex-col items-center justify-center gap-6 p-8">
+          <div
+            className="relative z-10 h-full flex flex-col gap-6"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
             {/* Render modules using unified QuizModuleRenderer */}
             {renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })}
             
@@ -369,7 +397,10 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
         {/* Quiz phase - Afficher le quiz réel */}
         {phase === 'quiz' && (
-          <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 gap-6">
+          <div
+            className="relative z-10 h-full flex flex-col gap-6"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
             {/* Modules de l'écran 2 */}
             {renderModuleGrid(modules2 as Module[], { device: previewMode })}
             <div className="w-full max-w-2xl">
@@ -408,14 +439,20 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
           <div className="relative z-10 h-full">
             {/* Modules de l'écran 3 */}
             {modules3.length > 0 && (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
+              <div
+                className="w-full h-full flex flex-col gap-6"
+                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
                 {renderModuleGrid(modules3 as Module[], { onButtonClick: handleReplay, device: previewMode })}
               </div>
             )}
 
             {/* Carte par défaut uniquement si pas de modules déclarés sur écran 3 */}
             {modules3.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center z-10 px-4">
+              <div
+                className="absolute inset-0 flex items-center justify-center z-10 px-4"
+                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
                 <div className="bg-white/90 backdrop-blur px-6 py-5 rounded-xl shadow max-w-md w-full text-center">
                   <div className="text-lg font-semibold text-gray-800 mb-2">
                     {campaignAny?.screens?.[3]?.confirmationTitle || 'Merci pour votre participation !'}
@@ -443,7 +480,10 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
             {/* Si des modules3 existent, on affiche un overlay bas pour Score/Rejouer - sauf si une carte contient déjà un bouton */}
             {modules3.length > 0 && (showScore || shouldRenderReplayButton) && !carteWithButtonScreen3 && (
-              <div className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-3 z-20 px-4">
+              <div
+                className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-3 z-20 px-4"
+                style={{ paddingLeft: safeZonePadding, paddingRight: safeZonePadding, boxSizing: 'border-box' }}
+              >
                 {showScore && (
                   <div className="px-3 py-1 rounded-full bg-white/85 text-gray-900 text-sm font-medium shadow">
                     Score: {score}

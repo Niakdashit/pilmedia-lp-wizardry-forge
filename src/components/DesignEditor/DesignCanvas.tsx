@@ -24,6 +24,20 @@ import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
+import DesignModularCanvas from './modules/DesignModularCanvas';
+import type { DesignModule, DesignScreenId } from '@/types/designEditorModular';
+
+const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
+  desktop: 56,
+  tablet: 40,
+  mobile: 28
+};
+
+const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
+  desktop: 24,
+  tablet: 20,
+  mobile: 16
+};
 
 export interface DesignCanvasProps {
   selectedDevice: DeviceType;
@@ -78,6 +92,15 @@ export interface DesignCanvasProps {
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
   containerClassName?: string;
+  // Multi-screen system props
+  screenId?: DesignScreenId;
+  modularModules?: DesignModule[];
+  selectedModuleId?: string | null;
+  onModuleUpdate?: (id: string, patch: Partial<DesignModule>) => void;
+  onModuleDelete?: (id: string) => void;
+  onModuleMove?: (id: string, direction: 'up' | 'down') => void;
+  onModuleDuplicate?: (id: string) => void;
+  elementFilter?: (element: any) => boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -98,6 +121,15 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   selectedGroupId,
   onSelectedGroupChange,
   groups,
+  // Multi-screen system props
+  screenId = 'screen1',
+  modularModules = [],
+  selectedModuleId,
+  onModuleUpdate,
+  onModuleDelete,
+  onModuleMove,
+  onModuleDuplicate,
+  elementFilter,
   onGroupMove,
   onGroupResize,
   onShowEffectsPanel,
@@ -176,6 +208,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
     return canvasSize;
   }, [selectedDevice, canvasSize]);
+
+  const safeZonePadding = useMemo(() => SAFE_ZONE_PADDING[selectedDevice] ?? SAFE_ZONE_PADDING.desktop, [selectedDevice]);
+  const safeZoneRadius = useMemo(() => SAFE_ZONE_RADIUS[selectedDevice] ?? SAFE_ZONE_RADIUS.desktop, [selectedDevice]);
 
   // Collect measured bounds from children (CanvasElement)
   const handleMeasureBounds = useCallback((id: string, rect: { x: number; y: number; width: number; height: number }) => {
@@ -1754,6 +1789,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   hasStyleToCopy={selectedElement !== null}
                 />
               )}
+              {/* Safe zone overlay to keep modules away from hard edges */}
+              <div
+                className="pointer-events-none absolute inset-0 z-[6]"
+                aria-hidden="true"
+              >
+                <div
+                  className="absolute border border-dashed border-white/60"
+                  style={{
+                    inset: `${safeZonePadding}px`,
+                    borderRadius: `${safeZoneRadius}px`,
+                    boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                  }}
+                />
+              </div>
               <GridOverlay 
                 canvasSize={effectiveCanvasSize}
                 showGrid={selectedDevice !== 'mobile' && showGridLines}
@@ -1815,39 +1864,48 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Roue standardisée avec découpage cohérent */}
-              <StandardizedWheel
-                campaign={campaign}
-                device={selectedDevice}
-                shouldCropWheel={true}
-                disabled={readOnly}
-                getCanonicalConfig={getCanonicalConfig}
-                updateWheelConfig={updateWheelConfig}
-                extractedColors={extractedColors}
-                wheelModalConfig={wheelModalConfig}
-                onClick={() => {
-                  if (readOnly) return;
-                  console.log('🔘 Clic sur la roue détecté');
-                  onWheelPanelChange?.(true);
-                }}
-              />
-
-              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-              {!readOnly && (
-                <div className="absolute bottom-2 right-2 z-50">
-                  <WheelSettingsButton
+              {/* Roue standardisée avec découpage cohérent - Seulement sur l'écran de jeu (screen2) */}
+              {screenId === 'screen2' && (
+                <>
+                  <StandardizedWheel
+                    campaign={campaign}
+                    device={selectedDevice}
+                    shouldCropWheel={true}
+                    disabled={readOnly}
+                    getCanonicalConfig={getCanonicalConfig}
+                    updateWheelConfig={updateWheelConfig}
+                    extractedColors={extractedColors}
+                    wheelModalConfig={wheelModalConfig}
                     onClick={() => {
-                      console.log('🔘 Clic sur WheelSettingsButton détecté');
+                      if (readOnly) return;
+                      console.log('🔘 Clic sur la roue détecté');
                       onWheelPanelChange?.(true);
                     }}
                   />
-                </div>
+
+                  {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+                  {!readOnly && (
+                    <div className="absolute bottom-2 right-2 z-50">
+                      <WheelSettingsButton
+                        onClick={() => {
+                          console.log('🔘 Clic sur WheelSettingsButton détecté');
+                          onWheelPanelChange?.(true);
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
             {elementsSortedByZIndex
               .filter((element: any) => {
+                // Apply custom element filter if provided
+                if (elementFilter && !elementFilter(element)) {
+                  return false;
+                }
+                
                 // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
                 const elementWithProps = {
                   ...element,
@@ -1946,6 +2004,155 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 />
               );
             })}
+
+            {/* Modular Canvas - Display modules with proper structure */}
+            {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
+              const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
+              const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
+              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+              
+              const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
+                const h = (m?.bandHeight ?? 60);
+                const p = (m?.bandPadding ?? 16) * 2;
+                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
+                return Math.max(acc, h + p + extra);
+              }, 0);
+              
+              const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
+                const h = (m?.bandHeight ?? 60);
+                const p = (m?.bandPadding ?? 16) * 2;
+                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
+                return Math.max(acc, h + p + extra);
+              }, 0);
+
+              return (
+                <>
+                  {/* Regular modules container with safe zone padding */}
+                  <div
+                    className="w-full flex justify-center mb-6"
+                    style={{
+                      paddingLeft: safeZonePadding,
+                      paddingRight: safeZonePadding,
+                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
+                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    {/* Spacer to prevent overlap with the absolute logo band */}
+                    {logoModules.length > 0 && (
+                      <div style={{ height: logoVisualHeight }} />
+                    )}
+                    <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                      <DesignModularCanvas
+                        screen={screenId}
+                        modules={regularModules}
+                        device={selectedDevice}
+                        onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                        onDelete={(id) => onModuleDelete?.(id)}
+                        onMove={(id, dir) => onModuleMove?.(id, dir)}
+                        onDuplicate={(id) => onModuleDuplicate?.(id)}
+                        onSelect={(m) => {
+                          try {
+                            const evt = new CustomEvent('designModularModuleSelected', { detail: { module: m } });
+                            window.dispatchEvent(evt);
+                          } catch {}
+                          if (m.type === 'BlocBouton') {
+                            onSelectedElementChange?.({
+                              id: `modular-button-${m.id}`,
+                              type: 'button',
+                              role: 'module-button',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocImage') {
+                            onSelectedElementChange?.({
+                              id: `modular-image-${m.id}`,
+                              type: 'image',
+                              role: 'module-image',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocReseauxSociaux') {
+                            onSelectedElementChange?.({
+                              id: `modular-social-${m.id}`,
+                              type: 'social',
+                              role: 'module-social',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocVideo') {
+                            onSelectedElementChange?.({
+                              id: `modular-video-${m.id}`,
+                              type: 'video',
+                              role: 'module-video',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocHtml') {
+                            onSelectedElementChange?.({
+                              id: `modular-html-${m.id}`,
+                              type: 'html',
+                              role: 'module-html',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocCarte') {
+                            onSelectedElementChange?.({
+                              id: `modular-carte-${m.id}`,
+                              type: 'carte',
+                              role: 'module-carte',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocTexte') {
+                            onSelectedElementChange?.({
+                              id: `modular-text-${m.id}`,
+                              type: 'text',
+                              role: 'module-text',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          onSelectedElementChange?.({
+                            id: `modular-${m.type}-${m.id}`,
+                            type: m.type,
+                            role: `module-${m.type}`,
+                            moduleId: m.id,
+                            screenId
+                          } as any);
+                          onOpenElementsTab?.();
+                        }}
+                        selectedModuleId={
+                          externalSelectedElement?.role?.startsWith('module-') 
+                            ? externalSelectedElement.moduleId 
+                            : undefined
+                        }
+                      />
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Marquee selection overlay */}
             {marqueeRect && (

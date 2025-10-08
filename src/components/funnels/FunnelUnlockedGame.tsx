@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
 import CanvasGameRenderer from './components/CanvasGameRenderer';
+import GameRenderer from './components/GameRenderer';
 import ResultScreen from './components/ResultScreen';
 import FormHandler from './components/FormHandler';
 import DynamicContactForm from '../forms/DynamicContactForm';
@@ -11,9 +12,23 @@ import { useEditorStore } from '../../stores/editorStore';
 import CanvasElement from '../ModelEditor/CanvasElement';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
+import { useEditorPreviewSync } from '../../hooks/useEditorPreviewSync';
 import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
 import { useScratchCardStore } from '../ScratchCardEditor/state/scratchcard.store';
 import { QuizModuleRenderer } from '../ScratchCardEditor/QuizRenderer';
+import { DesignModuleRenderer } from '../DesignEditor/DesignRenderer';
+
+const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 56,
+  tablet: 40,
+  mobile: 28
+};
+
+const SAFE_ZONE_RADIUS: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 40,
+  tablet: 32,
+  mobile: 24
+};
 
 interface FunnelUnlockedGameProps {
   campaign: any;
@@ -44,6 +59,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [participationLoading, setParticipationLoading] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [hasPlayed, setHasPlayed] = useState(false);
 
   // Écouter les mises à jour de style pour forcer le re-render (comme FunnelQuizParticipate)
   React.useEffect(() => {
@@ -52,12 +68,25 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setForceUpdate(prev => prev + 1);
     };
     
+    const handleEditorSync = (e: Event) => {
+      console.log('🔄 [FunnelUnlockedGame] Editor sync event received:', (e as CustomEvent).detail);
+      setForceUpdate(prev => prev + 1);
+    };
+    
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('modularModuleSelected', handleStyleUpdate);
+    window.addEventListener('editor-background-sync', handleEditorSync);
+    window.addEventListener('editor-modules-sync', handleEditorSync);
+    window.addEventListener('editor-module-sync', handleEditorSync);
+    window.addEventListener('editor-force-sync', handleEditorSync);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
       window.removeEventListener('modularModuleSelected', handleStyleUpdate);
+      window.removeEventListener('editor-background-sync', handleEditorSync);
+      window.removeEventListener('editor-modules-sync', handleEditorSync);
+      window.removeEventListener('editor-module-sync', handleEditorSync);
+      window.removeEventListener('editor-force-sync', handleEditorSync);
     };
   }, []);
 
@@ -123,6 +152,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const [liveCampaign, setLiveCampaign] = useState(campaign);
   const universalResponsive = useUniversalResponsive('desktop');
   const { getPropertiesForDevice } = universalResponsive;
+  const safeZonePadding = SAFE_ZONE_PADDING[previewMode] ?? SAFE_ZONE_PADDING.desktop;
+  const safeZoneRadius = SAFE_ZONE_RADIUS[previewMode] ?? SAFE_ZONE_RADIUS.desktop;
+  
+  // Hook de synchronisation pour obtenir les données canoniques
+  const { getCanonicalPreviewData } = useEditorPreviewSync();
   
   // Mettre à jour la campagne en temps réel quand le store change
   useEffect(() => {
@@ -231,65 +265,47 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   };
 
   // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
-  // Sélectionne l'image de fond appropriée selon le device (desktop vs mobile)
+  // Utilise les données canoniques du hook de synchronisation
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     const perScreenUrl = getPerScreenBg(currentScreen, previewMode);
     if (perScreenUrl) {
       return { background: `url(${perScreenUrl}) center/cover no-repeat` };
     }
     
-    const design = liveCampaign?.design || campaign?.design;
-    const canvasBackground = liveCampaign?.canvasConfig?.background || design?.background;
+    // Obtenir les données canoniques depuis le hook de synchronisation
+    const canonicalData = getCanonicalPreviewData();
+    const canonicalBg = canonicalData.background;
     
-    // Debug: log pour voir ce qu'on reçoit
-    console.log('🖼️ [FunnelUnlockedGame] Background debug:', {
+    console.log('🖼️ [FunnelUnlockedGame] Using canonical background:', {
       currentScreen,
       previewMode,
-      designBackground: design?.background,
-      canvasBackground,
-      designBackgroundImage: design?.backgroundImage,
-      designMobileBackgroundImage: design?.mobileBackgroundImage
+      type: canonicalBg.type,
+      value: canonicalBg.value?.substring(0, 50) + '...',
+      timestamp: canonicalData.timestamp
     });
     
-    // PRIORITÉ 1: Vérifier si design.background est un objet image
-    if (design?.background && typeof design.background === 'object' && design.background.type === 'image' && design.background.value) {
-      console.log('✅ [FunnelUnlockedGame] Using design.background.value:', design.background.value.substring(0, 50) + '...');
-      return { background: `url(${design.background.value}) center/cover no-repeat` };
+    // Utiliser directement les données canoniques
+    if (canonicalBg.type === 'image' && canonicalBg.value) {
+      return { background: `url(${canonicalBg.value}) center/cover no-repeat` };
     }
     
-    // PRIORITÉ 2: Vérifier les propriétés backgroundImage/mobileBackgroundImage
-    let backgroundImageUrl: string | undefined;
-    if (previewMode === 'mobile') {
-      // Priorité à mobileBackgroundImage pour mobile, sinon fallback sur backgroundImage
-      backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
-    } else {
-      // Desktop et tablet utilisent backgroundImage
-      backgroundImageUrl = design?.backgroundImage;
-    }
-    
-    // Si on a une URL d'image spécifique, l'utiliser
-    if (backgroundImageUrl) {
-      console.log('✅ [FunnelUnlockedGame] Using backgroundImageUrl:', backgroundImageUrl.substring(0, 50) + '...');
-      return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
-    }
-    
-    // PRIORITÉ 3: Vérifier canvasBackground
-    if (canvasBackground?.type === 'image' && canvasBackground?.value) {
-      console.log('✅ [FunnelUnlockedGame] Using canvasBackground.value:', canvasBackground.value.substring(0, 50) + '...');
-      return { background: `url(${canvasBackground.value}) center/cover no-repeat` };
-    }
-    
-    // FALLBACK: Utiliser la couleur ou le gradient
-    const fallbackBg = canvasBackground?.value || design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
-    console.log('⚠️ [FunnelUnlockedGame] Using fallback background:', fallbackBg);
-    return { background: fallbackBg };
-  }, [currentScreen, previewMode, liveCampaign?.canvasConfig?.background, liveCampaign?.design, campaign?.design, forceUpdate]);
+    return { background: canonicalBg.value };
+  }, [currentScreen, previewMode, getCanonicalPreviewData, forceUpdate]);
 
-  // Récupérer directement modularPage pour un rendu unifié (comme FunnelQuizParticipate)
-  const modularPage = liveCampaign?.modularPage || campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+  // Récupérer directement modularPage depuis les données canoniques
+  const canonicalData = getCanonicalPreviewData();
+  const designModular = liveCampaign?.design?.designModules;
+  const modularPage = designModular || canonicalData.modularPage;
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
+  
+  console.log('📦 [FunnelUnlockedGame] Using canonical modules:', {
+    screen1Count: modules.length,
+    screen2Count: modules2.length,
+    screen3Count: modules3.length,
+    timestamp: canonicalData.timestamp
+  });
 
   // Séparer les modules Logo et Footer pour l'écran 1
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
@@ -338,7 +354,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const handleGameButtonClick = () => {
     // Passer à l'écran 2 (cartes visibles mais bloquées)
     setCurrentScreen('screen2');
-    // Ne pas ouvrir le formulaire immédiatement, attendre que l'utilisateur essaie de gratter
+    if (!formValidated) {
+      setShowFormModal(true);
+    }
   };
 
   const handleCardClick = () => {
@@ -361,6 +379,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setFormValidated(true);
       setShowFormModal(false);
       setShowValidationMessage(true);
+      setHasPlayed(false);
       setTimeout(() => setShowValidationMessage(false), 2000);
       // Les cartes deviennent jouables après validation du formulaire
     } catch (error) {
@@ -372,7 +391,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   };
 
   const handleGameStart = () => {
-    // Game started logic if needed
+    setHasPlayed(true);
   };
 
   const handleGameFinish = async (result: 'win' | 'lose') => {
@@ -402,6 +421,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     setGameResult(null);
     setShowFormModal(false);
     setShowValidationMessage(false);
+    setHasPlayed(false);
   };
 
   // Si on a un résultat de jeu, afficher l'écran de résultat avec le même fond que le canvas
@@ -414,8 +434,18 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          <div className="absolute inset-0" style={backgroundStyle} />
-          <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="absolute inset-0 pointer-events-none z-20">
+            <div
+              className="absolute border border-dashed border-white/60"
+              style={{
+                inset: safeZonePadding,
+                borderRadius: safeZoneRadius,
+                boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+              }}
+            />
+          </div>
+          <div className="absolute inset-0 z-0" style={backgroundStyle} />
+          <div className="relative z-30 h-full w-full" style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
             <ResultScreen 
               gameResult={gameResult} 
               campaign={liveCampaign} 
@@ -429,10 +459,63 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     );
   }
 
+  const hasDesignModules = Boolean(
+    designModular &&
+    designModular.screens &&
+    Object.values(designModular.screens).some((screenModules: any) => Array.isArray(screenModules) && screenModules.length > 0)
+  );
+
+  if (hasDesignModules && currentScreen === 'screen1') {
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        console.log('[DesignPreview] Rendering design modules', {
+          screen1: modules?.map((m: any) => ({ id: m.id, type: m.type })),
+          screen2: modules2?.map((m: any) => ({ id: m.id, type: m.type })),
+          screen3: modules3?.map((m: any) => ({ id: m.id, type: m.type }))
+        });
+      } catch (error) {
+        console.warn('[DesignPreview] Unable to log design modules', error);
+      }
+    }
+    return (
+      <div className="w-full h-[100dvh] min-h-[100dvh]">
+        <div className="relative w-full h-full">
+          <div className="absolute inset-0 z-0" style={backgroundStyle} />
+          <div
+            className="relative z-30 h-full w-full overflow-y-auto"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
+            {modules.length > 0 && (
+              <section className="space-y-6" data-design-screen="screen1">
+                <DesignModuleRenderer
+                  modules={modules as any}
+                  previewMode
+                  device={previewMode}
+                  onButtonClick={handleGameButtonClick}
+                />
+              </section>
+            )}
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (liveCampaign.type === 'scratch') {
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className="absolute border border-dashed border-white/60"
+              style={{
+                inset: safeZonePadding,
+                borderRadius: safeZoneRadius,
+                boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+              }}
+            />
+          </div>
           <div className="absolute inset-0" style={backgroundStyle} />
 
           {/* ÉCRAN 1 : Avant le jeu */}
@@ -440,7 +523,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             <>
               {/* Bande logo absolue en haut (comme l'éditeur) */}
               {logoModules1.length > 0 && (
-                <div className="absolute left-0 top-0 w-full z-20" style={{ pointerEvents: 'none' }}>
+                <div
+                  className="absolute left-0 top-0 w-full z-40"
+                  style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
+                >
                   <div className="w-full" style={{ pointerEvents: 'auto' }}>
                     <QuizModuleRenderer 
                       modules={logoModules1}
@@ -451,8 +537,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 </div>
               )}
 
-              {/* Contenu régulier sous la bande */}
-              <div className={`relative z-10 h-full flex flex-col items-center ${logoModules1.length > 0 ? 'justify-start' : 'justify-center'} gap-6 p-8`}>
+              {/* Contenu régulier sous la bande - Layout identique à l'éditeur */}
+              <div
+                className="relative z-30 h-full w-full"
+                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
                 {logoModules1.length > 0 && (
                   <div style={{ height: logoBandHeight1 }} />
                 )}
@@ -468,7 +557,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
               {/* Bande footer absolue en bas */}
               {footerModules1.length > 0 && (
-                <div className="absolute left-0 bottom-0 w-full z-20" style={{ pointerEvents: 'none' }}>
+                <div
+                  className="absolute left-0 bottom-0 w-full z-40"
+                  style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
+                >
                   <div className="w-full" style={{ pointerEvents: 'auto' }}>
                     <QuizModuleRenderer 
                       modules={footerModules1}
@@ -484,8 +576,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
           {currentScreen === 'screen2' && gameResult === null && (
             <>
-              {/* Modules screen2 - en arrière-plan */}
-              <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 gap-6" style={{ pointerEvents: 'none' }}>
+              {/* Modules screen2 - en arrière-plan - Layout identique à l'éditeur */}
+              <div
+                className="relative z-30 h-full w-full"
+                style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
                 {modules2.length > 0 && (
                   <QuizModuleRenderer 
                     modules={modules2}
@@ -495,13 +590,26 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 )}
               </div>
 
-              {/* ScratchCardCanvas */}
+              {/* Game Component (Roue ou Cartes selon le type) */}
               <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 50 }}>
                 <div className={formValidated ? 'pointer-events-auto' : 'pointer-events-none'}>
-                  <ScratchCardCanvas 
-                    selectedDevice={previewMode}
-                    previewMode={!formValidated}
-                  />
+                  {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
+                    <GameRenderer
+                      campaign={liveCampaign}
+                      formValidated={formValidated}
+                      showValidationMessage={false}
+                      previewMode={previewMode}
+                      mobileConfig={mobileConfig}
+                      onGameFinish={handleGameFinish}
+                      onGameStart={() => console.log('Game started')}
+                      onGameButtonClick={handleCardClick}
+                    />
+                  ) : (
+                    <ScratchCardCanvas 
+                      selectedDevice={previewMode}
+                      previewMode={!formValidated}
+                    />
+                  )}
                 </div>
               </div>
               
@@ -530,18 +638,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             </>
           )}
 
-          {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') */}
+          {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
           {gameResult !== null && (
-            <div className="relative z-10 h-full">
+            <div
+              className="relative z-30 h-full w-full"
+              style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+            >
               {modules3.length > 0 && (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
-                  <QuizModuleRenderer 
-                    modules={modules3}
-                    previewMode={true}
-                    device={previewMode}
-                    onButtonClick={handleReset}
-                  />
-                </div>
+                <QuizModuleRenderer 
+                  modules={modules3}
+                  previewMode={true}
+                  device={previewMode}
+                  onButtonClick={handleReset}
+                />
               )}
             </div>
           )}
@@ -726,7 +835,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     <div className="w-full h-full">
       <CanvasGameRenderer 
         campaign={liveCampaign} 
-        formValidated={formValidated} 
+        formValidated={formValidated && !hasPlayed} 
         showValidationMessage={showValidationMessage} 
         previewMode={previewMode} 
         mobileConfig={mobileConfig} 

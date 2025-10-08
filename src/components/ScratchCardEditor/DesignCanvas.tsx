@@ -37,9 +37,9 @@ const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
 };
 
 const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
-  desktop: 32,
-  tablet: 28,
-  mobile: 24
+  desktop: 24,
+  tablet: 20,
+  mobile: 16
 };
 
 export interface DesignCanvasProps {

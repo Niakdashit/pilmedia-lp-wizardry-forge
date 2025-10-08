@@ -8,9 +8,7 @@ import {
   FormInput,
   MessageSquare
 } from 'lucide-react';
-import BackgroundPanel from './panels/BackgroundPanel';
-import CompositeElementsPanel from './modules/CompositeElementsPanel';
-import TextEffectsPanel from './panels/TextEffectsPanel';
+import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from './modules/ImageModulePanel';
 import LogoModulePanel from './modules/LogoModulePanel';
 import FooterModulePanel from './modules/FooterModulePanel';

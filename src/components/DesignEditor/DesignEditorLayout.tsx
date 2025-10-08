@@ -4,6 +4,9 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
+const FunnelQuizParticipate = lazy(() => import('@/components/funnels/FunnelQuizParticipate'));
+import type { DesignModularPage, DesignScreenId, DesignModule } from '@/types/designEditorModular';
+import { createEmptyDesignModularPage } from '@/types/designEditorModular';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -14,6 +17,7 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { useEditorPreviewSync } from '../../hooks/useEditorPreviewSync';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -96,6 +100,94 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
+  // Multi-screen system states
+  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
+  const [modularPage, setModularPage] = useState<DesignModularPage>(createEmptyDesignModularPage());
+  // Module selection for configuration panels
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [selectedModule, setSelectedModule] = useState<DesignModule | null>(null);
+
+  // Auto-assign screenId to elements without one
+  useEffect(() => {
+    if (!canvasElements.length) return;
+    const hasMissingScreen = canvasElements.some((element: any) => !element?.screenId);
+    if (!hasMissingScreen) return;
+
+    setCanvasElements((prev: any[]) => {
+      let mutated = false;
+      const updated = prev.map((element: any) => {
+        if (element?.screenId) return element;
+
+        mutated = true;
+        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+        if (role.includes('exit-message')) {
+          return { ...element, screenId: 'screen3' as const };
+        }
+        if (
+          role.includes('form') ||
+          role.includes('contact') ||
+          role.includes('lead') ||
+          role.includes('info') ||
+          role.includes('screen2')
+        ) {
+          return { ...element, screenId: 'screen2' as const };
+        }
+        return { ...element, screenId: 'screen1' as const };
+      });
+
+      return mutated ? updated : prev;
+    });
+  }, [canvasElements]);
+
+  // Detect scroll position to determine current screen
+  useEffect(() => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return;
+
+    const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
+    if (anchors.length === 0) return;
+
+    const computeNearestScreen = () => {
+      const areaRect = canvasScrollArea.getBoundingClientRect();
+      const areaCenter = areaRect.top + areaRect.height / 2;
+
+      let closestId: DesignScreenId = 'screen1';
+      let closestDistance = Infinity;
+
+      anchors.forEach((anchor) => {
+        const screenId = (anchor.dataset.screenAnchor as DesignScreenId | undefined) ?? 'screen1';
+        const rect = anchor.getBoundingClientRect();
+        const anchorCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(anchorCenter - areaCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestId = screenId;
+        }
+      });
+
+      setCurrentScreen((prev: DesignScreenId) => (prev === closestId ? prev : closestId));
+    };
+
+    requestAnimationFrame(computeNearestScreen);
+
+    const handleScroll = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    const handleResize = () => {
+      requestAnimationFrame(computeNearestScreen);
+    };
+
+    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      canvasScrollArea.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
     const device = detectDevice();
@@ -113,6 +205,45 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     updateWindowSize();
     window.addEventListener('resize', updateWindowSize);
     return () => window.removeEventListener('resize', updateWindowSize);
+  }, []);
+
+  // Écouter l'événement de sélection de module depuis le canvas
+  useEffect(() => {
+    const handleModuleSelected = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const module = customEvent.detail?.module;
+      if (module) {
+        console.log('🎯 Module sélectionné depuis le canvas:', module);
+        console.log('🎯 Type du module:', module.type);
+        setSelectedModuleId(module.id);
+        setSelectedModule(module);
+        // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
+        // Sinon, ouvrir l'onglet Elements pour les autres modules
+        if (module.type === 'BlocTexte') {
+          console.log('✅ BlocTexte détecté - Ouverture onglet Design');
+          // Forcer l'ouverture du panneau Design
+          setShowDesignInSidebar(true);
+          setShowEffectsInSidebar(false);
+          setShowAnimationsInSidebar(false);
+          setShowPositionInSidebar(false);
+          // Ouvrir l'onglet background
+          setTimeout(() => {
+            sidebarRef.current?.setActiveTab('background');
+          }, 0);
+        } else {
+          console.log('✅ Autre module détecté - Ouverture onglet Elements');
+          sidebarRef.current?.setActiveTab('elements');
+        }
+      }
+    };
+
+    // Écouter les deux types d'événements pour compatibilité
+    window.addEventListener('modularModuleSelected', handleModuleSelected);
+    window.addEventListener('designModularModuleSelected', handleModuleSelected);
+    return () => {
+      window.removeEventListener('modularModuleSelected', handleModuleSelected);
+      window.removeEventListener('designModularModuleSelected', handleModuleSelected);
+    };
   }, []);
 
   // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
@@ -162,7 +293,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setSelectedElement(null); // Désélectionner l'élément unique
       console.log('🎯 Selected all canvas elements:', {
         total: selectableElements.length,
-        types: selectableElements.reduce((acc, el) => {
+        types: selectableElements.reduce((acc: Record<string, number>, el: any) => {
           acc[el.type] = (acc[el.type] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
@@ -235,8 +366,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
   const handleAddElement = (element: any) => {
-    setCanvasElements(prev => {
-      const newArr = [...prev, element];
+    const resolvedScreenId = element?.screenId
+      || (currentScreen === 'screen2'
+        ? 'screen2'
+        : currentScreen === 'screen3' ? 'screen3' : 'screen1');
+    const enrichedElement = element?.screenId ? element : { ...element, screenId: resolvedScreenId };
+    setCanvasElements((prev: any[]) => {
+      const newArr = [...prev, enrichedElement];
       setTimeout(() => {
         addToHistory({
           campaignConfig: { ...campaignConfig },
@@ -246,12 +382,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       }, 0);
       return newArr;
     });
-    setSelectedElement(element);
+    setSelectedElement(enrichedElement);
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
   const handleBackgroundChange = (bg: any) => {
     setCanvasBackground(bg);
+    
+    // Synchroniser immédiatement avec le preview
+    syncBackground(bg, selectedDevice);
+    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
@@ -271,6 +411,50 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         canvasBackground: { ...canvasBackground }
       }, 'config_update');
     }, 0);
+  };
+
+  // Handler pour mettre à jour un module
+  const handleModuleUpdate = (moduleId: string, updates: Partial<DesignModule>) => {
+    console.log('🔧 [DesignEditorLayout] handleModuleUpdate appelé:', {
+      moduleId,
+      updates,
+      timestamp: new Date().toISOString()
+    });
+    
+    setModularPage((prev: DesignModularPage) => {
+      const updatedPage = { ...prev, screens: { ...prev.screens } };
+      let moduleFound = false;
+      
+      // Parcourir tous les écrans pour trouver et mettre à jour le module
+      (['screen1', 'screen2', 'screen3'] as DesignScreenId[]).forEach(screenId => {
+        const screenModules = [...updatedPage.screens[screenId]];
+        const moduleIndex = screenModules.findIndex((m: DesignModule) => m.id === moduleId);
+        if (moduleIndex !== -1) {
+          moduleFound = true;
+          const oldModule = screenModules[moduleIndex];
+          screenModules[moduleIndex] = { ...screenModules[moduleIndex], ...updates } as DesignModule;
+          updatedPage.screens[screenId] = screenModules;
+          
+          console.log('✅ [DesignEditorLayout] Module mis à jour:', {
+            screenId,
+            moduleIndex,
+            oldModule: { id: oldModule.id, type: oldModule.type, fontFamily: (oldModule as any).fontFamily },
+            newModule: { id: screenModules[moduleIndex].id, type: screenModules[moduleIndex].type, fontFamily: (screenModules[moduleIndex] as any).fontFamily }
+          });
+          
+          // Mettre à jour aussi le module sélectionné
+          if (selectedModuleId === moduleId) {
+            setSelectedModule(screenModules[moduleIndex]);
+          }
+        }
+      });
+      
+      if (!moduleFound) {
+        console.warn('⚠️ [DesignEditorLayout] Module non trouvé:', moduleId);
+      }
+      
+      return updatedPage;
+    });
   };
 
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
@@ -303,8 +487,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           : {})
       };
 
-      setCanvasElements(prev => {
-        const newArr = prev.map(el =>
+      setCanvasElements((prev: any[]) => {
+        const newArr = prev.map((el: any) =>
           el.id === selectedElement.id ? updatedElement : el
         );
         setTimeout(() => {
@@ -319,6 +503,15 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setSelectedElement(updatedElement);
     }
   };
+
+  // Hook de synchronisation robuste entre édition et preview
+  const {
+    syncBackground,
+    syncModules,
+    syncModule,
+    getCanonicalPreviewData,
+    forceSync
+  } = useEditorPreviewSync();
 
   // Utilisation du hook de synchronisation unifié
   const {
@@ -401,8 +594,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handleElementDelete = useCallback((elementId?: string) => {
     const targetElementId = elementId || selectedElement?.id;
     if (targetElementId) {
-      setCanvasElements(prev => {
-        const newElements = prev.filter(el => el.id !== targetElementId);
+      setCanvasElements((prev: any[]) => {
+        const newElements = prev.filter((el: any) => el.id !== targetElementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -434,8 +627,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       // Puis le supprimer
       const elementId = selectedElement.id;
-      setCanvasElements(prev => {
-        const newElements = prev.filter(el => el.id !== elementId);
+      setCanvasElements((prev: any[]) => {
+        const newElements = prev.filter((el: any) => el.id !== elementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -483,6 +676,196 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       console.log('🔄 Duplicated element:', newElement.id);
     }
   }, [selectedElement, handleAddElement]);
+
+  // Modular page management functions
+  const persistModular = useCallback((next: DesignModularPage) => {
+    setModularPage(next);
+    
+    // Synchroniser immédiatement avec le preview
+    syncModules(next);
+    
+    setCampaignConfig((prev: any) => {
+      const updated = {
+        ...(prev || {}),
+        design: {
+          ...(prev?.design || {}),
+          designModules: { ...next, _updatedAt: Date.now() }
+        }
+      };
+      return updated;
+    });
+    try { setIsModified(true); } catch {}
+  }, [setIsModified, syncModules]);
+
+  const scrollToScreen = useCallback((screen: DesignScreenId): boolean => {
+    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
+    if (!canvasScrollArea) return false;
+    const anchor = canvasScrollArea.querySelector(`[data-screen-anchor="${screen}"]`) as HTMLElement | null;
+    if (!anchor) return false;
+
+    const anchorTop = anchor.offsetTop;
+    const centerOffset = Math.max(0, (canvasScrollArea.clientHeight - anchor.clientHeight) / 2);
+    const target = anchorTop - centerOffset;
+    const maxScroll = canvasScrollArea.scrollHeight - canvasScrollArea.clientHeight;
+    const clamped = Math.min(Math.max(target, 0), Math.max(maxScroll, 0));
+
+    canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
+    return true;
+  }, []);
+
+  const handleAddModule = useCallback((screen: DesignScreenId, module: DesignModule) => {
+    setModularPage((prev) => {
+      const prevScreenModules = prev.screens[screen] || [];
+      const updatedModules: DesignModule[] = [module, ...prevScreenModules];
+
+      const next: DesignModularPage = {
+        screens: {
+          ...prev.screens,
+          [screen]: updatedModules
+        },
+        _updatedAt: Date.now()
+      };
+
+      persistModular(next);
+      return next;
+    });
+  }, [persistModular]);
+
+  const handleUpdateModule = useCallback((id: string, patch: Partial<DesignModule>) => {
+    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as DesignModule : m));
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleDeleteModule = useCallback((id: string) => {
+    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
+      nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
+    });
+    
+    // Vérifier s'il reste au moins un bouton après suppression
+    const hasButton = (Object.values(nextScreens) as DesignModule[][]).some((modules) =>
+      modules?.some((m) => m.type === 'BlocBouton')
+    );
+    
+    // Si plus aucun bouton, en créer un par défaut sur screen1
+    if (!hasButton) {
+      const defaultButton: DesignModule = {
+        id: `BlocBouton-${Date.now()}`,
+        type: 'BlocBouton',
+        label: 'Participer',
+        href: '#',
+        align: 'center',
+        borderRadius: 9999,
+        background: '#000000',
+        textColor: '#ffffff',
+        padding: '14px 28px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false
+      } as DesignModule;
+      nextScreens.screen1 = [...(nextScreens.screen1 || []), defaultButton];
+    }
+    
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
+    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
+      const arr = [...(nextScreens[s] || [])];
+      const idx = arr.findIndex((m) => m.id === id);
+      if (idx >= 0) {
+        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapWith >= 0 && swapWith < arr.length) {
+          const tmp = arr[swapWith];
+          arr[swapWith] = arr[idx];
+          arr[idx] = tmp;
+        }
+        nextScreens[s] = arr;
+      }
+    });
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  }, [modularPage, persistModular]);
+
+  const handleDuplicateModule = useCallback((id: string) => {
+    type ModuleWithMeta = DesignModule & { moduleId?: string; label?: string };
+
+    const nextScreens: Record<DesignScreenId, DesignModule[]> = { ...modularPage.screens };
+    let moduleToDuplicate: ModuleWithMeta | null = null;
+    let foundScreenId: DesignScreenId | null = null;
+    let originalIndex = -1;
+
+    for (const screenId of Object.keys(nextScreens) as DesignScreenId[]) {
+      const modules = nextScreens[screenId] ?? [];
+      const index = modules.findIndex((m) => m.id === id);
+      if (index >= 0) {
+        moduleToDuplicate = modules[index] as ModuleWithMeta;
+        foundScreenId = screenId;
+        originalIndex = index;
+        break;
+      }
+    }
+
+    if (!moduleToDuplicate || !foundScreenId || originalIndex < 0) {
+      console.warn(`⚠️ Impossible de trouver le module à dupliquer (ID: ${id})`);
+      return;
+    }
+
+    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const duplicatedModule: ModuleWithMeta = {
+      ...moduleToDuplicate,
+      id: newId
+    };
+
+    if (typeof moduleToDuplicate.label === 'string' && moduleToDuplicate.label.trim().length > 0) {
+      duplicatedModule.label = `${moduleToDuplicate.label} (copie)`;
+    }
+
+    const currentModules = nextScreens[foundScreenId] ?? [];
+    const updatedModules = [...currentModules];
+    updatedModules.splice(originalIndex + 1, 0, duplicatedModule);
+    nextScreens[foundScreenId] = updatedModules;
+
+    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+
+    console.log(`✅ Module dupliqué avec succès (${id} → ${duplicatedModule.id})`);
+  }, [modularPage.screens, persistModular]);
+  
+  // Assurer qu'un bouton "Participer" existe toujours sur l'écran 1
+  const ensuredButtonRef = useRef(false);
+  useEffect(() => {
+    if (ensuredButtonRef.current) return;
+    
+    const hasButton = (Object.values(modularPage.screens) as DesignModule[][]).some((modules) =>
+      modules?.some((m) => m.type === 'BlocBouton')
+    );
+    
+    if (!hasButton) {
+      const defaultButton: DesignModule = {
+        id: `BlocBouton-${Date.now()}`,
+        type: 'BlocBouton',
+        label: 'Participer',
+        href: '#',
+        align: 'center',
+        borderRadius: 9999,
+        background: '#000000',
+        textColor: '#ffffff',
+        padding: '14px 28px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false
+      } as DesignModule;
+      
+      const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
+      nextScreens.screen1 = [...(nextScreens.screen1 || []), defaultButton];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+    
+    ensuredButtonRef.current = true;
+  }, [modularPage.screens, persistModular]);
   
   // Synchronisation avec le store
   useEffect(() => {
@@ -495,10 +878,18 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
     
-    const customTexts = canvasElements.filter(el => 
+    const customTexts = canvasElements.filter((el: any) => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
-    const customImages = canvasElements.filter(el => el.type === 'image');
+    const customImages = canvasElements.filter((el: any) => el.type === 'image');
+    
+    // Inclure les modules dans les éléments pour l'aperçu
+    const allModules = Object.values(modularPage.screens).flat();
+    console.log('📦 [DesignEditorLayout] Modules trouvés pour preview:', {
+      modulesCount: allModules.length,
+      modules: allModules.map((m: any) => ({ id: m.id, type: m.type, label: m.label })),
+      modularPage: modularPage
+    });
 
     const currentWheelConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
@@ -577,7 +968,15 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           accent: extractedColors[2] || '#45b7d1'
         },
         wheelConfig: currentWheelConfig,
-        wheelBorderStyle: currentWheelConfig.borderStyle
+        wheelBorderStyle: currentWheelConfig.borderStyle,
+        designModules: {
+          ...modularPage,
+          _updatedAt: modularPage?._updatedAt ?? Date.now()
+        }
+      },
+      modularPage: {
+        ...modularPage,
+        _updatedAt: modularPage?._updatedAt ?? Date.now()
       },
       gameConfig: {
         wheel: {
@@ -608,14 +1007,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Garder la configuration canvas pour compatibilité
+      // Garder la configuration canvas pour compatibilité - INCLURE LES MODULES
       canvasConfig: {
-        elements: canvasElements,
+        elements: [...canvasElements, ...Object.values(modularPage.screens).flat()],
         background: canvasBackground,
         device: selectedDevice
-      }
+      },
+      // Ajouter modularPage pour compatibilité
+      modularPage: modularPage
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -691,6 +1092,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
+          },
+          // Préserver modularPage pour la synchronisation avec le preview
+          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
+          // Préserver design.designModules si présent
+          design: {
+            ...(transformedCampaign as any).design,
+            designModules: (transformedCampaign as any).modularPage || prev.design?.designModules
           }
         } as any;
       });
@@ -1001,16 +1409,25 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       }
     },
     onAlignTextLeft: () => {
+      if (!selectedElement) {
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'left' });
       }
     },
     onAlignTextCenter: () => {
+      if (!selectedElement) {
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'center' });
       }
     },
     onAlignTextRight: () => {
+      if (!selectedElement) {
+        return;
+      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'right' });
       }
@@ -1037,11 +1454,15 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
         backgroundBlendMode: 'screen, screen, lighten, normal',
         backgroundColor: '#3D2E72',
-        padding: '0 9px 9px 9px',
+        padding: showFunnel ? '0' : '0 9px 9px 9px',
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]">
+    <MobileStableEditor
+      className={showFunnel
+        ? 'h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden'
+        : 'h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]'}
+    >
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
@@ -1077,15 +1498,24 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
-              className={`absolute top-2 ${previewButtonSide === 'left' ? 'left-2' : 'right-2'} z-50 px-2 py-1 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
             >
               Mode édition
             </button>
-            <FunnelUnlockedGame
-              campaign={campaignData}
-              previewMode={selectedDevice}
-              wheelModalConfig={wheelModalConfig}
-            />
+            <div className="w-full h-full pointer-events-auto">
+              {campaignData?.type === 'quiz' ? (
+                <FunnelQuizParticipate
+                  campaign={campaignData as any}
+                  previewMode={selectedDevice}
+                />
+              ) : (
+                <FunnelUnlockedGame
+                  campaign={campaignData}
+                  previewMode={selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                />
+              )}
+            </div>
           </div>
         ) : (
           /* Design Editor Mode */
@@ -1152,29 +1582,50 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
+                // Multi-screen system props
+                currentScreen={currentScreen}
+                onAddModule={handleAddModule}
+                // Module selection props
+                selectedModuleId={selectedModuleId}
+                selectedModule={selectedModule}
+                onModuleUpdate={handleModuleUpdate}
+                onSelectedModuleChange={setSelectedModuleId}
               />
-            {/* Main Canvas Area */}
-            <DesignCanvas
-              ref={canvasRef}
-              selectedDevice={selectedDevice}
-              elements={canvasElements}
-              onElementsChange={setCanvasElements}
-              background={canvasBackground}
-              campaign={campaignData}
-              onCampaignChange={handleCampaignConfigChange}
-              zoom={canvasZoom}
-              onZoomChange={setCanvasZoom}
-              enableInternalAutoFit={true}
-              selectedElement={selectedElement}
-              onSelectedElementChange={setSelectedElement}
-              selectedElements={selectedElements}
-              onSelectedElementsChange={setSelectedElements}
-              onElementUpdate={handleElementUpdate}
-              // Wheel sync props
-              wheelModalConfig={wheelModalConfig}
-              extractedColors={extractedColors}
-              containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-              // Sidebar panel triggers
+            {/* Canvas Scrollable Area with 3 screens */}
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
+              <div className="min-h-full flex flex-col">
+                {/* Premier Canvas - Screen 1 */}
+                <div data-screen-anchor="screen1" className="relative">
+                  <DesignCanvas
+                    screenId="screen1"
+                    ref={canvasRef}
+                    selectedDevice={selectedDevice}
+                    elements={canvasElements}
+                    onElementsChange={setCanvasElements}
+                    background={canvasBackground}
+                    campaign={campaignData}
+                    onCampaignChange={handleCampaignConfigChange}
+                    zoom={canvasZoom}
+                    onZoomChange={setCanvasZoom}
+                    enableInternalAutoFit={true}
+                    selectedElement={selectedElement}
+                    onSelectedElementChange={setSelectedElement}
+                    selectedElements={selectedElements}
+                    onSelectedElementsChange={setSelectedElements}
+                    onElementUpdate={handleElementUpdate}
+                    // Wheel sync props
+                    wheelModalConfig={wheelModalConfig}
+                    extractedColors={extractedColors}
+                    containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                    elementFilter={(element: any) => {
+                      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                      return !role.includes('exit-message');
+                    }}
+                    // Module system props
+                    modularModules={modularPage.screens.screen1}
+                    onModuleUpdate={handleModuleUpdate}
+                    selectedModuleId={selectedModuleId}
+                    // Sidebar panel triggers
 onShowEffectsPanel={() => {
                         if (!isWindowMobile) {
                           setShowEffectsInSidebar(true);
@@ -1222,21 +1673,218 @@ onShowPositionPanel={() => {
                 setShowAnimationsInSidebar(false);
                 setShowPositionInSidebar(false);
               }}
-              // Mobile sidebar integrations
-              onAddElement={handleAddElement}
-              onBackgroundChange={handleBackgroundChange}
-              onExtractedColorsChange={handleExtractedColorsChange}
-              // Group selection wiring
-              selectedGroupId={selectedGroupId as any}
-              onSelectedGroupChange={setSelectedGroupId as any}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-              showWheelPanel={showWheelPanel}
-              onWheelPanelChange={setShowWheelPanel}
-            />
-            {/* Zoom Slider - Hidden when window is in mobile format */}
+                    // Mobile sidebar integrations
+                    onAddElement={handleAddElement}
+                    onBackgroundChange={handleBackgroundChange}
+                    onExtractedColorsChange={handleExtractedColorsChange}
+                    // Group selection wiring
+                    selectedGroupId={selectedGroupId as any}
+                    onSelectedGroupChange={setSelectedGroupId as any}
+                    onUndo={undo}
+                    onRedo={redo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                    showWheelPanel={showWheelPanel}
+                    onWheelPanelChange={setShowWheelPanel}
+                    // Modular page (screen1)
+                    modularModules={modularPage.screens.screen1}
+                    onModuleUpdate={handleModuleUpdate}
+                    selectedModuleId={selectedModuleId}
+                  />
+                </div>
+
+                {/* Deuxième Canvas - Screen 2 */}
+                <div className="mt-4 relative" data-screen-anchor="screen2">
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{ background: '#ffffff' }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      screenId="screen2"
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={canvasBackground}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      wheelModalConfig={wheelModalConfig}
+                      extractedColors={extractedColors}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return !role.includes('exit-message');
+                      }}
+                      onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowAnimationsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      showWheelPanel={showWheelPanel}
+                      onWheelPanelChange={setShowWheelPanel}
+                      modularModules={modularPage.screens.screen2}
+                      onModuleUpdate={handleModuleUpdate}
+                      selectedModuleId={selectedModuleId}
+                      onModuleDelete={handleDeleteModule}
+                      onModuleMove={handleMoveModule}
+                      onModuleDuplicate={handleDuplicateModule}
+                    />
+                  </div>
+                </div>
+
+                {/* Troisième Canvas - Screen 3 */}
+                <div className="mt-4 relative" data-screen-anchor="screen3">
+                  <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      background: canvasBackground.type === 'image'
+                        ? `url(${canvasBackground.value}) center/cover no-repeat`
+                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                    }}
+                  />
+                  <div 
+                    className="absolute -top-4 left-0 right-0 h-4 z-0"
+                    style={{ background: '#ffffff' }}
+                  />
+                  <div className="relative z-10">
+                    <DesignCanvas
+                      screenId="screen3"
+                      selectedDevice={selectedDevice}
+                      elements={canvasElements}
+                      onElementsChange={setCanvasElements}
+                      background={canvasBackground}
+                      campaign={campaignData}
+                      onCampaignChange={handleCampaignConfigChange}
+                      zoom={canvasZoom}
+                      onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
+                      selectedElement={selectedElement}
+                      onSelectedElementChange={setSelectedElement}
+                      selectedElements={selectedElements}
+                      onSelectedElementsChange={setSelectedElements}
+                      onElementUpdate={handleElementUpdate}
+                      wheelModalConfig={wheelModalConfig}
+                      extractedColors={extractedColors}
+                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+                      elementFilter={(element: any) => {
+                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
+                        return role.includes('exit-message');
+                      }}
+                      onShowEffectsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowEffectsInSidebar(true);
+                          setShowAnimationsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowAnimationsPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowAnimationsInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowPositionInSidebar(false);
+                        }
+                      }}
+                      onShowPositionPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowPositionInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowDesignInSidebar(false);
+                        }
+                      }}
+                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
+                        if (context) {
+                          setDesignColorContext(context);
+                        }
+                        setShowDesignInSidebar(true);
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('background');
+                        }
+                      }}
+                      onOpenElementsTab={() => {
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }}
+                      onAddElement={handleAddElement}
+                      onBackgroundChange={handleBackgroundChange}
+                      onExtractedColorsChange={handleExtractedColorsChange}
+                      selectedGroupId={selectedGroupId as any}
+                      onSelectedGroupChange={setSelectedGroupId as any}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      showWheelPanel={showWheelPanel}
+                      onWheelPanelChange={setShowWheelPanel}
+                      modularModules={modularPage.screens.screen3}
+                      onModuleUpdate={handleModuleUpdate}
+                      selectedModuleId={selectedModuleId}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Zoom Slider with integrated Screen navigation button */}
             {!isWindowMobile && (
               <ZoomSlider 
                 zoom={canvasZoom}
@@ -1244,6 +1892,18 @@ onShowPositionPanel={() => {
                 minZoom={0.1}
                 maxZoom={1}
                 step={0.05}
+                onNavigateToScreen2={() => {
+                  const nextScreen = currentScreen === 'screen1'
+                    ? 'screen2'
+                    : currentScreen === 'screen2'
+                      ? 'screen3'
+                      : 'screen1';
+                  const scrolled = scrollToScreen(nextScreen);
+                  if (scrolled) {
+                    setCurrentScreen(nextScreen);
+                  }
+                }}
+                currentScreen={currentScreen}
               />
             )}
           </>

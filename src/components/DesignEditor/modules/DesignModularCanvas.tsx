@@ -1,23 +1,23 @@
 import React from 'react';
 import { Trash2, GripVertical, MoveDiagonal, ChevronDown, Copy } from 'lucide-react';
-import type { Module, ScreenId, SocialIconStyle } from '@/types/modularEditor';
-import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from './socialIcons';
+import type { DesignModule, DesignScreenId, SocialIconStyle } from '@/types/designEditorModular';
+import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from '@/components/ScratchCardEditor/modules/socialIcons';
 import type { DeviceType } from '@/utils/deviceDimensions';
-import { QuizModuleRenderer } from '../QuizRenderer';
+import { DesignModuleRenderer } from '../DesignRenderer';
 
-export interface ModularCanvasProps {
-  screen: ScreenId;
-  modules: Module[];
-  onUpdate: (id: string, patch: Partial<Module>) => void;
+export interface DesignModularCanvasProps {
+  screen: DesignScreenId;
+  modules: DesignModule[];
+  onUpdate: (id: string, patch: Partial<DesignModule>) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, direction: 'up' | 'down') => void;
   onDuplicate?: (id: string) => void;
-  onSelect?: (module: Module) => void;
+  onSelect?: (module: DesignModule) => void;
   selectedModuleId?: string;
   device?: DeviceType;
 }
 
-type LayoutWidth = NonNullable<Module['layoutWidth']>;
+type LayoutWidth = NonNullable<DesignModule['layoutWidth']>;
 
 const layoutOptions: Array<{ id: LayoutWidth; label: string }> = [
   { id: 'full', label: '1/1' },
@@ -143,7 +143,7 @@ const Toolbar: React.FC<{
 }
 
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+const renderModule = (m: DesignModule, onUpdate: (patch: Partial<DesignModule>) => void, device: DeviceType = 'desktop') => {
   // const isMobileDevice = device === 'mobile';
   // const deviceScale = isMobileDevice ? 0.8 : 1;
 
@@ -155,7 +155,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     case 'BlocTexte': {
       return (
         <div style={{ ...commonStyle }}>
-          <QuizModuleRenderer
+          <DesignModuleRenderer
             modules={[m]}
             previewMode={false}
             device={device}
@@ -168,7 +168,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     case 'BlocImage': {
       return (
         <div style={{ ...commonStyle }}>
-          <QuizModuleRenderer
+          <DesignModuleRenderer
             modules={[m]}
             previewMode={false}
             device={device}
@@ -181,7 +181,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     case 'BlocBouton':
       return (
         <div style={{ ...commonStyle }}>
-          <QuizModuleRenderer
+          <DesignModuleRenderer
             modules={[m]}
             previewMode={false}
             device={device}
@@ -205,7 +205,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     case 'BlocVideo':
       return (
         <div style={{ ...commonStyle }}>
-          <QuizModuleRenderer
+          <DesignModuleRenderer
             modules={[m]}
             previewMode={false}
             device={device}
@@ -215,7 +215,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         </div>
       );
     case 'BlocReseauxSociaux': {
-      const moduleWithMeta = m as Module & {
+      const moduleWithMeta = m as DesignModule & {
         displayMode?: 'icons' | 'buttons';
         iconSize?: number;
         iconSpacing?: number;
@@ -264,7 +264,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
                 }}
               >
                 {links.map((link) => {
-                  const networkId = (link.network as any) || undefined;
+                  const networkId = (link.network as string) || undefined;
                   const iconStyle: SocialIconStyle = (moduleWithMeta.iconStyle as SocialIconStyle) ?? 'color';
                   const styleConfig = getIconStyleConfig(iconStyle, networkId as any);
                   void styleConfig; // Mark as used for future functionality
@@ -378,7 +378,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         </div>
       );
     case 'BlocCarte': {
-      // Utiliser QuizModuleRenderer pour un rendu cohérent avec l'héritage des couleurs
+      // Utiliser DesignModuleRenderer pour un rendu cohérent avec l'héritage des couleurs
       return (
         <div
           style={{
@@ -386,7 +386,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             width: '100%'
           }}
         >
-          <QuizModuleRenderer
+          <DesignModuleRenderer
             modules={[m]}
             previewMode={false}
             device={device}
@@ -405,7 +405,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     }
     case 'BlocLogo':
       return (
-        <QuizModuleRenderer
+        <DesignModuleRenderer
           modules={[m]}
           previewMode={false}
           device={device}
@@ -415,7 +415,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       );
     case 'BlocPiedDePage':
       return (
-        <QuizModuleRenderer
+        <DesignModuleRenderer
           modules={[m]}
           previewMode={false}
           device={device}
@@ -428,7 +428,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
   }
 };
 
-const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate, onDelete, onMove, onDuplicate, onSelect, selectedModuleId, device = 'desktop' }) => {
+const DesignModularCanvas: React.FC<DesignModularCanvasProps> = ({ screen, modules, onUpdate, onDelete, onMove, onDuplicate, onSelect, selectedModuleId, device = 'desktop' }) => {
   const moduleRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const modulesRef = React.useRef(modules);
   const onMoveRef = React.useRef(onMove);
@@ -518,7 +518,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     activeHandleRef.current = null;
   }, [handleGlobalPointerMove]);
 
-  const startModuleDrag = React.useCallback((event: React.PointerEvent<HTMLElement>, module: Module, index: number) => {
+  const startModuleDrag = React.useCallback((event: React.PointerEvent<HTMLElement>, module: DesignModule, index: number) => {
     if (event.button !== 0 && event.pointerType !== 'touch' && event.pointerType !== 'pen') {
       return;
     }
@@ -626,8 +626,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   const single = regularModules.length === 1;
   const minHeightPx = device === 'mobile' ? 420 : device === 'tablet' ? 520 : 640;
   const rows = React.useMemo(() => {
-    const grouped: Array<Array<{ module: Module; index: number }>> = [];
-    let current: Array<{ module: Module; index: number }> = [];
+    const grouped: Array<Array<{ module: DesignModule; index: number }>> = [];
+    let current: Array<{ module: DesignModule; index: number }> = [];
     let currentSpan = 0;
 
     const MAX_ROW_UNITS = 6;
@@ -959,4 +959,4 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   );
 };
 
-export default ModularCanvas;
+export default DesignModularCanvas;

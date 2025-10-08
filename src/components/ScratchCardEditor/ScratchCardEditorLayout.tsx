@@ -1936,6 +1936,13 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
+          },
+          // Préserver modularPage pour la synchronisation avec le preview
+          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
+          // Préserver design.quizModules si présent
+          design: {
+            ...(transformedCampaign as any).design,
+            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
           }
         } as any;
       });
@@ -2370,7 +2377,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex pointer-events-none">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}

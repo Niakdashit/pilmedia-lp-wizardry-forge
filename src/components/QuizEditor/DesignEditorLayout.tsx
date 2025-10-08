@@ -1337,7 +1337,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       lastModuleSelectionRef.current = moduleId;
       setSelectedModuleId(moduleId);
       setPreviousSidebarTab(activeSidebarTab);
-      setActiveSidebarTab('elements');
+      // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
+      // Sinon, ouvrir l'onglet Elements pour les autres modules
+      if (selectedModule?.type === 'BlocTexte') {
+        setActiveSidebarTab('background');
+      } else {
+        setActiveSidebarTab('elements');
+      }
       return;
     }
 
@@ -1832,6 +1838,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
+          },
+          // Préserver modularPage pour la synchronisation avec le preview
+          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
+          // Préserver design.quizModules si présent
+          design: {
+            ...(transformedCampaign as any).design,
+            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
           }
         } as any;
       });

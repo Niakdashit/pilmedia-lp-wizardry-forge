@@ -1,6 +1,7 @@
 import React from 'react';
-import { ModulesPanel, AssetsPanel } from '@/components/shared';
-import type { ScreenId, Module } from '@/components/shared/modules';
+import ModulesPanel from './ModulesPanel';
+import AssetsPanel from '../panels/AssetsPanel';
+import type { ScreenId, Module } from './ModulesPanel';
 
 export interface CompositeElementsPanelProps {
   currentScreen: ScreenId;
@@ -25,7 +26,12 @@ const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
       <div className="px-4 pt-2 pb-4">
         <div className="h-px bg-[hsl(var(--sidebar-border))]" />
       </div>
-      <AssetsPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} />
+      <AssetsPanel 
+        onAddElement={onAddElement} 
+        selectedElement={selectedElement} 
+        onElementUpdate={onElementUpdate} 
+        selectedDevice={selectedDevice} 
+      />
     </div>
   );
 };

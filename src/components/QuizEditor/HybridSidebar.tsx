@@ -7,9 +7,7 @@ import {
   Palette,
   FormInput
 } from 'lucide-react';
-import BackgroundPanel from './panels/BackgroundPanel';
-import CompositeElementsPanel from './modules/CompositeElementsPanel';
-import TextEffectsPanel from './panels/TextEffectsPanel';
+import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from './modules/ImageModulePanel';
 import LogoModulePanel from './modules/LogoModulePanel';
 import FooterModulePanel from './modules/FooterModulePanel';
@@ -626,14 +624,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           />
         );
       case 'background':
+        // Pour les modules texte, passer le module comme selectedElement
+        const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
+        const updateForBackground = selectedModule?.type === 'BlocTexte' && onModuleUpdate 
+          ? (updates: any) => onModuleUpdate(selectedModule.id, updates)
+          : onElementUpdate;
+        
         return (
           <BackgroundPanel 
             onBackgroundChange={onBackgroundChange || (() => {})} 
             onExtractedColorsChange={onExtractedColorsChange}
             currentBackground={currentBackground}
             extractedColors={extractedColors}
-            selectedElement={selectedElement}
-            onElementUpdate={onElementUpdate}
+            selectedElement={elementForBackground}
+            onElementUpdate={updateForBackground}
             onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
             currentScreen={currentScreen}

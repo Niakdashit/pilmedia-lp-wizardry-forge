@@ -2,16 +2,20 @@ import React from 'react';
 import { ModulesPanel, AssetsPanel } from '@/components/shared';
 import type { ScreenId, Module } from '@/components/shared/modules';
 
-export interface CompositeElementsPanelProps {
-  currentScreen: ScreenId;
-  onAddModule: (screen: ScreenId, module: Module) => void;
+// Type aliases pour compatibilité
+type DesignScreenId = ScreenId;
+type DesignModule = Module;
+
+export interface DesignCompositeElementsPanelProps {
+  currentScreen: DesignScreenId;
+  onAddModule: (screen: DesignScreenId, module: DesignModule) => void;
   onAddElement: (element: any) => void;
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
-const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
+const DesignCompositeElementsPanel: React.FC<DesignCompositeElementsPanelProps> = ({
   currentScreen,
   onAddModule,
   onAddElement,
@@ -30,4 +34,4 @@ const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
   );
 };
 
-export default CompositeElementsPanel;
+export default DesignCompositeElementsPanel;

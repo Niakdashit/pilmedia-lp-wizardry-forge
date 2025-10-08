@@ -152,7 +152,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
   switch (m.type) {
     case 'BlocTexte': {
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
+        <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -165,7 +165,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     }
     case 'BlocImage': {
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
+        <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -178,7 +178,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     }
     case 'BlocBouton':
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
+        <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -202,7 +202,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       );
     case 'BlocVideo':
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
+        <div style={{ ...commonStyle }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -236,9 +236,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       return (
         <div
           style={{
-            ...commonStyle,
-            paddingTop: (moduleWithMeta as any).spacingTop ?? 0,
-            paddingBottom: (moduleWithMeta as any).spacingBottom ?? 0
+            ...commonStyle
           }}
         >
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
@@ -358,8 +356,6 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           style={{
             ...commonStyle,
             background: 'transparent',
-            paddingTop: (m as any).spacingTop ?? 0,
-            paddingBottom: (m as any).spacingBottom ?? 0,
             display: 'flex',
             justifyContent: htmlJustify,
             width: '100%'
@@ -385,8 +381,6 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div
           style={{
             ...commonStyle,
-            paddingTop: (m as any).spacingTop ?? 0,
-            paddingBottom: (m as any).spacingBottom ?? 0,
             width: '100%'
           }}
         >
