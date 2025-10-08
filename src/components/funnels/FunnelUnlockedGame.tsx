@@ -594,10 +594,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               {/* Game Component (Roue ou Cartes selon le type) */}
               <div 
                 className="absolute inset-0 flex items-center justify-center" 
-                style={{ 
-                  zIndex: formValidated ? 100 : 50,
-                  pointerEvents: formValidated ? 'auto' : 'none'
-                }}
+                style={{ zIndex: 50 }}
               >
                 {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
                   <GameRenderer
@@ -640,11 +637,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     handleCardClick();
                   }}
                 />
-              )}
-              {formValidated && (
-                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 9999, background: 'lime', padding: '5px', fontSize: '12px' }}>
-                  ✅ Form validated - Wheel should be clickable
-                </div>
               )}
             </>
           )}

@@ -103,7 +103,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
               extractedColors: campaign?.design?.extractedColors || []
             }}
             disabled={!formValidated}
-            disableForm={false}
           />
         );
       

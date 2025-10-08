@@ -43,7 +43,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
   const commonProps = {
     campaign,
     config: gameConfig,
-    disableForm,
+    disabled: disableForm,
     onFinish: onGameFinish,
     previewDevice,
     gameSize: campaign.gameSize || 'medium',
