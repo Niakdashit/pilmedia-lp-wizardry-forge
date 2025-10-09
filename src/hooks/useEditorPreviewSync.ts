@@ -4,7 +4,6 @@ import { useEditorStore } from '../stores/editorStore';
 /**
  * Hook de synchronisation robuste entre le mode édition et le mode preview
  * Garantit que tous les changements sont instantanément reflétés dans les deux modes
- * Build trigger: force rebuild
  */
 export const useEditorPreviewSync = () => {
   const campaign = useEditorStore((state) => state.campaign);
