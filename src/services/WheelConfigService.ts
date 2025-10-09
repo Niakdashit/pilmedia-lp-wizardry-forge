@@ -357,7 +357,7 @@ export class WheelConfigService {
 
     // Cas 1: Position "center" => conserver l'ancien découpage (croppé en bas) pour tous les devices
     if (position === 'center' || device !== 'desktop') {
-      const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden pointer-events-none';
+      const base = 'absolute bottom-0 transform translate-y-1/3 overflow-hidden';
       const centerClass = 'left-1/2 -translate-x-1/2';
       return {
         containerClass: `${base} ${centerClass} z-40`,
