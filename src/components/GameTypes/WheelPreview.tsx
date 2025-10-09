@@ -185,46 +185,48 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         style={{ transform: lifted ? 'translateY(-25%)' : 'translateY(0%)' }}
       >
         <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
-          <SmartWheel
-            key={(() => {
-              try {
-                const parts = segments.map((s: any, idx: number) => 
-                  `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
-                ).join('|');
-                const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
-                return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
-              } catch {
-                const fallbackSpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
-                return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
-              }
-            })()}
-            segments={syncedSegments as any}
-            theme="modern"
-            size={wheelSize}
-            brandColors={{
-              primary: wheelConfig.brandColors?.primary || '#841b60',
-              secondary: wheelConfig.brandColors?.secondary || '#ffffff',
-              accent: wheelConfig.brandColors?.accent || '#45b7d1'
-            }}
-            onResult={handleResult}
-            onSpin={handleSpin}
-            disabled={disabled}
-            disablePointerAnimation={true}
-            borderStyle={wheelConfig.borderStyle}
-            customBorderColor={wheelConfig.borderColor}
-            customBorderWidth={wheelConfig.borderWidth}
-            showBulbs={wheelConfig.showBulbs}
-            buttonPosition="center"
-            // Forcer le mode probabilité pour respecter les réglages des lots
-            spinMode={'probability'}
-            speed={resolvedSpeed}
-            winProbability={resolvedWinProbability}
-            customButton={{
-              text: "GO",
-              color: wheelConfig.borderColor,
-              textColor: campaign.buttonConfig?.textColor || '#ffffff'
-            }}
-          />
+          <div className={cropping.wheelClass}>
+            <SmartWheel
+              key={(() => {
+                try {
+                  const parts = segments.map((s: any, idx: number) => 
+                    `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
+                  ).join('|');
+                  const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
+                  return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
+                } catch {
+                  const fallbackSpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
+                  return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
+                }
+              })()}
+              segments={syncedSegments as any}
+              theme="modern"
+              size={wheelSize}
+              brandColors={{
+                primary: wheelConfig.brandColors?.primary || '#841b60',
+                secondary: wheelConfig.brandColors?.secondary || '#ffffff',
+                accent: wheelConfig.brandColors?.accent || '#45b7d1'
+              }}
+              onResult={handleResult}
+              onSpin={handleSpin}
+              disabled={disabled}
+              disablePointerAnimation={true}
+              borderStyle={wheelConfig.borderStyle}
+              customBorderColor={wheelConfig.borderColor}
+              customBorderWidth={wheelConfig.borderWidth}
+              showBulbs={wheelConfig.showBulbs}
+              buttonPosition="center"
+              // Forcer le mode probabilité pour respecter les réglages des lots
+              spinMode={'probability'}
+              speed={resolvedSpeed}
+              winProbability={resolvedWinProbability}
+              customButton={{
+                text: "GO",
+                color: wheelConfig.borderColor,
+                textColor: campaign.buttonConfig?.textColor || '#ffffff'
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
