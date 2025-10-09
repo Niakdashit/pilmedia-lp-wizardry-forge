@@ -102,7 +102,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             wheelModalConfig={{
               extractedColors: campaign?.design?.extractedColors || []
             }}
-            disabled={!formValidated}
             disableForm={false}
           />
         );
