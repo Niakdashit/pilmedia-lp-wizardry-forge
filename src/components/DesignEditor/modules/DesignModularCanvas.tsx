@@ -830,9 +830,9 @@ const DesignModularCanvas: React.FC<DesignModularCanvasProps> = ({ screen, modul
 
                   // Default behavior for other modules: vertical height resize with spacing distribution
                   const startHeight = typeof m.minHeight === 'number' ? m.minHeight : measuredRef?.offsetHeight || 200;
-                  const baseSpacing = (type: Module['type']) => {
-                    if (type === 'BlocSeparateur') return 1;
-                    if (type === 'BlocTexte') return 0;
+                  const baseSpacing = (moduleType: string) => {
+                    if (moduleType === 'BlocSeparateur') return 1;
+                    if (moduleType === 'BlocTexte') return 0;
                     return 4;
                   };
                   const startTopSpacing = m.spacingTop ?? baseSpacing(m.type);

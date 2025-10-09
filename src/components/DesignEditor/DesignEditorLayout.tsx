@@ -507,10 +507,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // Hook de synchronisation robuste entre édition et preview
   const {
     syncBackground,
-    syncModules,
-    syncModule,
-    getCanonicalPreviewData,
-    forceSync
+    syncModules
   } = useEditorPreviewSync();
 
   // Utilisation du hook de synchronisation unifié
@@ -730,14 +727,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       return next;
     });
   }, [persistModular]);
-
-  const handleUpdateModule = useCallback((id: string, patch: Partial<DesignModule>) => {
-    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
-      nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as DesignModule : m));
-    });
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
 
   const handleDeleteModule = useCallback((id: string) => {
     const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
@@ -1012,9 +1001,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         elements: [...canvasElements, ...Object.values(modularPage.screens).flat()],
         background: canvasBackground,
         device: selectedDevice
-      },
-      // Ajouter modularPage pour compatibilité
-      modularPage: modularPage
+      }
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
 
@@ -1675,21 +1662,6 @@ onShowPositionPanel={() => {
               }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
-                    onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
-                    // Group selection wiring
-                    selectedGroupId={selectedGroupId as any}
-                    onSelectedGroupChange={setSelectedGroupId as any}
-                    onUndo={undo}
-                    onRedo={redo}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                    showWheelPanel={showWheelPanel}
-                    onWheelPanelChange={setShowWheelPanel}
-                    // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
-                    onModuleUpdate={handleModuleUpdate}
-                    selectedModuleId={selectedModuleId}
                   />
                 </div>
 

@@ -6,6 +6,7 @@ interface CartePanelProps {
   onUpdate: (id: string, patch: Partial<BlocCarte>) => void;
   onAddChild?: (parentId: string, childModule: any) => void;
   onDeleteChild?: (parentId: string, childId: string) => void;
+  onBack?: () => void;
 }
 
 const CartePanel: React.FC<CartePanelProps> = ({ module, onUpdate }) => {

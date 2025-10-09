@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useEditorStore } from '../stores/editorStore';
 
 /**
@@ -136,7 +136,7 @@ export const useEditorPreviewSync = () => {
    */
   const getCanonicalPreviewData = useCallback(() => {
     const design = campaign?.design || {};
-    const modularPage = campaign?.modularPage || campaign?.design?.designModules || { 
+    const modularPage = (campaign as any)?.modularPage || (campaign?.design as any)?.designModules || { 
       screens: { screen1: [], screen2: [], screen3: [] }, 
       _updatedAt: Date.now() 
     };
@@ -145,11 +145,11 @@ export const useEditorPreviewSync = () => {
     let canonicalBackground: { type: 'color' | 'image'; value: string };
     
     if (design.background && typeof design.background === 'object') {
-      canonicalBackground = design.background;
+      canonicalBackground = design.background as any;
     } else if (design.backgroundImage) {
       canonicalBackground = { type: 'image', value: design.backgroundImage };
-    } else if (campaign?.canvasConfig?.background) {
-      canonicalBackground = campaign.canvasConfig.background;
+    } else if ((campaign as any)?.canvasConfig?.background) {
+      canonicalBackground = (campaign as any).canvasConfig.background;
     } else {
       canonicalBackground = { 
         type: 'color', 
@@ -160,7 +160,7 @@ export const useEditorPreviewSync = () => {
     return {
       background: canonicalBackground,
       modularPage,
-      timestamp: campaign?._syncTimestamp || Date.now()
+      timestamp: (campaign as any)?._syncTimestamp || Date.now()
     };
   }, [campaign]);
 
