@@ -37,9 +37,9 @@ const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
 };
 
 const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
-  desktop: 24,
-  tablet: 20,
-  mobile: 16
+  desktop: 32,
+  tablet: 28,
+  mobile: 24
 };
 
 export interface DesignCanvasProps {
@@ -495,53 +495,32 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     }
   }, [selectedDevice, screenId]);
 
-  // Listen for device-scoped apply to all screens; apply to ALL screens for the specified device
+  // Listen for device-scoped apply to all screens; apply to this screen if device matches
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       const targetDevice = detail.device || selectedDevice;
-      console.log(`🎨 [${screenId}] Received applyBackgroundAllScreens for device:`, targetDevice);
-      // Appliquer à TOUS les écrans (pas de vérification de screenId)
-      // Mettre à jour l'état pour l'appareil spécifique
-      setDeviceBackgrounds(prev => ({
-        ...prev,
-        [targetDevice]: detail.url || null
-      }));
-      // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
-      try {
-        localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
-        console.log(`✅ [${screenId}] Applied background to device ${targetDevice}`);
-      } catch {}
-      // Mettre aussi à jour le design global (par device) pour la persistance et le preview
-      try {
-        updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
-      } catch {}
-    };
-    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
-    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
-  }, [screenId, selectedDevice]);
-
-  // Listen for clear backgrounds on other screens (when unchecking "apply to all")
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail as { device?: 'desktop' | 'tablet' | 'mobile'; keepScreenId?: string } | undefined;
-      if (!detail) return;
-      const targetDevice = detail.device || selectedDevice;
-      // Si ce n'est pas l'écran à conserver, supprimer le background pour ce device
-      if (detail.keepScreenId !== screenId) {
-        console.log(`🗑️ [${screenId}] Clearing background for device ${targetDevice}`);
+      if (detail.device === undefined || detail.device === targetDevice) {
+        // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
-          [targetDevice]: null
+          [targetDevice]: detail.url || null
         }));
+        // Stocker pour l'appareil ciblé afin de conserver les images distinctes par device
         try {
-          localStorage.removeItem(`sc-bg-${targetDevice}-${screenId}`);
+          localStorage.setItem(`sc-bg-${targetDevice}-${screenId}`, detail.url);
+          // Émettre un événement de synchronisation pour les autres canvas
+          window.dispatchEvent(new CustomEvent('sc-bg-sync', { detail: { screenId } }));
+        } catch {}
+        // Mettre aussi à jour le design global (par device) pour la persistance et le preview
+        try {
+          updateDesign(targetDevice === 'mobile' ? { mobileBackgroundImage: detail.url } : { backgroundImage: detail.url });
         } catch {}
       }
     };
-    window.addEventListener('clearBackgroundOtherScreens', handler as EventListener);
-    return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
+    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
   // Charger toutes les images de fond au montage initial (une seule fois)
@@ -2372,52 +2351,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 return null;
               })()}
 
-              {/* Logo band - rendered INSIDE canvas background to avoid padding */}
-              {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
-                const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
-                if (logoModules.length === 0) return null;
-                return (
-                  <div
-                    className="absolute left-0 top-0 z-[1000]"
-                    style={{
-                      width: '100%',
-                      pointerEvents: 'none'
-                    }}
-                  >
-                    <div className="w-full" style={{ pointerEvents: 'auto' }}>
-                      <QuizModuleRenderer
-                        modules={logoModules.map((lm: any) => ({
-                          ...lm,
-                          bandPadding: 0,
-                          spacingTop: 0
-                        }))}
-                        previewMode={false}
-                        device={selectedDevice}
-                        onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
-                        onModuleClick={(moduleId) => {
-                          try {
-                            const mod = (logoModules as any).find((mm: any) => mm.id === moduleId);
-                            const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
-                            window.dispatchEvent(evt);
-                          } catch {}
-                          onSelectedElementChange?.({
-                            id: `modular-logo-${moduleId}`,
-                            type: 'logo',
-                            role: 'module-logo',
-                            moduleId,
-                            screenId
-                          } as any);
-                          onOpenElementsTab?.();
-                        }}
-                        selectedModuleId={((externalSelectedElement as any)?.role === 'module-logo')
-                          ? (externalSelectedElement as any)?.moduleId
-                          : undefined}
-                      />
-                    </div>
-                  </div>
-                );
-              })()}
-
               {/* Scratch Card Game Canvas - Seulement sur l'écran de jeu (screen2) */}
               {screenId === 'screen2' && (
                 <div 
@@ -2439,36 +2372,53 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
               const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
               const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-              const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
-                const h = (m?.bandHeight ?? 60);
-                const p = (m?.bandPadding ?? 16) * 2;
-                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
-                return Math.max(acc, h + p + extra);
-              }, 0);
-              const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
-                const h = (m?.bandHeight ?? 60);
-                const p = (m?.bandPadding ?? 16) * 2;
-                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
-                return Math.max(acc, h + p + extra);
-              }, 0);
               return (
-                <>
+                <div className="relative w-full">
+                  {/* Absolute, full-width logo band at the very top (non-movable) */}
+                  {logoModules.length > 0 && (
+                    <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                        <QuizModuleRenderer
+                          modules={logoModules}
+                          previewMode={false}
+                          device={selectedDevice}
+                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
+                          onModuleClick={(moduleId) => {
+                            try {
+                              const mod = (logoModules as any).find((mm: any) => mm.id === moduleId);
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
+                              window.dispatchEvent(evt);
+                            } catch {}
+                            onSelectedElementChange?.({
+                              id: `modular-logo-${moduleId}`,
+                              type: 'logo',
+                              role: 'module-logo',
+                              moduleId,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                          }}
+                          selectedModuleId={((externalSelectedElement as any)?.role === 'module-logo')
+                            ? (externalSelectedElement as any)?.moduleId
+                            : undefined}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Regular modules container; padding adjusted when logo/footer exist */}
                   <div
-                    className="w-full flex justify-center mb-6"
+                    className="w-full flex justify-center"
                     style={{
                       paddingLeft: safeZonePadding,
                       paddingRight: safeZonePadding,
-                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
-                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
+                      paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
+                      paddingBottom: footerModules.length > 0 ? 0 : safeZonePadding,
+                      marginBottom: footerModules.length > 0 ? 0 : '1.5rem',
                       boxSizing: 'border-box'
                     }}
                   >
-                    {/* Spacer to prevent overlap with the absolute logo band */}
-                    {logoModules.length > 0 && (
-                      <div style={{ height: logoVisualHeight }} />
-                    )}
+                    {/* Spacer removed - logo is now flush at top */}
                     <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
                       <ModularCanvas
                         screen={screenId as any}
@@ -2568,9 +2518,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           ? (externalSelectedElement as any)?.moduleId
                           : undefined}
                       />
-                      {footerModules.length > 0 && (
-                        <div style={{ height: footerVisualHeight }} />
-                      )}
+                      {/* Spacer removed - footer is now flush at bottom */}
                     </div>
                   </div>
 
@@ -2580,7 +2528,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
-                          previewMode={false}
+                          previewMode={true}
                           device={selectedDevice}
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
@@ -2605,7 +2553,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               );
             })()}
 

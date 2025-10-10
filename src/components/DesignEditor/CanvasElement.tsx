@@ -51,7 +51,6 @@ export interface CanvasElementProps {
     elementStyle: React.CSSProperties;
     deviceProps: any;
   }) => React.ReactNode>;
-  allowWheelInteraction?: boolean;
 }
 
 const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
@@ -72,8 +71,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   campaign,
   extractedColors,
   alignmentSystem,
-  customRenderers = {},
-  allowWheelInteraction = false
+  customRenderers = {}
 }) => {
   const { getPropertiesForDevice } = useUniversalResponsive('desktop');
   
@@ -1231,16 +1229,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
             className={`${readOnly ? '' : 'cursor-move'}`}
             style={{ 
               ...elementStyle,
-              pointerEvents: 'auto',
-              cursor: 'pointer'
-            }}
-            onClick={(e) => {
-              if (allowWheelInteraction) {
-                e.stopPropagation();
-                // Trigger wheel spin on any click
-                const spinEvent = new CustomEvent('wheelSpin', { detail: { elementId: element.id } });
-                window.dispatchEvent(spinEvent);
-              }
+              pointerEvents: 'none' // Empêche l'interaction directe avec la roue
             }}
           >
             <SmartWheel
@@ -1259,7 +1248,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
               })()}
               segments={campaignSegments.length > 0 ? campaignSegments : (element.segments || [])}
               size={Math.min(element.width || 300, element.height || 300)}
-              disabled={!allowWheelInteraction}
+              disabled={true}
               disablePointerAnimation={true}
               theme="modern"
               brandColors={{
@@ -1350,10 +1339,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
         transition: (isDragging || isRotating || isResizing) ? 'none' : 'transform 0.1s linear',
         touchAction: 'none',
         cursor: readOnly ? 'default' : (isLaunchButton ? 'default' : (isEditing ? 'text' : (isDragging ? 'grabbing' : 'grab'))),
-        pointerEvents: (readOnly && element.type !== 'wheel') ? 'none' : 'auto',
+        pointerEvents: readOnly ? 'none' : 'auto',
       }}
-      onPointerDown={(readOnly && element.type !== 'wheel') ? undefined : handlePointerDown}
-      onDoubleClick={(readOnly && element.type !== 'wheel') ? undefined : handleDoubleClick}
+      onPointerDown={readOnly ? undefined : handlePointerDown}
+      onDoubleClick={readOnly ? undefined : handleDoubleClick}
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();

@@ -3,9 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-import type { DesignModularPage, DesignScreenId, DesignModule } from '@/types/designEditorModular';
-import { createEmptyDesignModularPage } from '@/types/designEditorModular';
-import { SmartWheel } from '../SmartWheel';
+const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -16,7 +14,6 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { useEditorPreviewSync } from '../../hooks/useEditorPreviewSync';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -28,41 +25,9 @@ const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'))
 interface DesignEditorLayoutProps {
   mode?: 'template' | 'campaign';
   hiddenTabs?: string[];
-  allowWheelInteraction?: boolean;
 }
 
-const DESIGN_SCREEN_IDS: DesignScreenId[] = ['screen1', 'screen2', 'screen3'];
-
-const normalizeDesignModularPage = (
-  page: DesignModularPage,
-  options?: { preserveTimestamp?: boolean }
-): DesignModularPage => {
-  const normalizedScreens: Record<DesignScreenId, DesignModule[]> = {
-    screen1: [],
-    screen2: [],
-    screen3: []
-  };
-
-  const resolveScreen = (raw: any, fallback: DesignScreenId): DesignScreenId => {
-    return DESIGN_SCREEN_IDS.includes(raw as DesignScreenId) ? (raw as DesignScreenId) : fallback;
-  };
-
-  DESIGN_SCREEN_IDS.forEach((screen) => {
-    const modules = Array.isArray(page?.screens?.[screen]) ? page.screens[screen] : [];
-    modules.forEach((module) => {
-      const targetScreen = resolveScreen((module as any)?.screenId, screen);
-      const normalizedModule = { ...module, screenId: targetScreen } as DesignModule & { screenId: DesignScreenId };
-      normalizedScreens[targetScreen].push(normalizedModule);
-    });
-  });
-
-  return {
-    screens: normalizedScreens,
-    _updatedAt: options?.preserveTimestamp && page?._updatedAt ? page._updatedAt : Date.now()
-  };
-};
-
-const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs, allowWheelInteraction = false }) => {
+const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
@@ -131,94 +96,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   ));
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
-  // Multi-screen system states
-  const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
-  const [modularPage, setModularPage] = useState<DesignModularPage>(createEmptyDesignModularPage());
-  // Module selection for configuration panels
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const [selectedModule, setSelectedModule] = useState<DesignModule | null>(null);
-
-  // Auto-assign screenId to elements without one
-  useEffect(() => {
-    if (!canvasElements.length) return;
-    const hasMissingScreen = canvasElements.some((element: any) => !element?.screenId);
-    if (!hasMissingScreen) return;
-
-    setCanvasElements((prev: any[]) => {
-      let mutated = false;
-      const updated = prev.map((element: any) => {
-        if (element?.screenId) return element;
-
-        mutated = true;
-        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-        if (role.includes('exit-message')) {
-          return { ...element, screenId: 'screen3' as const };
-        }
-        if (
-          role.includes('form') ||
-          role.includes('contact') ||
-          role.includes('lead') ||
-          role.includes('info') ||
-          role.includes('screen2')
-        ) {
-          return { ...element, screenId: 'screen2' as const };
-        }
-        return { ...element, screenId: 'screen1' as const };
-      });
-
-      return mutated ? updated : prev;
-    });
-  }, [canvasElements]);
-
-  // Detect scroll position to determine current screen
-  useEffect(() => {
-    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
-    if (!canvasScrollArea) return;
-
-    const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
-    if (anchors.length === 0) return;
-
-    const computeNearestScreen = () => {
-      const areaRect = canvasScrollArea.getBoundingClientRect();
-      const areaCenter = areaRect.top + areaRect.height / 2;
-
-      let closestId: DesignScreenId = 'screen1';
-      let closestDistance = Infinity;
-
-      anchors.forEach((anchor) => {
-        const screenId = (anchor.dataset.screenAnchor as DesignScreenId | undefined) ?? 'screen1';
-        const rect = anchor.getBoundingClientRect();
-        const anchorCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(anchorCenter - areaCenter);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestId = screenId;
-        }
-      });
-
-      setCurrentScreen((prev: DesignScreenId) => (prev === closestId ? prev : closestId));
-    };
-
-    requestAnimationFrame(computeNearestScreen);
-
-    const handleScroll = () => {
-      requestAnimationFrame(computeNearestScreen);
-    };
-
-    const handleResize = () => {
-      requestAnimationFrame(computeNearestScreen);
-    };
-
-    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      canvasScrollArea.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   // Synchronise l'état de l'appareil réel et sélectionné après le montage (corrige les différences entre Lovable et Safari)
   useEffect(() => {
     const device = detectDevice();
@@ -236,45 +113,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     updateWindowSize();
     window.addEventListener('resize', updateWindowSize);
     return () => window.removeEventListener('resize', updateWindowSize);
-  }, []);
-
-  // Écouter l'événement de sélection de module depuis le canvas
-  useEffect(() => {
-    const handleModuleSelected = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const module = customEvent.detail?.module;
-      if (module) {
-        console.log('🎯 Module sélectionné depuis le canvas:', module);
-        console.log('🎯 Type du module:', module.type);
-        setSelectedModuleId(module.id);
-        setSelectedModule(module);
-        // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
-        // Sinon, ouvrir l'onglet Elements pour les autres modules
-        if (module.type === 'BlocTexte') {
-          console.log('✅ BlocTexte détecté - Ouverture onglet Design');
-          // Forcer l'ouverture du panneau Design
-          setShowDesignInSidebar(true);
-          setShowEffectsInSidebar(false);
-          setShowAnimationsInSidebar(false);
-          setShowPositionInSidebar(false);
-          // Ouvrir l'onglet background
-          setTimeout(() => {
-            sidebarRef.current?.setActiveTab('background');
-          }, 0);
-        } else {
-          console.log('✅ Autre module détecté - Ouverture onglet Elements');
-          sidebarRef.current?.setActiveTab('elements');
-        }
-      }
-    };
-
-    // Écouter les deux types d'événements pour compatibilité
-    window.addEventListener('modularModuleSelected', handleModuleSelected);
-    window.addEventListener('designModularModuleSelected', handleModuleSelected);
-    return () => {
-      window.removeEventListener('modularModuleSelected', handleModuleSelected);
-      window.removeEventListener('designModularModuleSelected', handleModuleSelected);
-    };
   }, []);
 
   // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
@@ -324,7 +162,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setSelectedElement(null); // Désélectionner l'élément unique
       console.log('🎯 Selected all canvas elements:', {
         total: selectableElements.length,
-        types: selectableElements.reduce((acc: Record<string, number>, el: any) => {
+        types: selectableElements.reduce((acc, el) => {
           acc[el.type] = (acc[el.type] || 0) + 1;
           return acc;
         }, {} as Record<string, number>)
@@ -334,8 +172,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewScreen, setPreviewScreen] = useState<DesignScreenId>('screen1');
+  const [showFunnel, setShowFunnel] = useState(false);
+  const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
+    (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
+  );
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -352,6 +192,11 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     [hiddenTabs, mode]
   );
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('previewButtonSide', previewButtonSide);
+    } catch {}
+  }, [previewButtonSide]);
 
   // Chargement d'un modèle transmis via navigation state
   const location = useLocation();
@@ -390,13 +235,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Ajoute à l'historique lors de l'ajout d'un nouvel élément (granulaire)
   const handleAddElement = (element: any) => {
-    const resolvedScreenId = element?.screenId
-      || (currentScreen === 'screen2'
-        ? 'screen2'
-        : currentScreen === 'screen3' ? 'screen3' : 'screen1');
-    const enrichedElement = element?.screenId ? element : { ...element, screenId: resolvedScreenId };
-    setCanvasElements((prev: any[]) => {
-      const newArr = [...prev, enrichedElement];
+    setCanvasElements(prev => {
+      const newArr = [...prev, element];
       setTimeout(() => {
         addToHistory({
           campaignConfig: { ...campaignConfig },
@@ -406,16 +246,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       }, 0);
       return newArr;
     });
-    setSelectedElement(enrichedElement);
+    setSelectedElement(element);
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
   const handleBackgroundChange = (bg: any) => {
     setCanvasBackground(bg);
-    
-    // Synchroniser immédiatement avec le preview
-    syncBackground(bg, selectedDevice);
-    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
@@ -435,76 +271,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         canvasBackground: { ...canvasBackground }
       }, 'config_update');
     }, 0);
-  };
-
-  // Handler pour mettre à jour un module
-  const handleModuleUpdate = (moduleId: string, updates: Partial<DesignModule>) => {
-    console.log('🔧 [DesignEditorLayout] handleModuleUpdate appelé:', {
-      moduleId,
-      updates,
-      timestamp: new Date().toISOString()
-    });
-
-    let moduleFound = false;
-    let targetScreenForSelection: DesignScreenId | null = null;
-
-    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens } as any;
-
-    DESIGN_SCREEN_IDS.forEach((screenId) => {
-      const screenModules = Array.isArray(nextScreens[screenId]) ? [...nextScreens[screenId]] : [];
-      const moduleIndex = screenModules.findIndex((m: DesignModule) => m.id === moduleId);
-      if (moduleIndex !== -1) {
-        moduleFound = true;
-        const prevModule = screenModules[moduleIndex];
-        const updateScreenCandidate = (updates as any)?.screenId;
-        const prevScreenCandidate = (prevModule as any)?.screenId;
-        const desiredScreen = DESIGN_SCREEN_IDS.includes(updateScreenCandidate as DesignScreenId)
-          ? (updateScreenCandidate as DesignScreenId)
-          : DESIGN_SCREEN_IDS.includes(prevScreenCandidate as DesignScreenId)
-            ? (prevScreenCandidate as DesignScreenId)
-            : screenId;
-
-        const updatedModule = {
-          ...prevModule,
-          ...updates,
-          screenId: desiredScreen
-        } as DesignModule & { screenId: DesignScreenId };
-
-        screenModules[moduleIndex] = updatedModule;
-        nextScreens[screenId] = screenModules;
-
-        if (selectedModuleId === moduleId) {
-          targetScreenForSelection = desiredScreen;
-        }
-
-        console.log('✅ [DesignEditorLayout] Module mis à jour:', {
-          fromScreen: screenId,
-          targetScreen: desiredScreen,
-          moduleIndex,
-          oldModule: { id: prevModule.id, type: prevModule.type },
-          newModule: { id: updatedModule.id, type: updatedModule.type }
-        });
-      }
-    });
-
-    if (!moduleFound) {
-      console.warn('⚠️ [DesignEditorLayout] Module non trouvé:', moduleId);
-      return;
-    }
-
-    const nextPage: DesignModularPage = {
-      screens: nextScreens,
-      _updatedAt: Date.now()
-    };
-
-    const normalized = persistModular(nextPage);
-
-    if (selectedModuleId === moduleId && targetScreenForSelection) {
-      const normalizedModule = normalized.screens[targetScreenForSelection].find((m) => m.id === moduleId);
-      if (normalizedModule) {
-        setSelectedModule(normalizedModule);
-      }
-    }
   };
 
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
@@ -537,8 +303,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           : {})
       };
 
-      setCanvasElements((prev: any[]) => {
-        const newArr = prev.map((el: any) =>
+      setCanvasElements(prev => {
+        const newArr = prev.map(el =>
           el.id === selectedElement.id ? updatedElement : el
         );
         setTimeout(() => {
@@ -553,15 +319,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setSelectedElement(updatedElement);
     }
   };
-
-  // Hook de synchronisation robuste entre édition et preview
-  const {
-    syncBackground,
-    syncModules,
-    syncModule,
-    getCanonicalPreviewData,
-    forceSync
-  } = useEditorPreviewSync();
 
   // Utilisation du hook de synchronisation unifié
   const {
@@ -644,8 +401,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handleElementDelete = useCallback((elementId?: string) => {
     const targetElementId = elementId || selectedElement?.id;
     if (targetElementId) {
-      setCanvasElements((prev: any[]) => {
-        const newElements = prev.filter((el: any) => el.id !== targetElementId);
+      setCanvasElements(prev => {
+        const newElements = prev.filter(el => el.id !== targetElementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -677,8 +434,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       // Puis le supprimer
       const elementId = selectedElement.id;
-      setCanvasElements((prev: any[]) => {
-        const newElements = prev.filter((el: any) => el.id !== elementId);
+      setCanvasElements(prev => {
+        const newElements = prev.filter(el => el.id !== elementId);
         setTimeout(() => {
           addToHistory({
             campaignConfig: { ...campaignConfig },
@@ -726,194 +483,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       console.log('🔄 Duplicated element:', newElement.id);
     }
   }, [selectedElement, handleAddElement]);
-
-  // Modular page management functions
-  const persistModular = useCallback((next: DesignModularPage) => {
-    const normalized = normalizeDesignModularPage(next);
-    setModularPage(normalized);
-    
-    // Synchroniser immédiatement avec le preview
-    syncModules(normalized);
-    
-    setCampaignConfig((prev: any) => ({
-      ...(prev || {}),
-      design: {
-        ...(prev?.design || {}),
-        designModules: normalized
-      }
-    }));
-    try { setIsModified(true); } catch {}
-    return normalized;
-  }, [setIsModified, syncModules]);
-
-  const scrollToScreen = useCallback((screen: DesignScreenId): boolean => {
-    const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
-    if (!canvasScrollArea) return false;
-    const anchor = canvasScrollArea.querySelector(`[data-screen-anchor="${screen}"]`) as HTMLElement | null;
-    if (!anchor) return false;
-
-    const anchorTop = anchor.offsetTop;
-    const centerOffset = Math.max(0, (canvasScrollArea.clientHeight - anchor.clientHeight) / 2);
-    const target = anchorTop - centerOffset;
-    const maxScroll = canvasScrollArea.scrollHeight - canvasScrollArea.clientHeight;
-    const clamped = Math.min(Math.max(target, 0), Math.max(maxScroll, 0));
-
-    canvasScrollArea.scrollTo({ top: clamped, behavior: 'smooth' });
-    return true;
-  }, []);
-
-  const handleAddModule = useCallback((screen: DesignScreenId, module: DesignModule) => {
-    const moduleWithScreen = { ...module, screenId: screen } as DesignModule & { screenId: DesignScreenId };
-    const prevScreenModules = modularPage.screens[screen] || [];
-
-    const next: DesignModularPage = {
-      screens: {
-        ...modularPage.screens,
-        [screen]: [moduleWithScreen, ...prevScreenModules]
-      },
-      _updatedAt: Date.now()
-    };
-
-    persistModular(next);
-  }, [modularPage, persistModular]);
-
-  const handleUpdateModule = useCallback((id: string, patch: Partial<DesignModule>) => {
-    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
-      nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as DesignModule : m));
-    });
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleDeleteModule = useCallback((id: string) => {
-    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
-      nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
-    });
-    
-    // Vérifier s'il reste au moins un bouton après suppression
-    const hasButton = (Object.values(nextScreens) as DesignModule[][]).some((modules) =>
-      modules?.some((m) => m.type === 'BlocBouton')
-    );
-    
-    // Si plus aucun bouton, en créer un par défaut sur screen1
-    if (!hasButton) {
-      const defaultButton: DesignModule = {
-        id: `BlocBouton-${Date.now()}`,
-        type: 'BlocBouton',
-        label: 'Participer',
-        href: '#',
-        align: 'center',
-        borderRadius: 9999,
-        background: '#000000',
-        textColor: '#ffffff',
-        padding: '14px 28px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        uppercase: false,
-        bold: false
-      } as DesignModule;
-      nextScreens.screen1 = [...(nextScreens.screen1 || []), defaultButton];
-    }
-    
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
-    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
-    (Object.keys(nextScreens) as DesignScreenId[]).forEach((s) => {
-      const arr = [...(nextScreens[s] || [])];
-      const idx = arr.findIndex((m) => m.id === id);
-      if (idx >= 0) {
-        const swapWith = direction === 'up' ? idx - 1 : idx + 1;
-        if (swapWith >= 0 && swapWith < arr.length) {
-          const tmp = arr[swapWith];
-          arr[swapWith] = arr[idx];
-          arr[idx] = tmp;
-        }
-        nextScreens[s] = arr;
-      }
-    });
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
-
-  const handleDuplicateModule = useCallback((id: string) => {
-    type ModuleWithMeta = DesignModule & { moduleId?: string; label?: string };
-
-    const nextScreens: Record<DesignScreenId, DesignModule[]> = { ...modularPage.screens };
-    let moduleToDuplicate: ModuleWithMeta | null = null;
-    let foundScreenId: DesignScreenId | null = null;
-    let originalIndex = -1;
-
-    for (const screenId of Object.keys(nextScreens) as DesignScreenId[]) {
-      const modules = nextScreens[screenId] ?? [];
-      const index = modules.findIndex((m) => m.id === id);
-      if (index >= 0) {
-        moduleToDuplicate = modules[index] as ModuleWithMeta;
-        foundScreenId = screenId;
-        originalIndex = index;
-        break;
-      }
-    }
-
-    if (!moduleToDuplicate || !foundScreenId || originalIndex < 0) {
-      console.warn(`⚠️ Impossible de trouver le module à dupliquer (ID: ${id})`);
-      return;
-    }
-
-    const newId = `module-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const duplicatedModule: ModuleWithMeta = {
-      ...moduleToDuplicate,
-      id: newId
-    };
-    (duplicatedModule as any).screenId = (moduleToDuplicate as any)?.screenId ?? foundScreenId;
-
-    if (typeof moduleToDuplicate.label === 'string' && moduleToDuplicate.label.trim().length > 0) {
-      duplicatedModule.label = `${moduleToDuplicate.label} (copie)`;
-    }
-
-    const currentModules = nextScreens[foundScreenId] ?? [];
-    const updatedModules = [...currentModules];
-    updatedModules.splice(originalIndex + 1, 0, duplicatedModule);
-    nextScreens[foundScreenId] = updatedModules;
-
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-
-    console.log(`✅ Module dupliqué avec succès (${id} → ${duplicatedModule.id})`);
-  }, [modularPage.screens, persistModular]);
-  
-  // Assurer qu'un bouton "Participer" existe toujours sur l'écran 1
-  const ensuredButtonRef = useRef(false);
-  useEffect(() => {
-    if (ensuredButtonRef.current) return;
-    
-    const hasButton = (Object.values(modularPage.screens) as DesignModule[][]).some((modules) =>
-      modules?.some((m) => m.type === 'BlocBouton')
-    );
-    
-    if (!hasButton) {
-      const defaultButton: DesignModule = {
-        id: `BlocBouton-${Date.now()}`,
-        type: 'BlocBouton',
-        label: 'Participer',
-        href: '#',
-        align: 'center',
-        borderRadius: 9999,
-        background: '#000000',
-        textColor: '#ffffff',
-        padding: '14px 28px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        uppercase: false,
-        bold: false,
-        screenId: 'screen1'
-      } as DesignModule;
-      
-      const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
-      nextScreens.screen1 = [...(nextScreens.screen1 || []), defaultButton];
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-    }
-    
-    ensuredButtonRef.current = true;
-  }, [modularPage.screens, persistModular]);
   
   // Synchronisation avec le store
   useEffect(() => {
@@ -922,23 +491,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
-    const normalizedModularPage = normalizeDesignModularPage(modularPage, { preserveTimestamp: true });
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
     
-    const customTexts = canvasElements.filter((el: any) => 
+    const customTexts = canvasElements.filter(el => 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
-    const customImages = canvasElements.filter((el: any) => el.type === 'image');
-    
-    // Inclure les modules dans les éléments pour l'aperçu
-    const allModules = Object.values(normalizedModularPage.screens).flat();
-    console.log('📦 [DesignEditorLayout] Modules trouvés pour preview:', {
-      modulesCount: allModules.length,
-      modules: allModules.map((m: any) => ({ id: m.id, type: m.type, label: m.label })),
-      modularPage: modularPage
-    });
+    const customImages = canvasElements.filter(el => el.type === 'image');
 
     const currentWheelConfig = {
       borderStyle: wheelModalConfig?.wheelBorderStyle || campaignConfig?.wheelConfig?.borderStyle || campaignConfig?.design?.wheelBorderStyle || 'classic',
@@ -949,7 +509,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     console.log('🔄 CampaignData wheel config sync:', {
       wheelModalConfigScale: wheelModalConfig?.wheelScale,
       campaignConfigScale: campaignConfig?.wheelConfig?.scale,
-      finalScale: currentWheelConfig.scale
+      finalScale: currentWheelConfig.scale,
+      showFunnel
     });
 
     const primaryColor = canvasBackground.type === 'image' && extractedColors[0]
@@ -1016,10 +577,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           accent: extractedColors[2] || '#45b7d1'
         },
         wheelConfig: currentWheelConfig,
-        wheelBorderStyle: currentWheelConfig.borderStyle,
-        designModules: {
-          ...normalizedModularPage
-        }
+        wheelBorderStyle: currentWheelConfig.borderStyle
       },
       gameConfig: {
         wheel: {
@@ -1050,16 +608,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Garder la configuration canvas pour compatibilité - NE PAS mélanger les modules des 3 écrans ici
+      // Garder la configuration canvas pour compatibilité
       canvasConfig: {
-        elements: [...canvasElements],
+        elements: canvasElements,
         background: canvasBackground,
         device: selectedDevice
-      },
-      // Ajouter modularPage pour compatibilité
-      modularPage: normalizedModularPage
+      }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -1135,13 +691,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
-          },
-          // Préserver modularPage pour la synchronisation avec le preview
-          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.designModules si présent
-          design: {
-            ...(transformedCampaign as any).design,
-            designModules: (transformedCampaign as any).modularPage || prev.design?.designModules
           }
         } as any;
       });
@@ -1170,10 +719,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   };
 
   const handlePreview = () => {
-    setShowPreview(!showPreview);
-    if (!showPreview) {
-      setPreviewScreen('screen1'); // Toujours commencer par l'écran 1
-    }
+    setShowFunnel(!showFunnel);
   };
 
   // Save and continue: persist then navigate to settings page
@@ -1455,25 +1001,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       }
     },
     onAlignTextLeft: () => {
-      if (!selectedElement) {
-        return;
-      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'left' });
       }
     },
     onAlignTextCenter: () => {
-      if (!selectedElement) {
-        return;
-      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'center' });
       }
     },
     onAlignTextRight: () => {
-      if (!selectedElement) {
-        return;
-      }
       if (selectedElement?.type === 'text') {
         handleElementUpdate({ textAlign: 'right' });
       }
@@ -1504,21 +1041,21 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor
-      className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]"
-    >
-      {/* Top Toolbar - Hidden in preview mode */}
-      {!showPreview && (
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]">
+      {/* Top Toolbar - Hidden only in preview mode */}
+      {!showFunnel && (
         <>
           <DesignToolbar
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
             onPreviewToggle={handlePreview}
-            isPreviewMode={showPreview}
+            isPreviewMode={showFunnel}
             onUndo={undo}
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
+            previewButtonSide={previewButtonSide}
+            onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndContinue}
             showSaveCloseButtons={false}
@@ -1534,413 +1071,21 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative rounded-br-[28px]">
-        {showPreview ? (
-          /* Preview Mode - Fullscreen WYSIWYG */
-          <div className="fixed inset-0 z-50 bg-white overflow-auto">
-            {/* Bouton retour en mode édition */}
+        {showFunnel ? (
+          /* Funnel Preview Mode */
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+            {/* Floating Edit Mode Button */}
             <button
-              onClick={() => setShowPreview(false)}
-              className="absolute top-4 right-4 z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+              onClick={() => setShowFunnel(false)}
+              className={`absolute top-2 ${previewButtonSide === 'left' ? 'left-2' : 'right-2'} z-50 px-2 py-1 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
             >
               Mode édition
             </button>
-            
-            {/* Écran dynamique selon previewScreen */}
-            <div 
-              className="w-full min-h-screen relative"
-              style={{
-                background: canvasBackground.type === 'image'
-                  ? `url(${canvasBackground.value}) center/cover no-repeat`
-                  : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-              }}
-            >
-              {previewScreen === 'screen1' && (
-                <>
-              {/* Rendu des éléments de l'écran 1 */}
-              {canvasElements
-                .filter((el: any) => {
-                  const screenId = el?.screenId || 'screen1';
-                  return screenId === 'screen1';
-                })
-                .map((element: any) => {
-                  const props = selectedDevice !== 'desktop' && element[selectedDevice]
-                    ? { ...element, ...element[selectedDevice] }
-                    : element;
-
-                  return (
-                    <div
-                      key={element.id}
-                      style={{
-                        position: 'absolute',
-                        left: `${props.x || 0}px`,
-                        top: `${props.y || 0}px`,
-                        width: props.width ? `${props.width}px` : 'auto',
-                        height: props.height ? `${props.height}px` : 'auto',
-                        transform: props.rotation ? `rotate(${props.rotation}deg)` : undefined,
-                        zIndex: props.zIndex || 1,
-                        pointerEvents: 'none'
-                      }}
-                    >
-                      {element.type === 'text' && (
-                        <div
-                          style={{
-                            fontSize: `${props.fontSize || 16}px`,
-                            fontFamily: props.fontFamily || 'Arial',
-                            fontWeight: props.fontWeight || 'normal',
-                            fontStyle: props.fontStyle || 'normal',
-                            textDecoration: props.textDecoration || 'none',
-                            color: props.color || '#000000',
-                            textAlign: (props.textAlign as any) || 'left',
-                            lineHeight: props.lineHeight || 1.5,
-                            letterSpacing: props.letterSpacing || 'normal',
-                            textTransform: props.textTransform || 'none',
-                            textShadow: props.textShadow,
-                            backgroundColor: props.backgroundColor,
-                            padding: props.padding,
-                            borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
-                            border: props.border,
-                            boxShadow: props.boxShadow,
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          {props.content || 'Texte'}
-                        </div>
-                      )}
-                      {element.type === 'image' && props.src && (
-                        <img
-                          src={props.src}
-                          alt={props.alt || ''}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: (props.objectFit as any) || 'contain',
-                            borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
-                            border: props.border,
-                            boxShadow: props.boxShadow,
-                            opacity: props.opacity !== undefined ? props.opacity : 1
-                          }}
-                        />
-                      )}
-                      {element.type === 'shape' && (
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: props.backgroundColor || '#cccccc',
-                            borderRadius: props.shape === 'circle' ? '50%' : props.borderRadius ? `${props.borderRadius}px` : undefined,
-                            border: props.border,
-                            boxShadow: props.boxShadow,
-                            opacity: props.opacity !== undefined ? props.opacity : 1
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              
-              {/* Rendu des modules de l'écran 1 */}
-              {modularPage.screens.screen1.map((module) => {
-                if (module.type === 'BlocTexte') {
-                  return (
-                    <div
-                      key={module.id}
-                      style={{
-                        padding: '20px',
-                        textAlign: (module.align as any) || 'center',
-                        color: module.textColor || '#000000',
-                        fontSize: `${module.fontSize || 16}px`,
-                        fontWeight: module.bold ? 'bold' : 'normal',
-                        textTransform: module.uppercase ? 'uppercase' : 'none'
-                      }}
-                    >
-                      {module.content || ''}
-                    </div>
-                  );
-                }
-                if (module.type === 'BlocBouton') {
-                  return (
-                    <div
-                      key={module.id}
-                      style={{
-                        padding: '20px',
-                        textAlign: (module.align as any) || 'center'
-                      }}
-                    >
-                      <button
-                        style={{
-                          padding: module.padding || '14px 28px',
-                          background: module.background || '#000000',
-                          color: module.textColor || '#ffffff',
-                          borderRadius: `${module.borderRadius || 8}px`,
-                          border: 'none',
-                          fontSize: '16px',
-                          fontWeight: module.bold ? 'bold' : 'normal',
-                          textTransform: module.uppercase ? 'uppercase' : 'none',
-                          boxShadow: module.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          cursor: 'pointer',
-                          pointerEvents: 'auto'
-                        }}
-                        onClick={() => setPreviewScreen('screen2')}
-                      >
-                        {module.label || 'Bouton'}
-                      </button>
-                    </div>
-                  );
-                }
-                return null;
-              })}
-                </>
-              )}
-
-              {previewScreen === 'screen2' && (
-                <>
-                  {/* Rendu des éléments de l'écran 2 */}
-                  {canvasElements
-                    .filter((el: any) => {
-                      const screenId = el?.screenId || 'screen1';
-                      return screenId === 'screen2';
-                    })
-                    .map((element: any) => {
-                      const props = selectedDevice !== 'desktop' && element[selectedDevice]
-                        ? { ...element, ...element[selectedDevice] }
-                        : element;
-
-                      return (
-                        <div
-                          key={element.id}
-                          style={{
-                            position: 'absolute',
-                            left: `${props.x || 0}px`,
-                            top: `${props.y || 0}px`,
-                            width: props.width ? `${props.width}px` : 'auto',
-                            height: props.height ? `${props.height}px` : 'auto',
-                            transform: props.rotation ? `rotate(${props.rotation}deg)` : undefined,
-                            zIndex: props.zIndex || 1,
-                            pointerEvents: element.type === 'wheel' ? 'auto' : 'none'
-                          }}
-                        >
-                          {element.type === 'text' && (
-                            <div
-                              style={{
-                                fontSize: `${props.fontSize || 16}px`,
-                                fontFamily: props.fontFamily || 'Arial',
-                                fontWeight: props.fontWeight || 'normal',
-                                fontStyle: props.fontStyle || 'normal',
-                                textDecoration: props.textDecoration || 'none',
-                                color: props.color || '#000000',
-                                textAlign: (props.textAlign as any) || 'left',
-                                lineHeight: props.lineHeight || 1.5,
-                                letterSpacing: props.letterSpacing || 'normal',
-                                textTransform: props.textTransform || 'none',
-                                textShadow: props.textShadow,
-                                backgroundColor: props.backgroundColor,
-                                padding: props.padding,
-                                borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
-                                border: props.border,
-                                boxShadow: props.boxShadow,
-                                width: '100%',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center'
-                              }}
-                            >
-                              {props.content || 'Texte'}
-                            </div>
-                          )}
-                          {element.type === 'image' && props.src && (
-                            <img
-                              src={props.src}
-                              alt={props.alt || ''}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: (props.objectFit as any) || 'contain',
-                                borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
-                                border: props.border,
-                                boxShadow: props.boxShadow,
-                                opacity: props.opacity !== undefined ? props.opacity : 1
-                              }}
-                            />
-                          )}
-                          {element.type === 'shape' && (
-                            <div
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                backgroundColor: props.backgroundColor || '#cccccc',
-                                borderRadius: props.shape === 'circle' ? '50%' : props.borderRadius ? `${props.borderRadius}px` : undefined,
-                                border: props.border,
-                                boxShadow: props.boxShadow,
-                                opacity: props.opacity !== undefined ? props.opacity : 1
-                              }}
-                            />
-                          )}
-                          {element.type === 'wheel' && (
-                            <div
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              <SmartWheel
-                                segments={campaignData?.gameConfig?.wheel?.segments || [
-                                  { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', textColor: '#ffffff' },
-                                  { id: '2', label: 'Prix 2', color: '#ffffff', textColor: extractedColors[0] || '#841b60' },
-                                  { id: '3', label: 'Prix 3', color: extractedColors[0] || '#841b60', textColor: '#ffffff' },
-                                  { id: '4', label: 'Prix 4', color: '#ffffff', textColor: extractedColors[0] || '#841b60' }
-                                ]}
-                                onResult={(result) => {
-                                  console.log('Résultat de la roue:', result);
-                                  // Passer à l'écran 3 après le spin
-                                  setTimeout(() => setPreviewScreen('screen3'), 2000);
-                                }}
-                                borderStyle={wheelModalConfig?.wheelBorderStyle || campaignConfig?.design?.wheelConfig?.borderStyle || 'classic'}
-                                borderColor={wheelModalConfig?.wheelBorderColor || campaignConfig?.design?.wheelConfig?.borderColor || extractedColors[0] || '#841b60'}
-                                borderWidth={campaignConfig?.design?.wheelConfig?.borderWidth || 20}
-                                scale={wheelModalConfig?.wheelScale || campaignConfig?.design?.wheelConfig?.scale || 1}
-                                showBulbs={campaignConfig?.design?.wheelConfig?.showBulbs !== false}
-                                brandColors={extractedColors}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  
-                  {/* Rendu des modules de l'écran 2 */}
-                  {modularPage.screens.screen2.map((module) => {
-                    if (module.type === 'BlocTexte') {
-                      return (
-                        <div
-                          key={module.id}
-                          style={{
-                            padding: '20px',
-                            textAlign: (module.align as any) || 'center',
-                            color: module.textColor || '#000000',
-                            fontSize: `${module.fontSize || 16}px`,
-                            fontWeight: module.bold ? 'bold' : 'normal',
-                            textTransform: module.uppercase ? 'uppercase' : 'none'
-                          }}
-                        >
-                          {module.content || ''}
-                        </div>
-                      );
-                    }
-                    if (module.type === 'BlocBouton') {
-                      return (
-                        <div
-                          key={module.id}
-                          style={{
-                            padding: '20px',
-                            textAlign: (module.align as any) || 'center'
-                          }}
-                        >
-                          <button
-                            style={{
-                              padding: module.padding || '14px 28px',
-                              background: module.background || '#000000',
-                              color: module.textColor || '#ffffff',
-                              borderRadius: `${module.borderRadius || 8}px`,
-                              border: 'none',
-                              fontSize: '16px',
-                              fontWeight: module.bold ? 'bold' : 'normal',
-                              textTransform: module.uppercase ? 'uppercase' : 'none',
-                              boxShadow: module.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
-                              cursor: 'pointer',
-                              pointerEvents: 'auto'
-                            }}
-                            onClick={() => setPreviewScreen('screen3')}
-                          >
-                            {module.label || 'Bouton'}
-                          </button>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </>
-              )}
-
-              {previewScreen === 'screen3' && (
-                <div className="w-full min-h-screen flex flex-col items-center justify-center p-8">
-                  {/* Rendu des éléments de l'écran 3 */}
-                  {canvasElements
-                    .filter((el: any) => {
-                      const screenId = el?.screenId || 'screen1';
-                      return screenId === 'screen3';
-                    })
-                    .map((element: any) => {
-                      const props = selectedDevice !== 'desktop' && element[selectedDevice]
-                        ? { ...element, ...element[selectedDevice] }
-                        : element;
-
-                      return (
-                        <div
-                          key={element.id}
-                          style={{
-                            position: 'absolute',
-                            left: `${props.x || 0}px`,
-                            top: `${props.y || 0}px`,
-                            width: props.width ? `${props.width}px` : 'auto',
-                            height: props.height ? `${props.height}px` : 'auto',
-                            transform: props.rotation ? `rotate(${props.rotation}deg)` : undefined,
-                            zIndex: props.zIndex || 1
-                          }}
-                        >
-                          {element.type === 'text' && (
-                            <div
-                              style={{
-                                fontSize: `${props.fontSize || 16}px`,
-                                fontFamily: props.fontFamily || 'Arial',
-                                fontWeight: props.fontWeight || 'normal',
-                                color: props.color || '#000000',
-                                textAlign: (props.textAlign as any) || 'left'
-                              }}
-                            >
-                              {props.content || 'Texte'}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                  {/* Modules de l'écran 3 */}
-                  {modularPage.screens.screen3.map((module) => {
-                    if (module.type === 'BlocTexte') {
-                      return (
-                        <div
-                          key={module.id}
-                          style={{
-                            padding: '20px',
-                            textAlign: (module.align as any) || 'center',
-                            color: module.textColor || '#000000',
-                            fontSize: `${module.fontSize || 16}px`
-                          }}
-                        >
-                          {module.content || ''}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-
-                  {/* Bouton retour à l'écran 1 */}
-                  <button
-                    onClick={() => setPreviewScreen('screen1')}
-                    className="mt-8 px-6 py-3 rounded-lg text-white font-semibold"
-                    style={{ background: extractedColors[0] || '#841b60' }}
-                  >
-                    Retour à l'accueil
-                  </button>
-                </div>
-              )}
-            </div>
+            <FunnelUnlockedGame
+              campaign={campaignData}
+              previewMode={selectedDevice}
+              wheelModalConfig={wheelModalConfig}
+            />
           </div>
         ) : (
           /* Design Editor Mode */
@@ -2007,47 +1152,30 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
-                // Multi-screen system props
-                currentScreen={currentScreen}
-                onAddModule={handleAddModule}
-                // Module selection props
-                selectedModuleId={selectedModuleId}
-                selectedModule={selectedModule}
-                onModuleUpdate={handleModuleUpdate}
-                onSelectedModuleChange={setSelectedModuleId}
               />
-            {/* Canvas Scrollable Area with 3 screens */}
-            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
-              <div className="min-h-full flex flex-col">
-                {/* Premier Canvas - Screen 1 */}
-                <div data-screen-anchor="screen1" className="relative">
-                  <DesignCanvas
-                    screenId="screen1"
-                    ref={canvasRef}
-                    selectedDevice={selectedDevice}
-                    elements={canvasElements}
-                    onElementsChange={setCanvasElements}
-                    background={canvasBackground}
-                    campaign={campaignData}
-                    onCampaignChange={handleCampaignConfigChange}
-                    zoom={canvasZoom}
-                    onZoomChange={setCanvasZoom}
-                    enableInternalAutoFit={true}
-                    selectedElement={selectedElement}
-                    onSelectedElementChange={setSelectedElement}
-                    selectedElements={selectedElements}
-                    onSelectedElementsChange={setSelectedElements}
-                    onElementUpdate={handleElementUpdate}
-                    // Wheel sync props
-                    wheelModalConfig={wheelModalConfig}
-                    extractedColors={extractedColors}
-                    containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                    elementFilter={(element: any) => {
-                      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message');
-                    }}
-                    // Sidebar panel triggers
-                    onShowEffectsPanel={() => {
+            {/* Main Canvas Area */}
+            <DesignCanvas
+              ref={canvasRef}
+              selectedDevice={selectedDevice}
+              elements={canvasElements}
+              onElementsChange={setCanvasElements}
+              background={canvasBackground}
+              campaign={campaignData}
+              onCampaignChange={handleCampaignConfigChange}
+              zoom={canvasZoom}
+              onZoomChange={setCanvasZoom}
+              enableInternalAutoFit={true}
+              selectedElement={selectedElement}
+              onSelectedElementChange={setSelectedElement}
+              selectedElements={selectedElements}
+              onSelectedElementsChange={setSelectedElements}
+              onElementUpdate={handleElementUpdate}
+              // Wheel sync props
+              wheelModalConfig={wheelModalConfig}
+              extractedColors={extractedColors}
+              containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
+              // Sidebar panel triggers
+onShowEffectsPanel={() => {
                         if (!isWindowMobile) {
                           setShowEffectsInSidebar(true);
                           setShowAnimationsInSidebar(false);
@@ -2094,231 +1222,21 @@ onShowPositionPanel={() => {
                 setShowAnimationsInSidebar(false);
                 setShowPositionInSidebar(false);
               }}
-                    // Mobile sidebar integrations
-                    onAddElement={handleAddElement}
-                    onBackgroundChange={handleBackgroundChange}
-                    onExtractedColorsChange={handleExtractedColorsChange}
-                    // Group selection wiring
-                    selectedGroupId={selectedGroupId as any}
-                    onSelectedGroupChange={setSelectedGroupId as any}
-                    onUndo={undo}
-                    onRedo={redo}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                    showWheelPanel={showWheelPanel}
-                    onWheelPanelChange={setShowWheelPanel}
-                    // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
-                    onModuleUpdate={handleModuleUpdate}
-                    selectedModuleId={selectedModuleId}
-                    allowWheelInteraction={allowWheelInteraction}
-                  />
-                </div>
-
-                {/* Deuxième Canvas - Screen 2 */}
-                <div className="mt-4 relative" data-screen-anchor="screen2">
-                  <div 
-                    className="absolute inset-0 z-0"
-                    style={{
-                      background: canvasBackground.type === 'image'
-                        ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-                    }}
-                  />
-                  <div 
-                    className="absolute -top-4 left-0 right-0 h-4 z-0"
-                    style={{ background: '#ffffff' }}
-                  />
-                  <div className="relative z-10">
-                    <DesignCanvas
-                    screenId="screen2"
-                    selectedDevice={selectedDevice}
-                    elements={canvasElements.filter((el: any) => {
-                      const role = typeof el?.role === 'string' ? el.role.toLowerCase() : '';
-                      return !role.includes('exit-message');
-                    })}
-                    onElementsChange={setCanvasElements}
-                      background={canvasBackground}
-                      campaign={campaignData}
-                      onCampaignChange={handleCampaignConfigChange}
-                      zoom={canvasZoom}
-                      onZoomChange={setCanvasZoom}
-                      allowWheelInteraction={allowWheelInteraction}
-                      selectedElement={selectedElement}
-                      onSelectedElementChange={setSelectedElement}
-                      selectedElements={selectedElements}
-                      onSelectedElementsChange={setSelectedElements}
-                      onElementUpdate={handleElementUpdate}
-                      wheelModalConfig={wheelModalConfig}
-                      extractedColors={extractedColors}
-                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                      elementFilter={(element: any) => {
-                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return !role.includes('exit-message');
-                      }}
-                      onShowEffectsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowEffectsInSidebar(true);
-                          setShowAnimationsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowAnimationsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowAnimationsInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowPositionPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowPositionInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowAnimationsInSidebar(false);
-                          setShowDesignInSidebar(false);
-                        }
-                      }}
-                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
-                        }
-                      }}
-                      onOpenElementsTab={() => {
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }}
-                      onAddElement={handleAddElement}
-                      onBackgroundChange={handleBackgroundChange}
-                      onExtractedColorsChange={handleExtractedColorsChange}
-                      selectedGroupId={selectedGroupId as any}
-                      onSelectedGroupChange={setSelectedGroupId as any}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                      showWheelPanel={showWheelPanel}
-                      onWheelPanelChange={setShowWheelPanel}
-                      modularModules={modularPage.screens.screen2}
-                      onModuleUpdate={handleModuleUpdate}
-                      selectedModuleId={selectedModuleId}
-                    />
-                  </div>
-                </div>
-
-                {/* Troisième Canvas - Screen 3 */}
-                <div className="mt-4 relative" data-screen-anchor="screen3">
-                  <div 
-                    className="absolute inset-0 z-0"
-                    style={{
-                      background: canvasBackground.type === 'image'
-                        ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
-                    }}
-                  />
-                  <div 
-                    className="absolute -top-4 left-0 right-0 h-4 z-0"
-                    style={{ background: '#ffffff' }}
-                  />
-                  <div className="relative z-10">
-                    <DesignCanvas
-                    screenId="screen3"
-                    selectedDevice={selectedDevice}
-                    elements={canvasElements.filter((el: any) => {
-                      const role = typeof el?.role === 'string' ? el.role.toLowerCase() : '';
-                      return role.includes('exit-message');
-                    })}
-                    onElementsChange={setCanvasElements}
-                      background={canvasBackground}
-                      campaign={campaignData}
-                      onCampaignChange={handleCampaignConfigChange}
-                      zoom={canvasZoom}
-                      onZoomChange={setCanvasZoom}
-                      allowWheelInteraction={allowWheelInteraction}
-                      selectedElement={selectedElement}
-                      onSelectedElementChange={setSelectedElement}
-                      selectedElements={selectedElements}
-                      onSelectedElementsChange={setSelectedElements}
-                      onElementUpdate={handleElementUpdate}
-                      wheelModalConfig={wheelModalConfig}
-                      extractedColors={extractedColors}
-                      containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
-                      elementFilter={(element: any) => {
-                        const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return role.includes('exit-message');
-                      }}
-                      onShowEffectsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowEffectsInSidebar(true);
-                          setShowAnimationsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowAnimationsPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowAnimationsInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowPositionInSidebar(false);
-                        }
-                      }}
-                      onShowPositionPanel={() => {
-                        if (!isWindowMobile) {
-                          setShowPositionInSidebar(true);
-                          setShowEffectsInSidebar(false);
-                          setShowAnimationsInSidebar(false);
-                          setShowDesignInSidebar(false);
-                        }
-                      }}
-                      onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
-                        if (context) {
-                          setDesignColorContext(context);
-                        }
-                        setShowDesignInSidebar(true);
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('background');
-                        }
-                      }}
-                      onOpenElementsTab={() => {
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        setShowEffectsInSidebar(false);
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
-                      }}
-                      onAddElement={handleAddElement}
-                      onBackgroundChange={handleBackgroundChange}
-                      onExtractedColorsChange={handleExtractedColorsChange}
-                      selectedGroupId={selectedGroupId as any}
-                      onSelectedGroupChange={setSelectedGroupId as any}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                      showWheelPanel={showWheelPanel}
-                      onWheelPanelChange={setShowWheelPanel}
-                      modularModules={modularPage.screens.screen3}
-                      onModuleUpdate={handleModuleUpdate}
-                      selectedModuleId={selectedModuleId}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Zoom Slider with integrated Screen navigation button */}
+              // Mobile sidebar integrations
+              onAddElement={handleAddElement}
+              onBackgroundChange={handleBackgroundChange}
+              onExtractedColorsChange={handleExtractedColorsChange}
+              // Group selection wiring
+              selectedGroupId={selectedGroupId as any}
+              onSelectedGroupChange={setSelectedGroupId as any}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              showWheelPanel={showWheelPanel}
+              onWheelPanelChange={setShowWheelPanel}
+            />
+            {/* Zoom Slider - Hidden when window is in mobile format */}
             {!isWindowMobile && (
               <ZoomSlider 
                 zoom={canvasZoom}
@@ -2326,25 +1244,13 @@ onShowPositionPanel={() => {
                 minZoom={0.1}
                 maxZoom={1}
                 step={0.05}
-                onNavigateToScreen2={() => {
-                  const nextScreen = currentScreen === 'screen1'
-                    ? 'screen2'
-                    : currentScreen === 'screen2'
-                      ? 'screen3'
-                      : 'screen1';
-                  const scrolled = scrollToScreen(nextScreen);
-                  if (scrolled) {
-                    setCurrentScreen(nextScreen);
-                  }
-                }}
-                currentScreen={currentScreen}
               />
             )}
           </>
         )}
       </div>
-      {/* Floating bottom-right actions (no band) - Hidden in preview */}
-      {!showPreview && (
+      {/* Floating bottom-right actions (no band) */}
+      {!showFunnel && (
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
             onClick={() => navigate('/dashboard')}

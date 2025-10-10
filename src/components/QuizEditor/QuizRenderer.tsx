@@ -14,6 +14,10 @@ interface QuizModuleRendererProps {
   inheritedTextColor?: string;
   // Callback pour mettre à jour un module (utilisé en mode édition)
   onModuleUpdate?: (moduleId: string, patch: Partial<Module>) => void;
+  // Contrôle le mode de largeur des bandes (logo/pied-de-page)
+  // 'viewport' => 100vw avec marges négatives pour déborder du conteneur
+  // 'container' => 100% de la largeur du conteneur parent (ex: dans le canvas)
+  bandWidthMode?: 'viewport' | 'container';
 }
 
 /**
@@ -32,27 +36,36 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   className = '',
   onButtonClick,
   inheritedTextColor,
-  onModuleUpdate
+  onModuleUpdate,
+  bandWidthMode = 'viewport'
 }) => {
   const isMobileDevice = device === 'mobile';
   const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
 
   // Fonctions de gestion de l'édition de texte
-  const handleTextClick = useCallback((moduleId: string) => {
+  const handleTextClick = useCallback((moduleId: string, event?: React.MouseEvent) => {
     if (previewMode) return;
     setEditingModuleId(moduleId);
     setTimeout(() => {
       const ref = textRefs.current[moduleId];
       if (ref) {
         ref.focus();
+        // Ne pas sélectionner tout le texte, juste placer le curseur à la fin
         const range = document.createRange();
-        range.selectNodeContents(ref);
         const sel = window.getSelection();
         if (sel) {
           sel.removeAllRanges();
-          sel.addRange(range);
+          // Placer le curseur à la fin du texte
+          const textNode = ref.firstChild;
+          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+            const length = textNode.textContent?.length || 0;
+            range.setStart(textNode, length);
+            range.collapse(true);
+            sel.addRange(range);
+          }
         }
       }
     }, 0);
@@ -62,9 +75,55 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     setEditingModuleId(null);
   }, []);
 
+  // Gestionnaire du double-clic natif
+  const handleTextDoubleClick = useCallback((moduleId: string, event: React.MouseEvent) => {
+    console.log('🖱️ [QuizRenderer] Double-clic reçu sur module:', moduleId, 'previewMode:', previewMode);
+    if (previewMode) {
+      console.log('🚫 [QuizRenderer] Ignoré car previewMode=true');
+      return;
+    }
+    console.log('✅ [QuizRenderer] Activation du mode édition');
+    event.stopPropagation();
+    event.preventDefault();
+    handleTextClick(moduleId);
+  }, [previewMode, handleTextClick]);
+
   const handleTextInput = useCallback((moduleId: string, content: string) => {
     if (onModuleUpdate) {
+      // Sauvegarder la position du curseur avant la mise à jour
+      const ref = textRefs.current[moduleId];
+      let cursorPosition = 0;
+      if (ref) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const preCaretRange = range.cloneRange();
+          preCaretRange.selectNodeContents(ref);
+          preCaretRange.setEnd(range.endContainer, range.endOffset);
+          cursorPosition = preCaretRange.toString().length;
+        }
+      }
+
       onModuleUpdate(moduleId, { body: content });
+
+      // Restaurer la position du curseur après la mise à jour
+      setTimeout(() => {
+        const ref = textRefs.current[moduleId];
+        if (ref) {
+          const textNode = ref.firstChild;
+          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            const pos = Math.min(cursorPosition, textNode.textContent?.length || 0);
+            range.setStart(textNode, pos);
+            range.collapse(true);
+            if (sel) {
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }
+      }, 0);
     }
   }, [onModuleUpdate]);
 
@@ -121,6 +180,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         // Utilise la couleur héritée si aucune couleur n'est définie pour le texte
         color: textModule.bodyColor || inheritedTextColor || '#154b66',
         textAlign: (textModule.align || 'left') as any,
+        direction: 'ltr', // Force l'écriture de gauche à droite (français)
         ...textStyles
       };
 
@@ -188,7 +248,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                   ) : (
                     <div 
                       style={bodyStyle}
-                      onClick={() => handleTextClick(m.id)}
+                      onDoubleClick={(e) => handleTextDoubleClick(m.id, e)}
                       className={!previewMode ? 'cursor-text' : ''}
                     >
                       {content}
@@ -226,7 +286,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                 ) : (
                   <div 
                     style={bodyStyle}
-                    onClick={() => handleTextClick(m.id)}
+                    onDoubleClick={(e) => handleTextDoubleClick(m.id, e)}
                     className={!previewMode ? 'cursor-text' : ''}
                   >
                     {content}
@@ -494,7 +554,9 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as BlocLogo;
-      const bandHeight = logoModule.bandHeight ?? 60;
+      const baseBandHeight = logoModule.bandHeight ?? 60;
+      // Réduire de 10% sur mobile uniquement
+      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
       const bandColor = logoModule.bandColor ?? '#ffffff';
       const bandPadding = logoModule.bandPadding ?? 16;
       const logoWidth = logoModule.logoWidth ?? 120;
@@ -508,7 +570,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
           style={{ 
             backgroundColor: bandColor,
             height: bandHeight,
-            width: '100%',
+            width: bandWidthMode === 'container' ? '100%' : '100vw',
+            ...(bandWidthMode === 'container'
+              ? {}
+              : { marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }
+            ),
             display: 'flex',
             alignItems: 'center',
             justifyContent,
@@ -552,6 +618,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as BlocPiedDePage;
       const baseBandHeight = footerModule.bandHeight ?? 60;
+      // Réduire de 10% sur mobile uniquement
       const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
       const bandPadding = footerModule.bandPadding ?? 24;
@@ -571,7 +638,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
       const socialIconSize = footerModule.socialIconSize ?? 24;
       const socialIconColor = footerModule.socialIconColor ?? '#000000';
 
-      const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0 || socialLinks.length > 0;
+      const hasContent = footerModule.logoUrl || (footerText && footerText.trim()) || footerLinks.length > 0 || socialLinks.length > 0;
 
       // Ne pas afficher le footer vide en mode preview
       if (previewMode && !hasContent) {
@@ -585,7 +652,11 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             backgroundColor: bandColor,
             height: hasContent ? 'auto' : bandHeight,
             minHeight: hasContent ? bandHeight : undefined,
-            width: '100%',
+            width: bandWidthMode === 'container' ? '100%' : '100vw',
+            ...(bandWidthMode === 'container'
+              ? { position: 'relative' }
+              : { position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw' }
+            ),
             display: 'flex',
             flexDirection: 'column',
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
@@ -701,9 +772,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      display: 'inline-block',
+                      cursor: 'pointer'
                     }}
                     onClick={(e) => {
                       if (!previewMode) {
@@ -716,7 +786,7 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
                       height={socialIconSize}
                       viewBox="0 0 24 24"
                       fill={socialIconColor}
-                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ display: 'block' }}
                     >
                       <path d={getSocialIcon(social.platform)} />
                     </svg>

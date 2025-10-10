@@ -168,7 +168,7 @@ export interface FooterLink {
 
 export interface FooterSocialLink {
   id: string;
-  platform: 'facebook' | 'linkedin' | 'twitter' | 'instagram' | 'youtube' | 'tiktok' | string;
+  platform: 'facebook' | 'linkedin' | 'twitter' | 'instagram' | 'youtube' | 'tiktok';
   url: string;
 }
 
@@ -188,8 +188,8 @@ export interface BlocPiedDePage extends BaseModule {
   fontSize?: number; // Taille de police (px)
   separator?: string; // Séparateur entre les liens (ex: '|')
   // Réseaux sociaux
-  socialLinks?: FooterSocialLink[];
-  socialIconSize?: number; // Taille des icônes
+  socialLinks?: FooterSocialLink[]; // Liste des réseaux sociaux
+  socialIconSize?: number; // Taille des icônes (px)
   socialIconColor?: string; // Couleur des icônes
 }
 

@@ -142,7 +142,7 @@ const Toolbar: React.FC<{
   );
 }
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop', onSelect?: (module: Module) => void) => {
   // const isMobileDevice = device === 'mobile';
 
   const commonStyle: React.CSSProperties = {
@@ -152,7 +152,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
   switch (m.type) {
     case 'BlocTexte': {
       return (
-        <div style={{ ...commonStyle }}>
+        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -165,7 +165,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     }
     case 'BlocImage': {
       return (
-        <div style={{ ...commonStyle }}>
+        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -178,7 +178,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     }
     case 'BlocBouton':
       return (
-        <div style={{ ...commonStyle }}>
+        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -202,7 +202,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       );
     case 'BlocVideo':
       return (
-        <div style={{ ...commonStyle }}>
+        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
           <QuizModuleRenderer
             modules={[m]}
             previewMode={false}
@@ -236,7 +236,9 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       return (
         <div
           style={{
-            ...commonStyle
+            ...commonStyle,
+            paddingTop: (moduleWithMeta as any).spacingTop ?? 0,
+            paddingBottom: (moduleWithMeta as any).spacingBottom ?? 0
           }}
         >
           <div style={{ display: 'flex', justifyContent, width: '100%' }}>
@@ -356,6 +358,8 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           style={{
             ...commonStyle,
             background: 'transparent',
+            paddingTop: (m as any).spacingTop ?? 0,
+            paddingBottom: (m as any).spacingBottom ?? 0,
             display: 'flex',
             justifyContent: htmlJustify,
             width: '100%'
@@ -365,7 +369,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             {(m as any).html ? (
               <div
                 className="whitespace-pre-wrap text-sm text-slate-700"
-                dangerouslySetInnerHTML={{ __html: (m as any).html }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml((m as any).html) }}
               />
             ) : (
               <div className="text-sm italic text-slate-500">
@@ -381,6 +385,8 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         <div
           style={{
             ...commonStyle,
+            paddingTop: (m as any).spacingTop ?? 0,
+            paddingBottom: (m as any).spacingBottom ?? 0,
             width: '100%'
           }}
         >
@@ -417,7 +423,12 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
           modules={[m]}
           previewMode={false}
           device={device}
-          onModuleClick={() => {}}
+          bandWidthMode="container"
+          onModuleClick={(moduleId) => {
+            if (onSelect) {
+              onSelect(m);
+            }
+          }}
           onModuleUpdate={(_id, patch) => onUpdate(patch)}
         />
       );
@@ -616,9 +627,10 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
-  // Séparer les modules Logo des autres modules
+  // Séparer les modules Logo, Footer et réguliers
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo'), [modules]);
+  const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
+  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
   const single = regularModules.length === 1;
@@ -655,7 +667,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full" data-modular-zone="1">
+    <div className="w-full flex flex-col min-h-full" data-modular-zone="1">
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
         <div 
@@ -676,12 +688,12 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
             isMobile={device === 'mobile'}
           />
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
         </div>
       ))}
       
       {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto">
+      <div className="w-full max-w-[1500px] mx-auto" style={{ flex: regularModules.length > 0 ? '1' : 'initial' }}>
         <div
           className="flex flex-col gap-0"
           style={{
@@ -918,7 +930,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                       <GripVertical className="h-3.5 w-3.5" />
                     </button>
                     <div className={paddingClass}>
-                      {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+                      {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
                     </div>
                     <button
                       type="button"
@@ -940,10 +952,34 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           );
         })}
         </div>
-        {regularModules.length === 0 && logoModules.length === 0 && (
+        {regularModules.length === 0 && logoModules.length === 0 && footerModules.length === 0 && (
           <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
         )}
       </div>
+      
+      {/* Modules Footer - positionnés en pleine largeur en bas */}
+      {footerModules.map((m) => (
+        <div 
+          key={m.id}
+          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(m);
+          }}
+        >
+          <Toolbar
+            visible={selectedModuleId === m.id}
+            layoutWidth="full"
+            onWidthChange={() => {}}
+            onDelete={() => onDelete(m.id)}
+            expanded={openToolbarFor === m.id}
+            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+            isMobile={device === 'mobile'}
+          />
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
+        </div>
+      ))}
     </div>
   );
 };

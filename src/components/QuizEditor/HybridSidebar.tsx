@@ -7,7 +7,9 @@ import {
   Palette,
   FormInput
 } from 'lucide-react';
-import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
+import BackgroundPanel from './panels/BackgroundPanel';
+import CompositeElementsPanel from './modules/CompositeElementsPanel';
+import TextEffectsPanel from './panels/TextEffectsPanel';
 import ImageModulePanel from './modules/ImageModulePanel';
 import LogoModulePanel from './modules/LogoModulePanel';
 import FooterModulePanel from './modules/FooterModulePanel';
@@ -111,7 +113,6 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
-  // Callback pour forcer l'ouverture de l'onglet Elements
   onForceElementsTab?: () => void;
   // Tabs à masquer (par id: 'campaign', 'export', ...)
   hiddenTabs?: string[];
@@ -120,6 +121,7 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
+  allModules?: Module[];
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
@@ -177,7 +179,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onActiveTabChange,
   // modular editor
   currentScreen,
-  onAddModule
+  onAddModule,
+  allModules = []
 }: HybridSidebarProps, ref) => {
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -624,24 +627,16 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           />
         );
       case 'background':
-        // Pour les modules texte, passer le module comme selectedElement
-        const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
-        const updateForBackground = selectedModule?.type === 'BlocTexte' && onModuleUpdate 
-          ? (updates: any) => onModuleUpdate(selectedModule.id, updates)
-          : onElementUpdate;
-        
         return (
           <BackgroundPanel 
             onBackgroundChange={onBackgroundChange || (() => {})} 
             onExtractedColorsChange={onExtractedColorsChange}
             currentBackground={currentBackground}
             extractedColors={extractedColors}
-            selectedElement={elementForBackground}
-            onElementUpdate={updateForBackground}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
             onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
-            currentScreen={currentScreen}
-            selectedDevice={selectedDevice}
           />
         );
       case 'elements':
@@ -770,7 +765,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }
             }}
             onAddElement={onAddElement}
-            selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
           />
