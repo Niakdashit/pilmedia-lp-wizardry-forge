@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers } from 'lucide-react';
 
-interface QuizToolbarProps {
+interface ScratchToolbarProps {
   selectedDevice: 'desktop' | 'tablet' | 'mobile';
   onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onPreviewToggle?: () => void;
@@ -25,7 +25,7 @@ interface QuizToolbarProps {
   onNavigateToSettings?: () => void;
 }
 
-const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
+const ScratchToolbar: React.FC<ScratchToolbarProps> = React.memo(({
   selectedDevice,
   onDeviceChange,
   onPreviewToggle,
@@ -181,6 +181,6 @@ const QuizToolbar: React.FC<QuizToolbarProps> = React.memo(({
   );
 });
 
-QuizToolbar.displayName = 'QuizToolbar';
+ScratchToolbar.displayName = 'ScratchToolbar';
 
-export default QuizToolbar;
+export default ScratchToolbar;

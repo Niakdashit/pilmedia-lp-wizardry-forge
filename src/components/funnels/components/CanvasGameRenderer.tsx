@@ -427,7 +427,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         </div>
 
         {/* Overlay pour déclencher le formulaire si pas validé */}
-        {!formValidated && displayMode !== 'embedded' && (
+        {!formValidated && displayMode !== 'embedded' && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
           <div 
             onClick={() => {
               console.log('Canvas overlay clicked - triggering form');

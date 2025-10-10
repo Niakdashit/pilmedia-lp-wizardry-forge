@@ -203,7 +203,8 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="p-4 h-full overflow-y-auto">
+      <div className="h-full flex flex-col bg-white rounded-lg shadow-sm">
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center">
@@ -622,6 +623,7 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
         )}
       </div>
     </div>
+  </div>
   );
 };
 

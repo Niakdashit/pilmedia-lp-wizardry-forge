@@ -8,7 +8,10 @@ export type ModuleType =
   | 'BlocSeparateur'
   | 'BlocVideo'
   | 'BlocReseauxSociaux'
-  | 'BlocHtml';
+  | 'BlocHtml'
+  | 'BlocCarte'
+  | 'BlocLogo'
+  | 'BlocPiedDePage';
 
 export type SocialIconStyle =
   | 'color'
@@ -27,6 +30,7 @@ export interface BaseModule {
   align?: 'left' | 'center' | 'right';
   minHeight?: number; // px
   layoutWidth?: 'full' | 'half' | 'third' | 'twoThirds';
+  rotation?: number; // degrees (-180 to 180)
 }
 
 export interface BlocTexte extends BaseModule {
@@ -130,6 +134,65 @@ export interface BlocHtml extends BaseModule {
   language?: string;
 }
 
+export interface BlocCarte extends BaseModule {
+  type: 'BlocCarte';
+  title?: string;
+  description?: string;
+  children: Module[]; // Modules contenus dans la carte
+  cardBackground?: string;
+  cardBorderColor?: string;
+  cardBorderWidth?: number;
+  cardRadius?: number;
+  padding?: number;
+  boxShadow?: string;
+  maxWidth?: number; // px
+  textColor?: string; // Couleur du texte (titre + description)
+}
+
+export interface BlocLogo extends BaseModule {
+  type: 'BlocLogo';
+  logoUrl?: string;
+  logoWidth?: number; // px
+  logoHeight?: number; // px
+  bandHeight?: number; // px - hauteur de la bande
+  bandColor?: string; // couleur de fond de la bande
+  bandPadding?: number; // px - padding vertical de la bande
+}
+
+export interface FooterLink {
+  id: string;
+  text: string;
+  url: string;
+  openInNewTab?: boolean;
+}
+
+export interface FooterSocialLink {
+  id: string;
+  platform: 'facebook' | 'linkedin' | 'twitter' | 'instagram' | 'youtube' | 'tiktok' | string;
+  url: string;
+}
+
+export interface BlocPiedDePage extends BaseModule {
+  type: 'BlocPiedDePage';
+  logoUrl?: string;
+  logoWidth?: number; // px
+  logoHeight?: number; // px
+  bandHeight?: number; // px - hauteur de la bande
+  bandColor?: string; // couleur de fond de la bande
+  bandPadding?: number; // px - padding vertical de la bande
+  // Texte et liens
+  footerText?: string; // Texte libre du footer
+  footerLinks?: FooterLink[]; // Liste de liens
+  textColor?: string; // Couleur du texte
+  linkColor?: string; // Couleur des liens
+  fontSize?: number; // Taille de police (px)
+  separator?: string; // Séparateur entre les liens (ex: '|')
+  // Réseaux sociaux
+  socialLinks?: FooterSocialLink[];
+  socialIconSize?: number; // Taille des icônes
+  socialIconColor?: string; // Couleur des icônes
+}
+
 export type Module =
   | BlocTexte
   | BlocImage
@@ -137,7 +200,10 @@ export type Module =
   | BlocSeparateur
   | BlocVideo
   | BlocReseauxSociaux
-  | BlocHtml;
+  | BlocHtml
+  | BlocCarte
+  | BlocLogo
+  | BlocPiedDePage;
 
 export interface ModularScreen {
   screenId: ScreenId;
