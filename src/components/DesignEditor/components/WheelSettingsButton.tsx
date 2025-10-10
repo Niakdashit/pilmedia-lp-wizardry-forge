@@ -9,10 +9,10 @@ const WheelSettingsButton: React.FC<WheelSettingsButtonProps> = ({ onClick }) =>
   return (
     <button
       onClick={onClick}
-      className="bg-[#f0f5fd] rounded-lg p-2 shadow-sm hover:shadow-md hover:bg-[#eaf2ff] transition-colors"
+      className="bg-white border border-gray-300 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow"
       title="Paramètres de la roue"
     >
-      <Settings className="w-5 h-5 text-[#646463]" />
+      <Settings className="w-5 h-5 text-gray-600" />
     </button>
   );
 };

@@ -361,8 +361,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  
-
   // Détection de la taille de fenêtre
   useEffect(() => {
     const updateWindowSize = () => {
@@ -378,12 +376,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null);
+    const canvas = activeCanvasRef.current;
     if (!canvas) return;
 
     let initialDistance = 0;
     let initialZoom = 1;
     let isPinching = false;
+    let lastTouchTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -414,16 +413,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           
           // Appliquer le zoom avec une transition fluide
           requestAnimationFrame(() => {
-            onZoomChange?.(newZoom);
+            onZoomChange(newZoom);
           });
         }
         e.preventDefault();
       }
     };
 
-    const handleTouchEnd = (_e: TouchEvent) => {
+    const handleTouchEnd = (e: TouchEvent) => {
       if (isPinching) {
         isPinching = false;
+        lastTouchTime = Date.now();
       }
     };
 
@@ -748,23 +748,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     updateAutoSaveData(campaign, activityType, intensity);
   }, [elements, onElementsChange, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice, selectedGroupId]);
 
-  // Listen for text effects coming from BackgroundPanel and apply them to the current selection
-  useEffect(() => {
-    const onApplyTextEffect = (ev: Event) => {
-      const e = ev as CustomEvent<any>;
-      const detail = e.detail || {};
-      if (selectedElement) {
-        try {
-          handleElementUpdate(selectedElement, detail);
-        } catch (err) {
-          console.warn('applyTextEffect handler failed', err);
-        }
-      }
-    };
-    window.addEventListener('applyTextEffect', onApplyTextEffect as EventListener);
-    return () => window.removeEventListener('applyTextEffect', onApplyTextEffect as EventListener);
-  }, [selectedElement, handleElementUpdate]);
-
   // Synchroniser la sélection avec l'état externe
   useEffect(() => {
     if (externalSelectedElement && externalSelectedElement.id !== selectedElement) {
@@ -856,9 +839,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onZoomChange(clamped);
     }
   }, [onZoomChange]);
-
-  // Keep references to avoid TS6133 when externally wired
-  useEffect(() => { void deviceDefaultZoom; void handleZoomChange; }, [deviceDefaultZoom, handleZoomChange]);
 
 
   // Compute canvas-space coordinates from a pointer event
@@ -1580,10 +1560,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     const handleApplyTextEffect = (event: CustomEvent) => {
       const currentSelected = selectedElement || externalSelectedElement?.id;
-      console.log('🎯 applyTextEffect reçu (QuizEditor)', {
-        currentSelected,
-        detail: event.detail
-      });
       
       if (currentSelected) {
         // Check if this is a module (starts with 'modular-text-')
@@ -1591,7 +1567,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           const moduleId = currentSelected.replace('modular-text-', '');
           const module = modularModules?.find((m) => m.id === moduleId && m.type === 'BlocTexte');
           
-          console.log('🧩 applyTextEffect route=module?', { isModule: !!module, moduleId });
           if (module) {
             // Update module with advanced CSS styles
             onModuleUpdate(module.id, {
@@ -1601,7 +1576,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           }
         } else {
           // Regular element update
-          const element = elementById.get(currentSelected) || externalSelectedElement || null;
+          const element = elementById.get(currentSelected);
           const updates = {
             ...event.detail,
             style: {
@@ -1613,7 +1588,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             textEffect: event.detail.textEffect,
             textShape: event.detail.textShape
           };
-          console.log('🧱 applyTextEffect route=element', { elementId: currentSelected, updates });
           
           handleElementUpdate(currentSelected, updates);
         }
@@ -1625,16 +1599,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
     };
   }, [selectedElement, externalSelectedElement, handleElementUpdate, elementById, modularModules, onModuleUpdate]);
-
-  // Keep local selection id in sync when parent changes selected element instance
-  useEffect(() => {
-    if (externalSelectedElement?.id && externalSelectedElement.id !== selectedElement) {
-      setSelectedElement(externalSelectedElement.id);
-    }
-    if (!externalSelectedElement && selectedElement) {
-      setSelectedElement(null);
-    }
-  }, [externalSelectedElement, selectedElement]);
 
   // Écouteur d'événement pour afficher le popup d'animation
   useEffect(() => {
@@ -1678,7 +1642,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     maxRegions: 50,
     updateThreshold: 16 // 60fps
   });
-  void markRegionsDirty;
 
   // Convertir les éléments en format compatible avec useAutoResponsive
   const responsiveElements = useMemo(() => {
@@ -1796,7 +1759,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onQuizPanelChange?.(true);
     }
   }, [onQuizPanelChange, readOnly]);
-  void handleElementTap; // Reserved for future touch interaction features
 
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
@@ -1992,7 +1954,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null;
+            const canvasEl = typeof activeCanvasRef === 'object' ? activeCanvasRef.current : null;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -2043,11 +2005,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 transformOrigin: 'center top',
                 touchAction: 'none',
                 userSelect: 'none',
-                willChange: 'transform',
-                // Improve perceived sharpness for sans-serif like Open Sans
-                WebkitFontSmoothing: 'subpixel-antialiased' as any,
-                textRendering: 'optimizeLegibility',
-                fontSynthesis: 'none'
+                willChange: 'transform'
               }}
               onClickCapture={(e) => {
                 // Clear selection only when clicking on empty canvas, not on elements
@@ -2357,17 +2315,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onOpenElementsTab?.();
                         return;
                       }
-                      if (m.type === 'BlocCarte') {
-                        onSelectedElementChange?.({
-                          id: `modular-carte-${m.id}`,
-                          type: 'carte',
-                          role: 'module-carte',
-                          moduleId: m.id,
-                          screenId
-                        } as any);
-                        onOpenElementsTab?.();
-                        return;
-                      }
                       onSelectedElementChange?.({
                         id: `modular-text-${m.id}`,
                         type: 'text',
@@ -2375,14 +2322,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         moduleId: m.id,
                         screenId
                       } as any);
-                      onShowDesignPanel?.();
+                      onShowDesignPanel?.('text');
                     }}
                     selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
                       || (externalSelectedElement as any)?.role === 'module-image'
                       || (externalSelectedElement as any)?.role === 'module-video'
                       || (externalSelectedElement as any)?.role === 'module-social'
-                      || (externalSelectedElement as any)?.role === 'module-html'
-                      || (externalSelectedElement as any)?.role === 'module-carte')
+                      || (externalSelectedElement as any)?.role === 'module-html')
                       ? (externalSelectedElement as any)?.moduleId
                       : undefined}
                   />
@@ -2470,6 +2416,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               return (
                 <CanvasElement 
                   key={element.id} 
+                  screenId={screenId}
                   element={elementForCanvas} 
                   selectedDevice={selectedDevice}
                   isSelected={
@@ -2508,6 +2455,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     stopDragging
                   }}
                   customRenderers={customElementRenderers}
+                  onTap={handleElementTap}
                 />
               );
             })}

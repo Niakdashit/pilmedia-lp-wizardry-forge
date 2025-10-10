@@ -34,11 +34,11 @@ const PreviewWindowButton: React.FC<PreviewWindowButtonProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'outline':
-        return 'bg-[#f0f5fd] text-[#646463] hover:bg-[#eaf2ff]';
+        return 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50';
       case 'ghost':
-        return 'bg-transparent text-[#646463] hover:bg-[#eaf2ff]';
+        return 'bg-transparent text-gray-600 hover:bg-gray-100';
       default:
-        return 'bg-[#f0f5fd] text-[#646463] hover:bg-[#eaf2ff]';
+        return 'bg-blue-600 text-white hover:bg-blue-700';
     }
   };
 

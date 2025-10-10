@@ -15,14 +15,13 @@ import ButtonModulePanel from './modules/ButtonModulePanel';
 import VideoModulePanel from './modules/VideoModulePanel';
 import SocialModulePanel from './modules/SocialModulePanel';
 import HtmlModulePanel from './modules/HtmlModulePanel';
-import CartePanel from './panels/CartePanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
-import type { Module, BlocImage, BlocCarte } from '@/types/modularEditor';
+import type { Module, BlocImage } from '@/types/modularEditor';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -611,7 +610,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             extractedColors={extractedColors}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
-            onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
           />
         );
@@ -678,26 +676,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               onBack={() => {
                 onSelectedModuleChange?.(null);
                 setActiveTab('elements');
-              }}
-            />
-          );
-        }
-        if (selectedModule?.type === 'BlocCarte' && onModuleUpdate) {
-          return (
-            <CartePanel
-              module={selectedModule as BlocCarte}
-              onUpdate={(id: string, patch: Partial<BlocCarte>) => onModuleUpdate(id, patch)}
-              onAddChild={(parentId: string, childModule: Module) => {
-                // Ajouter un enfant à la carte
-                const carte = selectedModule as BlocCarte;
-                const updatedChildren = [...(carte.children || []), childModule];
-                onModuleUpdate(parentId, { children: updatedChildren } as any);
-              }}
-              onDeleteChild={(parentId: string, childId: string) => {
-                // Supprimer un enfant de la carte
-                const carte = selectedModule as BlocCarte;
-                const updatedChildren = (carte.children || []).filter(c => c.id !== childId);
-                onModuleUpdate(parentId, { children: updatedChildren } as any);
               }}
             />
           );
@@ -784,7 +762,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   return (
     <div data-hybrid-sidebar="expanded" className="flex h-full min-h-0">
-      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[28px]" style={themeVars}>
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0" style={themeVars}>
         <button
           onClick={() => setIsCollapsed(true)}
           className="p-3 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))] transition-all duration-200"
@@ -824,7 +802,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       </div>
 
       {internalActiveTab && (
-        <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
+        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             {(() => {
               const screenTitle = (currentScreen === 'screen2') ? 'Écran 2' : (currentScreen === 'screen3') ? 'Écran 3' : 'Écran 1';

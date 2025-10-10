@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Type, Shapes, Search } from 'lucide-react';
+import TextPanel from './TextPanel';
 import { shapes, ShapeDefinition } from '../shapes/shapeLibrary';
 
 interface AssetsPanelProps {
@@ -53,8 +54,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   const renderContent = () => {
     switch (activeTab) {
       case 'text':
-        return null; // TextPanel now returns null
-
+        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} selectedDevice={selectedDevice} elements={elements} />;
 
       case 'shapes':
         // Filtrer toutes les formes selon la recherche

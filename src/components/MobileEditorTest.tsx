@@ -5,11 +5,10 @@ import HybridSidebar from './DesignEditor/HybridSidebar';
 
 const MobileEditorTest: React.FC = () => {
   const [selectedElement, setSelectedElement] = useState<any>(null);
-  const [currentBackground, setCurrentBackground] = useState<{ type: 'color' | 'image'; value: string }>({ type: 'color', value: '#ffffff' });
+  const [currentBackground, setCurrentBackground] = useState({ type: 'color' as const, value: '#ffffff' });
   const [campaignConfig, setCampaignConfig] = useState({});
   const [elements, setElements] = useState<any[]>([]);
-  const [, setShowMobileUI] = useState(false);
-  void setShowMobileUI; // Mark as intentionally unused
+  const [showMobileUI, setShowMobileUI] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   
   const containerRef = useRef<HTMLDivElement>(null);

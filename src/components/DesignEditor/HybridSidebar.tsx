@@ -581,7 +581,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   if (isCollapsed) {
     return (
-      <div data-hybrid-sidebar="collapsed" className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
+      <div className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
         {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(false)}
@@ -633,9 +633,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   }
 
   return (
-    <div data-hybrid-sidebar="expanded" className="flex h-full min-h-0">
+    <div className="flex h-full min-h-0">
       {/* Vertical Tab Sidebar */}
-      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[28px]" style={themeVars}>
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0" style={themeVars}>
         {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
@@ -702,7 +702,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         return null;
       })()}
       {activeTab && (
-        <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
+        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">

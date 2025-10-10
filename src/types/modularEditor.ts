@@ -8,8 +8,7 @@ export type ModuleType =
   | 'BlocSeparateur'
   | 'BlocVideo'
   | 'BlocReseauxSociaux'
-  | 'BlocHtml'
-  | 'BlocCarte';
+  | 'BlocHtml';
 
 export type SocialIconStyle =
   | 'color'
@@ -28,7 +27,6 @@ export interface BaseModule {
   align?: 'left' | 'center' | 'right';
   minHeight?: number; // px
   layoutWidth?: 'full' | 'half' | 'third' | 'twoThirds';
-  rotation?: number; // degrees (-180 to 180)
 }
 
 export interface BlocTexte extends BaseModule {
@@ -132,21 +130,6 @@ export interface BlocHtml extends BaseModule {
   language?: string;
 }
 
-export interface BlocCarte extends BaseModule {
-  type: 'BlocCarte';
-  title?: string;
-  description?: string;
-  children: Module[]; // Modules contenus dans la carte
-  cardBackground?: string;
-  cardBorderColor?: string;
-  cardBorderWidth?: number;
-  cardRadius?: number;
-  padding?: number;
-  boxShadow?: string;
-  maxWidth?: number; // px
-  textColor?: string; // Couleur du texte (titre + description)
-}
-
 export type Module =
   | BlocTexte
   | BlocImage
@@ -154,8 +137,7 @@ export type Module =
   | BlocSeparateur
   | BlocVideo
   | BlocReseauxSociaux
-  | BlocHtml
-  | BlocCarte;
+  | BlocHtml;
 
 export interface ModularScreen {
   screenId: ScreenId;
