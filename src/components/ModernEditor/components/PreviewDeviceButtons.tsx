@@ -12,13 +12,13 @@ const PreviewDeviceButtons: React.FC<PreviewDeviceButtonsProps> = ({
   onDeviceChange
 }) => {
   return (
-    <div className="flex items-center bg-[#f0f5fd] rounded-lg p-1">
+    <div className="flex items-center bg-gray-100 rounded-lg p-1">
       <button
         onClick={() => onDeviceChange('desktop')}
         className={`p-2 rounded-md transition-colors ${
           selectedDevice === 'desktop' 
-            ? 'bg-[#eaf2ff] text-[#646463]' 
-            : 'text-[#646463] hover:bg-[#eaf2ff]'
+            ? 'bg-white shadow-sm text-[#841b60]' 
+            : 'text-gray-600 hover:text-gray-900'
         }`}
         title="Desktop"
       >
@@ -28,8 +28,8 @@ const PreviewDeviceButtons: React.FC<PreviewDeviceButtonsProps> = ({
         onClick={() => onDeviceChange('mobile')}
         className={`p-2 rounded-md transition-colors ${
           selectedDevice === 'mobile' 
-            ? 'bg-[#eaf2ff] text-[#646463]' 
-            : 'text-[#646463] hover:bg-[#eaf2ff]'
+            ? 'bg-white shadow-sm text-[#841b60]' 
+            : 'text-gray-600 hover:text-gray-900'
         }`}
         title="Mobile"
       >

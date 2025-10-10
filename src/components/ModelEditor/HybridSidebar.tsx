@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
   ChevronRight,
@@ -151,12 +151,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onForceElementsTab,
   colorEditingContext
 }: HybridSidebarProps, ref) => {
-  // Détection du format 9:16 (fenêtre portrait)
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
-  
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile' || isWindowMobile);
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
   const location = useLocation();
   const isFormEditor = location.pathname === '/form-editor';
   
@@ -173,7 +169,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     setActiveTab: setEditorActiveTab,
     setPanelState: setEditorPanelState
   } = useEditorState();
-  void editorType; void editorShowJackpotPanel;
   
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
@@ -338,24 +333,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     });
   };
   
-  // Détection de la taille de fenêtre
-  useEffect(() => {
-    const updateWindowSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    updateWindowSize();
-    window.addEventListener('resize', updateWindowSize);
-    return () => window.removeEventListener('resize', updateWindowSize);
-  }, []);
-  
-  // Forcer le collapse en format 9:16
-  useEffect(() => {
-    if (isWindowMobile) {
-      setIsCollapsed(true);
-    }
-  }, [isWindowMobile]);
-  
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -366,15 +343,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
 
     const deviceOverride = getEditorDeviceOverride();
-    if (deviceOverride === 'desktop' && !isWindowMobile) {
+    if (deviceOverride === 'desktop') {
       setIsCollapsed(false);
       return;
     }
 
-    if (/Mobi|Android/i.test(ua) || isWindowMobile) {
+    if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, [onForceElementsTab, isWindowMobile]);
+  }, [onForceElementsTab]);
 
   // Si le template actuel est 'custom-frame', fusionner les valeurs manquantes avec les défauts pour refléter visuellement
   React.useEffect(() => {
@@ -697,13 +674,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             <div className="h-full overflow-y-auto">
               <JackpotConfigPanel
                 onBack={() => onJackpotPanelChange?.(false)}
-                reelSymbols={(campaign as any)?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒']}
-                selectedTemplate={(campaign as any)?.gameConfig?.jackpot?.template || 'jackpot-frame'}
-                borderColor={(campaign as any)?.gameConfig?.jackpot?.borderColor || '#ffd700'}
-                backgroundColor={(campaign as any)?.gameConfig?.jackpot?.backgroundColor || '#ffffff'}
-                textColor={(campaign as any)?.gameConfig?.jackpot?.textColor || '#333333'}
-                customFrame={(campaign as any)?.gameConfig?.jackpot?.customFrame}
-                customTemplateUrl={(campaign as any)?.gameConfig?.jackpot?.customTemplateUrl}
+                reelSymbols={campaign?.gameConfig?.jackpot?.symbols || ['🍎', '🍊', '🍋', '🍇', '🍓', '🥝', '🍒']}
+                selectedTemplate={campaign?.gameConfig?.jackpot?.template || 'jackpot-frame'}
+                borderColor={campaign?.gameConfig?.jackpot?.borderColor || '#ffd700'}
+                backgroundColor={campaign?.gameConfig?.jackpot?.backgroundColor || '#ffffff'}
+                textColor={campaign?.gameConfig?.jackpot?.textColor || '#333333'}
+                customFrame={campaign?.gameConfig?.jackpot?.customFrame}
+                customTemplateUrl={campaign?.gameConfig?.jackpot?.customTemplateUrl}
                 onReelSymbolsChange={(symbols) => {
                   setCampaign((prev: any) => ({
                     ...prev,
@@ -819,7 +796,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <JackpotConfigPanel
             onBack={() => {
               onJackpotPanelChange?.(false);
-              setActiveTab('elements');
+              _setActiveTab('elements');
             }}
             reelSymbols={jackpotSymbols}
             onReelSymbolsChange={handleJackpotSymbolsChange}
@@ -1103,7 +1080,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   if (isCollapsed) {
     return (
-      <div data-hybrid-sidebar="collapsed" className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
+      <div className="w-16 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col" style={themeVars}>
         {/* Collapse/Expand Button */}
         <button
           onClick={() => setIsCollapsed(false)}
@@ -1155,9 +1132,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   }
 
   return (
-    <div data-hybrid-sidebar="expanded" className="flex h-full min-h-0">
+    <div className="flex h-full min-h-0">
       {/* Vertical Tab Sidebar */}
-      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[28px]" style={themeVars}>
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0" style={themeVars}>
         {/* Collapse Button */}
         <button
           onClick={() => setIsCollapsed(true)}
@@ -1219,7 +1196,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
       {/* Panel Content */}
       {activeTab && (
-        <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
+        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter select-text">

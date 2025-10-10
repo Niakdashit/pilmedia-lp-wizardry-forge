@@ -9,11 +9,10 @@ import { UNLOCKED_GAME_TYPES } from '../../utils/funnelMatcher';
 import { FieldConfig } from '../forms/DynamicContactForm';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasElement from '../ModelEditor/CanvasElement';
+import DesignCanvas from '../ModelEditor/DesignCanvas';
 import { useUniversalResponsive } from '../../hooks/useUniversalResponsive';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
-import { useScratchCardStore } from '../ScratchCardEditor/state/scratchcard.store';
-import { QuizModuleRenderer } from '../ScratchCardEditor/QuizRenderer';
 
 interface FunnelUnlockedGameProps {
   campaign: any;
@@ -21,15 +20,13 @@ interface FunnelUnlockedGameProps {
   mobileConfig?: any;
   wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   onReset?: () => void;
-  launchButtonStyles?: React.CSSProperties;
 }
 
 const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   campaign,
   previewMode = 'desktop',
   mobileConfig,
-  wheelModalConfig,
-  launchButtonStyles
+  wheelModalConfig
 }) => {
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!UNLOCKED_GAME_TYPES.includes(campaign.type)) {
@@ -37,88 +34,24 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   }
 
   // LOGIQUE FUNNEL UNLOCKED : formulaire obligatoire pour démarrer le jeu
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   const [formValidated, setFormValidated] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [participationLoading, setParticipationLoading] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
-
-  // Écouter les mises à jour de style pour forcer le re-render (comme FunnelQuizParticipate)
-  React.useEffect(() => {
-    const handleStyleUpdate = () => {
-      console.log('🔄 [FunnelUnlockedGame] Style update received, forcing re-render');
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    window.addEventListener('quizStyleUpdate', handleStyleUpdate);
-    window.addEventListener('modularModuleSelected', handleStyleUpdate);
-    
-    return () => {
-      window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
-      window.removeEventListener('modularModuleSelected', handleStyleUpdate);
-    };
-  }, []);
-
-  // Écouter les MAJ d'image de fond (DesignCanvas) pour forcer le re-render du preview
-  React.useEffect(() => {
-    const handleBgSync = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail;
-      console.log('🔄 [FunnelUnlockedGame] Background sync event:', detail);
-      setForceUpdate(prev => prev + 1);
-    };
-    window.addEventListener('sc-bg-sync', handleBgSync);
-    window.addEventListener('applyBackgroundAllScreens', handleBgSync);
-    window.addEventListener('applyBackgroundCurrentScreen', handleBgSync);
-    return () => {
-      window.removeEventListener('sc-bg-sync', handleBgSync);
-      window.removeEventListener('applyBackgroundAllScreens', handleBgSync);
-      window.removeEventListener('applyBackgroundCurrentScreen', handleBgSync);
-    };
-  }, []);
-
-  // Synchronize with localStorage changes (cross-frame) for background overrides
-  React.useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (!e.key) return;
-      if (e.key.startsWith('sc-bg-')) {
-        console.log('🔄 [FunnelUnlockedGame] storage change:', e.key);
-        setForceUpdate(prev => prev + 1);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
   
   const [formPreviewElements, setFormPreviewElements] = useState<any[]>([]);
   const [formPreviewBackground, setFormPreviewBackground] = useState<{ type: 'color' | 'image'; value: string }>({
     type: 'color',
     value: '#ffffff'
   });
-  const [, setFormPreviewZoom] = useState(() => {
+  const [formPreviewZoom, setFormPreviewZoom] = useState(() => {
     const device: 'desktop' | 'tablet' | 'mobile' = previewMode;
     const stored = getStoredZoom(device);
     return stored ?? getDefaultPreviewZoom(device);
   });
 
   // Synchronisation en temps réel avec le store pour les campagnes de type "form"
-  const scratchCards = useScratchCardStore((state: any) => state.config.cards);
-  
-  // Détecter quand une carte est révélée pour déterminer le résultat
-  React.useEffect(() => {
-    if (currentScreen !== 'screen2' || !formValidated || gameResult !== null) return;
-    
-    const revealedCard = scratchCards.find((card: any) => card.revealed);
-    if (revealedCard) {
-      // Déterminer si c'est gagnant ou perdant selon la logique
-      // Pour l'instant, utiliser card.isWinner si défini, sinon perdant par défaut
-      const result = revealedCard.isWinner ? 'win' : 'lose';
-      console.log(` Carte ${revealedCard.id} révélée - Résultat: ${result}`);
-      handleGameFinish(result);
-    }
-  }, [scratchCards, currentScreen, formValidated, gameResult]);
-  
   const storeCampaign = useEditorStore((state) => state.campaign);
   const [liveCampaign, setLiveCampaign] = useState(campaign);
   const universalResponsive = useUniversalResponsive('desktop');
@@ -154,9 +87,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             normalizedBackground ??
             storeCampaign.design?.background ??
             campaign.design?.background
-        },
-        // Préserver les messages personnalisés
-        scratchResultMessages: storeCampaign.scratchResultMessages || campaign.scratchResultMessages
+        }
       });
     } else {
       setLiveCampaign(campaign);
@@ -221,61 +152,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return 0.7;
   }
 
-  // Helper: lire un éventuel override local (par écran et par appareil) depuis sessionStorage
-  const getPerScreenBg = (screen: 'screen1' | 'screen2' | 'screen3', device: 'desktop' | 'tablet' | 'mobile'): string | null => {
-    try {
-      const url = localStorage.getItem(`sc-bg-${device}-${screen}`);
-      if (url && typeof url === 'string' && url.length > 0) return url;
-    } catch {}
-    return null;
-  };
-
-  // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
-  // Sélectionne l'image de fond appropriée selon le device (desktop vs mobile)
-  const backgroundStyle: React.CSSProperties = useMemo(() => {
-    const perScreenUrl = getPerScreenBg(currentScreen, previewMode);
-    if (perScreenUrl) {
-      return { background: `url(${perScreenUrl}) center/cover no-repeat` };
-    }
-    
-    // Déterminer quelle image de fond utiliser selon le device
-    const design = liveCampaign?.design || campaign?.design;
-    let backgroundImageUrl: string | undefined;
-    
-    if (previewMode === 'mobile') {
-      // Priorité à mobileBackgroundImage pour mobile, sinon fallback sur backgroundImage
-      backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
-    } else {
-      // Desktop et tablet utilisent backgroundImage
-      backgroundImageUrl = design?.backgroundImage;
-    }
-    
-    // Si on a une URL d'image spécifique, l'utiliser
-    if (backgroundImageUrl) {
-      return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
-    }
-    
-    // Sinon, utiliser le background général (couleur ou gradient)
-    const canvasBackground = liveCampaign?.canvasConfig?.background || design?.background;
-    return {
-      background: canvasBackground?.type === 'image'
-        ? `url(${canvasBackground.value}) center/cover no-repeat`
-        : canvasBackground?.value || design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
-    };
-  }, [currentScreen, previewMode, liveCampaign?.canvasConfig?.background, liveCampaign?.design, campaign?.design, forceUpdate]);
-
-  // Récupérer directement modularPage pour un rendu unifié (comme FunnelQuizParticipate)
-  const modularPage = liveCampaign?.modularPage || campaign?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
-  const modules = modularPage.screens.screen1 || [];
-  const modules2 = modularPage.screens.screen2 || [];
-  const modules3 = modularPage.screens.screen3 || [];
-
-  // Séparer les modules Logo et Footer pour l'écran 1
-  const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
-  const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
-  const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
-
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
       return;
@@ -315,16 +191,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   }, [liveCampaign?.formFields, liveCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate]);
 
   const handleGameButtonClick = () => {
-    // Passer à l'écran 2 (cartes visibles mais bloquées)
-    setCurrentScreen('screen2');
-    // Ne pas ouvrir le formulaire immédiatement, attendre que l'utilisateur essaie de gratter
-  };
-
-  const handleCardClick = () => {
-    // Si le formulaire n'est pas validé, ouvrir la modale
+    // Si le formulaire n'est pas validé, on affiche la modale
     if (!formValidated) {
       setShowFormModal(true);
     }
+    // Si le formulaire est validé, le jeu peut démarrer (géré dans chaque composant de jeu)
   };
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
@@ -341,7 +212,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setShowFormModal(false);
       setShowValidationMessage(true);
       setTimeout(() => setShowValidationMessage(false), 2000);
-      // Les cartes deviennent jouables après validation du formulaire
     } catch (error) {
       console.error('Erreur lors de la soumission:', error);
       toast.error('Erreur lors de la soumission du formulaire');
@@ -376,7 +246,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     if (process.env.NODE_ENV !== 'production') {
       console.log('🔄 Reset complet du funnel unlocked game');
     }
-    setCurrentScreen('screen1');
     setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
     setGameResult(null);
     setShowFormModal(false);
@@ -397,10 +266,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           <div className="relative z-10 h-full flex items-center justify-center">
             <ResultScreen 
               gameResult={gameResult} 
-              campaign={liveCampaign} 
+              campaign={campaign} 
               mobileConfig={mobileConfig} 
-              onReset={handleReset}
-              launchButtonStyles={launchButtonStyles}
+              onReset={handleReset} 
             />
           </div>
         </div>
@@ -409,155 +277,80 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   }
 
   if (liveCampaign.type === 'scratch') {
+    const canvasBackground = liveCampaign.canvasConfig?.background || liveCampaign.design?.background;
+    const backgroundStyle: React.CSSProperties = {
+      background: canvasBackground?.type === 'image'
+        ? `url(${canvasBackground.value}) center/cover no-repeat`
+        : canvasBackground?.value || liveCampaign.design?.background?.value || 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'
+    };
+
+    const canvasElements = liveCampaign.canvasConfig?.elements || liveCampaign.elements || [];
+    const { getPropertiesForDevice } = universalResponsive;
+
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
           <div className="absolute inset-0" style={backgroundStyle} />
 
-          {/* ÉCRAN 1 : Avant le jeu */}
-          {currentScreen === 'screen1' && (
-            <>
-              {/* Bande logo absolue en haut (comme l'éditeur) */}
-              {logoModules1.length > 0 && (
-                <div className="absolute left-0 top-0 w-full z-20" style={{ pointerEvents: 'none' }}>
-                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
-                    <QuizModuleRenderer 
-                      modules={logoModules1}
-                      previewMode={true}
-                      device={previewMode}
-                    />
-                  </div>
-                </div>
-              )}
+          {canvasElements.map((element: any) => {
+            const elementWithProps = {
+              ...element,
+              ...getPropertiesForDevice(element, previewMode)
+            };
 
-              {/* Contenu régulier sous la bande */}
-              <div className={`relative z-10 h-full flex flex-col items-center ${logoModules1.length > 0 ? 'justify-start' : 'justify-center'} gap-6 p-8`}>
-                {logoModules1.length > 0 && (
-                  <div style={{ height: logoBandHeight1 }} />
-                )}
-                {regularModules1.length > 0 && (
-                  <QuizModuleRenderer 
-                    modules={regularModules1}
-                    previewMode={true}
-                    device={previewMode}
-                    onButtonClick={handleGameButtonClick}
-                  />
-                )}
-              </div>
+            if (element.type === 'text') {
+              elementWithProps.width = element.width || 200;
+              elementWithProps.height = element.height || 40;
+              if (elementWithProps.width < 150) {
+                elementWithProps.width = 150;
+              }
+            }
 
-              {/* Bande footer absolue en bas */}
-              {footerModules1.length > 0 && (
-                <div className="absolute left-0 bottom-0 w-full z-20" style={{ pointerEvents: 'none' }}>
-                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
-                    <QuizModuleRenderer 
-                      modules={footerModules1}
-                      previewMode={true}
-                      device={previewMode}
-                    />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+            elementWithProps.x = Number(elementWithProps.x) || 0;
+            elementWithProps.y = Number(elementWithProps.y) || 0;
+            elementWithProps.width = Number(elementWithProps.width) || 100;
+            elementWithProps.height = Number(elementWithProps.height) || 100;
 
-          {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
-          {currentScreen === 'screen2' && gameResult === null && (
-            <>
-              {/* Modules screen2 - en arrière-plan */}
-              <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 gap-6" style={{ pointerEvents: 'none' }}>
-                {modules2.length > 0 && (
-                  <QuizModuleRenderer 
-                    modules={modules2}
-                    previewMode={true}
-                    device={previewMode}
-                  />
-                )}
-              </div>
+            return (
+              <CanvasElement
+                key={element.id}
+                element={elementWithProps}
+                selectedDevice={previewMode}
+                isSelected={false}
+                onSelect={() => {}}
+                onUpdate={() => {}}
+                onDelete={() => {}}
+                containerRef={null}
+                readOnly={true}
+                onMeasureBounds={() => {}}
+                onAddElement={() => {}}
+                elements={canvasElements}
+                isMultiSelecting={false}
+                isGroupSelecting={false}
+                activeGroupId={null}
+                campaign={liveCampaign}
+                extractedColors={[]}
+                alignmentSystem={null}
+              />
+            );
+          })}
 
-              {/* ScratchCardCanvas */}
-              <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 50 }}>
-                <div className={formValidated ? 'pointer-events-auto' : 'pointer-events-none'}>
-                  <ScratchCardCanvas 
-                    selectedDevice={previewMode}
-                    previewMode={!formValidated}
-                  />
-                </div>
-              </div>
-              
-              {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
-              {!formValidated && (
-                <div 
-                  className="absolute inset-0 cursor-pointer" 
-                  style={{ zIndex: 999999, backgroundColor: 'transparent' }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCardClick();
-                  }}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCardClick();
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCardClick();
-                  }}
-                />
-              )}
-            </>
-          )}
-
-          {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') */}
-          {gameResult !== null && (
-            <div className="relative z-10 h-full">
-              {modules3.length > 0 && (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
-                  <QuizModuleRenderer 
-                    modules={modules3}
-                    previewMode={true}
-                    device={previewMode}
-                    onButtonClick={handleReset}
-                  />
-                </div>
-              )}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 50 }}>
+            <div className="pointer-events-auto">
+              <ScratchCardCanvas selectedDevice={previewMode} />
             </div>
-          )}
+          </div>
         </div>
-
-        {/* Modal de formulaire */}
-        <FormHandler
-          showFormModal={showFormModal}
-          campaign={campaign}
-          fields={fields}
-          participationLoading={participationLoading}
-          onClose={() => setShowFormModal(false)}
-          onSubmit={handleFormSubmit}
-          launchButtonStyles={launchButtonStyles}
-        />
       </div>
     );
   }
 
   // Pour les campagnes de type "form", afficher directement le formulaire en plein écran
   if (liveCampaign.type === 'form') {
-    // Sélectionner l'image de fond appropriée selon le device pour les formulaires
-    const design = liveCampaign?.design || campaign?.design;
-    let formBackgroundUrl: string | undefined;
-    
-    if (previewMode === 'mobile') {
-      formBackgroundUrl = design?.mobileBackgroundImage || design?.backgroundImage;
-    } else {
-      formBackgroundUrl = design?.backgroundImage;
-    }
-    
     const backgroundStyle: React.CSSProperties = {
-      background: formBackgroundUrl
-        ? `url(${formBackgroundUrl}) center/cover no-repeat`
-        : formPreviewBackground?.type === 'image'
-          ? `url(${formPreviewBackground.value}) center/cover no-repeat`
-          : formPreviewBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+      background: formPreviewBackground?.type === 'image'
+        ? `url(${formPreviewBackground.value}) center/cover no-repeat`
+        : formPreviewBackground?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
     };
 
     return (
@@ -594,7 +387,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 onSelect={() => {}}
                 onUpdate={() => {}}
                 onDelete={() => {}}
-                containerRef={undefined}
+                containerRef={null}
                 readOnly={true}
                 onMeasureBounds={() => {}}
                 onAddElement={() => {}}
@@ -604,7 +397,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 activeGroupId={null}
                 campaign={liveCampaign}
                 extractedColors={[]}
-                alignmentSystem={undefined}
+                alignmentSystem={null}
               />
             );
           })}
@@ -695,7 +488,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           participationLoading={participationLoading}
           onClose={() => setShowFormModal(false)}
           onSubmit={handleFormSubmit}
-          launchButtonStyles={launchButtonStyles}
         />
       </div>
     );
@@ -726,7 +518,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           setShowFormModal(false);
         }}
         onSubmit={handleFormSubmit}
-        launchButtonStyles={launchButtonStyles}
       />
     </div>
   );

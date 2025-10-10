@@ -7,7 +7,6 @@ interface ScratchCardStore {
   config: ScratchCardState;
   
   // Actions de configuration
-  updateConfig: (updates: Partial<ScratchCardState>) => void;
   updateGrid: (grid: Partial<ScratchCardState['grid']>) => void;
   updateCardShape: (cardShape: CardShape) => void;
   updateBrush: (brush: Partial<ScratchCardState['brush']>) => void;
@@ -43,13 +42,6 @@ export const useScratchCardStore = create<ScratchCardStore>()(
     config: DEFAULT_SCRATCH_CONFIG,
     
     // Actions de configuration
-    updateConfig: (updates) => set((state) => ({
-      config: {
-        ...state.config,
-        ...updates
-      }
-    })),
-    
     updateCardShape: (cardShape: CardShape) => set((state) => ({
       config: {
         ...state.config,
@@ -116,12 +108,11 @@ export const useScratchCardStore = create<ScratchCardStore>()(
           { id: newId, isWinner: false, progress: 0, revealed: false } as ScratchCard
         ];
       }
-      // Normalize grid layout for desktop layout
-      // Desktop: toujours une ligne sauf pour 6 cartes (2 lignes de 3)
+      // Normalize grid layout for a nice default based on cap
       const normalizedGrid = {
         ...state.config.grid,
-        rows: normalizedMax === 6 ? 2 : 1,
-        cols: normalizedMax === 6 ? 3 : normalizedMax
+        rows: normalizedMax === 6 ? 2 : normalizedMax === 4 ? 2 : 1,
+        cols: normalizedMax === 6 ? 3 : normalizedMax === 4 ? 2 : 3
       };
       return {
         config: {

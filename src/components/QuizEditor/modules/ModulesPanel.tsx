@@ -1,16 +1,14 @@
 import React from 'react';
-import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video, Share2, Code2, Square, Footprints } from 'lucide-react';
+import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video, Share2, Code2 } from 'lucide-react';
 import { SOCIAL_PRESETS, getSocialIconUrl } from './socialIcons';
-import type { ScreenId, Module, ModuleType, SocialIconStyle } from '@/types/modularEditor';
 
 export interface ModulesPanelProps {
   currentScreen: ScreenId;
   onAdd: (screen: ScreenId, module: Module) => void;
 }
 
-const createModule = (type: ModuleType, screen: ScreenId): Module => {
+const createModule = (type: ModuleType): Module => {
   const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-  const defaultCTA = screen === 'screen3' ? 'Rejouer' : 'Participer';
   switch (type) {
     case 'BlocTexte':
       return {
@@ -111,74 +109,6 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
         minHeight: 200,
         backgroundColor: '#f8fafc'
       };
-    case 'BlocCarte':
-      return {
-        id,
-        type: 'BlocCarte' as const,
-        title: 'Merci pour votre participation',
-        description: 'Ajouter des lignes dans le corps du texte',
-        cardBackground: '#ffffff',
-        cardBorderColor: '#e5e7eb',
-        cardBorderWidth: 1,
-        cardRadius: 12,
-        padding: 24,
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        maxWidth: 600,
-        spacingTop: 16,
-        spacingBottom: 16,
-        align: 'center',
-        children: [
-          {
-            id: `${id}-text-1`,
-            type: 'BlocTexte',
-            body: 'Texte par défaut',
-            bodyFontSize: 16,
-            align: 'center'
-          },
-          {
-            id: `${id}-btn-1`,
-            type: 'BlocBouton',
-            label: defaultCTA,
-            href: '#',
-            background: '#000000',
-            textColor: '#ffffff',
-            borderRadius: 9999,
-            align: 'center'
-          }
-        ]
-      };
-    case 'BlocLogo':
-      return {
-        id,
-        type: 'BlocLogo' as const,
-        logoUrl: '',
-        logoWidth: 120,
-        logoHeight: 120,
-        bandHeight: 60,
-        bandColor: '#ffffff',
-        bandPadding: 16,
-        align: 'center',
-        spacingTop: 0,
-        spacingBottom: 0,
-        layoutWidth: 'full',
-        minHeight: 120
-      };
-    case 'BlocPiedDePage':
-      return {
-        id,
-        type: 'BlocPiedDePage' as const,
-        logoUrl: '',
-        logoWidth: 120,
-        logoHeight: 120,
-        bandHeight: 60,
-        bandColor: '#ffffff',
-        bandPadding: 16,
-        align: 'center',
-        spacingTop: 0,
-        spacingBottom: 0,
-        layoutWidth: 'full',
-        minHeight: 120
-      };
   }
 };
 
@@ -186,9 +116,6 @@ const items: Array<{ id: ModuleType; label: string; icon: React.ComponentType<an
   { id: 'BlocTexte', label: 'Bloc Texte', icon: Type },
   { id: 'BlocImage', label: 'Bloc Image', icon: ImgIcon },
   { id: 'BlocBouton', label: 'Bloc Bouton', icon: Link2 },
-  { id: 'BlocCarte', label: 'Carte', icon: Square },
-  { id: 'BlocLogo', label: 'Logo', icon: ImgIcon },
-  { id: 'BlocPiedDePage', label: 'Pied de page', icon: Footprints },
   { id: 'BlocSeparateur', label: 'Espace', icon: SeparatorHorizontal },
   { id: 'BlocVideo', label: 'Bloc Vidéo', icon: Video },
   { id: 'BlocReseauxSociaux', label: 'Réseaux sociaux', icon: Share2 },
@@ -205,7 +132,7 @@ const ModulesPanel: React.FC<ModulesPanelProps> = ({ currentScreen, onAdd }) => 
         {items.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => onAdd(currentScreen, createModule(id, currentScreen))}
+            onClick={() => onAdd(currentScreen, createModule(id))}
             className="flex items-center gap-2 p-3 rounded-lg border border-[hsl(var(--sidebar-border))] text-left hover:bg-[hsl(var(--sidebar-hover))] transition-colors"
           >
             <Icon className="w-4 h-4 text-[hsl(var(--sidebar-icon))]" />

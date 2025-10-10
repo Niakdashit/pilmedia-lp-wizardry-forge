@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { WizardData } from '../../ModernWizard';
-import { supabase } from '@/integrations/supabase/client';
 
 interface UseQuizGenerationProps {
   wizardData: WizardData;
@@ -14,6 +13,9 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
   const [progress, setProgress] = useState(0);
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [lastRawApiResponse, setLastRawApiResponse] = useState<string>(''); // Pour debug
+
+  const quizEndpoint = 'https://cknwowuaqymprfaylwti.supabase.co/functions/v1/quiz';
+  const supabaseApiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrbndvd3VhcXltcHJmYXlsd3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5OTYyNzUsImV4cCI6MjA2NTU3MjI3NX0.dPKnFeUMeufXNyO531OPXhT-s0DeJVyJIV2fhbRcL3Q'; // clef publique ! Pas à sécuriser
 
   const getMockQuizData = () => ({
     intro: "Testez vos connaissances sur notre produit !",
@@ -147,6 +149,7 @@ export const useQuizGeneration = ({ wizardData, updateWizardData, nextStep }: Us
     error,
     progress,
     debugInfo,
+    quizEndpoint,
     handleGenerate,
     lastRawApiResponse
   };

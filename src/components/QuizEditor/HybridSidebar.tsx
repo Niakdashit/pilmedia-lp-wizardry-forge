@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
   ChevronRight,
@@ -11,20 +11,17 @@ import BackgroundPanel from './panels/BackgroundPanel';
 import CompositeElementsPanel from './modules/CompositeElementsPanel';
 import TextEffectsPanel from './panels/TextEffectsPanel';
 import ImageModulePanel from './modules/ImageModulePanel';
-import LogoModulePanel from './modules/LogoModulePanel';
-import FooterModulePanel from './modules/FooterModulePanel';
 import ButtonModulePanel from './modules/ButtonModulePanel';
 import VideoModulePanel from './modules/VideoModulePanel';
 import SocialModulePanel from './modules/SocialModulePanel';
 import HtmlModulePanel from './modules/HtmlModulePanel';
-import CartePanel from './panels/CartePanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from './panels/QuizManagementPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
-import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
+import type { Module, BlocImage } from '@/types/modularEditor';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -113,6 +110,7 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onQuizBorderRadiusChange?: (radius: number) => void;
   onQuizTemplateChange?: (templateId: string) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  // Callback pour forcer l'ouverture de l'onglet Elements
   onForceElementsTab?: () => void;
   // Tabs à masquer (par id: 'campaign', 'export', ...)
   hiddenTabs?: string[];
@@ -121,7 +119,6 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
-  allModules?: Module[];
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
@@ -179,36 +176,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onActiveTabChange,
   // modular editor
   currentScreen,
-  onAddModule,
-  allModules = []
+  onAddModule
 }: HybridSidebarProps, ref) => {
-  // Détection du format 9:16 (fenêtre portrait)
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
-  
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile' || isWindowMobile);
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
   const setCampaign = useEditorStore((s) => s.setCampaign);
-  
-  // Détection de la taille de fenêtre
-  useEffect(() => {
-    const updateWindowSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    updateWindowSize();
-    window.addEventListener('resize', updateWindowSize);
-    return () => window.removeEventListener('resize', updateWindowSize);
-  }, []);
-  
-  // Forcer le collapse en format 9:16
-  useEffect(() => {
-    if (isWindowMobile) {
-      setIsCollapsed(true);
-    }
-  }, [isWindowMobile]);
   
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
@@ -220,15 +194,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
 
     const deviceOverride = getEditorDeviceOverride();
-    if (deviceOverride === 'desktop' && !isWindowMobile) {
+    if (deviceOverride === 'desktop') {
       setIsCollapsed(false);
       return;
     }
 
-    if (/Mobi|Android/i.test(ua) || isWindowMobile) {
+    if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, [onForceElementsTab, isWindowMobile]);
+  }, [onForceElementsTab]);
   const [internalActiveTab, setInternalActiveTab] = useState<string | null>('elements');
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
@@ -244,17 +218,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
     setActiveTab: (tab: string) => {
-      // Always allow external calls to open the Elements tab (e.g., after selecting a module)
-      // and make sure the sidebar is expanded on mobile.
-      if (tab === 'elements') {
-        setIsCollapsed(false);
-      }
-
-      // Keep a soft guard for rapid repeat calls but do not block the switch
+      // If we just manually switched tabs, ignore external attempts to force back to 'elements'
       if (Date.now() < ignoreExternalUntilRef.current && tab === 'elements') {
-        ignoreExternalUntilRef.current = 0;
+        return;
       }
-
+      // If no module is selected anymore, ignore external attempts to force Elements
+      if (tab === 'elements' && !selectedModuleId && !selectedModule) {
+        return;
+      }
+      // If a non-elements tab is currently active, block external ref-driven return to 'elements'
+      if (tab === 'elements' && internalActiveTab !== 'elements') {
+        return;
+      }
       setInternalActiveTab(tab);
       onActiveTabChange?.(tab);
       // Mettre à jour les états des panneaux en fonction de l'onglet sélectionné
@@ -270,7 +245,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onQuizPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, setIsCollapsed]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
@@ -635,7 +610,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             extractedColors={extractedColors}
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
-            onModuleUpdate={onModuleUpdate}
             colorEditingContext={colorEditingContext}
           />
         );
@@ -658,36 +632,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             <ImageModulePanel
               module={selectedModule as BlocImage}
               onUpdate={(patch: Partial<BlocImage>) => {
-                onModuleUpdate(selectedModule.id, patch);
-              }}
-              onBack={() => {
-                onSelectedModuleChange?.(null);
-                setActiveTab('elements');
-              }}
-            />
-          );
-        }
-        
-        if (selectedModule?.type === 'BlocLogo' && onModuleUpdate) {
-          return (
-            <LogoModulePanel
-              module={selectedModule as BlocLogo}
-              onUpdate={(patch: Partial<BlocLogo>) => {
-                onModuleUpdate(selectedModule.id, patch);
-              }}
-              onBack={() => {
-                onSelectedModuleChange?.(null);
-                setActiveTab('elements');
-              }}
-            />
-          );
-        }
-        
-        if (selectedModule?.type === 'BlocPiedDePage' && onModuleUpdate) {
-          return (
-            <FooterModulePanel
-              module={selectedModule as BlocPiedDePage}
-              onUpdate={(patch: Partial<BlocPiedDePage>) => {
                 onModuleUpdate(selectedModule.id, patch);
               }}
               onBack={() => {
@@ -736,26 +680,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           );
         }
-        if (selectedModule?.type === 'BlocCarte' && onModuleUpdate) {
-          return (
-            <CartePanel
-              module={selectedModule as BlocCarte}
-              onUpdate={(id: string, patch: Partial<BlocCarte>) => onModuleUpdate(id, patch)}
-              onAddChild={(parentId: string, childModule: Module) => {
-                // Ajouter un enfant à la carte
-                const carte = selectedModule as BlocCarte;
-                const updatedChildren = [...(carte.children || []), childModule];
-                onModuleUpdate(parentId, { children: updatedChildren } as any);
-              }}
-              onDeleteChild={(parentId: string, childId: string) => {
-                // Supprimer un enfant de la carte
-                const carte = selectedModule as BlocCarte;
-                const updatedChildren = (carte.children || []).filter(c => c.id !== childId);
-                onModuleUpdate(parentId, { children: updatedChildren } as any);
-              }}
-            />
-          );
-        }
         return (
           <CompositeElementsPanel
             currentScreen={currentScreen || 'screen1'}
@@ -765,6 +689,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               }
             }}
             onAddElement={onAddElement}
+            selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
           />
@@ -837,7 +762,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   return (
     <div data-hybrid-sidebar="expanded" className="flex h-full min-h-0">
-      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0 rounded-bl-[28px]" style={themeVars}>
+      <div className="w-20 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col shadow-sm min-h-0" style={themeVars}>
         <button
           onClick={() => setIsCollapsed(true)}
           className="p-3 hover:bg-[hsl(var(--sidebar-hover))] border-b border-[hsl(var(--sidebar-border))] transition-all duration-200"
@@ -877,7 +802,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       </div>
 
       {internalActiveTab && (
-        <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
+        <div className="w-80 bg-[hsl(var(--sidebar-bg))] border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             {(() => {
               const screenTitle = (currentScreen === 'screen2') ? 'Écran 2' : (currentScreen === 'screen3') ? 'Écran 3' : 'Écran 1';

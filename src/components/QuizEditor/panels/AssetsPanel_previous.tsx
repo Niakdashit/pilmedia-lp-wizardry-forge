@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TextPanel from './TextPanel';
 
 interface AssetsPanelProps {
   onAddElement: (element: any) => void;
@@ -193,7 +194,7 @@ const AssetsPanel: React.FC<AssetsPanelProps> = ({ onAddElement, selectedElement
   const renderContent = () => {
     switch (activeCategory) {
       case 'text':
-        return null; // TextPanel functionality moved elsewhere
+        return <TextPanel onAddElement={onAddElement} selectedElement={selectedElement} onElementUpdate={onElementUpdate} />;
 
       case 'shapes':
         return (

@@ -3,7 +3,6 @@ import { Trash2, GripVertical, MoveDiagonal, ChevronDown, Copy } from 'lucide-re
 import type { Module, ScreenId, SocialIconStyle } from '@/types/modularEditor';
 import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from './socialIcons';
 import type { DeviceType } from '@/utils/deviceDimensions';
-import { QuizModuleRenderer } from '../QuizRenderer';
 
 export interface ModularCanvasProps {
   screen: ScreenId;
@@ -142,8 +141,195 @@ const Toolbar: React.FC<{
   );
 }
 
-const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop', onSelect?: (module: Module) => void) => {
-  // const isMobileDevice = device === 'mobile';
+// Dedicated body editor to preserve caret position and avoid content resets on each keystroke
+const BodyEditor: React.FC<{ m: Module; style: React.CSSProperties; onUpdate: (patch: Partial<Module>) => void; isMobile?: boolean }>
+  = ({ m, style, onUpdate, isMobile = false }) => {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const isFocusedRef = React.useRef(false);
+
+  // Initialize or refresh innerHTML only when not focused to avoid caret jumps
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (isFocusedRef.current) return;
+    const html = (m as any).bodyRichHtml as string | undefined;
+    if (typeof html === 'string' && html.trim() !== '') {
+      if (el.innerHTML !== html) el.innerHTML = html;
+    } else {
+      // Fallback to plain text
+      const text = (m as any).body || '';
+      if (el.innerText !== text) {
+        el.innerText = text;
+      }
+    }
+  }, [m.id, (m as any).bodyRichHtml, (m as any).body]);
+
+  return (
+    <div
+      ref={ref}
+      className="w-full bg-transparent outline-none whitespace-pre-wrap break-words"
+      style={{ ...style, minHeight: 4, border: '1px dashed transparent', padding: 0 }}
+      contentEditable
+      role="textbox"
+      aria-multiline="true"
+      tabIndex={0}
+      spellCheck
+      suppressContentEditableWarning
+      data-module-id={(m as any).id}
+      data-module-role="body"
+      onMouseDown={() => {
+        // Ensure the editor gets focus on mouse interaction
+        ref.current?.focus();
+      }}
+      onFocus={() => { isFocusedRef.current = true; }}
+      onBlur={(e) => {
+        isFocusedRef.current = false;
+        const el = e.currentTarget as HTMLDivElement;
+        const html = el.innerHTML;
+        const text = el.textContent || '';
+        onUpdate({ bodyRichHtml: html, body: text });
+      }}
+      onKeyDown={(e) => {
+        const el = ref.current;
+        // Handle Cmd/Ctrl+A explicitly to ensure select-all works inside the editor
+        if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'a')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (el) {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const sel = window.getSelection();
+            if (sel) {
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+          return;
+        }
+        // Handle Undo/Redo explicitly to avoid interference
+        const isModifier = e.metaKey || e.ctrlKey;
+        if (isModifier && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          e.stopPropagation();
+          try { document.execCommand('undo'); } catch {}
+          return;
+        }
+        if (isModifier && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          try { document.execCommand('redo'); } catch {}
+          return;
+        }
+        // Fallback paste handler for Cmd/Ctrl+V if onPaste is blocked by the browser
+        if (isModifier && e.key.toLowerCase() === 'v') {
+          // Try async clipboard read; only prevent default if we will insert
+          if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+            e.preventDefault();
+            e.stopPropagation();
+            navigator.clipboard.readText()
+              .then((text) => {
+                if (!text) return;
+                // Reuse insertion logic by creating a text node at caret
+                const sel = window.getSelection();
+                const container = ref.current;
+                if (!sel || !container) return;
+                if (!sel.rangeCount || !container.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                  const rangeToEnd = document.createRange();
+                  rangeToEnd.selectNodeContents(container);
+                  rangeToEnd.collapse(false);
+                  sel.removeAllRanges();
+                  sel.addRange(rangeToEnd);
+                }
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const node = document.createTextNode(text);
+                range.insertNode(node);
+                range.setStartAfter(node);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                const current = container?.textContent || '';
+                onUpdate({ body: current });
+              })
+              .catch(() => {
+                // let native paste happen if readText fails
+              });
+            return;
+          }
+        }
+        // Allow other native shortcuts inside contentEditable (Cmd/Ctrl+B/I/U/Z/Y...)
+        if (e.metaKey || e.ctrlKey) {
+          // Prevent parent handlers from interfering
+          e.stopPropagation();
+          return;
+        }
+        // Let Enter and other typing keys flow, but keep them from bubbling to the container
+        e.stopPropagation();
+      }}
+      
+      onPaste={(e) => {
+        // Force paste as plain text when possible; otherwise allow native paste
+        const direct = e.clipboardData?.getData('text/plain') ?? '';
+        const insertText = (text: string) => {
+          if (!text) return;
+          // Now that we will insert ourselves, block native
+          e.preventDefault();
+          e.stopPropagation();
+          // Try modern API
+          try {
+            if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+              const ok = document.execCommand('insertText', false, text);
+              if (ok) return;
+            }
+          } catch {}
+          // Fallback: manual range insertion
+          const sel = window.getSelection();
+          const container = ref.current;
+          if (!sel || !container) return;
+          if (!sel.rangeCount || !container.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+            // Place caret at end of editor if selection is missing or outside
+            const rangeToEnd = document.createRange();
+            rangeToEnd.selectNodeContents(container);
+            rangeToEnd.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(rangeToEnd);
+          }
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const node = document.createTextNode(text);
+          range.insertNode(node);
+          // Move caret to end of inserted text
+          range.setStartAfter(node);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          // Update plain text after paste
+          const current = container?.textContent || '';
+          onUpdate({ body: current });
+        };
+        if (direct) {
+          insertText(direct);
+        } else if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+          // We'll handle async paste; stop native only when we actually insert
+          e.stopPropagation();
+          navigator.clipboard.readText().then((txt) => insertText(txt)).catch(() => {
+            // if failed, fallback to native (do nothing)
+          });
+        }
+      }}
+      onInput={(e) => {
+        // Update only plain text on input to reduce rerenders
+        const el = e.currentTarget as HTMLDivElement;
+        const text = el.textContent || '';
+        onUpdate({ body: text });
+      }}
+    />
+  );
+};
+
+const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
+  const isMobileDevice = device === 'mobile';
+  const deviceScale = isMobileDevice ? 0.8 : 1;
 
   const commonStyle: React.CSSProperties = {
     background: m.backgroundColor,
@@ -151,41 +337,161 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
   };
   switch (m.type) {
     case 'BlocTexte': {
+      // Transparent module: no inner card, only outer outline
+      const pad = 0;
+      const hasLegacy = !m.title && !m.body && (m.text || m.html);
+      // Title style removed (no title field rendered)
+      const baseBodyFontSize = (m as any).bodyFontSize as number | undefined;
+      const scaledBodyFontSize = baseBodyFontSize ? Math.max(8, Math.round(baseBodyFontSize * deviceScale)) : undefined;
+      
+      // Separate container styles (background, padding, borders) from text styles
+      const customCSS = (m as any).customCSS || {};
+      const containerStyles: React.CSSProperties = {};
+      const textStyles: React.CSSProperties = {};
+      
+      // Container-level properties (create a "button" effect)
+      const containerProps = ['backgroundColor', 'padding', 'borderRadius', 'display', 'border', 'boxShadow'];
+      containerProps.forEach(prop => {
+        if (customCSS[prop]) {
+          containerStyles[prop as any] = customCSS[prop];
+        }
+      });
+      
+      // Text-level properties
+      Object.keys(customCSS).forEach(prop => {
+        if (!containerProps.includes(prop)) {
+          textStyles[prop as any] = customCSS[prop];
+        }
+      });
+      
+      const bodyStyle: React.CSSProperties = {
+        fontSize: scaledBodyFontSize ? `${scaledBodyFontSize}px` : undefined,
+        fontWeight: (m as any).bodyBold ? '600' as any : undefined,
+        fontStyle: (m as any).bodyItalic ? 'italic' : undefined,
+        textDecoration: (m as any).bodyUnderline ? 'underline' : undefined,
+        lineHeight: 1.6,
+        fontFamily: (m as any).bodyFontFamily || (m as any).fontFamily || 'Open Sans',
+        color: (m as any).bodyColor || '#154b66',
+        textAlign: (m.align || 'left') as any,
+        // Apply text-level advanced CSS styles
+        ...textStyles
+      };
+      const align = m.align || 'left';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+      const maxTextWidth = (m as any).width ?? 800; // clamp default text width
+      
+      // If there are container styles, wrap the content in a container
+      const hasContainerStyles = Object.keys(containerStyles).length > 0;
+      
       return (
         <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
-          />
+          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+            <div style={{ width: '100%', maxWidth: maxTextWidth, paddingLeft: pad, paddingRight: pad }}>
+              {hasLegacy ? (
+              m.html ? (
+                <div dangerouslySetInnerHTML={{ __html: m.html }} />
+              ) : (
+                <textarea
+                  className="w-full bg-transparent outline-none text-sm text-black/90 dark:text-white/90"
+                  style={{
+                    textAlign: (m.align || 'left') as any,
+                    padding: isMobileDevice ? '0' : undefined,
+                    fontSize: scaledBodyFontSize ? `${scaledBodyFontSize}px` : undefined
+                  }}
+                  rows={3}
+                  value={m.text || ''}
+                  onChange={(e) => onUpdate({ text: e.target.value })}
+                  placeholder="Votre texte ici"
+                />
+              )
+            ) : hasContainerStyles ? (
+              // Wrap editor in styled container for effects like "Bouton Jaune"
+              <div style={{ display: 'inline-block', ...containerStyles }}>
+                <BodyEditor m={m} style={bodyStyle} onUpdate={onUpdate} isMobile={isMobileDevice} />
+              </div>
+            ) : (
+              // Only a multi-line body editor; no title field
+              <BodyEditor m={m} style={bodyStyle} onUpdate={onUpdate} isMobile={isMobileDevice} />
+            )}
+            </div>
+          </div>
         </div>
       );
     }
     case 'BlocImage': {
+      const align = m.align || 'center';
+      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+      const maxContentWidth = ((m.width ?? 480) * deviceScale);
+      const fit = m.objectFit || 'cover';
+      // Utiliser directement la hauteur spécifiée par l'utilisateur, sans minimum forcé
+      const baseHeight = typeof m.minHeight === 'number'
+        ? Math.max(50, Math.round(m.minHeight * deviceScale))  // scale minHeight on mobile
+        : Math.max(200, Math.round((maxContentWidth || 520) * 0.6));
+      // Cap container height to avoid overflowing the safe zone (approx 60% viewport height)
+      const vhCap = (typeof window !== 'undefined' && window.innerHeight) ? Math.max(240, Math.round(window.innerHeight * 0.6)) : 600;
+      const containerHeight = fit === 'cover' ? Math.min(baseHeight, vhCap) : undefined;
+      const borderRadius = m.borderRadius ?? 0;
+      const imageSource = (m.url && m.url.trim().length > 0)
+        ? m.url
+        : '/assets/templates/placeholder.png';
+
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
-          />
+        <div style={{ ...commonStyle }}>
+          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+            <div
+              style={{
+                width: '100%',
+                maxWidth: maxContentWidth,
+                borderRadius,
+                overflow: 'hidden',
+                // Transparent to preserve alpha from uploaded images
+                background: 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: containerHeight,
+                // Remove subtle inset background line to avoid perceived background
+                boxShadow: 'none',
+                paddingTop: (m as any).spacingTop ?? 0,
+                paddingBottom: (m as any).spacingBottom ?? 0
+              }}
+            >
+              <img
+                src={imageSource}
+                alt={m.alt || ''}
+                style={{
+                  width: '100%',
+                  height: fit === 'cover' ? '100%' : 'auto',
+                  objectFit: fit,
+                  display: 'block'
+                }}
+              />
+            </div>
+          </div>
         </div>
       );
     }
     case 'BlocBouton':
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
-          />
+        <div style={{ ...commonStyle, textAlign: 'center' }}>
+          <a
+            href={m.href || '#'}
+            onClick={(e) => e.preventDefault()}
+            className={`inline-flex items-center justify-center px-6 py-3 text-sm transition-transform hover:-translate-y-[1px] ${((m as any).uppercase) ? 'uppercase' : ''} ${((m as any).bold) ? 'font-bold' : 'font-semibold'} ${((m as any).boxShadow) ? 'shadow-[0_12px_30px_rgba(132,27,96,0.35)]' : ''}`}
+            style={{
+              background: (m as any).background || 'linear-gradient(to bottom right, #841b60, #b41b60)',
+              color: (m as any).textColor || '#ffffff',
+              borderRadius: `${m.borderRadius ?? 9999}px`,
+              border: `${(m as any).borderWidth ?? 0}px solid ${(m as any).borderColor || '#000000'}`,
+              width: 'min(280px, 100%)',
+              display: 'inline-flex',
+              marginTop: (m as any).spacingTop ?? 0,
+              marginBottom: (m as any).spacingBottom ?? 0,
+              boxShadow: (m as any).boxShadow || 'none'
+            }}
+          >
+            {m.label || 'Participer'}
+          </a>
         </div>
       );
     case 'BlocSeparateur':
@@ -202,14 +508,38 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       );
     case 'BlocVideo':
       return (
-        <div style={{ ...commonStyle, paddingTop: (m as any).spacingTop ?? 0, paddingBottom: (m as any).spacingBottom ?? 0 }}>
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
-          />
+        <div style={{ ...commonStyle }}>
+          {(() => {
+            const align = m.align || 'center';
+            const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+            const borderRadius = m.borderRadius ?? 0;
+            return (
+              <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+                <div
+                  style={{
+                    width: '100%',
+                    maxWidth: (((m as any).width ?? 560) * deviceScale),
+                    borderRadius,
+                    overflow: 'hidden',
+                    background: 'transparent',
+                    display: 'block',
+                    paddingTop: (m as any).spacingTop ?? 0,
+                    paddingBottom: (m as any).spacingBottom ?? 0
+                  }}
+                >
+                  <div className="relative" style={{ paddingTop: '56.25%' }}>
+                    <iframe
+                      src={m.src}
+                      title={m.title || 'Video'}
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       );
     case 'BlocReseauxSociaux': {
@@ -265,9 +595,8 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
               >
                 {links.map((link) => {
                   const networkId = (link.network as any) || undefined;
-                  const iconStyle: SocialIconStyle = (moduleWithMeta.iconStyle as SocialIconStyle) ?? 'color';
+                  const iconStyle: SocialIconStyle = moduleWithMeta.iconStyle ?? 'color';
                   const styleConfig = getIconStyleConfig(iconStyle, networkId as any);
-                  void styleConfig; // Mark as used for future functionality
                   const background = 'transparent';
                   const borderStyle = 'none';
                   const iconWrapperStyle: React.CSSProperties = {
@@ -369,7 +698,7 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             {(m as any).html ? (
               <div
                 className="whitespace-pre-wrap text-sm text-slate-700"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml((m as any).html) }}
+                dangerouslySetInnerHTML={{ __html: (m as any).html }}
               />
             ) : (
               <div className="text-sm italic text-slate-500">
@@ -378,59 +707,6 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
             )}
           </div>
         </div>
-      );
-    case 'BlocCarte': {
-      // Utiliser QuizModuleRenderer pour un rendu cohérent avec l'héritage des couleurs
-      return (
-        <div
-          style={{
-            ...commonStyle,
-            paddingTop: (m as any).spacingTop ?? 0,
-            paddingBottom: (m as any).spacingBottom ?? 0,
-            width: '100%'
-          }}
-        >
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={(moduleId) => {
-              // Pas de sélection en mode édition pour les cartes
-            }}
-            selectedModuleId={undefined}
-            onModuleUpdate={(moduleId, patch) => {
-              // Mettre à jour le module via le callback parent
-              onUpdate({ ...patch } as any);
-            }}
-            className="w-full"
-          />
-        </div>
-      );
-    }
-    case 'BlocLogo':
-      return (
-        <QuizModuleRenderer
-          modules={[m]}
-          previewMode={false}
-          device={device}
-          onModuleClick={() => {}}
-          onModuleUpdate={(_id, patch) => onUpdate(patch)}
-        />
-      );
-    case 'BlocPiedDePage':
-      return (
-        <QuizModuleRenderer
-          modules={[m]}
-          previewMode={false}
-          device={device}
-          bandWidthMode="container"
-          onModuleClick={(moduleId) => {
-            if (onSelect) {
-              onSelect(m);
-            }
-          }}
-          onModuleUpdate={(_id, patch) => onUpdate(patch)}
-        />
       );
     default:
       return null;
@@ -627,13 +903,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
     return () => window.cancelAnimationFrame(id);
   }, [modules, onUpdate, device]);
 
-  // Séparer les modules Logo, Footer et réguliers
-  const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
-  const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
-  const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
-  
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
-  const single = regularModules.length === 1;
+  const single = modules.length === 1;
   const minHeightPx = device === 'mobile' ? 420 : device === 'tablet' ? 520 : 640;
   const rows = React.useMemo(() => {
     const grouped: Array<Array<{ module: Module; index: number }>> = [];
@@ -642,7 +913,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
 
     const MAX_ROW_UNITS = 6;
 
-    regularModules.forEach((module, index) => {
+    modules.forEach((module, index) => {
       const width = module.layoutWidth || 'full';
       const span = width === 'third' ? 2 : width === 'twoThirds' ? 4 : width === 'half' ? 3 : 6;
 
@@ -664,44 +935,18 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
 
     if (current.length > 0) grouped.push(current);
     return grouped;
-  }, [regularModules]);
+  }, [modules]);
 
   return (
-    <div className="w-full flex flex-col min-h-full" data-modular-zone="1">
-      {/* Modules Logo - positionnés en pleine largeur au-dessus */}
-      {logoModules.map((m) => (
-        <div 
-          key={m.id}
-          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.(m);
-          }}
-        >
-          <Toolbar
-            visible={selectedModuleId === m.id}
-            layoutWidth="full"
-            onWidthChange={() => {}}
-            onDelete={() => onDelete(m.id)}
-            expanded={openToolbarFor === m.id}
-            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-            isMobile={device === 'mobile'}
-          />
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
-        </div>
-      ))}
-      
-      {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto" style={{ flex: regularModules.length > 0 ? '1' : 'initial' }}>
-        <div
-          className="flex flex-col gap-0"
-          style={{
-            minHeight: single ? minHeightPx : undefined,
-            justifyContent: 'flex-start'
-          }}
-        >
-          {rows.map((row, rowIndex) => {
+    <div className="w-full max-w-[1500px] mx-auto" data-modular-zone="1">
+      <div
+        className="flex flex-col gap-0"
+        style={{
+          minHeight: single ? minHeightPx : undefined,
+          justifyContent: 'flex-start'
+        }}
+      >
+        {rows.map((row, rowIndex) => {
           const isMobileView = device === 'mobile';
           const hasSplit = row.some(({ module }) => (module.layoutWidth || 'full') !== 'full');
           return (
@@ -930,7 +1175,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                       <GripVertical className="h-3.5 w-3.5" />
                     </button>
                     <div className={paddingClass}>
-                      {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
+                      {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
                     </div>
                     <button
                       type="button"
@@ -951,35 +1196,10 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             </div>
           );
         })}
-        </div>
-        {regularModules.length === 0 && logoModules.length === 0 && footerModules.length === 0 && (
-          <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
-        )}
       </div>
-      
-      {/* Modules Footer - positionnés en pleine largeur en bas */}
-      {footerModules.map((m) => (
-        <div 
-          key={m.id}
-          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.(m);
-          }}
-        >
-          <Toolbar
-            visible={selectedModuleId === m.id}
-            layoutWidth="full"
-            onWidthChange={() => {}}
-            onDelete={() => onDelete(m.id)}
-            expanded={openToolbarFor === m.id}
-            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-            isMobile={device === 'mobile'}
-          />
-          {renderModule(m, (patch) => onUpdate(m.id, patch), device, onSelect)}
-        </div>
-      ))}
+      {modules.length === 0 && (
+        <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
+      )}
     </div>
   );
 };
