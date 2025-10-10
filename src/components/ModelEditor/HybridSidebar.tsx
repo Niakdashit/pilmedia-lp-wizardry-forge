@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { 
   ChevronLeft,
   ChevronRight,
@@ -9,7 +9,9 @@ import {
   Palette
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { BackgroundPanel, AssetsPanel, TextEffectsPanel } from '@/components/shared';
+import BackgroundPanel from '../DesignEditor/panels/BackgroundPanel';
+import AssetsPanel from '../DesignEditor/panels/AssetsPanel';
+import TextEffectsPanel from '../DesignEditor/panels/TextEffectsPanel';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
@@ -149,12 +151,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onForceElementsTab,
   colorEditingContext
 }: HybridSidebarProps, ref) => {
-  // Détection du format 9:16 (fenêtre portrait)
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
-  
   // Détecter si on est sur mobile avec un hook React pour éviter les erreurs hydration
-  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile' || isWindowMobile);
+  const [isCollapsed, setIsCollapsed] = useState(selectedDevice === 'mobile');
   const location = useLocation();
   const isFormEditor = location.pathname === '/form-editor';
   
@@ -336,24 +334,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     });
   };
   
-  // Détection de la taille de fenêtre
-  useEffect(() => {
-    const updateWindowSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    updateWindowSize();
-    window.addEventListener('resize', updateWindowSize);
-    return () => window.removeEventListener('resize', updateWindowSize);
-  }, []);
-  
-  // Forcer le collapse en format 9:16
-  useEffect(() => {
-    if (isWindowMobile) {
-      setIsCollapsed(true);
-    }
-  }, [isWindowMobile]);
-  
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -364,15 +344,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
 
     const deviceOverride = getEditorDeviceOverride();
-    if (deviceOverride === 'desktop' && !isWindowMobile) {
+    if (deviceOverride === 'desktop') {
       setIsCollapsed(false);
       return;
     }
 
-    if (/Mobi|Android/i.test(ua) || isWindowMobile) {
+    if (/Mobi|Android/i.test(ua)) {
       setIsCollapsed(true);
     }
-  }, [onForceElementsTab, isWindowMobile]);
+  }, [onForceElementsTab]);
 
   // Si le template actuel est 'custom-frame', fusionner les valeurs manquantes avec les défauts pour refléter visuellement
   React.useEffect(() => {

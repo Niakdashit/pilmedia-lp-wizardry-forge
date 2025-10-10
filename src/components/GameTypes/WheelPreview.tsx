@@ -137,16 +137,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     wheelConfigSize: wheelConfig.size,
     scale: wheelConfig.scale
   });
-  
-  // Zone cliquable: proxy pour déclencher le bouton interne de SmartWheel
-  const wheelAreaRef = React.useRef<HTMLDivElement>(null);
-  const handleWheelAreaClick = () => {
-    if (disabled) return;
-    const btn = wheelAreaRef.current?.querySelector('button');
-    if (btn instanceof HTMLButtonElement && !btn.disabled) {
-      btn.click();
-    }
-  };
+
   // Resolve spin props from props -> wheelModalConfig -> campaign -> defaults
   const resolvedSpinMode: 'random' | 'instant_winner' | 'probability' =
     spinMode ||
@@ -194,48 +185,46 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         style={{ transform: lifted ? 'translateY(-25%)' : 'translateY(0%)' }}
       >
         <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
-          <div className={cropping.wheelClass}>
-            <SmartWheel
-              key={(() => {
-                try {
-                  const parts = segments.map((s: any, idx: number) => 
-                    `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
-                  ).join('|');
-                  const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
-                  return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
-                } catch {
-                  const fallbackSpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
-                  return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
-                }
-              })()}
-              segments={syncedSegments as any}
-              theme="modern"
-              size={wheelSize}
-              brandColors={{
-                primary: wheelConfig.brandColors?.primary || '#841b60',
-                secondary: wheelConfig.brandColors?.secondary || '#ffffff',
-                accent: wheelConfig.brandColors?.accent || '#45b7d1'
-              }}
-              onResult={handleResult}
-              onSpin={handleSpin}
-              disabled={disabled}
-              disablePointerAnimation={true}
-              borderStyle={wheelConfig.borderStyle}
-              customBorderColor={wheelConfig.borderColor}
-              customBorderWidth={wheelConfig.borderWidth}
-              showBulbs={wheelConfig.showBulbs}
-              buttonPosition="center"
-              // Forcer le mode probabilité pour respecter les réglages des lots
-              spinMode={'probability'}
-              speed={resolvedSpeed}
-              winProbability={resolvedWinProbability}
-              customButton={{
-                text: "GO",
-                color: wheelConfig.borderColor,
-                textColor: campaign.buttonConfig?.textColor || '#ffffff'
-              }}
-            />
-          </div>
+          <SmartWheel
+            key={(() => {
+              try {
+                const parts = segments.map((s: any, idx: number) => 
+                  `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.probability ?? 1}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
+                ).join('|');
+                const keySpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
+                return `${segments.length}-${parts}-${wheelConfig.borderStyle}-${wheelConfig.borderWidth}-${wheelSize}-${wheelConfig.showBulbs ? 1 : 0}-${keySpin}`;
+              } catch {
+                const fallbackSpin = `${resolvedSpinMode}-${resolvedSpeed}-${typeof resolvedWinProbability === 'number' ? resolvedWinProbability : 'np'}`;
+                return `${segments.length}-${wheelConfig.borderStyle}-${wheelSize}-${fallbackSpin}`;
+              }
+            })()}
+            segments={syncedSegments as any}
+            theme="modern"
+            size={wheelSize}
+            brandColors={{
+              primary: wheelConfig.brandColors?.primary || '#841b60',
+              secondary: wheelConfig.brandColors?.secondary || '#ffffff',
+              accent: wheelConfig.brandColors?.accent || '#45b7d1'
+            }}
+            onResult={handleResult}
+            onSpin={handleSpin}
+            disabled={disabled}
+            disablePointerAnimation={true}
+            borderStyle={wheelConfig.borderStyle}
+            customBorderColor={wheelConfig.borderColor}
+            customBorderWidth={wheelConfig.borderWidth}
+            showBulbs={wheelConfig.showBulbs}
+            buttonPosition="center"
+            // Forcer le mode probabilité pour respecter les réglages des lots
+            spinMode={'probability'}
+            speed={resolvedSpeed}
+            winProbability={resolvedWinProbability}
+            customButton={{
+              text: "GO",
+              color: wheelConfig.borderColor,
+              textColor: campaign.buttonConfig?.textColor || '#ffffff'
+            }}
+          />
         </div>
       </div>
     </div>

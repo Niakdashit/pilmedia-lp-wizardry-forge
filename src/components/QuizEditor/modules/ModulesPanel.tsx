@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video, Share2, Code2, Square, Footprints } from 'lucide-react';
+import { Image as ImgIcon, Type, Link2, SeparatorHorizontal, Video, Share2, Code2, Square } from 'lucide-react';
 import { SOCIAL_PRESETS, getSocialIconUrl } from './socialIcons';
 import type { ScreenId, Module, ModuleType, SocialIconStyle } from '@/types/modularEditor';
 
@@ -147,38 +147,6 @@ const createModule = (type: ModuleType, screen: ScreenId): Module => {
           }
         ]
       };
-    case 'BlocLogo':
-      return {
-        id,
-        type: 'BlocLogo' as const,
-        logoUrl: '',
-        logoWidth: 120,
-        logoHeight: 120,
-        bandHeight: 60,
-        bandColor: '#ffffff',
-        bandPadding: 16,
-        align: 'center',
-        spacingTop: 0,
-        spacingBottom: 0,
-        layoutWidth: 'full',
-        minHeight: 120
-      };
-    case 'BlocPiedDePage':
-      return {
-        id,
-        type: 'BlocPiedDePage' as const,
-        logoUrl: '',
-        logoWidth: 120,
-        logoHeight: 120,
-        bandHeight: 60,
-        bandColor: '#ffffff',
-        bandPadding: 16,
-        align: 'center',
-        spacingTop: 0,
-        spacingBottom: 0,
-        layoutWidth: 'full',
-        minHeight: 120
-      };
   }
 };
 
@@ -187,8 +155,6 @@ const items: Array<{ id: ModuleType; label: string; icon: React.ComponentType<an
   { id: 'BlocImage', label: 'Bloc Image', icon: ImgIcon },
   { id: 'BlocBouton', label: 'Bloc Bouton', icon: Link2 },
   { id: 'BlocCarte', label: 'Carte', icon: Square },
-  { id: 'BlocLogo', label: 'Logo', icon: ImgIcon },
-  { id: 'BlocPiedDePage', label: 'Pied de page', icon: Footprints },
   { id: 'BlocSeparateur', label: 'Espace', icon: SeparatorHorizontal },
   { id: 'BlocVideo', label: 'Bloc Vidéo', icon: Video },
   { id: 'BlocReseauxSociaux', label: 'Réseaux sociaux', icon: Share2 },

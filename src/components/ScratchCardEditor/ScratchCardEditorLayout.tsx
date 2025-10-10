@@ -179,7 +179,6 @@ interface ScratchCardEditorLayoutProps {
 
 const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -204,12 +203,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   // Détection de la taille de fenêtre pour la responsivité
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
-  
-  // Détection du ratio 9:16 ou moins pour padding adaptatif, ou appareil mobile
-  const isNarrowRatio = windowSize.width > 0 && windowSize.height > 0 
-    ? (windowSize.height / windowSize.width) >= (16 / 9) 
-    : false;
-  const shouldUseReducedPadding = isNarrowRatio || actualDevice === 'mobile' || isWindowMobile;
 
   // Zoom par défaut selon l'appareil, avec restauration depuis localStorage
   const getDefaultZoom = (device: 'desktop' | 'tablet' | 'mobile'): number => {
@@ -314,25 +307,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     setSelectedDevice(device);
     setCanvasZoom(getDefaultZoom(device));
   }, []);
-
-  // Réinitialiser l'image de fond quand on change de route (uniquement si on vient d'une autre page)
-  const prevPathRef = useRef<string>('');
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const prevPath = prevPathRef.current;
-    
-    // Réinitialiser uniquement si on vient d'une autre page ET qu'il y a une image
-    if (prevPath && prevPath !== currentPath && canvasBackground.type === 'image') {
-      console.log('🧹 [ScratchEditor] Navigation détectée - réinitialisation du fond');
-      setCanvasBackground(
-        mode === 'template'
-          ? { type: 'color', value: '#4ECDC4' }
-          : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
-      );
-    }
-    
-    prevPathRef.current = currentPath;
-  }, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
 
   // Recharger l'image de fond correcte depuis la campaign quand on change de device
   useEffect(() => {
@@ -944,6 +918,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   }, []);
 
   // Chargement d'un modèle transmis via navigation state
+  const location = useLocation();
   useEffect(() => {
     const state = (location as any)?.state as any;
     const template = state?.templateCampaign;
@@ -1413,9 +1388,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       role === 'module-video' ||
       role === 'module-social' ||
       role === 'module-html' ||
-      role === 'module-carte' ||
-      role === 'module-logo' ||
-      role === 'module-footer';
+      role === 'module-carte';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;
@@ -1936,13 +1909,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
-          },
-          // Préserver modularPage pour la synchronisation avec le preview
-          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.quizModules si présent
-          design: {
-            ...(transformedCampaign as any).design,
-            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
           }
         } as any;
       });
@@ -2344,7 +2310,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : `h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden ${shouldUseReducedPadding ? 'pt-[9px]' : 'pt-[1.25cm]'} pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]`}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]"}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2377,7 +2343,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex pointer-events-none">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -2727,7 +2693,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
-                    enableInternalAutoFit={true}
                     onZoomChange={setCanvasZoom}
                     selectedElement={selectedElement}
                     onSelectedElementChange={debugSetSelectedElement}
@@ -2774,15 +2739,17 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                         }
                       }
                     }}
-                     onOpenElementsTab={() => {
-                       // Toujours ouvrir l'onglet Éléments, même en mode mobile/portrait
-                       if (sidebarRef.current) {
-                         sidebarRef.current.setActiveTab('elements');
-                       }
-                       // Fermer les autres panneaux
-                       setShowAnimationsInSidebar(false);
-                       setShowPositionInSidebar(false);
-                     }}
+                    onOpenElementsTab={() => {
+                      if (!isWindowMobile) {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                      }
+                    }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
                     onBackgroundChange={handleBackgroundChange}
@@ -2835,7 +2802,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -2941,7 +2907,6 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}

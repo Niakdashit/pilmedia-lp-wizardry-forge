@@ -1,7 +1,6 @@
 import React from 'react';
 import { Minus, Plus, ChevronDown } from 'lucide-react';
 import { isRealMobile } from '@/utils/isRealMobile';
-import type { DesignScreenId } from '@/types/designEditorModular';
 
 interface ZoomSliderProps {
   zoom: number;
@@ -10,8 +9,6 @@ interface ZoomSliderProps {
   maxZoom?: number;
   step?: number;
   defaultZoom?: number;
-  onNavigateToScreen2?: () => void;
-  currentScreen?: DesignScreenId;
 }
 
 const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({ 
@@ -20,9 +17,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
   minZoom = 0.1,
   maxZoom = 1,
   step = 0.05,
-  defaultZoom = 1,
-  onNavigateToScreen2,
-  currentScreen
+  defaultZoom = 1
 }) => {
   if (isRealMobile()) {
     return null;
@@ -93,22 +88,16 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
         </div>
 
         {/* Screen navigation button (visual parity with QuizEditor) */}
-        {onNavigateToScreen2 && (
-          <>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            <button
-              onClick={onNavigateToScreen2}
-              className="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white hover:bg-gray-50 rounded-lg transition-colors shadow-sm h-8"
-              aria-label="Aller à l'écran suivant"
-              title="Aller à l'écran suivant"
-            >
-              <span className="text-xs font-medium text-gray-700">
-                {currentScreen === 'screen1' ? 'Écran 2' : currentScreen === 'screen2' ? 'Écran 3' : 'Écran 1'}
-              </span>
-              <ChevronDown size={14} className="text-gray-600" />
-            </button>
-          </>
-        )}
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <button
+          onClick={() => { /* no-op in DesignEditor */ }}
+          className="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white hover:bg-gray-50 rounded-lg transition-colors shadow-sm h-8"
+          aria-label="Aller à l'écran 2"
+          title="Aller à l'écran 2"
+        >
+          <span className="text-xs font-medium text-gray-700">Écran 2</span>
+          <ChevronDown size={14} className="text-gray-600" />
+        </button>
 
         {/* Zoom In Button */}
         <button

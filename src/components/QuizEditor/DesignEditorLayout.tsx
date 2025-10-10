@@ -105,7 +105,6 @@ interface QuizEditorLayoutProps {
 
 const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -246,25 +245,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Réinitialiser l'image de fond quand on change de route (uniquement si on vient d'une autre page)
-  const prevPathRef = useRef<string>('');
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const prevPath = prevPathRef.current;
-    
-    // Réinitialiser uniquement si on vient d'une autre page ET qu'il y a une image
-    if (prevPath && prevPath !== currentPath && canvasBackground.type === 'image') {
-      console.log('🧹 [QuizEditor] Navigation détectée - réinitialisation du fond');
-      setCanvasBackground(
-        mode === 'template'
-          ? { type: 'color', value: '#4ECDC4' }
-          : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
-      );
-    }
-    
-    prevPathRef.current = currentPath;
-  }, [location.pathname, mode, canvasBackground.type]); // Se déclenche au changement de route
-
   // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
   useEffect(() => {
     if (actualDevice === 'mobile') {
@@ -273,65 +253,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       return () => window.removeEventListener('resize', updateZoom);
     }
   }, [actualDevice]);
-
-  // Écoute l'évènement global pour appliquer l'image de fond à tous les écrans par device (desktop/tablette/mobile distinct)
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: string } | undefined;
-      const url = detail?.url;
-      const targetDevice = detail?.device || 'desktop';
-      if (!url) return;
-      
-      console.log('🎨 [QuizEditor] Received applyBackgroundAllScreens:', { url: url.substring(0, 50), targetDevice, selectedDevice });
-      
-      // Mettre à jour le background local de l'éditeur seulement si c'est le device actuel
-      if (targetDevice === selectedDevice) {
-        setCanvasBackground({ type: 'image', value: url });
-      }
-      
-      // Mettre à jour la campagne globale selon le device ciblé
-      try {
-        setCampaign((prev: any) => {
-          if (!prev) return prev;
-          const updatedDesign = { ...(prev.design || {}) };
-          
-          // Appliquer l'image uniquement au device approprié
-          if (targetDevice === 'mobile') {
-            updatedDesign.mobileBackgroundImage = url;
-          } else {
-            // Desktop et tablet partagent la même image
-            updatedDesign.backgroundImage = url;
-          }
-          
-          return {
-            ...prev,
-            name: prev.name || 'Campaign',
-            design: updatedDesign,
-            _lastUpdate: Date.now()
-          };
-        });
-      } catch {}
-      
-      // Mettre à jour la config locale utilisée par l'éditeur si présente
-      setCampaignConfig((prev: any) => {
-        if (!prev) return prev;
-        const updatedDesign = { ...(prev.design || {}) };
-        
-        if (targetDevice === 'mobile') {
-          updatedDesign.mobileBackgroundImage = url;
-        } else {
-          updatedDesign.backgroundImage = url;
-        }
-        
-        return {
-          ...prev,
-          design: updatedDesign
-        };
-      });
-    };
-    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
-    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
-  }, [setCampaign, selectedDevice]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -849,6 +770,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   }, []);
 
   // Chargement d'un modèle transmis via navigation state
+  const location = useLocation();
   useEffect(() => {
     const state = (location as any)?.state as any;
     const template = state?.templateCampaign;
@@ -1318,9 +1240,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       role === 'module-video' ||
       role === 'module-social' ||
       role === 'module-html' ||
-      role === 'module-carte' ||
-      role === 'module-logo' ||
-      role === 'module-footer';
+      role === 'module-carte';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;
@@ -1337,13 +1257,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       lastModuleSelectionRef.current = moduleId;
       setSelectedModuleId(moduleId);
       setPreviousSidebarTab(activeSidebarTab);
-      // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
-      // Sinon, ouvrir l'onglet Elements pour les autres modules
-      if (selectedModule?.type === 'BlocTexte') {
-        setActiveSidebarTab('background');
-      } else {
-        setActiveSidebarTab('elements');
-      }
+      setActiveSidebarTab('elements');
       return;
     }
 
@@ -1773,11 +1687,11 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       ...campaignData,
       name: 'Ma Campagne',
       type: (campaignData.type || 'wheel') as 'wheel' | 'scratch' | 'jackpot' | 'quiz' | 'dice' | 'form' | 'memory' | 'puzzle',
-      // Important: preserve background as an object for preview so FunnelQuizParticipate
-      // can detect image backgrounds (type === 'image'). Do not flatten to string.
       design: {
         ...campaignData.design,
-        background: campaignData.design?.background ?? { type: 'color', value: '#ffffff' }
+        background: typeof campaignData.design?.background === 'object'
+          ? campaignData.design.background.value || '#ffffff'
+          : campaignData.design?.background || '#ffffff'
       }
     };
 
@@ -1838,13 +1752,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
               ...(transformedCampaign as any)?.config?.roulette,
               segments: mergedSegments
             }
-          },
-          // Préserver modularPage pour la synchronisation avec le preview
-          modularPage: (transformedCampaign as any).modularPage || prev.modularPage,
-          // Préserver design.quizModules si présent
-          design: {
-            ...(transformedCampaign as any).design,
-            quizModules: (transformedCampaign as any).modularPage || prev.design?.quizModules
           }
         } as any;
       });
@@ -2626,7 +2533,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
-                    enableInternalAutoFit={true}
                     onZoomChange={setCanvasZoom}
                     selectedElement={selectedElement}
                     onSelectedElementChange={debugSetSelectedElement}
@@ -2674,13 +2580,15 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       }
                     }}
                     onOpenElementsTab={() => {
-                      // Toujours ouvrir l'onglet Éléments, même en mode mobile/portrait
-                      if (sidebarRef.current) {
-                        sidebarRef.current.setActiveTab('elements');
+                      if (!isWindowMobile) {
+                        // Utiliser la même logique que onForceElementsTab
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('elements');
+                        }
+                        // Fermer les autres panneaux
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
                       }
-                      // Fermer les autres panneaux
-                      setShowAnimationsInSidebar(false);
-                      setShowPositionInSidebar(false);
                     }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
@@ -2734,7 +2642,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -2840,7 +2747,6 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
