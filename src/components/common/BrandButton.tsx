@@ -1,6 +1,6 @@
 
 import React from 'react';
-// import { useBrandTheme } from '../../hooks/useBrandTheme';
+import { useBrandTheme } from '../../hooks/useBrandTheme';
 
 interface BrandButtonProps {
   children: React.ReactNode;
@@ -21,15 +21,35 @@ const BrandButton: React.FC<BrandButtonProps> = ({
   className = '',
   type = 'button'
 }) => {
-  // Theme-based colors are not used in the unified button style anymore
+  const { primaryColor, secondaryColor, textColor } = useBrandTheme();
 
   const getButtonStyle = () => {
-    // Uniform global button styling
-    return {
-      backgroundColor: '#f0f5fd',
-      color: '#646463',
-      borderColor: 'transparent'
-    } as React.CSSProperties;
+    switch (variant) {
+      case 'primary':
+        return {
+          backgroundColor: primaryColor,
+          color: textColor,
+          borderColor: primaryColor
+        };
+      case 'secondary':
+        return {
+          backgroundColor: secondaryColor,
+          color: textColor,
+          borderColor: secondaryColor
+        };
+      case 'outline':
+        return {
+          backgroundColor: 'transparent',
+          color: primaryColor,
+          borderColor: primaryColor
+        };
+      default:
+        return {
+          backgroundColor: primaryColor,
+          color: textColor,
+          borderColor: primaryColor
+        };
+    }
   };
 
   const getSizeClasses = () => {
@@ -50,7 +70,7 @@ const BrandButton: React.FC<BrandButtonProps> = ({
       disabled={disabled}
       className={`
         ${getSizeClasses()}
-        font-medium rounded-lg transition-all duration-200
+        font-medium rounded-lg border transition-all duration-200
         hover:opacity-90 active:scale-95
         disabled:opacity-50 disabled:cursor-not-allowed
         focus:ring-2 focus:ring-offset-2

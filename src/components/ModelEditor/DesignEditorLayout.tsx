@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Save, X } from 'lucide-react';
+import { User, LogOut, Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
+import GradientBand from '../shared/GradientBand';
 
 import ZoomSlider from './components/ZoomSlider';
 import DesignCanvas from './DesignCanvas';
@@ -1432,23 +1433,100 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     };
   }, []);
 
+  // Inline editable campaign title (used in template mode header)
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState<string>('');
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setTitleInput(((campaignState as any)?.name as string) || '');
+    }
+  }, [campaignState, isEditingTitle]);
+  const commitTitle = useCallback(() => {
+    const value = (titleInput || '').trim() || 'Sans titre';
+    setCampaign((prev: any) => ({ ...(prev || {}), name: value }));
+    setIsEditingTitle(false);
+  }, [titleInput, setCampaign]);
 
   return (
-    <div
-      className="min-h-screen w-full"
-      style={{
-        backgroundImage:
-          'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
-        backgroundBlendMode: 'screen, screen, lighten, normal',
-        backgroundColor: '#3D2E72',
-        padding: '0 9px 9px 9px',
-        boxSizing: 'border-box'
-      }}
-    >
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]">
+    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
       {/* Nettoyage des états d'éditeur */}
       <EditorStateCleanup />
       
+      {/* Bande dégradée avec logo et icônes */}
+      <GradientBand className="transform translate-y-[0.4vh]">
+        {mode === 'template' ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginTop: '-122px',
+              marginLeft: '24px'
+            }}
+          >
+            {isEditingTitle ? (
+              <input
+                autoFocus
+                value={titleInput}
+                onChange={(e) => setTitleInput(e.target.value)}
+                onBlur={commitTitle}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitTitle();
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
+                placeholder="Nom de la campagne"
+                className="bg-transparent border-b border-white/70 text-white placeholder-white/70 focus:outline-none focus:border-white px-1 py-0.5 text-base sm:text-lg font-semibold tracking-wide w-[min(60vw,420px)]"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsEditingTitle(true)}
+                title="Modifier le nom de la campagne"
+                className="text-white font-semibold tracking-wide text-base sm:text-lg select-text text-left"
+              >
+                {((campaignState as any)?.name as string) || 'Edition de template'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <img 
+            src="/logo.png" 
+            alt="Prosplay Logo" 
+            style={{
+              height: '93px',
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+              maxWidth: '468px',
+              marginTop: '-120px',
+              marginLeft: '1.5%',
+              padding: 0
+            }} 
+          />
+        )}
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'center',
+          marginTop: '-122px',
+          marginRight: '24px'
+        }}>
+          <button 
+            onClick={() => {}}
+            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
+            title="Mon compte"
+          >
+            <User className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => {}}
+            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
+            title="Déconnexion"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </GradientBand>
+
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
         <>
@@ -1477,7 +1555,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
       )}
       
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative rounded-br-[28px]">
+      <div className="flex-1 flex overflow-hidden relative">
           {/* Overlay Preview: full live funnel (matches other editors) */}
           {showFunnel && (() => {
             const previewCampaign = {
@@ -1885,7 +1963,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}
               onZoomChange={setCanvasZoom}
-              enableInternalAutoFit={true}
               selectedElement={selectedElement}
               onSelectedElementChange={setSelectedElement}
               selectedElements={selectedElements}
@@ -1977,7 +2054,7 @@ onShowPositionPanel={() => {
       </div>
       {/* Floating bottom-right actions (no band) */}
       {!showFunnel && (
-        <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
           <button
             onClick={() => navigate('/dashboard')}
             className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
@@ -1998,7 +2075,6 @@ onShowPositionPanel={() => {
         </div>
       )}
     </MobileStableEditor>
-    </div>
   );
 };
 

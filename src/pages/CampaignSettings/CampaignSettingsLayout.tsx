@@ -21,7 +21,7 @@ const CampaignSettingsLayout: React.FC = () => {
     navigate(editorUrl);
   };
   return (
-    <div className="h-[100dvh] bg-[#2e353e]">
+    <div className="h-[100dvh] bg-[hsl(var(--sidebar-surface))]">
       {/* Bande dégradée identique au dashboard (magenta) */}
       <GradientBand heightClass="h-[5cm]" zIndex={1} className="pointer-events-none" />
       
@@ -29,18 +29,18 @@ const CampaignSettingsLayout: React.FC = () => {
       <div 
         className="fixed z-20 bg-[hsl(var(--sidebar-surface))]"
         style={{
-          borderRadius: '28px',
+          borderRadius: '28px 28px 0 0',
           margin: '0',
           top: 'calc(1.16cm - 1px)',
-          bottom: '9px',
-          left: '9px',
-          right: '9px',
+          bottom: '0',
+          left: '0',
+          right: '0',
           boxSizing: 'border-box',
         }}
       />
       
       {/* Main layout container */}
-      <div className="relative z-30 h-[100dvh] flex flex-col" style={{ marginTop: '1.16cm', height: 'calc(100dvh - 1.16cm - 9px)', marginLeft: '9px', marginRight: '9px', borderRadius: '28px', overflow: 'hidden' }}>
+      <div className="relative z-30 h-[100dvh] flex flex-col" style={{ marginTop: '1.16cm', height: 'calc(100dvh - 1.16cm)' }}>
         
         {/* Top toolbar matching DesignToolbar */}
         <div className="bg-white border-b border-[hsl(var(--sidebar-border))] px-4 py-2 flex items-center justify-between shadow-sm rounded-tl-[28px] rounded-tr-[28px]">
