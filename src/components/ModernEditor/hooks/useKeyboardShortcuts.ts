@@ -75,8 +75,6 @@ export const useKeyboardShortcuts = ({
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const { ctrlKey, metaKey, shiftKey, key, target, altKey, code } = event;
     
-    const k = typeof key === 'string' ? key.toLowerCase() : '';
-    
     // Debug: Log all keyboard events
     console.log('🎹 Keyboard event detected:', {
       key: key,
@@ -94,7 +92,7 @@ export const useKeyboardShortcuts = ({
     const isModifierPressed = isMac ? metaKey : ctrlKey;
     
     // Test spécifique pour la touche 'g'
-    if (k === 'g') {
+    if (key.toLowerCase() === 'g') {
       console.log('🔥 TOUCHE G DÉTECTÉE!', { isModifierPressed, ctrlKey, metaKey });
     }
     
@@ -106,7 +104,7 @@ export const useKeyboardShortcuts = ({
                        (target as HTMLElement)?.contentEditable === 'true';
     
     // For Ctrl+A, handle both text input selection and canvas element selection
-    if (k === 'a' && isModifierPressed) {
+    if (key.toLowerCase() === 'a' && isModifierPressed) {
       if (isTextInput) {
         // Let browser handle text selection in inputs
         console.log('🎹 Ctrl+A in text input - allowing browser default');
@@ -127,14 +125,14 @@ export const useKeyboardShortcuts = ({
     }
 
     // Alt+A (Option+A on Mac): select all canvas elements (do not run in inputs)
-    if (altKey && (k === 'a' || code === 'KeyA')) {
+    if (altKey && (key.toLowerCase() === 'a' || code === 'KeyA')) {
       console.log('🎹 Alt+A: Selecting all canvas elements');
       event.preventDefault();
       onSelectAll?.();
       return;
     }
 
-    switch (k) {
+    switch (key.toLowerCase()) {
       // Save
       case 's':
         if (isModifierPressed) {
