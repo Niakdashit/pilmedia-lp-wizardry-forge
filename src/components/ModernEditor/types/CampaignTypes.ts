@@ -122,26 +122,6 @@ export interface ScratchCard {
   isWinning: boolean;
 }
 
-export interface ScratchResultMessages {
-  winner: {
-    title: string;
-    message: string;
-    subMessage?: string;
-    buttonText: string;
-    buttonAction: 'replay' | 'close' | 'redirect';
-    redirectUrl?: string;
-    showPrizeImage: boolean;
-  };
-  loser: {
-    title: string;
-    message: string;
-    subMessage?: string;
-    buttonText: string;
-    buttonAction: 'replay' | 'close' | 'redirect';
-    redirectUrl?: string;
-  };
-}
-
 export interface JackpotConfig {
   symbols?: string[];
   winningCombination?: string[];
@@ -355,12 +335,6 @@ export interface OptimizedCampaign {
     mobileConfig?: MobileConfig;
   };
   mobileConfig?: MobileConfig;
-  
-  // Scratch card result messages
-  scratchResultMessages?: ScratchResultMessages;
-  
-  // Scratch card configuration
-  scratchConfig?: any;
   
   // Internal tracking
   _lastUpdate?: number;

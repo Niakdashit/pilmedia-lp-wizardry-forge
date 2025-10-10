@@ -51,7 +51,7 @@ const ZoomSlider: React.FC<ZoomSliderProps> = React.memo(({
   }, [isMobile]);
 
   return (
-    <div className={`fixed bottom-6 z-50`} style={{ left: isMobile ? 16 : `calc(${sidebarOffsetRem}rem + 1rem)` }}>
+    <div className={`fixed bottom-4 z-50`} style={{ left: isMobile ? 16 : `calc(${sidebarOffsetRem}rem + 1rem)` }}>
       <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2 h-10">
         {/* Zoom Slider only */}
         <input

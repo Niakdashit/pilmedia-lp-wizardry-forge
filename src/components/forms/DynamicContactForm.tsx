@@ -23,7 +23,6 @@ interface DynamicContactFormProps {
   inputBorderColor?: string;
   inputFocusColor?: string;
   inputBorderRadius?: number | string;
-  launchButtonStyles?: React.CSSProperties;
 }
 
 const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
@@ -34,9 +33,8 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
   className = "",
   textStyles,
   inputBorderColor = "#E5E7EB",
-  inputFocusColor = "#000000",
-  inputBorderRadius = "2px",
-  launchButtonStyles
+  inputFocusColor = "#841b60",
+  inputBorderRadius = "2px"
 }) => {
   // Stabilize defaultValues to avoid identity changes causing effects to loop
   const stableDefaultValues = useMemo(() => defaultValues ?? {}, [defaultValues]);
@@ -202,11 +200,7 @@ const DynamicContactForm: React.FC<DynamicContactFormProps> = ({
       <button
         type="submit"
         className="w-full px-6 py-3 font-medium transition-colors duration-200"
-        style={{
-          ...launchButtonStyles,
-          ...(launchButtonStyles ? {} : (textStyles?.button || {})),
-          ...(launchButtonStyles ? {} : { borderRadius: 2 })
-        }}
+        style={{ ...(textStyles?.button || {}), borderRadius: 2 }}
       >
         {submitLabel}
       </button>
