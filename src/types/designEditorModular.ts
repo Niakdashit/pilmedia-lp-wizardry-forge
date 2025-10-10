@@ -24,6 +24,7 @@ export interface DesignBaseModule {
   id: string; // unique id
   type: DesignModuleType;
   // common display settings
+  screenId?: DesignScreenId;
   spacingTop?: number; // px
   spacingBottom?: number; // px
   backgroundColor?: string;

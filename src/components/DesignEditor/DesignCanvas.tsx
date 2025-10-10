@@ -101,6 +101,7 @@ export interface DesignCanvasProps {
   onModuleMove?: (id: string, direction: 'up' | 'down') => void;
   onModuleDuplicate?: (id: string) => void;
   elementFilter?: (element: any) => boolean;
+  allowWheelInteraction?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -130,6 +131,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleMove,
   onModuleDuplicate,
   elementFilter,
+  allowWheelInteraction = false,
   onGroupMove,
   onGroupResize,
   onShowEffectsPanel,
@@ -2001,6 +2003,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     startDragging,
                     stopDragging
                   }}
+                  allowWheelInteraction={allowWheelInteraction}
                 />
               );
             })}

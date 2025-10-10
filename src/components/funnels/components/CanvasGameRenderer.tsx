@@ -16,9 +16,11 @@ interface CanvasGameRendererProps {
   wheelModalConfig?: any; // Configuration en temps réel depuis le Design Editor
   onGameFinish: (result: 'win' | 'lose') => void;
   onGameStart: () => void;
-  onGameButtonClick: () => void;
+  onGameButtonClick: () => void; // Triggered when the locked game is clicked (opens the form)
   /** When true, render the preview on a fixed full-screen overlay to ensure parity with other editors */
   fullScreen?: boolean;
+  /** Optional screen scope to filter custom elements (text/images) */
+  screenId?: 'screen1' | 'screen2' | 'screen3';
 }
 
 const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
@@ -30,7 +32,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   onGameFinish,
   onGameStart,
   onGameButtonClick,
-  fullScreen = true
+  fullScreen = true,
+  screenId = 'screen1'
 }) => {
   // Configuration du canvas depuis la campagne - essayer plusieurs sources
   const canvasConfig = campaign.canvasConfig || {};
@@ -66,10 +69,13 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   }), []);
 
   // Utiliser prioritairement les données structurées de design, puis fallback sur canvasConfig
+  // Filtrer par écran si screenId est défini sur les éléments
   const responsiveTexts = useMemo(() => {
     const customTexts = campaign.design?.customTexts || [];
     const canvasTexts = canvasElements.filter((el: any) => el.type === 'text') || [];
     const allTexts = customTexts.length > 0 ? customTexts : canvasTexts;
+    const screenFilter = (el: any) => !el?.screenId || el.screenId === screenId;
+    const filtered = allTexts.filter(screenFilter);
     
     console.log('🔍 ResponsiveTexts Debug:', {
       customTextsCount: customTexts.length,
@@ -78,9 +84,9 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       allTexts: allTexts
     });
     
-    if (!allTexts.length) return [];
+    if (!filtered.length) return [];
     
-    const convertedTexts = allTexts.map((text: any) => ({
+    const convertedTexts = filtered.map((text: any) => ({
       ...text,
       type: 'text' as const,
       x: text.x || 0,
@@ -94,16 +100,18 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
     console.log('🔍 ConvertedTexts:', convertedTexts);
     
     return applyAutoResponsive(convertedTexts);
-  }, [campaign.design?.customTexts, canvasElements, applyAutoResponsive]);
+  }, [campaign.design?.customTexts, canvasElements, applyAutoResponsive, screenId]);
 
   // Convertir les images en format responsif
   const responsiveImages = useMemo(() => {
     const customImages = campaign.design?.customImages || [];
     const canvasImages = canvasElements.filter((el: any) => el.type === 'image') || [];
     const allImages = customImages.length > 0 ? customImages : canvasImages;
-    if (!allImages.length) return [];
+    const screenFilter = (el: any) => !el?.screenId || el.screenId === screenId;
+    const filtered = allImages.filter(screenFilter);
+    if (!filtered.length) return [];
     
-    const convertedImages = allImages.map((image: any) => ({
+    const convertedImages = filtered.map((image: any) => ({
       ...image,
       type: 'image' as const,
       x: image.x || 0,
@@ -112,7 +120,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       height: image.height || 150
     }));
     return applyAutoResponsive(convertedImages);
-  }, [campaign.design?.customImages, canvasElements, applyAutoResponsive]);
+  }, [campaign.design?.customImages, canvasElements, applyAutoResponsive, screenId]);
 
   // Préparer les éléments pour CustomElementsRenderer
   const customTextsForRenderer = useMemo(() => {
@@ -418,7 +426,11 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
           
           {/* Rendu des éléments du canvas uniquement pour les types non gérés par CustomElementsRenderer */}
           {canvasElements
-            .filter((element: any) => !['text', 'image'].includes(element.type))
+            .filter((element: any) => {
+              if (['text', 'image'].includes(element.type)) return false;
+              if (!element?.screenId) return true;
+              return element.screenId === screenId;
+            })
             .map(renderCanvasElement)
           }
           
@@ -427,7 +439,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
         </div>
 
         {/* Overlay pour déclencher le formulaire si pas validé */}
-        {!formValidated && displayMode !== 'embedded' && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
+        {!formValidated && displayMode !== 'embedded' && (
           <div 
             onClick={() => {
               console.log('Canvas overlay clicked - triggering form');

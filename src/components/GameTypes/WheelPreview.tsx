@@ -177,6 +177,23 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
     prevDisabled.current = disabled;
   }, [disabled, wheelConfig.position]);
 
+  const buttonLabel =
+    campaign.buttonConfig?.text ||
+    campaign.gameConfig?.wheel?.buttonLabel ||
+    campaign.screens?.[0]?.buttonText ||
+    'Faire tourner';
+
+  const buttonColor =
+    campaign.buttonConfig?.color ||
+    wheelConfig.borderColor ||
+    (campaign.design?.customColors?.primary as string) ||
+    '#841b60';
+
+  const buttonTextColor =
+    campaign.buttonConfig?.textColor ||
+    campaign.design?.customColors?.secondary ||
+    '#ffffff';
+
   return (
     <div className="relative w-full h-full">
       {/* Wrapper animé pour décaler verticalement la roue après validation */}
@@ -220,10 +237,11 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
             speed={resolvedSpeed}
             winProbability={resolvedWinProbability}
             customButton={{
-              text: "GO",
-              color: wheelConfig.borderColor,
-              textColor: campaign.buttonConfig?.textColor || '#ffffff'
+              text: buttonLabel,
+              color: buttonColor,
+              textColor: buttonTextColor
             }}
+            allowSurfaceSpin={!disabled}
           />
         </div>
       </div>

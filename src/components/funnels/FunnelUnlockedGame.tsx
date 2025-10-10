@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
 import CanvasGameRenderer from './components/CanvasGameRenderer';
@@ -54,12 +54,19 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // LOGIQUE FUNNEL UNLOCKED : formulaire obligatoire pour démarrer le jeu
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   const [formValidated, setFormValidated] = useState(false);
+  const [previewFormCompleted, setPreviewFormCompleted] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
   const [participationLoading, setParticipationLoading] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
-  const [hasPlayed, setHasPlayed] = useState(false);
+  const [designPreviewStage, setDesignPreviewStage] = useState<'design' | 'wheel'>('design');
+
+  const isEditorPreview =
+    typeof window !== 'undefined' &&
+    /design-editor|scratch-editor/i.test(window.location.pathname || '');
+
+  const isFormValidatedForGame = formValidated || (isEditorPreview && previewFormCompleted);
 
   // Écouter les mises à jour de style pour forcer le re-render (comme FunnelQuizParticipate)
   React.useEffect(() => {
@@ -136,7 +143,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   
   // Détecter quand une carte est révélée pour déterminer le résultat
   React.useEffect(() => {
-    if (currentScreen !== 'screen2' || !formValidated || gameResult !== null) return;
+    if (currentScreen !== 'screen2' || !isFormValidatedForGame || gameResult !== null) return;
     
     const revealedCard = scratchCards.find((card: any) => card.revealed);
     if (revealedCard) {
@@ -146,7 +153,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       console.log(` Carte ${revealedCard.id} révélée - Résultat: ${result}`);
       handleGameFinish(result);
     }
-  }, [scratchCards, currentScreen, formValidated, gameResult]);
+  }, [scratchCards, currentScreen, isFormValidatedForGame, gameResult]);
   
   const storeCampaign = useEditorStore((state) => state.campaign);
   const [liveCampaign, setLiveCampaign] = useState(campaign);
@@ -296,9 +303,35 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const canonicalData = getCanonicalPreviewData();
   const designModular = liveCampaign?.design?.designModules;
   const modularPage = designModular || canonicalData.modularPage;
-  const modules = modularPage.screens.screen1 || [];
-  const modules2 = modularPage.screens.screen2 || [];
-  const modules3 = modularPage.screens.screen3 || [];
+  const modules = Array.isArray(modularPage.screens.screen1)
+    ? modularPage.screens.screen1.filter((m: any) => !m?.screenId || m.screenId === 'screen1')
+    : [];
+  const modules2 = Array.isArray(modularPage.screens.screen2)
+    ? modularPage.screens.screen2.filter((m: any) => !m?.screenId || m.screenId === 'screen2')
+    : [];
+  const modules3 = Array.isArray(modularPage.screens.screen3)
+    ? modularPage.screens.screen3.filter((m: any) => !m?.screenId || m.screenId === 'screen3')
+    : [];
+
+  const hasDesignModules = useMemo(() => (
+    designModular &&
+    designModular.screens &&
+    Object.values(designModular.screens).some((screenModules: any) => Array.isArray(screenModules) && screenModules.length > 0)
+  ), [designModular]);
+
+  useEffect(() => {
+    if (!hasDesignModules) {
+      setDesignPreviewStage('wheel');
+    }
+  }, [hasDesignModules]);
+
+  const proceedToWheelPreview = useCallback(() => {
+    setDesignPreviewStage('wheel');
+    setCurrentScreen('screen2');
+    setFormValidated(false);
+    setPreviewFormCompleted(false);
+    setShowFormModal(false);
+  }, []);
   
   console.log('📦 [FunnelUnlockedGame] Using canonical modules:', {
     screen1Count: modules.length,
@@ -352,22 +385,35 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   }, [liveCampaign?.formFields, liveCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate]);
 
   const handleGameButtonClick = () => {
-    // Passer à l'écran 2 (cartes visibles mais bloquées)
-    setCurrentScreen('screen2');
-    if (!formValidated) {
-      setShowFormModal(true);
-    }
+    proceedToWheelPreview();
   };
 
   const handleCardClick = () => {
-    // Si le formulaire n'est pas validé, ouvrir la modale
-    if (!formValidated) {
-      setShowFormModal(true);
-    }
+    setDesignPreviewStage('wheel');
+    setCurrentScreen('screen2');
+    setShowFormModal(true);
   };
+
+  const finalizeFormValidation = useCallback(() => {
+    setFormValidated(true);
+    setPreviewFormCompleted(true);
+    setShowFormModal(false);
+    if (hasDesignModules) {
+      setDesignPreviewStage('wheel');
+      setCurrentScreen('screen2');
+    }
+    setShowValidationMessage(true);
+    setTimeout(() => setShowValidationMessage(false), 2000);
+  }, [hasDesignModules]);
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);
+    if (isEditorPreview) {
+      // En preview éditeur, ne jamais bloquer le funnel sur un appel réseau
+      finalizeFormValidation();
+      setParticipationLoading(false);
+      return;
+    }
     try {
       if (campaign.id) {
         await createParticipation({
@@ -376,23 +422,22 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           user_email: formData.email
         });
       }
-      console.log('✅ Form validated! Setting formValidated to true');
-      setFormValidated(true);
-      setShowFormModal(false);
-      setShowValidationMessage(true);
-      setHasPlayed(false);
-      setTimeout(() => setShowValidationMessage(false), 2000);
-      // Les cartes deviennent jouables après validation du formulaire
+      finalizeFormValidation();
     } catch (error) {
       console.error('Erreur lors de la soumission:', error);
-      toast.error('Erreur lors de la soumission du formulaire');
+      if (isEditorPreview) {
+        console.warn('[FunnelUnlockedGame] Preview mode: unlock wheel despite submission failure.');
+        finalizeFormValidation();
+      } else {
+        toast.error('Erreur lors de la soumission du formulaire');
+      }
     } finally {
       setParticipationLoading(false);
     }
   };
 
   const handleGameStart = () => {
-    setHasPlayed(true);
+    // Game started logic if needed
   };
 
   const handleGameFinish = async (result: 'win' | 'lose') => {
@@ -419,10 +464,13 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     }
     setCurrentScreen('screen1');
     setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
+    setPreviewFormCompleted(false);
     setGameResult(null);
     setShowFormModal(false);
     setShowValidationMessage(false);
-    setHasPlayed(false);
+    if (hasDesignModules) {
+      setDesignPreviewStage('design');
+    }
   };
 
   // Si on a un résultat de jeu, afficher l'écran de résultat avec le même fond que le canvas
@@ -460,13 +508,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     );
   }
 
-  const hasDesignModules = Boolean(
-    designModular &&
-    designModular.screens &&
-    Object.values(designModular.screens).some((screenModules: any) => Array.isArray(screenModules) && screenModules.length > 0)
-  );
-
-  if (hasDesignModules && currentScreen === 'screen1') {
+  if (hasDesignModules && designPreviewStage === 'design') {
     if (process.env.NODE_ENV !== 'production') {
       try {
         console.log('[DesignPreview] Rendering design modules', {
@@ -497,6 +539,27 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               </section>
             )}
 
+            {modules2.length > 0 && (
+              <section className="space-y-6 mt-16" data-design-screen="screen2">
+                <DesignModuleRenderer
+                  modules={modules2 as any}
+                  previewMode
+                  device={previewMode}
+                  onButtonClick={handleCardClick}
+                />
+              </section>
+            )}
+
+            {modules3.length > 0 && (
+              <section className="space-y-6 mt-16" data-design-screen="screen3">
+                <DesignModuleRenderer
+                  modules={modules3 as any}
+                  previewMode
+                  device={previewMode}
+                  onButtonClick={handleReset}
+                />
+              </section>
+            )}
           </div>
         </div>
       </div>
@@ -592,39 +655,34 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               </div>
 
               {/* Game Component (Roue ou Cartes selon le type) */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center" 
-                style={{ 
-                  zIndex: formValidated ? 100 : 50,
-                  pointerEvents: formValidated ? 'auto' : 'none'
-                }}
-              >
-                {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
-                  <GameRenderer
-                    campaign={liveCampaign}
-                    formValidated={formValidated}
-                    showValidationMessage={false}
-                    previewMode={previewMode}
-                    mobileConfig={mobileConfig}
-                    onGameFinish={handleGameFinish}
-                    onGameStart={() => console.log('🎮 Game started')}
-                    onGameButtonClick={handleCardClick}
-                  />
-                ) : (
-                  <ScratchCardCanvas 
-                    selectedDevice={previewMode}
-                    previewMode={!formValidated}
-                  />
-                )}
+              <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 50 }}>
+              <div className={isFormValidatedForGame ? 'pointer-events-auto' : 'pointer-events-none'}>
+                  {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
+                    <GameRenderer
+                      campaign={liveCampaign}
+                      formValidated={isFormValidatedForGame}
+                      showValidationMessage={false}
+                      previewMode={previewMode}
+                      mobileConfig={mobileConfig}
+                      onGameFinish={handleGameFinish}
+                      onGameStart={handleCardClick}
+                      onGameButtonClick={handleCardClick}
+                    />
+                  ) : (
+                    <ScratchCardCanvas 
+                      selectedDevice={previewMode}
+                      previewMode={!isFormValidatedForGame}
+                    />
+                  )}
+                </div>
               </div>
               
               {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
-              {!formValidated && (
+              {!isFormValidatedForGame && (
                 <div 
                   className="absolute inset-0 cursor-pointer" 
                   style={{ zIndex: 999999, backgroundColor: 'transparent' }}
                   onClick={(e) => {
-                    console.log('🚫 Overlay clicked - opening form modal');
                     e.preventDefault();
                     e.stopPropagation();
                     handleCardClick();
@@ -640,11 +698,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                     handleCardClick();
                   }}
                 />
-              )}
-              {formValidated && (
-                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 9999, background: 'lime', padding: '5px', fontSize: '12px' }}>
-                  ✅ Form validated - Wheel should be clickable
-                </div>
               )}
             </>
           )}
@@ -846,15 +899,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     <div className="w-full h-full">
       <CanvasGameRenderer 
         campaign={liveCampaign} 
-        formValidated={formValidated && !hasPlayed} 
+        formValidated={isFormValidatedForGame} 
         showValidationMessage={showValidationMessage} 
         previewMode={previewMode} 
         mobileConfig={mobileConfig} 
         wheelModalConfig={wheelModalConfig}
         fullScreen={false}
+        screenId={'screen2'}
         onGameFinish={handleGameFinish} 
         onGameStart={handleGameStart} 
-        onGameButtonClick={handleGameButtonClick} 
+        onGameButtonClick={handleCardClick} 
       />
 
       {/* Modal de formulaire pour tous les jeux unlocked - avec styles appliqués */}

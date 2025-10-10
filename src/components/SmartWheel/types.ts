@@ -37,6 +37,8 @@ export interface WheelTheme {
   };
 }
 
+export type FormDataPayload = Record<string, FormDataEntryValue>;
+
 export interface SmartWheelProps {
   segments: WheelSegment[];
   theme?: WheelTheme | string;
@@ -76,6 +78,7 @@ export interface SmartWheelProps {
     options?: string[];
   }>; // Champs de formulaire personnalisés pour le mode 2
 
+  onParticipationSubmit?: (formData: FormData, payload: FormDataPayload) => Promise<void> | void;
   // Nouvelles options de spin
   spinMode?: 'random' | 'instant_winner' | 'probability';
   winProbability?: number; // Utilisé uniquement pour instant_winner

@@ -3,10 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
-const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
-const FunnelQuizParticipate = lazy(() => import('@/components/funnels/FunnelQuizParticipate'));
 import type { DesignModularPage, DesignScreenId, DesignModule } from '@/types/designEditorModular';
 import { createEmptyDesignModularPage } from '@/types/designEditorModular';
+import { SmartWheel } from '../SmartWheel';
 
 import ZoomSlider from './components/ZoomSlider';
 const DesignCanvas = lazy(() => import('./DesignCanvas'));
@@ -29,9 +28,41 @@ const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'))
 interface DesignEditorLayoutProps {
   mode?: 'template' | 'campaign';
   hiddenTabs?: string[];
+  allowWheelInteraction?: boolean;
 }
 
-const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
+const DESIGN_SCREEN_IDS: DesignScreenId[] = ['screen1', 'screen2', 'screen3'];
+
+const normalizeDesignModularPage = (
+  page: DesignModularPage,
+  options?: { preserveTimestamp?: boolean }
+): DesignModularPage => {
+  const normalizedScreens: Record<DesignScreenId, DesignModule[]> = {
+    screen1: [],
+    screen2: [],
+    screen3: []
+  };
+
+  const resolveScreen = (raw: any, fallback: DesignScreenId): DesignScreenId => {
+    return DESIGN_SCREEN_IDS.includes(raw as DesignScreenId) ? (raw as DesignScreenId) : fallback;
+  };
+
+  DESIGN_SCREEN_IDS.forEach((screen) => {
+    const modules = Array.isArray(page?.screens?.[screen]) ? page.screens[screen] : [];
+    modules.forEach((module) => {
+      const targetScreen = resolveScreen((module as any)?.screenId, screen);
+      const normalizedModule = { ...module, screenId: targetScreen } as DesignModule & { screenId: DesignScreenId };
+      normalizedScreens[targetScreen].push(normalizedModule);
+    });
+  });
+
+  return {
+    screens: normalizedScreens,
+    _updatedAt: options?.preserveTimestamp && page?._updatedAt ? page._updatedAt : Date.now()
+  };
+};
+
+const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs, allowWheelInteraction = false }) => {
   const navigate = useNavigate();
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
@@ -303,10 +334,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
-  const [showFunnel, setShowFunnel] = useState(false);
-  const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
-    (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
-  );
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewScreen, setPreviewScreen] = useState<DesignScreenId>('screen1');
   // Calcul des onglets à masquer selon le mode
   const effectiveHiddenTabs = useMemo(
     () => {
@@ -323,11 +352,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     [hiddenTabs, mode]
   );
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('previewButtonSide', previewButtonSide);
-    } catch {}
-  }, [previewButtonSide]);
 
   // Chargement d'un modèle transmis via navigation state
   const location = useLocation();
@@ -420,41 +444,67 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       updates,
       timestamp: new Date().toISOString()
     });
-    
-    setModularPage((prev: DesignModularPage) => {
-      const updatedPage = { ...prev, screens: { ...prev.screens } };
-      let moduleFound = false;
-      
-      // Parcourir tous les écrans pour trouver et mettre à jour le module
-      (['screen1', 'screen2', 'screen3'] as DesignScreenId[]).forEach(screenId => {
-        const screenModules = [...updatedPage.screens[screenId]];
-        const moduleIndex = screenModules.findIndex((m: DesignModule) => m.id === moduleId);
-        if (moduleIndex !== -1) {
-          moduleFound = true;
-          const oldModule = screenModules[moduleIndex];
-          screenModules[moduleIndex] = { ...screenModules[moduleIndex], ...updates } as DesignModule;
-          updatedPage.screens[screenId] = screenModules;
-          
-          console.log('✅ [DesignEditorLayout] Module mis à jour:', {
-            screenId,
-            moduleIndex,
-            oldModule: { id: oldModule.id, type: oldModule.type, fontFamily: (oldModule as any).fontFamily },
-            newModule: { id: screenModules[moduleIndex].id, type: screenModules[moduleIndex].type, fontFamily: (screenModules[moduleIndex] as any).fontFamily }
-          });
-          
-          // Mettre à jour aussi le module sélectionné
-          if (selectedModuleId === moduleId) {
-            setSelectedModule(screenModules[moduleIndex]);
-          }
+
+    let moduleFound = false;
+    let targetScreenForSelection: DesignScreenId | null = null;
+
+    const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens } as any;
+
+    DESIGN_SCREEN_IDS.forEach((screenId) => {
+      const screenModules = Array.isArray(nextScreens[screenId]) ? [...nextScreens[screenId]] : [];
+      const moduleIndex = screenModules.findIndex((m: DesignModule) => m.id === moduleId);
+      if (moduleIndex !== -1) {
+        moduleFound = true;
+        const prevModule = screenModules[moduleIndex];
+        const updateScreenCandidate = (updates as any)?.screenId;
+        const prevScreenCandidate = (prevModule as any)?.screenId;
+        const desiredScreen = DESIGN_SCREEN_IDS.includes(updateScreenCandidate as DesignScreenId)
+          ? (updateScreenCandidate as DesignScreenId)
+          : DESIGN_SCREEN_IDS.includes(prevScreenCandidate as DesignScreenId)
+            ? (prevScreenCandidate as DesignScreenId)
+            : screenId;
+
+        const updatedModule = {
+          ...prevModule,
+          ...updates,
+          screenId: desiredScreen
+        } as DesignModule & { screenId: DesignScreenId };
+
+        screenModules[moduleIndex] = updatedModule;
+        nextScreens[screenId] = screenModules;
+
+        if (selectedModuleId === moduleId) {
+          targetScreenForSelection = desiredScreen;
         }
-      });
-      
-      if (!moduleFound) {
-        console.warn('⚠️ [DesignEditorLayout] Module non trouvé:', moduleId);
+
+        console.log('✅ [DesignEditorLayout] Module mis à jour:', {
+          fromScreen: screenId,
+          targetScreen: desiredScreen,
+          moduleIndex,
+          oldModule: { id: prevModule.id, type: prevModule.type },
+          newModule: { id: updatedModule.id, type: updatedModule.type }
+        });
       }
-      
-      return updatedPage;
     });
+
+    if (!moduleFound) {
+      console.warn('⚠️ [DesignEditorLayout] Module non trouvé:', moduleId);
+      return;
+    }
+
+    const nextPage: DesignModularPage = {
+      screens: nextScreens,
+      _updatedAt: Date.now()
+    };
+
+    const normalized = persistModular(nextPage);
+
+    if (selectedModuleId === moduleId && targetScreenForSelection) {
+      const normalizedModule = normalized.screens[targetScreenForSelection].find((m) => m.id === moduleId);
+      if (normalizedModule) {
+        setSelectedModule(normalizedModule);
+      }
+    }
   };
 
   // Ajoute à l'historique à chaque modification d'élément (granulaire)
@@ -679,22 +729,21 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Modular page management functions
   const persistModular = useCallback((next: DesignModularPage) => {
-    setModularPage(next);
+    const normalized = normalizeDesignModularPage(next);
+    setModularPage(normalized);
     
     // Synchroniser immédiatement avec le preview
-    syncModules(next);
+    syncModules(normalized);
     
-    setCampaignConfig((prev: any) => {
-      const updated = {
-        ...(prev || {}),
-        design: {
-          ...(prev?.design || {}),
-          designModules: { ...next, _updatedAt: Date.now() }
-        }
-      };
-      return updated;
-    });
+    setCampaignConfig((prev: any) => ({
+      ...(prev || {}),
+      design: {
+        ...(prev?.design || {}),
+        designModules: normalized
+      }
+    }));
     try { setIsModified(true); } catch {}
+    return normalized;
   }, [setIsModified, syncModules]);
 
   const scrollToScreen = useCallback((screen: DesignScreenId): boolean => {
@@ -714,22 +763,19 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   }, []);
 
   const handleAddModule = useCallback((screen: DesignScreenId, module: DesignModule) => {
-    setModularPage((prev) => {
-      const prevScreenModules = prev.screens[screen] || [];
-      const updatedModules: DesignModule[] = [module, ...prevScreenModules];
+    const moduleWithScreen = { ...module, screenId: screen } as DesignModule & { screenId: DesignScreenId };
+    const prevScreenModules = modularPage.screens[screen] || [];
 
-      const next: DesignModularPage = {
-        screens: {
-          ...prev.screens,
-          [screen]: updatedModules
-        },
-        _updatedAt: Date.now()
-      };
+    const next: DesignModularPage = {
+      screens: {
+        ...modularPage.screens,
+        [screen]: [moduleWithScreen, ...prevScreenModules]
+      },
+      _updatedAt: Date.now()
+    };
 
-      persistModular(next);
-      return next;
-    });
-  }, [persistModular]);
+    persistModular(next);
+  }, [modularPage, persistModular]);
 
   const handleUpdateModule = useCallback((id: string, patch: Partial<DesignModule>) => {
     const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
@@ -819,6 +865,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       ...moduleToDuplicate,
       id: newId
     };
+    (duplicatedModule as any).screenId = (moduleToDuplicate as any)?.screenId ?? foundScreenId;
 
     if (typeof moduleToDuplicate.label === 'string' && moduleToDuplicate.label.trim().length > 0) {
       duplicatedModule.label = `${moduleToDuplicate.label} (copie)`;
@@ -856,7 +903,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         padding: '14px 28px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         uppercase: false,
-        bold: false
+        bold: false,
+        screenId: 'screen1'
       } as DesignModule;
       
       const nextScreens: DesignModularPage['screens'] = { ...modularPage.screens };
@@ -874,6 +922,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Configuration de campagne dynamique optimisée avec synchronisation forcée
   const campaignData = useMemo(() => {
+    const normalizedModularPage = normalizeDesignModularPage(modularPage, { preserveTimestamp: true });
     const titleElement = canvasElements.find(el => el.type === 'text' && el.role === 'title');
     const descriptionElement = canvasElements.find(el => el.type === 'text' && el.role === 'description');
     const buttonElement = canvasElements.find(el => el.type === 'text' && el.role === 'button');
@@ -884,7 +933,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const customImages = canvasElements.filter((el: any) => el.type === 'image');
     
     // Inclure les modules dans les éléments pour l'aperçu
-    const allModules = Object.values(modularPage.screens).flat();
+    const allModules = Object.values(normalizedModularPage.screens).flat();
     console.log('📦 [DesignEditorLayout] Modules trouvés pour preview:', {
       modulesCount: allModules.length,
       modules: allModules.map((m: any) => ({ id: m.id, type: m.type, label: m.label })),
@@ -900,8 +949,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     console.log('🔄 CampaignData wheel config sync:', {
       wheelModalConfigScale: wheelModalConfig?.wheelScale,
       campaignConfigScale: campaignConfig?.wheelConfig?.scale,
-      finalScale: currentWheelConfig.scale,
-      showFunnel
+      finalScale: currentWheelConfig.scale
     });
 
     const primaryColor = canvasBackground.type === 'image' && extractedColors[0]
@@ -970,13 +1018,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         wheelConfig: currentWheelConfig,
         wheelBorderStyle: currentWheelConfig.borderStyle,
         designModules: {
-          ...modularPage,
-          _updatedAt: modularPage?._updatedAt ?? Date.now()
+          ...normalizedModularPage
         }
-      },
-      modularPage: {
-        ...modularPage,
-        _updatedAt: modularPage?._updatedAt ?? Date.now()
       },
       gameConfig: {
         wheel: {
@@ -1007,14 +1050,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Garder la configuration canvas pour compatibilité - INCLURE LES MODULES
+      // Garder la configuration canvas pour compatibilité - NE PAS mélanger les modules des 3 écrans ici
       canvasConfig: {
-        elements: [...canvasElements, ...Object.values(modularPage.screens).flat()],
+        elements: [...canvasElements],
         background: canvasBackground,
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage
+      modularPage: normalizedModularPage
     };
   }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
 
@@ -1127,7 +1170,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   };
 
   const handlePreview = () => {
-    setShowFunnel(!showFunnel);
+    setShowPreview(!showPreview);
+    if (!showPreview) {
+      setPreviewScreen('screen1'); // Toujours commencer par l'écran 1
+    }
   };
 
   // Save and continue: persist then navigate to settings page
@@ -1454,29 +1500,25 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
         backgroundBlendMode: 'screen, screen, lighten, normal',
         backgroundColor: '#3D2E72',
-        padding: showFunnel ? '0' : '0 9px 9px 9px',
+        padding: '0 9px 9px 9px',
         boxSizing: 'border-box'
       }}
     >
     <MobileStableEditor
-      className={showFunnel
-        ? 'h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden'
-        : 'h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]'}
+      className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]"
     >
-      {/* Top Toolbar - Hidden only in preview mode */}
-      {!showFunnel && (
+      {/* Top Toolbar - Hidden in preview mode */}
+      {!showPreview && (
         <>
           <DesignToolbar
             selectedDevice={selectedDevice}
             onDeviceChange={handleDeviceChange}
             onPreviewToggle={handlePreview}
-            isPreviewMode={showFunnel}
+            isPreviewMode={showPreview}
             onUndo={undo}
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
-            previewButtonSide={previewButtonSide}
-            onPreviewButtonSideChange={setPreviewButtonSide}
             mode={mode}
             onSave={handleSaveAndContinue}
             showSaveCloseButtons={false}
@@ -1492,28 +1534,411 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative rounded-br-[28px]">
-        {showFunnel ? (
-          /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
-            {/* Floating Edit Mode Button */}
+        {showPreview ? (
+          /* Preview Mode - Fullscreen WYSIWYG */
+          <div className="fixed inset-0 z-50 bg-white overflow-auto">
+            {/* Bouton retour en mode édition */}
             <button
-              onClick={() => setShowFunnel(false)}
-              className={`absolute top-4 ${previewButtonSide === 'left' ? 'left-4' : 'right-4'} z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0`}
+              onClick={() => setShowPreview(false)}
+              className="absolute top-4 right-4 z-50 px-4 py-2 bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:opacity-90 transition-opacity shadow-lg"
             >
               Mode édition
             </button>
-            <div className="w-full h-full pointer-events-auto">
-              {campaignData?.type === 'quiz' ? (
-                <FunnelQuizParticipate
-                  campaign={campaignData as any}
-                  previewMode={selectedDevice}
-                />
-              ) : (
-                <FunnelUnlockedGame
-                  campaign={campaignData}
-                  previewMode={selectedDevice}
-                  wheelModalConfig={wheelModalConfig}
-                />
+            
+            {/* Écran dynamique selon previewScreen */}
+            <div 
+              className="w-full min-h-screen relative"
+              style={{
+                background: canvasBackground.type === 'image'
+                  ? `url(${canvasBackground.value}) center/cover no-repeat`
+                  : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+              }}
+            >
+              {previewScreen === 'screen1' && (
+                <>
+              {/* Rendu des éléments de l'écran 1 */}
+              {canvasElements
+                .filter((el: any) => {
+                  const screenId = el?.screenId || 'screen1';
+                  return screenId === 'screen1';
+                })
+                .map((element: any) => {
+                  const props = selectedDevice !== 'desktop' && element[selectedDevice]
+                    ? { ...element, ...element[selectedDevice] }
+                    : element;
+
+                  return (
+                    <div
+                      key={element.id}
+                      style={{
+                        position: 'absolute',
+                        left: `${props.x || 0}px`,
+                        top: `${props.y || 0}px`,
+                        width: props.width ? `${props.width}px` : 'auto',
+                        height: props.height ? `${props.height}px` : 'auto',
+                        transform: props.rotation ? `rotate(${props.rotation}deg)` : undefined,
+                        zIndex: props.zIndex || 1,
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {element.type === 'text' && (
+                        <div
+                          style={{
+                            fontSize: `${props.fontSize || 16}px`,
+                            fontFamily: props.fontFamily || 'Arial',
+                            fontWeight: props.fontWeight || 'normal',
+                            fontStyle: props.fontStyle || 'normal',
+                            textDecoration: props.textDecoration || 'none',
+                            color: props.color || '#000000',
+                            textAlign: (props.textAlign as any) || 'left',
+                            lineHeight: props.lineHeight || 1.5,
+                            letterSpacing: props.letterSpacing || 'normal',
+                            textTransform: props.textTransform || 'none',
+                            textShadow: props.textShadow,
+                            backgroundColor: props.backgroundColor,
+                            padding: props.padding,
+                            borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
+                            border: props.border,
+                            boxShadow: props.boxShadow,
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          {props.content || 'Texte'}
+                        </div>
+                      )}
+                      {element.type === 'image' && props.src && (
+                        <img
+                          src={props.src}
+                          alt={props.alt || ''}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: (props.objectFit as any) || 'contain',
+                            borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
+                            border: props.border,
+                            boxShadow: props.boxShadow,
+                            opacity: props.opacity !== undefined ? props.opacity : 1
+                          }}
+                        />
+                      )}
+                      {element.type === 'shape' && (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: props.backgroundColor || '#cccccc',
+                            borderRadius: props.shape === 'circle' ? '50%' : props.borderRadius ? `${props.borderRadius}px` : undefined,
+                            border: props.border,
+                            boxShadow: props.boxShadow,
+                            opacity: props.opacity !== undefined ? props.opacity : 1
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              
+              {/* Rendu des modules de l'écran 1 */}
+              {modularPage.screens.screen1.map((module) => {
+                if (module.type === 'BlocTexte') {
+                  return (
+                    <div
+                      key={module.id}
+                      style={{
+                        padding: '20px',
+                        textAlign: (module.align as any) || 'center',
+                        color: module.textColor || '#000000',
+                        fontSize: `${module.fontSize || 16}px`,
+                        fontWeight: module.bold ? 'bold' : 'normal',
+                        textTransform: module.uppercase ? 'uppercase' : 'none'
+                      }}
+                    >
+                      {module.content || ''}
+                    </div>
+                  );
+                }
+                if (module.type === 'BlocBouton') {
+                  return (
+                    <div
+                      key={module.id}
+                      style={{
+                        padding: '20px',
+                        textAlign: (module.align as any) || 'center'
+                      }}
+                    >
+                      <button
+                        style={{
+                          padding: module.padding || '14px 28px',
+                          background: module.background || '#000000',
+                          color: module.textColor || '#ffffff',
+                          borderRadius: `${module.borderRadius || 8}px`,
+                          border: 'none',
+                          fontSize: '16px',
+                          fontWeight: module.bold ? 'bold' : 'normal',
+                          textTransform: module.uppercase ? 'uppercase' : 'none',
+                          boxShadow: module.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          cursor: 'pointer',
+                          pointerEvents: 'auto'
+                        }}
+                        onClick={() => setPreviewScreen('screen2')}
+                      >
+                        {module.label || 'Bouton'}
+                      </button>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+                </>
+              )}
+
+              {previewScreen === 'screen2' && (
+                <>
+                  {/* Rendu des éléments de l'écran 2 */}
+                  {canvasElements
+                    .filter((el: any) => {
+                      const screenId = el?.screenId || 'screen1';
+                      return screenId === 'screen2';
+                    })
+                    .map((element: any) => {
+                      const props = selectedDevice !== 'desktop' && element[selectedDevice]
+                        ? { ...element, ...element[selectedDevice] }
+                        : element;
+
+                      return (
+                        <div
+                          key={element.id}
+                          style={{
+                            position: 'absolute',
+                            left: `${props.x || 0}px`,
+                            top: `${props.y || 0}px`,
+                            width: props.width ? `${props.width}px` : 'auto',
+                            height: props.height ? `${props.height}px` : 'auto',
+                            transform: props.rotation ? `rotate(${props.rotation}deg)` : undefined,
+                            zIndex: props.zIndex || 1,
+                            pointerEvents: element.type === 'wheel' ? 'auto' : 'none'
+                          }}
+                        >
+                          {element.type === 'text' && (
+                            <div
+                              style={{
+                                fontSize: `${props.fontSize || 16}px`,
+                                fontFamily: props.fontFamily || 'Arial',
+                                fontWeight: props.fontWeight || 'normal',
+                                fontStyle: props.fontStyle || 'normal',
+                                textDecoration: props.textDecoration || 'none',
+                                color: props.color || '#000000',
+                                textAlign: (props.textAlign as any) || 'left',
+                                lineHeight: props.lineHeight || 1.5,
+                                letterSpacing: props.letterSpacing || 'normal',
+                                textTransform: props.textTransform || 'none',
+                                textShadow: props.textShadow,
+                                backgroundColor: props.backgroundColor,
+                                padding: props.padding,
+                                borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
+                                border: props.border,
+                                boxShadow: props.boxShadow,
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {props.content || 'Texte'}
+                            </div>
+                          )}
+                          {element.type === 'image' && props.src && (
+                            <img
+                              src={props.src}
+                              alt={props.alt || ''}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: (props.objectFit as any) || 'contain',
+                                borderRadius: props.borderRadius ? `${props.borderRadius}px` : undefined,
+                                border: props.border,
+                                boxShadow: props.boxShadow,
+                                opacity: props.opacity !== undefined ? props.opacity : 1
+                              }}
+                            />
+                          )}
+                          {element.type === 'shape' && (
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor: props.backgroundColor || '#cccccc',
+                                borderRadius: props.shape === 'circle' ? '50%' : props.borderRadius ? `${props.borderRadius}px` : undefined,
+                                border: props.border,
+                                boxShadow: props.boxShadow,
+                                opacity: props.opacity !== undefined ? props.opacity : 1
+                              }}
+                            />
+                          )}
+                          {element.type === 'wheel' && (
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <SmartWheel
+                                segments={campaignData?.gameConfig?.wheel?.segments || [
+                                  { id: '1', label: 'Prix 1', color: extractedColors[0] || '#841b60', textColor: '#ffffff' },
+                                  { id: '2', label: 'Prix 2', color: '#ffffff', textColor: extractedColors[0] || '#841b60' },
+                                  { id: '3', label: 'Prix 3', color: extractedColors[0] || '#841b60', textColor: '#ffffff' },
+                                  { id: '4', label: 'Prix 4', color: '#ffffff', textColor: extractedColors[0] || '#841b60' }
+                                ]}
+                                onResult={(result) => {
+                                  console.log('Résultat de la roue:', result);
+                                  // Passer à l'écran 3 après le spin
+                                  setTimeout(() => setPreviewScreen('screen3'), 2000);
+                                }}
+                                borderStyle={wheelModalConfig?.wheelBorderStyle || campaignConfig?.design?.wheelConfig?.borderStyle || 'classic'}
+                                borderColor={wheelModalConfig?.wheelBorderColor || campaignConfig?.design?.wheelConfig?.borderColor || extractedColors[0] || '#841b60'}
+                                borderWidth={campaignConfig?.design?.wheelConfig?.borderWidth || 20}
+                                scale={wheelModalConfig?.wheelScale || campaignConfig?.design?.wheelConfig?.scale || 1}
+                                showBulbs={campaignConfig?.design?.wheelConfig?.showBulbs !== false}
+                                brandColors={extractedColors}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  
+                  {/* Rendu des modules de l'écran 2 */}
+                  {modularPage.screens.screen2.map((module) => {
+                    if (module.type === 'BlocTexte') {
+                      return (
+                        <div
+                          key={module.id}
+                          style={{
+                            padding: '20px',
+                            textAlign: (module.align as any) || 'center',
+                            color: module.textColor || '#000000',
+                            fontSize: `${module.fontSize || 16}px`,
+                            fontWeight: module.bold ? 'bold' : 'normal',
+                            textTransform: module.uppercase ? 'uppercase' : 'none'
+                          }}
+                        >
+                          {module.content || ''}
+                        </div>
+                      );
+                    }
+                    if (module.type === 'BlocBouton') {
+                      return (
+                        <div
+                          key={module.id}
+                          style={{
+                            padding: '20px',
+                            textAlign: (module.align as any) || 'center'
+                          }}
+                        >
+                          <button
+                            style={{
+                              padding: module.padding || '14px 28px',
+                              background: module.background || '#000000',
+                              color: module.textColor || '#ffffff',
+                              borderRadius: `${module.borderRadius || 8}px`,
+                              border: 'none',
+                              fontSize: '16px',
+                              fontWeight: module.bold ? 'bold' : 'normal',
+                              textTransform: module.uppercase ? 'uppercase' : 'none',
+                              boxShadow: module.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              cursor: 'pointer',
+                              pointerEvents: 'auto'
+                            }}
+                            onClick={() => setPreviewScreen('screen3')}
+                          >
+                            {module.label || 'Bouton'}
+                          </button>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </>
+              )}
+
+              {previewScreen === 'screen3' && (
+                <div className="w-full min-h-screen flex flex-col items-center justify-center p-8">
+                  {/* Rendu des éléments de l'écran 3 */}
+                  {canvasElements
+                    .filter((el: any) => {
+                      const screenId = el?.screenId || 'screen1';
+                      return screenId === 'screen3';
+                    })
+                    .map((element: any) => {
+                      const props = selectedDevice !== 'desktop' && element[selectedDevice]
+                        ? { ...element, ...element[selectedDevice] }
+                        : element;
+
+                      return (
+                        <div
+                          key={element.id}
+                          style={{
+                            position: 'absolute',
+                            left: `${props.x || 0}px`,
+                            top: `${props.y || 0}px`,
+                            width: props.width ? `${props.width}px` : 'auto',
+                            height: props.height ? `${props.height}px` : 'auto',
+                            transform: props.rotation ? `rotate(${props.rotation}deg)` : undefined,
+                            zIndex: props.zIndex || 1
+                          }}
+                        >
+                          {element.type === 'text' && (
+                            <div
+                              style={{
+                                fontSize: `${props.fontSize || 16}px`,
+                                fontFamily: props.fontFamily || 'Arial',
+                                fontWeight: props.fontWeight || 'normal',
+                                color: props.color || '#000000',
+                                textAlign: (props.textAlign as any) || 'left'
+                              }}
+                            >
+                              {props.content || 'Texte'}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                  {/* Modules de l'écran 3 */}
+                  {modularPage.screens.screen3.map((module) => {
+                    if (module.type === 'BlocTexte') {
+                      return (
+                        <div
+                          key={module.id}
+                          style={{
+                            padding: '20px',
+                            textAlign: (module.align as any) || 'center',
+                            color: module.textColor || '#000000',
+                            fontSize: `${module.fontSize || 16}px`
+                          }}
+                        >
+                          {module.content || ''}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+
+                  {/* Bouton retour à l'écran 1 */}
+                  <button
+                    onClick={() => setPreviewScreen('screen1')}
+                    className="mt-8 px-6 py-3 rounded-lg text-white font-semibold"
+                    style={{ background: extractedColors[0] || '#841b60' }}
+                  >
+                    Retour à l'accueil
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -1621,12 +2046,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
                       return !role.includes('exit-message');
                     }}
-                    // Module system props
-                    modularModules={modularPage.screens.screen1}
-                    onModuleUpdate={handleModuleUpdate}
-                    selectedModuleId={selectedModuleId}
                     // Sidebar panel triggers
-onShowEffectsPanel={() => {
+                    onShowEffectsPanel={() => {
                         if (!isWindowMobile) {
                           setShowEffectsInSidebar(true);
                           setShowAnimationsInSidebar(false);
@@ -1690,6 +2111,7 @@ onShowPositionPanel={() => {
                     modularModules={modularPage.screens.screen1}
                     onModuleUpdate={handleModuleUpdate}
                     selectedModuleId={selectedModuleId}
+                    allowWheelInteraction={allowWheelInteraction}
                   />
                 </div>
 
@@ -1709,16 +2131,19 @@ onShowPositionPanel={() => {
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      screenId="screen2"
-                      selectedDevice={selectedDevice}
-                      elements={canvasElements}
-                      onElementsChange={setCanvasElements}
+                    screenId="screen2"
+                    selectedDevice={selectedDevice}
+                    elements={canvasElements.filter((el: any) => {
+                      const role = typeof el?.role === 'string' ? el.role.toLowerCase() : '';
+                      return !role.includes('exit-message');
+                    })}
+                    onElementsChange={setCanvasElements}
                       background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
+                      allowWheelInteraction={allowWheelInteraction}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -1745,6 +2170,14 @@ onShowPositionPanel={() => {
                           setShowPositionInSidebar(false);
                         }
                       }}
+                      onShowPositionPanel={() => {
+                        if (!isWindowMobile) {
+                          setShowPositionInSidebar(true);
+                          setShowEffectsInSidebar(false);
+                          setShowAnimationsInSidebar(false);
+                          setShowDesignInSidebar(false);
+                        }
+                      }}
                       onShowDesignPanel={(context?: 'fill' | 'border' | 'text') => {
                         if (context) {
                           setDesignColorContext(context);
@@ -1761,6 +2194,7 @@ onShowPositionPanel={() => {
                         if (sidebarRef.current) {
                           sidebarRef.current.setActiveTab('elements');
                         }
+                        setShowEffectsInSidebar(false);
                         setShowAnimationsInSidebar(false);
                         setShowPositionInSidebar(false);
                       }}
@@ -1778,9 +2212,6 @@ onShowPositionPanel={() => {
                       modularModules={modularPage.screens.screen2}
                       onModuleUpdate={handleModuleUpdate}
                       selectedModuleId={selectedModuleId}
-                      onModuleDelete={handleDeleteModule}
-                      onModuleMove={handleMoveModule}
-                      onModuleDuplicate={handleDuplicateModule}
                     />
                   </div>
                 </div>
@@ -1801,16 +2232,19 @@ onShowPositionPanel={() => {
                   />
                   <div className="relative z-10">
                     <DesignCanvas
-                      screenId="screen3"
-                      selectedDevice={selectedDevice}
-                      elements={canvasElements}
-                      onElementsChange={setCanvasElements}
+                    screenId="screen3"
+                    selectedDevice={selectedDevice}
+                    elements={canvasElements.filter((el: any) => {
+                      const role = typeof el?.role === 'string' ? el.role.toLowerCase() : '';
+                      return role.includes('exit-message');
+                    })}
+                    onElementsChange={setCanvasElements}
                       background={canvasBackground}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
-                      enableInternalAutoFit={true}
+                      allowWheelInteraction={allowWheelInteraction}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -1909,8 +2343,8 @@ onShowPositionPanel={() => {
           </>
         )}
       </div>
-      {/* Floating bottom-right actions (no band) */}
-      {!showFunnel && (
+      {/* Floating bottom-right actions (no band) - Hidden in preview */}
+      {!showPreview && (
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
             onClick={() => navigate('/dashboard')}

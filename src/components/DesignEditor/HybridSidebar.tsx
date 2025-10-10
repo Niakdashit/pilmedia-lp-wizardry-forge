@@ -5,7 +5,8 @@ import {
   Plus,
   FormInput,
   Palette,
-  Gamepad2
+  Gamepad2,
+  MessageSquareText
 } from 'lucide-react';
 import { BackgroundPanel, TextEffectsPanel } from '@/components/shared';
 import TextAnimationsPanel from './panels/TextAnimationsPanel';
@@ -25,6 +26,7 @@ import VideoModulePanel from './modules/VideoModulePanel';
 import SocialModulePanel from './modules/SocialModulePanel';
 import HtmlModulePanel from './modules/HtmlModulePanel';
 import CartePanel from './panels/CartePanel';
+import WheelMessagesPanel from './panels/WheelMessagesPanel';
 
 
 // Lazy-loaded heavy panels
@@ -368,6 +370,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       id: 'form', 
       label: 'Formulaire', 
       icon: FormInput
+    },
+    {
+      id: 'messages',
+      label: 'Messages',
+      icon: MessageSquareText
     }
   ];
   console.log('📌 hiddenTabs:', hiddenTabs);
@@ -738,6 +745,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </div>
         );
+      case 'messages':
+        return (
+          <WheelMessagesPanel
+            campaign={campaign}
+            setCampaign={setCampaign}
+          />
+        );
       default:
         return null;
     }
@@ -869,14 +883,24 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
-            <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
-              {activeTab === 'effects' ? 'Effets de texte' : 
-               activeTab === 'animations' ? 'Animations de texte' : 
-               activeTab === 'position' ? 'Position' : 
-               activeTab === 'wheel' ? 'Roue de fortune' : 
-               activeTab === 'game' ? 'Jeu' :
-               tabs.find(tab => tab.id === activeTab)?.label}
-            </h2>
+            {(() => {
+              const screenLabel = currentScreen === 'screen2' ? 'Écran 2' : currentScreen === 'screen3' ? 'Écran 3' : 'Écran 1';
+              const baseTitle = (
+                activeTab === 'effects' ? 'Effets de texte' :
+                activeTab === 'animations' ? 'Animations de texte' :
+                activeTab === 'position' ? 'Position' :
+                activeTab === 'wheel' ? 'Roue de fortune' :
+                activeTab === 'game' ? 'Jeu' :
+                tabs.find(tab => tab.id === activeTab)?.label || ''
+              );
+              const showScreenTitle = activeTab === 'elements' || activeTab === 'form' || activeTab === 'game' || activeTab === 'messages';
+              const title = showScreenTitle ? screenLabel : baseTitle;
+              return (
+                <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
+                  {title}
+                </h2>
+              );
+            })()}
           </div>
 
           {/* Panel Content */}

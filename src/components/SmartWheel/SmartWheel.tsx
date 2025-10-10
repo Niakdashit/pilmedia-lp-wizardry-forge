@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SmartWheelProps } from './types';
 import { getTheme } from './utils/wheelThemes';
 import { useWheelAnimation } from './hooks/useWheelAnimation';
@@ -16,6 +16,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   onSpin,
   onResult,
   onShowParticipationModal,
+  onParticipationSubmit,
   brandColors,
   customButton,
   borderStyle = 'classic',
@@ -30,7 +31,8 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
   formFields,
   spinMode,
   winProbability,
-  speed
+  speed,
+  allowSurfaceSpin = false
 }) => {
   // Forcer la mise à jour des couleurs des segments avec brandColors
   const updatedSegments = useMemo(() => {
@@ -169,6 +171,27 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     currentSegment
   }), [isSpinning, rotation, targetRotation, currentSegment]);
 
+  const handleParticipationSubmit = useCallback(async (formData: FormData) => {
+    try {
+      const payload = Array.from(formData.entries()).reduce<Record<string, any>>((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});
+
+      console.log('📝 [SmartWheel] Participation form submitted', payload);
+
+      if (typeof onParticipationSubmit === 'function') {
+        await onParticipationSubmit(formData, payload);
+      }
+
+      setShowParticipationModal(false);
+      setMode2State('wheel');
+      spin();
+    } catch (error) {
+      console.error('[SmartWheel] handleParticipationSubmit failure', error);
+    }
+  }, [onParticipationSubmit, spin]);
+
   // Rendu Canvas - Utiliser currentBorderStyle au lieu de borderStyle
   const { canvasRef, centerImgReady } = useSmartWheelRenderer({
     segments: updatedSegments,
@@ -183,7 +206,7 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     brandColors
   });
   
-  const handleSpin = () => {
+  const handleSpin = useCallback(() => {
     if (!isMode1) {
       // Mode 2: ouvrir la modale de participation
       if (mode2State === 'form') {
@@ -197,28 +220,20 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
       }
       // Si on est déjà dans l'état wheel, faire tourner
       if (mode2State === 'wheel') {
-        if (onSpin) onSpin();
         spin();
-        return;
       }
     }
-    
+
     // Mode 1: comportement normal
     if (onSpin) {
       onSpin();
     }
     spin();
-  };
-  
-  const handleParticipationSubmit = () => {
-    setShowParticipationModal(false);
-    setMode2State('wheel');
-  };
-  
+  }, [isMode1, mode2State, onShowParticipationModal, onSpin, spin]);
+
   const handlePlayAgain = () => {
     setMode2State('form');
   };
-
   // Fonction pour déterminer la position optimale du bouton
   const getOptimalButtonPosition = () => {
     // Si buttonPosition est explicitement défini, l'utiliser
@@ -303,6 +318,29 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
     return disabled || wheelState.isSpinning || segments.length === 0;
   };
 
+  const handleSurfaceClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!allowSurfaceSpin) return;
+    const target = event.target as HTMLElement | null;
+    if (target && target.closest('button')) return;
+    if (isButtonDisabled()) return;
+    event.stopPropagation();
+    handleSpin();
+  }, [allowSurfaceSpin, isButtonDisabled, handleSpin]);
+
+  const handleSurfaceKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!allowSurfaceSpin) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    if (isButtonDisabled()) return;
+    handleSpin();
+  }, [allowSurfaceSpin, isButtonDisabled, handleSpin]);
+
+  const surfaceAccessibilityProps = allowSurfaceSpin
+    ? ({ role: 'button', tabIndex: 0 } as const)
+    : ({} as const);
+
+  const surfaceStyle: React.CSSProperties | undefined = allowSurfaceSpin ? { cursor: 'pointer' } : undefined;
+
   const handleButtonClick = () => {
     if (!isMode1 && mode2State === 'result') {
       handlePlayAgain();
@@ -313,7 +351,13 @@ const SmartWheel: React.FC<SmartWheelProps> = ({
 
   return (
     <>
-      <div className={`${getLayoutClasses()} ${className}`}>
+      <div
+        className={`${getLayoutClasses()} ${className}`}
+        onClick={allowSurfaceSpin ? handleSurfaceClick : undefined}
+        onKeyDown={allowSurfaceSpin ? handleSurfaceKeyDown : undefined}
+        {...surfaceAccessibilityProps}
+        style={surfaceStyle}
+      >
         {/* Container de la roue */}
         <div className="relative flex items-center justify-center" style={{
           width: actualSize,
