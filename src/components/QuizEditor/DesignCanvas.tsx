@@ -2285,18 +2285,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             </div>
 
             {/* Modular stacked content (HubSpot-like) */}
-            {Array.isArray(modularModules) && modularModules.length > 0 && (
+            {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
+              const hasLogoModule = modularModules.some((m: Module) => m.type === 'BlocLogo');
+              const hasFooterModule = modularModules.some((m: Module) => m.type === 'BlocPiedDePage');
+              return (
               <div
                 className="w-full flex justify-center mb-6"
                 style={{
                   paddingLeft: safeZonePadding,
                   paddingRight: safeZonePadding,
-                  paddingTop: safeZonePadding,
-                  paddingBottom: safeZonePadding,
+                  paddingTop: hasLogoModule ? 0 : safeZonePadding,
+                  paddingBottom: hasFooterModule ? 0 : safeZonePadding,
                   boxSizing: 'border-box'
                 }}
               >
-                <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                 <div className="w-full max-w-[1500px] flex flex-col" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
                   <ModularCanvas
                     screen={screenId as any}
                     modules={modularModules}
@@ -2408,7 +2411,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   />
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
             {renderableElements

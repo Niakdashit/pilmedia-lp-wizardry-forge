@@ -2372,20 +2372,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
               const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
               const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-              const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
-                const h = (m?.bandHeight ?? 60);
-                const p = (m?.bandPadding ?? 16) * 2;
-                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
-                return Math.max(acc, h + p + extra);
-              }, 0);
-              const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
-                const h = (m?.bandHeight ?? 60);
-                const p = (m?.bandPadding ?? 16) * 2;
-                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
-                return Math.max(acc, h + p + extra);
-              }, 0);
               return (
-                <>
+                <div className="relative w-full">
                   {/* Absolute, full-width logo band at the very top (non-movable) */}
                   {logoModules.length > 0 && (
                     <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
@@ -2420,19 +2408,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
                   {/* Regular modules container; padding adjusted when logo/footer exist */}
                   <div
-                    className="w-full flex justify-center mb-6"
+                    className="w-full flex justify-center"
                     style={{
                       paddingLeft: safeZonePadding,
                       paddingRight: safeZonePadding,
-                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
-                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
+                      paddingTop: logoModules.length > 0 ? 0 : safeZonePadding,
+                      paddingBottom: footerModules.length > 0 ? 0 : safeZonePadding,
+                      marginBottom: footerModules.length > 0 ? 0 : '1.5rem',
                       boxSizing: 'border-box'
                     }}
                   >
-                    {/* Spacer to prevent overlap with the absolute logo band */}
-                    {logoModules.length > 0 && (
-                      <div style={{ height: logoVisualHeight }} />
-                    )}
+                    {/* Spacer removed - logo is now flush at top */}
                     <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
                       <ModularCanvas
                         screen={screenId as any}
@@ -2532,9 +2518,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           ? (externalSelectedElement as any)?.moduleId
                           : undefined}
                       />
-                      {footerModules.length > 0 && (
-                        <div style={{ height: footerVisualHeight }} />
-                      )}
+                      {/* Spacer removed - footer is now flush at bottom */}
                     </div>
                   </div>
 
@@ -2544,7 +2528,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
-                          previewMode={false}
+                          previewMode={true}
                           device={selectedDevice}
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
@@ -2569,7 +2553,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               );
             })()}
 

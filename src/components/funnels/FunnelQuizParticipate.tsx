@@ -186,43 +186,98 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         <div className="absolute inset-0" style={backgroundStyle} />
 
         {/* Participate phase */}
-        {phase === 'participate' && (
-          <div className="relative z-10 h-full flex flex-col items-center justify-center gap-6 p-8">
-            {/* Render modules using unified QuizModuleRenderer */}
-            {modules.length > 0 && (
-              <QuizModuleRenderer 
-                modules={modules}
-                previewMode={true}
-                device={previewMode}
-                onButtonClick={handleParticipate}
-              />
-            )}
-            
-            {/* Bouton Participer - masqué si une carte contient déjà un bouton */}
-            {!carteWithButton && (
-              <button
-                onClick={handleParticipate}
-                className={ctaClassName}
-                style={ctaStyles}
-              >
-                {ctaLabel}
-              </button>
-            )}
-          </div>
-        )}
+        {phase === 'participate' && (() => {
+          const logoModules = modules.filter((m: any) => m?.type === 'BlocLogo');
+          const footerModules = modules.filter((m: any) => m?.type === 'BlocPiedDePage');
+          const regularModules = modules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+          
+          // Vérifier si un BlocBouton existe dans les modules réguliers ou dans une carte
+          const hasButtonInRegularModules = regularModules.some((m: any) => m?.type === 'BlocBouton');
+          const shouldHideDefaultButton = carteWithButton || hasButtonInRegularModules;
+          
+          return (
+            <div className="relative z-10 h-full flex flex-col">
+              {/* Logo band at top */}
+              {logoModules.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                  <QuizModuleRenderer 
+                    modules={logoModules}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="viewport"
+                  />
+                </div>
+              )}
+
+              {/* Regular content - flex-1 pour prendre l'espace disponible */}
+              <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
+                {regularModules.length > 0 && (
+                  <QuizModuleRenderer 
+                    modules={regularModules}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="viewport"
+                    onButtonClick={handleParticipate}
+                  />
+                )}
+                
+                {/* Bouton Participer - masqué si un BlocBouton existe déjà */}
+                {!shouldHideDefaultButton && (
+                  <button
+                    onClick={handleParticipate}
+                    className={ctaClassName}
+                    style={ctaStyles}
+                  >
+                    {ctaLabel}
+                  </button>
+                )}
+              </div>
+
+              {/* Footer band at bottom */}
+              {footerModules.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                  <QuizModuleRenderer 
+                    modules={footerModules}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="container"
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Quiz phase - Afficher le quiz réel */}
-        {phase === 'quiz' && (
-          <div className="relative z-10 h-full flex flex-col items-center justify-center p-4 gap-6">
-            {/* Modules de l'écran 2 */}
-            {modules2.length > 0 && (
-              <QuizModuleRenderer 
-                modules={modules2}
-                previewMode={true}
-                device={previewMode}
-              />
-            )}
-            <div className="w-full max-w-2xl">
+        {phase === 'quiz' && (() => {
+          const logoModules2 = modules2.filter((m: any) => m?.type === 'BlocLogo');
+          const footerModules2 = modules2.filter((m: any) => m?.type === 'BlocPiedDePage');
+          const regularModules2 = modules2.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+          
+          return (
+            <div className="relative z-10 h-full flex flex-col">
+              {/* Logo band at top */}
+              {logoModules2.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                  <QuizModuleRenderer 
+                    modules={logoModules2}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="viewport"
+                  />
+                </div>
+              )}
+
+              <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
+                {regularModules2.length > 0 && (
+                  <QuizModuleRenderer 
+                    modules={regularModules2}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="viewport"
+                  />
+                )}
+                <div className="w-full max-w-2xl">
               {/* Utiliser le composant TemplatedQuiz pour afficher le quiz */}
               <TemplatedQuiz
                 campaign={campaign}
@@ -239,9 +294,23 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
                   }
                 }}
               />
+                </div>
+              </div>
+
+              {/* Footer band at bottom */}
+              {footerModules2.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                  <QuizModuleRenderer 
+                    modules={footerModules2}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="container"
+                  />
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Form phase - use modal component to keep look consistent */}
         <FormHandler
@@ -254,19 +323,41 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         />
 
         {/* Thank you phase */}
-        {phase === 'thankyou' && (
-          <div className="relative z-10 h-full">
-            {/* Modules de l'écran 3 */}
-            {modules3.length > 0 && (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
-                <QuizModuleRenderer 
-                  modules={modules3}
-                  previewMode={true}
-                  device={previewMode}
-                  onButtonClick={handleReplay}
-                />
-              </div>
-            )}
+        {phase === 'thankyou' && (() => {
+          const logoModules3 = modules3.filter((m: any) => m?.type === 'BlocLogo');
+          const footerModules3 = modules3.filter((m: any) => m?.type === 'BlocPiedDePage');
+          const regularModules3 = modules3.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+          
+          // Vérifier si un BlocBouton existe dans les modules réguliers ou dans une carte
+          const hasButtonInRegularModules3 = regularModules3.some((m: any) => m?.type === 'BlocBouton');
+          const shouldHideDefaultReplayButton = carteWithButtonScreen3 || hasButtonInRegularModules3;
+          
+          return (
+            <div className="relative z-10 h-full flex flex-col">
+              {/* Logo band at top */}
+              {logoModules3.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                  <QuizModuleRenderer 
+                    modules={logoModules3}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="viewport"
+                  />
+                </div>
+              )}
+
+              <div className="flex-1 relative">
+                {regularModules3.length > 0 && (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
+                    <QuizModuleRenderer 
+                      modules={regularModules3}
+                      previewMode={true}
+                      device={previewMode}
+                      bandWidthMode="viewport"
+                      onButtonClick={handleReplay}
+                    />
+                  </div>
+                )}
 
             {/* Carte par défaut uniquement si pas de modules déclarés sur écran 3 */}
             {modules3.length === 0 && (
@@ -296,8 +387,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
               </div>
             )}
 
-            {/* Si des modules3 existent, on affiche un overlay bas pour Score/Rejouer - sauf si une carte contient déjà un bouton */}
-            {modules3.length > 0 && (showScore || shouldRenderReplayButton) && !carteWithButtonScreen3 && (
+            {/* Si des modules3 existent, on affiche un overlay bas pour Score/Rejouer - sauf si un BlocBouton existe déjà */}
+            {modules3.length > 0 && (showScore || shouldRenderReplayButton) && !shouldHideDefaultReplayButton && (
               <div className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-3 z-20 px-4">
                 {showScore && (
                   <div className="px-3 py-1 rounded-full bg-white/85 text-gray-900 text-sm font-medium shadow">
@@ -315,8 +406,22 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
                 )}
               </div>
             )}
-          </div>
-        )}
+              </div>
+
+              {/* Footer band at bottom */}
+              {footerModules3.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                  <QuizModuleRenderer 
+                    modules={footerModules3}
+                    previewMode={true}
+                    device={previewMode}
+                    bandWidthMode="container"
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
