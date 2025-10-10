@@ -103,8 +103,9 @@ export const DEFAULT_SCRATCH_CONFIG: ScratchCardState = {
     { id: '4', isWinner: false }
   ],
   grid: {
-    rows: 2,
-    cols: 2,
+    // Desktop par défaut: 4 cartes en 1 ligne
+    rows: 1,
+    cols: 4,
     gap: 20,
     borderRadius: 24,
     cardShape: 'vertical-rectangle' // Default to rectangle

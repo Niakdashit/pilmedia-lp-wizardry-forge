@@ -334,13 +334,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = activeCanvasRef.current;
+    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null);
     if (!canvas) return;
 
     let initialDistance = 0;
     let initialZoom = 1;
     let isPinching = false;
-    let lastTouchTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -371,17 +370,16 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           
           // Appliquer le zoom avec une transition fluide
           requestAnimationFrame(() => {
-            onZoomChange(newZoom);
+            onZoomChange?.(newZoom);
           });
         }
         e.preventDefault();
       }
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
+    const handleTouchEnd = (_e: TouchEvent) => {
       if (isPinching) {
         isPinching = false;
-        lastTouchTime = Date.now();
       }
     };
 
@@ -733,6 +731,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     autoFitEnabledRef.current = false;
   }, [enableInternalAutoFit, updateAutoFit]);
 
+  // Re-fit when switching device (e.g., desktop ↔ mobile) so the full canvas is visible
+  useEffect(() => {
+    if (!enableInternalAutoFit) return;
+    autoFitEnabledRef.current = true;
+    updateAutoFit();
+    autoFitEnabledRef.current = false;
+  }, [selectedDevice, enableInternalAutoFit, updateAutoFit]);
+
   // Do not auto-fit on resizes anymore; keep user's zoom unchanged
   useEffect(() => {
     // intentionally left blank
@@ -749,6 +755,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       onZoomChange(clamped);
     }
   }, [onZoomChange]);
+
+  // Keep references to avoid TS6133 when externally wired
+  useEffect(() => { void deviceDefaultZoom; void handleZoomChange; }, [deviceDefaultZoom, handleZoomChange]);
 
 
   // Compute canvas-space coordinates from a pointer event
@@ -767,11 +776,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (readOnly) return;
     // Allow marquee on all devices; treat touch specially
     // Only react to primary mouse button, but allow touch regardless of e.button
-    if (e.pointerType !== 'touch' && e.button !== 0) return;
     if (e.pointerType === 'touch') {
-      // Prevent native gestures from interfering with marquee start
-      e.preventDefault();
+      // Allow pinch-to-zoom; no marquee selection on touch
+      return;
     }
+    if (e.button !== 0) return;
     // Start suppression so the subsequent synthetic click won't clear selection
     suppressNextClickClearRef.current = true;
     console.debug('🟦 Marquee start (pointerdown)', { clientX: e.clientX, clientY: e.clientY });
@@ -1676,7 +1685,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-start ${isWindowMobile ? '-mt-20' : 'pt-40'} pb-4 px-4 max-w-[1520px] w-full mx-auto ${containerClassName || 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-start ${isWindowMobile ? 'pt-0' : 'pt-40'} pb-4 px-4 max-w-[1520px] w-full mx-auto ${containerClassName || 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}

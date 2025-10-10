@@ -52,9 +52,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         } else {
           // Use canvas optimization. For alpha-capable sources, export as PNG to keep transparency
           const optimized = await optimizeImageForSegment(file, {
-            maxWidth: 2048,
-            maxHeight: 2048,
-            quality: 0.9,
+            maxWidth: 800,
+            maxHeight: 800,
+            quality: 0.85,
             format: supportsAlpha ? 'png' : 'jpeg'
           });
           onChange(optimized.dataUrl);

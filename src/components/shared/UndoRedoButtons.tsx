@@ -61,10 +61,10 @@ export const UndoRedoButtons: React.FC<UndoRedoButtonsProps> = ({
 
   // Classes de variante
   const variantClasses = {
-    default: 'bg-gray-700 hover:bg-gray-600 text-white',
-    ghost: 'hover:bg-gray-100 text-gray-700 hover:text-gray-900',
-    outline: 'border border-gray-300 hover:bg-gray-50 text-gray-700'
-  };
+    default: 'bg-[#f0f5fd] text-[#646463] hover:bg-[#eaf2ff]',
+    ghost: 'bg-transparent text-[#646463] hover:bg-[#eaf2ff]',
+    outline: 'bg-[#f0f5fd] text-[#646463] hover:bg-[#eaf2ff]'
+  } as const;
 
   // Classes de base pour les boutons
   const baseButtonClasses = `
@@ -83,7 +83,7 @@ export const UndoRedoButtons: React.FC<UndoRedoButtonsProps> = ({
   `;
 
   // Classes pour les boutons désactivés
-  const disabledClasses = 'opacity-50 cursor-not-allowed hover:bg-gray-700';
+  const disabledClasses = 'opacity-50 cursor-not-allowed hover:bg-[#f0f5fd]';
 
   // Classes de conteneur selon l'orientation
   const containerClasses = orientation === 'horizontal' 

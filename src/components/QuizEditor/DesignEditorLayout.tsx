@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 const FunnelUnlockedGame = lazy(() => import('@/components/funnels/FunnelUnlockedGame'));
 const FunnelQuizParticipate = lazy(() => import('../funnels/FunnelQuizParticipate'));
-import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -29,10 +28,10 @@ import { quizTemplates } from '../../types/quizTemplates';
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
 
-const LAUNCH_BUTTON_FALLBACK_GRADIENT = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
+const LAUNCH_BUTTON_FALLBACK_GRADIENT = '#000000';
 const LAUNCH_BUTTON_DEFAULT_TEXT_COLOR = '#ffffff';
 const LAUNCH_BUTTON_DEFAULT_PADDING = '14px 28px';
-const LAUNCH_BUTTON_DEFAULT_SHADOW = '0 12px 30px rgba(132, 27, 96, 0.35)';
+const LAUNCH_BUTTON_DEFAULT_SHADOW = '0 4px 12px rgba(0, 0, 0, 0.15)';
 
 const buildLaunchButtonStyles = (
   buttonModule: BlocBouton | undefined,
@@ -262,6 +261,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
+  const [showEffectsInSidebar, setShowEffectsInSidebar] = useState(false);
+  void showEffectsInSidebar; // Used in callbacks below
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
@@ -431,10 +432,67 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return true;
   }, []);
 
+  const screenHasCardButton = useCallback((modules: Module[] = []) => {
+    return modules.some((m) => m.type === 'BlocCarte' && Array.isArray((m as any).children) && (m as any).children.some((child: Module) => child?.type === 'BlocBouton'));
+  }, []);
+
+  const editorHasCardButton = useCallback(() => {
+    return (Object.values(modularPage.screens) as Module[][]).some((modules) => screenHasCardButton(modules));
+  }, [modularPage.screens, screenHasCardButton]);
+
+  const getDefaultButtonLabel = useCallback((screen: ScreenId): string => {
+    return screen === 'screen3' ? 'Rejouer' : 'Participer';
+  }, []);
+
+  // Ajouter automatiquement un bouton "Rejouer" sur l'écran 3 s'il n'existe pas
+  React.useEffect(() => {
+    const screen3Modules = modularPage.screens.screen3 || [];
+    const hasReplayButton = screen3Modules.some((m) => m.type === 'BlocBouton') || screenHasCardButton(screen3Modules);
+    
+    if (!hasReplayButton && currentScreen === 'screen3') {
+      const replayButton: BlocBouton = {
+        id: `bloc-bouton-replay-${Date.now()}`,
+        type: 'BlocBouton',
+        label: getDefaultButtonLabel('screen3'),
+        href: '#',
+        background: '#000000',
+        textColor: '#ffffff',
+        borderRadius: 9999,
+        borderWidth: 0,
+        borderColor: '#000000',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        uppercase: false,
+        bold: false,
+        spacingTop: 0,
+        spacingBottom: 0
+      };
+      
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      nextScreens.screen3 = [...screen3Modules, replayButton];
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+    }
+  }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
+
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
     setModularPage((prev) => {
-      const prevScreenModules = prev.screens[screen] || [];
+      let prevScreenModules = prev.screens[screen] || [];
+
+      if (module.type === 'BlocCarte' && Array.isArray((module as any).children)) {
+        const cardHasButton = (module as any).children.some((child: Module) => child?.type === 'BlocBouton');
+        if (cardHasButton) {
+          prevScreenModules = prevScreenModules.filter((m) => m.type !== 'BlocBouton');
+          (module as any).children = (module as any).children.map((child: Module) => {
+            if (child?.type === 'BlocBouton') {
+              return {
+                ...child,
+                label: child?.label || getDefaultButtonLabel(screen)
+              } as Module;
+            }
+            return child;
+          });
+        }
+      }
       const isParticiperButton = module.type === 'BlocBouton' && (module.label || '').trim().toLowerCase() === 'participer';
 
       let updatedModules: Module[];
@@ -477,10 +535,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   }, [modularPage, persistModular]);
 
   const ensuredBlocBoutonRef = useRef(false);
-  const createDefaultBlocBouton = useCallback((): BlocBouton => ({
+  const createDefaultBlocBouton = useCallback((screen: ScreenId = 'screen1'): BlocBouton => ({
     id: `BlocBouton-${Date.now()}`,
     type: 'BlocBouton',
-    label: 'Participer',
+    label: getDefaultButtonLabel(screen),
     href: '#',
     align: 'center',
     borderRadius: 9999,
@@ -488,29 +546,29 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     textColor: LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
     padding: LAUNCH_BUTTON_DEFAULT_PADDING,
     boxShadow: LAUNCH_BUTTON_DEFAULT_SHADOW
-  }), []);
+  }), [getDefaultButtonLabel]);
 
   useEffect(() => {
     if (ensuredBlocBoutonRef.current) return;
-    const hasBlocBouton = Object.values(modularPage.screens).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
-    if (!hasBlocBouton) {
-      const defaultModule = createDefaultBlocBouton();
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+    const hasStandaloneButton = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasStandaloneButton && !editorHasCardButton()) {
       const targetScreen = currentScreen || 'screen1';
+      const defaultModule = createDefaultBlocBouton(targetScreen);
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
       nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), defaultModule];
       persistModular({ screens: nextScreens, _updatedAt: Date.now() });
     }
     ensuredBlocBoutonRef.current = true;
-  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton]);
+  }, [modularPage.screens, currentScreen, persistModular, createDefaultBlocBouton, editorHasCardButton]);
 
   useEffect(() => {
     const legacyButton = canvasElements.find((el) => typeof el?.role === 'string' && el.role.toLowerCase().includes('button'));
     if (!legacyButton) return;
 
-    const hasModule = Object.values(modularPage.screens).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
-    if (!hasModule) {
+    const hasStandalone = (Object.values(modularPage.screens) as Module[][]).some((modules) => modules?.some((m) => m.type === 'BlocBouton'));
+    if (!hasStandalone && !editorHasCardButton()) {
       const newModule: BlocBouton = {
-        ...createDefaultBlocBouton(),
+        ...createDefaultBlocBouton((legacyButton.screenId as ScreenId) || currentScreen || 'screen1'),
         label: legacyButton.content || legacyButton.text || 'Participer',
         background: legacyButton.customCSS?.background || LAUNCH_BUTTON_FALLBACK_GRADIENT,
         textColor: legacyButton.customCSS?.color || LAUNCH_BUTTON_DEFAULT_TEXT_COLOR,
@@ -539,8 +597,20 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
       nextScreens[s] = (nextScreens[s] || []).filter((m) => m.id !== id);
     });
+
+    const flattened = (Object.values(nextScreens) as Module[][]).flat();
+    const hasStandaloneButton = flattened.some((m) => m.type === 'BlocBouton');
+    const hasCardButton = flattened.some((m) => m.type === 'BlocCarte' && Array.isArray((m as any).children) && (m as any).children.some((c: Module) => c?.type === 'BlocBouton'));
+
+    // Réintroduire un bouton par défaut si plus aucun bouton n'est présent
+    if (!hasStandaloneButton && !hasCardButton) {
+      const defaultButton = createDefaultBlocBouton();
+      const targetScreen = currentScreen || 'screen1';
+      nextScreens[targetScreen] = [...(nextScreens[targetScreen] || []), defaultButton];
+    }
+
     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [modularPage, persistModular]);
+  }, [modularPage, persistModular, createDefaultBlocBouton, currentScreen]);
 
   const handleMoveModule = useCallback((id: string, direction: 'up' | 'down') => {
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
@@ -884,20 +954,27 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     const isModuleText = (selectedElement as any)?.role === 'module-text' && (selectedElement as any)?.moduleId;
     if (isModuleText) {
       const moduleId = (selectedElement as any).moduleId as string;
-      const patch: Partial<Module> & Record<string, any> = {};
 
-      if (updates.fontFamily) patch.bodyFontFamily = updates.fontFamily;
-      if (updates.color) patch.bodyColor = updates.color;
-      if (updates.fontSize) patch.bodyFontSize = updates.fontSize;
-      if (updates.fontWeight) patch.bodyBold = updates.fontWeight === 'bold';
-      if (updates.fontStyle) patch.bodyItalic = updates.fontStyle === 'italic';
-      if (updates.textDecoration) patch.bodyUnderline = updates.textDecoration?.includes('underline');
-      if (updates.textAlign) patch.align = updates.textAlign;
-
-      if (Object.keys(patch).length > 0) {
-        handleUpdateModule(moduleId, patch);
+      // Route ALL updates to the module (including rotation)
+      const modulePatch: Partial<Module> & Record<string, any> = {};
+      if (updates.fontFamily) modulePatch.bodyFontFamily = updates.fontFamily;
+      if (updates.color) modulePatch.bodyColor = updates.color;
+      if (updates.fontSize) modulePatch.bodyFontSize = updates.fontSize;
+      if (updates.fontWeight) modulePatch.bodyBold = updates.fontWeight === 'bold';
+      if (updates.fontStyle) modulePatch.bodyItalic = updates.fontStyle === 'italic';
+      if (updates.textDecoration) modulePatch.bodyUnderline = updates.textDecoration?.includes('underline');
+      if (updates.textAlign) modulePatch.align = updates.textAlign;
+      
+      // Add rotation to module
+      if (typeof updates.rotation === 'number') {
+        modulePatch.rotation = updates.rotation;
       }
 
+      if (Object.keys(modulePatch).length > 0) {
+        handleUpdateModule(moduleId, modulePatch);
+      }
+
+      // Update local selectedElement to reflect changes
       setSelectedElement((prev: any) => (prev ? { ...prev, ...updates } : prev));
       return;
     }
@@ -1162,7 +1239,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       role === 'module-image' ||
       role === 'module-video' ||
       role === 'module-social' ||
-      role === 'module-html';
+      role === 'module-html' ||
+      role === 'module-carte' ||
+      role === 'module-logo';
 
     if (!moduleId || !isModularRole) {
       lastModuleSelectionRef.current = null;
@@ -1371,6 +1450,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       el.type === 'text' && !['title', 'description', 'button'].includes(el.role)
     );
     const customImages = canvasElements.filter(el => el.type === 'image');
+    
+    // Inclure les modules dans les éléments pour l'aperçu
+    const allModules = Object.values(modularPage.screens).flat();
+    console.log('📦 [DesignEditorLayout] Modules trouvés:', {
+      modulesCount: allModules.length,
+      modules: allModules.map((m: any) => ({ id: m.id, type: m.type, label: m.label }))
+    });
 
     // Primary color used by quiz buttons and participation form
     const toRgb = (color: string): { r: number; g: number; b: number } | null => {
@@ -1561,12 +1647,14 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
-      // Garder la configuration canvas pour compatibilité
+      // Garder la configuration canvas pour compatibilité - INCLURE LES MODULES
       canvasConfig: {
-        elements: canvasElements,
+        elements: [...canvasElements, ...allModules],
         background: canvasBackground,
         device: selectedDevice
-      }
+      },
+      // Ajouter modularPage pour compatibilité
+      modularPage: modularPage
     };
   }, [
     canvasElements,
@@ -1578,8 +1666,18 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     campaignState,
     launchButtonStyles,
     quizStyleOverrides,
-    quizConfig
+    quizConfig,
+    modularPage
   ]);
+  
+  // Log pour vérifier que campaignData contient bien les éléments
+  console.log('📊 [DesignEditorLayout] campaignData construit:', {
+    canvasElementsCount: canvasElements.length,
+    campaignDataCanvasConfigElements: campaignData?.canvasConfig?.elements?.length || 0,
+    customTextsCount: campaignData?.design?.customTexts?.length || 0,
+    customImagesCount: campaignData?.design?.customImages?.length || 0,
+    showFunnel
+  });
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -2045,61 +2143,18 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
   });
 
   return (
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]">
-      {/* Bande dégradée avec logo et icônes */}
-      <GradientBand className="transform translate-y-[0.4vh]">
-        {mode === 'template' ? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginTop: '-122px',
-              marginLeft: '24px'
-            }}
-          >
-            <span className="text-white font-semibold tracking-wide text-base sm:text-lg select-text">
-              Edition de template
-            </span>
-          </div>
-        ) : (
-          <img 
-            src="/logo.png" 
-            alt="Prosplay Logo" 
-            style={{
-              height: '93px',
-              width: 'auto',
-              filter: 'brightness(0) invert(1)',
-              maxWidth: '468px',
-              marginTop: '-120px',
-              marginLeft: '1.5%',
-              padding: 0
-            }} 
-          />
-        )}
-        <div style={{
-          display: 'flex',
-          gap: '16px',
-          alignItems: 'center',
-          marginTop: '-122px',
-          marginRight: '24px'
-        }}>
-          <button 
-            onClick={() => {}}
-            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
-            title="Mon compte"
-          >
-            <User className="w-4 h-4" />
-          </button>
-          <button 
-            onClick={() => {}}
-            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors duration-200"
-            title="Déconnexion"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </GradientBand>
+    <div
+      className="min-h-screen w-full"
+      style={{
+        backgroundImage: showFunnel ? 'none' : 
+          'radial-gradient(130% 130% at 12% 20%, rgba(235, 155, 100, 0.8) 0%, rgba(235, 155, 100, 0) 55%), radial-gradient(120% 120% at 78% 18%, rgba(128, 82, 180, 0.85) 0%, rgba(128, 82, 180, 0) 60%), radial-gradient(150% 150% at 55% 82%, rgba(68, 52, 128, 0.75) 0%, rgba(68, 52, 128, 0) 65%), linear-gradient(90deg, #E07A3A 0%, #9A5CA9 50%, #3D2E72 100%)',
+        backgroundBlendMode: showFunnel ? 'normal' : 'screen, screen, lighten, normal',
+        backgroundColor: showFunnel ? 'transparent' : '#3D2E72',
+        padding: showFunnel ? '0' : '0 9px 9px 9px',
+        boxSizing: 'border-box'
+      }}
+    >
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] transform -translate-y-[0.4vh]"}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
@@ -2142,7 +2197,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             </button>
             {campaignData?.type === 'quiz' ? (
               <FunnelQuizParticipate
-                campaign={campaignData}
+              campaign={campaignData as any}
                 previewMode={selectedDevice}
               />
             ) : (
@@ -2465,7 +2520,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
               />
             {/* Canvas Scrollable Area */}
-            <div className="flex-1 canvas-scroll-area relative z-20">
+            <div className="flex-1 canvas-scroll-area relative z-20 rounded-br-[28px] rounded-bl-none" style={{ borderBottomLeftRadius: '0 !important' }}>
               <div className="min-h-full flex flex-col">
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
@@ -2479,6 +2534,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
+                    enableInternalAutoFit={true}
                     onZoomChange={setCanvasZoom}
                     selectedElement={selectedElement}
                     onSelectedElementChange={debugSetSelectedElement}
@@ -2526,15 +2582,13 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       }
                     }}
                     onOpenElementsTab={() => {
-                      if (!isWindowMobile) {
-                        // Utiliser la même logique que onForceElementsTab
-                        if (sidebarRef.current) {
-                          sidebarRef.current.setActiveTab('elements');
-                        }
-                        // Fermer les autres panneaux
-                        setShowAnimationsInSidebar(false);
-                        setShowPositionInSidebar(false);
+                      // Toujours ouvrir l'onglet Éléments, même en mode mobile/portrait
+                      if (sidebarRef.current) {
+                        sidebarRef.current.setActiveTab('elements');
                       }
+                      // Fermer les autres panneaux
+                      setShowAnimationsInSidebar(false);
+                      setShowPositionInSidebar(false);
                     }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
@@ -2588,6 +2642,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -2693,6 +2748,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
                       onZoomChange={setCanvasZoom}
+                      enableInternalAutoFit={true}
                       selectedElement={selectedElement}
                       onSelectedElementChange={setSelectedElement}
                       selectedElements={selectedElements}
@@ -2826,6 +2882,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         </div>
       )}
     </MobileStableEditor>
+    </div>
   );
 };
 

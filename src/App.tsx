@@ -30,6 +30,7 @@ const ViralityStep = lazy(() => import('./pages/CampaignSettings/ViralityStep'))
 const AppearanceStep = lazy(() => import('./pages/CampaignSettings/AppearanceStep'));
 const MobileTestPage = lazy(() => import('./pages/MobileTestPage'));
 const MobileCompleteTestPage = lazy(() => import('./pages/MobileCompleteTestPage'));
+const Templates = lazy(() => import('./pages/Templates'));
 
 function App() {
   // Idle prefetch heavy editor routes to smooth first navigation without impacting TTI
@@ -69,6 +70,7 @@ function App() {
                 <Route path="campaigns" element={<Campaigns />} />
                 <Route path="gamification" element={<Gamification />} />
                 <Route path="statistics" element={<Statistics />} />
+                <Route path="modeles" element={<Templates />} />
                 <Route path="templates-editor" element={<TemplatesEditor />} />
               </Route>
 
