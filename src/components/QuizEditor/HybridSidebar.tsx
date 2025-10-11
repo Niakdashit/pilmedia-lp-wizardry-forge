@@ -60,7 +60,7 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Design panel controls
   showDesignPanel?: boolean;
   onDesignPanelChange?: (show: boolean) => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
+  canvasRef?: React.RefObject<HTMLDivElement | null>;
   // Props pour le système de groupes
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
@@ -226,7 +226,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab, isWindowMobile]);
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('elements');
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch

@@ -24,7 +24,7 @@ interface CanvasToolbarProps {
   onShowPositionPanel?: () => void;
   onShowDesignPanel?: (context?: 'fill' | 'border' | 'text') => void;
   onOpenElementsTab?: () => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
+  canvasRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({

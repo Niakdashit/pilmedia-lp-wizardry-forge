@@ -16,7 +16,7 @@ interface TouchCalibration {
 }
 
 export const useMobileOptimization = (
-  containerRef: React.RefObject<HTMLElement>,
+  containerRef: React.RefObject<HTMLElement | null>,
   config: MobileOptimizationConfig = {
     preventScrollBounce: true,
     stabilizeViewport: true,

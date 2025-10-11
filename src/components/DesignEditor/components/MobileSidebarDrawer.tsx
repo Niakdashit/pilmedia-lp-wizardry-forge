@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '../hooks/useMobileOptimization';
@@ -90,16 +92,17 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
   // Disable auto-open on mobile and 9:16 window for all editor routes
   const location = useLocation();
+  const pathname = location.pathname;
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
   
   const disableAutoOpen = (isMobile || isWindowMobile) && (
-    location.pathname === '/design-editor' || 
-    location.pathname === '/template-editor' || 
-    location.pathname === '/quiz-editor' ||
-    location.pathname === '/jackpot-editor' ||
-    location.pathname === '/form-editor' ||
-    location.pathname === '/scratch-editor'
+    pathname === '/design-editor' || 
+    pathname === '/template-editor' || 
+    pathname === '/quiz-editor' ||
+    pathname === '/jackpot-editor' ||
+    pathname === '/form-editor' ||
+    pathname === '/scratch-editor'
   );
   void disableAutoOpen;
 

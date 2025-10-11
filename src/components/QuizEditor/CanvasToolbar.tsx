@@ -20,7 +20,7 @@ interface CanvasToolbarProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
+  canvasRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const CanvasToolbar: React.FC<CanvasToolbarProps> = React.memo(({

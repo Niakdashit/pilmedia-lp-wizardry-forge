@@ -3,7 +3,7 @@ import type { DeviceType } from '../../../utils/deviceDimensions';
 
 interface TouchDebugOverlayProps {
   selectedDevice: DeviceType;
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
   isVisible: boolean;
   onToggle: () => void;
 }

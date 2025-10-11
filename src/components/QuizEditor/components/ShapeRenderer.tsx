@@ -16,7 +16,7 @@ interface ShapeRendererProps {
   onContentChange?: (content: string) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
-  textRef?: React.RefObject<HTMLDivElement>;
+  textRef?: React.RefObject<HTMLDivElement | null>;
   fontSize?: number;
   fontFamily?: string;
   fontWeight?: string;

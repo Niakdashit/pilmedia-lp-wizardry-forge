@@ -12,7 +12,7 @@ interface MobileResponsiveLayoutProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
-  canvasRef: React.RefObject<HTMLDivElement>;
+  canvasRef: React.RefObject<HTMLDivElement | null>;
   zoom: number;
   onZoomChange?: (zoom: number) => void;
   className?: string;

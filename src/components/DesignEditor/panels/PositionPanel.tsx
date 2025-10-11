@@ -5,7 +5,7 @@ interface PositionPanelProps {
   onBack: () => void;
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
+  canvasRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const PositionPanel: React.FC<PositionPanelProps> = ({

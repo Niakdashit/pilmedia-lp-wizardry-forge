@@ -144,12 +144,13 @@ export const useEditorPreviewSync = () => {
     // Déterminer l'image de fond canonique
     let canonicalBackground: { type: 'color' | 'image'; value: string };
     
-    if (design.background && typeof design.background === 'object') {
+    // Priorité 1: canvasConfig.background (preview-only, le plus à jour)
+    if ((campaign as any)?.canvasConfig?.background) {
+      canonicalBackground = (campaign as any).canvasConfig.background;
+    } else if (design.background && typeof design.background === 'object') {
       canonicalBackground = design.background as any;
     } else if (design.backgroundImage) {
       canonicalBackground = { type: 'image', value: design.backgroundImage };
-    } else if ((campaign as any)?.canvasConfig?.background) {
-      canonicalBackground = (campaign as any).canvasConfig.background;
     } else {
       canonicalBackground = { 
         type: 'color', 

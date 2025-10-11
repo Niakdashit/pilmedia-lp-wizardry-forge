@@ -876,8 +876,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 })();
 
                 return (
-                  <div
-                    key={m.id}
+                  <div key={m.id}
                     className={`relative group bg-transparent rounded-md transition-colors cursor-pointer ${columnSpanClass} ${isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0 hover:outline hover:outline-1 hover:outline-gray-400'} ${isDragging ? 'ring-2 ring-[#0ea5b7]/30 shadow-xl shadow-black/10' : ''}`}
                     role="button"
                     tabIndex={0}

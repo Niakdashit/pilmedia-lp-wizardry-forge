@@ -24,8 +24,9 @@ import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
-import DesignModularCanvas from './modules/DesignModularCanvas';
-import type { DesignModule, DesignScreenId } from '@/types/designEditorModular';
+import type { Module, ScreenId } from '@/types/modularEditor';
+import ModularCanvas from '../QuizEditor/modules/ModularCanvas';
+import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
 
 const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
   desktop: 56,
@@ -34,12 +35,13 @@ const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
 };
 
 const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
-  desktop: 24,
-  tablet: 20,
-  mobile: 16
+  desktop: 32,
+  tablet: 28,
+  mobile: 24
 };
 
 export interface DesignCanvasProps {
+  screenId?: ScreenId;
   selectedDevice: DeviceType;
   elements: any[];
   onElementsChange: (elements: any[]) => void;
@@ -92,18 +94,21 @@ export interface DesignCanvasProps {
   readOnly?: boolean;
   // Optional classes for the outer container (e.g., to override background color)
   containerClassName?: string;
-  // Multi-screen system props
-  screenId?: DesignScreenId;
-  modularModules?: DesignModule[];
-  selectedModuleId?: string | null;
-  onModuleUpdate?: (id: string, patch: Partial<DesignModule>) => void;
-  onModuleDelete?: (id: string) => void;
-  onModuleMove?: (id: string, direction: 'up' | 'down') => void;
-  onModuleDuplicate?: (id: string) => void;
   elementFilter?: (element: any) => boolean;
+  // Modular editor props
+  modularModules?: Module[];
+  onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
+  onModuleDelete?: (id: string) => void;
+  // Module selection props
+  selectedModuleId?: string | null;
+  selectedModule?: Module | null;
+  onSelectedModuleChange?: (moduleId: string | null) => void;
+  onModuleMove?: (id: string, dir: 'up' | 'down') => void;
+  onModuleDuplicate?: (id: string) => void;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
+  screenId = 'screen1',
   selectedDevice,
   elements,
   onElementsChange,
@@ -121,15 +126,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   selectedGroupId,
   onSelectedGroupChange,
   groups,
-  // Multi-screen system props
-  screenId = 'screen1',
-  modularModules = [],
-  selectedModuleId,
-  onModuleUpdate,
-  onModuleDelete,
-  onModuleMove,
-  onModuleDuplicate,
-  elementFilter,
   onGroupMove,
   onGroupResize,
   onShowEffectsPanel,
@@ -151,16 +147,27 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onWheelPanelChange,
   readOnly = false,
   containerClassName,
+  elementFilter,
+  // Wheel config
+  wheelModalConfig,
+  extractedColors,
   updateWheelConfig,
   getCanonicalConfig,
-  wheelModalConfig,
-  extractedColors
-}, ref) => {
+  // modular editor
+  modularModules,
+  onModuleUpdate,
+  onModuleDelete,
+  onModuleMove,
+  onModuleDuplicate,
+  // Module selection
+  selectedModuleId,
+  selectedModule,
+  onSelectedModuleChange
+}: DesignCanvasProps, ref) => {
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoFitEnabledRef = useRef(true);
-  
   // Utiliser la référence externe si fournie, sinon utiliser la référence interne
   const activeCanvasRef = ref || canvasRef;
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
@@ -358,7 +365,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   useEffect(() => {
     if (!isRealMobile()) return;
     
-    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement>).current : null);
+    const canvas = (typeof activeCanvasRef === 'object' ? (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current : null);
     if (!canvas) return;
 
     let initialDistance = 0;
@@ -726,14 +733,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     autoFitEnabledRef.current = false;
   }, [enableInternalAutoFit, updateAutoFit]);
 
-  // Re-fit when switching device (e.g., desktop ↔ mobile) so the full canvas is visible
-  useEffect(() => {
-    if (!enableInternalAutoFit) return;
-    autoFitEnabledRef.current = true;
-    updateAutoFit();
-    autoFitEnabledRef.current = false;
-  }, [selectedDevice, enableInternalAutoFit, updateAutoFit]);
-
   // Do not auto-fit on resizes anymore; keep user's zoom unchanged
   useEffect(() => {
     // intentionally left blank
@@ -757,7 +756,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Compute canvas-space coordinates from a pointer event
   const getCanvasPointFromClient = useCallback((clientX: number, clientY: number) => {
-    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
     if (!canvasEl) return { x: 0, y: 0 };
     const rect = canvasEl.getBoundingClientRect();
     // rect is in CSS pixels and includes the scale; divide by zoom to get canvas-space
@@ -771,11 +770,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (readOnly) return;
     // Allow marquee on all devices; treat touch specially
     // Only react to primary mouse button, but allow touch regardless of e.button
+    if (e.pointerType !== 'touch' && e.button !== 0) return;
     if (e.pointerType === 'touch') {
-      // Allow pinch-to-zoom; no marquee selection on touch
-      return;
+      // Prevent native gestures from interfering with marquee start
+      e.preventDefault();
     }
-    if (e.button !== 0) return;
     // Start suppression so the subsequent synthetic click won't clear selection
     suppressNextClickClearRef.current = true;
     console.debug('🟦 Marquee start (pointerdown)', { clientX: e.clientX, clientY: e.clientY });
@@ -785,7 +784,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     setMarqueeEnd(pt);
     setIsMarqueeActive(true);
     // Mark canvas as marquee-active so mobile canvas lock can bypass blocking
-    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+    const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
     canvasEl?.setAttribute('data-marquee', 'active');
 
     // Clear single selection immediately; multi selection will be set on pointerup
@@ -809,7 +808,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       setIsMarqueeActive(false);
       setMarqueeEnd(null);
       // Clear marquee-active flag on canvas
-      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+      const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
       canvasEl?.removeAttribute('data-marquee');
       // Ensure suppression flag is cleared
       setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
@@ -824,7 +823,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         setIsMarqueeActive(false);
         setMarqueeEnd(null);
         // Clear marquee-active flag on canvas
-        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
         canvasEl?.removeAttribute('data-marquee');
         // Allow click-clear after event loop turn
         setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
@@ -849,7 +848,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         setIsMarqueeActive(false);
         setMarqueeEnd(null);
         // Clear marquee-active flag on canvas
-        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+        const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
         canvasEl?.removeAttribute('data-marquee');
         setTimeout(() => { suppressNextClickClearRef.current = false; }, 0);
         return;
@@ -881,7 +880,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       setIsMarqueeActive(false);
       setMarqueeEnd(null);
       // Clear marquee-active flag on canvas
-      const canvasEl2 = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+      const canvasEl2 = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
       canvasEl2?.removeAttribute('data-marquee');
       console.debug('🟦 Marquee end (pointerup)', { selected: newSelection.map((e: any) => e.id), rect: { minX, minY, maxX, maxY } });
       // Defer reset so the subsequent click doesn't clear the fresh selection
@@ -1202,7 +1201,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Zoom au pincement (pinch) sur écrans tactiles
   useEffect(() => {
-    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current) as HTMLElement | null;
+    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement | null>)?.current) as HTMLElement | null;
     if (!el) return;
 
     let isPinching = false;
@@ -1464,7 +1463,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       
       if (elementInDOM) {
         const rect = elementInDOM.getBoundingClientRect();
-        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement>).current?.getBoundingClientRect();
+        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current?.getBoundingClientRect();
         
         if (canvasRect) {
           // Position relative au canvas
@@ -1642,10 +1641,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onShowEffectsPanel={onShowEffectsPanel}
         onShowAnimationsPanel={onShowAnimationsPanel}
         onShowPositionPanel={onShowPositionPanel}
-        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 flex flex-col items-center justify-start ${isWindowMobile ? 'pt-0' : 'pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 flex flex-col items-center justify-start ${isWindowMobile ? '-mt-20' : 'pt-40'} pb-4 px-4 ${containerClassName ? containerClassName : 'bg-gray-100'} relative`}
         // Props pour la sidebar mobile
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
@@ -1677,7 +1676,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               onShowPositionPanel={onShowPositionPanel}
               onShowDesignPanel={onShowDesignPanel}
               onOpenElementsTab={onOpenElementsTab}
-              canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+              canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
             />
           </div>
         )}
@@ -1688,7 +1687,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           onPointerDownCapture={(e) => {
             // Enable selecting elements even when they visually overflow outside the clipped canvas
             // Only handle when clicking outside the actual canvas element to avoid interfering
-            const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement>).current;
+            const canvasEl = (activeCanvasRef as React.RefObject<HTMLDivElement | null>).current;
             if (!canvasEl || readOnly) return;
             if (canvasEl.contains(e.target as Node)) return;
             // Convert pointer to canvas-space coordinates using canvas bounding rect and current pan/zoom
@@ -1832,80 +1831,266 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
               
-              {/* Clouds */}
-              
-              
-              
-              
-              
-              {(() => {
-                // Debug: log just before the wheel renders to trace segment source and canonical config
-                try {
-                  const segs = (campaign as any)?.gameConfig?.wheel?.segments 
-                    || (campaign as any)?.config?.roulette?.segments 
-                    || [];
-                  const campaignSegIds = Array.isArray(segs) ? segs.map((s: any) => s?.id ?? '?') : [];
-                  const canonical = typeof getCanonicalConfig === 'function' 
-                    ? getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true }) 
-                    : null;
-                  const canonicalSegs = (canonical as any)?.segments || [];
-                  const canonicalSegIds = Array.isArray(canonicalSegs) ? canonicalSegs.map((s: any) => s?.id ?? '?') : [];
-                  console.log('🧭 [DesignCanvas] Pre-render wheel debug:', {
-                    device: selectedDevice,
-                    campaignSegCount: Array.isArray(segs) ? segs.length : 0,
-                    campaignSegIds,
-                    hasGetCanonicalConfig: typeof getCanonicalConfig === 'function',
-                    canonicalSegCount: Array.isArray(canonicalSegs) ? canonicalSegs.length : 0,
-                    canonicalSegIds
-                  });
-                } catch (e) {
-                  console.warn('🧭 [DesignCanvas] pre-render log error', e);
-                }
-                return null;
-              })()}
-
-              {/* Roue standardisée avec découpage cohérent - Seulement sur l'écran de jeu (screen2) */}
+              {/* Roue standardisée avec découpage cohérent - Visible uniquement sur screen2 */}
               {screenId === 'screen2' && (
-                <>
-                  <StandardizedWheel
-                    campaign={campaign}
-                    device={selectedDevice}
-                    shouldCropWheel={true}
-                    disabled={readOnly}
-                    getCanonicalConfig={getCanonicalConfig}
-                    updateWheelConfig={updateWheelConfig}
-                    extractedColors={extractedColors}
-                    wheelModalConfig={wheelModalConfig}
+                <StandardizedWheel
+                  campaign={campaign}
+                  device={selectedDevice}
+                  shouldCropWheel={true}
+                  disabled={readOnly}
+                  getCanonicalConfig={getCanonicalConfig}
+                  updateWheelConfig={updateWheelConfig}
+                  extractedColors={extractedColors}
+                  wheelModalConfig={wheelModalConfig}
+                  onClick={() => {
+                    if (readOnly) return;
+                    console.log('🔘 Clic sur la roue détecté');
+                    onWheelPanelChange?.(true);
+                  }}
+                />
+              )}
+
+              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+              {!readOnly && (
+                <div className="absolute bottom-2 right-2 z-50">
+                  <WheelSettingsButton
                     onClick={() => {
-                      if (readOnly) return;
-                      console.log('🔘 Clic sur la roue détecté');
+                      console.log('🔘 Clic sur WheelSettingsButton détecté');
                       onWheelPanelChange?.(true);
                     }}
                   />
+                </div>
+              )}
 
-                  {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
-                  {!readOnly && (
-                    <div className="absolute bottom-2 right-2 z-50">
-                      <WheelSettingsButton
-                        onClick={() => {
-                          console.log('🔘 Clic sur WheelSettingsButton détecté');
-                          onWheelPanelChange?.(true);
+              {/* Modular stacked content (HubSpot-like) */}
+              {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
+              const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
+              const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
+              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+              const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
+                const h = (m?.bandHeight ?? 60);
+                const p = (m?.bandPadding ?? 16) * 2;
+                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
+                return Math.max(acc, h + p + extra);
+              }, 0);
+              const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
+                const h = (m?.bandHeight ?? 60);
+                const p = (m?.bandPadding ?? 16) * 2;
+                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
+                return Math.max(acc, h + p + extra);
+              }, 0);
+              return (
+                <>
+                  {/* Regular modules container; padding adjusted when logo/footer exist */}
+                  <div
+                    className="w-full flex justify-center mb-6 relative"
+                    style={{
+                      paddingLeft: safeZonePadding,
+                      paddingRight: safeZonePadding,
+                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
+                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
+                      boxSizing: 'border-box',
+                      zIndex: 1500,
+                      pointerEvents: 'auto'
+                    }}
+                  >
+                    {/* Spacer to prevent overlap with the absolute logo band */}
+                    {logoModules.length > 0 && (
+                      <div style={{ height: logoVisualHeight }} />
+                    )}
+                    <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
+                      <ModularCanvas
+                        screen={screenId as any}
+                        modules={regularModules}
+                        device={selectedDevice}
+                        onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
+                        onDelete={(id) => onModuleDelete?.(id)}
+                        onMove={(id, dir) => onModuleMove?.(id, dir)}
+                        onDuplicate={(id) => onModuleDuplicate?.(id)}
+                        onSelect={(m) => {
+                          try {
+                            const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
+                            window.dispatchEvent(evt);
+                          } catch {}
+                          
+                          // Mettre à jour l'ID du module sélectionné
+                          onSelectedModuleChange?.(m.id);
+                          
+                          if (m.type === 'BlocBouton') {
+                            onSelectedElementChange?.({
+                              id: `modular-button-${m.id}`,
+                              type: 'button',
+                              role: 'module-button',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocImage') {
+                            onSelectedElementChange?.({
+                              id: `modular-image-${m.id}`,
+                              type: 'image',
+                              role: 'module-image',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocReseauxSociaux') {
+                            onSelectedElementChange?.({
+                              id: `modular-social-${m.id}`,
+                              type: 'social',
+                              role: 'module-social',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocVideo') {
+                            onSelectedElementChange?.({
+                              id: `modular-video-${m.id}`,
+                              type: 'video',
+                              role: 'module-video',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocHtml') {
+                            onSelectedElementChange?.({
+                              id: `modular-html-${m.id}`,
+                              type: 'html',
+                              role: 'module-html',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocCarte') {
+                            onSelectedElementChange?.({
+                              id: `modular-carte-${m.id}`,
+                              type: 'carte',
+                              role: 'module-carte',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocLogo') {
+                            onSelectedElementChange?.({
+                              id: `modular-logo-${m.id}`,
+                              type: 'logo',
+                              role: 'module-logo',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          if (m.type === 'BlocPiedDePage') {
+                            onSelectedElementChange?.({
+                              id: `modular-footer-${m.id}`,
+                              type: 'footer',
+                              role: 'module-footer',
+                              moduleId: m.id,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                            return;
+                          }
+                          onSelectedElementChange?.({
+                            id: `modular-text-${m.id}`,
+                            type: 'text',
+                            role: 'module-text',
+                            moduleId: m.id,
+                            screenId
+                          } as any);
+                          onShowDesignPanel?.();
                         }}
+                        selectedModuleId={selectedModuleId ?? undefined}
                       />
+                      {footerModules.length > 0 && (
+                        <div style={{ height: footerVisualHeight }} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Logo band at the top (non-movable) */}
+                  {logoModules.length > 0 && (
+                    <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                        <QuizModuleRenderer
+                          modules={logoModules}
+                          previewMode={false}
+                          device={selectedDevice}
+                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
+                          onModuleClick={(moduleId) => {
+                            try {
+                              const mod = (logoModules as any).find((mm: any) => mm.id === moduleId);
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
+                              window.dispatchEvent(evt);
+                            } catch {}
+                            // Mettre à jour l'ID du module sélectionné
+                            onSelectedModuleChange?.(moduleId);
+                            onSelectedElementChange?.({
+                              id: `modular-logo-${moduleId}`,
+                              type: 'logo',
+                              role: 'module-logo',
+                              moduleId,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                          }}
+                          selectedModuleId={selectedModuleId ?? undefined}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer band at the bottom (non-movable) */}
+                  {footerModules.length > 0 && (
+                    <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                      <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                        <QuizModuleRenderer
+                          modules={footerModules}
+                          previewMode={false}
+                          device={selectedDevice}
+                          onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
+                          onModuleClick={(moduleId) => {
+                            try {
+                              const mod = (footerModules as any).find((mm: any) => mm.id === moduleId);
+                              const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
+                              window.dispatchEvent(evt);
+                            } catch {}
+                            // Mettre à jour l'ID du module sélectionné
+                            onSelectedModuleChange?.(moduleId);
+                            onSelectedElementChange?.({
+                              id: `modular-footer-${moduleId}`,
+                              type: 'footer',
+                              role: 'module-footer',
+                              moduleId,
+                              screenId
+                            } as any);
+                            onOpenElementsTab?.();
+                          }}
+                          selectedModuleId={selectedModuleId ?? undefined}
+                        />
+                      </div>
                     </div>
                   )}
                 </>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Canvas Elements - Rendu optimisé avec virtualisation */}
             {elementsSortedByZIndex
               .filter((element: any) => {
-                // Apply custom element filter if provided
-                if (elementFilter && !elementFilter(element)) {
-                  return false;
-                }
-                
                 // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
                 const elementWithProps = {
                   ...element,
@@ -1978,7 +2163,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   onSelect={handleElementSelect} 
                   onUpdate={handleElementUpdate} 
                   onDelete={handleElementDelete}
-                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
                   readOnly={readOnly}
                   onMeasureBounds={handleMeasureBounds}
                   onAddElement={(newElement) => {
@@ -2004,155 +2189,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 />
               );
             })}
-
-            {/* Modular Canvas - Display modules with proper structure */}
-            {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
-              const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
-              const footerModules = modularModules.filter((m: any) => m?.type === 'BlocPiedDePage');
-              const regularModules = modularModules.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-              
-              const logoVisualHeight = logoModules.reduce((acc: number, m: any) => {
-                const h = (m?.bandHeight ?? 60);
-                const p = (m?.bandPadding ?? 16) * 2;
-                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
-                return Math.max(acc, h + p + extra);
-              }, 0);
-              
-              const footerVisualHeight = footerModules.reduce((acc: number, m: any) => {
-                const h = (m?.bandHeight ?? 60);
-                const p = (m?.bandPadding ?? 16) * 2;
-                const extra = ((m as any)?.spacingTop ?? 0) + ((m as any)?.spacingBottom ?? 0);
-                return Math.max(acc, h + p + extra);
-              }, 0);
-
-              return (
-                <>
-                  {/* Regular modules container with safe zone padding */}
-                  <div
-                    className="w-full flex justify-center mb-6"
-                    style={{
-                      paddingLeft: safeZonePadding,
-                      paddingRight: safeZonePadding,
-                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
-                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    {/* Spacer to prevent overlap with the absolute logo band */}
-                    {logoModules.length > 0 && (
-                      <div style={{ height: logoVisualHeight }} />
-                    )}
-                    <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
-                      <DesignModularCanvas
-                        screen={screenId}
-                        modules={regularModules}
-                        device={selectedDevice}
-                        onUpdate={(id, patch) => onModuleUpdate?.(id, patch)}
-                        onDelete={(id) => onModuleDelete?.(id)}
-                        onMove={(id, dir) => onModuleMove?.(id, dir)}
-                        onDuplicate={(id) => onModuleDuplicate?.(id)}
-                        onSelect={(m) => {
-                          try {
-                            const evt = new CustomEvent('designModularModuleSelected', { detail: { module: m } });
-                            window.dispatchEvent(evt);
-                          } catch {}
-                          if (m.type === 'BlocBouton') {
-                            onSelectedElementChange?.({
-                              id: `modular-button-${m.id}`,
-                              type: 'button',
-                              role: 'module-button',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocImage') {
-                            onSelectedElementChange?.({
-                              id: `modular-image-${m.id}`,
-                              type: 'image',
-                              role: 'module-image',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocReseauxSociaux') {
-                            onSelectedElementChange?.({
-                              id: `modular-social-${m.id}`,
-                              type: 'social',
-                              role: 'module-social',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocVideo') {
-                            onSelectedElementChange?.({
-                              id: `modular-video-${m.id}`,
-                              type: 'video',
-                              role: 'module-video',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocHtml') {
-                            onSelectedElementChange?.({
-                              id: `modular-html-${m.id}`,
-                              type: 'html',
-                              role: 'module-html',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocCarte') {
-                            onSelectedElementChange?.({
-                              id: `modular-carte-${m.id}`,
-                              type: 'carte',
-                              role: 'module-carte',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          if (m.type === 'BlocTexte') {
-                            onSelectedElementChange?.({
-                              id: `modular-text-${m.id}`,
-                              type: 'text',
-                              role: 'module-text',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
-                            return;
-                          }
-                          onSelectedElementChange?.({
-                            id: `modular-${m.type}-${m.id}`,
-                            type: m.type,
-                            role: `module-${m.type}`,
-                            moduleId: m.id,
-                            screenId
-                          } as any);
-                          onOpenElementsTab?.();
-                        }}
-                        selectedModuleId={
-                          externalSelectedElement?.role?.startsWith('module-') 
-                            ? externalSelectedElement.moduleId 
-                            : undefined
-                        }
-                      />
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
 
             {/* Marquee selection overlay */}
             {marqueeRect && (
@@ -2426,6 +2462,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             visible={showAnimationPopup}
           />
         )}
+      </div>
       </MobileResponsiveLayout>
     </DndProvider>
   );

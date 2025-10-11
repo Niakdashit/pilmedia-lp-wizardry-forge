@@ -168,6 +168,9 @@ const StandardizedWheel: React.FC<StandardizedWheelProps> = ({
     >
       <div 
         className={croppingStyles.wheelClass}
+        style={{
+          transform: croppingStyles.transform || undefined
+        }}
         onClick={(e) => {
           // Empêcher la propagation afin d'éviter les sélections ou autres handlers globaux
           e.stopPropagation();

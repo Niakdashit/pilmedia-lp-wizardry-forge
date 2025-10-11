@@ -23,7 +23,7 @@ export interface CanvasElementProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   selectedDevice: DeviceType;
-  containerRef?: React.RefObject<HTMLDivElement>;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
   onAddElement?: (element: any) => void;
   elements?: any[];
   readOnly?: boolean;
@@ -231,7 +231,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   // Smart snapping integration for alignment guides and snapping during drag
   const { applySnapping } = useSmartSnapping({
-    containerRef: containerRef as React.RefObject<HTMLDivElement>,
+    containerRef: containerRef as React.RefObject<HTMLDivElement | null>,
     gridSize: 20,
     snapTolerance: 3
   });

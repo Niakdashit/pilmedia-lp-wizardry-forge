@@ -34,7 +34,7 @@ export const useWheelConfigSync = ({
         wheelBorderStyle: campaign.design.wheelBorderStyle,
         wheelBorderColor: campaign.design.wheelConfig.borderColor,
         wheelBorderWidth: campaign.design.wheelConfig.borderWidth,
-        wheelScale: campaign.design.wheelConfig.scale,
+        wheelScale: campaign.design.wheelConfig.scale !== undefined ? campaign.design.wheelConfig.scale : 2.4,
         wheelShowBulbs: campaign.design.wheelConfig.showBulbs,
         wheelPosition: (campaign.design.wheelConfig as any)?.position,
 

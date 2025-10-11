@@ -3,7 +3,7 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 interface DragCalibrationConfig {
   deviceType: 'mobile' | 'tablet' | 'desktop';
   zoom: number;
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
 }
 
 interface CalibrationData {

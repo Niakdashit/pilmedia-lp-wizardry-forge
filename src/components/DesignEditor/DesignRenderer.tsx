@@ -23,7 +23,7 @@ interface DesignModuleRendererProps {
  * 
  * Cloné depuis DesignModuleRenderer pour le DesignEditor
  */
-export const DesignModuleRenderer: React.FC<DesignModuleRendererProps> = ({
+export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModuleDelete?: (id: string) => void } > = ({
   modules,
   previewMode = false,
   device = 'desktop',
@@ -32,7 +32,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps> = ({
   className = '',
   onButtonClick,
   inheritedTextColor,
-  onModuleUpdate
+  onModuleUpdate,
+  onModuleDelete
 }) => {
   const isMobileDevice = device === 'mobile';
   const deviceScale = isMobileDevice ? 0.8 : 1;
@@ -519,6 +520,17 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps> = ({
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
+          {!previewMode && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onModuleDelete?.(m.id); }}
+              style={{ position: 'absolute', right: 8, top: 8, zIndex: 10 }}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white text-gray-700 shadow-sm shadow-black/5"
+              title="Supprimer le bloc Logo"
+            >
+              🗑️
+            </button>
+          )}
           {logoModule.logoUrl ? (
             <img
               src={logoModule.logoUrl}
@@ -603,6 +615,17 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps> = ({
             }
           }}
         >
+          {!previewMode && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onModuleDelete?.(m.id); }}
+              style={{ position: 'absolute', right: 8, top: 8, zIndex: 10 }}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/40 bg-white text-gray-700 shadow-sm shadow-black/5"
+              title="Supprimer le bloc Pied de page"
+            >
+              🗑️
+            </button>
+          )}
           {/* Logo */}
           {footerModule.logoUrl && (
             <img

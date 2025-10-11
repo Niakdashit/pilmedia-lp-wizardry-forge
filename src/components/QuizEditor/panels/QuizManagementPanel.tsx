@@ -47,6 +47,17 @@ const QuizManagementPanel: React.FC<QuizManagementPanelProps> = ({
     randomizeQuestions: false
   };
 
+  // Always ensure there is at least one question by default
+  const initializedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (initializedRef.current) return;
+    const hasNoQuestions = !Array.isArray(quizConfig.questions) || quizConfig.questions.length === 0;
+    if (hasNoQuestions) {
+      initializedRef.current = true;
+      addQuestion();
+    }
+  }, [quizConfig.questions?.length]);
+
   const addQuestion = () => {
     const newQuestion: Question = {
       id: `q_${Date.now()}`,

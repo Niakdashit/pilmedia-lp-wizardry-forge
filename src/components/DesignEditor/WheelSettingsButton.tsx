@@ -22,7 +22,7 @@ const WheelSettingsButton: React.FC<WheelSettingsButtonProps> = ({ onClick }) =>
       e.preventDefault();
       e.stopPropagation();
     }}
-    className="fixed bottom-3 right-3 z-[70] w-9 h-9 flex items-center justify-center bg-[#f0f5fd] hover:bg-[#eaf2ff] rounded-[10px] shadow-md transition cursor-pointer"
+    className="fixed bottom-3 right-3 z-[70] w-9 h-9 flex items-center justify-center bg-white border-2 border-[#0074E0] rounded-[10px] shadow-md hover:bg-[#E5F3FF] transition cursor-pointer"
     aria-label="Configurer la roue de la fortune"
     title="Configurer la roue de la fortune"
     style={{ 
@@ -34,8 +34,8 @@ const WheelSettingsButton: React.FC<WheelSettingsButtonProps> = ({ onClick }) =>
     }}
   >
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" style={{ pointerEvents: 'none' }}>
-      <circle cx="12" cy="12" r="9" stroke="#646463" strokeWidth="1.5" fill="transparent" />
-      <path d="M12 6v6l4 2" stroke="#646463" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="9" stroke="#0074E0" strokeWidth="1.5" fill="#F8FCFF" />
+      <path d="M12 6v6l4 2" stroke="#0074E0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   </button>
 );

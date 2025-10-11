@@ -7,7 +7,7 @@ interface MobileToolbarOverlayProps {
   onShowEffectsPanel?: () => void;
   onShowAnimationsPanel?: () => void;
   onShowPositionPanel?: () => void;
-  canvasRef: React.RefObject<HTMLDivElement>;
+  canvasRef: React.RefObject<HTMLDivElement | null>;
   zoom: number;
 }
 
