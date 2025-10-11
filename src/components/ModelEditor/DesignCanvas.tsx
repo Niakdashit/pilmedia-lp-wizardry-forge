@@ -731,6 +731,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     autoFitEnabledRef.current = false;
   }, [enableInternalAutoFit, updateAutoFit]);
 
+  // Re-fit when switching device (e.g., desktop ↔ mobile) so the full canvas is visible
+  useEffect(() => {
+    if (!enableInternalAutoFit) return;
+    autoFitEnabledRef.current = true;
+    updateAutoFit();
+    autoFitEnabledRef.current = false;
+  }, [selectedDevice, enableInternalAutoFit, updateAutoFit]);
+
   // Do not auto-fit on resizes anymore; keep user's zoom unchanged
   useEffect(() => {
     // intentionally left blank
@@ -768,11 +776,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     if (readOnly) return;
     // Allow marquee on all devices; treat touch specially
     // Only react to primary mouse button, but allow touch regardless of e.button
-    if (e.pointerType !== 'touch' && e.button !== 0) return;
     if (e.pointerType === 'touch') {
-      // Prevent native gestures from interfering with marquee start
-      e.preventDefault();
+      // Allow pinch-to-zoom; no marquee selection on touch
+      return;
     }
+    if (e.button !== 0) return;
     // Start suppression so the subsequent synthetic click won't clear selection
     suppressNextClickClearRef.current = true;
     console.debug('🟦 Marquee start (pointerdown)', { clientX: e.clientX, clientY: e.clientY });
@@ -1677,7 +1685,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
         zoom={localZoom}
         forceDeviceType={selectedDevice}
-        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-start ${isWindowMobile ? '-mt-20' : 'pt-40'} pb-4 px-4 max-w-[1520px] w-full mx-auto ${containerClassName || 'bg-gray-100'} relative`}
+        className={`design-canvas-container flex-1 h-full flex flex-col items-center justify-start ${isWindowMobile ? 'pt-0' : 'pt-40'} pb-4 px-4 max-w-[1520px] w-full mx-auto ${containerClassName || 'bg-gray-100'} relative`}
         onAddElement={onAddElement}
         onBackgroundChange={onBackgroundChange}
         onExtractedColorsChange={onExtractedColorsChange}

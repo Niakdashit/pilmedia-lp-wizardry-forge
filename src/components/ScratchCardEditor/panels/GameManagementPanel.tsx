@@ -12,19 +12,6 @@ import {
   Upload
 } from 'lucide-react';
 
-// Local Prize interface for ScratchCard UI (different from PrizeSystem)
-interface Prize {
-  id: string;
-  name: string;
-  totalUnits: number;
-  awardedUnits: number;
-  attributionMethod: 'calendar' | 'probability';
-  calendarDate?: string;
-  calendarTime?: string;
-  probability?: number;
-  segmentId?: string;
-}
-
 interface GameManagementPanelProps {
   campaign: any;
   setCampaign: (campaign: any) => void;
@@ -40,6 +27,17 @@ interface WheelSegment {
   imageUrl?: string;
 }
 
+interface Prize {
+  id: string;
+  name: string;
+  description: string;
+  attributionMethod: 'calendar' | 'probability';
+  calendarDate?: string;
+  calendarTime?: string;
+  probability?: number;
+  segmentId?: string;
+  quantity: number;
+}
 
 const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
   campaign,
@@ -194,8 +192,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
     const newPrize: Prize = {
       id: Date.now().toString(),
       name: 'Nouveau lot',
-      totalUnits: 1,
-      awardedUnits: 0,
+      description: '',
+      quantity: 1,
       attributionMethod: 'probability',
       probability: 10
     };
@@ -489,8 +487,8 @@ const GameManagementPanel: React.FC<GameManagementPanelProps> = ({
                         <input
                           type="number"
                           min="0"
-                          value={prize.totalUnits || 1}
-                          onChange={(e) => updatePrize(prize.id, { totalUnits: Number(e.target.value) || 1 })}
+                          value={prize.quantity || 1}
+                          onChange={(e) => updatePrize(prize.id, { quantity: Number(e.target.value) || 1 })}
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
                         />
                       </div>

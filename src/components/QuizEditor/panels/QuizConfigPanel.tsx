@@ -185,7 +185,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 max="100"
                 step="1"
                 value={backgroundOpacity}
-                onChange={(e) => onBackgroundOpacityChange?.(parseInt(e.target.value))}
+                onChange={(e) => {
+                  const newOpacity = parseInt(e.target.value);
+                  onBackgroundOpacityChange?.(newOpacity);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { backgroundOpacity: newOpacity }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 data-suffix="%"
                 aria-label="Transparence (%)"
@@ -239,7 +247,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={backgroundColor || '#ffffff'}
-                onChange={(e) => onBackgroundColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onBackgroundColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { backgroundColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur de fond"
               />
@@ -261,7 +277,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={textColor || '#111111'}
-                onChange={(e) => onTextColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onTextColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { textColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur du texte"
               />
@@ -284,7 +308,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={buttonBackgroundColor}
-                onChange={(e) => onButtonBackgroundColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onButtonBackgroundColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { buttonBackgroundColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur de fond des boutons"
               />
@@ -307,7 +339,15 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
               <input
                 type="color"
                 value={buttonTextColor}
-                onChange={(e) => onButtonTextColorChange?.(e.target.value)}
+                onChange={(e) => {
+                  const newColor = e.target.value;
+                  onButtonTextColorChange?.(newColor);
+                  // Émettre un événement pour synchroniser avec TemplatedQuiz
+                  const event = new CustomEvent('quizStyleUpdate', {
+                    detail: { buttonTextColor: newColor }
+                  });
+                  window.dispatchEvent(event);
+                }}
                 className="w-10 h-10 rounded-md border border-gray-300 bg-white p-0"
                 aria-label="Couleur du texte des boutons"
               />

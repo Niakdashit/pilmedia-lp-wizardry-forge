@@ -1,12 +1,26 @@
-import React, { useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
-import FormHandler from './components/FormHandler';
-import { useParticipations } from '../../hooks/useParticipations';
-import { FieldConfig } from '../forms/DynamicContactForm';
+import React, { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
+import FormHandler from './components/FormHandler';
+import type { Tables } from '@/integrations/supabase/types';
+import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
+import { useParticipations } from '../../hooks/useParticipations';
+import type { Module } from '@/types/modularEditor';
+
+const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 56,
+  tablet: 40,
+  mobile: 28
+};
+
+const SAFE_ZONE_RADIUS: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 40,
+  tablet: 32,
+  mobile: 24
+};
 
 interface FunnelQuizParticipateProps {
-  campaign: any;
+  campaign: Tables<'campaigns'>;
   previewMode: 'mobile' | 'tablet' | 'desktop';
 }
 
@@ -17,34 +31,59 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   
   const [showFormModal, setShowFormModal] = useState<boolean>(false);
   const [participationLoading, setParticipationLoading] = useState<boolean>(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
-  const showScore = !!campaign?.gameConfig?.quiz?.showScore;
-
-  const participateLabel = campaign?.buttonConfig?.text || campaign?.screens?.[0]?.buttonText || 'Participer';
-  const participateStyles = useMemo(() => {
-    const gradientFallback = 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)';
-    const buttonStyles = campaign?.gameConfig?.quiz?.buttonStyles || campaign?.buttonConfig?.styles || {};
-
-    const style: React.CSSProperties = {
-      background: buttonStyles.background || gradientFallback,
-      color: buttonStyles.color || campaign?.buttonConfig?.textColor || '#ffffff',
-      padding: buttonStyles.padding || '14px 28px',
-      borderRadius: buttonStyles.borderRadius || campaign?.buttonConfig?.borderRadius || '9999px',
-      boxShadow: buttonStyles.boxShadow || '0 12px 30px rgba(132, 27, 96, 0.35)',
-      display: buttonStyles.display || 'inline-flex',
-      alignItems: buttonStyles.alignItems || 'center',
-      justifyContent: buttonStyles.justifyContent || 'center',
-      minWidth: buttonStyles.minWidth,
-      minHeight: buttonStyles.minHeight,
-      width: buttonStyles.width,
-      height: buttonStyles.height,
-      fontWeight: 600
+  const showScore = !!(campaign?.game_config as any)?.quiz?.showScore;
+  
+  // Écouter les mises à jour de style pour forcer le re-render
+  React.useEffect(() => {
+    const handleStyleUpdate = () => {
+      console.log('🔄 [FunnelQuizParticipate] Style update received, forcing re-render');
+      setForceUpdate(prev => prev + 1);
     };
+    
+    window.addEventListener('quizStyleUpdate', handleStyleUpdate);
+    window.addEventListener('quizStyleUpdateFallback', handleStyleUpdate);
+    window.addEventListener('modularModuleSelected', handleStyleUpdate);
+    
+    return () => {
+      window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
+      window.removeEventListener('quizStyleUpdateFallback', handleStyleUpdate);
+      window.removeEventListener('modularModuleSelected', handleStyleUpdate);
+    };
+  }, []);
 
-    return style;
-  }, [campaign]);
+  // Écouter les MAJ d'image de fond (DesignCanvas) pour forcer le re-render du preview
+  React.useEffect(() => {
+    const handleBgSync = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail;
+      console.log('🔄 [FunnelQuizParticipate] Background sync event:', detail);
+      setForceUpdate(prev => prev + 1);
+    };
+    window.addEventListener('sc-bg-sync', handleBgSync);
+    window.addEventListener('applyBackgroundAllScreens', handleBgSync);
+    window.addEventListener('applyBackgroundCurrentScreen', handleBgSync);
+    return () => {
+      window.removeEventListener('sc-bg-sync', handleBgSync);
+      window.removeEventListener('applyBackgroundAllScreens', handleBgSync);
+      window.removeEventListener('applyBackgroundCurrentScreen', handleBgSync);
+    };
+  }, []);
 
-  const rawReplayButton = campaign?.screens?.[3]?.replayButtonText;
+  // Synchronize with localStorage changes (cross-frame) for background overrides
+  React.useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key.startsWith('sc-bg-')) {
+        console.log('🔄 [FunnelQuizParticipate] storage change:', e.key);
+        setForceUpdate(prev => prev + 1);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const rawReplayButton = (campaign as any)?.screens?.[3]?.replayButtonText;
   const shouldRenderReplayButton = rawReplayButton !== '';
   const replayButtonLabel = (() => {
     if (!shouldRenderReplayButton) return '';
@@ -59,220 +98,240 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
   const { createParticipation } = useParticipations();
 
-  const fields: FieldConfig[] = useMemo(() => (
-    (campaign?.formFields && Array.isArray(campaign.formFields)) ? campaign.formFields : [
+  const safeZonePadding = SAFE_ZONE_PADDING[previewMode] ?? SAFE_ZONE_PADDING.desktop;
+  const safeZoneRadius = SAFE_ZONE_RADIUS[previewMode] ?? SAFE_ZONE_RADIUS.desktop;
+
+  const fields = useMemo(() => (
+    (campaign?.form_fields && Array.isArray(campaign.form_fields)) ? campaign.form_fields : [
       { id: 'prenom', label: 'Prénom', type: 'text', required: true },
       { id: 'nom', label: 'Nom', type: 'text', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true }
     ]
-  ), [campaign?.formFields]);
+  ), [campaign?.form_fields]);
 
-  const backgroundStyle: React.CSSProperties = useMemo(() => ({
-    background: campaign.design?.background?.type === 'image'
-      ? `url(${campaign.design.background.value}) center/cover no-repeat`
-      : campaign.design?.background?.value || '#ffffff'
-  }), [campaign?.design?.background]);
+  const backgroundStyle: React.CSSProperties = useMemo(() => {
+    const design = (campaign.design as any);
+    const canvasBackground = (campaign as any)?.canvasConfig?.background || design?.background;
+    
+    // Debug: log pour voir ce qu'on reçoit
+    console.log('🖼️ [FunnelQuizParticipate] Background debug:', {
+      previewMode,
+      designBackground: design?.background,
+      canvasBackground,
+      designBackgroundImage: design?.backgroundImage,
+      designMobileBackgroundImage: design?.mobileBackgroundImage
+    });
+    
+    // PRIORITÉ 1: Vérifier si design.background est un objet image
+    if (design?.background && typeof design.background === 'object' && design.background.type === 'image' && design.background.value) {
+      console.log('✅ [FunnelQuizParticipate] Using design.background.value:', design.background.value.substring(0, 50) + '...');
+      return { background: `url(${design.background.value}) center/cover no-repeat` };
+    }
+    
+    // PRIORITÉ 2: Vérifier les propriétés backgroundImage/mobileBackgroundImage
+    let backgroundImageUrl: string | undefined;
+    if (previewMode === 'mobile') {
+      backgroundImageUrl = design?.mobileBackgroundImage || design?.backgroundImage;
+    } else {
+      backgroundImageUrl = design?.backgroundImage;
+    }
+    
+    if (backgroundImageUrl) {
+      console.log('✅ [FunnelQuizParticipate] Using backgroundImageUrl:', backgroundImageUrl.substring(0, 50) + '...');
+      return { background: `url(${backgroundImageUrl}) center/cover no-repeat` };
+    }
+    
+    // PRIORITÉ 3: Vérifier canvasBackground
+    if (canvasBackground?.type === 'image' && canvasBackground?.value) {
+      console.log('✅ [FunnelQuizParticipate] Using canvasBackground.value:', canvasBackground.value.substring(0, 50) + '...');
+      return { background: `url(${canvasBackground.value}) center/cover no-repeat` };
+    }
+    
+    // FALLBACK: Utiliser la couleur ou le gradient
+    const fallbackBg = canvasBackground?.value || design?.background?.value || '#ffffff';
+    console.log('⚠️ [FunnelQuizParticipate] Using fallback background:', fallbackBg);
+    return { background: fallbackBg };
+  }, [campaign?.design, (campaign as any)?.canvasConfig?.background, previewMode, forceUpdate]);
 
-  const designTexts = Array.isArray(campaign?.design?.customTexts) ? campaign.design.customTexts : [];
-  const designImages = Array.isArray(campaign?.design?.customImages) ? campaign.design.customImages : [];
-  const canvasConfig = campaign?.canvasConfig || {};
-  const canvasElements = Array.isArray(canvasConfig.elements) ? canvasConfig.elements : [];
-  const { participateElements, exitMessageElements } = useMemo(() => {
-    const parsePx = (value: any): number | undefined => {
-      if (value == null) return undefined;
-      if (typeof value === 'number' && Number.isFinite(value)) return value;
-      if (typeof value === 'string') {
-        const match = value.match(/-?\d*\.?\d+/);
-        if (match) {
-          const parsed = parseFloat(match[0]);
-          if (Number.isFinite(parsed)) return parsed;
-        }
-      }
-      return undefined;
-    };
+  // Récupérer directement modularPage pour un rendu unifié
+  const campaignAny = campaign as any;
+  const modularPage = campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+  const modules = modularPage.screens.screen1 || [];
+  const modules2 = modularPage.screens.screen2 || [];
+  const modules3 = modularPage.screens.screen3 || [];
 
-    const mergeStyles = (base: any, extra: any) => {
-      if (!extra) return base;
-      const merged = { ...(base || {}) };
-      for (const key of Object.keys(extra)) {
-        const value = extra[key];
-        if (value === undefined || value === null || value === '') continue;
-        merged[key] = value;
-      }
-      return merged;
-    };
+  type LayoutWidth = NonNullable<Module['layoutWidth']>;
+  const layoutSpan: Record<LayoutWidth, number> = {
+    full: 6,
+    half: 3,
+    twoThirds: 4,
+    third: 2
+  };
 
-    const toPx = (value: any) => {
-      const parsed = parsePx(value);
-      return typeof parsed === 'number' ? `${parsed}px` : undefined;
-    };
+  const getModuleSpan = (module: Module): number => {
+    const width = (module.layoutWidth || 'full') as LayoutWidth;
+    return layoutSpan[width] ?? 6;
+  };
 
-    const baseElements = [
-      ...canvasElements,
-      ...designTexts.map((text: any) => ({ ...text, type: 'text' })),
-      ...designImages.map((image: any) => ({ ...image, type: 'image' }))
-    ];
-    const toRenderable = (element: any) => {
-      const deviceOverrides = (element?.[previewMode] || {}) as Record<string, any>;
-      const x = deviceOverrides.x ?? element.x ?? 0;
-      const y = deviceOverrides.y ?? element.y ?? 0;
+  const buildRows = (mods: Module[]): Module[][] => {
+    const rows: Module[][] = [];
+    let current: Module[] = [];
+    let currentUnits = 0;
+    const MAX_ROW_UNITS = 6;
 
-      const widthCandidates = [
-        deviceOverrides.width,
-        element.width,
-        element.customCSS?.width,
-        element.customCSS?.minWidth
-      ];
-      const heightCandidates = [
-        deviceOverrides.height,
-        element.height,
-        element.customCSS?.height,
-        element.customCSS?.minHeight
-      ];
-
-      const width = widthCandidates.reduce<number | undefined>((acc, candidate) => acc ?? parsePx(candidate), undefined);
-      const height = heightCandidates.reduce<number | undefined>((acc, candidate) => acc ?? parsePx(candidate), undefined);
-
-      const baseStyle: React.CSSProperties = {
-        position: 'absolute',
-        left: toPx(x) || '0px',
-        top: toPx(y) || '0px',
-        width: width ? `${width}px` : undefined,
-        height: height ? `${height}px` : undefined,
-        transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
-        zIndex: element.zIndex || 1,
-        pointerEvents: 'none'
-      };
-
-      let combinedStyle = mergeStyles(
-        mergeStyles(baseStyle, element.style),
-        mergeStyles(element.customCSS, (deviceOverrides as any)?.customCSS)
-      );
-
-      if (combinedStyle.fontSize == null) {
-        const fontSize = parsePx(deviceOverrides.fontSize ?? element.fontSize ?? element.customCSS?.fontSize);
-        if (fontSize) combinedStyle.fontSize = `${fontSize}px`;
-      }
-      if (combinedStyle.color == null && (deviceOverrides.color || element.color)) {
-        combinedStyle.color = deviceOverrides.color || element.color;
-      }
-      if (element.textAlign || deviceOverrides.textAlign || combinedStyle.textAlign) {
-        combinedStyle.textAlign = deviceOverrides.textAlign || combinedStyle.textAlign || element.textAlign;
+    mods.forEach((module) => {
+      const span = getModuleSpan(module);
+      if (current.length > 0 && currentUnits + span > MAX_ROW_UNITS) {
+        rows.push(current);
+        current = [];
+        currentUnits = 0;
       }
 
-      if (combinedStyle.fontWeight == null) {
-        const fontWeight = deviceOverrides.fontWeight ?? element.fontWeight;
-        if (fontWeight != null) combinedStyle.fontWeight = fontWeight;
+      current.push(module);
+      currentUnits += span;
+
+      if (currentUnits === MAX_ROW_UNITS) {
+        rows.push(current);
+        current = [];
+        currentUnits = 0;
       }
+    });
 
-      if (combinedStyle.fontFamily == null) {
-        const fontFamily = deviceOverrides.fontFamily ?? element.fontFamily;
-        if (fontFamily) combinedStyle.fontFamily = fontFamily;
-      }
+    if (current.length > 0) {
+      rows.push(current);
+    }
 
-      if (combinedStyle.fontStyle == null && (deviceOverrides.fontStyle || element.fontStyle)) {
-        combinedStyle.fontStyle = deviceOverrides.fontStyle || element.fontStyle;
-      }
+    return rows;
+  };
 
-      if (combinedStyle.textDecoration == null && (deviceOverrides.textDecoration || element.textDecoration)) {
-        combinedStyle.textDecoration = deviceOverrides.textDecoration || element.textDecoration;
-      }
+  const renderModuleGrid = (mods: Module[], options?: { onButtonClick?: () => void; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+    if (!mods?.length) return null;
 
-      if (combinedStyle.letterSpacing == null && (deviceOverrides.letterSpacing || element.letterSpacing)) {
-        const spacing = deviceOverrides.letterSpacing ?? element.letterSpacing;
-        if (spacing !== undefined) {
-          const parsed = parsePx(spacing);
-          combinedStyle.letterSpacing = Number.isFinite(parsed) ? `${parsed}px` : spacing;
-        }
-      }
+    const device = options?.device || previewMode;
+    const isMobile = device === 'mobile';
+    const modulePaddingClass = isMobile ? 'p-0' : 'p-4';
+    const rows = buildRows(mods);
 
-      if (combinedStyle.textTransform == null && (deviceOverrides.textTransform || element.textTransform)) {
-        combinedStyle.textTransform = deviceOverrides.textTransform || element.textTransform;
-      }
+    return (
+      <div className="w-full max-w-[1500px]">
+        <div className="flex flex-col gap-6">
+          {rows.map((row, rowIndex) => {
+            const hasSplit = row.some((module) => getModuleSpan(module) !== 6);
+            return (
+              <div
+                key={`preview-row-${rowIndex}`}
+                className={`grid grid-cols-1 gap-4 md:gap-6 ${hasSplit ? 'md:grid-cols-6' : 'md:grid-cols-6'}`}
+              >
+                {row.map((module) => {
+                  const span = getModuleSpan(module);
+                  const spanClass = span === 6 ? 'md:col-span-6' : `md:col-span-${span}`;
+                  const paddingClass = module.type === 'BlocTexte'
+                    ? (isMobile ? 'px-0 py-0' : 'px-0 py-1')
+                    : modulePaddingClass;
 
-      combinedStyle = Object.fromEntries(
-        Object.entries(combinedStyle).filter(([, value]) => value !== undefined && value !== null)
-      );
-
-      if (element.type === 'text') {
-        combinedStyle.display = combinedStyle.display || 'flex';
-        combinedStyle.alignItems = combinedStyle.alignItems || 'center';
-        combinedStyle.justifyContent = combinedStyle.justifyContent || ((combinedStyle.textAlign === 'center')
-          ? 'center'
-          : combinedStyle.textAlign === 'right'
-            ? 'flex-end'
-            : 'flex-start');
-        if (combinedStyle.lineHeight == null && typeof combinedStyle.fontSize === 'string') {
-          combinedStyle.lineHeight = combinedStyle.fontSize;
-        }
-        if (combinedStyle.color == null && element.customCSS?.color) {
-          combinedStyle.color = element.customCSS.color;
-        }
-      }
-
-      combinedStyle.pointerEvents = 'none';
-      combinedStyle.userSelect = 'none';
-      combinedStyle.whiteSpace = combinedStyle.whiteSpace || 'pre-wrap';
-      combinedStyle.wordBreak = combinedStyle.wordBreak || 'break-word';
-      combinedStyle.overflowWrap = combinedStyle.overflowWrap || 'break-word';
-
-      if (typeof combinedStyle.padding === 'string') {
-        combinedStyle.padding = combinedStyle.padding
-          .split(/\s+/)
-          .map((segment: string) => {
-            const parsed = parsePx(segment);
-            return Number.isFinite(parsed) ? `${parsed}px` : segment;
-          })
-          .join(' ');
-      }
-
-      return {
-        ...element,
-        x,
-        y,
-        width,
-        height,
-        resolvedStyle: combinedStyle
-      };
-    };
-
-    return baseElements.reduce<{ participateElements: any[]; exitMessageElements: any[] }>((acc, element: any) => {
-      const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-      if (role.includes('button')) {
-        return acc;
-      }
-
-      const renderable = toRenderable(element);
-      if (!renderable) {
-        return acc;
-      }
-
-      if (role.includes('exit-message')) {
-        acc.exitMessageElements.push(renderable);
-      } else {
-        acc.participateElements.push(renderable);
-      }
-
-      return acc;
-    }, { participateElements: [], exitMessageElements: [] });
-  }, [canvasElements, designTexts, designImages, previewMode]);
-
-  console.log('🎯 [FunnelQuizParticipate] static elements', {
-    participateCount: participateElements.length,
-    exitMessageCount: exitMessageElements.length,
-    ids: [...participateElements, ...exitMessageElements].map((el: any) => el.id),
-    previewMode,
+                  return (
+                    <div key={module.id} className={`w-full ${spanClass}`}>
+                      <div className={`w-full ${paddingClass}`}>
+                        <QuizModuleRenderer
+                          modules={[module]}
+                          previewMode={true}
+                          device={device}
+                          onButtonClick={options?.onButtonClick}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+  
+  console.log('🔍 [FunnelQuizParticipate] Using modularPage:', {
+    screen1Count: modules.length,
+    screen2Count: modules2.length,
+    screen3Count: modules3.length,
+    screen1: modules.map((m: any) => ({ id: m.id, type: m.type })),
+    screen2: modules2.map((m: any) => ({ id: m.id, type: m.type })),
+    screen3: modules3.map((m: any) => ({ id: m.id, type: m.type })),
     campaignId: campaign?.id,
-    canvasElementsCount: canvasElements.length,
-    designTextsCount: designTexts.length,
-    designImagesCount: designImages.length
+    fullModularPage: modularPage,
+    campaignModularPage: campaignAny?.modularPage
   });
+
+  // Vérifier si une carte contient un bouton sur écran 1
+  const carteWithButton = Array.isArray(modules)
+    ? (modules as any[]).find((m) => 
+        m?.type === 'BlocCarte' && 
+        Array.isArray(m.children) && 
+        m.children.some((child: any) => child?.type === 'BlocBouton')
+      )
+    : undefined;
+
+  // Vérifier si une carte contient un bouton sur écran 3
+  const carteWithButtonScreen3 = Array.isArray(modules3)
+    ? (modules3 as any[]).find((m) => 
+        m?.type === 'BlocCarte' && 
+        Array.isArray(m.children) && 
+        m.children.some((child: any) => child?.type === 'BlocBouton')
+      )
+    : undefined;
+
+  // Si un module BlocBouton est défini (ou dans une carte), on l'utilise comme source de vérité pour le style du CTA preview
+  const ctaModule: any | undefined = carteWithButton
+    ? carteWithButton.children.find((c: any) => c?.type === 'BlocBouton')
+    : Array.isArray(modules)
+    ? (modules as any[]).find((m) => m?.type === 'BlocBouton')
+    : undefined;
+
+  const hasPrimaryCTA = Boolean(ctaModule);
+
+  // Styles par défaut (hérités de gameConfig/buttonConfig) si aucun BlocBouton n'est présent
+  const defaultParticipateStyles = useMemo(() => {
+    const defaultBackground = '#000000';
+    const buttonStyles = campaignAny?.gameConfig?.quiz?.buttonStyles || campaignAny?.buttonConfig?.styles || {};
+    const style: React.CSSProperties = {
+      background: buttonStyles.background || defaultBackground,
+      color: buttonStyles.color || campaignAny?.buttonConfig?.textColor || '#ffffff',
+      padding: buttonStyles.padding || '14px 28px',
+      borderRadius: buttonStyles.borderRadius || campaignAny?.buttonConfig?.borderRadius || '9999px',
+      boxShadow: buttonStyles.boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 600
+    };
+    return style;
+  }, [campaign]);
+
+  // Styles du CTA réellement utilisés dans le preview: miroir du BlocBouton si présent
+  const ctaStyles: React.CSSProperties = useMemo(() => {
+    if (!ctaModule) return defaultParticipateStyles;
+    return {
+      background: ctaModule.background || defaultParticipateStyles.background,
+      color: ctaModule.textColor || defaultParticipateStyles.color || '#ffffff',
+      borderRadius: `${ctaModule.borderRadius ?? 9999}px`,
+      border: `${ctaModule.borderWidth ?? 0}px solid ${ctaModule.borderColor || '#000000'}`,
+      boxShadow: ctaModule.boxShadow || defaultParticipateStyles.boxShadow || 'none',
+      padding: ctaModule.padding || defaultParticipateStyles.padding || '14px 28px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: (ctaModule.bold ? 700 : 600) as any,
+      textTransform: ctaModule.uppercase ? 'uppercase' : undefined,
+      width: 'min(280px, 100%)'
+    } as React.CSSProperties;
+  }, [ctaModule, defaultParticipateStyles]);
+
+  const ctaLabel = ctaModule?.label || (campaignAny?.buttonConfig?.text || campaignAny?.screens?.[0]?.buttonText || 'Participer');
+  const ctaClassName = `rounded-lg transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/70 mt-4 ${ctaModule?.uppercase ? 'uppercase' : ''} ${ctaModule?.bold ? 'font-bold' : 'font-semibold'}`;
 
   const handleParticipate = () => {
     setPhase('quiz');
   };
-
-  // Unused answer handler
 
   const handleFormSubmit = async (formData: Record<string, string>) => {
     setParticipationLoading(true);
@@ -302,62 +361,60 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   return (
     <div className="w-full h-[100dvh] min-h-[100dvh]">
       <div className="relative w-full h-full">
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute border border-dashed border-white/60"
+            style={{
+              inset: safeZonePadding,
+              borderRadius: safeZoneRadius,
+              boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+            }}
+          />
+        </div>
         <div className="absolute inset-0" style={backgroundStyle} />
 
         {/* Participate phase */}
         {phase === 'participate' && (
-          <div className="relative z-10 h-full flex items-center justify-center">
-            {participateElements.length > 0 && (
-              <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-                {participateElements.map((element: any) => {
-                  if (element.type === 'text') {
-                    return (
-                      <div
-                        key={element.id}
-                        style={element.resolvedStyle}
-                        className="select-text"
-                      >
-                        {element.content || element.text || 'Texte personnalisé'}
-                      </div>
-                    );
-                  }
-                  if (element.type === 'image' && element.src) {
-                    return (
-                      <img
-                        key={element.id}
-                        src={element.src}
-                        alt={element.alt || ''}
-                        style={element.resolvedStyle}
-                        className="select-none"
-                      />
-                    );
-                  }
-                  return null;
-                })}
-              </div>
+          <div
+            className="relative z-10 h-full flex flex-col gap-6"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
+            {/* Render modules using unified QuizModuleRenderer */}
+            {renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })}
+            
+            {/* Bouton Participer - affiché uniquement si aucun CTA modulaire n'est présent */}
+            {!hasPrimaryCTA && (
+              <button
+                onClick={handleParticipate}
+                className={ctaClassName}
+                style={ctaStyles}
+              >
+                {ctaLabel}
+              </button>
             )}
-            <button
-              onClick={handleParticipate}
-              className="rounded-lg transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/70"
-              style={participateStyles}
-            >
-              {participateLabel}
-            </button>
           </div>
         )}
 
         {/* Quiz phase - Afficher le quiz réel */}
         {phase === 'quiz' && (
-          <div className="relative z-10 h-full flex items-center justify-center p-4">
+          <div
+            className="relative z-10 h-full flex flex-col gap-6"
+            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+          >
+            {/* Modules de l'écran 2 */}
+            {renderModuleGrid(modules2 as Module[], { device: previewMode })}
             <div className="w-full max-w-2xl">
               {/* Utiliser le composant TemplatedQuiz pour afficher le quiz */}
               <TemplatedQuiz
                 campaign={campaign}
                 device={previewMode}
                 disabled={false}
-                onClick={() => setPhase('form')}
-                templateId={campaign?.gameConfig?.quiz?.templateId || 'image-quiz'}
-                onAnswerSelected={(isCorrect) => {
+                onClick={() => {
+                  console.log('🎯 Quiz completed, showing form');
+                  setShowFormModal(true);
+                }}
+                templateId={campaignAny?.gameConfig?.quiz?.templateId || 'image-quiz'}
+                onAnswerSelected={(isCorrect: boolean) => {
                   if (isCorrect) {
                     setScore(prev => prev + 1);
                   }
@@ -370,8 +427,8 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         {/* Form phase - use modal component to keep look consistent */}
         <FormHandler
           showFormModal={showFormModal}
-          campaign={campaign}
-          fields={fields}
+          campaign={campaignAny}
+          fields={fields as any}
           participationLoading={participationLoading}
           onClose={() => setShowFormModal(false)}
           onSubmit={handleFormSubmit}
@@ -380,62 +437,28 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
         {/* Thank you phase */}
         {phase === 'thankyou' && (
           <div className="relative z-10 h-full">
-            {exitMessageElements.length > 0 ? (
-              <>
-                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
-                  {exitMessageElements.map((element: any) => {
-                    if (element.type === 'text') {
-                      return (
-                        <div
-                          key={element.id}
-                          style={element.resolvedStyle}
-                          className="select-text"
-                        >
-                          {element.content || element.text || 'Merci pour votre participation !'}
-                        </div>
-                      );
-                    }
-                    if (element.type === 'image' && element.src) {
-                      return (
-                        <img
-                          key={element.id}
-                          src={element.src}
-                          alt={element.alt || ''}
-                          style={element.resolvedStyle}
-                          className="select-none"
-                        />
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-                {(showScore || shouldRenderReplayButton) && (
-                  <div className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-3 z-20 px-4">
-                    {showScore && (
-                      <div className="px-3 py-1 rounded-full bg-white/85 text-gray-900 text-sm font-medium shadow">
-                        Score: {score}
-                      </div>
-                    )}
-                    {shouldRenderReplayButton && (
-                      <button
-                        onClick={handleReplay}
-                        className="rounded-lg transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/70"
-                        style={participateStyles}
-                      >
-                        {replayButtonLabel}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center z-10 px-4">
+            {/* Modules de l'écran 3 */}
+            {modules3.length > 0 && (
+              <div
+                className="w-full h-full flex flex-col gap-6"
+                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
+                {renderModuleGrid(modules3 as Module[], { onButtonClick: handleReplay, device: previewMode })}
+              </div>
+            )}
+
+            {/* Carte par défaut uniquement si pas de modules déclarés sur écran 3 */}
+            {modules3.length === 0 && (
+              <div
+                className="absolute inset-0 flex items-center justify-center z-10 px-4"
+                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+              >
                 <div className="bg-white/90 backdrop-blur px-6 py-5 rounded-xl shadow max-w-md w-full text-center">
                   <div className="text-lg font-semibold text-gray-800 mb-2">
-                    {campaign?.screens?.[3]?.confirmationTitle || 'Merci pour votre participation !'}
+                    {campaignAny?.screens?.[3]?.confirmationTitle || 'Merci pour votre participation !'}
                   </div>
                   <div className="text-sm text-gray-700 mb-3 whitespace-pre-wrap break-words">
-                    {campaign?.screens?.[3]?.confirmationMessage || campaign?.screens?.[3]?.description || 'Votre participation a bien été enregistrée.'}
+                    {campaignAny?.screens?.[3]?.confirmationMessage || campaignAny?.screens?.[3]?.description || 'Votre participation a bien été enregistrée.'}
                   </div>
                   {showScore && (
                     <div className="text-sm text-gray-700 mb-3">Score: {score}</div>
@@ -445,13 +468,36 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
                       <button
                         onClick={handleReplay}
                         className="rounded-lg transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/70"
-                        style={participateStyles}
+                        style={ctaStyles}
                       >
                         {replayButtonLabel}
                       </button>
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Si des modules3 existent, on affiche un overlay bas pour Score/Rejouer - sauf si une carte contient déjà un bouton */}
+            {modules3.length > 0 && (showScore || shouldRenderReplayButton) && !carteWithButtonScreen3 && (
+              <div
+                className="absolute inset-x-0 bottom-10 flex flex-col items-center gap-3 z-20 px-4"
+                style={{ paddingLeft: safeZonePadding, paddingRight: safeZonePadding, boxSizing: 'border-box' }}
+              >
+                {showScore && (
+                  <div className="px-3 py-1 rounded-full bg-white/85 text-gray-900 text-sm font-medium shadow">
+                    Score: {score}
+                  </div>
+                )}
+                {shouldRenderReplayButton && (
+                  <button
+                    onClick={handleReplay}
+                    className="rounded-lg transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-white/70"
+                    style={ctaStyles}
+                  >
+                    {replayButtonLabel}
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -102,8 +102,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             wheelModalConfig={{
               extractedColors: campaign?.design?.extractedColors || []
             }}
-            disabled={!formValidated}
-            disableForm={false}
+            disableForm={formValidated}
           />
         );
       
@@ -210,16 +209,6 @@ const GameRenderer: React.FC<GameRendererProps> = ({
           </div>
         </ContrastBackground>
       </div>
-      
-      {!formValidated && ['wheel', 'scratch', 'jackpot'].includes(campaign.type) && (
-        <div 
-          onClick={() => {
-            console.log('Game overlay clicked - triggering form');
-            onGameButtonClick();
-          }}
-          className="absolute inset-0 flex items-center justify-center z-30 rounded-lg cursor-pointer bg-black/0" 
-        />
-      )}
 
       <ValidationMessage
         show={showValidationMessage}

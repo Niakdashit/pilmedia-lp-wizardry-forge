@@ -1,7 +1,6 @@
 import React from 'react';
-import ModulesPanel from './ModulesPanel';
-import AssetsPanel from '../../DesignEditor/panels/AssetsPanel';
-import type { ScreenId, Module } from '@/types/modularEditor';
+import { ModulesPanel, AssetsPanel } from '@/components/shared';
+import type { ScreenId, Module } from '@/components/shared/modules';
 
 export interface CompositeElementsPanelProps {
   currentScreen: ScreenId;
