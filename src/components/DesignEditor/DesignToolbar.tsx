@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useNavigate } from '@/lib/router-adapter';
-import { buildButtonStyles, resolveBrandColor, designTokens } from '../shared/designTokens';
 import { Monitor, Smartphone, Save, Eye, X, Undo, Redo, Layers } from 'lucide-react';
 
 interface DesignToolbarProps {
@@ -145,36 +144,18 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
         </div>
         <button 
           onClick={onPreviewToggle}
-          className={`flex items-center text-xs sm:text-sm rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 px-2.5 py-1.5 ${isPreviewMode ? '' : ''}`}
-          style={isPreviewMode
-            ? buildButtonStyles({
-                background: 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)',
-                color: '#ffffff',
-                radius: designTokens.radius,
-                padding: '6px 10px',
-                shadow: 'none',
-              })
-            : buildButtonStyles({
-                background: '#ffffff',
-                color: '#111827',
-                radius: designTokens.radius,
-                padding: '6px 10px',
-                shadow: 'none',
-              })}
+          className={`flex items-center px-2.5 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors shadow-none focus:shadow-none ring-0 focus:ring-0 drop-shadow-none filter-none backdrop-blur-0 ${
+            isPreviewMode 
+              ? 'bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white border-[#841b60]' 
+              : 'border-gray-300 hover:bg-gray-50'
+          }`}
         >
           <Eye className="w-4 h-4 mr-1" />
           {isPreviewMode ? 'Mode Édition' : 'Aperçu'}
         </button>
         <button
           onClick={onNavigateToSettings}
-          className="flex items-center text-xs sm:text-sm transition-colors"
-          style={buildButtonStyles({
-            background: '#ffffff',
-            color: '#111827',
-            radius: designTokens.radius,
-            padding: '6px 10px',
-            shadow: 'none',
-          })}
+          className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           Paramétrage
         </button>
@@ -182,28 +163,14 @@ const DesignToolbar: React.FC<DesignToolbarProps> = React.memo(({
           <>
             <button 
               onClick={() => navigate('/dashboard')}
-              className="flex items-center text-xs sm:text-sm transition-colors"
-              style={buildButtonStyles({
-                background: '#ffffff',
-                color: '#111827',
-                radius: designTokens.radius,
-                padding: '6px 10px',
-                shadow: 'none',
-              })}
+              className="flex items-center px-2.5 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <X className="w-4 h-4 mr-1" />
               Fermer
             </button>
             <button 
               onClick={onSave}
-              className="flex items-center text-xs sm:text-sm transition-colors"
-              style={buildButtonStyles({
-                background: 'radial-gradient(circle at 0% 0%, #841b60, #b41b60)',
-                color: '#ffffff',
-                radius: designTokens.radius,
-                padding: '6px 12px',
-                shadow: 'none',
-              })}
+              className="flex items-center px-3 py-1.5 text-xs sm:text-sm bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] text-white rounded-lg hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] transition-colors"
             >
               <Save className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">{saveDesktopLabel}</span>

@@ -505,7 +505,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       if (!detail || typeof detail.url !== 'string') return;
       if (detail.screenId === (screenId as any)) {
         const targetDevice = detail.device || selectedDevice;
-        console.log(`📤 [${screenId}] Uploading background for ${targetDevice}:`, detail.url?.substring(0, 50) + '...');
+        // Upload background for device
         // Mettre à jour l'état pour l'appareil spécifique
         setDeviceBackgrounds(prev => ({
           ...prev,
@@ -521,7 +521,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         } catch {}
         // Synchroniser les autres canvas du même écran
         try {
-          console.log(`🔔 [${screenId}] Background set in-memory only for ${targetDevice}`);
+          // Background set in-memory
           window.dispatchEvent(new CustomEvent('quiz-bg-sync', { detail: { screenId: detail.screenId } }));
         } catch {}
       }
@@ -536,7 +536,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
       if (!detail || typeof detail.url !== 'string') return;
       const targetDevice = detail.device || selectedDevice;
-      console.log(`🎨 [${screenId}] Received applyBackgroundAllScreens for device:`, targetDevice);
+      // Apply background to all screens
       // Appliquer à TOUS les écrans (pas de vérification de screenId)
       // Mettre à jour l'état pour l'appareil spécifique
       setDeviceBackgrounds(prev => ({
@@ -555,7 +555,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         });
       } catch {}
       try {
-        console.log(`✅ [${screenId}] Applied background to device ${targetDevice} (session only)`);
+        // Applied background to device
       } catch {}
     };
     window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
@@ -570,7 +570,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const targetDevice = detail.device || selectedDevice;
       // Si ce n'est pas l'écran à conserver, supprimer le background pour ce device
       if (detail.keepScreenId !== screenId) {
-        console.log(`🗑️ [${screenId}] Clearing background for device ${targetDevice}`);
+        // Clearing background
         setDeviceBackgrounds(prev => ({
           ...prev,
           [targetDevice]: null
@@ -584,21 +584,20 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
   }, [screenId, selectedDevice]);
 
-  // Restaurer les images de fond depuis localStorage au montage (par device + screen)
+  // Nettoyer les images de fond au montage (réinitialisation à chaque chargement de page)
   useEffect(() => {
     try {
-      const get = (key: string) => {
-        try { return localStorage.getItem(key); } catch { return null; }
-      };
-      const desktop = get(`quiz-bg-desktop-${screenId}`);
-      const tablet = get(`quiz-bg-tablet-${screenId}`);
-      const mobile = get(`quiz-bg-mobile-${screenId}`);
-      setDeviceBackgrounds({
-        desktop: desktop || tablet || null, // desktop/tablet partagés
-        tablet: tablet || desktop || null,
-        mobile: mobile || null
+      // Nettoyer toutes les clés de background pour ce screenId
+      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+      devices.forEach((d) => {
+        try { 
+          localStorage.removeItem(`quiz-bg-${d}-${screenId}`);
+        } catch {}
       });
-      console.log(`🖼️ [${screenId}] Backgrounds restored from LS`);
+      
+      // Réinitialiser l'état
+      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
+      // Backgrounds cleared on page load
     } catch {
       setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
     }
@@ -617,7 +616,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           });
           // Réinitialiser les overrides en mémoire pour ne pas afficher d'image
           setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
-          console.log(`🧹 [${screenId}] Cleared device backgrounds due to mount-clear`);
+          // Cleared device backgrounds
         } catch {}
       }
     };

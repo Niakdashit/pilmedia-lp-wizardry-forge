@@ -5,7 +5,8 @@ import {
   Plus,
   Gamepad2,
   Palette,
-  FormInput
+  FormInput,
+  MessageSquare
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -19,6 +20,7 @@ import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import QuizManagementPanel from '../QuizEditor/panels/QuizManagementPanel';
+import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
@@ -422,6 +424,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       id: 'game', 
       label: 'Jeu', 
       icon: Gamepad2
+    },
+    { 
+      id: 'messages', 
+      label: 'Messages', 
+      icon: MessageSquare
     }
   ];
   
@@ -792,6 +799,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               setCampaign={setCampaign as any}
             />
           </div>
+        );
+      case 'messages':
+        return (
+          <MessagesPanel 
+            campaignConfig={campaignConfig}
+            onCampaignConfigChange={onCampaignConfigChange}
+          />
         );
       default:
         return null;

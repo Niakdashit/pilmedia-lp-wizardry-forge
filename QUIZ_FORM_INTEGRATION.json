@@ -1,0 +1,101 @@
+{
+  "funnel_updated": true,
+  "implementation_date": "2025-01-12",
+  "new_flow": ["participate", "quiz", "form (optional)", "thankyou"],
+  "affected_files": [
+    "src/components/QuizEditor/panels/FormFieldsPanel.tsx",
+    "src/components/funnels/FunnelQuizParticipate.tsx"
+  ],
+  "implementation_details": {
+    "toggle_control": {
+      "location": "FormFieldsPanel.tsx",
+      "property": "campaign.showFormBeforeResult",
+      "default_value": true,
+      "description": "Toggle checkbox in the 'Formulaire' tab to enable/disable the participation form between quiz and result screen"
+    },
+    "flow_logic": {
+      "file": "FunnelQuizParticipate.tsx",
+      "function": "handleQuizComplete()",
+      "behavior": {
+        "when_enabled": "Quiz → Form → Thank You",
+        "when_disabled": "Quiz → Thank You (direct)"
+      }
+    },
+    "button_style_sync": {
+      "status": "Already implemented",
+      "description": "Form submit button uses ctaStyles which mirrors the launch button styles from BlocBouton or buttonConfig",
+      "location": "FunnelQuizParticipate.tsx lines 469-476"
+    },
+    "form_rendering": {
+      "type": "Inline (not modal)",
+      "component": "DynamicContactForm",
+      "styling": "White card with backdrop blur, centered on screen",
+      "fields_source": "campaign.form_fields or campaign.formFields"
+    }
+  },
+  "ui_changes": {
+    "form_fields_panel": {
+      "new_section": {
+        "type": "Toggle with description",
+        "label": "Afficher le formulaire après le quiz",
+        "description": "Si activé, le formulaire de participation s'affichera entre la dernière question du quiz et l'écran de résultat.",
+        "styling": "Blue background (bg-blue-50) with border, prominent placement at top of panel"
+      }
+    }
+  },
+  "preview_mode_compatibility": {
+    "status": "Fully compatible",
+    "description": "Preview mode in /quiz-editor will correctly show or hide the form based on the toggle state",
+    "phase_management": "Uses React state 'phase' with values: 'participate' | 'quiz' | 'form' | 'thankyou'"
+  },
+  "backward_compatibility": {
+    "default_behavior": "Form enabled (showFormBeforeResult defaults to true)",
+    "existing_campaigns": "Will continue to show form unless explicitly disabled",
+    "migration_needed": false
+  },
+  "data_flow": {
+    "configuration": "FormFieldsPanel → campaign.showFormBeforeResult → Zustand store",
+    "runtime": "handleQuizComplete checks showFormBeforeResult → conditionally sets phase to 'form' or 'thankyou'",
+    "form_submission": "DynamicContactForm → handleFormSubmit → createParticipation → phase='thankyou'"
+  },
+  "testing_checklist": [
+    "✅ Toggle appears in Formulaire tab",
+    "✅ Toggle state persists in campaign data",
+    "✅ When enabled: Quiz → Form → Result",
+    "✅ When disabled: Quiz → Result (direct)",
+    "✅ Form button uses same style as launch button",
+    "✅ Form fields are configurable",
+    "✅ Preview mode reflects toggle state",
+    "✅ Form submission saves participation data",
+    "✅ Score is preserved through form phase"
+  ],
+  "optional_enhancements": {
+    "future_features": [
+      "Add form title/description customization",
+      "Add form position options (modal vs inline)",
+      "Add conditional form display based on quiz score",
+      "Add form skip button option"
+    ]
+  },
+  "code_examples": {
+    "toggle_usage": {
+      "file": "FormFieldsPanel.tsx",
+      "code": "const showFormBeforeResult = campaign?.showFormBeforeResult ?? true;"
+    },
+    "flow_control": {
+      "file": "FunnelQuizParticipate.tsx",
+      "code": "if (showFormBeforeResult) { setPhase('form'); } else { setPhase('thankyou'); }"
+    },
+    "button_style_application": {
+      "file": "FunnelQuizParticipate.tsx",
+      "code": "textStyles={{ button: { backgroundColor: ctaStyles.background, color: ctaStyles.color, borderRadius: ctaStyles.borderRadius } }}"
+    }
+  },
+  "technical_notes": {
+    "state_management": "Uses Zustand store (useEditorStore) for campaign state",
+    "form_component": "DynamicContactForm is reused from design-editor",
+    "styling_consistency": "Form inherits button styles from launch button configuration",
+    "phase_transitions": "participate → quiz → form → thankyou (with optional form skip)",
+    "data_persistence": "Form data saved with score in participation record"
+  }
+}

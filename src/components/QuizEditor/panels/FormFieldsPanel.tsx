@@ -28,6 +28,7 @@ const ensureArray = (v: any): FieldConfig[] => (Array.isArray(v) ? v : []);
 
 const FormFieldsPanel: React.FC<FormFieldsPanelProps> = ({ campaign, setCampaign }) => {
   const fields: FieldConfig[] = ensureArray(campaign?.formFields);
+  const showFormBeforeResult = campaign?.showFormBeforeResult ?? true; // Default to true for backward compatibility
 
   const updateFields = (next: FieldConfig[]) => {
     setCampaign((prev: any) => ({
@@ -70,6 +71,33 @@ const FormFieldsPanel: React.FC<FormFieldsPanelProps> = ({ campaign, setCampaign
 
   return (
     <div className="p-4 space-y-4">
+      {/* Toggle pour activer/désactiver le formulaire */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <input
+            id="show-form-toggle"
+            type="checkbox"
+            checked={showFormBeforeResult}
+            onChange={(e) => {
+              setCampaign((prev: any) => ({
+                ...(prev || {}),
+                showFormBeforeResult: e.target.checked,
+                _lastUpdate: Date.now(),
+              }));
+            }}
+            className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div className="flex-1">
+            <label htmlFor="show-form-toggle" className="block text-sm font-semibold text-gray-900 cursor-pointer">
+              Afficher le formulaire après le quiz
+            </label>
+            <p className="text-xs text-gray-600 mt-1">
+              Si activé, le formulaire de participation s'affichera entre la dernière question du quiz et l'écran de résultat.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-900">Champs du formulaire</h3>
         <button

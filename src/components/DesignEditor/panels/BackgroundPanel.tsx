@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Upload, Pipette } from 'lucide-react';
 import ColorThief from 'colorthief';
 
@@ -11,6 +11,10 @@ interface BackgroundPanelProps {
   onElementUpdate?: (updates: any) => void;
   // 'fill' applies text color or shape background; 'border' applies shape borderColor
   colorEditingContext?: 'fill' | 'border' | 'text';
+  // Current modular screen to target per-screen background application
+  currentScreen?: 'screen1' | 'screen2' | 'screen3';
+  // Current editor device to scope backgrounds per device (desktop/tablet/mobile)
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
 }
 
 const BackgroundPanel: React.FC<BackgroundPanelProps> = ({ 
@@ -20,11 +24,15 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   extractedColors = [],
   selectedElement,
   onElementUpdate,
-  colorEditingContext = 'fill'
+  colorEditingContext = 'fill',
+  currentScreen,
+  selectedDevice
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [customColor, setCustomColor] = useState('#FF0000');
+  // Option: appliquer l'image de fond à tous les écrans (desktop/tablette/mobile)
+  const [applyToAllScreens, setApplyToAllScreens] = useState<boolean>(false);
 
   // Vérifier si un élément est sélectionné
   const isTextSelected = selectedElement && selectedElement.type === 'text';
@@ -84,22 +92,191 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     '#DDA0DD', '#FF8C69', '#87CEEB', '#98FB98'
   ];
 
+  // Helpers pour filtrer les couleurs extraites
+  const parseRgb = (s: string) => {
+    const m = String(s).match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+    if (!m) return null;
+    return { r: +m[1], g: +m[2], b: +m[3] };
+  };
+
+  const toHslHelper = (r: number, g: number, b: number) => {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max - min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return { h, s, l };
+  };
+
+  const filterColorsUI = (arr: string[] = []) => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const c of arr) {
+      const rgb = parseRgb(c);
+      if (!rgb) continue;
+      const { s, l } = toHslHelper(rgb.r, rgb.g, rgb.b);
+      if (l < 0.06 || l > 0.95) continue;
+      if (s < 0.1) continue;
+      const key = `${rgb.r}-${rgb.g}-${rgb.b}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+      if (out.length >= 8) break;
+    }
+    return out;
+  };
+
+  const displayedExtracted = useMemo<string[]>(() => filterColorsUI(extractedColors), [extractedColors]);
+
+  // Gérer le changement de la checkbox
+  const handleApplyToAllScreensChange = (checked: boolean) => {
+    setApplyToAllScreens(checked);
+    
+    // Si on décoche, supprimer les images des autres écrans pour le device courant
+    if (!checked && typeof window !== 'undefined' && selectedDevice) {
+      const evt = new CustomEvent('clearBackgroundOtherScreens', { 
+        detail: { 
+          device: selectedDevice, 
+          keepScreenId: currentScreen 
+        } 
+      });
+      window.dispatchEvent(evt);
+    }
+  };
+
   const extractColorsFromImage = async (imageUrl: string) => {
+    const fallbackViaCanvas = (img: HTMLImageElement): string[] => {
+      try {
+        const maxW = 200;
+        const scale = Math.min(1, maxW / Math.max(1, img.naturalWidth || img.width || maxW));
+        const w = Math.max(1, Math.round((img.naturalWidth || img.width || maxW) * scale));
+        const h = Math.max(1, Math.round((img.naturalHeight || img.height || maxW) * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true } as any) as CanvasRenderingContext2D | null;
+        if (!ctx) return [];
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        
+        // Helper: RGB -> HSL
+        const toHsl = (r: number, g: number, b: number) => {
+          r /= 255; g /= 255; b /= 255;
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          let h = 0, s = 0;
+          const l = (max + min) / 2;
+          if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max - min);
+            switch (max) {
+              case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+              case g: h = (b - r) / d + 2; break;
+              case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+          }
+          return { h, s, l };
+        };
+        
+        // Quantize by reducing color resolution to 4-bit per channel (0..15), but skip dull/near-black/near-white
+        const buckets: Record<string, number> = {};
+        const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 20000))); // sample ~20k pixels max
+        for (let y = 0; y < h; y += step) {
+          for (let x = 0; x < w; x += step) {
+            const i = (y * w + x) * 4;
+            const a = data[i + 3];
+            if (a < 16) continue; // skip transparent
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            // Filter near-black or near-white and very low saturation colors
+            const { s, l } = toHsl(r, g, b);
+            if (l < 0.06 || l > 0.96) continue;
+            if (s < 0.1) continue;
+            const R = (r >> 4), G = (g >> 4), B = (b >> 4);
+            const key = `${R}-${G}-${B}`;
+            buckets[key] = (buckets[key] || 0) + 1;
+          }
+        }
+        const entries = Object.entries(buckets)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([key]) => {
+            const [R, G, B] = key.split('-').map(n => parseInt(n, 10));
+            return `rgb(${R * 17}, ${G * 17}, ${B * 17})`;
+          });
+        return entries;
+      } catch {
+        return [];
+      }
+    };
+
     return new Promise<string[]>((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         try {
           const colorThief = new ColorThief();
-          // Extraire une palette de 8 couleurs pour avoir un bon choix
-          const palette = colorThief.getPalette(img, 8);
-          const extractedColors = palette.map(color => 
-            `rgb(${color[0]}, ${color[1]}, ${color[2]})`
-          );
-          resolve(extractedColors);
+          let palette: number[][] = [];
+          try {
+            palette = colorThief.getPalette(img, 8) || [];
+          } catch {}
+
+          let colors = (palette || []).map(c => `rgb(${c[0]}, ${c[1]}, ${c[2]})`);
+          const tooDarkCount = colors.filter(c => /rgb\((\s*0\s*,){2}\s*0\s*\)/.test(c)).length;
+          if (colors.length === 0 || tooDarkCount >= Math.max(3, Math.floor(colors.length / 2))) {
+            // Fallback if ColorThief failed or returned mostly black
+            colors = fallbackViaCanvas(img);
+          }
+          
+          // Final filter: remove near-black/near-white/low-saturation and deduplicate
+          const toRgb = (s: string) => {
+            const m = s.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+            if (!m) return null;
+            return { r: +m[1], g: +m[2], b: +m[3] };
+          };
+          const toKey = (r: number, g: number, b: number) => `${r}-${g}-${b}`;
+          const toHsl = (r: number, g: number, b: number) => {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h = 0, s = 0;
+            const l = (max + min) / 2;
+            if (max !== min) {
+              const d = max - min;
+              s = l > 0.5 ? d / (2 - max - min) : d / (max - min);
+              switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+              }
+              h /= 6;
+            }
+            return { h, s, l };
+          };
+          const seen = new Set<string>();
+          const filtered = colors.reduce<string[]>((acc, c) => {
+            const rgb = toRgb(c);
+            if (!rgb) return acc;
+            const { s, l } = toHsl(rgb.r, rgb.g, rgb.b);
+            if (l < 0.06 || l > 0.95) return acc;
+            if (s < 0.1) return acc;
+            const key = toKey(rgb.r, rgb.g, rgb.b);
+            if (seen.has(key)) return acc;
+            seen.add(key);
+            acc.push(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+            return acc;
+          }, []);
+          resolve(filtered.slice(0, 8));
         } catch (error) {
-          console.error('Error extracting colors:', error);
-          resolve([]);
+          console.warn('ColorThief failed, using canvas fallback', error);
+          resolve(fallbackViaCanvas(img));
         }
       };
       img.onerror = () => resolve([]);
@@ -110,15 +287,39 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validation de fichier (taille max 10MB, formats acceptés)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const acceptedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      
+      if (file.size > maxSize) {
+        alert('Le fichier est trop volumineux. Taille maximale: 10MB');
+        return;
+      }
+      
+      if (!acceptedFormats.includes(file.type)) {
+        alert('Format de fichier non supporté. Formats acceptés: JPG, PNG, GIF, WebP');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
-        onBackgroundChange({ type: 'image', value: imageUrl });
         
-        // Extract colors from the uploaded image
-        const extractedColors = await extractColorsFromImage(imageUrl);
-        if (onExtractedColorsChange && extractedColors.length > 0) {
-          onExtractedColorsChange(extractedColors);
+        // UNIQUEMENT si la case est cochée : appliquer l'image
+        if (applyToAllScreens) {
+          if (typeof window !== 'undefined') {
+            const evt = new CustomEvent('applyBackgroundAllScreens', { detail: { url: imageUrl, device: selectedDevice } });
+            window.dispatchEvent(evt);
+          }
+        } else {
+          // Informer l'utilisateur qu'il doit cocher la case
+          alert('Pour appliquer l\'image de fond, veuillez cocher la case "Appliquer à tous les écrans"');
+        }
+        
+        // Extract colors from the uploaded image (toujours extraire les couleurs)
+        const extracted = await extractColorsFromImage(imageUrl);
+        if (onExtractedColorsChange && extracted.length > 0) {
+          onExtractedColorsChange(extracted);
         }
       };
       reader.readAsDataURL(file);
@@ -186,7 +387,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
 
       {/* Upload Background Image - Seulement si pas de texte sélectionné */}
       {!isTextSelected && (
-        <div>
+        <div className="space-y-3">
           <h3 className="font-semibold text-sm text-gray-700 mb-3">IMAGE DE FOND</h3>
           <button
             onClick={triggerFileUpload}
@@ -194,8 +395,25 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
           >
             <Upload className="w-6 h-6 mb-2 text-gray-600 group-hover:text-white" />
             <span className="text-sm text-gray-600 group-hover:text-white">Télécharger une image</span>
-            <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG jusqu'à 10MB</span>
+            <span className="text-xs text-gray-500 group-hover:text-white">PNG, JPG, GIF, WebP jusqu'à 10MB</span>
           </button>
+          
+          {/* Checkbox pour appliquer à tous les écrans/devices */}
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="apply-to-all-screens"
+              checked={applyToAllScreens}
+              onChange={(e) => handleApplyToAllScreensChange(e.target.checked)}
+              className="w-4 h-4 text-[#841b60] border-gray-300 rounded focus:ring-[#841b60]"
+            />
+            <label htmlFor="apply-to-all-screens" className="text-xs text-gray-600 cursor-pointer">
+              {currentScreen 
+                ? `Appliquer à tous les écrans (${selectedDevice || 'desktop'})`
+                : `Appliquer à tous les appareils (Desktop/Tablette/Mobile)`
+              }
+            </label>
+          </div>
         </div>
       )}
 
@@ -250,12 +468,12 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         </div>
       </div>
 
-      {/* Extracted Colors */}
-      {extractedColors.length > 0 && (
+      {/* Extracted Colors - Utilise displayedExtracted pour filtrer les couleurs */}
+      {displayedExtracted.length > 0 && (
         <div>
           <h3 className="font-semibold text-sm text-gray-700 mb-3">COULEURS EXTRAITES</h3>
           <div className="grid grid-cols-5 gap-2">
-            {extractedColors.map((color, index) => (
+            {displayedExtracted.map((color, index) => (
               <button
                 key={index}
                 onClick={() => applyColor(color)}

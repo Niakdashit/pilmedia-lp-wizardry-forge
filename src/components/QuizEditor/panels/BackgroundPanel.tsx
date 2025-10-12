@@ -48,13 +48,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
   currentScreen,
   selectedDevice
 }) => {
-  console.log('🎨 BackgroundPanel component received props:', {
-    selectedElementId: selectedElement?.id,
-    selectedElementType: selectedElement?.type,
-    hasOnElementUpdate: !!onElementUpdate,
-    colorEditingContext,
-    timestamp: new Date().toISOString()
-  });
+  // BackgroundPanel component mounted
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
   const [customColor, setCustomColor] = useState('#FF0000');
@@ -95,7 +89,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     
     // Si on décoche, supprimer les images des autres écrans pour le device courant
     if (!checked && typeof window !== 'undefined' && selectedDevice) {
-      console.log('🗑️ [BackgroundPanel] Clearing backgrounds from other screens for device:', selectedDevice);
+      // Clearing backgrounds from other screens
       const evt = new CustomEvent('clearBackgroundOtherScreens', { 
         detail: { 
           device: selectedDevice, 
@@ -203,52 +197,36 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
     return currentBackground?.type === 'color' ? currentBackground.value : undefined;
   };
   
-  console.log('🎨 BackgroundPanel render:', {
-    selectedElement: selectedElement?.id || selectedElement?.type,
-    selectedElementType: selectedElement?.type,
-    isTextSelected,
-    isShapeSelected,
-    colorEditingContext,
-    currentColor: getCurrentColor(),
-    hasOnElementUpdate: !!onElementUpdate,
-    timestamp: new Date().toISOString()
-  });
+  // BackgroundPanel render
 
   // Fonction pour appliquer une couleur
   const applyColor = (color: string) => {
-    console.log('🎨 applyColor called:', {
-      color,
-      isTextSelected,
-      isShapeSelected,
-      colorEditingContext,
-      hasOnElementUpdate: !!onElementUpdate,
-      selectedElement: selectedElement?.id || selectedElement?.type
-    });
+    // Apply color
     
     if (isTextSelected && onElementUpdate) {
       // Texte: bordure optionnelle, sinon couleur du texte
       if (colorEditingContext === 'border') {
-        console.log('🎨 Updating text border color:', color);
+        // Update text border color
         onElementUpdate({ borderColor: color });
       } else {
-        console.log('🎨 Updating text color:', color);
+        // Update text color
         onElementUpdate({ color });
       }
     } else if (isShapeSelected && onElementUpdate) {
       // Forme: selon le contexte
       if (colorEditingContext === 'border') {
-        console.log('🎨 Updating shape border color:', color);
+        // Update shape border color
         onElementUpdate({ borderColor: color });
       } else if (colorEditingContext === 'text') {
-        console.log('🎨 Updating shape text color:', color);
+        // Update shape text color
         onElementUpdate({ textColor: color });
       } else {
-        console.log('🎨 Updating shape background color:', color);
+        // Update shape background color
         onElementUpdate({ backgroundColor: color });
       }
     } else {
       // Appliquer à l'arrière-plan (toujours fill)
-      console.log('🎨 Updating background color:', color);
+      // Update background color
       onBackgroundChange({ type: 'color', value: color });
       
       // Émettre un événement pour synchroniser avec TemplatedQuiz et FunnelQuizParticipate
@@ -430,13 +408,7 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
         };
 
     // Centralize routing through DesignCanvas listener so modules/elements are handled correctly
-    console.log('🎨 Dispatching applyTextEffect from BackgroundPanel', {
-      effectId,
-      selectedElementSummary: {
-        id: (selectedElement as any)?.id || selectedElement,
-        type: (selectedElement as any)?.type,
-      }
-    });
+    // Dispatch applyTextEffect
     const updateEvent = new CustomEvent('applyTextEffect', { detail: baseUpdates });
     window.dispatchEvent(updateEvent);
   };
@@ -556,23 +528,18 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
-        console.log('🎨 [BackgroundPanel] Uploading image:', {
-          applyToAllScreens,
-          currentScreen,
-          selectedDevice,
-          imageUrlLength: imageUrl?.length
-        });
+        // Upload image
         // Si la case est cochée, appliquer à tous les écrans MAIS uniquement pour l'appareil courant (device-scoped)
         if (applyToAllScreens) {
           if (typeof window !== 'undefined') {
-            console.log('🎨 [BackgroundPanel] Dispatching applyBackgroundAllScreens for device:', selectedDevice);
+            // Dispatch applyBackgroundAllScreens
             const evt = new CustomEvent('applyBackgroundAllScreens', { detail: { url: imageUrl, device: selectedDevice } });
             window.dispatchEvent(evt);
           }
         } else {
           // Sinon, ne pas toucher au background global: appliquer uniquement à l'écran courant
           if (typeof window !== 'undefined' && currentScreen) {
-            console.log('🎨 [BackgroundPanel] Dispatching applyBackgroundCurrentScreen for screen:', currentScreen, 'device:', selectedDevice);
+            // Dispatch applyBackgroundCurrentScreen
             const evt2 = new CustomEvent('applyBackgroundCurrentScreen', { detail: { url: imageUrl, screenId: currentScreen, device: selectedDevice } });
             window.dispatchEvent(evt2);
           }

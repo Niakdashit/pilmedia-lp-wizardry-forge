@@ -135,6 +135,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
   setCampaign
 }) => {
   const formFields = campaign?.formFields || [];
+  const showFormBeforeResult = campaign?.showFormBeforeResult ?? true;
 
   // Saved forms state & logic
   const { forms, fetchForms, createForm, updateForm, error: formsError } = useSavedForms();
@@ -292,6 +293,33 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Toggle pour activer/désactiver le formulaire après le quiz */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <input
+            id="show-form-toggle"
+            type="checkbox"
+            checked={showFormBeforeResult}
+            onChange={(e) => {
+              setCampaign((prev: any) => ({
+                ...(prev || {}),
+                showFormBeforeResult: e.target.checked,
+                _lastUpdate: Date.now(),
+              }));
+            }}
+            className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div className="flex-1">
+            <label htmlFor="show-form-toggle" className="block text-sm font-semibold text-gray-900 cursor-pointer">
+              Afficher le formulaire après le quiz
+            </label>
+            <p className="text-xs text-gray-600 mt-1">
+              Si activé, le formulaire de participation s'affichera entre la dernière question du quiz et l'écran de résultat.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Saved forms searchable dropdown */}
       <div ref={dropdownRef} className="relative">
         <button

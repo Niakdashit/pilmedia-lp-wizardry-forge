@@ -37,6 +37,10 @@ interface MobileSidebarDrawerProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  // Multi-screen support
+  currentScreen?: 'screen1' | 'screen2' | 'screen3';
+  selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  extractedColors?: string[];
 }
 
 const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
@@ -53,7 +57,10 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   onUndo,
   onRedo,
   canUndo,
-  canRedo
+  canRedo,
+  currentScreen,
+  selectedDevice,
+  extractedColors
 }) => {
   const [activeTab, setActiveTab] = useState<string>('assets');
   const [isMinimized, setIsMinimized] = useState(true);
@@ -170,6 +177,11 @@ const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             onBackgroundChange={onBackgroundChange || (() => {})} 
             onExtractedColorsChange={onExtractedColorsChange}
             currentBackground={currentBackground}
+            extractedColors={extractedColors}
+            selectedElement={selectedElement}
+            onElementUpdate={onElementUpdate}
+            currentScreen={currentScreen}
+            selectedDevice={selectedDevice}
           />
         );
       case 'layers':

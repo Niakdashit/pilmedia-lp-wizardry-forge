@@ -116,6 +116,21 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   
   // Modular editor JSON state
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  
+  // Debug: Log screen1 modules
+  React.useEffect(() => {
+    console.log('🎯 [DesignEditorLayout] Screen1 modules:', modularPage.screens.screen1?.length || 0, modularPage.screens.screen1);
+  }, [modularPage.screens.screen1]);
+  
+  // Scroll vers le haut au chargement pour afficher l'écran 1
+  React.useEffect(() => {
+    const scrollArea = document.querySelector('.canvas-scroll-area');
+    if (scrollArea) {
+      console.log('📜 [DesignEditorLayout] Scrolling to top to show screen1');
+      scrollArea.scrollTop = 0;
+    }
+  }, []); // Seulement au montage
+  
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   
   const selectedModule: Module | null = useMemo(() => {
@@ -1161,7 +1176,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           accent: extractedColors[2] || '#45b7d1'
         },
         wheelConfig: currentWheelConfig,
-        wheelBorderStyle: currentWheelConfig.borderStyle
+        wheelBorderStyle: currentWheelConfig.borderStyle,
+        designModules: modularPage
       },
       gameConfig: {
         wheel: {
@@ -1199,7 +1215,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState]);
+  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -2105,7 +2121,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         <div className="fixed bottom-6 right-6 flex items-center gap-3 z-30">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm border border-gray-300 bg-white/90 backdrop-blur rounded-lg hover:bg-white transition-colors shadow-sm"
+            className="inline-flex items-center px-3 py-1.5 text-sm rounded-xl bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm"
             title="Fermer"
           >
             <X className="w-4 h-4 mr-1" />
@@ -2113,7 +2129,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           </button>
           <button
             onClick={handleSaveAndContinue}
-            className="flex items-center px-3 py-2 text-xs sm:text-sm rounded-lg text-white bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)] hover:opacity-95 transition-colors shadow-sm"
+            className="inline-flex items-center px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-medium border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[#841b60]/20"
             title="Sauvegarder et continuer"
           >
             <Save className="w-4 h-4 mr-1" />

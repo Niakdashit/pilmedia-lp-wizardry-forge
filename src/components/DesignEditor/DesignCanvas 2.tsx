@@ -1,0 +1,1134 @@
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import CanvasElement from './CanvasElement';
+import CanvasToolbar from './CanvasToolbar';
+import StandardizedWheel from '../shared/StandardizedWheel';
+import WheelConfigModal from './WheelConfigModal';
+import AlignmentGuides from './components/AlignmentGuides';
+import GridOverlay from './components/GridOverlay';
+import WheelSettingsButton from './components/WheelSettingsButton';
+import ZoomSlider from './components/ZoomSlider';
+import GroupSelectionFrame from './components/GroupSelectionFrame';
+import { useAutoResponsive } from '../../hooks/useAutoResponsive';
+import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
+import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
+import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
+import { useUltraFluidDragDrop } from '../ModernEditor/hooks/useUltraFluidDragDrop';
+import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
+import { useEditorStore } from '../../stores/editorStore';
+import CanvasContextMenu from './components/CanvasContextMenu';
+
+import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
+
+import MobileResponsiveLayout from './components/MobileResponsiveLayout';
+import type { DeviceType } from '../../utils/deviceDimensions';
+import { isRealMobile } from '../../utils/isRealMobile';
+
+export interface DesignCanvasProps {
+  selectedDevice: DeviceType;
+  elements: any[];
+  onElementsChange: (elements: any[]) => void;
+  background?: {
+    type: 'color' | 'image';
+    value: string;
+  };
+  campaign?: any;
+  onCampaignChange?: (campaign: any) => void;
+  zoom?: number;
+  onZoomChange?: (zoom: number) => void;
+  selectedElement?: any;
+  onSelectedElementChange?: (element: any) => void;
+  selectedElements?: any[];
+  onSelectedElementsChange?: (elements: any[]) => void;
+  onElementUpdate?: (updates: any) => void;
+  // Props pour la gestion des groupes
+  selectedGroupId?: string;
+  onSelectedGroupChange?: (groupId: string | null) => void;
+  groups?: any[];
+  onGroupMove?: (groupId: string, deltaX: number, deltaY: number) => void;
+  onGroupResize?: (groupId: string, bounds: any) => void;
+  onShowEffectsPanel?: () => void;
+  onShowAnimationsPanel?: () => void;
+  onShowPositionPanel?: () => void;
+  onOpenElementsTab?: () => void;
+  // Props pour la sidebar mobile
+  onAddElement?: (element: any) => void;
+  onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
+  onExtractedColorsChange?: (colors: string[]) => void;
+  // Props pour la toolbar mobile
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  updateWheelConfig?: (updates: any) => void;
+  getCanonicalConfig?: (options?: { device?: string; shouldCropWheel?: boolean }) => any;
+}
+
+const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
+  selectedDevice,
+  elements,
+  onElementsChange,
+  background,
+  campaign,
+  onCampaignChange,
+  zoom = 1,
+  onZoomChange,
+  selectedElement: externalSelectedElement,
+  onSelectedElementChange,
+  selectedElements,
+  onSelectedElementsChange,
+  onElementUpdate: externalOnElementUpdate,
+  // Props pour la gestion des groupes
+  selectedGroupId,
+  onSelectedGroupChange,
+  groups,
+  onGroupMove,
+  onGroupResize,
+  onShowEffectsPanel,
+  onShowAnimationsPanel,
+  onShowPositionPanel,
+  onOpenElementsTab,
+  // Props pour la sidebar mobile
+  onAddElement,
+  onBackgroundChange,
+  onExtractedColorsChange,
+  // Props pour la toolbar mobile
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  updateWheelConfig,
+  getCanonicalConfig
+}, ref) => {
+
+  const canvasRef = useRef<HTMLDivElement>(null);
+  
+  // Utiliser la référence externe si fournie, sinon utiliser la référence interne
+  const activeCanvasRef = ref || canvasRef;
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [localZoom, setLocalZoom] = useState(zoom);
+  const [showBorderModal, setShowBorderModal] = useState(false);
+  
+  const [showAnimationPopup, setShowAnimationPopup] = useState(false);
+  const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  // Prevent repeated auto-fit on mobile when viewing desktop canvas
+  const didAutoFitRef = useRef(false);
+
+  // Références pour lisser les mises à jour de zoom
+  const rafRef = useRef<number | null>(null);
+  const pendingZoomRef = useRef<number | null>(null);
+  
+  // État pour le menu contextuel global du canvas
+  
+  // Use global clipboard from Zustand
+  const clipboard = useEditorStore(state => state.clipboard);
+
+  // Optimisation mobile pour une expérience tactile parfaite
+
+  // Intégration du système auto-responsive (doit être défini avant canvasSize)
+  const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
+
+  // Taille du canvas memoized
+  const canvasSize = useMemo(() => {
+    return DEVICE_DIMENSIONS[selectedDevice];
+  }, [selectedDevice, DEVICE_DIMENSIONS]);
+
+  // Forcer un format mobile 9:16 sans bordures ni encoches
+  const effectiveCanvasSize = useMemo(() => {
+    if (selectedDevice === 'mobile') {
+      // 9:16 exact ratio
+      return { width: 360, height: 640 };
+    }
+    return canvasSize;
+  }, [selectedDevice, canvasSize]);
+
+  // 🚀 Cache intelligent pour optimiser les performances (moved earlier to avoid TDZ)
+  const elementCache = useAdvancedCache({
+    maxSize: 5 * 1024 * 1024, // 5MB pour commencer
+    maxEntries: 200,
+    ttl: 10 * 60 * 1000, // 10 minutes
+    enableCompression: true,
+    storageKey: 'design-canvas-cache'
+  });
+
+  // 🚀 Auto-save adaptatif pour une sauvegarde intelligente (moved earlier)
+  const { updateData: updateAutoSaveData, recordActivity } = useAdaptiveAutoSave({
+    onSave: async (data) => {
+      if (onCampaignChange) {
+        onCampaignChange(data);
+      }
+    },
+    baseDelay: 2000, // 2 secondes de base
+    minDelay: 500,   // Minimum 500ms
+    maxDelay: 8000,  // Maximum 8 secondes
+    onSaveSuccess: () => {
+      console.log('✓ Sauvegarde automatique réussie');
+    },
+    onError: (error) => {
+      console.warn('⚠️ Erreur de sauvegarde automatique:', error);
+    }
+  });
+
+  // Hooks optimisés pour snapping (moved earlier)
+  const { applySnapping } = useSmartSnapping({
+    containerRef: activeCanvasRef,
+    gridSize: 20,
+    snapTolerance: 3 // Réduit pour plus de précision
+  });
+
+  // Handlers optimisés avec snapping et cache intelligent (moved earlier)
+  const handleElementUpdate = useCallback((id: string, updates: any) => {
+    // Utiliser la fonction externe si disponible
+    if (externalOnElementUpdate && selectedElement === id) {
+      externalOnElementUpdate(updates);
+      return;
+    }
+
+    // Préparer les updates selon l'appareil courant (desktop = racine, mobile/tablet = scope par device)
+    const deviceScopedKeys = ['x', 'y', 'width', 'height', 'fontSize', 'textAlign'];
+    const isDeviceScoped = selectedDevice !== 'desktop';
+
+    // Copier pour ne pas muter l'argument
+    const workingUpdates: Record<string, any> = { ...updates };
+    const devicePatch: Record<string, any> = {};
+
+    // Appliquer le snapping si c'est un déplacement (avant de répartir par device)
+    if (workingUpdates.x !== undefined && workingUpdates.y !== undefined) {
+      const element = elements.find(el => el.id === id);
+      if (element) {
+        const snappedPosition = applySnapping(
+          workingUpdates.x,
+          workingUpdates.y,
+          element.width || 100,
+          element.height || 100,
+          id
+        );
+        workingUpdates.x = snappedPosition.x;
+        workingUpdates.y = snappedPosition.y;
+
+        // Mettre en cache la position snappée pour optimiser les mouvements répétitifs
+        const positionCacheKey = `snap-${id}-${Math.floor(workingUpdates.x/5)}-${Math.floor(workingUpdates.y/5)}`;
+        elementCache.set(positionCacheKey, { x: workingUpdates.x, y: workingUpdates.y, timestamp: Date.now() });
+      }
+    }
+
+    if (isDeviceScoped) {
+      // Extraire les props dépendantes de l'appareil
+      for (const key of deviceScopedKeys) {
+        if (workingUpdates[key] !== undefined) {
+          devicePatch[key] = workingUpdates[key];
+          delete workingUpdates[key];
+        }
+      }
+    }
+
+    // Vérifier le cache pour éviter les recalculs
+    const cacheKey = `element-update-${id}-${JSON.stringify({ workingUpdates, devicePatch }).slice(0, 50)}`;
+    const cachedResult = elementCache.get(cacheKey);
+    if (cachedResult && Date.now() - cachedResult.timestamp < 1000) {
+      onElementsChange(cachedResult.elements);
+      return;
+    }
+
+    const updatedElements = elements.map(el => {
+      if (el.id !== id) return el;
+
+      const base = { ...el, ...workingUpdates };
+      if (isDeviceScoped) {
+        const currentDeviceData = (el as any)[selectedDevice] || {};
+        return {
+          ...base,
+          [selectedDevice]: {
+            ...currentDeviceData,
+            ...devicePatch
+          }
+        };
+      }
+      return base;
+    });
+
+    // Mettre en cache le résultat
+    elementCache.set(cacheKey, { elements: updatedElements, timestamp: Date.now() });
+
+    onElementsChange(updatedElements);
+
+    // 🚀 Déclencher l'auto-save adaptatif avec activité intelligente
+    const activityType = (updates.x !== undefined || updates.y !== undefined) ? 'drag' : 'click';
+    const intensity = activityType === 'drag' ? 0.8 : 0.5;
+    updateAutoSaveData(campaign, activityType, intensity);
+  }, [elements, onElementsChange, applySnapping, elementCache, updateAutoSaveData, campaign, externalOnElementUpdate, selectedElement, selectedDevice]);
+
+  // Synchroniser la sélection avec l'état externe
+  useEffect(() => {
+    if (externalSelectedElement && externalSelectedElement.id !== selectedElement) {
+      setSelectedElement(externalSelectedElement.id);
+    }
+  }, [externalSelectedElement]);
+
+  // Synchroniser le zoom local avec le prop
+  useEffect(() => {
+    // Clamp le zoom entre 0.1 et 1.0 (100%)
+    const clamped = Math.max(0.1, Math.min(1, zoom));
+    setLocalZoom(clamped);
+  }, [zoom]);
+
+  // Définir le zoom par défaut selon l'appareil
+  // - Mobile: 85%
+  // - Tablette: 60%
+  // - Desktop: 70%
+  useEffect(() => {
+    const defaultZoom =
+      selectedDevice === 'mobile' ? 0.85 :
+      selectedDevice === 'tablet' ? 0.6 : 0.7;
+
+    setLocalZoom(defaultZoom);
+    if (onZoomChange) {
+      onZoomChange(defaultZoom);
+    }
+  }, [selectedDevice]);
+
+  // Calculer le zoom par défaut selon l'appareil (pour le bouton reset)
+  const deviceDefaultZoom = useMemo(() => {
+    return selectedDevice === 'mobile' ? 0.85 :
+           selectedDevice === 'tablet' ? 0.6 : 0.7;
+  }, [selectedDevice]);
+
+  // Auto-fit: if on a real mobile device but viewing the desktop canvas, fit the canvas to viewport
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isRealMobile() || selectedDevice !== 'desktop') return;
+
+    const computeAndApplyFit = () => {
+      // Only auto-fit once until orientation changes
+      if (didAutoFitRef.current) return;
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Match paddings used in the container around the canvas for desktop-on-mobile
+      const paddingTop = 32;
+      const paddingBottom = 180; // space reserved for MobileSidebarDrawer
+      const paddingLeft = 20;
+      const paddingRight = 20;
+
+      const availableWidth = Math.max(0, viewportWidth - paddingLeft - paddingRight);
+      const availableHeight = Math.max(0, viewportHeight - paddingTop - paddingBottom);
+
+      const targetW = effectiveCanvasSize.width;
+      const targetH = effectiveCanvasSize.height;
+
+      if (targetW > 0 && targetH > 0 && availableWidth > 0 && availableHeight > 0) {
+        const scaleX = availableWidth / targetW;
+        const scaleY = availableHeight / targetH;
+        const fitted = Math.min(scaleX, scaleY, 1);
+        const clamped = Math.max(0.1, Math.min(1, fitted));
+
+        setLocalZoom(clamped);
+        onZoomChange?.(clamped);
+        didAutoFitRef.current = true;
+      }
+    };
+
+    // Initial fit
+    computeAndApplyFit();
+
+    // Re-fit on orientation changes
+    const handleOrientation = () => {
+      didAutoFitRef.current = false;
+      // Allow the browser to update innerWidth/innerHeight first
+      requestAnimationFrame(() => computeAndApplyFit());
+    };
+    window.addEventListener('orientationchange', handleOrientation);
+    return () => window.removeEventListener('orientationchange', handleOrientation);
+  }, [selectedDevice, effectiveCanvasSize, onZoomChange]);
+
+  // Handler centralisé pour changer le zoom depuis la barre d'échelle
+  const handleZoomChange = useCallback((value: number) => {
+    // Clamp le zoom entre 0.1 et 1.0 (100%)
+    const clamped = Math.max(0.1, Math.min(1, value));
+    setLocalZoom(clamped);
+    if (onZoomChange) {
+      onZoomChange(clamped);
+    }
+  }, [onZoomChange]);
+
+
+
+  // Zoom au pincement (pinch) sur écrans tactiles
+  useEffect(() => {
+    const el = (typeof activeCanvasRef === 'object' && (activeCanvasRef as React.RefObject<HTMLDivElement>)?.current) as HTMLElement | null;
+    if (!el) return;
+
+    let isPinching = false;
+    let startDist = 0;
+    let startZoom = 1;
+
+    const getDist = (touches: TouchList) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const flushZoom = () => {
+      if (pendingZoomRef.current != null) {
+        setLocalZoom(pendingZoomRef.current);
+        onZoomChange?.(pendingZoomRef.current);
+        pendingZoomRef.current = null;
+      }
+      rafRef.current = null;
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        startDist = getDist(e.touches);
+        startZoom = localZoom;
+        e.preventDefault();
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (isPinching && e.touches.length === 2) {
+        const newDist = getDist(e.touches);
+        const ratio = newDist / startDist;
+        const accelerated = Math.pow(ratio, 1.35);
+        const newZoom = Math.max(0.1, Math.min(1.0, startZoom * accelerated));
+        pendingZoomRef.current = newZoom;
+        if (!rafRef.current) {
+          rafRef.current = requestAnimationFrame(flushZoom);
+        }
+        e.preventDefault();
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (isPinching) {
+        isPinching = false;
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchEnd);
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart as EventListener);
+      el.removeEventListener('touchmove', onTouchMove as EventListener);
+      el.removeEventListener('touchend', onTouchEnd as EventListener);
+      el.removeEventListener('touchcancel', onTouchEnd as EventListener);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [activeCanvasRef, localZoom, onZoomChange]);
+
+
+  // Support du zoom via trackpad et molette souris + Ctrl/Cmd
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Vérifier si Ctrl (Windows/Linux) ou Cmd (Mac) est pressé
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Calculer le facteur de zoom basé sur le delta (plus lent)
+        const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
+        const newZoom = Math.max(0.1, Math.min(1, localZoom * zoomFactor));
+        
+        setLocalZoom(newZoom);
+        
+        // Synchroniser avec la barre de zoom externe si disponible
+        if (onZoomChange) {
+          onZoomChange(newZoom);
+        }
+      }
+    };
+
+    const canvasElement = typeof activeCanvasRef === 'object' && activeCanvasRef?.current;
+    if (canvasElement) {
+      canvasElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        canvasElement.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, [localZoom, activeCanvasRef]);
+
+  // Fonction de sélection qui notifie l'état externe
+  const handleElementSelect = useCallback((elementId: string | null, isMultiSelect?: boolean) => {
+    console.log('🔥 handleElementSelect called with:', {
+      elementId,
+      isMultiSelect,
+      currentSelectedElements: selectedElements?.length || 0,
+      hasOnSelectedElementsChange: !!onSelectedElementsChange
+    });
+    
+    if (isMultiSelect && elementId) {
+      // Sélection multiple avec Ctrl/Cmd + clic
+      const currentSelectedElements = selectedElements || [];
+      const isAlreadySelected = currentSelectedElements.some((el: any) => el.id === elementId);
+      
+      console.log('🔥 Multi-select logic:', {
+        currentCount: currentSelectedElements.length,
+        isAlreadySelected,
+        targetElementId: elementId
+      });
+      
+      if (isAlreadySelected) {
+        // Désélectionner l'élément s'il est déjà sélectionné
+        const newSelectedElements = currentSelectedElements.filter((el: any) => el.id !== elementId);
+        console.log('🔥 Removing element from selection:', {
+          removed: elementId,
+          newCount: newSelectedElements.length,
+          newSelection: newSelectedElements.map(el => el.id)
+        });
+        onSelectedElementsChange?.(newSelectedElements);
+      } else {
+        // Ajouter l'élément à la sélection
+        const elementToAdd = elements.find(el => el.id === elementId);
+        if (elementToAdd) {
+          const newSelectedElements = [...currentSelectedElements, elementToAdd];
+          console.log('🔥 Adding element to selection:', {
+            added: elementId,
+            newCount: newSelectedElements.length,
+            newSelection: newSelectedElements.map(el => el.id)
+          });
+          onSelectedElementsChange?.(newSelectedElements);
+        } else {
+          console.error('🔥 Element not found in elements array:', elementId);
+        }
+      }
+      // En mode multi-sélection, on ne change pas l'élément unique sélectionné
+      setSelectedElement(null);
+      if (onSelectedElementChange) {
+        onSelectedElementChange(null);
+      }
+    } else {
+      // Sélection simple (comportement normal)
+      console.log('🔥 Single select mode:', { elementId, clearingMultiSelection: true });
+      setSelectedElement(elementId);
+      if (onSelectedElementChange) {
+        const element = elementId ? elements.find(el => el.id === elementId) : null;
+        onSelectedElementChange(element);
+      }
+      // Réinitialiser la sélection multiple
+      onSelectedElementsChange?.([]);
+    }
+  }, [elements, onSelectedElementChange, selectedElements, onSelectedElementsChange]);
+
+  // Store centralisé pour la grille
+  const { showGridLines, setShowGridLines } = useEditorStore();
+
+  // Fonction utilitaire pour calculer les positions absolues des éléments groupés
+  const calculateAbsolutePosition = useCallback((element: any) => {
+    if (!element.parentGroupId) {
+      // Élément non groupé : position absolue normale
+      return { x: element.x, y: element.y };
+    }
+    
+    // Élément groupé : calculer position absolue = position du groupe + position relative
+    const parentGroup = elements.find(el => el.id === element.parentGroupId && el.isGroup);
+    if (!parentGroup) {
+      console.warn('🎯 Parent group not found for element:', element.id, 'parentGroupId:', element.parentGroupId);
+      return { x: element.x, y: element.y };
+    }
+    
+    const absoluteX = parentGroup.x + element.x; // element.x est relatif au groupe
+    const absoluteY = parentGroup.y + element.y; // element.y est relatif au groupe
+    
+    console.log('🎯 Calculating absolute position:', {
+      elementId: element.id,
+      parentGroupId: element.parentGroupId,
+      groupPosition: { x: parentGroup.x, y: parentGroup.y },
+      relativePosition: { x: element.x, y: element.y },
+      absolutePosition: { x: absoluteX, y: absoluteY }
+    });
+    
+    return { x: absoluteX, y: absoluteY };
+  }, [elements]);
+
+  // Les fonctions de configuration de la roue sont maintenant fournies par le composant parent
+
+  // Écouteur d'événement pour l'application des effets de texte depuis le panneau latéral
+  useEffect(() => {
+    const handleApplyTextEffect = (event: CustomEvent) => {
+      console.log('🎯 Événement applyTextEffect reçu:', event.detail);
+      if (selectedElement) {
+        console.log('✅ Application de l\'effet au texte sélectionné:', selectedElement);
+        handleElementUpdate(selectedElement, event.detail);
+      } else {
+        console.log('❌ Aucun élément sélectionné pour appliquer l\'effet');
+      }
+    };
+
+    window.addEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
+    return () => {
+      window.removeEventListener('applyTextEffect', handleApplyTextEffect as EventListener);
+    };
+  }, [selectedElement]);
+
+  // Écouteur d'événement pour afficher le popup d'animation
+  useEffect(() => {
+    const handleShowAnimationPopup = (event: CustomEvent) => {
+      const { animation, selectedElementId } = event.detail;
+      
+      // Calculer la position du popup sous l'élément sélectionné
+      const elementInDOM = document.querySelector(`[data-element-id="${selectedElementId}"]`);
+      let position = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      
+      if (elementInDOM) {
+        const rect = elementInDOM.getBoundingClientRect();
+        const canvasRect = (activeCanvasRef as React.RefObject<HTMLDivElement>).current?.getBoundingClientRect();
+        
+        if (canvasRect) {
+          // Position relative au canvas
+          position = {
+            x: rect.left + rect.width / 2,
+            y: rect.bottom + 10
+          };
+        }
+      }
+      
+      setSelectedAnimation(animation);
+      setPopupPosition(position);
+      setShowAnimationPopup(true);
+    };
+
+    window.addEventListener('showAnimationPopup', handleShowAnimationPopup as EventListener);
+    return () => {
+      window.removeEventListener('showAnimationPopup', handleShowAnimationPopup as EventListener);
+    };
+  }, []);
+
+  // (moved) auto-responsive, canvasSize, and effectiveCanvasSize are defined earlier to avoid TDZ issues
+
+  // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
+  const { markRegionsDirty, isElementVisible } = useVirtualizedCanvas({
+    containerRef: activeCanvasRef,
+    regionSize: 200,
+    maxRegions: 50,
+    updateThreshold: 16 // 60fps
+  });
+
+  // Hooks optimisés pour snapping (gardé pour compatibilité)
+  // 🚀 Drag & drop ultra-fluide pour une expérience premium
+  useUltraFluidDragDrop({
+    containerRef: activeCanvasRef,
+    snapToGrid: showGridLines,
+    gridSize: 20,
+    enableInertia: true,
+    onDragStart: (elementId, position) => {
+      // Enregistrer l'activité de début de drag
+      recordActivity('drag', 0.9);
+      // Marquer les éléments affectés pour le rendu optimisé
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      elementCache.set(`drag-start-${elementId}`, { position, timestamp: Date.now() });
+    },
+    onDragMove: (elementId, position, velocity) => {
+      // Optimiser le rendu en marquant seulement les éléments nécessaires
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      const moveKey = `drag-move-${elementId}-${Math.floor(position.x/2)}-${Math.floor(position.y/2)}`;
+      elementCache.set(moveKey, { position, velocity, timestamp: Date.now() });
+    },
+    onDragEnd: (elementId, position) => {
+      // Finaliser le drag avec mise à jour des données
+      const element = elements.find(el => el.id === elementId);
+      if (element) {
+        markRegionsDirty([{ ...element, x: position.x, y: position.y }]);
+      }
+      handleElementUpdate(elementId, { x: position.x, y: position.y });
+    }
+  });
+
+  // Configuration canonique de la roue
+  const wheelConfig = useMemo(() =>
+    getCanonicalConfig
+      ? getCanonicalConfig({ device: selectedDevice, shouldCropWheel: true })
+      : { borderStyle: 'classic', borderColor: '#841b60', borderWidth: 12, scale: 1 },
+    [getCanonicalConfig, selectedDevice]
+  );
+
+
+
+  // Convertir les éléments en format compatible avec useAutoResponsive
+  const responsiveElements = useMemo(() => {
+    return elements.map(element => ({
+      id: element.id,
+      x: element.x || 0,
+      y: element.y || 0,
+      width: element.width,
+      height: element.height,
+      fontSize: element.fontSize || 16,
+      type: element.type,
+      content: element.content,
+      // Préserver les autres propriétés
+      ...element
+    }));
+  }, [elements]);
+
+  // Appliquer les calculs responsives
+  const elementsWithResponsive = useMemo(() => {
+    return applyAutoResponsive(responsiveElements);
+  }, [responsiveElements, applyAutoResponsive]);
+
+  // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
+
+  const handleElementDelete = useCallback((id: string) => {
+    const updatedElements = elements.filter(el => el.id !== id);
+    onElementsChange(updatedElements);
+    
+    // 🚀 Auto-save après suppression avec activité élevée
+    updateAutoSaveData(campaign, 'click', 0.9);
+    if (selectedElement === id) {
+      setSelectedElement(null);
+    }
+  }, [elements, onElementsChange, updateAutoSaveData, campaign, selectedElement]);
+
+  // Handlers pour le menu contextuel global du canvas
+  const handleCanvasCopyStyle = useCallback(() => {
+    if (selectedElement) {
+      const element = elements.find(el => el.id === selectedElement);
+      if (element) {
+        const style = {
+          fontFamily: element.fontFamily,
+          fontSize: element.fontSize,
+          color: element.color,
+          fontWeight: element.fontWeight,
+          textAlign: element.textAlign,
+          backgroundColor: element.backgroundColor,
+          borderRadius: element.borderRadius
+        };
+        // Style copié depuis le canvas
+        console.log('Style copié depuis le canvas:', style);
+      }
+    }
+  }, [selectedElement, elements]);
+
+  const handleCanvasPaste = useCallback(() => {
+    if (clipboard && clipboard.type === 'element' && onElementsChange) {
+      const elementToPaste = clipboard.payload;
+      const deviceProps = getPropertiesForDevice(elementToPaste, selectedDevice);
+      const newElement = {
+        ...elementToPaste,
+        id: `text-${Date.now()}`,
+        x: (deviceProps.x || 0) + 30,
+        y: (deviceProps.y || 0) + 30
+      };
+      const updatedElements = [...elements, newElement];
+      onElementsChange(updatedElements);
+      handleElementSelect(newElement.id);
+      console.log('Élément collé depuis le canvas (global clipboard):', newElement);
+    }
+  }, [clipboard, elements, onElementsChange, getPropertiesForDevice, selectedDevice, handleElementSelect]);
+
+  const handleRemoveBackground = useCallback(() => {
+    if (background && background.type !== 'color') {
+      // Remettre le background par défaut
+      const defaultBackground = {
+        type: 'color' as const,
+        value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+      };
+      // Déclencher un événement personnalisé pour notifier le changement de background
+      const event = new CustomEvent('backgroundChange', { detail: defaultBackground });
+      window.dispatchEvent(event);
+      console.log('Arrière-plan supprimé');
+    }
+  }, [background]);
+  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
+
+  // Les segments et tailles sont maintenant gérés par StandardizedWheel
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <MobileResponsiveLayout
+        selectedElement={elements.find(el => el.id === selectedElement)}
+        onElementUpdate={(updates) => {
+          if (selectedElement) {
+            handleElementUpdate(selectedElement, updates);
+          }
+        }}
+        onShowEffectsPanel={onShowEffectsPanel}
+        onShowAnimationsPanel={onShowAnimationsPanel}
+        onShowPositionPanel={onShowPositionPanel}
+        canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+        zoom={zoom}
+        forceDeviceType={selectedDevice}
+        className="design-canvas-container flex-1 flex flex-col items-center justify-center p-4 bg-gray-100 relative overflow-hidden"
+        // Props pour la sidebar mobile
+        onAddElement={onAddElement}
+        onBackgroundChange={onBackgroundChange}
+        onExtractedColorsChange={onExtractedColorsChange}
+        campaignConfig={campaign}
+        onCampaignConfigChange={onCampaignChange}
+        elements={elements}
+        onElementsChange={onElementsChange}
+        // Props pour la toolbar mobile
+        onUndo={onUndo}
+        onRedo={onRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      >
+        {/* Canvas Toolbar - Only show when text element is selected */}
+        {selectedElementData && selectedElementData.type === 'text' && (
+          <div className={`z-10 ${
+            selectedDevice === 'desktop' 
+              ? 'absolute top-4 left-1/2 transform -translate-x-1/2' 
+              : 'flex justify-center py-2 px-4'
+          }`}>
+            <CanvasToolbar 
+              selectedElement={selectedElementData} 
+              onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
+              onShowEffectsPanel={onShowEffectsPanel}
+              onShowAnimationsPanel={onShowAnimationsPanel}
+              onShowPositionPanel={onShowPositionPanel}
+              onOpenElementsTab={onOpenElementsTab}
+              canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+            />
+          </div>
+        )}
+        
+        <div className="flex justify-center items-center h-full w-full" style={{
+          // Padding fixe (indépendant du zoom) pour garantir un centrage stable
+          paddingTop: selectedDevice === 'tablet' ? 48 : (typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 32),
+          paddingLeft: selectedDevice === 'tablet' ? 32 : 20,
+          paddingRight: selectedDevice === 'tablet' ? 32 : 20,
+          paddingBottom: (isRealMobile() ? 180 : (selectedDevice === 'tablet' ? 48 : 32)),
+          transition: 'padding 0.2s ease-in-out',
+          minHeight: '100%'
+        }}>
+          {/* Canvas wrapper pour maintenir le centrage avec zoom */}
+          <div 
+            className="flex justify-center items-center"
+            style={{
+              width: 'fit-content',
+              height: 'fit-content',
+              minHeight: 'auto'
+            }}
+          >
+            <div 
+              ref={activeCanvasRef}
+              className="relative bg-white rounded-3xl overflow-hidden" 
+              style={{
+                width: `${effectiveCanvasSize.width}px`,
+                height: `${effectiveCanvasSize.height}px`,
+                minWidth: `${effectiveCanvasSize.width}px`,
+                minHeight: `${effectiveCanvasSize.height}px`,
+                flexShrink: 0,
+                transform: `scale(${localZoom})`,
+                transformOrigin: 'center center',
+                touchAction: 'none',
+                transition: 'transform 0.15s ease-out',
+                willChange: 'transform'
+              }}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedElement(null);
+                // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
+                if (onSelectedElementChange) {
+                  console.log('🎯 Canvas container click - clearing selection via onSelectedElementChange');
+                  onSelectedElementChange(null);
+                }
+              }
+            }}
+          >
+            {/* Canvas Background */}
+            <div 
+              className="absolute inset-0" 
+              style={{
+                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+              }}
+              onMouseDown={(e) => {
+                console.log('🔘 Clic sur le background détecté');
+                // Désélectionner l'élément quand on clique sur le background
+                e.stopPropagation();
+                setSelectedElement(null);
+                // 🎯 CORRECTION: Notifier le changement de sélection vers l'extérieur
+                if (onSelectedElementChange) {
+                  console.log('🎯 Background click - clearing selection via onSelectedElementChange');
+                  onSelectedElementChange(null);
+                }
+              }}
+            >
+              {/* Menu contextuel global du canvas */}
+              <CanvasContextMenu
+                onCopyStyle={handleCanvasCopyStyle}
+                onPaste={handleCanvasPaste}
+                onRemoveBackground={handleRemoveBackground}
+                canPaste={!!clipboard && clipboard.type === 'element'}
+                hasStyleToCopy={selectedElement !== null}
+              />
+              <GridOverlay 
+                canvasSize={effectiveCanvasSize}
+                showGrid={selectedDevice !== 'mobile' && showGridLines}
+                gridSize={20}
+                opacity={0.15}
+              />
+              
+              {/* Alignment Guides */}
+              <AlignmentGuides
+                canvasSize={effectiveCanvasSize}
+                elements={elementsWithResponsive}
+              />
+              
+              {/* Clouds */}
+              
+              
+              
+              
+              
+              {/* Roue standardisée avec découpage cohérent */}
+              <StandardizedWheel
+                campaign={campaign}
+                device={selectedDevice}
+                shouldCropWheel={true}
+                disabled={false}
+                onClick={() => {
+                  console.log('🔘 Clic sur la roue détecté');
+                  setShowBorderModal(true);
+                }}
+              />
+
+              {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
+              <div className="absolute bottom-2 right-2 z-50">
+                <WheelSettingsButton
+                  onClick={() => {
+                    console.log('🔘 Clic sur WheelSettingsButton détecté');
+                    setShowBorderModal(true);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Canvas Elements - Rendu optimisé avec virtualisation */}
+            {elementsWithResponsive
+              .filter((element: any) => {
+                // 🚀 S'assurer que l'élément a des dimensions numériques pour la virtualisation
+                const elementWithProps = {
+                  ...element,
+                  ...getPropertiesForDevice(element, selectedDevice)
+                };
+                
+                // Ajouter des dimensions par défaut pour les éléments de texte si manquantes
+                if (element.type === 'text') {
+                  elementWithProps.width = elementWithProps.width || 200;
+                  elementWithProps.height = elementWithProps.height || 40;
+                }
+                
+                // S'assurer que x, y, width, height sont des nombres
+                elementWithProps.x = Number(elementWithProps.x) || 0;
+                elementWithProps.y = Number(elementWithProps.y) || 0;
+                elementWithProps.width = Number(elementWithProps.width) || 100;
+                elementWithProps.height = Number(elementWithProps.height) || 100;
+                
+                return isElementVisible(elementWithProps);
+              })
+              .map((element: any) => {
+              // Obtenir les propriétés pour l'appareil actuel
+              const responsiveProps = getPropertiesForDevice(element, selectedDevice);
+              
+              // (plus de calcul absolu ici pour éviter les décalages en mobile)
+              
+              // Fusionner les propriétés responsive avec l'élément original (utiliser directement les props responsive pour éviter les décalages)
+              const elementWithResponsive = {
+                ...element,
+                x: responsiveProps.x,
+                y: responsiveProps.y,
+                width: responsiveProps.width,
+                height: responsiveProps.height,
+                fontSize: responsiveProps.fontSize,
+                // Appliquer l'alignement de texte responsive si disponible
+                textAlign: responsiveProps.textAlign || element.textAlign
+              };
+
+              return (
+                <CanvasElement 
+                  key={element.id} 
+                  element={elementWithResponsive} 
+                  selectedDevice={selectedDevice}
+                  isSelected={
+                    selectedElement === element.id || 
+                    Boolean(selectedElements && selectedElements.some((sel: any) => sel.id === element.id))
+                  } 
+                  onSelect={handleElementSelect} 
+                  onUpdate={handleElementUpdate} 
+                  onDelete={handleElementDelete}
+                  containerRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
+                  zoom={zoom}
+                  onAddElement={(newElement) => {
+                    const updatedElements = [...elements, newElement];
+                    onElementsChange(updatedElements);
+                    handleElementSelect(newElement.id);
+                  }}
+                  elements={elements}
+                />
+              );
+            })}
+
+            {/* Grid and Guides Toggle - desktop only */}
+            {selectedDevice === 'desktop' && (
+              <div className="absolute top-2 right-2 flex gap-2">
+                <button
+                  onClick={() => setShowGridLines(!showGridLines)}
+                  className={`p-2 rounded-lg shadow-sm text-xs z-40 transition-colors ${
+                    showGridLines 
+                      ? 'bg-[hsl(var(--primary))] text-white hover:bg-[radial-gradient(circle_at_0%_0%,_#841b60,_#b41b60)]' 
+                      : 'bg-white/80 hover:bg-white text-gray-700'
+                  }`}
+                  title="Afficher/masquer la grille (G)"
+                >
+                  📐
+                </button>
+              </div>
+            )}
+
+            </div>
+          </div>
+        </div>
+
+        {/* Canvas Info - desktop only */}
+        {selectedDevice === 'desktop' && (
+          <div className="text-center mt-4 text-sm text-gray-500">
+            {selectedDevice} • {effectiveCanvasSize.width} × {effectiveCanvasSize.height}px • Cliquez sur la roue pour changer le style de bordure
+          </div>
+        )}
+
+        {/* Multi-Selection Debug Display */}
+        {selectedElements && selectedElements.length > 0 && (
+          <div className="absolute top-2 left-2 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">
+            🎯 Multi-Selection: {selectedElements.length} elements
+            <div className="text-xs mt-1">
+              {selectedElements.map((el: any, i: number) => (
+                <div key={el.id}>{i + 1}. {el.id}</div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Cadre de sélection pour les groupes */}
+        {selectedGroupId && groups && (
+          (() => {
+            const selectedGroup = groups.find(g => g.id === selectedGroupId);
+            if (selectedGroup && selectedGroup.groupChildren) {
+              // Calculer les bounds du groupe à partir des positions absolues de ses éléments
+              const groupElements = elements.filter(el => selectedGroup.groupChildren?.includes(el.id));
+              if (groupElements.length > 0) {
+                // Utiliser les positions absolues pour calculer les bounds du groupe
+                const elementsWithAbsolutePos = groupElements.map(el => {
+                  const absPos = calculateAbsolutePosition(el);
+                  return { ...el, x: absPos.x, y: absPos.y };
+                });
+                
+                const minX = Math.min(...elementsWithAbsolutePos.map(el => el.x));
+                const minY = Math.min(...elementsWithAbsolutePos.map(el => el.y));
+                const maxX = Math.max(...elementsWithAbsolutePos.map(el => el.x + (el.width || 0)));
+                const maxY = Math.max(...elementsWithAbsolutePos.map(el => el.y + (el.height || 0)));
+                
+                const groupBounds = {
+                  x: minX,
+                  y: minY,
+                  width: maxX - minX,
+                  height: maxY - minY
+                };
+                
+                console.log('🎯 Group bounds calculated:', {
+                  groupId: selectedGroup.id,
+                  groupElements: groupElements.length,
+                  bounds: groupBounds,
+                  elementsPositions: elementsWithAbsolutePos.map(el => ({ id: el.id, x: el.x, y: el.y }))
+                });
+                
+                return (
+                  <GroupSelectionFrame
+                    key={selectedGroup.id}
+                    groupId={selectedGroup.id}
+                    bounds={groupBounds}
+                    zoom={zoom}
+                    onMove={(deltaX, deltaY) => {
+                      console.log('🎯 Moving group:', selectedGroup.id, { deltaX, deltaY });
+                      onGroupMove?.(selectedGroup.id, deltaX, deltaY);
+                    }}
+                    onResize={(newBounds) => {
+                      console.log('🎯 Resizing group:', selectedGroup.id, newBounds);
+                      onGroupResize?.(selectedGroup.id, newBounds);
+                    }}
+                    onDoubleClick={() => {
+                      console.log('🎯 Double-click on group - entering edit mode:', selectedGroup.id);
+                      // Passer en mode édition individuelle des éléments du groupe
+                      onSelectedGroupChange?.(null);
+                    }}
+                  />
+                );
+              }
+            }
+            return null;
+          })()
+        )}
+        
+        
+
+        {/* Modal pour la configuration de la roue */}
+        <WheelConfigModal
+          isOpen={showBorderModal}
+          onClose={() => setShowBorderModal(false)}
+          wheelBorderStyle={wheelConfig.borderStyle}
+          wheelBorderColor={wheelConfig.borderColor}
+          wheelBorderWidth={wheelConfig.borderWidth}
+          wheelScale={wheelConfig.scale}
+          wheelShowBulbs={!!wheelConfig.showBulbs}
+          wheelPosition={(wheelConfig as any)?.position || 'center'}
+
+          onBorderStyleChange={(style) => updateWheelConfig?.({ borderStyle: style })}
+          onBorderColorChange={(color) => updateWheelConfig?.({ borderColor: color })}
+          onBorderWidthChange={(width) => updateWheelConfig?.({ borderWidth: width })}
+          onScaleChange={(scale) => updateWheelConfig?.({ scale })}
+          onShowBulbsChange={(show) => updateWheelConfig?.({ showBulbs: show })}
+          onPositionChange={(position) => updateWheelConfig?.({ position })}
+
+          selectedDevice={selectedDevice}
+        />
+        
+        {/* Barre d'échelle de zoom (overlay bas-centre) */}
+        {selectedDevice !== 'mobile' && (
+          <ZoomSlider
+            zoom={localZoom}
+            onZoomChange={handleZoomChange}
+            minZoom={0.1}
+            maxZoom={1}
+            step={0.05}
+            defaultZoom={deviceDefaultZoom}
+          />
+        )}
+        
+
+        
+        {/* Popup contextuel d'animation */}
+        {showAnimationPopup && selectedAnimation && (
+          <AnimationSettingsPopup
+            animation={selectedAnimation}
+            position={popupPosition}
+            onApply={(settings) => {
+              if (selectedElement) {
+                handleElementUpdate(selectedElement, settings);
+                setShowAnimationPopup(false);
+              }
+            }}
+            onClose={() => setShowAnimationPopup(false)}
+            visible={showAnimationPopup}
+          />
+        )}
+      </MobileResponsiveLayout>
+    </DndProvider>
+  );
+});
+
+DesignCanvas.displayName = 'DesignCanvas';
+
+export default DesignCanvas;

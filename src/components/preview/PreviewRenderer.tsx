@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import StandardizedWheel from '../shared/StandardizedWheel';
+import TemplatedQuiz from '../shared/TemplatedQuiz';
+import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
+import Modal from '../common/Modal';
+import { useMessageStore } from '@/stores/messageStore';
 import { useEditorStore } from '@/stores/editorStore';
+import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import { useButtonStyleCSS } from '@/stores/buttonStore';
 import { DesignModuleRenderer } from '@/components/DesignEditor/DesignRenderer';
-import { QuizModuleRenderer } from '@/components/ScratchCardEditor/QuizRenderer';
-import StandardizedWheel from '@/components/shared/StandardizedWheel';
-import TemplatedQuiz from '@/components/shared/TemplatedQuiz';
-import Modal from '@/components/common/Modal';
-import DynamicContactForm, { FieldConfig } from '@/components/forms/DynamicContactForm';
+import { QuizModuleRenderer } from '@/components/QuizEditor/QuizRenderer';
 import type { DesignScreenId } from '@/types/designEditorModular';
 
 interface PreviewRendererProps {
@@ -40,6 +42,12 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const [forceUpdate, setForceUpdate] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [hasSubmittedForm, setHasSubmittedForm] = useState(false);
+  
+  // Lire les messages depuis le store Zustand persistant
+  const { messages: storeMessages } = useMessageStore();
+  
+  // Lire le style global des boutons
+  const globalButtonStyle = useButtonStyleCSS();
 
   // Lire directement depuis le store Zustand pour détecter les changements profonds
   // Utiliser un sélecteur qui force le re-render quand canvasConfig.background change
@@ -205,7 +213,18 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const handleGameFinish = (result: 'win' | 'lose') => {
     console.log('🎯 Game finished with result:', result);
     setGameResult(result);
-    setCurrentScreen('screen3');
+    
+    // Check if form should be shown before result
+    const showFormBeforeResult = campaign?.showFormBeforeResult ?? true;
+    console.log('🔍 [PreviewRenderer] showFormBeforeResult:', showFormBeforeResult);
+    
+    if (showFormBeforeResult && !hasSubmittedForm) {
+      console.log('✅ [PreviewRenderer] Showing form before result');
+      setShowContactForm(true);
+    } else {
+      console.log('⏭️ [PreviewRenderer] Skipping form, going to result');
+      setCurrentScreen('screen3');
+    }
   };
 
   const handleReset = () => {
@@ -227,6 +246,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     console.log('📝 Form submitted:', formData);
     setShowContactForm(false);
     setHasSubmittedForm(true);
+    // After form submission, go to result screen
+    console.log('➡️ [PreviewRenderer] Form submitted, moving to screen3');
+    setCurrentScreen('screen3');
   };
 
   const contactFields: FieldConfig[] = useMemo(() => {
@@ -275,7 +297,68 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
               )}
               
               {/* Autres modules (avec padding) - flex-1 pour pousser le footer en bas */}
-              <div className="flex-1">
+              <div className="flex-1 relative">
+                {/* Rendu des éléments canvas (images et textes personnalisés) */}
+                {campaign?.design?.customImages && campaign.design.customImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                    {campaign.design.customImages.map((img: any) => (
+                      <div
+                        key={img.id}
+                        className="absolute"
+                        style={{
+                          left: `${img.x || 0}px`,
+                          top: `${img.y || 0}px`,
+                          width: `${img.width || 100}px`,
+                          height: `${img.height || 100}px`,
+                          transform: img.rotation ? `rotate(${img.rotation}deg)` : undefined,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        <img
+                          src={img.src || img.url}
+                          alt={img.alt || ''}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            borderRadius: img.borderRadius ? `${img.borderRadius}px` : undefined
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {campaign?.design?.customTexts && campaign.design.customTexts.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                    {campaign.design.customTexts.map((txt: any) => (
+                      <div
+                        key={txt.id}
+                        className="absolute"
+                        style={{
+                          left: `${txt.x || 0}px`,
+                          top: `${txt.y || 0}px`,
+                          width: `${txt.width || 200}px`,
+                          minHeight: `${txt.height || 40}px`,
+                          fontSize: `${txt.fontSize || 16}px`,
+                          fontWeight: txt.fontWeight || 'normal',
+                          fontStyle: txt.fontStyle || 'normal',
+                          textDecoration: txt.textDecoration || 'none',
+                          color: txt.color || '#000000',
+                          textAlign: (txt.textAlign || 'left') as any,
+                          fontFamily: txt.fontFamily || 'inherit',
+                          transform: txt.rotation ? `rotate(${txt.rotation}deg)` : undefined,
+                          pointerEvents: 'none',
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word'
+                        }}
+                      >
+                        {txt.content || txt.text || ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {modules1.length > 0 ? (
                   <section 
                     className="space-y-6" 
@@ -290,47 +373,17 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                     />
                   </section>
                 ) : (
-                  /* Si pas de modules sur screen1, afficher directement le jeu */
+                  /* Si pas de modules sur screen1, afficher un bouton "Participer" par défaut */
                   <div 
                     className="flex items-center justify-center h-full"
                     style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
                   >
-                    {campaign.type === 'wheel' && (
-                      <StandardizedWheel
-                        campaign={campaign}
-                        extractedColors={campaign?.design?.extractedColors || []}
-                        wheelModalConfig={wheelModalConfig}
-                        device={previewMode}
-                        shouldCropWheel={true}
-                        disabled={campaign.type === 'wheel' && !hasSubmittedForm}
-                        onClick={handleWheelClick}
-                        onSpin={() => {
-                          if (campaign.type === 'wheel' && !hasSubmittedForm) {
-                            console.log('🎡 Wheel clicked but form not submitted yet');
-                            return;
-                          }
-                          console.log('🎡 Wheel spinning...');
-                          setTimeout(() => {
-                            const isWin = Math.random() > 0.5;
-                            handleGameFinish(isWin ? 'win' : 'lose');
-                          }, 3000);
-                        }}
-                      />
-                    )}
-                    {campaign.type === 'quiz' && (
-                      <TemplatedQuiz
-                        campaign={campaign}
-                        device={previewMode}
-                        disabled={false}
-                        templateId={campaign?.design?.quizConfig?.templateId || 'image-quiz'}
-                        onAnswerSelected={(isCorrect) => {
-                          console.log('🎯 Quiz answer selected:', isCorrect ? 'correct' : 'incorrect');
-                          setTimeout(() => {
-                            handleGameFinish(isCorrect ? 'win' : 'lose');
-                          }, 1000);
-                        }}
-                      />
-                    )}
+                    <button
+                      onClick={handleParticipate}
+                      className="inline-flex items-center px-8 py-4 text-lg rounded-xl bg-gradient-to-br from-[#841b60] to-[#b41b60] backdrop-blur-sm text-white font-semibold border border-white/20 shadow-lg shadow-[#841b60]/20 hover:from-[#841b60] hover:to-[#6d164f] hover:shadow-xl hover:shadow-[#841b60]/30 transition-all duration-300 transform hover:-translate-y-0.5"
+                    >
+                      Participer
+                    </button>
                   </div>
                 )}
               </div>
@@ -363,67 +416,127 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
               )}
               
               {/* Contenu avec padding */}
-              <div 
-                className="flex-1 flex flex-col items-center justify-center space-y-6"
-                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-              >
-                {/* Modules de l'écran 2 en arrière-plan */}
+              <div className="flex-1 relative">
+                {/* Rendu des éléments canvas (images et textes personnalisés) pour écran 2 */}
+                {campaign?.design?.customImages && campaign.design.customImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                    {campaign.design.customImages.map((img: any) => (
+                      <div
+                        key={img.id}
+                        className="absolute"
+                        style={{
+                          left: `${img.x || 0}px`,
+                          top: `${img.y || 0}px`,
+                          width: `${img.width || 100}px`,
+                          height: `${img.height || 100}px`,
+                          transform: img.rotation ? `rotate(${img.rotation}deg)` : undefined,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        <img
+                          src={img.src || img.url}
+                          alt={img.alt || ''}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            borderRadius: img.borderRadius ? `${img.borderRadius}px` : undefined
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {campaign?.design?.customTexts && campaign.design.customTexts.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                    {campaign.design.customTexts.map((txt: any) => (
+                      <div
+                        key={txt.id}
+                        className="absolute"
+                        style={{
+                          left: `${txt.x || 0}px`,
+                          top: `${txt.y || 0}px`,
+                          width: `${txt.width || 200}px`,
+                          minHeight: `${txt.height || 40}px`,
+                          fontSize: `${txt.fontSize || 16}px`,
+                          fontWeight: txt.fontWeight || 'normal',
+                          fontStyle: txt.fontStyle || 'normal',
+                          textDecoration: txt.textDecoration || 'none',
+                          color: txt.color || '#000000',
+                          textAlign: (txt.textAlign || 'left') as any,
+                          fontFamily: txt.fontFamily || 'inherit',
+                          transform: txt.rotation ? `rotate(${txt.rotation}deg)` : undefined,
+                          pointerEvents: 'none',
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word'
+                        }}
+                      >
+                        {txt.content || txt.text || ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Modules de l'écran 2 */}
                 {modules2.length > 0 && (
-                  <div className="w-full">
+                  <section 
+                    className="space-y-6" 
+                    data-screen="screen2"
+                    style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+                  >
                     <ModuleRenderer
                       modules={modules2 as any}
                       previewMode
                       device={previewMode}
                     />
-                  </div>
+                  </section>
                 )}
 
-              {/* Jeu (Roue, Scratch, etc.) */}
-              {campaign.type === 'wheel' && (
-                <div className="flex items-center justify-center">
-                  <StandardizedWheel
-                    campaign={campaign}
-                    extractedColors={campaign?.design?.extractedColors || []}
-                    wheelModalConfig={wheelModalConfig}
-                    device={previewMode}
-                    shouldCropWheel={true}
-                    disabled={campaign.type === 'wheel' && !hasSubmittedForm}
-                    onClick={handleWheelClick}
-                    onSpin={() => {
-                      if (campaign.type === 'wheel' && !hasSubmittedForm) {
-                        console.log('🎡 Wheel clicked but form not submitted yet');
-                        return;
-                      }
-                      console.log('🎡 Wheel spinning...');
-                      setTimeout(() => {
-                        const isWin = Math.random() > 0.5;
-                        handleGameFinish(isWin ? 'win' : 'lose');
-                      }, 3000);
-                    }}
-                  />
-                </div>
-              )}
+                {/* Jeu (Roue, Scratch, etc.) - Centré */}
+                <div 
+                  className="flex items-center justify-center"
+                  style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: '400px' }}
+                >
+                  {campaign.type === 'wheel' && (
+                    <StandardizedWheel
+                      campaign={campaign}
+                      extractedColors={campaign?.design?.extractedColors || []}
+                      wheelModalConfig={wheelModalConfig}
+                      device={previewMode}
+                      shouldCropWheel={true}
+                      disabled={campaign.type === 'wheel' && !hasSubmittedForm}
+                      onClick={handleWheelClick}
+                      onSpin={() => {
+                        if (campaign.type === 'wheel' && !hasSubmittedForm) {
+                          console.log('🎡 Wheel clicked but form not submitted yet');
+                          return;
+                        }
+                        console.log('🎡 Wheel spinning...');
+                        setTimeout(() => {
+                          const isWin = Math.random() > 0.5;
+                          handleGameFinish(isWin ? 'win' : 'lose');
+                        }, 3000);
+                      }}
+                    />
+                  )}
 
-              {/* Quiz */}
-              {campaign.type === 'quiz' && (
-                <div className="flex items-center justify-center w-full">
-                  <TemplatedQuiz
-                    campaign={campaign}
-                    device={previewMode}
-                    disabled={false}
-                    templateId={campaign?.design?.quizConfig?.templateId || 'image-quiz'}
-                    onAnswerSelected={(isCorrect) => {
-                      console.log('🎯 Quiz answer selected:', isCorrect ? 'correct' : 'incorrect');
-                      // Simuler un résultat après 1 seconde
-                      setTimeout(() => {
-                        handleGameFinish(isCorrect ? 'win' : 'lose');
-                      }, 1000);
-                    }}
-                  />
+                  {/* Quiz */}
+                  {campaign.type === 'quiz' && (
+                    <TemplatedQuiz
+                      campaign={campaign}
+                      device={previewMode}
+                      disabled={false}
+                      templateId={campaign?.design?.quizConfig?.templateId || 'image-quiz'}
+                      onAnswerSelected={(isCorrect) => {
+                        console.log('🎯 Quiz answer selected:', isCorrect ? 'correct' : 'incorrect');
+                        setTimeout(() => {
+                          handleGameFinish(isCorrect ? 'win' : 'lose');
+                        }, 1000);
+                      }}
+                    />
+                  )}
                 </div>
-              )}
-
-              {/* Autres types de jeux à ajouter ici */}
               </div>
               
               {/* Modules Footer (collés en bas sans padding) */}
@@ -454,7 +567,137 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
               )}
               
               {/* Autres modules (avec padding) - flex-1 pour pousser le footer en bas */}
-              <div className="flex-1">
+              <div className="flex-1 relative">
+                {/* Rendu des éléments canvas (images et textes personnalisés) pour écran 3 */}
+                {campaign?.design?.customImages && campaign.design.customImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                    {campaign.design.customImages.map((img: any) => (
+                      <div
+                        key={img.id}
+                        className="absolute"
+                        style={{
+                          left: `${img.x || 0}px`,
+                          top: `${img.y || 0}px`,
+                          width: `${img.width || 100}px`,
+                          height: `${img.height || 100}px`,
+                          transform: img.rotation ? `rotate(${img.rotation}deg)` : undefined,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        <img
+                          src={img.src || img.url}
+                          alt={img.alt || ''}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            borderRadius: img.borderRadius ? `${img.borderRadius}px` : undefined
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {campaign?.design?.customTexts && campaign.design.customTexts.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{ padding: safeZonePadding }}>
+                    {campaign.design.customTexts.map((txt: any) => (
+                      <div
+                        key={txt.id}
+                        className="absolute"
+                        style={{
+                          left: `${txt.x || 0}px`,
+                          top: `${txt.y || 0}px`,
+                          width: `${txt.width || 200}px`,
+                          minHeight: `${txt.height || 40}px`,
+                          fontSize: `${txt.fontSize || 16}px`,
+                          fontWeight: txt.fontWeight || 'normal',
+                          fontStyle: txt.fontStyle || 'normal',
+                          textDecoration: txt.textDecoration || 'none',
+                          color: txt.color || '#000000',
+                          textAlign: (txt.textAlign || 'left') as any,
+                          fontFamily: txt.fontFamily || 'inherit',
+                          transform: txt.rotation ? `rotate(${txt.rotation}deg)` : undefined,
+                          pointerEvents: 'none',
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word'
+                        }}
+                      >
+                        {txt.content || txt.text || ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Messages de résultat dynamiques - Style Scratch Editor - Centré absolument */}
+                <div 
+                  className="absolute inset-0 flex items-center justify-center w-full"
+                  style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
+                >
+                  {(() => {
+                    // Utiliser les messages du store en priorité, sinon fallback sur campaign
+                    const resultMessages = storeMessages || campaign?.resultMessages || {};
+                    const messages = gameResult === 'win' 
+                      ? (resultMessages.winner || {
+                          title: '🎉 Félicitations !',
+                          message: 'Vous avez gagné !',
+                          subMessage: 'Un email de confirmation vous a été envoyé',
+                          buttonText: 'Fermer',
+                          buttonAction: 'close',
+                          showPrizeImage: true
+                        })
+                      : (resultMessages.loser || {
+                          title: '😞 Dommage !',
+                          message: 'Merci pour votre participation !',
+                          subMessage: 'Tentez votre chance une prochaine fois',
+                          buttonText: 'Rejouer',
+                          buttonAction: 'replay'
+                        });
+
+                    const handleButtonClick = () => {
+                      if (messages.buttonAction === 'replay') {
+                        handleReset();
+                      } else if (messages.buttonAction === 'redirect' && messages.redirectUrl) {
+                        window.location.href = messages.redirectUrl;
+                      } else {
+                        // close action - could close modal or navigate away
+                        console.log('Close action');
+                      }
+                    };
+
+                    return (
+                      <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md w-full mx-auto">
+                        {/* Titre principal */}
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-3 text-center">
+                          {messages.title}
+                        </h2>
+
+                        {/* Message principal */}
+                        <p className="text-base text-gray-700 mb-2">
+                          {messages.message}
+                        </p>
+
+                        {/* Sous-message */}
+                        {messages.subMessage && (
+                          <p className="text-sm text-gray-600 mb-6">
+                            {messages.subMessage}
+                          </p>
+                        )}
+
+                        {/* Bouton d'action principal */}
+                        <button
+                          onClick={handleButtonClick}
+                          className="w-full font-medium text-base hover:opacity-90 transition-all duration-200"
+                          style={globalButtonStyle}
+                        >
+                          {messages.buttonText}
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Modules de l'écran 3 (en dessous des messages) */}
                 {modules3.length > 0 && (
                   <section 
                     className="space-y-6" 
@@ -486,28 +729,31 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
         </div>
       </div>
 
-      {showContactForm && campaign.type === 'wheel' && (
+      {/* Modal de formulaire de contact */}
+      {showContactForm && (
         <Modal
-          onClose={() => setShowContactForm(false)}
+          onClose={() => {
+            setShowContactForm(false);
+            // If user closes modal without submitting, go to result screen anyway
+            if (!hasSubmittedForm) {
+              console.log('⚠️ [PreviewRenderer] Form modal closed without submission, going to result');
+              setCurrentScreen('screen3');
+            }
+          }}
           title={campaign?.screens?.[1]?.title || 'Vos informations'}
         >
           <DynamicContactForm
-            fields={contactFields}
+            fields={contactFields as any}
             submitLabel={campaign?.screens?.[1]?.buttonText || "C'est parti !"}
             onSubmit={handleFormSubmit}
             textStyles={{
-              label: {
-                color: campaign?.design?.textStyles?.label?.color || '#374151',
-                fontFamily: campaign?.design?.fontFamily || 'inherit',
-                ...campaign?.design?.textStyles?.label
-              },
+              label: { color: '#374151', fontFamily: 'inherit' },
               button: {
-                backgroundColor: campaign?.design?.customColors?.primary || campaign?.design?.buttonColor || '#841b60',
-                color: '#ffffff',
-                borderRadius: campaign?.design?.borderRadius || '8px',
-                fontFamily: campaign?.design?.fontFamily || 'inherit',
-                fontWeight: '600',
-                ...campaign?.design?.textStyles?.button
+                backgroundColor: globalButtonStyle.backgroundColor || '#841b60',
+                color: globalButtonStyle.color || '#ffffff',
+                borderRadius: globalButtonStyle.borderRadius || '8px',
+                fontFamily: 'inherit',
+                fontWeight: '600'
               }
             }}
             inputBorderColor={campaign?.design?.customColors?.primary || campaign?.design?.borderColor || '#E5E7EB'}

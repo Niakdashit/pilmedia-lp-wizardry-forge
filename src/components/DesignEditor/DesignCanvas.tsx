@@ -199,6 +199,17 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   // Precise DOM-measured bounds per element (canvas-space units)
   const [measuredBounds, setMeasuredBounds] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
 
+  // État pour gérer les images de fond par device (desktop/tablet/mobile)
+  const [deviceBackgrounds, setDeviceBackgrounds] = useState<{
+    desktop: string | null;
+    tablet: string | null;
+    mobile: string | null;
+  }>({
+    desktop: null,
+    tablet: null,
+    mobile: null
+  });
+
   // Intégration du système auto-responsive
   const { applyAutoResponsive, getPropertiesForDevice, DEVICE_DIMENSIONS } = useAutoResponsive();
 
@@ -1485,6 +1496,107 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
   }, []);
 
+  // Listen for per-screen background apply and store a local override for this canvas screen & device
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; screenId?: 'screen1' | 'screen2' | 'screen3'; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
+      if (!detail || typeof detail.url !== 'string') return;
+      if (detail.screenId === (screenId as any)) {
+        const targetDevice = detail.device || selectedDevice;
+        // Mettre à jour l'état pour l'appareil spécifique
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [targetDevice]: detail.url || null
+        }));
+        // Persister pour le preview (clé par device + screen)
+        try {
+          const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> =
+            targetDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
+          devicesToPersist.forEach((d) => {
+            try { localStorage.setItem(`design-bg-${d}-${screenId}` as string, detail.url || ''); } catch {}
+          });
+        } catch {}
+        // Synchroniser avec le parent si disponible
+        if (onBackgroundChange) {
+          onBackgroundChange({ type: 'image', value: detail.url || '' });
+        }
+      }
+    };
+    window.addEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundCurrentScreen', handler as EventListener);
+  }, [screenId, selectedDevice, onBackgroundChange]);
+
+  // Listen for device-scoped apply to all screens; apply to ALL screens for the specified device
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { url?: string; device?: 'desktop' | 'tablet' | 'mobile' } | undefined;
+      if (!detail || typeof detail.url !== 'string') return;
+      const targetDevice = detail.device || selectedDevice;
+      // Appliquer à TOUS les écrans (pas de vérification de screenId)
+      // Mettre à jour l'état pour l'appareil spécifique
+      setDeviceBackgrounds(prev => ({
+        ...prev,
+        [targetDevice]: detail.url || null
+      }));
+      // Persister pour tous les écrans afin que le preview puisse lire la valeur
+      try {
+        const screens: Array<'screen1' | 'screen2' | 'screen3'> = ['screen1', 'screen2', 'screen3'];
+        const devicesToPersist: Array<'desktop' | 'tablet' | 'mobile'> =
+          targetDevice === 'mobile' ? ['mobile'] : ['desktop', 'tablet'];
+        devicesToPersist.forEach((d) => {
+          screens.forEach((s) => {
+            try { localStorage.setItem(`design-bg-${d}-${s}`, detail.url || ''); } catch {}
+          });
+        });
+      } catch {}
+      // Synchroniser avec le parent si disponible
+      if (onBackgroundChange) {
+        onBackgroundChange({ type: 'image', value: detail.url || '' });
+      }
+    };
+    window.addEventListener('applyBackgroundAllScreens', handler as EventListener);
+    return () => window.removeEventListener('applyBackgroundAllScreens', handler as EventListener);
+  }, [screenId, selectedDevice, onBackgroundChange]);
+
+  // Listen for clear backgrounds on other screens (when unchecking "apply to all")
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<any>)?.detail as { device?: 'desktop' | 'tablet' | 'mobile'; keepScreenId?: string } | undefined;
+      if (!detail) return;
+      const targetDevice = detail.device || selectedDevice;
+      // Si ce n'est pas l'écran à conserver, supprimer le background pour ce device
+      if (detail.keepScreenId !== screenId) {
+        setDeviceBackgrounds(prev => ({
+          ...prev,
+          [targetDevice]: null
+        }));
+        try {
+          localStorage.removeItem(`design-bg-${targetDevice}-${screenId}`);
+        } catch {}
+      }
+    };
+    window.addEventListener('clearBackgroundOtherScreens', handler as EventListener);
+    return () => window.removeEventListener('clearBackgroundOtherScreens', handler as EventListener);
+  }, [screenId, selectedDevice]);
+
+  // Nettoyer les images de fond au montage (réinitialisation à chaque chargement de page)
+  useEffect(() => {
+    try {
+      // Nettoyer toutes les clés de background pour ce screenId
+      const devices: Array<'desktop' | 'tablet' | 'mobile'> = ['desktop', 'tablet', 'mobile'];
+      devices.forEach((d) => {
+        try { 
+          localStorage.removeItem(`design-bg-${d}-${screenId}`);
+        } catch {}
+      });
+      
+      // Réinitialiser l'état
+      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
+    } catch {
+      setDeviceBackgrounds({ desktop: null, tablet: null, mobile: null });
+    }
+  }, [screenId]);
+
   // (moved) auto-responsive, canvasSize, and effectiveCanvasSize are defined earlier to avoid TDZ issues
 
   // 🚀 Canvas virtualisé pour un rendu ultra-optimisé
@@ -1771,7 +1883,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             <div 
               className="absolute inset-0" 
               style={{
-                background: background?.type === 'image' ? `url(${background.value}) center/cover no-repeat` : background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                background: (() => {
+                  // Priorité 1: Image de fond spécifique au device (depuis deviceBackgrounds)
+                  const deviceBg = deviceBackgrounds[selectedDevice];
+                  if (deviceBg) {
+                    return `url(${deviceBg}) center/cover no-repeat`;
+                  }
+                  // Priorité 2: Background global (depuis props)
+                  if (background?.type === 'image') {
+                    return `url(${background.value}) center/cover no-repeat`;
+                  }
+                  // Priorité 3: Couleur de fond ou gradient par défaut
+                  return background?.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)';
+                })()
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();
