@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import FormHandler from './components/FormHandler';
@@ -7,6 +7,8 @@ import type { Tables } from '@/integrations/supabase/types';
 import { QuizModuleRenderer } from '../QuizEditor/QuizRenderer';
 import { useParticipations } from '../../hooks/useParticipations';
 import type { Module } from '@/types/modularEditor';
+import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import { useEditorStore } from '@/stores/editorStore';
 
 const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
   desktop: 56,
@@ -35,22 +37,37 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const [forceUpdate, setForceUpdate] = useState(0);
 
   const showScore = !!(campaign?.game_config as any)?.quiz?.showScore;
+  const storeCampaign = useEditorStore((state) => state.campaign);
+  const { getCanonicalPreviewData } = useEditorPreviewSync();
   
   // Écouter les mises à jour de style pour forcer le re-render
-  React.useEffect(() => {
+  useEffect(() => {
     const handleStyleUpdate = () => {
       console.log('🔄 [FunnelQuizParticipate] Style update received, forcing re-render');
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    const handleFormFieldsSync = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('📋 [FunnelQuizParticipate] FormFields sync event received:', {
+        fieldsCount: detail?.formFields?.length,
+        timestamp: detail?.timestamp
+      });
       setForceUpdate(prev => prev + 1);
     };
     
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('quizStyleUpdateFallback', handleStyleUpdate);
     window.addEventListener('modularModuleSelected', handleStyleUpdate);
+    window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
+    window.addEventListener('editor-force-sync', handleFormFieldsSync);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
       window.removeEventListener('quizStyleUpdateFallback', handleStyleUpdate);
       window.removeEventListener('modularModuleSelected', handleStyleUpdate);
+      window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
+      window.removeEventListener('editor-force-sync', handleFormFieldsSync);
     };
   }, []);
 
@@ -102,13 +119,45 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
   const safeZonePadding = SAFE_ZONE_PADDING[previewMode] ?? SAFE_ZONE_PADDING.desktop;
   const safeZoneRadius = SAFE_ZONE_RADIUS[previewMode] ?? SAFE_ZONE_RADIUS.desktop;
 
-  const fields = useMemo(() => (
-    (campaign?.form_fields && Array.isArray(campaign.form_fields)) ? campaign.form_fields : [
+  const fields = useMemo(() => {
+    // Priorité 1: Données canoniques du hook de synchronisation
+    const canonicalData = getCanonicalPreviewData();
+    if (canonicalData.formFields && Array.isArray(canonicalData.formFields) && canonicalData.formFields.length > 0) {
+      console.log('📋 [FunnelQuizParticipate] ✅ Using canonical formFields:', {
+        count: canonicalData.formFields.length,
+        fields: canonicalData.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type })),
+        timestamp: canonicalData.timestamp
+      });
+      return canonicalData.formFields;
+    }
+    
+    // Priorité 2: Store campaign
+    if (storeCampaign?.formFields && Array.isArray(storeCampaign.formFields) && storeCampaign.formFields.length > 0) {
+      console.log('📋 [FunnelQuizParticipate] ⚠️ Using storeCampaign formFields:', {
+        count: storeCampaign.formFields.length,
+        fields: storeCampaign.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
+      });
+      return storeCampaign.formFields;
+    }
+    
+    // Priorité 3: Campaign props (form_fields avec underscore OU formFields camelCase)
+    const campaignFields = (campaign as any)?.formFields || campaign?.form_fields;
+    if (campaignFields && Array.isArray(campaignFields) && campaignFields.length > 0) {
+      console.log('📋 [FunnelQuizParticipate] ⚠️ Using campaign formFields (default from generator):', {
+        count: campaignFields.length,
+        fields: campaignFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
+      });
+      return campaignFields;
+    }
+    
+    // Fallback: Champs par défaut
+    console.warn('📋 [FunnelQuizParticipate] ❌ Using fallback default formFields');
+    return [
       { id: 'prenom', label: 'Prénom', type: 'text', required: true },
       { id: 'nom', label: 'Nom', type: 'text', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true }
-    ]
-  ), [campaign?.form_fields]);
+    ];
+  }, [getCanonicalPreviewData, storeCampaign?.formFields, storeCampaign?._lastUpdate, campaign?.form_fields, (campaign as any)?.formFields, forceUpdate]);
 
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     const design = (campaign.design as any);

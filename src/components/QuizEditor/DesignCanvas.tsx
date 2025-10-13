@@ -17,6 +17,7 @@ import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
+import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
 
@@ -1981,20 +1982,23 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
   }, [campaign, resolvedQuizTemplateId]);
 
+  // 🎯 Récupérer le layout dynamique pour le positionnement du quiz
+  const quizLayout = useMemo(() => useLayoutFromCampaign(campaign), [campaign]);
+
   const customElementRenderers = useMemo(() => ({
     'quiz-template': ({ elementStyle }: any) => (
       <div className="relative w-full h-full" style={elementStyle} data-canvas-ui="quiz-template">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <ScreenLayoutWrapper layout={quizLayout} className="absolute inset-0 pointer-events-none">
           <TemplatedQuiz
             campaign={quizCampaignForRenderer}
             device={selectedDevice}
             disabled={readOnly}
             templateId={resolvedQuizTemplateId}
           />
-        </div>
+        </ScreenLayoutWrapper>
       </div>
     )
-  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly]);
+  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly, quizLayout]);
 
   const handleElementTap = useCallback((element: any) => {
     if (!element || readOnly) return;
@@ -2434,7 +2438,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 const shouldRenderInlinePreview = !hideInlineQuizPreview && (!elements.some(el => el.id === 'quiz-template'));
 
                 return (
-                  <div className="w-full h-full flex justify-center items-center">
+                  <ScreenLayoutWrapper layout={quizLayout} className="w-full h-full">
                     {shouldRenderInlinePreview && (
                       <div
                         role="button"
@@ -2470,7 +2474,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         />
                       </div>
                     )}
-                  </div>
+                  </ScreenLayoutWrapper>
                 );
               })()}
 

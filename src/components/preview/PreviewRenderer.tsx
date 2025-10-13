@@ -76,16 +76,27 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       setForceUpdate(prev => prev + 1);
     };
     
+    const handleFormFieldsSync = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('📋 [PreviewRenderer] FormFields sync event received:', {
+        fieldsCount: detail?.formFields?.length,
+        timestamp: detail?.timestamp
+      });
+      setForceUpdate(prev => prev + 1);
+    };
+    
     window.addEventListener('editor-background-sync', handleUpdate);
     window.addEventListener('editor-modules-sync', handleUpdate);
     window.addEventListener('editor-module-sync', handleUpdate);
     window.addEventListener('editor-force-sync', handleUpdate);
+    window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
     
     return () => {
       window.removeEventListener('editor-background-sync', handleUpdate);
       window.removeEventListener('editor-modules-sync', handleUpdate);
       window.removeEventListener('editor-module-sync', handleUpdate);
       window.removeEventListener('editor-force-sync', handleUpdate);
+      window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
     };
   }, []);
 
@@ -246,23 +257,49 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     console.log('📝 Form submitted:', formData);
     setShowContactForm(false);
     setHasSubmittedForm(true);
-    // After form submission, go to result screen
-    console.log('➡️ [PreviewRenderer] Form submitted, moving to screen3');
-    setCurrentScreen('screen3');
+    // For quiz, transition to result screen after form submission
+    // For other game types (wheel, scratch, etc.), just close the modal
+    if (campaign?.type === 'quiz') {
+      console.log('➡️ [PreviewRenderer] Quiz form submitted, moving to screen3');
+      setCurrentScreen('screen3');
+    } else {
+      console.log('✅ [PreviewRenderer] Form submitted, modal closed');
+      // Modal is closed, user stays on current screen (game screen)
+    }
   };
 
   const contactFields: FieldConfig[] = useMemo(() => {
-    const fields = campaign?.contactFields || [];
-    if (fields.length === 0) {
-      return [
-        { id: 'firstName', label: 'Prénom', type: 'text', required: true },
-        { id: 'lastName', label: 'Nom', type: 'text', required: true },
-        { id: 'email', label: 'Email', type: 'email', required: true },
-        { id: 'phone', label: 'Téléphone', type: 'tel', required: false }
-      ];
+    // Priorité 1: Données canoniques du hook de synchronisation
+    if (canonicalData.formFields && Array.isArray(canonicalData.formFields) && canonicalData.formFields.length > 0) {
+      console.log('📋 [PreviewRenderer] ✅ Using canonical formFields:', {
+        count: canonicalData.formFields.length,
+        fields: canonicalData.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type })),
+        timestamp: canonicalData.timestamp
+      });
+      return canonicalData.formFields;
     }
-    return fields;
-  }, [campaign?.contactFields]);
+    
+    // Priorité 2: campaign.formFields (camelCase)
+    if (campaign?.formFields && Array.isArray(campaign.formFields) && campaign.formFields.length > 0) {
+      console.log('📋 [PreviewRenderer] ⚠️ Using campaign.formFields:', campaign.formFields.length);
+      return campaign.formFields;
+    }
+    
+    // Priorité 3: campaign.contactFields (ancien nom)
+    const fields = campaign?.contactFields || [];
+    if (fields.length > 0) {
+      console.log('📋 [PreviewRenderer] ⚠️ Using campaign.contactFields (legacy):', fields.length);
+      return fields;
+    }
+    
+    // Fallback: Champs par défaut (ne devrait pas être utilisé)
+    console.warn('📋 [PreviewRenderer] ❌ Using fallback default formFields');
+    return [
+      { id: 'firstName', label: 'Prénom', type: 'text', required: true },
+      { id: 'lastName', label: 'Nom', type: 'text', required: true },
+      { id: 'email', label: 'Email', type: 'email', required: true }
+    ];
+  }, [canonicalData, campaign?.formFields, campaign?.contactFields, forceUpdate]);
 
   // Déterminer quel renderer utiliser selon le type de campagne
   const isDesignModular = Boolean(
@@ -275,8 +312,21 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const ModuleRenderer = isDesignModular ? DesignModuleRenderer : QuizModuleRenderer;
 
   return (
-    <div className="w-full h-[100dvh] min-h-[100dvh]">
-      <div className="relative w-full h-full">
+    <>
+      <style>{`
+        @keyframes slideUpFromBottom {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+      <div className="w-full h-[100dvh] min-h-[100dvh]">
+        <div className="relative w-full h-full">
         {/* Background */}
         <div className="absolute inset-0 z-0" style={backgroundStyle} />
 
@@ -554,7 +604,12 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
           {/* SCREEN 3: Résultat */}
           {currentScreen === 'screen3' && (
-            <div className="flex flex-col min-h-full">
+            <div 
+              className="flex flex-col min-h-full animate-slide-up"
+              style={{
+                animation: 'slideUpFromBottom 0.5s ease-out forwards'
+              }}
+            >
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules3.length > 0 && (
                 <div className="w-full">
@@ -728,20 +783,30 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
           )}
         </div>
       </div>
+      </div>
 
       {/* Modal de formulaire de contact */}
-      {showContactForm && (
-        <Modal
-          onClose={() => {
-            setShowContactForm(false);
-            // If user closes modal without submitting, go to result screen anyway
-            if (!hasSubmittedForm) {
-              console.log('⚠️ [PreviewRenderer] Form modal closed without submission, going to result');
-              setCurrentScreen('screen3');
-            }
-          }}
-          title={campaign?.screens?.[1]?.title || 'Vos informations'}
-        >
+      {showContactForm && (() => {
+        // Calculer la hauteur dynamique en fonction du nombre de champs
+        const baseHeight = 200;
+        const fieldHeight = 100;
+        const calculatedHeight = baseHeight + (contactFields.length * fieldHeight);
+        const maxScreenHeight = window.innerHeight * 0.85;
+        const maxHeight = `${Math.min(calculatedHeight, maxScreenHeight)}px`;
+        
+        return (
+          <Modal
+            onClose={() => {
+              // Fermer la modal sans passer à l'écran suivant
+              // L'utilisateur doit remplir le formulaire pour continuer
+              console.log('⚠️ [PreviewRenderer] Form modal closed without submission - user must submit to continue');
+              setShowContactForm(false);
+              // Ne PAS passer à l'écran suivant si le formulaire n'a pas été soumis
+            }}
+            title={campaign?.screens?.[1]?.title || 'Vos informations'}
+            maxHeight={maxHeight}
+          >
+        
           <DynamicContactForm
             fields={contactFields as any}
             submitLabel={campaign?.screens?.[1]?.buttonText || "C'est parti !"}
@@ -760,8 +825,9 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
             inputFocusColor={campaign?.design?.customColors?.primary || campaign?.design?.buttonColor || '#841b60'}
           />
         </Modal>
-      )}
-    </div>
+        );
+      })()}
+    </>
   );
 };
 

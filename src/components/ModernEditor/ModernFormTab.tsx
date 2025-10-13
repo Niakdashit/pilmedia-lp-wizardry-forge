@@ -14,6 +14,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import Modal from '@/components/common/Modal';
 import { useSavedForms } from '@/hooks/useSavedForms';
+import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 
 interface ModernFormTabProps {
   campaign: any;
@@ -136,6 +137,7 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
 }) => {
   const formFields = campaign?.formFields || [];
   const showFormBeforeResult = campaign?.showFormBeforeResult ?? true;
+  const { syncFormFields } = useEditorPreviewSync();
 
   // Saved forms state & logic
   const { forms, fetchForms, createForm, updateForm, error: formsError } = useSavedForms();
@@ -187,29 +189,44 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       options: []
     };
 
+    const updatedFields = [...(formFields || []), newField];
+    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: [...(prev.formFields || []), newField],
+      formFields: updatedFields,
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
+    
+    // Synchroniser avec le preview en temps réel
+    syncFormFields(updatedFields);
   };
 
   const updateField = (fieldId: string, updates: any) => {
+    const updatedFields = (formFields || []).map((field: any) => 
+      field.id === fieldId ? { ...field, ...updates } : field
+    );
+    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: (prev.formFields || []).map((field: any) => 
-        field.id === fieldId ? { ...field, ...updates } : field
-      ),
+      formFields: updatedFields,
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
+    
+    // Synchroniser avec le preview en temps réel
+    syncFormFields(updatedFields);
   };
 
   const removeField = (fieldId: string) => {
+    const updatedFields = (formFields || []).filter((field: any) => field.id !== fieldId);
+    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: (prev.formFields || []).filter((field: any) => field.id !== fieldId),
+      formFields: updatedFields,
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
+    
+    // Synchroniser avec le preview en temps réel
+    syncFormFields(updatedFields);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -218,11 +235,15 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
       const oldIndex = formFields.findIndex((f: any) => f.id === active.id);
       const newIndex = formFields.findIndex((f: any) => f.id === over.id);
       const items = arrayMove(formFields, oldIndex, newIndex);
+      
       setCampaign((prev: any) => (prev ? {
         ...prev,
         formFields: items,
         _lastUpdate: Date.now() // Force sync avec preview
       } : prev));
+      
+      // Synchroniser avec le preview en temps réel
+      syncFormFields(items);
     }
   };
 
@@ -256,11 +277,17 @@ const ModernFormTab: React.FC<ModernFormTabProps> = ({
     if (!selected) return;
     const proceed = formFields.length === 0 || window.confirm('Charger ce formulaire remplacera les champs existants. Continuer ?');
     if (!proceed) return;
+    
+    const loadedFields = Array.isArray(selected.fields) ? selected.fields : [];
+    
     setCampaign((prev: any) => (prev ? {
       ...prev,
-      formFields: Array.isArray(selected.fields) ? selected.fields : [],
+      formFields: loadedFields,
       _lastUpdate: Date.now() // Force sync avec preview
     } : prev));
+    
+    // Synchroniser avec le preview en temps réel
+    syncFormFields(loadedFields);
   };
 
   const handleSelectAndLoad = (id: string) => {

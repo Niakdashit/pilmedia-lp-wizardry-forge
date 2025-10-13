@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Color from 'color';
 import DynamicContactForm from '../forms/DynamicContactForm';
 import { QuizGame, Memory, Puzzle } from '../GameTypes';
 import { useParticipations } from '../../hooks/useParticipations';
 import { STANDARD_GAME_TYPES } from '../../utils/funnelMatcher';
+import { useEditorPreviewSync } from '../../hooks/useEditorPreviewSync';
+import { useEditorStore } from '../../stores/editorStore';
 
 const DEFAULT_FIELDS = [
   { id: "civilite", label: "Civilité", type: "select", options: ["M.", "Mme"], required: false },
@@ -18,16 +20,65 @@ interface GameFunnelProps {
 
 const FunnelStandard: React.FC<GameFunnelProps> = ({ campaign }) => {
   const [step, setStep] = useState<'start' | 'form' | 'game' | 'end'>('start');
+  const [forceUpdate, setForceUpdate] = useState(0);
   const { createParticipation, loading: participationLoading } = useParticipations();
+  const storeCampaign = useEditorStore((state) => state.campaign);
+  const { getCanonicalPreviewData } = useEditorPreviewSync();
 
   // Vérifier que le type de jeu est compatible avec ce funnel
   if (!STANDARD_GAME_TYPES.includes(campaign.type)) {
     console.warn(`Type de jeu "${campaign.type}" utilise FunnelStandard mais devrait utiliser FunnelUnlockedGame`);
   }
 
-  const fields = Array.isArray(campaign.formFields) && campaign.formFields.length > 0 
-    ? campaign.formFields 
-    : DEFAULT_FIELDS;
+  // Écouter les changements de formFields en temps réel
+  useEffect(() => {
+    const handleFormFieldsSync = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('📋 [FunnelStandard] FormFields sync event received:', {
+        fieldsCount: detail?.formFields?.length,
+        timestamp: detail?.timestamp
+      });
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
+    window.addEventListener('editor-force-sync', handleFormFieldsSync);
+    
+    return () => {
+      window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
+      window.removeEventListener('editor-force-sync', handleFormFieldsSync);
+    };
+  }, []);
+
+  // Utiliser les données canoniques pour les champs de formulaire
+  const fields = useMemo(() => {
+    // Priorité 1: Données canoniques du hook de synchronisation
+    const canonicalData = getCanonicalPreviewData();
+    if (canonicalData.formFields && Array.isArray(canonicalData.formFields) && canonicalData.formFields.length > 0) {
+      console.log('📋 [FunnelStandard] Using canonical formFields:', {
+        count: canonicalData.formFields.length,
+        fields: canonicalData.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type })),
+        timestamp: canonicalData.timestamp
+      });
+      return canonicalData.formFields;
+    }
+    
+    // Priorité 2: Store campaign
+    if (storeCampaign?.formFields && Array.isArray(storeCampaign.formFields) && storeCampaign.formFields.length > 0) {
+      console.log('📋 [FunnelStandard] Using storeCampaign formFields:', storeCampaign.formFields.length);
+      return storeCampaign.formFields;
+    }
+    
+    // Priorité 3: Campaign props
+    if (campaign?.formFields && Array.isArray(campaign.formFields) && campaign.formFields.length > 0) {
+      console.log('📋 [FunnelStandard] Using campaign formFields:', campaign.formFields.length);
+      return campaign.formFields;
+    }
+    
+    // Fallback: Champs par défaut
+    console.log('📋 [FunnelStandard] Using default formFields');
+    return DEFAULT_FIELDS;
+  }, [getCanonicalPreviewData, storeCampaign?.formFields, storeCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate, forceUpdate]);
 
   // Récupérer les couleurs de design de la campagne
   const design = campaign.design || {};

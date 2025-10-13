@@ -7,9 +7,10 @@ interface ModalProps {
   children: React.ReactNode;
   onClose: () => void;
   width?: string;
+  maxHeight?: string; // Nouvelle prop pour contrôler la hauteur max
 }
 
-const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md' }) => {
+const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md', maxHeight }) => {
   useEffect(() => {
     // Aide au debug en cas de soucis d'affichage
     // eslint-disable-next-line no-console
@@ -55,7 +56,14 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
           </div>
         )}
         {/* Contenu */}
-        <div className="px-6 pb-6 pt-2 max-h-96 overflow-y-auto">{children}</div>
+        <div 
+          className="px-6 pb-6 pt-2 overflow-y-auto"
+          style={{
+            maxHeight: maxHeight || '70vh' // Hauteur adaptative (70% de la hauteur de l'écran par défaut)
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

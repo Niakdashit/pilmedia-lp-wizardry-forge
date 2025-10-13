@@ -17,6 +17,7 @@ import ScratchCardCanvas from '../ScratchCardEditor/ScratchCardCanvas';
 import { useScratchCardStore } from '../ScratchCardEditor/state/scratchcard.store';
 import { QuizModuleRenderer } from '../ScratchCardEditor/QuizRenderer';
 import { DesignModuleRenderer } from '../DesignEditor/DesignRenderer';
+import { ScreenLayoutWrapper, useLayoutFromCampaign } from '../Layout/ScreenLayoutWrapper';
 
 const SAFE_ZONE_PADDING: Record<'desktop' | 'tablet' | 'mobile', number> = {
   desktop: 56,
@@ -51,8 +52,8 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     console.warn(`Type de jeu "${campaign.type}" utilise FunnelUnlockedGame mais devrait utiliser FunnelStandard`);
   }
 
-  // LOGIQUE FUNNEL UNLOCKED : formulaire obligatoire pour démarrer le jeu
-  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
+  // LOGIQUE FUNNEL UNLOCKED : écran 1 en premier, formulaire s'ouvre au grattage
+  const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1'); // Écran 1 en premier
   const [formValidated, setFormValidated] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
@@ -73,12 +74,22 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       setForceUpdate(prev => prev + 1);
     };
     
+    const handleFormFieldsSync = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('📋 [FunnelUnlockedGame] FormFields sync event received:', {
+        fieldsCount: detail?.formFields?.length,
+        timestamp: detail?.timestamp
+      });
+      setForceUpdate(prev => prev + 1);
+    };
+    
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('modularModuleSelected', handleStyleUpdate);
     window.addEventListener('editor-background-sync', handleEditorSync);
     window.addEventListener('editor-modules-sync', handleEditorSync);
     window.addEventListener('editor-module-sync', handleEditorSync);
     window.addEventListener('editor-force-sync', handleEditorSync);
+    window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
@@ -87,6 +98,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       window.removeEventListener('editor-modules-sync', handleEditorSync);
       window.removeEventListener('editor-module-sync', handleEditorSync);
       window.removeEventListener('editor-force-sync', handleEditorSync);
+      window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
     };
   }, []);
 
@@ -189,6 +201,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             storeCampaign.design?.background ??
             campaign.design?.background
         },
+        // ✅ IMPORTANT: Synchroniser les formFields depuis le store
+        formFields: storeCampaign.formFields || campaign.formFields,
+        _lastUpdate: storeCampaign._lastUpdate || Date.now(),
         // Préserver les messages personnalisés
         scratchResultMessages: storeCampaign.scratchResultMessages || campaign.scratchResultMessages
       });
@@ -335,28 +350,48 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   } = useParticipations();
 
   const fields: FieldConfig[] = useMemo(() => {
-    // Utilisation prioritaire des champs depuis liveCampaign.formFields (synchronisé en temps réel)
+    // Priorité 1: Données canoniques du hook de synchronisation
+    const canonicalData = getCanonicalPreviewData();
+    if (canonicalData.formFields && Array.isArray(canonicalData.formFields) && canonicalData.formFields.length > 0) {
+      console.log('📋 [FunnelUnlockedGame] ✅ Using canonical formFields:', {
+        count: canonicalData.formFields.length,
+        fields: canonicalData.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type })),
+        timestamp: canonicalData.timestamp
+      });
+      return canonicalData.formFields;
+    }
+    
+    // Priorité 2: Utilisation des champs depuis liveCampaign.formFields (synchronisé en temps réel)
     if (liveCampaign?.formFields && Array.isArray(liveCampaign.formFields) && liveCampaign.formFields.length > 0) {
+      console.log('📋 [FunnelUnlockedGame] ⚠️ Using liveCampaign formFields:', {
+        count: liveCampaign.formFields.length,
+        fields: liveCampaign.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
+      });
       return liveCampaign.formFields;
     }
-    // Fallback vers campaign.formFields si liveCampaign n'est pas encore synchronisé
+    
+    // Priorité 3: Fallback vers campaign.formFields si liveCampaign n'est pas encore synchronisé
     if (campaign?.formFields && Array.isArray(campaign.formFields) && campaign.formFields.length > 0) {
+      console.log('📋 [FunnelUnlockedGame] ⚠️ Using campaign formFields (default from generator):', {
+        count: campaign.formFields.length,
+        fields: campaign.formFields.map((f: any) => ({ id: f.id, label: f.label, type: f.type }))
+      });
       return campaign.formFields;
     }
-    // Fallback vers les champs par défaut
+    
+    // Fallback final: Champs par défaut (ne devrait jamais être utilisé)
+    console.warn('📋 [FunnelUnlockedGame] ❌ Using fallback default formFields - this should not happen!');
     return [
       { id: 'prenom', label: 'Prénom', type: 'text', required: true },
       { id: 'nom', label: 'Nom', type: 'text', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true }
     ];
-  }, [liveCampaign?.formFields, liveCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate]);
+  }, [getCanonicalPreviewData, liveCampaign?.formFields, liveCampaign?._lastUpdate, campaign?.formFields, campaign?._lastUpdate, forceUpdate]);
 
   const handleGameButtonClick = () => {
     // Passer à l'écran 2 (cartes visibles mais bloquées)
     setCurrentScreen('screen2');
-    if (!formValidated) {
-      setShowFormModal(true);
-    }
+    // Ne pas ouvrir le formulaire automatiquement, il s'ouvrira au grattage
   };
 
   const handleCardClick = () => {
@@ -414,10 +449,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
   // FONCTION DE RESET COMPLET pour le funnel unlocked
   const handleReset = () => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔄 Reset complet du funnel unlocked game');
-    }
-    setCurrentScreen('screen1');
+    setCurrentScreen('screen1'); // Retour à l'écran 1
     setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
     setGameResult(null);
     setShowFormModal(false);
@@ -641,11 +673,6 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   }}
                 />
               )}
-              {formValidated && (
-                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 9999, background: 'lime', padding: '5px', fontSize: '12px' }}>
-                  ✅ Form validated - Wheel should be clickable
-                </div>
-              )}
             </>
           )}
 
@@ -752,40 +779,39 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         </div>
 
         {/* Afficher le formulaire configuré exactement comme dans l'éditeur */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
+        <div className="absolute inset-0 z-20">
+          <ScreenLayoutWrapper 
+            layout={useLayoutFromCampaign(liveCampaign)}
+            style={{ padding: '1rem' }}
+          >
             {(() => {
               // Reproduire exactement la logique de DesignCanvas pour le formulaire
               const campaignDesign = (liveCampaign as any)?.design || {};
-              const formPosition = (campaignDesign.formPosition as 'left' | 'right') || 'right';
               const formWidth = campaignDesign.formWidth || campaignDesign.formConfig?.widthPx ? `${campaignDesign.formConfig.widthPx}px` : '360px';
-              const buttonColor = campaignDesign.buttonColor || '#841b60';
-              const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
-              const borderColor = campaignDesign.borderColor || '#E5E7EB';
-              const focusColor = buttonColor;
-              const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
-              const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
-              const panelBg = campaignDesign.blockColor || '#ffffff';
-              const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
-              const title = (liveCampaign as any)?.screens?.[1]?.title || 'Vos informations';
-              const description = (liveCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour participer';
-              const submitLabel = (liveCampaign as any)?.screens?.[1]?.buttonText || 'SPIN';
+            const buttonColor = campaignDesign.buttonColor || '#841b60';
+            const buttonTextColor = campaignDesign.buttonTextColor || '#ffffff';
+            const borderColor = campaignDesign.borderColor || '#E5E7EB';
+            const focusColor = buttonColor;
+            const borderRadius = typeof campaignDesign.borderRadius === 'number' ? `${campaignDesign.borderRadius}px` : (campaignDesign.borderRadius || '12px');
+            const inputBorderRadius = typeof campaignDesign.inputBorderRadius === 'number' ? campaignDesign.inputBorderRadius : (typeof campaignDesign.borderRadius === 'number' ? campaignDesign.borderRadius : 2);
+            const panelBg = campaignDesign.blockColor || '#ffffff';
+            const textColor = campaignDesign?.textStyles?.label?.color || '#111827';
+            const title = (liveCampaign as any)?.screens?.[1]?.title || 'Vos informations';
+            const description = (liveCampaign as any)?.screens?.[1]?.description || 'Remplissez le formulaire pour participer';
+            const submitLabel = (liveCampaign as any)?.screens?.[1]?.buttonText || 'SPIN';
 
-              return (
-                <div
-                  className={`absolute z-[60] opacity-100 pointer-events-auto flex`}
-                  style={{
-                    // Centrage vertical et ancrage horizontal selon la position choisie
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    ...(formPosition === 'left' ? { left: '4%' } : { right: '4%' }),
-                    // Largeur configurée par l'utilisateur
-                    width: formWidth,
-                    height: 'auto',
-                    maxHeight: 'calc(100% - 32px)'
-                  }}
-                  data-canvas-ui
-                >
+            return (
+              <div
+                className={`opacity-100 pointer-events-auto`}
+                style={{
+                  // Centrage complet au milieu de l'écran
+                  width: '100%',
+                  maxWidth: formWidth,
+                  height: 'auto',
+                  maxHeight: 'calc(100vh - 2rem)'
+                }}
+                data-canvas-ui
+              >
                   <div
                     className={`w-full shadow-2xl rounded-xl p-6 overflow-y-auto`}
                     style={{ backgroundColor: panelBg, maxHeight: 'calc(100% - 0px)' }}
@@ -826,7 +852,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 </div>
               );
             })()}
-          </div>
+          </ScreenLayoutWrapper>
         </div>
 
         <FormHandler

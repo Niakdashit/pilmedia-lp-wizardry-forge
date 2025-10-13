@@ -31,10 +31,23 @@ const FormHandler: React.FC<FormHandlerProps> = ({
   const borderColor = design.borderColor || "#E5E7EB";
   const focusColor = "#000000";
 
+  // Calculer la hauteur dynamique en fonction du nombre de champs
+  // Formule : hauteur de base (200px) + (nombre de champs × hauteur par champ)
+  // Hauteur par champ : ~100px (label + input + espacement)
+  const calculateMaxHeight = () => {
+    const baseHeight = 200; // Hauteur pour le titre et le bouton
+    const fieldHeight = 100; // Hauteur approximative par champ
+    const calculatedHeight = baseHeight + (fields.length * fieldHeight);
+    const maxScreenHeight = window.innerHeight * 0.85; // Max 85% de la hauteur de l'écran
+    
+    return `${Math.min(calculatedHeight, maxScreenHeight)}px`;
+  };
+
   return (
     <Modal
       onClose={onClose}
       title={campaign.screens?.[1]?.title || 'Vos informations'}
+      maxHeight={calculateMaxHeight()}
     >
       <DynamicContactForm
         fields={fields}
