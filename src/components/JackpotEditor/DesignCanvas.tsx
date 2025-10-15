@@ -7,7 +7,6 @@ import SmartAlignmentGuides from './components/SmartAlignmentGuides';
 import AlignmentToolbar from './components/AlignmentToolbar';
 import GridOverlay from './components/GridOverlay';
 import GroupSelectionFrame from './components/GroupSelectionFrame';
-import TemplatedQuiz from '../shared/TemplatedQuiz';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
 import { useAlignmentSystem } from './hooks/useAlignmentSystem';
@@ -1920,40 +1919,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       return targetScreen === screenId;
     });
   }, [elementsSortedByZIndex, elementFilter, screenId]);
-
-  const resolvedQuizTemplateId = useMemo(() => {
-    return (
-      quizModalConfig?.templateId ||
-      (campaign as any)?.gameConfig?.quiz?.templateId ||
-      (campaign as any)?.design?.quizConfig?.templateId ||
-      'image-quiz'
-    );
-  }, [quizModalConfig?.templateId, campaign]);
-
-  const quizCampaignForRenderer = useMemo(() => {
-    if (campaign) return campaign;
-    return {
-      gameConfig: {
-        quiz: {
-          templateId: resolvedQuizTemplateId,
-          questions: []
-        }
-      },
-      design: {
-        quizConfig: {
-          templateId: resolvedQuizTemplateId
-        }
-      }
-    };
-  }, [campaign, resolvedQuizTemplateId]);
-
-  const handleElementTap = useCallback((element: any) => {
-    if (!element || readOnly) return;
-    if (element.id === 'quiz-template') {
-      onQuizPanelChange?.(true);
-    }
-  }, [onQuizPanelChange, readOnly]);
-  void handleElementTap; // Reserved for future touch interaction features
 
   // (moved) handleElementUpdate is declared earlier to avoid TDZ issues
 
