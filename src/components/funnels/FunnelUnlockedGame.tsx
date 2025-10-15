@@ -628,51 +628,53 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 className="absolute inset-0 flex items-center justify-center" 
                 style={{ 
                   zIndex: formValidated ? 100 : 50,
-                  pointerEvents: formValidated ? 'auto' : 'none'
+                  pointerEvents: 'auto'
                 }}
               >
-                {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
-                  <GameRenderer
-                    campaign={liveCampaign}
-                    formValidated={formValidated}
-                    showValidationMessage={false}
-                    previewMode={previewMode}
-                    mobileConfig={mobileConfig}
-                    onGameFinish={handleGameFinish}
-                    onGameStart={() => console.log('🎮 Game started')}
-                    onGameButtonClick={handleCardClick}
-                  />
-                ) : (
-                  <ScratchCardCanvas 
-                    selectedDevice={previewMode}
-                    previewMode={!formValidated}
-                  />
-                )}
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
+                    <GameRenderer
+                      campaign={liveCampaign}
+                      formValidated={formValidated}
+                      showValidationMessage={false}
+                      previewMode={previewMode}
+                      mobileConfig={mobileConfig}
+                      onGameFinish={handleGameFinish}
+                      onGameStart={() => console.log('🎮 Game started')}
+                      onGameButtonClick={handleCardClick}
+                    />
+                  ) : (
+                    <ScratchCardCanvas 
+                      selectedDevice={previewMode}
+                      previewMode={!formValidated}
+                    />
+                  )}
+                  
+                  {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
+                  {!formValidated && (
+                    <div 
+                      className="absolute inset-0 cursor-pointer" 
+                      style={{ zIndex: 10, backgroundColor: 'rgba(255,0,0,0.1)' }}
+                      onClick={(e) => {
+                        console.log('🚫 Overlay clicked - opening form modal');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCardClick();
+                      }}
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCardClick();
+                      }}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCardClick();
+                      }}
+                    />
+                  )}
+                </div>
               </div>
-              
-              {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
-              {!formValidated && (
-                <div 
-                  className="absolute inset-0 cursor-pointer" 
-                  style={{ zIndex: 999999, backgroundColor: 'transparent' }}
-                  onClick={(e) => {
-                    console.log('🚫 Overlay clicked - opening form modal');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCardClick();
-                  }}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCardClick();
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCardClick();
-                  }}
-                />
-              )}
             </>
           )}
 
