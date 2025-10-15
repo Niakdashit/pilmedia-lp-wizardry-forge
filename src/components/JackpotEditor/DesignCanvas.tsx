@@ -18,7 +18,6 @@ import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import ResultScreenPreview from '../DesignEditor/ResultScreenPreview';
-import SlotMachine from '../SlotJackpot/SlotMachine';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -2374,13 +2373,12 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   style={{ zIndex: 10000 }}
                 >
-                  <div className="pointer-events-auto">
-                    <SlotMachine 
-                      disabled={readOnly}
-                      onOpenConfig={onOpenElementsTab}
-                      symbols={(campaign as any)?.jackpotConfig?.symbols}
-                      templateOverride={(campaign as any)?.jackpotConfig?.template || (campaign as any)?.gameConfig?.jackpot?.template}
-                    />
+                  <div className="pointer-events-auto bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+                    <div className="text-center">
+                      <div className="text-4xl mb-4">🎰</div>
+                      <p className="text-gray-600 font-medium">Jackpot Game</p>
+                      <p className="text-sm text-gray-500 mt-2">Configuration disponible dans l'onglet "Jeu"</p>
+                    </div>
                   </div>
                 </div>
               )}

@@ -19,7 +19,7 @@ import HtmlModulePanel from './modules/HtmlModulePanel';
 import CartePanel from './panels/CartePanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
+import JackpotGamePanel from './panels/JackpotGamePanel';
 import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -776,56 +776,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'game':
         return (
-          <JackpotConfigPanel
-            onBack={() => setActiveTab('background')}
-            selectedTemplate={(campaign as any)?.gameConfig?.jackpot?.template || (campaign as any)?.jackpotConfig?.template || 'jackpot-frame'}
-            reelSymbols={(campaign as any)?.gameConfig?.jackpot?.symbols || (campaign as any)?.jackpotConfig?.symbols}
-            spinDuration={(campaign as any)?.gameConfig?.jackpot?.spinDuration || (campaign as any)?.jackpotConfig?.spinDuration}
-            winProbability={(campaign as any)?.gameConfig?.jackpot?.winProbability || (campaign as any)?.jackpotConfig?.winProbability}
-            onTemplateChange={(templateId) => {
-              if (!setCampaign) return;
-              setCampaign((prev: any) => ({
-                ...prev,
-                jackpotConfig: { ...(prev?.jackpotConfig || {}), template: templateId },
-                gameConfig: { 
-                  ...prev?.gameConfig, 
-                  jackpot: { ...(prev?.gameConfig?.jackpot || {}), template: templateId }
-                }
-              }));
-            }}
-            onReelSymbolsChange={(symbols) => {
-              if (!setCampaign) return;
-              setCampaign((prev: any) => ({
-                ...prev,
-                jackpotConfig: { ...(prev?.jackpotConfig || {}), symbols },
-                gameConfig: { 
-                  ...prev?.gameConfig, 
-                  jackpot: { ...(prev?.gameConfig?.jackpot || {}), symbols }
-                }
-              }));
-            }}
-            onSpinDurationChange={(duration) => {
-              if (!setCampaign) return;
-              setCampaign((prev: any) => ({
-                ...prev,
-                jackpotConfig: { ...(prev?.jackpotConfig || {}), spinDuration: duration },
-                gameConfig: { 
-                  ...prev?.gameConfig, 
-                  jackpot: { ...(prev?.gameConfig?.jackpot || {}), spinDuration: duration }
-                }
-              }));
-            }}
-            onWinProbabilityChange={(probability) => {
-              if (!setCampaign) return;
-              setCampaign((prev: any) => ({
-                ...prev,
-                jackpotConfig: { ...(prev?.jackpotConfig || {}), winProbability: probability },
-                gameConfig: { 
-                  ...prev?.gameConfig, 
-                  jackpot: { ...(prev?.gameConfig?.jackpot || {}), winProbability: probability }
-                }
-              }));
-            }}
+          <JackpotGamePanel
+            campaign={campaign}
+            setCampaign={setCampaign}
+            onElementsChange={onElementsChange}
+            elements={elements}
+            onElementUpdate={onElementUpdate}
+            selectedElement={selectedElement}
           />
         );
       case 'form':
