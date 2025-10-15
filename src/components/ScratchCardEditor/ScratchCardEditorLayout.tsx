@@ -618,34 +618,32 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     return screen === 'screen3' ? 'Rejouer' : 'Participer';
   }, []);
 
-  // Ajouter automatiquement un bouton "Rejouer" sur l'écran 3 s'il n'existe pas
-  React.useEffect(() => {
-    const screen3Modules = modularPage.screens.screen3 || [];
-    const hasReplayButton = screen3Modules.some((m) => m.type === 'BlocBouton') || screenHasCardButton(screen3Modules);
-    
-    if (!hasReplayButton && currentScreen === 'screen3') {
-      const replayButton: BlocBouton = {
-        id: `bloc-bouton-replay-${Date.now()}`,
-        type: 'BlocBouton',
-        label: getDefaultButtonLabel('screen3'),
-        href: '#',
-        background: '#000000',
-        textColor: '#ffffff',
-        borderRadius: 9999,
-        borderWidth: 0,
-        borderColor: '#000000',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        uppercase: false,
-        bold: false,
-        spacingTop: 0,
-        spacingBottom: 0
-      };
-      
-      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-      nextScreens.screen3 = [...screen3Modules, replayButton];
-      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-    }
-  }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
+  // Bouton "Rejouer" sur l'écran 3 désactivé (retiré par demande utilisateur)
+  // React.useEffect(() => {
+  //   const screen3Modules = modularPage.screens.screen3 || [];
+  //   const hasReplayButton = screen3Modules.some((m) => m.type === 'BlocBouton') || screenHasCardButton(screen3Modules);
+  //   if (!hasReplayButton && currentScreen === 'screen3') {
+  //     const replayButton: BlocBouton = {
+  //       id: `bloc-bouton-replay-${Date.now()}`,
+  //       type: 'BlocBouton',
+  //       label: getDefaultButtonLabel('screen3'),
+  //       href: '#',
+  //       background: '#000000',
+  //       textColor: '#ffffff',
+  //       borderRadius: 9999,
+  //       borderWidth: 0,
+  //       borderColor: '#000000',
+  //       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  //       uppercase: false,
+  //       bold: false,
+  //       spacingTop: 0,
+  //       spacingBottom: 0
+  //     };
+  //     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+  //     nextScreens.screen3 = [...screen3Modules, replayButton];
+  //     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  //   }
+  // }, [currentScreen, modularPage.screens.screen3, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {

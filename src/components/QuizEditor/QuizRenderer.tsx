@@ -538,9 +538,16 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
             padding: `${bandPadding}px`,
             paddingTop: (logoModule as any).spacingTop ?? 0,
             paddingBottom: (logoModule as any).spacingBottom ?? 0,
-            position: 'relative'
+            position: 'relative',
+            cursor: previewMode ? 'default' : 'pointer'
           }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
+          onClick={() => {
+            console.log('🎯 [QuizModuleRenderer] Logo onClick triggered!', { previewMode, moduleId: m.id });
+            if (!previewMode) {
+              console.log('✅ [QuizModuleRenderer] Calling onModuleClick for logo');
+              onModuleClick?.(m.id);
+            }
+          }}
         >
           {logoModule.logoUrl ? (
             <img

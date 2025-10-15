@@ -138,6 +138,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
+  
   // Sauvegarder le zoom à chaque changement pour persistance entre modes
   useEffect(() => {
     try {
@@ -368,43 +369,37 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
   }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
-  // Assurer la présence d'un bouton "Rejouer" sur l'écran 3 en mode édition
-  React.useEffect(() => {
-    // Ne s'exécute que lorsque l'écran 3 est affiché pour éviter des insertions inutiles
-    if (currentScreen !== 'screen3') return;
-
-    const screen3Modules = Array.isArray(modularPage.screens.screen3)
-      ? modularPage.screens.screen3
-      : [];
-
-    const hasStandaloneReplay = screen3Modules.some(
-      (m) => m.type === 'BlocBouton' && typeof (m as any).label === 'string'
-    );
-    const hasCardReplay = screenHasCardButton(screen3Modules);
-
-    if (hasStandaloneReplay || hasCardReplay) return; // déjà présent
-
-    const replayButton: BlocBouton = {
-      id: `bloc-bouton-replay-${Date.now()}`,
-      type: 'BlocBouton',
-      label: getDefaultButtonLabel('screen3'),
-      href: '#',
-      background: '#000000',
-      textColor: '#ffffff',
-      borderRadius: 9999,
-      borderWidth: 0,
-      borderColor: '#000000',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      uppercase: false,
-      bold: false,
-      spacingTop: 0,
-      spacingBottom: 0
-    };
-
-    const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
-    nextScreens.screen3 = [...screen3Modules, replayButton];
-    persistModular({ screens: nextScreens, _updatedAt: Date.now() });
-  }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
+  // Bouton "Rejouer" sur l'écran 3 désactivé (retiré par demande utilisateur)
+  // React.useEffect(() => {
+  //   if (currentScreen !== 'screen3') return;
+  //   const screen3Modules = Array.isArray(modularPage.screens.screen3)
+  //     ? modularPage.screens.screen3
+  //     : [];
+  //   const hasStandaloneReplay = screen3Modules.some(
+  //     (m) => m.type === 'BlocBouton' && typeof (m as any).label === 'string'
+  //   );
+  //   const hasCardReplay = screenHasCardButton(screen3Modules);
+  //   if (hasStandaloneReplay || hasCardReplay) return;
+  //   const replayButton: BlocBouton = {
+  //     id: `bloc-bouton-replay-${Date.now()}`,
+  //     type: 'BlocBouton',
+  //     label: getDefaultButtonLabel('screen3'),
+  //     href: '#',
+  //     background: '#000000',
+  //     textColor: '#ffffff',
+  //     borderRadius: 9999,
+  //     borderWidth: 0,
+  //     borderColor: '#000000',
+  //     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  //     uppercase: false,
+  //     bold: false,
+  //     spacingTop: 0,
+  //     spacingBottom: 0
+  //   };
+  //   const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+  //   nextScreens.screen3 = [...screen3Modules, replayButton];
+  //   persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+  // }, [currentScreen, modularPage.screens, persistModular, screenHasCardButton, getDefaultButtonLabel]);
 
   // Module management functions (cloned from QuizEditor)
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
@@ -576,6 +571,42 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
+  
+  // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId
+  useEffect(() => {
+    const role = (selectedElement as any)?.role;
+    const moduleId = (selectedElement as any)?.moduleId as string | undefined;
+    const isModularRole =
+      role === 'module-button' ||
+      role === 'module-image' ||
+      role === 'module-video' ||
+      role === 'module-social' ||
+      role === 'module-html' ||
+      role === 'module-carte' ||
+      role === 'module-logo' ||
+      role === 'module-footer';
+
+    console.log('🔍 [DesignEditor] selectedElement changed:', {
+      role,
+      moduleId,
+      isModularRole,
+      selectedElement,
+      currentSelectedModuleId: selectedModuleId
+    });
+
+    if (!moduleId || !isModularRole) {
+      if (selectedModuleId !== null) {
+        console.log('❌ [DesignEditor] Clearing selectedModuleId');
+        setSelectedModuleId(null);
+      }
+      return;
+    }
+
+    if (selectedModuleId !== moduleId) {
+      console.log('✅ [DesignEditor] Setting selectedModuleId to:', moduleId);
+      setSelectedModuleId(moduleId);
+    }
+  }, [selectedElement, selectedModuleId]);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {

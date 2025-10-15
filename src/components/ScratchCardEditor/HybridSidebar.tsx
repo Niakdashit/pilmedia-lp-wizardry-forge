@@ -421,7 +421,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: FormInput
     },
     { id: 'game', label: 'Jeu', icon: Gamepad2 },
-    { id: 'messages', label: 'Messages', icon: MessageSquare }
+    { id: 'messages', label: 'Sortie', icon: MessageSquare }
   ];
   
   // Vérifier si hiddenTabs est défini et est un tableau

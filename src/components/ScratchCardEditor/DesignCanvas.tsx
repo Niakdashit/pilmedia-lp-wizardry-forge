@@ -20,6 +20,7 @@ import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
 
 import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
+import ResultScreenPreview from '../DesignEditor/ResultScreenPreview';
 
 import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -2433,6 +2434,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
             </div>
+
+            {/* Aperçu de la carte de résultat pour l'écran 3 */}
+            {screenId === 'screen3' && (
+              <ResultScreenPreview
+                campaign={campaign}
+                device={selectedDevice}
+              />
+            )}
 
             {/* Modular stacked content (HubSpot-like) */}
             {Array.isArray(modularModules) && modularModules.length > 0 && (() => {

@@ -20,6 +20,7 @@ import { useEditorStore } from '../../stores/editorStore';
 import CanvasContextMenu from './components/CanvasContextMenu';
 
 import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
+import ResultScreenPreview from './ResultScreenPreview';
 
 import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
@@ -1986,6 +1987,14 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 </div>
               )}
 
+              {/* Aperçu de la carte de résultat pour l'écran 3 */}
+              {screenId === 'screen3' && (
+                <ResultScreenPreview
+                  campaign={campaign}
+                  device={selectedDevice}
+                />
+              )}
+
               {/* Modular stacked content (HubSpot-like) */}
               {Array.isArray(modularModules) && modularModules.length > 0 && (() => {
               const logoModules = modularModules.filter((m: any) => m?.type === 'BlocLogo');
@@ -2107,25 +2116,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             return;
                           }
                           if (m.type === 'BlocLogo') {
-                            onSelectedElementChange?.({
-                              id: `modular-logo-${m.id}`,
-                              type: 'logo',
-                              role: 'module-logo',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
+                            // Ne pas appeler onOpenElementsTab pour laisser le HybridSidebar afficher le panneau Logo
                             return;
                           }
                           if (m.type === 'BlocPiedDePage') {
-                            onSelectedElementChange?.({
-                              id: `modular-footer-${m.id}`,
-                              type: 'footer',
-                              role: 'module-footer',
-                              moduleId: m.id,
-                              screenId
-                            } as any);
-                            onOpenElementsTab?.();
+                            // Ne pas appeler onOpenElementsTab pour laisser le HybridSidebar afficher le panneau Pied de page
                             return;
                           }
                           onSelectedElementChange?.({
@@ -2147,7 +2142,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
                   {/* Logo band at the top (non-movable) */}
                   {logoModules.length > 0 && (
-                    <div className="absolute left-0 top-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                    <div 
+                      className="absolute left-0 top-0 w-full z-[9999]" 
+                      style={{ pointerEvents: 'auto' }}
+                      onClick={() => console.log('🎯 [DesignCanvas] Logo container clicked!')}
+                    >
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={logoModules}
@@ -2155,13 +2154,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           device={selectedDevice}
                           onModuleUpdate={(_id, patch) => onModuleUpdate?.(_id, patch)}
                           onModuleClick={(moduleId) => {
+                            console.log('🖱️ [DesignCanvas] Logo clicked!', moduleId);
                             try {
                               const mod = (logoModules as any).find((mm: any) => mm.id === moduleId);
                               const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
                               window.dispatchEvent(evt);
                             } catch {}
-                            // Mettre à jour l'ID du module sélectionné
-                            onSelectedModuleChange?.(moduleId);
+                            console.log('📤 [DesignCanvas] Calling onSelectedElementChange with:', {
+                              id: `modular-logo-${moduleId}`,
+                              type: 'logo',
+                              role: 'module-logo',
+                              moduleId,
+                              screenId
+                            });
                             onSelectedElementChange?.({
                               id: `modular-logo-${moduleId}`,
                               type: 'logo',
@@ -2179,7 +2184,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
                   {/* Footer band at the bottom (non-movable) */}
                   {footerModules.length > 0 && (
-                    <div className="absolute left-0 bottom-0 w-full z-[1000]" style={{ pointerEvents: 'none' }}>
+                    <div 
+                      className="absolute left-0 bottom-0 w-full z-[9999]" 
+                      style={{ pointerEvents: 'auto' }}
+                      onClick={() => console.log('🎯 [DesignCanvas] Footer container clicked!')}
+                    >
                       <div className="w-full" style={{ pointerEvents: 'auto' }}>
                         <QuizModuleRenderer
                           modules={footerModules}
@@ -2192,8 +2201,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                               const evt = new CustomEvent('modularModuleSelected', { detail: { module: mod } });
                               window.dispatchEvent(evt);
                             } catch {}
-                            // Mettre à jour l'ID du module sélectionné
-                            onSelectedModuleChange?.(moduleId);
                             onSelectedElementChange?.({
                               id: `modular-footer-${moduleId}`,
                               type: 'footer',

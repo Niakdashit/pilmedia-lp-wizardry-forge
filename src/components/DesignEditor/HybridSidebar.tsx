@@ -280,6 +280,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, [internalActiveTab, onSelectedModuleChange]);
   
+  // Forcer l'ouverture de l'onglet 'elements' quand un module est sélectionné
+  React.useEffect(() => {
+    console.log('🎯 [HybridSidebar] selectedModuleId changed:', {
+      selectedModuleId,
+      selectedModule,
+      internalActiveTab,
+      moduleType: selectedModule?.type
+    });
+    
+    if (selectedModuleId && internalActiveTab !== 'elements') {
+      console.log('✅ [HybridSidebar] Switching to elements tab');
+      setInternalActiveTab('elements');
+      onActiveTabChange?.('elements');
+    }
+  }, [selectedModuleId]);
+  
   // Fonction interne pour gérer le changement d'onglet
   const activeTemplate = React.useMemo(() => {
     return quizTemplates.find((tpl) => tpl.id === selectedQuizTemplate) || quizTemplates[0];
@@ -427,7 +443,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     },
     { 
       id: 'messages', 
-      label: 'Messages', 
+      label: 'Sortie', 
       icon: MessageSquare
     }
   ];

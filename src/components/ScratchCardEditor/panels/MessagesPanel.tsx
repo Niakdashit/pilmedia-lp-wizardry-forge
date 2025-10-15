@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trophy, Frown } from 'lucide-react';
 
 interface MessagesPanelProps {
@@ -7,7 +7,15 @@ interface MessagesPanelProps {
 }
 
 const MessagesPanel: React.FC<MessagesPanelProps> = ({ campaign, setCampaign }) => {
-  const [activeSection, setActiveSection] = useState<'winner' | 'loser'>('winner');
+  const [activeSection, setActiveSection] = useState<'winner' | 'loser'>('loser');
+  
+  // Émettre un événement quand l'onglet change pour mettre à jour l'aperçu
+  useEffect(() => {
+    const event = new CustomEvent('resultMessageTabChange', { 
+      detail: { activeTab: activeSection } 
+    });
+    window.dispatchEvent(event);
+  }, [activeSection]);
 
   const winnerMessages = campaign?.scratchResultMessages?.winner || {
     title: '🎉 Félicitations !',

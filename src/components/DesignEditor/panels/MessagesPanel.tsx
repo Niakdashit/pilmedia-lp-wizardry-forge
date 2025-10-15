@@ -11,7 +11,15 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
   campaignConfig, 
   onCampaignConfigChange 
 }) => {
-  const [activeSection, setActiveSection] = useState<'winner' | 'loser'>('winner');
+  const [activeSection, setActiveSection] = useState<'winner' | 'loser'>('loser');
+  
+  // Émettre un événement quand l'onglet change pour mettre à jour l'aperçu
+  useEffect(() => {
+    const event = new CustomEvent('resultMessageTabChange', { 
+      detail: { activeTab: activeSection } 
+    });
+    window.dispatchEvent(event);
+  }, [activeSection]);
   
   // Utiliser le store Zustand persistant
   const { messages, setWinnerMessage, setLoserMessage } = useMessageStore();
