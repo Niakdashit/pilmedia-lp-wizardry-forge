@@ -631,7 +631,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   pointerEvents: formValidated ? 'auto' : 'none'
                 }}
               >
-                {liveCampaign.type === 'wheel' || campaign.type === 'wheel' ? (
+                {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
                   <GameRenderer
                     campaign={liveCampaign}
                     formValidated={formValidated}
