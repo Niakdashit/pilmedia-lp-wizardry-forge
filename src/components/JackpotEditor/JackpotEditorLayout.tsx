@@ -1718,7 +1718,8 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
           secondary: secondaryColor,
           accent: extractedColors[2] || '#45b7d1'
         },
-        jackpotConfig: jackpotConfig
+        jackpotConfig: jackpotConfig,
+        designModules: modularPage
       },
       gameConfig: {
         jackpot: jackpotConfig
