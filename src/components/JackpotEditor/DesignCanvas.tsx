@@ -1,28 +1,26 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import CanvasElement from '../DesignEditor/CanvasElement';
+import CanvasElement from './CanvasElement';
 import CanvasToolbar from './CanvasToolbar';
-import ScratchCardCanvas from './ScratchCardCanvas';
-import SmartAlignmentGuides from '../DesignEditor/components/SmartAlignmentGuides';
-import AlignmentToolbar from '../DesignEditor/components/AlignmentToolbar';
-import GridOverlay from '../DesignEditor/components/GridOverlay';
-// Scratch editor doesn't use quiz settings button
-import GroupSelectionFrame from '../DesignEditor/components/GroupSelectionFrame';
+import SmartAlignmentGuides from './components/SmartAlignmentGuides';
+import AlignmentToolbar from './components/AlignmentToolbar';
+import GridOverlay from './components/GridOverlay';
+import GroupSelectionFrame from './components/GroupSelectionFrame';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
 import { useAutoResponsive } from '../../hooks/useAutoResponsive';
 import { useSmartSnapping } from '../ModernEditor/hooks/useSmartSnapping';
-import { useAlignmentSystem } from '../DesignEditor/hooks/useAlignmentSystem';
+import { useAlignmentSystem } from './hooks/useAlignmentSystem';
 import { useAdvancedCache } from '../ModernEditor/hooks/useAdvancedCache';
 import { useAdaptiveAutoSave } from '../ModernEditor/hooks/useAdaptiveAutoSave';
 import { useVirtualizedCanvas } from '../ModernEditor/hooks/useVirtualizedCanvas';
 import { useEditorStore } from '../../stores/editorStore';
-import CanvasContextMenu from '../DesignEditor/components/CanvasContextMenu';
+import CanvasContextMenu from './components/CanvasContextMenu';
 
-import AnimationSettingsPopup from '../DesignEditor/panels/AnimationSettingsPopup';
+import AnimationSettingsPopup from './panels/AnimationSettingsPopup';
 import ResultScreenPreview from '../DesignEditor/ResultScreenPreview';
 
-import MobileResponsiveLayout from '../DesignEditor/components/MobileResponsiveLayout';
+import MobileResponsiveLayout from './components/MobileResponsiveLayout';
 import type { DeviceType } from '../../utils/deviceDimensions';
 import { isRealMobile } from '../../utils/isRealMobile';
 import ModularCanvas from './modules/ModularCanvas';
@@ -1949,21 +1947,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     };
   }, [campaign, resolvedQuizTemplateId]);
 
-  const customElementRenderers = useMemo(() => ({
-    'quiz-template': ({ elementStyle }: any) => (
-      <div className="relative w-full h-full" style={elementStyle} data-canvas-ui="quiz-template">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <TemplatedQuiz
-            campaign={quizCampaignForRenderer}
-            device={selectedDevice}
-            disabled={readOnly}
-            templateId={resolvedQuizTemplateId}
-          />
-        </div>
-      </div>
-    )
-  }), [quizCampaignForRenderer, resolvedQuizTemplateId, selectedDevice, readOnly]);
-
   const handleElementTap = useCallback((element: any) => {
     if (!element || readOnly) return;
     if (element.id === 'quiz-template') {
@@ -2419,17 +2402,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                 );
               })()}
 
-              {/* Scratch Card Game Canvas - Seulement sur l'écran de jeu (screen2) */}
+              {/* Jackpot Game Canvas - Seulement sur l'écran de jeu (screen2) */}
               {screenId === 'screen2' && (
                 <div 
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   style={{ zIndex: 10000 }}
                 >
-                  <div className="pointer-events-auto">
-                    <ScratchCardCanvas 
-                      previewMode={false}
-                      selectedDevice={selectedDevice}
-                    />
+                  <div className="pointer-events-auto bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+                    <div className="text-center">
+                      <div className="text-4xl mb-4">🎰</div>
+                      <p className="text-gray-600 font-medium">Jackpot Game</p>
+                      <p className="text-sm text-gray-500 mt-2">Configuration disponible dans l'onglet "Jeu"</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2736,7 +2720,6 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                     startDragging,
                     stopDragging
                   }}
-                  customRenderers={customElementRenderers}
                 />
               );
             })}
