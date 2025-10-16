@@ -1,6 +1,7 @@
 export type WheelSegment = {
+  id: string;
   label: string;
-  id?: string;
+  value: string;
   color?: string;
   textColor?: string;
   image?: string;
@@ -18,7 +19,12 @@ export type WheelConfig = {
  * - Alternates colors starting with brandColor, then #ffffff
  */
 export function createSegments(config: WheelConfig, brandColor: string): WheelSegment[] {
-  const base = (config?.wheelSegments ?? []).map((s) => ({ ...s }));
+  const base = (config?.wheelSegments ?? []).map((s, idx) => ({
+    ...s,
+    id: s.id || `segment-${idx}`,
+    value: s.label || s.id || '',
+    label: s.label || `Segment ${idx + 1}`
+  }));
 
   if (base.length === 0) return [];
 
@@ -30,15 +36,14 @@ export function createSegments(config: WheelConfig, brandColor: string): WheelSe
 
   const segments = base.map((seg, idx) => {
     const color = idx % 2 === 0 ? brandColor : '#ffffff';
-    // Build stepwise to avoid duplicate literal keys
-    const merged: WheelSegment = { ...seg };
-    if (!merged.id) merged.id = `segment-${idx}`;
-    if (!merged.label) merged.label = `Segment ${idx + 1}`;
-    // enforce alternating colors for preview
-    merged.color = color;
-    if (!merged.textColor) {
-      merged.textColor = idx % 2 === 0 ? '#ffffff' : '#111111';
-    }
+    const merged: WheelSegment = {
+      ...seg,
+      id: seg.id,
+      label: seg.label,
+      value: seg.value || seg.label,
+      color: color,
+      textColor: seg.textColor || (idx % 2 === 0 ? '#ffffff' : '#111111')
+    };
     return merged;
   });
 
