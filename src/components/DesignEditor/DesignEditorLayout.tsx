@@ -20,7 +20,6 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
-import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';

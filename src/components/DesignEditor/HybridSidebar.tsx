@@ -122,6 +122,19 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
+  // Wheel configuration props
+  wheelBorderStyle?: string;
+  wheelBorderColor?: string;
+  wheelBorderWidth?: number;
+  wheelScale?: number;
+  wheelShowBulbs?: boolean;
+  wheelPosition?: 'left' | 'right' | 'center';
+  onWheelBorderStyleChange?: (style: string) => void;
+  onWheelBorderColorChange?: (color: string) => void;
+  onWheelBorderWidthChange?: (width: number) => void;
+  onWheelScaleChange?: (scale: number) => void;
+  onWheelShowBulbsChange?: (show: boolean) => void;
+  onWheelPositionChange?: (position: 'left' | 'right' | 'center') => void;
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
