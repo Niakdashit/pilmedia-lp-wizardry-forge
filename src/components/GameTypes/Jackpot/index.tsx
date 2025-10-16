@@ -13,6 +13,7 @@ const Jackpot: React.FC<JackpotProps> = ({
   instantWinConfig,
   onFinish,
   onStart,
+  onButtonClick,
   disabled = false,
   buttonLabel = "Lancer le Jackpot",
   buttonColor = "#ec4899",
@@ -31,7 +32,14 @@ const Jackpot: React.FC<JackpotProps> = ({
 
 
   const roll = () => {
-    if (isRolling || result || disabled) return;
+    if (isRolling || result) return;
+    
+    // Si le jeu est désactivé (formulaire non validé), appeler onButtonClick pour ouvrir le formulaire
+    if (disabled) {
+      console.log('🚫 Jackpot disabled - calling onButtonClick to open form');
+      onButtonClick?.();
+      return;
+    }
     
     onStart?.();
     

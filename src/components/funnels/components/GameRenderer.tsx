@@ -138,6 +138,7 @@ const GameRenderer: React.FC<GameRendererProps> = ({
             disabled={!formValidated}
             onFinish={handleGameComplete}
             onStart={handleGameStartInternal}
+            onButtonClick={onGameButtonClick}
           />
         );
       case 'quiz':

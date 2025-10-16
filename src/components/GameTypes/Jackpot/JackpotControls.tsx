@@ -98,7 +98,7 @@ const JackpotControls: React.FC<JackpotControlsProps> = ({
   return (
     <button
       onClick={onRoll}
-      disabled={isRolling || disabled}
+      disabled={isRolling}
       className="px-6 py-3 text-white font-medium transition-all duration-200 disabled:opacity-50 max-w-full"
       style={{
         backgroundColor: buttonColor,
@@ -107,6 +107,7 @@ const JackpotControls: React.FC<JackpotControlsProps> = ({
         background: `linear-gradient(145deg, ${buttonColor}, ${buttonColor}dd)`,
         transform: isRolling ? 'translateY(1px)' : 'translateY(0)',
         cursor: isRolling ? 'not-allowed' : 'pointer',
+        opacity: disabled && !isRolling ? 0.7 : 1,
         ...getButtonBorderStyles(),
       }}
       onMouseDown={(e) => {

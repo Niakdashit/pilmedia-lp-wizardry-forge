@@ -654,7 +654,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   {!formValidated && (
                     <div 
                       className="absolute inset-0 cursor-pointer" 
-                      style={{ zIndex: 10, backgroundColor: 'rgba(255,0,0,0.1)' }}
+                      style={{ zIndex: 150, backgroundColor: 'rgba(255,0,0,0.1)' }}
                       onClick={(e) => {
                         console.log('🚫 Overlay clicked - opening form modal');
                         e.preventDefault();

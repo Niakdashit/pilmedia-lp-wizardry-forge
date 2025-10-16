@@ -11,6 +11,8 @@ export interface JackpotProps {
   instantWinConfig?: JackpotInstantWinConfig;
   onFinish?: (result: 'win' | 'lose') => void;
   onStart?: () => void;
+  /** Callback appelé quand l'utilisateur clique sur le jackpot désactivé (pour ouvrir le formulaire) */
+  onButtonClick?: () => void;
   /** Désactive le démarrage du jackpot (formulaire non validé) */
   disabled?: boolean;
   buttonLabel?: string;
