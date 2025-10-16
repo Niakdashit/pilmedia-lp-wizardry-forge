@@ -37,7 +37,7 @@ enabled = true
 port = 54327
 
 [functions.studio-campaign-generator]
-verify_jwt = false
+verify_jwt = true
 
 [functions.openai-branding-generator]
-verify_jwt = false
+verify_jwt = true
