@@ -70,8 +70,12 @@ export const SettingsTab: React.FC = () => {
 
   const handleExportToEditor = () => {
     if (!generatedContent) return;
-    setFromGeneratedHTML(generatedContent);
-    loadGeneratedAsModules();
+    if (setFromGeneratedHTML) {
+      setFromGeneratedHTML(generatedContent);
+    }
+    if (loadGeneratedAsModules) {
+      loadGeneratedAsModules(generatedContent);
+    }
     toast.success("Le template a bien été transféré dans l'onglet Modifier.");
   };
 

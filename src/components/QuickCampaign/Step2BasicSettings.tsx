@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Calendar, Upload } from 'lucide-react';
 import { useQuickCampaignStore } from '../../stores/quickCampaignStore';
-import LogoUploader from '../LogoUploader';
+import LogoUploader from './LogoUploader';
 
 const Step2BasicSettings: React.FC = () => {
   const {
@@ -100,7 +100,7 @@ const Step2BasicSettings: React.FC = () => {
               <label className="block text-lg font-medium text-gray-900 mb-4">
                 Logo <span className="text-gray-500 font-normal">(optionnel)</span>
               </label>
-              <LogoUploader />
+              <LogoUploader onLogoChange={() => {}} />
             </motion.div>
 
             {/* Background Images - Split into two columns */}

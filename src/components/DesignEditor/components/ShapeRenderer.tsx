@@ -133,7 +133,7 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
       {/* Zone de texte éditable au centre de la forme */}
       {isEditing ? (
         <div
-          ref={textRef}
+          ref={textRef as React.RefObject<HTMLDivElement>}
           contentEditable
           suppressContentEditableWarning
           style={textStyle}

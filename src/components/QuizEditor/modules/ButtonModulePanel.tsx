@@ -9,7 +9,7 @@ interface ButtonModulePanelProps {
 }
 
 const ButtonModulePanel: React.FC<ButtonModulePanelProps> = ({ module, onUpdate, onBack }) => {
-  const { buttonStyle, updateButtonStyle } = useButtonStore();
+  const { updateButtonStyle } = useButtonStore();
   
   const radius = typeof module.borderRadius === 'number' ? module.borderRadius : 200;
   const label = module.label || 'Participer';

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface ResultMessage {
   title: string;
@@ -81,8 +81,7 @@ export const useMessageStore = create<MessageState>()(
     {
       name: 'pilmedia-result-messages',
       version: 1,
-      // Utiliser localStorage pour la persistance
-      getStorage: () => localStorage,
+      storage: createJSONStorage(() => localStorage),
       // Optionnel: migrer les anciennes versions si nécessaire
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {

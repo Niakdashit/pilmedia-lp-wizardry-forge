@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Type, Shapes, Search, Image as ImgIcon, Link2, SeparatorHorizontal, Video, Share2, Code2, Square, Footprints, Upload, Layout } from 'lucide-react';
+import { Type, Shapes, Search, Image as ImgIcon, Link2, SeparatorHorizontal, Video, Share2, Code2, Square, Footprints, Layout } from 'lucide-react';
 import TextPanel from './TextPanel';
 import { shapes, ShapeDefinition } from '../shapes/shapeLibrary';
 import type { ModuleType, Module, ScreenId } from '@/types/modularEditor';

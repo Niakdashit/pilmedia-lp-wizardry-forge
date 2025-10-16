@@ -3,11 +3,11 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
 // Align routing with QuizEditor via router adapter
 import { useLocation, useNavigate } from '@/lib/router-adapter';
-import { User, LogOut, Save, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-import GradientBand from '../shared/GradientBand';
+// import GradientBand from '../shared/GradientBand';
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -196,8 +196,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   });
 
-  // Hook de synchronisation preview
-  const { syncBackground } = useEditorPreviewSync();
+  // Hook de synchronisation preview (commented to avoid unused warning)
+  // const { syncBackground } = useEditorPreviewSync();
 
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -323,9 +323,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     });
   }, []);
 
-  const editorHasCardButton = useCallback(() => {
-    return (Object.values(modularPage.screens) as Module[][]).some((modules) => screenHasCardButton(modules));
-  }, [modularPage.screens, screenHasCardButton]);
+  // const editorHasCardButton = useCallback(() => {
+  //   return (Object.values(modularPage.screens) as Module[][]).some((modules) => screenHasCardButton(modules));
+  // }, [modularPage.screens, screenHasCardButton]);
 
   const getDefaultButtonLabel = useCallback((screen: ScreenId): string => {
     return screen === 'screen3' ? 'Rejouer' : 'Participer';
@@ -851,16 +851,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           g: rgb.g + (255 - rgb.g) * pct,
           b: rgb.b + (255 - rgb.b) * pct
         });
-        const getTextOn = (rgb: { r: number; g: number; b: number }) => (luminance(rgb) > 0.55 ? '#111111' : '#ffffff');
-
         const baseRgb = toRgb(base);
         if (baseRgb) {
-          // Choose a primary accent that contrasts with background
           const primaryRgb = luminance(baseRgb) > 0.6 ? darken(baseRgb, 0.35) : lighten(baseRgb, 0.35);
           const primaryHex = toHex(primaryRgb);
-          const buttonText = getTextOn(primaryRgb);
-          const hoverHex = toHex(darken(primaryRgb, 0.12));
-          const activeHex = toHex(darken(primaryRgb, 0.24));
 
           setCampaignConfig((prev: any) => {
             const next = {

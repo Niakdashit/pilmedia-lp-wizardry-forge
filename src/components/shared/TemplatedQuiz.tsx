@@ -691,8 +691,8 @@ const TemplatedQuiz: React.FC<TemplatedQuizProps> = ({
         {template.header && (
           <div
             style={{
-              background: template.header.background || '#3B82F6',
-              padding: template.header.padding || '12px 16px',
+              background: (template.header as any).background || template.header.backgroundColor || '#3B82F6',
+              padding: (template.header as any).padding || '12px 16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: template.header.align || 'center',

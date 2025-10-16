@@ -29,13 +29,13 @@ const SegmentOverlayCustomization: React.FC = () => {
   };
 
   const handleRemoveOverlay = (overlayId: string) => {
-    const overlay = segmentOverlays.overlays.find(o => o.id === overlayId);
+    const overlay = segmentOverlays.overlays.find((o: any) => o.id === overlayId);
     if (overlay?.url) {
       URL.revokeObjectURL(overlay.url);
     }
     
     setSegmentOverlays({
-      overlays: segmentOverlays.overlays.filter(o => o.id !== overlayId)
+      overlays: segmentOverlays.overlays.filter((o: any) => o.id !== overlayId)
     });
   };
 
@@ -60,7 +60,7 @@ const SegmentOverlayCustomization: React.FC = () => {
 
   const updateOverlayProperty = (overlayId: string, property: string, value: any) => {
     setSegmentOverlays({
-      overlays: segmentOverlays.overlays.map(overlay =>
+      overlays: segmentOverlays.overlays.map((overlay: any) =>
         overlay.id === overlayId
           ? { ...overlay, [property]: value }
           : overlay
@@ -69,7 +69,7 @@ const SegmentOverlayCustomization: React.FC = () => {
   };
 
   const getSegmentOverlays = (segmentIndex: number) => {
-    return segmentOverlays.overlays.filter(o => o.segmentIndex === segmentIndex);
+    return segmentOverlays.overlays.filter((o: any) => o.segmentIndex === segmentIndex);
   };
 
   return (
@@ -167,7 +167,7 @@ const SegmentOverlayCustomization: React.FC = () => {
                   Overlays actuels
                 </label>
                 <div className="space-y-3">
-                  {getSegmentOverlays(selectedSegment).map((overlay) => (
+                  {getSegmentOverlays(selectedSegment).map((overlay: any) => (
                     <div key={overlay.id} className="bg-white rounded-lg p-4 border">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">

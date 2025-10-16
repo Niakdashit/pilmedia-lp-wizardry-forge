@@ -7,7 +7,7 @@ import DicePreview from '../../../GameTypes/DicePreview';
 import FormPreview from '../../../GameTypes/FormPreview';
 import AdvancedWheelRenderer from '../AdvancedWheelRenderer';
 import { useQuickCampaignStore } from '../../../../stores/quickCampaignStore';
-import { calculateConstrainedSize } from '../utils/previewConstraints';
+import { calculateConstrainedSize, GameType } from '../utils/previewConstraints';
 
 interface GameSwitcherProps {
   gameType: string;
@@ -57,7 +57,7 @@ const GameSwitcher: React.FC<GameSwitcherProps> = ({
   const gameConstraints = calculateConstrainedSize(
     containerWidth,
     containerHeight,
-    gameType,
+    'wheel' as GameType,
     40
   );
 

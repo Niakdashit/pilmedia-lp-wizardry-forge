@@ -231,7 +231,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
 
   // Smart snapping integration for alignment guides and snapping during drag
   const { applySnapping } = useSmartSnapping({
-    containerRef: containerRef as React.RefObject<HTMLDivElement | null>,
+    containerRef: containerRef as React.RefObject<HTMLDivElement>,
     gridSize: 20,
     snapTolerance: 3
   });
