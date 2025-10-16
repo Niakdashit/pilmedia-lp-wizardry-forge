@@ -882,7 +882,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         fullScreen={false}
         onGameFinish={handleGameFinish} 
         onGameStart={handleGameStart} 
-        onGameButtonClick={handleGameButtonClick} 
+        onGameButtonClick={handleCardClick} 
       />
 
       {/* Modal de formulaire pour tous les jeux unlocked - avec styles appliqués */}
