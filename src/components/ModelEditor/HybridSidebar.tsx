@@ -3,12 +3,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Layers,
+  MessageSquare,
   FormInput,
   Gamepad2,
   Palette
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-adapter';
 import { BackgroundPanel, AssetsPanel, TextEffectsPanel } from '@/components/shared';
 import TextAnimationsPanel from '../DesignEditor/panels/TextAnimationsPanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
@@ -16,6 +16,7 @@ import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
 import TabJackpot from '../configurators/TabJackpot';
 import TabForm from '../configurators/TabForm';
+import MessagesPanel from '../DesignEditor/panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { useEditorState } from '../../hooks/useEditorState';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -24,10 +25,8 @@ import { quizTemplates } from '../../types/quizTemplates';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
-const loadLayersPanel = () => import('../DesignEditor/panels/LayersPanel');
 
 const LazyPositionPanel = React.lazy(loadPositionPanel);
-const LazyLayersPanel = React.lazy(loadLayersPanel);
 
 
 export interface HybridSidebarRef {
@@ -491,9 +490,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
     const id = schedule(() => {
       try {
-        if (activeTab !== 'layers') {
-          loadLayersPanel();
-        }
         // Position panel can be opened via toggles; prefetch proactively
         loadPositionPanel();
       } catch (e) {
@@ -516,9 +512,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       icon: Plus
     },
     { 
-      id: 'layers', 
-      label: 'Calques', 
-      icon: Layers
+      id: 'messages', 
+      label: 'Sortie', 
+      icon: MessageSquare
     },
     { 
       id: 'form', 
@@ -586,8 +582,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const prefetchTab = (tabId: string) => {
     if (tabId === 'position') {
       loadPositionPanel();
-    } else if (tabId === 'layers') {
-      loadLayersPanel();
     }
   };
 
@@ -1082,17 +1076,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             />
           </div>
         );
-      case 'layers':
+      case 'messages':
         return (
-          <React.Suspense fallback={<div className="p-4 text-sm text-gray-500">Chargement des calques…</div>}>
-            <LazyLayersPanel 
-              elements={elements} 
-              onElementsChange={onElementsChange || (() => {})} 
-              selectedElements={selectedElements}
-              onSelectedElementsChange={onSelectedElementsChange}
-              onAddToHistory={onAddToHistory}
-            />
-          </React.Suspense>
+          <MessagesPanel 
+            campaignConfig={campaignConfig}
+            onCampaignConfigChange={onCampaignConfigChange}
+          />
         );
       default:
         return null;

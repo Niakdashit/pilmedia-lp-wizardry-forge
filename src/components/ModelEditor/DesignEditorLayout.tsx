@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+// Align routing with QuizEditor via router adapter
+import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import FunnelUnlockedGame from '@/components/funnels/FunnelUnlockedGame';
 
 import ZoomSlider from './components/ZoomSlider';
-import DesignCanvas from './DesignCanvas';
+const DesignCanvas = lazy(() => import('./DesignCanvas'));
 import { useEditorStore } from '../../stores/editorStore';
 import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts';
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';

@@ -9,6 +9,7 @@ export interface CompositeElementsPanelProps {
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  existingModules?: Module[];
 }
 
 const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
@@ -17,11 +18,12 @@ const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
   onAddElement,
   selectedElement,
   onElementUpdate,
-  selectedDevice
+  selectedDevice,
+  existingModules
 }) => {
   return (
     <div className="h-full overflow-y-auto">
-      <ModulesPanel currentScreen={currentScreen} onAdd={onAddModule} />
+      <ModulesPanel currentScreen={currentScreen} onAdd={onAddModule} existingModules={existingModules} />
       <div className="px-4 pt-2 pb-4">
         <div className="h-px bg-[hsl(var(--sidebar-border))]" />
       </div>

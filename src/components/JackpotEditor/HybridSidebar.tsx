@@ -19,8 +19,9 @@ import HtmlModulePanel from './modules/HtmlModulePanel';
 import CartePanel from './panels/CartePanel';
 import QuizConfigPanel from './panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import JackpotGamePanel from './panels/JackpotGamePanel';
 import MessagesPanel from './panels/MessagesPanel';
+import JackpotFullPanel from './panels/JackpotFullPanel';
+import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
@@ -59,6 +60,9 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
+  // Inline jackpot panel controls
+  showJackpotPanel?: boolean;
+  onJackpotPanelChange?: (show: boolean) => void;
   // Design panel controls
   showDesignPanel?: boolean;
   onDesignPanelChange?: (show: boolean) => void;
@@ -146,6 +150,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizBorderRadiusChange,
   showQuizPanel = false,
   onQuizPanelChange,
+  showJackpotPanel = false,
+  onJackpotPanelChange,
   showDesignPanel = false,
   onDesignPanelChange,
   canvasRef,
@@ -267,9 +273,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onPositionPanelChange?.(true);
       } else if (tab === 'quiz') {
         onQuizPanelChange?.(true);
+      } else if (tab === 'jackpot') {
+        onJackpotPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, setIsCollapsed]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onJackpotPanelChange, setIsCollapsed]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
@@ -299,6 +307,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showAnimationsPanel,
     showPositionPanel,
     showQuizPanel,
+    showJackpotPanel,
     showDesignPanel,
     activeTab: internalActiveTab
   });
@@ -315,12 +324,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
       { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
       { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
+      { key: 'jackpot', active: showJackpotPanel, prevActive: prev.showJackpotPanel },
       { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
     ];
 
     // Si le panneau Quiz est activé, forcer l'onglet quiz
     if (showQuizPanel && !prev.showQuizPanel) {
       newActiveTab = 'quiz';
+      shouldUpdate = true;
+    }
+    // Si le panneau Jackpot est activé, forcer l'onglet jackpot
+    else if (showJackpotPanel && !prev.showJackpotPanel) {
+      newActiveTab = 'jackpot';
       shouldUpdate = true;
     }
     // Si le panneau Design est activé, forcer l'onglet background
@@ -330,14 +345,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     } 
     // Si un autre panneau a été activé, basculer vers son onglet correspondant
     else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz');
+      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'jackpot');
       if (activatedPanel) {
         newActiveTab = activatedPanel.key;
         shouldUpdate = true;
       } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'elements'
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour jackpot ou 'elements' pour les autres
       else if (panelStates.some(p => p.key === internalActiveTab && !p.active && p.prevActive)) {
-        newActiveTab = 'elements';
+        newActiveTab = internalActiveTab === 'jackpot' ? 'game' : 'elements';
         shouldUpdate = true;
       }
     }
@@ -353,6 +368,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       showAnimationsPanel,
       showPositionPanel,
       showQuizPanel,
+      showJackpotPanel,
       showDesignPanel,
       activeTab: newActiveTab
     };
@@ -369,6 +385,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showAnimationsPanel, 
     showPositionPanel, 
     showQuizPanel,
+    showJackpotPanel,
     showDesignPanel,
     activeTab,
     onDesignPanelChange
@@ -434,11 +451,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
+    const isTransientJackpot = internalActiveTab === 'jackpot' && showJackpotPanel;
 
-    if (!activeIsVisible && !isTransientQuiz) {
+    if (!activeIsVisible && !isTransientQuiz && !isTransientJackpot) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel]);
+  }, [tabs, internalActiveTab, showQuizPanel, showJackpotPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -482,6 +500,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     if (showQuizPanel && tabId !== 'quiz') {
       onQuizPanelChange?.(false);
     }
+    if (showJackpotPanel && tabId !== 'jackpot') {
+      onJackpotPanelChange?.(false);
+    }
     // Si la cible N'EST PAS 'elements', toujours désélectionner le module pour éviter que le panel temporaire reste ouvert
     if (tabId !== 'elements' && onSelectedModuleChange) {
       onSelectedModuleChange(null);
@@ -493,6 +514,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       onAnimationsPanelChange?.(false);
       onPositionPanelChange?.(false);
       onQuizPanelChange?.(false);
+      onJackpotPanelChange?.(false);
       onDesignPanelChange?.(false);
     } else if (tabId === 'background') {
       onDesignPanelChange?.(true);
@@ -504,6 +526,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       onPositionPanelChange?.(true);
     } else if (tabId === 'quiz') {
       onQuizPanelChange?.(true);
+    } else if (tabId === 'jackpot') {
+      onJackpotPanelChange?.(true);
     }
     
     if (internalActiveTab === tabId) {
@@ -620,6 +644,122 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               handleQuizMobileWidthChange?.(width);
             }}
             selectedDevice={selectedDevice}
+          />
+        );
+      case 'jackpot':
+        // Configuration du Jackpot depuis campaign.gameConfig.jackpot
+        const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
+        const jackpotStyle = (jackpotConfig.style as any) || {};
+        const customFrame = (jackpotConfig.customFrame as any) || {};
+        
+        return (
+          <JackpotConfigPanel
+            onBack={() => {
+              onJackpotPanelChange?.(false);
+              setActiveTab('game');
+            }}
+            reelSymbols={jackpotConfig.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣']}
+            selectedTemplate={jackpotConfig.template || 'jackpot-frame'}
+            borderColor={jackpotConfig.borderColor || jackpotStyle.borderColor || '#ffd700'}
+            backgroundColor={jackpotConfig.backgroundColor || jackpotStyle.backgroundColor || '#ffffff'}
+            textColor={jackpotConfig.textColor || jackpotStyle.textColor || '#333333'}
+            customFrame={customFrame}
+            customTemplateUrl={jackpotConfig.customTemplateUrl || ''}
+            onReelSymbolsChange={(symbols: string[]) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    symbols
+                  }
+                }
+              }));
+            }}
+            onTemplateChange={(templateId: string) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    template: templateId
+                  }
+                }
+              }));
+            }}
+            onBorderColorChange={(color: string) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    borderColor: color
+                  }
+                }
+              }));
+            }}
+            onBackgroundColorChange={(color: string) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    backgroundColor: color
+                  }
+                }
+              }));
+            }}
+            onTextColorChange={(color: string) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    textColor: color
+                  }
+                }
+              }));
+            }}
+            onCustomFrameChange={(updates: any) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    customFrame: {
+                      ...prev?.gameConfig?.jackpot?.customFrame,
+                      ...updates
+                    }
+                  }
+                }
+              }));
+            }}
+            onCustomTemplateChange={(url: string) => {
+              setCampaign((prev: any) => ({
+                ...prev,
+                name: prev?.name || 'Campaign',
+                gameConfig: {
+                  ...prev?.gameConfig,
+                  jackpot: {
+                    ...prev?.gameConfig?.jackpot,
+                    customTemplateUrl: url,
+                    template: 'user-template'
+                  }
+                }
+              }));
+            }}
           />
         );
       case 'background':
@@ -772,17 +912,25 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
+            existingModules={(() => {
+              // Récupérer tous les modules de tous les écrans pour vérifier si Logo/Footer existent
+              const allModules: Module[] = [];
+              if (campaignConfig?.design?.designModules?.screens) {
+                Object.values(campaignConfig.design.designModules.screens).forEach((screenModules: any) => {
+                  if (Array.isArray(screenModules)) {
+                    allModules.push(...screenModules);
+                  }
+                });
+              }
+              return allModules;
+            })()}
           />
         );
       case 'game':
         return (
-          <JackpotGamePanel
+          <JackpotFullPanel
             campaign={campaign}
             setCampaign={setCampaign}
-            onElementsChange={onElementsChange}
-            elements={elements}
-            onElementUpdate={onElementUpdate}
-            selectedElement={selectedElement}
           />
         );
       case 'form':

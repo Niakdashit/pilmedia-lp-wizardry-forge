@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback, lazy } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+// Align routing with QuizEditor via router adapter
+import { useLocation, useNavigate } from '@/lib/router-adapter';
 import { Save, X } from 'lucide-react';
 
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
@@ -647,6 +648,52 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 
   // Modular handlers
   const handleAddModule = useCallback((screen: ScreenId, module: Module) => {
+    // Logo : ajouté automatiquement sur tous les écrans en haut
+    if (module.type === 'BlocLogo') {
+      const logoId = module.id || `BlocLogo-${Date.now()}`;
+      const cloneLogo = (base: typeof module): Module => ({
+        ...(base as Module),
+        id: logoId
+      });
+
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
+        const withoutLogo = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocLogo');
+        nextScreens[screenId] = [cloneLogo(module), ...withoutLogo];
+      });
+
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+      return;
+    }
+
+    // Pied de page : ajouté automatiquement sur tous les écrans en bas
+    if (module.type === 'BlocPiedDePage') {
+      const footerId = module.id || `BlocPiedDePage-${Date.now()}`;
+      const cloneFooter = (base: typeof module): Module => {
+        if (base.type !== 'BlocPiedDePage') return { ...base } as Module;
+        const footer = base;
+        return {
+          ...footer,
+          id: footerId,
+          footerLinks: Array.isArray(footer.footerLinks)
+            ? footer.footerLinks.map((link) => ({ ...link }))
+            : footer.footerLinks,
+          socialLinks: Array.isArray(footer.socialLinks)
+            ? footer.socialLinks.map((link) => ({ ...link }))
+            : footer.socialLinks
+        } as Module;
+      };
+
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
+        const withoutFooter = (nextScreens[screenId] || []).filter((m) => m.type !== 'BlocPiedDePage');
+        nextScreens[screenId] = [...withoutFooter, cloneFooter(module)];
+      });
+
+      persistModular({ screens: nextScreens, _updatedAt: Date.now() });
+      return;
+    }
+
     setModularPage((prev) => {
       let prevScreenModules = prev.screens[screen] || [];
 

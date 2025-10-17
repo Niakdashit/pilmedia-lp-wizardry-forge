@@ -772,6 +772,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
+            existingModules={(() => {
+              // Récupérer tous les modules de tous les écrans pour vérifier si Logo/Footer existent
+              const allModules: Module[] = [];
+              if (campaignConfig?.design?.designModules?.screens) {
+                Object.values(campaignConfig.design.designModules.screens).forEach((screenModules: any) => {
+                  if (Array.isArray(screenModules)) {
+                    allModules.push(...screenModules);
+                  }
+                });
+              }
+              return allModules;
+            })()}
           />
         );
       case 'game':

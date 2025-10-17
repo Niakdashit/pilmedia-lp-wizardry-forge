@@ -1,3 +1,4 @@
+// FunnelUnlockedGame - Version avec logos/footers collés aux bords (UPDATED)
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParticipations } from '../../hooks/useParticipations';
 import { toast } from 'react-toastify';
@@ -322,11 +323,18 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     timestamp: canonicalData.timestamp
   });
 
-  // Séparer les modules Logo et Footer pour l'écran 1
+  // Séparer les modules Logo et Footer pour tous les écrans
   const logoModules1 = (modules || []).filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = (modules || []).filter((m: any) => m?.type === 'BlocPiedDePage');
   const regularModules1 = (modules || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
-  const logoBandHeight1 = logoModules1.reduce((acc: number, m: any) => Math.max(acc, m?.bandHeight ?? 60), 0);
+  
+  const logoModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocLogo');
+  const footerModules2 = (modules2 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
+  const regularModules2 = (modules2 || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  
+  const logoModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocLogo');
+  const footerModules3 = (modules3 || []).filter((m: any) => m?.type === 'BlocPiedDePage');
+  const regularModules3 = (modules3 || []).filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
 
   useEffect(() => {
     if (liveCampaign?.type !== 'form') {
@@ -514,21 +522,46 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
           <div className="absolute inset-0 z-0" style={backgroundStyle} />
-          <div
-            className="relative z-30 h-full w-full overflow-y-auto"
-            style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-          >
-            {modules.length > 0 && (
-              <section className="space-y-6" data-design-screen="screen1">
-                <DesignModuleRenderer
-                  modules={modules as any}
-                  previewMode
-                  device={previewMode}
-                  onButtonClick={handleGameButtonClick}
-                />
-              </section>
-            )}
-
+          
+          {/* Content avec safe zone */}
+          <div className="relative z-30 h-full w-full overflow-y-auto">
+            <div className="flex flex-col min-h-full">
+              {/* Modules Logo (collés en haut sans padding) */}
+              {logoModules1.length > 0 && (
+                <div className="w-full">
+                  <DesignModuleRenderer
+                    modules={logoModules1 as any}
+                    previewMode
+                    device={previewMode}
+                  />
+                </div>
+              )}
+              
+              {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+              <div className="flex-1 relative">
+                {regularModules1.length > 0 && (
+                  <div style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
+                    <DesignModuleRenderer
+                      modules={regularModules1 as any}
+                      previewMode
+                      device={previewMode}
+                      onButtonClick={handleGameButtonClick}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Modules Footer (collés en bas sans padding) */}
+              {footerModules1.length > 0 && (
+                <div className="w-full">
+                  <DesignModuleRenderer
+                    modules={footerModules1 as any}
+                    previewMode
+                    device={previewMode}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -551,149 +584,184 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
           </div>
           <div className="absolute inset-0" style={backgroundStyle} />
 
-          {/* ÉCRAN 1 : Avant le jeu */}
-          {currentScreen === 'screen1' && (
-            <>
-              {/* Bande logo absolue en haut (comme l'éditeur) */}
-              {logoModules1.length > 0 && (
-                <div
-                  className="absolute left-0 top-0 w-full z-40"
-                  style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
-                >
-                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
+          {/* Content avec safe zone */}
+          <div className="relative z-30 h-full w-full overflow-y-auto">
+            {/* ÉCRAN 1 : Avant le jeu */}
+            {currentScreen === 'screen1' && (
+              <div className="flex flex-col min-h-full">
+                {/* Modules Logo (collés en haut sans padding) */}
+                {logoModules1.length > 0 && (
+                  <div className="w-full">
                     <QuizModuleRenderer 
                       modules={logoModules1}
                       previewMode={true}
                       device={previewMode}
                     />
                   </div>
+                )}
+                
+                {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+                <div className="flex-1 relative">
+                  {regularModules1.length > 0 && (
+                    <div style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
+                      <QuizModuleRenderer 
+                        modules={regularModules1}
+                        previewMode={true}
+                        device={previewMode}
+                        onButtonClick={handleGameButtonClick}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-
-              {/* Contenu régulier sous la bande - Layout identique à l'éditeur */}
-              <div
-                className="relative z-30 h-full w-full"
-                style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-              >
-                {logoModules1.length > 0 && (
-                  <div style={{ height: logoBandHeight1 }} />
-                )}
-                {regularModules1.length > 0 && (
-                  <QuizModuleRenderer 
-                    modules={regularModules1}
-                    previewMode={true}
-                    device={previewMode}
-                    onButtonClick={handleGameButtonClick}
-                  />
-                )}
-              </div>
-
-              {/* Bande footer absolue en bas */}
-              {footerModules1.length > 0 && (
-                <div
-                  className="absolute left-0 bottom-0 w-full z-40"
-                  style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
-                >
-                  <div className="w-full" style={{ pointerEvents: 'auto' }}>
+                
+                {/* Modules Footer (collés en bas sans padding) */}
+                {footerModules1.length > 0 && (
+                  <div className="w-full">
                     <QuizModuleRenderer 
                       modules={footerModules1}
                       previewMode={true}
                       device={previewMode}
                     />
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </div>
+            )}
 
-          {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
-          {currentScreen === 'screen2' && gameResult === null && (
-            <>
-              {/* Modules screen2 - en arrière-plan - Layout identique à l'éditeur */}
-              <div
-                className="relative z-30 h-full w-full"
-                style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}
-              >
-                {modules2.length > 0 && (
+            {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
+            {currentScreen === 'screen2' && gameResult === null && (
+              <div className="flex flex-col min-h-full">
+              {/* Modules Logo (collés en haut sans padding) */}
+              {logoModules2.length > 0 && (
+                <div className="w-full" style={{ pointerEvents: 'auto' }}>
                   <QuizModuleRenderer 
-                    modules={modules2}
+                    modules={logoModules2}
                     previewMode={true}
                     device={previewMode}
                   />
+                </div>
+              )}
+              
+                {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+                <div className="flex-1 relative">
+                  {/* Modules screen2 réguliers - en arrière-plan */}
+                  {regularModules2.length > 0 && (
+                    <div style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}>
+                      <QuizModuleRenderer 
+                        modules={regularModules2}
+                        previewMode={true}
+                        device={previewMode}
+                      />
+                    </div>
+                  )}
+
+                  {/* Game Component (Roue ou Cartes selon le type) */}
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center" 
+                    style={{ 
+                      zIndex: formValidated ? 100 : 50,
+                      pointerEvents: 'auto'
+                    }}
+                  >
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
+                        <GameRenderer
+                          campaign={liveCampaign}
+                          formValidated={formValidated}
+                          showValidationMessage={false}
+                          previewMode={previewMode}
+                          mobileConfig={mobileConfig}
+                          onGameFinish={handleGameFinish}
+                          onGameStart={() => console.log('🎮 Game started')}
+                          onGameButtonClick={handleCardClick}
+                        />
+                      ) : (
+                        <ScratchCardCanvas 
+                          selectedDevice={previewMode}
+                          previewMode={!formValidated}
+                        />
+                      )}
+                      
+                      {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
+                      {!formValidated && (
+                        <div 
+                          className="absolute inset-0 cursor-pointer" 
+                          style={{ zIndex: 150, backgroundColor: 'rgba(255,0,0,0.1)' }}
+                          onClick={(e) => {
+                            console.log('🚫 Overlay clicked - opening form modal');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCardClick();
+                          }}
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCardClick();
+                          }}
+                          onTouchStart={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCardClick();
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Modules Footer (collés en bas sans padding) */}
+                {footerModules2.length > 0 && (
+                  <div className="w-full">
+                    <QuizModuleRenderer 
+                      modules={footerModules2}
+                      previewMode={true}
+                      device={previewMode}
+                    />
+                  </div>
                 )}
               </div>
+            )}
 
-              {/* Game Component (Roue ou Cartes selon le type) */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center" 
-                style={{ 
-                  zIndex: formValidated ? 100 : 50,
-                  pointerEvents: 'auto'
-                }}
-              >
-                <div className="relative w-full h-full flex items-center justify-center">
-                  {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
-                    <GameRenderer
-                      campaign={liveCampaign}
-                      formValidated={formValidated}
-                      showValidationMessage={false}
-                      previewMode={previewMode}
-                      mobileConfig={mobileConfig}
-                      onGameFinish={handleGameFinish}
-                      onGameStart={() => console.log('🎮 Game started')}
-                      onGameButtonClick={handleCardClick}
+            {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
+            {gameResult !== null && (
+              <div className="flex flex-col min-h-full">
+                {/* Modules Logo (collés en haut sans padding) */}
+                {logoModules3.length > 0 && (
+                  <div className="w-full">
+                    <QuizModuleRenderer 
+                      modules={logoModules3}
+                      previewMode={true}
+                      device={previewMode}
                     />
-                  ) : (
-                    <ScratchCardCanvas 
-                      selectedDevice={previewMode}
-                      previewMode={!formValidated}
-                    />
-                  )}
-                  
-                  {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
-                  {!formValidated && (
-                    <div 
-                      className="absolute inset-0 cursor-pointer" 
-                      style={{ zIndex: 150, backgroundColor: 'rgba(255,0,0,0.1)' }}
-                      onClick={(e) => {
-                        console.log('🚫 Overlay clicked - opening form modal');
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCardClick();
-                      }}
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCardClick();
-                      }}
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCardClick();
-                      }}
-                    />
+                  </div>
+                )}
+                
+                {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+                <div className="flex-1 relative">
+                  {regularModules3.length > 0 && (
+                    <div style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
+                      <QuizModuleRenderer 
+                        modules={regularModules3}
+                        previewMode={true}
+                        device={previewMode}
+                        onButtonClick={handleReset}
+                      />
+                    </div>
                   )}
                 </div>
+                
+                {/* Modules Footer (collés en bas sans padding) */}
+                {footerModules3.length > 0 && (
+                  <div className="w-full">
+                    <QuizModuleRenderer 
+                      modules={footerModules3}
+                      previewMode={true}
+                      device={previewMode}
+                    />
+                  </div>
+                )}
               </div>
-            </>
-          )}
-
-          {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
-          {gameResult !== null && (
-            <div
-              className="relative z-30 h-full w-full"
-              style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
-            >
-              {modules3.length > 0 && (
-                <QuizModuleRenderer 
-                  modules={modules3}
-                  previewMode={true}
-                  device={previewMode}
-                  onButtonClick={handleReset}
-                />
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Modal de formulaire */}

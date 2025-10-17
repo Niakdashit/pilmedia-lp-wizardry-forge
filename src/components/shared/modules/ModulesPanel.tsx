@@ -25,6 +25,7 @@ export interface Module {
 export interface ModulesPanelProps {
   currentScreen: ScreenId;
   onAdd: (screen: ScreenId, module: Module) => void;
+  existingModules?: Module[];
 }
 
 const createModule = (type: ModuleType, screen: ScreenId): Module => {
@@ -214,26 +215,47 @@ const items: Array<{ id: ModuleType; label: string; icon: React.ComponentType<an
   { id: 'BlocHtml', label: 'Bloc HTML', icon: Code2 }
 ];
 
-const ModulesPanel: React.FC<ModulesPanelProps> = ({ currentScreen, onAdd }) => {
+const ModulesPanel: React.FC<ModulesPanelProps> = ({ currentScreen, onAdd, existingModules = [] }) => {
+  // Vérifier si un Logo ou Pied de page existe déjà
+  const hasLogo = existingModules.some(m => m.type === 'BlocLogo');
+  const hasFooter = existingModules.some(m => m.type === 'BlocPiedDePage');
+
+  const isModuleDisabled = (moduleType: ModuleType): boolean => {
+    if (moduleType === 'BlocLogo') return hasLogo;
+    if (moduleType === 'BlocPiedDePage') return hasFooter;
+    return false;
+  };
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[hsl(var(--sidebar-text-primary))]">Modules</h3>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {items.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => onAdd(currentScreen, createModule(id, currentScreen))}
-            className="flex items-center gap-2 p-3 rounded-lg border border-[hsl(var(--sidebar-border))] text-left hover:bg-[hsl(var(--sidebar-hover))] transition-colors"
-          >
-            <Icon className="w-4 h-4 text-[hsl(var(--sidebar-icon))]" />
-            <div>
-              <div className="text-xs font-medium text-[hsl(var(--sidebar-text-primary))]">{label}</div>
-              <div className="text-[10px] text-[hsl(var(--sidebar-icon))]">Ajouter à l'écran courant</div>
-            </div>
-          </button>
-        ))}
+        {items.map(({ id, label, icon: Icon }) => {
+          const disabled = isModuleDisabled(id);
+          return (
+            <button
+              key={id}
+              onClick={() => !disabled && onAdd(currentScreen, createModule(id, currentScreen))}
+              disabled={disabled}
+              className={`flex items-center gap-2 p-3 rounded-lg border border-[hsl(var(--sidebar-border))] text-left transition-colors ${
+                disabled 
+                  ? 'opacity-40 cursor-not-allowed bg-gray-100' 
+                  : 'hover:bg-[hsl(var(--sidebar-hover))] cursor-pointer'
+              }`}
+              title={disabled ? `${label} déjà ajouté` : undefined}
+            >
+              <Icon className="w-4 h-4 text-[hsl(var(--sidebar-icon))]" />
+              <div>
+                <div className="text-xs font-medium text-[hsl(var(--sidebar-text-primary))]">{label}</div>
+                <div className="text-[10px] text-[hsl(var(--sidebar-icon))]">
+                  {disabled ? 'Déjà ajouté' : 'Ajouter à l\'écran courant'}
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

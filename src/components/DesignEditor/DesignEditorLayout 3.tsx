@@ -571,7 +571,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedElements, setSelectedElements] = useState<any[]>([]);
   
-  // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId + ouvrir le panneau
+  // Détecter quand selectedElement contient un moduleId et mettre à jour selectedModuleId
   useEffect(() => {
     const role = (selectedElement as any)?.role;
     const moduleId = (selectedElement as any)?.moduleId as string | undefined;
@@ -604,18 +604,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     if (selectedModuleId !== moduleId) {
       console.log('✅ [DesignEditor] Setting selectedModuleId to:', moduleId);
       setSelectedModuleId(moduleId);
-      
-      // Ouvrir l'onglet Elements dans la sidebar pour afficher le panneau du module
-      if (sidebarRef.current) {
-        console.log('📂 [DesignEditor] Opening Elements tab for module');
-        sidebarRef.current.setActiveTab('elements');
-      }
-      
-      // Fermer les autres panneaux
-      setShowEffectsInSidebar(false);
-      setShowAnimationsInSidebar(false);
-      setShowPositionInSidebar(false);
-      setShowDesignInSidebar(false);
     }
   }, [selectedElement, selectedModuleId]);
   

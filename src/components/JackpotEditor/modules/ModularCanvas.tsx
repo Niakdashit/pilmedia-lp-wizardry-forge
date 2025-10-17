@@ -620,6 +620,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
 
   // Séparer les modules Logo des autres modules
   const logoModules = React.useMemo(() => modules.filter(m => m.type === 'BlocLogo'), [modules]);
+  const footerModules = React.useMemo(() => modules.filter(m => m.type === 'BlocPiedDePage'), [modules]);
   const regularModules = React.useMemo(() => modules.filter(m => m.type !== 'BlocLogo' && m.type !== 'BlocPiedDePage'), [modules]);
   
   const modulePaddingClass = device === 'mobile' ? 'p-0' : 'p-4';
@@ -662,7 +663,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
       {logoModules.map((m) => (
         <div
           key={m.id}
-          className={`absolute top-0 left-0 right-0 z-50 ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          className={`absolute top-0 left-0 right-0 z-50 group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
           style={{
             width: '100%',
             height: 'auto',
@@ -677,6 +678,21 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
             onSelect?.(m);
           }}
         >
+          {/* Bouton de suppression toujours visible au survol */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(m.id);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="absolute right-4 top-4 z-[1004] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
+            aria-label="Supprimer le logo"
+            title="Supprimer le logo"
+            data-module-no-drag="true"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
           <Toolbar
             visible={selectedModuleId === m.id}
             layoutWidth="full"
@@ -951,10 +967,50 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           );
         })}
         </div>
-        {regularModules.length === 0 && logoModules.length === 0 && (
+        {regularModules.length === 0 && logoModules.length === 0 && footerModules.length === 0 && (
           <div className="text-xs text-gray-500 text-center py-8">Aucun module. Utilisez l'onglet Éléments pour en ajouter.</div>
         )}
       </div>
+      
+      {/* Modules Footer - positionnés en pleine largeur en bas */}
+      {footerModules.map((m) => (
+        <div 
+          key={m.id}
+          data-module-id={m.id}
+          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(m);
+          }}
+        >
+          {/* Bouton de suppression toujours visible au survol */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(m.id);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="absolute right-4 top-4 z-[1004] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
+            aria-label="Supprimer le pied de page"
+            title="Supprimer le pied de page"
+            data-module-no-drag="true"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+          <Toolbar
+            visible={selectedModuleId === m.id}
+            layoutWidth="full"
+            onWidthChange={() => {}}
+            onDelete={() => onDelete(m.id)}
+            expanded={openToolbarFor === m.id}
+            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+            isMobile={device === 'mobile'}
+          />
+          {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
+        </div>
+      ))}
     </div>
   );
 };
