@@ -19,7 +19,8 @@ import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
 import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import QuizManagementPanel from '../QuizEditor/panels/QuizManagementPanel';
+import GameManagementPanel from './panels/GameManagementPanel';
+import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
@@ -59,6 +60,9 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Inline quiz panel controls
   showQuizPanel?: boolean;
   onQuizPanelChange?: (show: boolean) => void;
+  // Inline wheel panel controls
+  showWheelPanel?: boolean;
+  onWheelPanelChange?: (show: boolean) => void;
   // Design panel controls
   showDesignPanel?: boolean;
   onDesignPanelChange?: (show: boolean) => void;
@@ -159,6 +163,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizBorderRadiusChange,
   showQuizPanel = false,
   onQuizPanelChange,
+  showWheelPanel = false,
+  onWheelPanelChange,
   showDesignPanel = false,
   onDesignPanelChange,
   canvasRef,
@@ -192,7 +198,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onActiveTabChange,
   // modular editor
   currentScreen,
-  onAddModule
+  onAddModule,
+  // wheel configuration
+  wheelBorderStyle,
+  wheelBorderColor,
+  wheelBorderWidth,
+  wheelScale,
+  wheelShowBulbs,
+  wheelPosition,
+  onWheelBorderStyleChange,
+  onWheelBorderColorChange,
+  onWheelBorderWidthChange,
+  onWheelScaleChange,
+  onWheelShowBulbsChange,
+  onWheelPositionChange
 }: HybridSidebarProps, ref) => {
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -280,9 +299,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onPositionPanelChange?.(true);
       } else if (tab === 'quiz') {
         onQuizPanelChange?.(true);
+      } else if (tab === 'wheel') {
+        onWheelPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, setIsCollapsed]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onWheelPanelChange, setIsCollapsed]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
@@ -328,6 +349,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showAnimationsPanel,
     showPositionPanel,
     showQuizPanel,
+    showWheelPanel,
     showDesignPanel,
     activeTab: internalActiveTab
   });
@@ -344,12 +366,18 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
       { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
       { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
+      { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
       { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
     ];
 
     // Si le panneau Quiz est activé, forcer l'onglet quiz
     if (showQuizPanel && !prev.showQuizPanel) {
       newActiveTab = 'quiz';
+      shouldUpdate = true;
+    }
+    // Si le panneau Wheel est activé, forcer l'onglet wheel
+    else if (showWheelPanel && !prev.showWheelPanel) {
+      newActiveTab = 'wheel';
       shouldUpdate = true;
     }
     // Si le panneau Design est activé, forcer l'onglet background
@@ -359,14 +387,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     } 
     // Si un autre panneau a été activé, basculer vers son onglet correspondant
     else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz');
+      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
       if (activatedPanel) {
         newActiveTab = activatedPanel.key;
         shouldUpdate = true;
       } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'elements'
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel ou 'elements' pour les autres
       else if (panelStates.some(p => p.key === internalActiveTab && !p.active && p.prevActive)) {
-        newActiveTab = 'elements';
+        newActiveTab = internalActiveTab === 'wheel' ? 'game' : 'elements';
         shouldUpdate = true;
       }
     }
@@ -382,6 +410,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       showAnimationsPanel,
       showPositionPanel,
       showQuizPanel,
+      showWheelPanel,
       showDesignPanel,
       activeTab: newActiveTab
     };
@@ -398,6 +427,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showAnimationsPanel, 
     showPositionPanel, 
     showQuizPanel,
+    showWheelPanel,
     showDesignPanel,
     activeTab,
     onDesignPanelChange
@@ -471,11 +501,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
+    const isTransientWheel = internalActiveTab === 'wheel' && showWheelPanel;
 
-    if (!activeIsVisible && !isTransientQuiz) {
+    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel]);
+  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -519,6 +550,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     if (showQuizPanel && tabId !== 'quiz') {
       onQuizPanelChange?.(false);
     }
+    if (showWheelPanel && tabId !== 'wheel') {
+      onWheelPanelChange?.(false);
+    }
     // Si la cible N'EST PAS 'elements', toujours désélectionner le module pour éviter que le panel temporaire reste ouvert
     if (tabId !== 'elements' && onSelectedModuleChange) {
       onSelectedModuleChange(null);
@@ -530,6 +564,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       onAnimationsPanelChange?.(false);
       onPositionPanelChange?.(false);
       onQuizPanelChange?.(false);
+      onWheelPanelChange?.(false);
       onDesignPanelChange?.(false);
     } else if (tabId === 'background') {
       onDesignPanelChange?.(true);
@@ -541,6 +576,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       onPositionPanelChange?.(true);
     } else if (tabId === 'quiz') {
       onQuizPanelChange?.(true);
+    } else if (tabId === 'wheel') {
+      onWheelPanelChange?.(true);
     }
     
     if (internalActiveTab === tabId) {
@@ -656,6 +693,28 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
               });
               handleQuizMobileWidthChange?.(width);
             }}
+            selectedDevice={selectedDevice}
+          />
+        );
+      case 'wheel':
+        return (
+          <WheelConfigPanel
+            onBack={() => {
+              onWheelPanelChange?.(false);
+              setActiveTab('game');
+            }}
+            wheelBorderStyle={wheelBorderStyle || 'solid'}
+            wheelBorderColor={wheelBorderColor || '#ffd700'}
+            wheelBorderWidth={wheelBorderWidth || 2}
+            wheelScale={wheelScale || 67}
+            wheelShowBulbs={wheelShowBulbs ?? true}
+            wheelPosition={wheelPosition || 'center'}
+            onWheelBorderStyleChange={onWheelBorderStyleChange || (() => {})}
+            onWheelBorderColorChange={onWheelBorderColorChange || (() => {})}
+            onWheelBorderWidthChange={onWheelBorderWidthChange || (() => {})}
+            onWheelScaleChange={onWheelScaleChange || (() => {})}
+            onWheelShowBulbsChange={onWheelShowBulbsChange || (() => {})}
+            onWheelPositionChange={onWheelPositionChange || (() => {})}
             selectedDevice={selectedDevice}
           />
         );
@@ -813,12 +872,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'game':
         return (
-          <div className="h-full overflow-y-auto">
-            <QuizManagementPanel 
-              campaign={campaign}
-              setCampaign={setCampaign}
-            />
-          </div>
+          <GameManagementPanel
+            campaign={campaign}
+            setCampaign={setCampaign}
+          />
         );
       case 'form':
         return (

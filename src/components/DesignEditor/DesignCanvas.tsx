@@ -72,6 +72,7 @@ export interface DesignCanvasProps {
   onShowPositionPanel?: () => void;
   onShowDesignPanel?: () => void;
   onOpenElementsTab?: () => void;
+  onOpenWheelPanel?: () => void;
   // Props pour la sidebar mobile
   onAddElement?: (element: any) => void;
   onBackgroundChange?: (background: { type: 'color' | 'image'; value: string }) => void;
@@ -134,6 +135,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onShowPositionPanel,
   onShowDesignPanel,
   onOpenElementsTab,
+  onOpenWheelPanel,
   // Props pour la sidebar mobile
   onAddElement,
   onBackgroundChange,
@@ -2353,6 +2355,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   campaign={campaign}
                   // Pass extracted colors for wheel customization
                   extractedColors={extractedColors}
+                  // Pass wheel panel opener
+                  onOpenWheelPanel={onOpenWheelPanel}
                   // Pass alignment system for new snapping logic
                   alignmentSystem={{
                     snapElement,

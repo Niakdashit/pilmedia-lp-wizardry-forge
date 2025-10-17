@@ -37,6 +37,8 @@ export interface CanvasElementProps {
   campaign?: CampaignConfig;
   // Extracted colors from background image
   extractedColors?: string[];
+  // Callback to open wheel configuration panel
+  onOpenWheelPanel?: () => void;
   // New alignment system
   alignmentSystem?: {
     snapElement: (element: { x: number; y: number; width: number; height: number; id: string }) => { x: number; y: number; guides: any[] };
@@ -70,6 +72,7 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
   activeGroupId,
   campaign,
   extractedColors,
+  onOpenWheelPanel,
   alignmentSystem,
   customRenderers = {}
 }) => {
@@ -411,8 +414,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     if (readOnly || isLaunchButton) return; // Disable entering edit mode for fixed button
     if (element.type === 'text' || element.type === 'shape') {
       setIsEditing(true);
+    } else if (element.type === 'wheel' && onOpenWheelPanel) {
+      onOpenWheelPanel();
     }
-  }, [element.type, readOnly, isLaunchButton]);
+  }, [element.type, readOnly, isLaunchButton, onOpenWheelPanel]);
 
 
   // Commit edits on blur/Enter without re-rendering per keystroke

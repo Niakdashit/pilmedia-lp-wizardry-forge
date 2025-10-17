@@ -1750,6 +1750,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
                 showPositionPanel={showPositionInSidebar}
                 onPositionPanelChange={setShowPositionInSidebar}
+                showWheelPanel={showWheelPanel}
+                onWheelPanelChange={setShowWheelPanel}
                 showDesignPanel={showDesignInSidebar}
                 onDesignPanelChange={(isOpen) => {
                   if (!isOpen) {
@@ -1889,6 +1891,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       setShowAnimationsInSidebar(false);
                       setShowPositionInSidebar(false);
                     }}
+                    onOpenWheelPanel={() => {
+                      setShowWheelPanel(true);
+                      if (sidebarRef.current) {
+                        sidebarRef.current.setActiveTab('wheel');
+                      }
+                      setShowEffectsInSidebar(false);
+                      setShowAnimationsInSidebar(false);
+                      setShowPositionInSidebar(false);
+                      setShowDesignInSidebar(false);
+                    }}
                     // Mobile sidebar integrations
                     onAddElement={handleAddElement}
                     onBackgroundChange={handleBackgroundChange}
@@ -1989,6 +2001,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                         }
                         setShowAnimationsInSidebar(false);
                         setShowPositionInSidebar(false);
+                      }}
+                      onOpenWheelPanel={() => {
+                        setShowWheelPanel(true);
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('wheel');
+                        }
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                        setShowDesignInSidebar(false);
                       }}
                       // Mobile sidebar integrations
                       onAddElement={handleAddElement}
@@ -2100,6 +2122,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                         setShowEffectsInSidebar(false);
                         setShowAnimationsInSidebar(false);
                         setShowPositionInSidebar(false);
+                      }}
+                      onOpenWheelPanel={() => {
+                        setShowWheelPanel(true);
+                        if (sidebarRef.current) {
+                          sidebarRef.current.setActiveTab('wheel');
+                        }
+                        setShowEffectsInSidebar(false);
+                        setShowAnimationsInSidebar(false);
+                        setShowPositionInSidebar(false);
+                        setShowDesignInSidebar(false);
                       }}
                       // Mobile sidebar integrations
                       onAddElement={handleAddElement}
