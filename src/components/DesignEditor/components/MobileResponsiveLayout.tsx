@@ -263,14 +263,11 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           overflow: hidden;
         }
 
-        /* Layout mobile */
+        /* Layout mobile - optimisé pour format 9:16 */
         .mobile-layout {
           /* Canvas toujours visible entièrement */
           display: flex;
           flex-direction: column;
-          height: 100vh;
-          max-height: 100vh;
-          min-height: 100vh;
           height: 100dvh;
           max-height: 100dvh;
           min-height: 100dvh;
@@ -285,11 +282,11 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           -webkit-touch-callout: none;
           -webkit-tap-highlight-color: transparent;
           
-          /* Safe areas iOS */
-          padding-top: env(safe-area-inset-top);
-          padding-bottom: env(safe-area-inset-bottom);
-          padding-left: env(safe-area-inset-left);
-          padding-right: env(safe-area-inset-right);
+          /* Safe areas iOS - Spacing uniformisé pour 9:16 */
+          padding-top: max(env(safe-area-inset-top), 8px);
+          padding-bottom: max(env(safe-area-inset-bottom), 8px);
+          padding-left: max(env(safe-area-inset-left), 8px);
+          padding-right: max(env(safe-area-inset-right), 8px);
         }
 
         .mobile-layout .layout-content {
@@ -310,13 +307,13 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
 
         /* Afficher la toolbar canvas sur mobile pour le texte (comportement comme PC) */
 
-        /* Ajuster le canvas pour mobile */
+        /* Ajuster le canvas pour mobile en 9:16 */
         .mobile-layout .design-canvas-container {
           flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 4px; /* Minimal padding to prevent edge cropping */
+          padding: 8px; /* Uniform padding for 9:16 format */
           overflow: hidden;
           position: relative;
           min-height: 0;
@@ -325,7 +322,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           height: 100%;
         }
         
-        /* Canvas wrapper pour mobile - centrage parfait */
+        /* Canvas wrapper pour mobile - centrage parfait en 9:16 */
         .mobile-layout .design-canvas-wrapper {
           display: flex;
           align-items: center;
@@ -334,7 +331,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           height: 100%;
           flex: 1;
           max-width: calc(100vw - 8px); /* Account for minimal padding */
-          max-height: calc(100vh - 120px); /* Account for safe areas and UI */
+          max-height: calc(100dvh - 80px); /* Optimized for 9:16 format - reduced from 120px */
         }
 
         /* Canvas bloqué sur mobile - empêcher les interactions non désirées */

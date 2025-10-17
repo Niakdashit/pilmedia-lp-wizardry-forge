@@ -131,9 +131,9 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           will-change: auto;
           backface-visibility: hidden;
           
-          /* Safe areas iOS - optimized for canvas visibility */
+          /* Safe areas iOS - optimized for canvas visibility in 9:16 format */
           padding-top: env(safe-area-inset-top);
-          padding-bottom: calc(env(safe-area-inset-bottom) + 60px); /* Reduced padding for better canvas space */
+          padding-bottom: calc(env(safe-area-inset-bottom) + 20px); /* Minimized padding for maximum canvas space */
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);
           
