@@ -131,17 +131,17 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
 
   // Générer les classes CSS d'animation
 
-  // Calculer les dimensions du canvas selon l'appareil
+  // Calculer les dimensions du canvas selon l'appareil - UTILISER LES DIMENSIONS STANDARD
   const getCanvasSize = () => {
     switch (previewMode) {
       case 'desktop':
         return { width: '100%', height: '100%' };
       case 'tablet':
-        return { width: 768, height: 1024 };
+        return { width: 820, height: 1180 }; // Dimensions standard
       case 'mobile':
-        return { width: 360, height: 640 };
+        return { width: 430, height: 932 }; // Dimensions standard (iPhone 14 Pro Max)
       default:
-        return { width: 360, height: 640 };
+        return { width: 430, height: 932 };
     }
   };
 

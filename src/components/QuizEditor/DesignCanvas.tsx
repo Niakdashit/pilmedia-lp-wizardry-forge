@@ -2577,8 +2577,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   <div
                     className="w-full flex justify-center mb-6"
                     style={{
-                      paddingTop: logoVisualHeight * 0.7,
-                      paddingBottom: footerVisualHeight * 0.7,
+                      paddingLeft: safeZonePadding,
+                      paddingRight: safeZonePadding,
+                      paddingTop: safeZonePadding + (logoVisualHeight * 0.7),
+                      paddingBottom: safeZonePadding + (footerVisualHeight * 0.7),
                       boxSizing: 'border-box'
                     }}
                   >
@@ -2587,15 +2589,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                       <div style={{ height: logoVisualHeight }} />
                     )}
                     <div className="w-full max-w-[1500px] flex" style={{ minHeight: effectiveCanvasSize?.height || 640 }}>
-                      {/* Wrapper avec safe zone padding pour synchroniser avec PreviewRenderer */}
-                      <div 
-                        className="w-full"
-                        style={{
-                          padding: `${safeZonePadding}px`,
-                          boxSizing: 'border-box'
-                        }}
-                      >
-                        <ModularCanvas
+                      <ModularCanvas
                         screen={screenId as any}
                         modules={regularModules}
                         device={selectedDevice}
@@ -2738,9 +2732,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         ? (externalSelectedElement as any)?.moduleId
                         : undefined}
                     />
-                      </div>
-                    </div>
                   </div>
+                </div>
               )}
             </>
               );
