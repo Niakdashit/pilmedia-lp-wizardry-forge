@@ -86,6 +86,8 @@ export interface DesignCanvasProps {
   containerClassName?: string;
   // When true, display a hover form overlay on the right side (30% width)
   showFormOverlay?: boolean;
+  // Preview mode flag to disable rounded corners
+  isPreviewMode?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -1767,7 +1769,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className="relative bg-transparent rounded-3xl overflow-hidden group" 
+              className={`relative bg-transparent overflow-hidden group ${!readOnly ? 'rounded-3xl' : ''}`} 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,

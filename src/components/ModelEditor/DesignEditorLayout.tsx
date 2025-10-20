@@ -385,8 +385,27 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any) => {
-    setCanvasBackground(bg);
+  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+    console.log('🎨 [ModelEditor] handleBackgroundChange:', { bg, options });
+    
+    if (options?.device) {
+      // 📱 Stocker avec device-specific data
+      const newBg = {
+        ...bg,
+        devices: {
+          ...(canvasBackground?.devices || {}),
+          [options.device]: bg
+        }
+      };
+      console.log('📱 Updated background with device-specific data:', {
+        deviceKey: options.device,
+        newBg
+      });
+      setCanvasBackground(newBg);
+    } else {
+      setCanvasBackground(bg);
+    }
+    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
@@ -1448,7 +1467,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className="h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]">
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-tl-[28px] rounded-tr-[28px] rounded-br-[28px] transform -translate-y-[0.4vh]"}>
       {/* Nettoyage des états d'éditeur */}
       <EditorStateCleanup />
       
@@ -1885,7 +1904,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
               selectedDevice={selectedDevice}
               elements={canvasElements}
               onElementsChange={setCanvasElements}
-              background={canvasBackground}
+              background={canvasBackground?.devices?.[selectedDevice] || canvasBackground}
               campaign={campaignData}
               onCampaignChange={handleCampaignConfigChange}
               zoom={canvasZoom}

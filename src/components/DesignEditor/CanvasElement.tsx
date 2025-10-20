@@ -136,6 +136,30 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
     [element, selectedDevice, getPropertiesForDevice]
   );
 
+  // 📱 Vérifier si l'élément doit être visible sur l'appareil actuel
+  const isVisibleOnCurrentDevice = useMemo(() => {
+    // Si l'élément n'a pas de restriction de visibilité, il est visible partout
+    if (!element.visibleDevices || element.visibleDevices.length === 0) {
+      return true;
+    }
+    // Vérifier si l'appareil actuel est dans la liste des appareils visibles
+    const isVisible = element.visibleDevices.includes(selectedDevice);
+    console.log('📱 Vérification visibilité élément:', {
+      elementId: element.id,
+      elementType: element.type,
+      visibleDevices: element.visibleDevices,
+      selectedDevice,
+      isVisible
+    });
+    return isVisible;
+  }, [element.visibleDevices, selectedDevice, element.id, element.type]);
+
+  // Si l'élément n'est pas visible sur cet appareil, ne rien rendre
+  if (!isVisibleOnCurrentDevice) {
+    console.log('🚫 Élément masqué sur', selectedDevice, ':', element.id);
+    return null;
+  }
+
   const isLaunchButton = useMemo(() => {
     const role = (element as any)?.role;
     return typeof role === 'string' && role.toLowerCase() === 'button';
@@ -1217,17 +1241,31 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           </div>
         );
       }
-      case 'image':
+      case 'image': {
+        // Afficher un badge indiquant les appareils de visibilité si configuré
+        const visibilityBadge = element.visibleDevices && element.visibleDevices.length > 0 && isSelected && !readOnly ? (
+          <div className="absolute top-1 right-1 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full z-10 pointer-events-none">
+            {element.visibleDevices.map((d: string) => {
+              const icons: Record<string, string> = { desktop: '🖥️', tablet: '📱', mobile: '📱' };
+              return icons[d] || d;
+            }).join(' ')}
+          </div>
+        ) : null;
+        
         return (
-          <img
-            src={element.src}
-            alt={element.alt || 'Image'}
-            className={`${readOnly ? '' : 'cursor-move'} object-cover`}
-            draggable={false}
-            loading="lazy"
-            style={elementStyle}
-          />
+          <>
+            {visibilityBadge}
+            <img
+              src={element.src}
+              alt={element.alt || 'Image'}
+              className={`${readOnly ? '' : 'cursor-move'} object-cover`}
+              draggable={false}
+              loading="lazy"
+              style={elementStyle}
+            />
+          </>
         );
+      }
       case 'wheel':
         // Get wheel position from campaign config
         const wheelPosition = (campaign as any)?.design?.wheelConfig?.position || element.wheelPosition || 'center';

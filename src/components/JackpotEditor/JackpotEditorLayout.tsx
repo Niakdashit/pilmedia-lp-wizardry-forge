@@ -993,8 +993,36 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
         screen3: bg
       });
       setCanvasBackground(bg); // Fallback global
+    } else if (options?.screenId && options?.device) {
+      // 📱 Appliquer uniquement à l'écran ET appareil spécifiés
+      console.log(`✅ Applying background to ${options.screenId} on ${options.device} ONLY`);
+      setScreenBackgrounds(prev => {
+        const screenKey = options.screenId!;
+        const deviceKey = options.device!;
+        const currentScreenBg = prev[screenKey];
+        
+        // Structure: { type, value, devices: { desktop: {...}, mobile: {...}, tablet: {...} } }
+        const newScreenBg = {
+          ...currentScreenBg,
+          devices: {
+            ...(currentScreenBg?.devices || {}),
+            [deviceKey]: bg
+          }
+        };
+        
+        console.log('📱 Updated screen background with device-specific data:', {
+          screenKey,
+          deviceKey,
+          newScreenBg
+        });
+        
+        return {
+          ...prev,
+          [screenKey]: newScreenBg
+        };
+      });
     } else if (options?.screenId) {
-      // Appliquer uniquement à l'écran spécifié
+      // Appliquer uniquement à l'écran spécifié (tous devices)
       console.log(`✅ Applying background to ${options.screenId} ONLY`);
       setScreenBackgrounds(prev => ({
         ...prev,
@@ -2734,7 +2762,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={screenBackgrounds.screen1}
+                    background={screenBackgrounds.screen1?.devices?.[selectedDevice] || screenBackgrounds.screen1}
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
@@ -2844,7 +2872,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen2}
+                      background={screenBackgrounds.screen2?.devices?.[selectedDevice] || screenBackgrounds.screen2}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2950,7 +2978,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={screenBackgrounds.screen3}
+                      background={screenBackgrounds.screen3?.devices?.[selectedDevice] || screenBackgrounds.screen3}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}

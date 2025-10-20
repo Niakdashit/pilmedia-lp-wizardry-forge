@@ -113,6 +113,8 @@ export interface DesignCanvasProps {
   onModuleDelete?: (id: string) => void;
   onModuleMove?: (id: string, dir: 'up' | 'down') => void;
   onModuleDuplicate?: (id: string) => void;
+  // Preview mode flag to disable rounded corners
+  isPreviewMode?: boolean;
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
@@ -2243,7 +2245,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
             <div 
               ref={activeCanvasRef}
               data-canvas-root="true"
-              className="relative bg-transparent rounded-3xl overflow-hidden" 
+              className={`relative bg-transparent overflow-hidden ${!readOnly ? 'rounded-3xl' : ''}`} 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
