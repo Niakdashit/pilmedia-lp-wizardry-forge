@@ -1806,7 +1806,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         boxSizing: 'border-box'
       }}
     >
-    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-[28px] transform -translate-y-[0.4vh]"}>
+    <MobileStableEditor className={showFunnel ? "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden rounded-none" : "h-[100dvh] min-h-[100dvh] w-full bg-transparent flex flex-col overflow-hidden pt-[1.25cm] pb-[6px] rounded-[28px] transform -translate-y-[0.4vh]"}>
 
       {/* Top Toolbar - Hidden only in preview mode */}
       {!showFunnel && (
