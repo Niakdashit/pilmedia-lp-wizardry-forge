@@ -16,6 +16,7 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import EditorStateCleanup from '../EditorStateCleanup';
 
 
@@ -658,6 +659,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
     onElementsChange: setCanvasElements,
     onAddToHistory: addToHistory
   });
+  
+  // Hook de synchronisation preview
+  const { syncBackground } = useEditorPreviewSync();
   
   const {
     createGroup,

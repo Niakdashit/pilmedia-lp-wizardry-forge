@@ -21,6 +21,8 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -269,7 +271,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     ? { type: 'color' as const, value: '#4ECDC4' }
     : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
   
-  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', { type: 'color' | 'image'; value: string }>>({
+  const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
     screen1: defaultBackground,
     screen2: defaultBackground,
     screen3: defaultBackground
@@ -1404,6 +1406,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     onElementsChange: setCanvasElements,
     onAddToHistory: addToHistory
   });
+  
+  // Hook de synchronisation preview
+  const { syncBackground } = useEditorPreviewSync();
   
   const {
     createGroup,
