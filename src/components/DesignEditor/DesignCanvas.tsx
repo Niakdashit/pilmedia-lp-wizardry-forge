@@ -1979,7 +1979,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
               {/* Bouton roue fortune ABSOLU dans le canvas d'aperçu */}
               {!readOnly && (
-                <div className="absolute bottom-2 right-2 z-50">
+                <div className="absolute bottom-2 right-2 z-[10001]">
                   <WheelSettingsButton
                     onClick={() => {
                       console.log('🔘 Clic sur WheelSettingsButton détecté');
@@ -2152,7 +2152,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {logoModules.length > 0 && (
                     <div 
                       className="absolute left-0 top-0 w-full z-[9999] group" 
-                      style={{ pointerEvents: 'auto' }}
+                      style={{ pointerEvents: 'none' }}
                       onClick={() => console.log('🎯 [DesignCanvas] Logo container clicked!')}
                     >
                       {/* Bouton de suppression toujours visible au survol */}
@@ -2165,6 +2165,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onMouseDown={(e) => e.stopPropagation()}
                         onPointerDown={(e) => e.stopPropagation()}
                         className="absolute right-4 top-4 z-[10000] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
+                        style={{ pointerEvents: 'auto' }}
                         aria-label="Supprimer le logo"
                         title="Supprimer le logo"
                         data-module-no-drag="true"
@@ -2212,7 +2213,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                   {footerModules.length > 0 && (
                     <div 
                       className="absolute left-0 bottom-0 w-full z-[9999] group" 
-                      style={{ pointerEvents: 'auto' }}
+                      style={{ pointerEvents: 'none' }}
                       onClick={() => console.log('🎯 [DesignCanvas] Footer container clicked!')}
                     >
                       {/* Bouton de suppression toujours visible au survol */}
@@ -2225,6 +2226,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                         onMouseDown={(e) => e.stopPropagation()}
                         onPointerDown={(e) => e.stopPropagation()}
                         className="absolute right-4 top-4 z-[10000] inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-xl opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:scale-110 transition-all duration-200 backdrop-blur-sm border-2 border-red-300"
+                        style={{ pointerEvents: 'auto' }}
                         aria-label="Supprimer le pied de page"
                         title="Supprimer le pied de page"
                         data-module-no-drag="true"

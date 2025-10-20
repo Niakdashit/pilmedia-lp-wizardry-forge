@@ -1229,11 +1229,35 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           />
         );
       case 'wheel':
+        // Get wheel position from campaign config
+        const wheelPosition = (campaign as any)?.design?.wheelConfig?.position || element.wheelPosition || 'center';
+        
+        // Calculate position styles based on wheelPosition
+        const getWheelPositionStyle = (): React.CSSProperties => {
+          const baseStyle: React.CSSProperties = {
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%'
+          };
+          
+          switch (wheelPosition) {
+            case 'left':
+              return { ...baseStyle, justifyContent: 'flex-start' };
+            case 'right':
+              return { ...baseStyle, justifyContent: 'flex-end' };
+            case 'center':
+            default:
+              return { ...baseStyle, justifyContent: 'center' };
+          }
+        };
+        
         return (
           <div 
             className={`${readOnly ? '' : 'cursor-move'}`}
             style={{ 
               ...elementStyle,
+              ...getWheelPositionStyle(),
               pointerEvents: 'none' // Empêche l'interaction directe avec la roue
             }}
           >
@@ -1246,9 +1270,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
                     `${s.id ?? idx}:${s.label ?? ''}:${s.color ?? ''}:${s.textColor ?? ''}:${s.contentType ?? 'text'}:${s.imageUrl ?? ''}`
                   ).join('|');
                   const size = Math.min(element.width || 300, element.height || 300);
-                  return `${segs.length}-${parts}-${size}`;
+                  const pos = wheelPosition || 'center';
+                  return `${segs.length}-${parts}-${size}-${pos}`;
                 } catch {
-                  return `${campaignSegments.length || (element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}`;
+                  return `${campaignSegments.length || (element.segments || []).length}-${Math.min(element.width || 300, element.height || 300)}-${wheelPosition}`;
                 }
               })()}
               segments={campaignSegments.length > 0 ? campaignSegments : (element.segments || [])}
@@ -1274,6 +1299,29 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
           </div>
         );
       case 'shape':
+        // Parse border width to ensure it's a number
+        const parseBorderWidth = (val: any): number => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') {
+            const match = val.match(/(\d+)/);
+            return match ? parseInt(match[1], 10) : 0;
+          }
+          return 0;
+        };
+        
+        // Parse border radius to ensure it's a number
+        const parseBorderRadius = (val: any): number => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') {
+            const match = val.match(/(\d+)/);
+            return match ? parseInt(match[1], 10) : 0;
+          }
+          return 0;
+        };
+        
+        const borderWidthNum = parseBorderWidth(element.borderWidth || element.style?.borderWidth || '0px');
+        const borderRadiusNum = parseBorderRadius(element.borderRadius || element.style?.borderRadius || '0px');
+        
         return (
           <div className={`${readOnly ? '' : 'cursor-move'}`} style={elementStyle}>
             <ShapeRenderer
@@ -1281,10 +1329,10 @@ const CanvasElement: React.FC<CanvasElementProps> = React.memo(({
               width={element.width || 100}
               height={element.height || 100}
               color={element.backgroundColor || element.style?.backgroundColor || '#3B82F6'}
-              borderRadius={element.borderRadius || element.style?.borderRadius}
-              borderStyle={element.borderStyle || 'none'}
-              borderWidth={element.borderWidth || '0px'}
-              borderColor={element.borderColor || '#000000'}
+              borderRadius={borderRadiusNum}
+              borderStyle={element.borderStyle || element.style?.borderStyle || 'none'}
+              borderWidth={borderWidthNum}
+              borderColor={element.borderColor || element.style?.borderColor || '#000000'}
               isEditing={isEditing}
               content={element.content || ''}
               onContentChange={(content: string) => {

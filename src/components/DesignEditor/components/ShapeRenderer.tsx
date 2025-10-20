@@ -5,9 +5,9 @@ interface ShapeRendererProps {
   width: number;
   height: number;
   color: string;
-  borderRadius?: string;
+  borderRadius?: string | number;
   borderStyle?: string;
-  borderWidth?: string;
+  borderWidth?: string | number;
   borderColor?: string;
   className?: string;
   style?: React.CSSProperties;
@@ -51,13 +51,30 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
   textAlign = 'center',
   textColor = '#000000',
 }) => {
+  // Normalize border values to ensure proper CSS format
+  const normalizeBorderRadius = (val: string | number): string => {
+    if (typeof val === 'number') return `${val}px`;
+    if (typeof val === 'string' && !val.includes('px')) return `${val}px`;
+    return val;
+  };
+  
+  const normalizeBorderWidth = (val: string | number): string => {
+    if (typeof val === 'number') return `${val}px`;
+    if (typeof val === 'string' && !val.includes('px') && val !== 'none') return `${val}px`;
+    return val;
+  };
+  
+  const normalizedBorderRadius = normalizeBorderRadius(borderRadius);
+  const normalizedBorderWidth = normalizeBorderWidth(borderWidth);
+  
   // Style de base pour les formes simples
   const baseStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
     backgroundColor: color,
-    borderRadius: borderRadius,
-    border: borderStyle !== 'none' ? `${borderWidth} ${borderStyle} ${borderColor}` : 'none',
+    borderRadius: normalizedBorderRadius,
+    border: borderStyle !== 'none' ? `${normalizedBorderWidth} ${borderStyle} ${borderColor}` : 'none',
+    boxSizing: 'border-box', // Important pour que les bordures ne débordent pas
     ...style,
   };
 
@@ -114,7 +131,7 @@ export const ShapeRenderer: React.FC<ShapeRendererProps> = ({
             style={{
               ...baseStyle,
               borderRadius: shapeType === 'rounded-rectangle'
-                ? (borderRadius && borderRadius !== '0' ? borderRadius : '20px')
+                ? (normalizedBorderRadius && normalizedBorderRadius !== '0px' ? normalizedBorderRadius : '20px')
                 : baseStyle.borderRadius,
             }}
           />

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Trash2, GripVertical, MoveDiagonal, ChevronDown, Copy } from 'lucide-react';
-import type { Module, ScreenId, SocialIconStyle } from '@/types/modularEditor';
+import type { Module, ScreenId, SocialIconStyle, BlocVideo } from '@/types/modularEditor';
 import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from './socialIcons';
 import type { DeviceType } from '@/utils/deviceDimensions';
 import { QuizModuleRenderer } from '../QuizRenderer';
+import VideoModule from '@/components/shared/modules/VideoModule';
 
 export interface ModularCanvasProps {
   screen: ScreenId;
@@ -202,15 +203,11 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
       );
     case 'BlocVideo':
       return (
-        <div style={{ ...commonStyle }}>
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
-          />
-        </div>
+        <VideoModule
+          module={m as BlocVideo}
+          onClick={() => {}}
+          isSelected={false}
+        />
       );
     case 'BlocReseauxSociaux': {
       const moduleWithMeta = m as Module & {

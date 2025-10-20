@@ -263,11 +263,20 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
-    mode === 'template'
-      ? { type: 'color', value: '#4ECDC4' }
-      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
-  ));
+  
+  // Background par écran - chaque écran a son propre background
+  const defaultBackground = mode === 'template'
+    ? { type: 'color' as const, value: '#4ECDC4' }
+    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+  
+  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', { type: 'color' | 'image'; value: string }>>({
+    screen1: defaultBackground,
+    screen2: defaultBackground,
+    screen3: defaultBackground
+  });
+  
+  // Background global (fallback pour compatibilité)
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   useEffect(() => {
@@ -1044,13 +1053,43 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any) => {
-    setCanvasBackground(bg);
+  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+    console.log('🎨 [ScratchCardEditor] handleBackgroundChange:', { bg, options });
+    
+    if (options?.applyToAllScreens) {
+      // Appliquer à tous les écrans
+      console.log('✅ Applying background to ALL screens');
+      setScreenBackgrounds({
+        screen1: bg,
+        screen2: bg,
+        screen3: bg
+      });
+      setCanvasBackground(bg); // Fallback global
+    } else if (options?.screenId) {
+      // Appliquer uniquement à l'écran spécifié
+      console.log(`✅ Applying background to ${options.screenId} ONLY`);
+      setScreenBackgrounds(prev => ({
+        ...prev,
+        [options.screenId!]: bg
+      }));
+      // Ne pas modifier canvasBackground global
+    } else {
+      // Pas d'options : comportement par défaut (appliquer globalement)
+      console.log('⚠️ No options provided, applying globally (fallback)');
+      setScreenBackgrounds({
+        screen1: bg,
+        screen2: bg,
+        screen3: bg
+      });
+      setCanvasBackground(bg);
+    }
+    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
         canvasElements: JSON.parse(JSON.stringify(canvasElements)),
-        canvasBackground: { ...bg }
+        canvasBackground: { ...bg },
+        screenBackgrounds: { ...screenBackgrounds }
       }, 'background_update');
     }, 0);
 
@@ -1841,6 +1880,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       type: 'scratch',
       design: {
         background: canvasBackground,
+        screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
         customTexts: customTexts,
         customImages: customImages,
         extractedColors: extractedColors,
@@ -1879,6 +1919,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       canvasConfig: {
         elements: [...canvasElements, ...allModules],
         background: canvasBackground,
+        screenBackgrounds: screenBackgrounds, // Backgrounds par écran
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
@@ -1887,6 +1928,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   }, [
     canvasElements,
     canvasBackground,
+    screenBackgrounds,
     campaignConfig,
     extractedColors,
     selectedDevice,
@@ -2768,7 +2810,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={canvasBackground}
+                    background={screenBackgrounds.screen1}
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
@@ -2875,7 +2917,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={canvasBackground}
+                      background={screenBackgrounds.screen2}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2981,7 +3023,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={canvasBackground}
+                      background={screenBackgrounds.screen3}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}

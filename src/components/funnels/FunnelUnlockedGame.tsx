@@ -283,12 +283,24 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   // Background style avec synchronisation en temps réel et override par écran (DesignCanvas)
   // Utilise les données canoniques du hook de synchronisation
   const backgroundStyle: React.CSSProperties = useMemo(() => {
+    // Priorité 1: Backgrounds par écran depuis campaign
+    const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
+    if (screenBackgrounds && screenBackgrounds[currentScreen]) {
+      const screenBg = screenBackgrounds[currentScreen];
+      console.log(`✅ [FunnelUnlockedGame] Using screen-specific background for ${currentScreen}:`, screenBg);
+      if (screenBg.type === 'image' && screenBg.value) {
+        return { background: `url(${screenBg.value}) center/cover no-repeat` };
+      }
+      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    }
+    
+    // Priorité 2: Per-screen localStorage
     const perScreenUrl = getPerScreenBg(currentScreen, previewMode);
     if (perScreenUrl) {
       return { background: `url(${perScreenUrl}) center/cover no-repeat` };
     }
     
-    // Obtenir les données canoniques depuis le hook de synchronisation
+    // Priorité 3: Obtenir les données canoniques depuis le hook de synchronisation
     const canonicalData = getCanonicalPreviewData();
     const canonicalBg = canonicalData.background;
     
@@ -306,7 +318,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     }
     
     return { background: canonicalBg.value };
-  }, [currentScreen, previewMode, getCanonicalPreviewData, forceUpdate]);
+  }, [campaign, currentScreen, previewMode, getCanonicalPreviewData, forceUpdate]);
 
   // Récupérer directement modularPage depuis les données canoniques
   const canonicalData = getCanonicalPreviewData();

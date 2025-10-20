@@ -162,6 +162,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
+  // État pour l'onglet actif dans HybridSidebar
+  const [activeTab, setActiveTab] = useState<string | null>('background');
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
@@ -1594,6 +1596,8 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                     setShowDesignInSidebar(false);
                   }
                 }}
+                activeTab={activeTab}
+                onActiveTabChange={setActiveTab}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}

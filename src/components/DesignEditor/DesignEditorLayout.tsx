@@ -103,11 +103,21 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // États principaux
   const [canvasElements, setCanvasElements] = useState<any[]>([]);
-  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(() => (
-    mode === 'template'
-      ? { type: 'color', value: '#4ECDC4' }
-      : { type: 'color', value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' }
-  ));
+  
+  // Background par écran - chaque écran a son propre background
+  const defaultBackground = mode === 'template'
+    ? { type: 'color' as const, value: '#4ECDC4' }
+    : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+  
+  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', { type: 'color' | 'image'; value: string }>>({
+    screen1: defaultBackground,
+    screen2: defaultBackground,
+    screen3: defaultBackground
+  });
+  
+  // Background global (fallback pour compatibilité)
+  const [canvasBackground, setCanvasBackground] = useState<{ type: 'color' | 'image'; value: string }>(defaultBackground);
+  
   const [canvasZoom, setCanvasZoom] = useState(getDefaultZoom(selectedDevice));
 
   // État pour tracker la position de scroll (quel écran est visible)
@@ -131,6 +141,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   }, []); // Seulement au montage
   
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const lastModuleSelectionRef = useRef<string | null>(null);
+  const [previousActiveTab, setPreviousActiveTab] = useState<string>('elements');
   
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
@@ -181,6 +193,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const [showAnimationsInSidebar, setShowAnimationsInSidebar] = useState(false);
   const [showPositionInSidebar, setShowPositionInSidebar] = useState(false);
   const [showDesignInSidebar, setShowDesignInSidebar] = useState(false);
+  // État pour l'onglet actif dans HybridSidebar
+  const [activeTab, setActiveTab] = useState<string | null>('background');
   // Référence pour contrôler l'onglet actif dans HybridSidebar
   const sidebarRef = useRef<{ setActiveTab: (tab: string) => void }>(null); // Nouvelle référence pour suivre la demande d'ouverture
   // Context de couleur demandé depuis la toolbar ('fill' | 'border' | 'text')
@@ -502,10 +516,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   }, [modularPage, persistModular, getDefaultButtonLabel, screenHasCardButton]);
 
   const handleUpdateModule = useCallback((id: string, patch: Partial<Module>) => {
+    console.log('🔄 [DesignEditorLayout] handleUpdateModule called:', { id, patch });
     const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
     (Object.keys(nextScreens) as ScreenId[]).forEach((s) => {
       nextScreens[s] = (nextScreens[s] || []).map((m) => (m.id === id ? { ...m, ...patch } as Module : m));
     });
+    console.log('✅ [DesignEditorLayout] Module updated, persisting:', nextScreens);
     persistModular({ screens: nextScreens, _updatedAt: Date.now() });
   }, [modularPage, persistModular]);
 
@@ -583,7 +599,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       role === 'module-html' ||
       role === 'module-carte' ||
       role === 'module-logo' ||
-      role === 'module-footer';
+      role === 'module-footer' ||
+      role === 'module-text';
 
     console.log('🔍 [DesignEditor] selectedElement changed:', {
       role,
@@ -601,23 +618,48 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       return;
     }
 
-    if (selectedModuleId !== moduleId) {
+    const isNewSelection = selectedModuleId !== moduleId;
+    
+    if (isNewSelection) {
       console.log('✅ [DesignEditor] Setting selectedModuleId to:', moduleId);
+      lastModuleSelectionRef.current = moduleId;
       setSelectedModuleId(moduleId);
+      setPreviousActiveTab(activeTab || 'elements');
       
-      // Ouvrir l'onglet Elements dans la sidebar pour afficher le panneau du module
-      if (sidebarRef.current) {
+      // Trouver le module pour vérifier son type
+      const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+      const module = allModules.find((m) => m.id === moduleId);
+      
+      // Si c'est un BlocTexte, ouvrir l'onglet Design (background) pour éditer le texte
+      // Sinon, ouvrir l'onglet Elements pour les autres modules
+      if (module?.type === 'BlocTexte') {
+        console.log('📝 [DesignEditor] Opening Background tab for BlocTexte');
+        // Ne changer l'onglet que si on n'est pas déjà sur background
+        if (activeTab !== 'background') {
+          setActiveTab('background');
+          if (sidebarRef.current) {
+            sidebarRef.current.setActiveTab('background');
+          }
+        }
+        setShowDesignInSidebar(true);
+      } else {
         console.log('📂 [DesignEditor] Opening Elements tab for module');
-        sidebarRef.current.setActiveTab('elements');
+        // Ne changer l'onglet que si on n'est pas déjà sur elements
+        if (activeTab !== 'elements') {
+          setActiveTab('elements');
+          if (sidebarRef.current) {
+            sidebarRef.current.setActiveTab('elements');
+          }
+        }
+        setShowDesignInSidebar(false);
       }
       
       // Fermer les autres panneaux
       setShowEffectsInSidebar(false);
       setShowAnimationsInSidebar(false);
       setShowPositionInSidebar(false);
-      setShowDesignInSidebar(false);
     }
-  }, [selectedElement, selectedModuleId]);
+  }, [selectedElement, selectedModuleId, activeTab, modularPage.screens]);
   
   // Fonction pour sélectionner tous les éléments (textes, images, etc.)
   const handleSelectAll = useCallback(() => {
@@ -804,13 +846,43 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   };
 
   // Ajoute à l'historique lors du changement de background (granulaire)
-  const handleBackgroundChange = (bg: any) => {
-    setCanvasBackground(bg);
+  const handleBackgroundChange = (bg: any, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => {
+    console.log('🎨 [DesignEditor] handleBackgroundChange:', { bg, options });
+    
+    if (options?.applyToAllScreens) {
+      // Appliquer à tous les écrans
+      console.log('✅ Applying background to ALL screens');
+      setScreenBackgrounds({
+        screen1: bg,
+        screen2: bg,
+        screen3: bg
+      });
+      setCanvasBackground(bg); // Fallback global
+    } else if (options?.screenId) {
+      // Appliquer uniquement à l'écran spécifié
+      console.log(`✅ Applying background to ${options.screenId} ONLY`);
+      setScreenBackgrounds(prev => ({
+        ...prev,
+        [options.screenId!]: bg
+      }));
+      // Ne pas modifier canvasBackground global
+    } else {
+      // Pas d'options : comportement par défaut (appliquer globalement)
+      console.log('⚠️ No options provided, applying globally (fallback)');
+      setScreenBackgrounds({
+        screen1: bg,
+        screen2: bg,
+        screen3: bg
+      });
+      setCanvasBackground(bg);
+    }
+    
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
         canvasElements: JSON.parse(JSON.stringify(canvasElements)),
-        canvasBackground: { ...bg }
+        canvasBackground: { ...bg },
+        screenBackgrounds: { ...screenBackgrounds }
       }, 'background_update');
     }, 0);
 
@@ -1203,6 +1275,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       type: 'wheel',
       design: {
         background: canvasBackground,
+        screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
         customTexts: customTexts,
         customImages: customImages,
         extractedColors: extractedColors,
@@ -1248,10 +1321,11 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       canvasConfig: {
         elements: canvasElements,
         background: canvasBackground,
+        screenBackgrounds: screenBackgrounds, // Backgrounds par écran
         device: selectedDevice
       }
     };
-  }, [canvasElements, canvasBackground, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
+  }, [canvasElements, canvasBackground, screenBackgrounds, campaignConfig, extractedColors, selectedDevice, wheelModalConfig, campaignState, modularPage]);
 
   // Synchronisation avec le store (éviter les boucles d'updates)
   const lastTransformedSigRef = useRef<string>('');
@@ -1758,6 +1832,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     setShowDesignInSidebar(false);
                   }
                 }}
+                activeTab={activeTab}
+                onActiveTabChange={setActiveTab}
                 canvasRef={canvasRef}
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
@@ -1827,7 +1903,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     selectedDevice={selectedDevice}
                     elements={canvasElements}
                     onElementsChange={setCanvasElements}
-                    background={canvasBackground}
+                    background={screenBackgrounds.screen1}
                     campaign={campaignData}
                     onCampaignChange={handleCampaignConfigChange}
                     zoom={canvasZoom}
@@ -1931,9 +2007,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   <div 
                     className="absolute inset-0 z-0"
                     style={{
-                      background: canvasBackground.type === 'image'
-                        ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                      background: screenBackgrounds.screen2.type === 'image'
+                        ? `url(${screenBackgrounds.screen2.value}) center/cover no-repeat`
+                        : screenBackgrounds.screen2.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                     }}
                   />
                   {/* Background supplémentaire pour l'espace entre les canvas */}
@@ -1949,7 +2025,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={canvasBackground}
+                      background={screenBackgrounds.screen2}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}
@@ -2043,9 +2119,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   <div 
                     className="absolute inset-0 z-0"
                     style={{
-                      background: canvasBackground.type === 'image'
-                        ? `url(${canvasBackground.value}) center/cover no-repeat`
-                        : canvasBackground.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
+                      background: screenBackgrounds.screen3.type === 'image'
+                        ? `url(${screenBackgrounds.screen3.value}) center/cover no-repeat`
+                        : screenBackgrounds.screen3.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)'
                     }}
                   />
                   {/* Background supplémentaire pour l'espace entre les canvas */}
@@ -2061,7 +2137,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
                       onElementsChange={setCanvasElements}
-                      background={canvasBackground}
+                      background={screenBackgrounds.screen3}
                       campaign={campaignData}
                       onCampaignChange={handleCampaignConfigChange}
                       zoom={canvasZoom}

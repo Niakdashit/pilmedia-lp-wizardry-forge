@@ -101,6 +101,9 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   hiddenTabs?: string[];
   // Propagate color editing context from toolbar -> layout -> sidebar -> background panel
   colorEditingContext?: 'fill' | 'border' | 'text';
+  // Tab state controls
+  activeTab?: string | null;
+  onActiveTabChange?: (tab: string | null) => void;
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
@@ -146,7 +149,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   selectedDevice = 'desktop',
   hiddenTabs = [],
   onForceElementsTab,
-  colorEditingContext
+  colorEditingContext,
+  activeTab,
+  onActiveTabChange
 }: HybridSidebarProps, ref) => {
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -161,16 +166,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   const {
     editorType,
     activeTab: editorActiveTab,
-    showQuizPanel: editorShowQuizPanel,
-    showJackpotPanel: editorShowJackpotPanel,
-    showDesignPanel: editorShowDesignPanel,
-    showEffectsPanel: editorShowEffectsPanel,
-    showAnimationsPanel: editorShowAnimationsPanel,
-    showPositionPanel: editorShowPositionPanel,
     setActiveTab: setEditorActiveTab,
     setPanelState: setEditorPanelState
   } = useEditorState();
-  void editorType; void editorShowJackpotPanel;
+  void editorType;
   
   // Centralized campaign state (Zustand)
   const campaign = useEditorStore((s) => s.campaign);
@@ -403,21 +402,32 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, [jackpotTemplate]);
 
-  // Utiliser l'état isolé par éditeur
-  const activeTab = editorActiveTab || 'elements';
+  // Synchroniser avec les props externes
+  React.useEffect(() => {
+    if (activeTab !== undefined && activeTab !== null && activeTab !== editorActiveTab) {
+      setEditorActiveTab(activeTab);
+    }
+  }, [activeTab, editorActiveTab, setEditorActiveTab]);
+  
+  // Notifier le parent des changements
+  React.useEffect(() => {
+    if (onActiveTabChange && editorActiveTab !== activeTab) {
+      onActiveTabChange(editorActiveTab);
+    }
+  }, [editorActiveTab, activeTab, onActiveTabChange]);
 
   // Gestion des changements de showJackpotPanel - simplifié pour éviter les boucles
   React.useEffect(() => {
-    if (showJackpotPanel && activeTab !== 'game') {
+    if (showJackpotPanel && editorActiveTab !== 'game') {
       setEditorActiveTab('game');
     }
-  }, [showJackpotPanel, setEditorActiveTab, activeTab]);
+  }, [showJackpotPanel, setEditorActiveTab, editorActiveTab]);
 
   React.useEffect(() => {
-    if (showQuizPanel && activeTab !== 'quiz') {
+    if (showQuizPanel && editorActiveTab !== 'quiz') {
       setEditorActiveTab('quiz');
     }
-  }, [showQuizPanel, setEditorActiveTab, activeTab]);
+  }, [showQuizPanel, setEditorActiveTab, editorActiveTab]);
   
   // Exposer setActiveTab via ref
   useImperativeHandle(ref, () => ({
@@ -461,22 +471,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   // Gérer l'affichage des onglets en fonction des états des panneaux - simplifié
   React.useEffect(() => {
     // Si le panneau Design est activé, forcer l'onglet background
-    if (editorShowDesignPanel && activeTab !== 'background') {
+    if (showDesignPanel && editorActiveTab !== 'background') {
       setEditorActiveTab('background');
     }
-  }, [editorShowDesignPanel, setEditorActiveTab, activeTab]);
+  }, [showDesignPanel, setEditorActiveTab, editorActiveTab]);
 
   // La gestion de onForceElementsTab a été déplacée dans le premier useEffect
   // pour éviter la duplication de code et les effets secondaires multiples
 
   // Fermer automatiquement le panneau d'effets si aucun élément texte n'est sélectionné
   React.useEffect(() => {
-    if (activeTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
+    if (editorActiveTab === 'effects' && (!selectedElement || selectedElement.type !== 'text')) {
       onEffectsPanelChange?.(false);
       setEditorPanelState('showEffectsPanel', false);
       setActiveTab('elements');
     }
-  }, [selectedElement, activeTab, onEffectsPanelChange, setEditorPanelState, setActiveTab]);
+  }, [selectedElement, editorActiveTab, onEffectsPanelChange, setEditorPanelState, setActiveTab]);
 
   // Idle prefetch heavy panels to smooth first open without blocking initial render
   React.useEffect(() => {
@@ -611,31 +621,45 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   } as React.CSSProperties;
 
   const handleTabClick = (tabId: string) => {
-    console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', activeTab);
+    console.log('🗂️ Clic sur onglet détecté:', tabId, 'État actuel:', editorActiveTab);
     
-    if (activeTab === tabId) {
+    // TOUJOURS fermer TOUS les panneaux temporaires lors d'un changement d'onglet
+    onEffectsPanelChange?.(false);
+    setEditorPanelState('showEffectsPanel', false);
+    onAnimationsPanelChange?.(false);
+    setEditorPanelState('showAnimationsPanel', false);
+    onPositionPanelChange?.(false);
+    setEditorPanelState('showPositionPanel', false);
+    onQuizPanelChange?.(false);
+    setEditorPanelState('showQuizPanel', false);
+    onJackpotPanelChange?.(false);
+    setEditorPanelState('showJackpotPanel', false);
+    onDesignPanelChange?.(false);
+    setEditorPanelState('showDesignPanel', false);
+    
+    if (editorActiveTab === tabId) {
       console.log('🗂️ Fermeture de l\'onglet actif:', tabId);
       setEditorActiveTab('elements'); // Revenir à elements au lieu de null
     } else {
       console.log('🗂️ Ouverture du nouvel onglet:', tabId);
       setEditorActiveTab(tabId);
       
-      // Fermer les autres panneaux quand on change d'onglet
-      if (tabId !== 'effects' && editorShowEffectsPanel) {
-        onEffectsPanelChange?.(false);
-        setEditorPanelState('showEffectsPanel', false);
-      }
-      if (tabId !== 'animations' && editorShowAnimationsPanel) {
-        onAnimationsPanelChange?.(false);
-        setEditorPanelState('showAnimationsPanel', false);
-      }
-      if (tabId !== 'position' && editorShowPositionPanel) {
-        onPositionPanelChange?.(false);
-        setEditorPanelState('showPositionPanel', false);
-      }
-      if (tabId !== 'quiz' && editorShowQuizPanel) {
-        onQuizPanelChange?.(false);
-        setEditorPanelState('showQuizPanel', false);
+      // Ouvrir explicitement le panneau correspondant au tab ciblé
+      if (tabId === 'background') {
+        onDesignPanelChange?.(true);
+        setEditorPanelState('showDesignPanel', true);
+      } else if (tabId === 'effects') {
+        onEffectsPanelChange?.(true);
+        setEditorPanelState('showEffectsPanel', true);
+      } else if (tabId === 'animations') {
+        onAnimationsPanelChange?.(true);
+        setEditorPanelState('showAnimationsPanel', true);
+      } else if (tabId === 'position') {
+        onPositionPanelChange?.(true);
+        setEditorPanelState('showPositionPanel', true);
+      } else if (tabId === 'quiz') {
+        onQuizPanelChange?.(true);
+        setEditorPanelState('showQuizPanel', true);
       }
       if (tabId !== 'game' && showJackpotPanel) {
         onJackpotPanelChange?.(false);
@@ -1122,7 +1146,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
                   e.stopPropagation();
                 }}
                 className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-                  activeTab === tab.id
+                  editorActiveTab === tab.id
                     ? 'bg-[hsl(var(--sidebar-active-bg))] text-[hsl(var(--sidebar-icon-active))]'
                     : 'text-[hsl(var(--sidebar-icon))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--sidebar-icon-active))]'
                 }`}
@@ -1162,7 +1186,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           })()}
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = editorActiveTab === tab.id;
             
             return (
               <button
@@ -1205,23 +1229,23 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       </div>
 
       {/* Panel Content */}
-      {activeTab && (
+      {editorActiveTab && (
         <div className="w-80 bg-white border-r border-[hsl(var(--sidebar-border))] flex flex-col h-full min-h-0 shadow-sm">
           {/* Panel Header */}
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter select-text">
-              {activeTab === 'effects' ? 'Effets de texte' : 
-               activeTab === 'animations' ? 'Animations de texte' : 
-               activeTab === 'position' ? 'Position' : 
-               activeTab === 'quiz' ? 'Configuration Quiz' : 
-               activeTab === 'game' && isFormEditor ? 'Configuration Jeu' :
-               tabs.find(tab => tab.id === activeTab)?.label}
+              {editorActiveTab === 'effects' ? 'Effets de texte' : 
+               editorActiveTab === 'animations' ? 'Animations de texte' : 
+               editorActiveTab === 'position' ? 'Position' : 
+               editorActiveTab === 'quiz' ? 'Configuration Quiz' : 
+               editorActiveTab === 'game' && isFormEditor ? 'Configuration Jeu' :
+               tabs.find(tab => tab.id === editorActiveTab)?.label}
             </h2>
           </div>
 
           {/* Panel Content */}
           <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-            {renderPanel(activeTab)}
+            {renderPanel(editorActiveTab)}
           </div>
         </div>
       )}

@@ -411,14 +411,11 @@ export const useSmartWheelRenderer = ({
       
       if (segment.color === '#841b60' && brandColors?.primary) {
         segmentColor = brandColors.primary;
-        console.log(`🔧 useSmartWheelRenderer: FORCING segment ${segment.id} color from #841b60 to ${brandColors.primary}`);
       } else if (!segmentColor) {
         segmentColor = index % 2 === 0 ? theme.colors.primary : theme.colors.secondary;
       }
       
       if (DEBUG_SEGMENTS) usedColors.push(segmentColor);
-      
-      console.log(`🎨 useSmartWheelRenderer: Segment ${index} (id: ${segment.id}) - original: ${segment.color} -> final: ${segmentColor}`);
 
       // Dessiner le segment - utiliser le rayon complet
       ctx.beginPath();
@@ -459,25 +456,12 @@ export const useSmartWheelRenderer = ({
       const isImageSegment = (segmentWithImage.contentType === 'image') || hasImageUrl || hasIcon;
       const imageUrl = hasImageUrl ? segmentWithImage.imageUrl : (hasIcon ? segmentWithImage.icon : undefined);
       
-      if (isImageSegment) {
-        console.log('🖼️ Image segment debug:', {
-          id: segmentWithImage.id,
-          label: segmentWithImage.label,
-          contentType: segmentWithImage.contentType,
-          imageUrl: segmentWithImage.imageUrl ? segmentWithImage.imageUrl.substring(0, 50) + '...' : 'NONE',
-          icon: segmentWithImage.icon ? segmentWithImage.icon.substring(0, 50) + '...' : 'NONE',
-          finalImageUrl: imageUrl ? imageUrl.substring(0, 50) + '...' : 'NONE',
-          willRenderImage: !!(imageUrl && typeof imageUrl === 'string')
-        });
-      }
-      
+      // Image segment detection (logging removed for performance)
       if (imageUrl && typeof imageUrl === 'string' && isImageSegment) {
-        console.log('🎯 Processing image for segment:', segmentWithImage.id, 'URL length:', imageUrl.length);
         
         const cache = segmentIconCacheRef.current;
         let entry = cache.get(imageUrl);
         if (!entry) {
-          console.log('🆕 Creating new image cache entry for segment:', segmentWithImage.id);
           const img = new Image();
           img.crossOrigin = 'anonymous';
           entry = { img, ready: false, loading: true };
@@ -487,7 +471,6 @@ export const useSmartWheelRenderer = ({
             if (e) {
               e.ready = true;
               e.loading = false;
-              console.log('✅ Image loaded successfully for segment:', segmentWithImage.id);
             }
           };
           img.onerror = () => {
@@ -500,12 +483,9 @@ export const useSmartWheelRenderer = ({
             console.error('❌ Failed to load segment image for:', segmentWithImage.id, imageUrl.substring(0, 100));
           };
           img.src = imageUrl;
-        } else {
-          console.log('📋 Using cached image entry for segment:', segmentWithImage.id, 'ready:', entry.ready, 'loading:', entry.loading, 'failed:', entry.failed);
         }
         
         if (entry && entry.ready && !entry.failed) {
-          console.log('🎨 Rendering image for segment:', segmentWithImage.id);
           
           // Positionner l'image au centre du segment
           const midAngle = startAngle + anglePerSegment / 2;
@@ -563,21 +543,7 @@ export const useSmartWheelRenderer = ({
           ctx.restore();
           
           ctx.restore();
-        } else if (entry && entry.loading) {
-          console.log('⏳ Image loading for segment:', segmentWithImage.id);
-        } else if (entry && entry.failed) {
-          console.log('❌ Image failed to load for segment:', segmentWithImage.id);
-        } else {
-          console.log('🔍 No cache entry for image segment:', segmentWithImage.id, 'imageUrl:', imageUrl);
         }
-      } else {
-        console.log('⚠️ Image segment without valid imageUrl:', {
-          id: segmentWithImage.id,
-          contentType: segmentWithImage.contentType,
-          hasImageUrl: !!segmentWithImage.imageUrl,
-          hasIcon: !!segmentWithImage.icon,
-          finalImageUrl: imageUrl
-        });
       }
       
       // Gestion de l'indicateur de chargement pour les segments image
@@ -606,7 +572,6 @@ export const useSmartWheelRenderer = ({
 
       // Dessiner le texte seulement si ce n'est pas un segment image
       const shouldDrawText = !isImageSegment;
-      console.log('📝 Text rendering decision for segment:', segmentWithImage.id, 'shouldDrawText:', shouldDrawText, 'contentType:', segmentWithImage.contentType);
       
       if (shouldDrawText) {
         drawSegmentText(ctx, segment, centerX, centerY, radius, startAngle, anglePerSegment, theme);

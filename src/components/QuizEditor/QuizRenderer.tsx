@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
+import VideoModule from '@/components/shared/modules/VideoModule';
 
 interface QuizModuleRendererProps {
   modules: Module[];
@@ -34,6 +35,12 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   inheritedTextColor,
   onModuleUpdate
 }) => {
+  console.log('🎯 [QuizModuleRenderer] Rendering modules:', {
+    count: modules.length,
+    previewMode,
+    modules: modules.map(m => ({ id: m.id, type: m.type }))
+  });
+  
   const isMobileDevice = device === 'mobile';
   const deviceScale = isMobileDevice ? 0.8 : 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
@@ -80,6 +87,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   }, []);
 
   const renderModule = (m: Module) => {
+    console.log('🔍 [QuizRenderer] renderModule called for:', { id: m.id, type: m.type });
+    
     const commonStyle: React.CSSProperties = {
       background: m.backgroundColor,
       textAlign: m.align || 'left'
@@ -297,40 +306,18 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
     // BlocVideo
     if (m.type === 'BlocVideo') {
       const videoModule = m as BlocVideo;
-      const align = videoModule.align || 'center';
-      const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
-      const borderRadius = videoModule.borderRadius ?? 0;
-
+      console.log('🎬 [QuizRenderer] Rendering BlocVideo with VideoModule:', {
+        id: m.id,
+        previewMode,
+        module: videoModule
+      });
       return (
-        <div 
-          key={m.id} 
-          style={{ ...commonStyle }}
-          onClick={() => !previewMode && onModuleClick?.(m.id)}
-        >
-          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
-            <div
-              style={{
-                width: '100%',
-                maxWidth: (((videoModule as any).width ?? 560) * deviceScale),
-                borderRadius,
-                overflow: 'hidden',
-                background: 'transparent',
-                display: 'block',
-                paddingTop: (videoModule as any).spacingTop ?? 0,
-                paddingBottom: (videoModule as any).spacingBottom ?? 0
-              }}
-            >
-              <div className="relative" style={{ paddingTop: '56.25%' }}>
-                <iframe
-                  src={(videoModule as any).src || ''}
-                  title={(videoModule as any).title || 'Video'}
-                  className="absolute inset-0 w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </div>
-          </div>
+        <div key={m.id} style={commonStyle}>
+          <VideoModule
+            module={videoModule}
+            onClick={() => !previewMode && onModuleClick?.(m.id)}
+            isSelected={selectedModuleId === m.id}
+          />
         </div>
       );
     }

@@ -102,10 +102,30 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
 
   // Obtenir les données canoniques
   const canonicalData = getCanonicalPreviewData();
-  const modularPage = campaign?.design?.designModules || canonicalData.modularPage;
-  const allModules1 = modularPage.screens.screen1 || [];
-  const allModules2 = modularPage.screens.screen2 || [];
-  const allModules3 = modularPage.screens.screen3 || [];
+  
+  // Déterminer quel renderer utiliser selon le type de campagne
+  // Priorité 1: Vérifier si campaign.modularPage existe (Quiz)
+  // Priorité 2: Vérifier si campaign.design.designModules existe (Design)
+  const hasQuizModularPage = Boolean((campaign as any)?.modularPage?.screens);
+  const hasDesignModules = Boolean(campaign?.design?.designModules?.screens);
+  
+  const isDesignModular = hasDesignModules && !hasQuizModularPage;
+  
+  // Pour Quiz: utiliser campaign.modularPage
+  // Pour Design: utiliser campaign.design.designModules
+  const modularPage = isDesignModular 
+    ? (campaign?.design?.designModules || canonicalData.modularPage)
+    : ((campaign as any)?.modularPage || campaign?.design?.designModules || canonicalData.modularPage);
+  
+  console.log('📦 [PreviewRenderer] Loading modules from:', {
+    isDesignModular,
+    source: isDesignModular ? 'campaign.design.designModules' : 'campaign.modularPage',
+    modularPage
+  });
+  
+  const allModules1 = modularPage?.screens?.screen1 || [];
+  const allModules2 = modularPage?.screens?.screen2 || [];
+  const allModules3 = modularPage?.screens?.screen3 || [];
   
   // Séparer les modules Logo et Footer des autres modules
   // Les logos doivent être collés en haut sans padding
@@ -113,6 +133,22 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const logoModules1 = allModules1.filter((m: any) => m?.type === 'BlocLogo');
   const footerModules1 = allModules1.filter((m: any) => m?.type === 'BlocPiedDePage');
   const modules1 = allModules1.filter((m: any) => m?.type !== 'BlocLogo' && m?.type !== 'BlocPiedDePage');
+  
+  console.log('📦 [PreviewRenderer] Screen1 modules breakdown:', {
+    total: allModules1.length,
+    logos: logoModules1.length,
+    footers: footerModules1.length,
+    others: modules1.length,
+    modulesDetails: modules1.map((m: any) => ({ id: m.id, type: m.type }))
+  });
+  
+  // Log juste avant le rendu
+  React.useEffect(() => {
+    console.log('🎨 [PreviewRenderer] About to render modules1:', {
+      count: modules1.length,
+      modules: modules1.map((m: any) => ({ id: m.id, type: m.type }))
+    });
+  }, [modules1]);
   
   const logoModules2 = allModules2.filter((m: any) => m?.type === 'BlocLogo');
   const footerModules2 = allModules2.filter((m: any) => m?.type === 'BlocPiedDePage');
@@ -126,15 +162,25 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const backgroundStyle: React.CSSProperties = useMemo(() => {
     console.log('🎨 [PreviewRenderer] Raw data:', {
       'campaign.canvasConfig.background': campaign?.canvasConfig?.background,
-      'campaign.canvasConfig.background.type': campaign?.canvasConfig?.background?.type,
-      'campaign.canvasConfig.background.value': campaign?.canvasConfig?.background?.value?.substring(0, 100),
+      'campaign.canvasConfig.screenBackgrounds': campaign?.canvasConfig?.screenBackgrounds,
+      'campaign.design.screenBackgrounds': campaign?.design?.screenBackgrounds,
       'campaign.design.background': campaign?.design?.background,
-      'campaign.design.backgroundImage': campaign?.design?.backgroundImage,
-      'canonicalData.background': canonicalData.background,
+      'currentScreen': currentScreen,
       'forceUpdate': forceUpdate
     });
     
-    // Top priorité (preview local): image de fond par écran stockée en session (localStorage)
+    // Priorité 1: Backgrounds par écran depuis canvasConfig
+    const screenBackgrounds = campaign?.canvasConfig?.screenBackgrounds || campaign?.design?.screenBackgrounds;
+    if (screenBackgrounds && screenBackgrounds[currentScreen]) {
+      const screenBg = screenBackgrounds[currentScreen];
+      console.log(`✅ [PreviewRenderer] Using screen-specific background for ${currentScreen}:`, screenBg);
+      if (screenBg.type === 'image' && screenBg.value) {
+        return { background: `url(${screenBg.value}) center/cover no-repeat` };
+      }
+      return { background: screenBg.value || 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
+    }
+    
+    // Priorité 2 (fallback): image de fond par écran stockée en session (localStorage)
     // Clés gérées par DesignCanvas lors des uploads: `quiz-bg-<device>-<screenId>`
     let perScreenImage: string | null = null;
     try {
@@ -143,12 +189,12 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       perScreenImage = typeof window !== 'undefined' ? (localStorage.getItem(lsKey) || null) : null;
     } catch {}
 
-    // Priorité 1bis: si une image par écran existe pour l'appareil courant, l'utiliser
+    // Priorité 3: si une image par écran existe pour l'appareil courant, l'utiliser
     if (perScreenImage) {
       return { background: `url(${perScreenImage}) center/cover no-repeat` };
     }
 
-    // Priorité 2: campaign.canvasConfig.background (preview-only, le plus à jour)
+    // Priorité 4: campaign.canvasConfig.background (preview-only, le plus à jour)
     let bg = campaign?.canvasConfig?.background;
     
     // Priorité 3: campaign.design.background (global)
@@ -199,6 +245,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
     previewMode,
     campaign?.canvasConfig?.background?.type,
     campaign?.canvasConfig?.background?.value,
+    campaign?.canvasConfig?.screenBackgrounds,
+    campaign?.design?.screenBackgrounds,
     campaign?.design?.background,
     campaign?.design?.backgroundImage,
     canonicalData.background,
@@ -300,14 +348,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
       { id: 'email', label: 'Email', type: 'email', required: true }
     ];
   }, [canonicalData, campaign?.formFields, campaign?.contactFields, forceUpdate]);
-
-  // Déterminer quel renderer utiliser selon le type de campagne
-  const isDesignModular = Boolean(
-    campaign?.design?.designModules &&
-    Object.values(campaign.design.designModules.screens || {}).some(
-      (screenModules: any) => Array.isArray(screenModules) && screenModules.length > 0
-    )
-  );
 
   const ModuleRenderer = isDesignModular ? DesignModuleRenderer : QuizModuleRenderer;
 
@@ -417,7 +457,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   >
                     <ModuleRenderer
                       modules={modules1 as any}
-                      previewMode
+                      previewMode={true}
                       device={previewMode}
                       onButtonClick={handleParticipate}
                     />

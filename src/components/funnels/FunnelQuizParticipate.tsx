@@ -56,18 +56,27 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
       setForceUpdate(prev => prev + 1);
     };
     
+    const handleModularSync = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      console.log('📦 [FunnelQuizParticipate] Modular sync event received:', {
+        hasModularPage: !!detail?.modularPage,
+        timestamp: detail?.timestamp
+      });
+      setForceUpdate(prev => prev + 1);
+    };
+    
     window.addEventListener('quizStyleUpdate', handleStyleUpdate);
     window.addEventListener('quizStyleUpdateFallback', handleStyleUpdate);
     window.addEventListener('modularModuleSelected', handleStyleUpdate);
     window.addEventListener('editor-formfields-sync', handleFormFieldsSync);
-    window.addEventListener('editor-force-sync', handleFormFieldsSync);
+    window.addEventListener('editor-force-sync', handleModularSync);
     
     return () => {
       window.removeEventListener('quizStyleUpdate', handleStyleUpdate);
       window.removeEventListener('quizStyleUpdateFallback', handleStyleUpdate);
       window.removeEventListener('modularModuleSelected', handleStyleUpdate);
       window.removeEventListener('editor-formfields-sync', handleFormFieldsSync);
-      window.removeEventListener('editor-force-sync', handleFormFieldsSync);
+      window.removeEventListener('editor-force-sync', handleModularSync);
     };
   }, []);
 
@@ -205,10 +214,21 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
 
   // Récupérer directement modularPage pour un rendu unifié
   const campaignAny = campaign as any;
-  const modularPage = campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
+  const storeCampaignAny = storeCampaign as any;
+  
+  // Priorité: utiliser storeCampaign (synchronisé) plutôt que campaign (props)
+  const modularPage = storeCampaignAny?.modularPage || campaignAny?.modularPage || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
   const modules = modularPage.screens.screen1 || [];
   const modules2 = modularPage.screens.screen2 || [];
   const modules3 = modularPage.screens.screen3 || [];
+  
+  console.log('📦 [FunnelQuizParticipate] Modules loaded:', {
+    screen1: modules.length,
+    screen2: modules2.length,
+    screen3: modules3.length,
+    modularPageTimestamp: modularPage._updatedAt,
+    source: storeCampaignAny?.modularPage ? 'storeCampaign' : 'campaign'
+  });
 
   type LayoutWidth = NonNullable<Module['layoutWidth']>;
   const layoutSpan: Record<LayoutWidth, number> = {
@@ -456,13 +476,19 @@ const FunnelQuizParticipate: React.FC<FunnelQuizParticipateProps> = ({ campaign,
               style={{ padding: safeZonePadding, boxSizing: 'border-box' }}
             >
               {/* Render modules using unified QuizModuleRenderer */}
-              {modules.length > 0 ? (
-                renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })
-              ) : (
-                <div className="text-center text-white/80">
-                  <p className="text-sm mb-4">Aucun contenu configuré pour l'écran 1</p>
-                </div>
-              )}
+              {(() => {
+                console.log('🎯 [FunnelQuizParticipate] Rendering modules:', {
+                  count: modules.length,
+                  modules: modules.map((m: Module) => ({ id: m.id, type: m.type }))
+                });
+                return modules.length > 0 ? (
+                  renderModuleGrid(modules as Module[], { onButtonClick: handleParticipate, device: previewMode })
+                ) : (
+                  <div className="text-center text-white/80">
+                    <p className="text-sm mb-4">Aucun contenu configuré pour l'écran 1</p>
+                  </div>
+                );
+              })()}
               
               {/* Bouton Participer - affiché uniquement si aucun CTA modulaire n'est présent */}
               {!hasPrimaryCTA && (

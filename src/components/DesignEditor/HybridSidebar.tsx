@@ -307,14 +307,16 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
-  // Toujours désélectionner le module si l'onglet actif n'est pas 'elements'
+  // Désélectionner le module si l'onglet actif n'est pas 'elements' ou 'background'
+  // (background est autorisé pour les BlocTexte)
   React.useEffect(() => {
-    if (internalActiveTab !== 'elements') {
+    if (internalActiveTab !== 'elements' && internalActiveTab !== 'background') {
       onSelectedModuleChange?.(null);
     }
   }, [internalActiveTab, onSelectedModuleChange]);
   
-  // Forcer l'ouverture de l'onglet 'elements' quand un module est sélectionné
+  // Log pour debug - ne pas forcer le changement d'onglet ici pour éviter les boucles
+  // La logique de changement d'onglet est gérée par DesignEditorLayout
   React.useEffect(() => {
     console.log('🎯 [HybridSidebar] selectedModuleId changed:', {
       selectedModuleId,
@@ -322,13 +324,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       internalActiveTab,
       moduleType: selectedModule?.type
     });
-    
-    if (selectedModuleId && internalActiveTab !== 'elements') {
-      console.log('✅ [HybridSidebar] Switching to elements tab');
-      setInternalActiveTab('elements');
-      onActiveTabChange?.('elements');
-    }
-  }, [selectedModuleId]);
+  }, [selectedModuleId, selectedModule?.type, internalActiveTab]);
   
   // Fonction interne pour gérer le changement d'onglet
   const activeTemplate = React.useMemo(() => {
@@ -380,8 +376,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       newActiveTab = 'wheel';
       shouldUpdate = true;
     }
-    // Si le panneau Design est activé, forcer l'onglet background
-    else if (showDesignPanel && !prev.showDesignPanel) {
+    // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
+    else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
       newActiveTab = 'background';
       shouldUpdate = true;
     } 
@@ -537,36 +533,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     isUserTabSwitchingRef.current = true;
     ignoreExternalUntilRef.current = Date.now() + 2000;
     setTimeout(() => { isUserTabSwitchingRef.current = false; }, 300);
-    // Si on clique sur un onglet différent, fermer les panneaux spéciaux
-    if (showEffectsPanel && tabId !== 'effects') {
-      onEffectsPanelChange?.(false);
-    }
-    if (showAnimationsPanel && tabId !== 'animations') {
-      onAnimationsPanelChange?.(false);
-    }
-    if (showPositionPanel && tabId !== 'position') {
-      onPositionPanelChange?.(false);
-    }
-    if (showQuizPanel && tabId !== 'quiz') {
-      onQuizPanelChange?.(false);
-    }
-    if (showWheelPanel && tabId !== 'wheel') {
-      onWheelPanelChange?.(false);
-    }
+    
+    // TOUJOURS fermer TOUS les panneaux temporaires lors d'un changement d'onglet
+    onEffectsPanelChange?.(false);
+    onAnimationsPanelChange?.(false);
+    onPositionPanelChange?.(false);
+    onQuizPanelChange?.(false);
+    onWheelPanelChange?.(false);
+    onDesignPanelChange?.(false);
+    
     // Si la cible N'EST PAS 'elements', toujours désélectionner le module pour éviter que le panel temporaire reste ouvert
     if (tabId !== 'elements' && onSelectedModuleChange) {
       onSelectedModuleChange(null);
     }
 
     // Ouvrir explicitement le panneau correspondant au tab ciblé
-    if (tabId === 'elements') {
-      onEffectsPanelChange?.(false);
-      onAnimationsPanelChange?.(false);
-      onPositionPanelChange?.(false);
-      onQuizPanelChange?.(false);
-      onWheelPanelChange?.(false);
-      onDesignPanelChange?.(false);
-    } else if (tabId === 'background') {
+    if (tabId === 'background') {
       onDesignPanelChange?.(true);
     } else if (tabId === 'effects') {
       onEffectsPanelChange?.(true);
@@ -709,12 +691,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             wheelScale={wheelScale || 67}
             wheelShowBulbs={wheelShowBulbs ?? true}
             wheelPosition={wheelPosition || 'center'}
-            onWheelBorderStyleChange={onWheelBorderStyleChange || (() => {})}
-            onWheelBorderColorChange={onWheelBorderColorChange || (() => {})}
-            onWheelBorderWidthChange={onWheelBorderWidthChange || (() => {})}
-            onWheelScaleChange={onWheelScaleChange || (() => {})}
-            onWheelShowBulbsChange={onWheelShowBulbsChange || (() => {})}
-            onWheelPositionChange={onWheelPositionChange || (() => {})}
+            onBorderStyleChange={onWheelBorderStyleChange || (() => {})}
+            onBorderColorChange={onWheelBorderColorChange || (() => {})}
+            onBorderWidthChange={onWheelBorderWidthChange || (() => {})}
+            onScaleChange={onWheelScaleChange || (() => {})}
+            onShowBulbsChange={onWheelShowBulbsChange || (() => {})}
+            onPositionChange={onWheelPositionChange || (() => {})}
             selectedDevice={selectedDevice}
           />
         );

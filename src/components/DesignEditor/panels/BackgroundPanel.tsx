@@ -3,7 +3,7 @@ import { Upload, Pipette } from 'lucide-react';
 import ColorThief from 'colorthief';
 
 interface BackgroundPanelProps {
-  onBackgroundChange: (background: { type: 'color' | 'image'; value: string }) => void;
+  onBackgroundChange: (background: { type: 'color' | 'image'; value: string }, options?: { screenId?: 'screen1' | 'screen2' | 'screen3'; applyToAllScreens?: boolean; device?: 'desktop' | 'tablet' | 'mobile' }) => void;
   onExtractedColorsChange?: (colors: string[]) => void;
   currentBackground?: { type: 'color' | 'image'; value: string };
   extractedColors?: string[];
@@ -79,7 +79,14 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       }
     } else {
       // Appliquer à l'arrière-plan (toujours fill)
-      onBackgroundChange({ type: 'color', value: color });
+      onBackgroundChange(
+        { type: 'color', value: color },
+        {
+          screenId: currentScreen,
+          applyToAllScreens: applyToAllScreens,
+          device: selectedDevice
+        }
+      );
     }
   };
 
@@ -305,16 +312,15 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
         
-        // UNIQUEMENT si la case est cochée : appliquer l'image
-        if (applyToAllScreens) {
-          if (typeof window !== 'undefined') {
-            const evt = new CustomEvent('applyBackgroundAllScreens', { detail: { url: imageUrl, device: selectedDevice } });
-            window.dispatchEvent(evt);
+        // Appliquer l'image via le callback avec les options appropriées
+        onBackgroundChange(
+          { type: 'image', value: imageUrl },
+          {
+            screenId: currentScreen,
+            applyToAllScreens: applyToAllScreens,
+            device: selectedDevice
           }
-        } else {
-          // Informer l'utilisateur qu'il doit cocher la case
-          alert('Pour appliquer l\'image de fond, veuillez cocher la case "Appliquer à tous les écrans"');
-        }
+        );
         
         // Extract colors from the uploaded image (toujours extraire les couleurs)
         const extracted = await extractColorsFromImage(imageUrl);
