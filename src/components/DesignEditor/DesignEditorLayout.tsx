@@ -1855,11 +1855,20 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             {selectedDevice === 'mobile' ? (
               /* Mobile Preview: Canvas centré avec fond #2c2c35 */
               <div className="flex items-center justify-center w-full h-full">
-                <PreviewRenderer
-                  campaign={campaignData}
-                  previewMode="mobile"
-                  wheelModalConfig={wheelModalConfig}
-                />
+                <div 
+                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                  style={{
+                    width: '375px',
+                    height: '812px',
+                    maxHeight: '90vh'
+                  }}
+                >
+                  <PreviewRenderer
+                    campaign={campaignData}
+                    previewMode="mobile"
+                    wheelModalConfig={wheelModalConfig}
+                  />
+                </div>
               </div>
             ) : (
               /* Desktop/Tablet Preview: Fullscreen normal */
