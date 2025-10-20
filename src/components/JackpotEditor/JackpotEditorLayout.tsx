@@ -2424,21 +2424,50 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
             >
               Mode édition
             </button>
-            <div className="w-full h-full pointer-events-auto flex items-center justify-center">
-              {campaignData?.type === 'quiz' ? (
-                <FunnelQuizParticipate
-                  campaign={campaignData as any}
-                  previewMode={selectedDevice}
-                />
-              ) : (
-                <FunnelUnlockedGame
-                  campaign={campaignData}
-                  previewMode={selectedDevice}
-                  wheelModalConfig={wheelModalConfig}
-                  launchButtonStyles={launchButtonStyles}
-                />
-              )}
-            </div>
+            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
+              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
+              <div className="flex items-center justify-center w-full h-full">
+                <div 
+                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
+                  style={{
+                    width: '430px',
+                    height: '932px',
+                    maxHeight: '90vh'
+                  }}
+                >
+                  {campaignData?.type === 'quiz' ? (
+                    <FunnelQuizParticipate
+                      campaign={campaignData as any}
+                      previewMode="mobile"
+                    />
+                  ) : (
+                    <FunnelUnlockedGame
+                      campaign={campaignData}
+                      previewMode="mobile"
+                      wheelModalConfig={wheelModalConfig}
+                      launchButtonStyles={launchButtonStyles}
+                    />
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
+              <div className="w-full h-full pointer-events-auto flex items-center justify-center">
+                {campaignData?.type === 'quiz' ? (
+                  <FunnelQuizParticipate
+                    campaign={campaignData as any}
+                    previewMode={selectedDevice}
+                  />
+                ) : (
+                  <FunnelUnlockedGame
+                    campaign={campaignData}
+                    previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                    wheelModalConfig={wheelModalConfig}
+                    launchButtonStyles={launchButtonStyles}
+                  />
+                )}
+              </div>
+            )}
           </div>
         ) : (
           /* Design Editor Mode */
