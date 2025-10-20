@@ -2533,33 +2533,43 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             >
               Mode édition
             </button>
-            {/* Conteneur avec scale exact selon le device (comme Chrome DevTools) */}
-            <div 
-              className="h-full overflow-hidden flex items-center justify-center"
-              style={{
-                width: '100%',
-                maxWidth: '100%'
-              }}
-            >
-              <div
+            {/* Sur appareil mobile physique: fullscreen sans scale. Sur desktop: scale selon device sélectionné */}
+            {actualDevice === 'mobile' ? (
+              /* Mobile physique: Fullscreen sans cadre ni scale */
+              <PreviewRenderer
+                campaign={campaignData}
+                previewMode="mobile"
+                wheelModalConfig={wheelModalConfig}
+              />
+            ) : (
+              /* Desktop/Tablet: Conteneur avec scale exact selon le device (comme Chrome DevTools) */
+              <div 
+                className="h-full overflow-hidden flex items-center justify-center"
                 style={{
-                  width: selectedDevice === 'mobile' ? '1700px' : selectedDevice === 'tablet' ? '1700px' : '1700px',
-                  height: '100%',
-                  transform: selectedDevice === 'mobile' 
-                    ? 'scale(0.253)' // 430/1700 = 0.253
-                    : selectedDevice === 'tablet'
-                    ? 'scale(0.482)' // 820/1700 = 0.482
-                    : 'scale(1)',
-                  transformOrigin: 'center center'
+                  width: '100%',
+                  maxWidth: '100%'
                 }}
               >
-                <PreviewRenderer
-                  campaign={campaignData}
-                  previewMode={selectedDevice}
-                  wheelModalConfig={wheelModalConfig}
-                />
+                <div
+                  style={{
+                    width: selectedDevice === 'mobile' ? '1700px' : selectedDevice === 'tablet' ? '1700px' : '1700px',
+                    height: '100%',
+                    transform: selectedDevice === 'mobile' 
+                      ? 'scale(0.253)' // 430/1700 = 0.253
+                      : selectedDevice === 'tablet'
+                      ? 'scale(0.482)' // 820/1700 = 0.482
+                      : 'scale(1)',
+                    transformOrigin: 'center center'
+                  }}
+                >
+                  <PreviewRenderer
+                    campaign={campaignData}
+                    previewMode={selectedDevice}
+                    wheelModalConfig={wheelModalConfig}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           /* Design Editor Mode */

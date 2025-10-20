@@ -18,7 +18,6 @@ import { useKeyboardShortcuts } from '../ModernEditor/hooks/useKeyboardShortcuts
 import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
-import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
 
@@ -63,18 +62,15 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
         if (!Number.isNaN(v) && v >= 0.1 && v <= 1) return v;
       }
     } catch {}
-    if (device === 'mobile' && typeof window !== 'undefined') {
-      const { width, height } = getDeviceDimensions('mobile');
-      const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
-      return Math.min(scale, 1);
-    }
+    // Uniformisation : même zoom que le mode preview pour tous les appareils
+    // Cela garantit que l'écran a exactement la même taille en édition et en preview
     switch (device) {
       case 'desktop':
         return 0.7;
       case 'tablet':
         return 0.55;
       case 'mobile':
-        return 0.45;
+        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
       default:
         return 0.7;
     }
@@ -162,6 +158,16 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const device = detectDevice();
     setActualDevice(device);
     setSelectedDevice(device);
+    
+    // Nettoyer les anciennes valeurs de zoom mobile pour forcer le nouveau zoom à 100%
+    try {
+      const savedMobileZoom = localStorage.getItem('editor-zoom-mobile');
+      if (savedMobileZoom && parseFloat(savedMobileZoom) < 1.0) {
+        console.log('🧹 Nettoyage ancien zoom mobile:', savedMobileZoom, '→ 1.0');
+        localStorage.removeItem('editor-zoom-mobile');
+      }
+    } catch {}
+    
     setCanvasZoom(getDefaultZoom(device));
   }, []);
 
@@ -176,14 +182,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
-  useEffect(() => {
-    if (actualDevice === 'mobile') {
-      const updateZoom = () => setCanvasZoom(getDefaultZoom('mobile'));
-      window.addEventListener('resize', updateZoom);
-      return () => window.removeEventListener('resize', updateZoom);
-    }
-  }, [actualDevice]);
+  // Note: Le zoom mobile est maintenant fixe à 100% pour correspondre au mode preview
+  // L'ancien code qui ajustait automatiquement le zoom lors du redimensionnement a été supprimé
 
   // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
   const [hasRecalculated, setHasRecalculated] = useState(false);
@@ -1842,7 +1842,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
           <div 
             className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center"
             style={{
-              backgroundColor: selectedDevice === 'mobile' ? '#2c2c35' : 'transparent'
+              backgroundColor: (selectedDevice === 'mobile' && actualDevice !== 'mobile') ? '#2c2c35' : 'transparent'
             }}
           >
             {/* Floating Edit Mode Button */}
@@ -1852,14 +1852,14 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             >
               Mode édition
             </button>
-            {selectedDevice === 'mobile' ? (
-              /* Mobile Preview: Canvas centré avec fond #2c2c35 */
+            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
+              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
               <div className="flex items-center justify-center w-full h-full">
                 <div 
                   className="relative overflow-hidden rounded-[32px] shadow-2xl"
                   style={{
-                    width: '375px',
-                    height: '812px',
+                    width: '430px',
+                    height: '932px',
                     maxHeight: '90vh'
                   }}
                 >
@@ -1872,7 +1872,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 </div>
               </div>
             ) : (
-              /* Desktop/Tablet Preview: Fullscreen normal */
+              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
               <PreviewRenderer
                 campaign={campaignData}
                 previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}

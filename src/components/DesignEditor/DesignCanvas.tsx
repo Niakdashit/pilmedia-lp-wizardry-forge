@@ -511,6 +511,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
 
   // Handlers optimisés avec snapping et cache intelligent (moved earlier)
   const handleElementUpdate = useCallback((id: string, updates: any) => {
+    console.log('🔄 [DesignCanvas] handleElementUpdate called:', {
+      id,
+      updates,
+      selectedDevice,
+      currentElement: elementById.get(id)
+    });
+    
     // Utiliser la fonction externe si disponible
     if (externalOnElementUpdate && selectedElement === id) {
       // Appeler le handler externe pour la synchronisation/side-effects,
@@ -639,13 +646,21 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       const base = { ...el, ...workingUpdates };
       if (isDeviceScoped) {
         const currentDeviceData = (el as any)[selectedDevice] || {};
-        return {
+        const updated = {
           ...base,
           [selectedDevice]: {
             ...currentDeviceData,
             ...devicePatch
           }
         };
+        console.log('✅ [DesignCanvas] Element updated with device scope:', {
+          elementId: id,
+          device: selectedDevice,
+          devicePatch,
+          oldDeviceData: currentDeviceData,
+          newDeviceData: updated[selectedDevice]
+        });
+        return updated;
       }
       
       // Debug logging for zIndex updates
@@ -657,6 +672,13 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           elementType: el.type
         });
       }
+      
+      console.log('✅ [DesignCanvas] Element updated (desktop):', {
+        elementId: id,
+        workingUpdates,
+        oldElement: el,
+        newElement: base
+      });
       
       return base;
     });
@@ -1821,11 +1843,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Clear selection when clicking outside canvas/toolbars on mobile
         onClearSelection={handleClearSelection}
       >
-        {/* Canvas Toolbar - Show for text and shape elements (including modular text) */}
+        {/* Canvas Toolbar - Show for text and shape elements (including modular text) on all devices */}
         {(() => {
           // Vérifier si le module sélectionné appartient à cet écran
           const isModuleOnThisScreen = externalSelectedElement?.screenId === screenId;
-          const shouldShow = (!readOnly) && toolbarElement && (toolbarElement.type === 'text' || toolbarElement.type === 'shape') && selectedDevice !== 'mobile' && (selectedElementData || isModuleOnThisScreen);
+          const shouldShow = (!readOnly) && toolbarElement && (toolbarElement.type === 'text' || toolbarElement.type === 'shape') && (selectedElementData || isModuleOnThisScreen);
           console.log('🎨 [DesignCanvas] Toolbar render check:', {
             screenId,
             readOnly,
@@ -1838,10 +1860,28 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           return shouldShow ? (
             <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
               <CanvasToolbar 
-              selectedElement={{
-                ...toolbarElement,
-                ...(selectedElementData ? getPropertiesForDevice(toolbarElement, selectedDevice) : {})
-              }} 
+              selectedElement={(() => {
+                // Pour les éléments canvas, fusionner avec les propriétés du device
+                // Pour les modules, utiliser directement toolbarElement
+                if (!selectedElementData) {
+                  // Module texte - utiliser directement
+                  console.log('🎨 [DesignCanvas] Using module toolbar element directly:', toolbarElement);
+                  return toolbarElement;
+                }
+                
+                // Élément canvas - fusionner avec device props
+                const fullDeviceProps = getPropertiesForDevice(toolbarElement, selectedDevice);
+                
+                console.log('🎨 [DesignCanvas] Toolbar element merged:', {
+                  base: toolbarElement,
+                  device: selectedDevice,
+                  fullDeviceProps,
+                  fontSize: fullDeviceProps.fontSize,
+                  fontFamily: fullDeviceProps.fontFamily
+                });
+                
+                return fullDeviceProps;
+              })()} 
               onElementUpdate={updates => {
                 if (selectedElement) {
                   handleElementUpdate(selectedElement, updates);
@@ -1912,7 +1952,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
           >
             <div 
               ref={activeCanvasRef}
-              className="relative bg-transparent rounded-3xl overflow-hidden" 
+              className="relative bg-transparent rounded-[32px] overflow-hidden" 
               style={{
                 width: `${effectiveCanvasSize.width}px`,
                 height: `${effectiveCanvasSize.height}px`,
