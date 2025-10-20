@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import StandardizedWheel from '../shared/StandardizedWheel';
 import TemplatedQuiz from '../shared/TemplatedQuiz';
-import ScratchPreview from '../GameTypes/ScratchPreview';
-import JackpotPreview from '../QuickCampaign/Preview/JackpotPreview';
 import DynamicContactForm, { type FieldConfig } from '../forms/DynamicContactForm';
 import Modal from '../common/Modal';
 import { useMessageStore } from '@/stores/messageStore';
@@ -597,12 +595,11 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                   </section>
                 )}
 
-                {/* Jeu (Roue, Scratch, Jackpot, Quiz) - Centré */}
+                {/* Jeu (Roue, Scratch, etc.) - Centré */}
                 <div 
                   className="flex items-center justify-center"
                   style={{ padding: safeZonePadding, boxSizing: 'border-box', minHeight: '400px' }}
                 >
-                  {/* Roue */}
                   {campaign.type === 'wheel' && (
                     <StandardizedWheel
                       campaign={campaign}
@@ -622,38 +619,6 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
                           const isWin = Math.random() > 0.5;
                           handleGameFinish(isWin ? 'win' : 'lose');
                         }, 3000);
-                      }}
-                    />
-                  )}
-
-                  {/* Scratch Card */}
-                  {campaign.type === 'scratch' && (
-                    <ScratchPreview
-                      config={campaign?.design?.scratchConfig || {}}
-                      disabled={!hasSubmittedForm}
-                      autoStart={hasSubmittedForm}
-                      onStart={() => {
-                        console.log('🎰 Scratch game started');
-                      }}
-                      onFinish={(result) => {
-                        console.log('🎰 Scratch game finished:', result);
-                        handleGameFinish(result);
-                      }}
-                    />
-                  )}
-
-                  {/* Jackpot */}
-                  {campaign.type === 'jackpot' && (
-                    <JackpotPreview
-                      customColors={campaign?.design?.extractedColors || { primary: '#841b60', secondary: '#b41b60' }}
-                      jackpotColors={campaign?.design?.jackpotConfig || {
-                        containerBackgroundColor: '#1a1a2e',
-                        backgroundColor: '#16213e',
-                        borderColor: '#841b60',
-                        borderWidth: 3,
-                        slotBorderColor: '#b41b60',
-                        slotBorderWidth: 2,
-                        slotBackgroundColor: '#0f3460'
                       }}
                     />
                   )}
