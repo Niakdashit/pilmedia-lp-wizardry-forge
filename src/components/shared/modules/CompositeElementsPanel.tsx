@@ -10,6 +10,7 @@ export interface CompositeElementsPanelProps {
   selectedElement?: any;
   onElementUpdate?: (updates: any) => void;
   selectedDevice?: 'desktop' | 'tablet' | 'mobile';
+  existingModules?: Module[];
 }
 
 const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
@@ -18,7 +19,8 @@ const CompositeElementsPanel: React.FC<CompositeElementsPanelProps> = ({
   onAddElement,
   selectedElement,
   onElementUpdate,
-  selectedDevice
+  selectedDevice,
+  existingModules
 }) => {
   return (
     <div className="h-full overflow-y-auto">

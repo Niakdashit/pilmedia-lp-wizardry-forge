@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { Trash2, GripVertical, MoveDiagonal, ChevronDown, Copy } from 'lucide-react';
 import type { Module, ScreenId, SocialIconStyle, BlocVideo } from '@/types/modularEditor';
 import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from './socialIcons';

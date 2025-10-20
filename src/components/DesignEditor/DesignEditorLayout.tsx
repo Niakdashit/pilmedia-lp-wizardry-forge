@@ -142,7 +142,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const lastModuleSelectionRef = useRef<string | null>(null);
-  const [previousActiveTab, setPreviousActiveTab] = useState<string>('elements');
   
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
@@ -624,7 +623,6 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       console.log('✅ [DesignEditor] Setting selectedModuleId to:', moduleId);
       lastModuleSelectionRef.current = moduleId;
       setSelectedModuleId(moduleId);
-      setPreviousActiveTab(activeTab || 'elements');
       
       // Trouver le module pour vérifier son type
       const allModules = (Object.values(modularPage.screens) as Module[][]).flat();

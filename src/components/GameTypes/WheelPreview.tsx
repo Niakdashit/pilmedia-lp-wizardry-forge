@@ -184,7 +184,7 @@ const WheelPreview: React.FC<WheelPreviewProps> = ({
         className="w-full h-full transition-transform duration-700 ease-out"
         style={{ transform: lifted ? 'translateY(-25%)' : 'translateY(0%)' }}
       >
-        <div className={cropping.containerClass} style={cropping.styles as React.CSSProperties}>
+        <div className={cropping.containerClass}>
           <div className={cropping.wheelClass}>
             <SmartWheel
               key={(() => {

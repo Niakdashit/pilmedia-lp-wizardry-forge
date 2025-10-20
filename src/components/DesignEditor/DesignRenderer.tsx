@@ -301,6 +301,21 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
       const align = videoModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
       const borderRadius = videoModule.borderRadius ?? 0;
+      const borderWidth = (videoModule as any).borderWidth ?? 0;
+      const borderColor = (videoModule as any).borderColor ?? '#000000';
+      const src = (videoModule as any).src || '';
+      
+      // Convertir les URLs YouTube/Vimeo en URLs embed
+      const convertToEmbedUrl = (url: string): string => {
+        if (!url) return '';
+        const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+        if (youtubeMatch) return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+        if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        return url;
+      };
+      
+      const embedUrl = convertToEmbedUrl(src);
 
       return (
         <div 
@@ -308,31 +323,81 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           style={{ ...commonStyle }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
-          <div style={{ display: 'flex', justifyContent, width: '100%' }}>
+          <div 
+            style={{ 
+              display: 'flex', 
+              justifyContent, 
+              width: '100%',
+              paddingTop: (videoModule as any).spacingTop ?? 16,
+              paddingBottom: (videoModule as any).spacingBottom ?? 16
+            }}
+          >
             <div
               style={{
                 width: '100%',
                 maxWidth: (((videoModule as any).width ?? 560) * deviceScale),
                 borderRadius,
                 overflow: 'hidden',
-                background: 'transparent',
-                display: 'block',
-                paddingTop: (videoModule as any).spacingTop ?? 0,
-                paddingBottom: (videoModule as any).spacingBottom ?? 0
+                background: '#000000',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : 'none'
               }}
             >
-              <div className="relative" style={{ paddingTop: '56.25%' }}>
-                <iframe
-                  src={(videoModule as any).src || ''}
-                  title={(videoModule as any).title || 'Video'}
-                  className="absolute inset-0 w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+              {embedUrl ? (
+                <div className="relative" style={{ paddingTop: '56.25%', background: '#1a1a1a' }}>
+                  <iframe
+                    src={embedUrl}
+                    title={(videoModule as any).title || 'Video'}
+                    className="absolute inset-0 w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ display: 'block' }}
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="relative flex items-center justify-center bg-gray-800 text-white"
+                  style={{ paddingTop: '56.25%', minHeight: 200 }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center p-4">
+                      <p className="text-sm opacity-75">Aucune vidéo configurée</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+      );
+    }
+
+    // BlocSeparateur / BlocEspace (Spacer)
+    if ((m as any).type === 'BlocEspace' || (m as any).type === 'BlocSeparateur') {
+      const space = m as any;
+      const baseHeight =
+        typeof space.height === 'number' ? space.height :
+        typeof space.spaceHeight === 'number' ? space.spaceHeight :
+        typeof space.minHeight === 'number' ? space.minHeight : 40;
+      const height = isMobileDevice ? Math.max(8, Math.round(baseHeight * 0.9)) : baseHeight;
+      const layoutWidth = space.layoutWidth || 'content';
+      const maxW = layoutWidth === 'full' ? '100%' : '1200px';
+
+      return (
+        <div
+          key={m.id}
+          style={{
+            ...commonStyle,
+            width: '100%',
+            maxWidth: maxW,
+            margin: '0 auto',
+            height: `${height}px`,
+            paddingTop: space.spacingTop ?? 0,
+            paddingBottom: space.spacingBottom ?? 0,
+            cursor: previewMode ? 'default' : 'pointer'
+          }}
+          onClick={() => !previewMode && onModuleClick?.(m.id)}
+        />
       );
     }
 

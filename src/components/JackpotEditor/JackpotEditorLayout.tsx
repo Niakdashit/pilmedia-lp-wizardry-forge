@@ -2913,11 +2913,6 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
-                      // Quiz panels
-                      showQuizPanel={showQuizPanel}
-                      onQuizPanelChange={setShowQuizPanel}
-                      showJackpotPanel={showJackpotPanel}
-                      onJackpotPanelChange={setShowJackpotPanel}
                       // Modular page (screen2)
                       modularModules={modularPage.screens.screen2}
                       onModuleUpdate={handleUpdateModule}
@@ -3033,11 +3028,6 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
-                      // Quiz panels
-                      showQuizPanel={showQuizPanel}
-                      onQuizPanelChange={setShowQuizPanel}
-                      showJackpotPanel={showJackpotPanel}
-                      onJackpotPanelChange={setShowJackpotPanel}
                       // Modular page (screen3)
                       modularModules={modularPage.screens.screen3}
                       onModuleUpdate={handleUpdateModule}
