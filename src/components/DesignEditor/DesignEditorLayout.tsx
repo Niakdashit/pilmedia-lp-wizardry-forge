@@ -1468,16 +1468,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   const handlePreview = () => {
     // Logique intelligente pour l'aperçu :
     // - Sur desktop physique + mode desktop → Fullscreen preview en mode PC
-    // - Sur desktop physique + mode mobile → Canvas mobile (pas fullscreen)
+    // - Sur desktop physique + mode mobile → Fullscreen avec fond #2c2c35 et canvas mobile centré
     // - Sur mobile/tablet physique → Toujours fullscreen avec le mode actuel
-    
-    if (actualDevice === 'desktop' && selectedDevice === 'mobile') {
-      // Desktop physique en mode mobile : on reste en mode édition mais on affiche le canvas mobile
-      // Pas de fullscreen car la fenêtre desktop ne convient pas pour un aperçu mobile fullscreen
-      console.log('📱 [Preview] Desktop → Mobile view: staying in editor mode');
-      // On ne change pas showFunnel, on laisse l'utilisateur voir le canvas mobile dans l'éditeur
-      return;
-    }
     
     // Si on est sur desktop physique et en mode desktop, on force le preview en mode desktop
     if (actualDevice === 'desktop' && selectedDevice === 'desktop' && !showFunnel) {
@@ -1486,7 +1478,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       setPreviewDevice('desktop');
     }
     
-    // Tous les autres cas : toggle fullscreen preview
+    // Si on est en mode mobile, on affiche toujours le fullscreen avec canvas mobile centré
+    if (selectedDevice === 'mobile' && !showFunnel) {
+      console.log('📱 [Preview] Mobile view: showing fullscreen with centered mobile canvas');
+    }
+    
+    // Tous les cas : toggle fullscreen preview
     setShowFunnel(!showFunnel);
   };
 
@@ -1842,7 +1839,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+          <div 
+            className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden flex items-center justify-center"
+            style={{
+              backgroundColor: selectedDevice === 'mobile' ? '#2c2c35' : 'transparent'
+            }}
+          >
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -1850,11 +1852,23 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             >
               Mode édition
             </button>
-            <PreviewRenderer
-              campaign={campaignData}
-              previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-              wheelModalConfig={wheelModalConfig}
-            />
+            {selectedDevice === 'mobile' ? (
+              /* Mobile Preview: Canvas centré avec fond #2c2c35 */
+              <div className="flex items-center justify-center w-full h-full">
+                <PreviewRenderer
+                  campaign={campaignData}
+                  previewMode="mobile"
+                  wheelModalConfig={wheelModalConfig}
+                />
+              </div>
+            ) : (
+              /* Desktop/Tablet Preview: Fullscreen normal */
+              <PreviewRenderer
+                campaign={campaignData}
+                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
+            )}
           </div>
         ) : (
           /* Design Editor Mode */
