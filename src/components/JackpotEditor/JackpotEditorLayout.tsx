@@ -6,7 +6,7 @@ import { Save, X } from 'lucide-react';
 const HybridSidebar = lazy(() => import('./HybridSidebar'));
 const DesignToolbar = lazy(() => import('./DesignToolbar'));
 import PreviewRenderer from '@/components/preview/PreviewRenderer';
-// Jackpot editor uses PreviewRenderer for WYSIWYG (same as DesignEditor)
+// Jackpot editor uses PreviewRenderer for WYSIWYG (cloned from DesignEditor)WYSIWYG (same as DesignEditor)
 import type { ModularPage, ScreenId, BlocBouton, Module } from '@/types/modularEditor';
 import { createEmptyModularPage } from '@/types/modularEditor';
 
@@ -2424,7 +2424,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
               Mode édition
             </button>
             {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
-              /* Mobile Preview sur Desktop: Canvas centré avec cadre */
+              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - CLONED FROM DESIGN-EDITOR */
               <div className="flex items-center justify-center w-full h-full">
                 <div 
                   className="relative overflow-hidden rounded-[32px] shadow-2xl"
@@ -2434,38 +2434,21 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                     maxHeight: '90vh'
                   }}
                 >
-                  {campaignData?.type === 'quiz' ? (
-                    <FunnelQuizParticipate
-                      campaign={campaignData as any}
-                      previewMode="mobile"
-                    />
-                  ) : (
-                    <FunnelUnlockedGame
-                      campaign={campaignData}
-                      previewMode="mobile"
-                      wheelModalConfig={wheelModalConfig}
-                      launchButtonStyles={launchButtonStyles}
-                    />
-                  )}
+                  <PreviewRenderer
+                    campaign={campaignData}
+                    previewMode="mobile"
+                    wheelModalConfig={wheelModalConfig}
+                    constrainedHeight={true}
+                  />
                 </div>
               </div>
             ) : (
-              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen */
-              <div className="w-full h-full pointer-events-auto flex items-center justify-center">
-                {campaignData?.type === 'quiz' ? (
-                  <FunnelQuizParticipate
-                    campaign={campaignData as any}
-                    previewMode={selectedDevice}
-                  />
-                ) : (
-                  <FunnelUnlockedGame
-                    campaign={campaignData}
-                    previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
-                    wheelModalConfig={wheelModalConfig}
-                    launchButtonStyles={launchButtonStyles}
-                  />
-                )}
-              </div>
+              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre - CLONED FROM DESIGN-EDITOR */
+              <PreviewRenderer
+                campaign={campaignData}
+                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
             )}
           </div>
         ) : (
