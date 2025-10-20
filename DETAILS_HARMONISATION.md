@@ -211,3 +211,117 @@ Tous les détails ont été harmonisés. Les éditeurs offrent maintenant une ex
 - Comportements synchronisés
 
 **Statut**: ✅ **HARMONISATION DÉTAILS COMPLÈTE**
+
+---
+
+## 🔄 MISE À JOUR FINALE - Zoom Harmonisé
+
+**Date**: 20 Octobre 2025
+
+### Problème Zoom Bloqué
+
+**Tous les éditeurs sauf DesignEditor** avaient le zoom bloqué en mode édition:
+- ❌ QuizEditor
+- ❌ ModelEditor  
+- ❌ ScratchCardEditor
+- ❌ JackpotEditor
+
+**Cause**: Pas de synchronisation entre `zoom` (prop du parent) et `localZoom` (état local du Canvas)
+
+### Solution Appliquée
+
+Ajout du `useEffect` de synchronisation dans tous les Canvas:
+
+```typescript
+// Synchroniser le zoom depuis la prop externe (ZoomSlider)
+useEffect(() => {
+  // Synchroniser depuis le prop uniquement s'il est valide
+  if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
+    const clamped = Math.max(0.1, Math.min(1, zoom));
+    // Éviter les mises à jour inutiles
+    if (Math.abs(clamped - localZoom) > 0.0001) {
+      setLocalZoom(clamped);
+    }
+  }
+}, [zoom, localZoom]);
+```
+
+**Fichiers modifiés**:
+- ✅ `/src/components/QuizEditor/DesignCanvas.tsx`
+- ✅ `/src/components/ModelEditor/DesignCanvas.tsx`
+- ✅ `/src/components/ScratchCardEditor/DesignCanvas.tsx`
+- ✅ `/src/components/JackpotEditor/DesignCanvas.tsx`
+
+### Modes Preview Harmonisés
+
+**Deux systèmes selon le type d'éditeur**:
+
+#### 1. PreviewRenderer (Contenu Statique/Quiz)
+**Éditeurs**: DesignEditor, QuizEditor
+
+**Preview Mobile sur Desktop**:
+```tsx
+{(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
+  <div className="flex items-center justify-center w-full h-full">
+    <div 
+      className="relative overflow-hidden rounded-[32px] shadow-2xl"
+      style={{ width: '430px', height: '932px', maxHeight: '90vh' }}
+    >
+      <PreviewRenderer
+        campaign={campaignData}
+        previewMode="mobile"
+        constrainedHeight={true}
+      />
+    </div>
+  </div>
+) : (
+  <PreviewRenderer ... />
+)}
+```
+
+**Caractéristiques**:
+- ✅ Cadre mobile 430x932px avec rounded-[32px]
+- ✅ Shadow élégante
+- ✅ Adapté au contenu statique
+
+#### 2. FunnelUnlockedGame (Jeux Interactifs)
+**Éditeurs**: ModelEditor, ScratchCardEditor, JackpotEditor
+
+**Preview Fullscreen**:
+```tsx
+<div className="group fixed inset-0 z-40 w-full h-[100dvh] overflow-hidden">
+  <FunnelUnlockedGame
+    campaign={campaignData}
+    previewMode={selectedDevice}
+    wheelModalConfig={wheelModalConfig}
+  />
+</div>
+```
+
+**Caractéristiques**:
+- ✅ Fullscreen pour tous les devices
+- ✅ Adapté aux jeux interactifs (roue, jackpot, scratch)
+- ✅ Pas de cadre (expérience immersive)
+
+### Résultat Final
+
+| Éditeur | Zoom | Preview Mobile | Preview Desktop/Tablet | Status |
+|---------|------|----------------|------------------------|--------|
+| **DesignEditor** | ✅ Fonctionnel | ✅ Cadre 430x932px | ✅ PreviewRenderer | ✅ 100% |
+| **QuizEditor** | ✅ Fonctionnel | ✅ Cadre 430x932px | ✅ PreviewRenderer | ✅ 100% |
+| **ModelEditor** | ✅ Fonctionnel | ✅ Fullscreen | ✅ FunnelUnlockedGame | ✅ 100% |
+| **ScratchCardEditor** | ✅ Fonctionnel | ✅ Fullscreen | ✅ FunnelUnlockedGame | ✅ 100% |
+| **JackpotEditor** | ✅ Fonctionnel | ✅ Fullscreen | ✅ FunnelUnlockedGame | ✅ 100% |
+
+### Commits
+
+1. **`ac501956`** - Déblocage zoom QuizEditor
+2. **`f9e4b34e`** - Harmonisation zoom tous les éditeurs
+
+### Conclusion
+
+✅ **Zoom fonctionnel sur TOUS les éditeurs**  
+✅ **Modes preview cohérents selon le type de contenu**  
+✅ **Expérience utilisateur harmonisée à 100%**
+
+**Statut Final**: ✅ **HARMONISATION COMPLÈTE - ZOOM + PREVIEW**
