@@ -186,6 +186,19 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       ? Math.max(0.1, Math.min(1, zoom))
       : 1
   );
+  
+  // Synchroniser le zoom depuis la prop externe (ZoomSlider)
+  useEffect(() => {
+    // Synchroniser depuis le prop uniquement s'il est valide
+    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
+      const clamped = Math.max(0.1, Math.min(1, zoom));
+      // Éviter les mises à jour inutiles
+      if (Math.abs(clamped - localZoom) > 0.0001) {
+        setLocalZoom(clamped);
+      }
+    }
+  }, [zoom, localZoom]);
+  
   // Pan offset in screen pixels, applied before scale with origin at center for stable centering
   const [panOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   // Local override for per-screen background images (stored per device to maintain distinct images)

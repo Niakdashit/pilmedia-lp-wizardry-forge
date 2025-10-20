@@ -178,6 +178,18 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
       : 1
   );
 
+  // Synchroniser le zoom depuis la prop externe (ZoomSlider)
+  useEffect(() => {
+    // Synchroniser depuis le prop uniquement s'il est valide
+    if (typeof zoom === 'number' && !Number.isNaN(zoom)) {
+      const clamped = Math.max(0.1, Math.min(1, zoom));
+      // Éviter les mises à jour inutiles
+      if (Math.abs(clamped - localZoom) > 0.0001) {
+        setLocalZoom(clamped);
+      }
+    }
+  }, [zoom, localZoom]);
+
   const [showAnimationPopup, setShowAnimationPopup] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState<any>(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
