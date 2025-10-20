@@ -1466,6 +1466,27 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
   };
 
   const handlePreview = () => {
+    // Logique intelligente pour l'aperçu :
+    // - Sur desktop physique + mode desktop → Fullscreen preview en mode PC
+    // - Sur desktop physique + mode mobile → Canvas mobile (pas fullscreen)
+    // - Sur mobile/tablet physique → Toujours fullscreen avec le mode actuel
+    
+    if (actualDevice === 'desktop' && selectedDevice === 'mobile') {
+      // Desktop physique en mode mobile : on reste en mode édition mais on affiche le canvas mobile
+      // Pas de fullscreen car la fenêtre desktop ne convient pas pour un aperçu mobile fullscreen
+      console.log('📱 [Preview] Desktop → Mobile view: staying in editor mode');
+      // On ne change pas showFunnel, on laisse l'utilisateur voir le canvas mobile dans l'éditeur
+      return;
+    }
+    
+    // Si on est sur desktop physique et en mode desktop, on force le preview en mode desktop
+    if (actualDevice === 'desktop' && selectedDevice === 'desktop' && !showFunnel) {
+      console.log('💻 [Preview] Desktop → Desktop preview: forcing desktop mode');
+      // On s'assure que le preview s'affiche en mode desktop
+      setPreviewDevice('desktop');
+    }
+    
+    // Tous les autres cas : toggle fullscreen preview
     setShowFunnel(!showFunnel);
   };
 
@@ -1831,7 +1852,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             </button>
             <PreviewRenderer
               campaign={campaignData}
-              previewMode={selectedDevice}
+              previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
               wheelModalConfig={wheelModalConfig}
             />
           </div>
