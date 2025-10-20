@@ -104,18 +104,19 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const canonicalData = getCanonicalPreviewData();
   
   // Déterminer quel renderer utiliser selon le type de campagne
-  // Priorité 1: Vérifier si campaign.modularPage existe (Quiz)
-  // Priorité 2: Vérifier si campaign.design.designModules existe (Design)
+  // Priorité 1: Si la campagne n'est pas un quiz et que des designModules existent → utiliser DesignModuleRenderer
+  // Priorité 2: Sinon, si campaign.modularPage existe (Quiz) → utiliser QuizModuleRenderer
+  // Priorité 3: Fallback sur canonicalData
   const hasQuizModularPage = Boolean((campaign as any)?.modularPage?.screens);
   const hasDesignModules = Boolean(campaign?.design?.designModules?.screens);
   
-  const isDesignModular = hasDesignModules && !hasQuizModularPage;
+  // Choix robuste: pour tout type ≠ 'quiz', privilégier designModules même si modularPage existe
+  const isDesignModular = (campaign?.type !== 'quiz' && hasDesignModules) || (!hasQuizModularPage && hasDesignModules);
   
-  // Pour Quiz: utiliser campaign.modularPage
-  // Pour Design: utiliser campaign.design.designModules
+  // Source des modules
   const modularPage = isDesignModular 
     ? (campaign?.design?.designModules || canonicalData.modularPage)
-    : ((campaign as any)?.modularPage || campaign?.design?.designModules || canonicalData.modularPage);
+    : ((campaign as any)?.modularPage?.screens ? (campaign as any).modularPage : (campaign?.design?.designModules || canonicalData.modularPage));
   
   console.log('📦 [PreviewRenderer] Loading modules from:', {
     isDesignModular,
