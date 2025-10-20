@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import path from 'path';
+import { writeFile, mkdir } from 'fs/promises';
 
 /**
  * AUDIT WYSIWYG - Comparaison des modes preview entre éditeurs
@@ -412,9 +413,11 @@ test.describe('Audit WYSIWYG - Comparaison Preview Éditeurs', () => {
 
       // 8. Générer le rapport
       const reportPath = path.join(process.cwd(), 'test-results', 'audit-preview', `report-${device}.json`);
-      await require('fs').promises.writeFile(
+      await mkdir(path.dirname(reportPath), { recursive: true });
+      await writeFile(
         reportPath,
-        JSON.stringify({ device, results, reference }, null, 2)
+        JSON.stringify({ device, results, reference }, null, 2),
+        'utf-8'
       );
       console.log(`\n📄 Rapport généré: ${reportPath}`);
     });
