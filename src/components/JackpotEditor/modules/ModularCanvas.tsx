@@ -1,9 +1,10 @@
 import React from 'react';
 import { Trash2, GripVertical, MoveDiagonal, ChevronDown, Copy } from 'lucide-react';
-import type { Module, ScreenId, SocialIconStyle } from '@/types/modularEditor';
+import type { Module, ScreenId, SocialIconStyle, BlocVideo } from '@/types/modularEditor';
 import { getGlyphSvg, getSocialIconUrl, getIconStyleConfig } from './socialIcons';
 import type { DeviceType } from '@/utils/deviceDimensions';
 import { QuizModuleRenderer } from '../QuizRenderer';
+import VideoModule from '@/components/shared/modules/VideoModule';
 
 export interface ModularCanvasProps {
   screen: ScreenId;
@@ -142,15 +143,36 @@ const Toolbar: React.FC<{
   );
 }
 
-
 const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, device: DeviceType = 'desktop') => {
   // const isMobileDevice = device === 'mobile';
-  // const deviceScale = isMobileDevice ? 0.8 : 1;
 
   const commonStyle: React.CSSProperties = {
     background: m.backgroundColor,
     textAlign: m.align || 'left'
   };
+  
+  // Gérer BlocEspace qui n'est pas dans les types TypeScript mais existe en runtime
+  if ((m as any).type === 'BlocEspace') {
+    const spaceModule = m as any;
+    const spaceHeight = 
+      typeof spaceModule.height === 'number' ? spaceModule.height :
+      typeof spaceModule.spaceHeight === 'number' ? spaceModule.spaceHeight :
+      typeof spaceModule.minHeight === 'number' ? spaceModule.minHeight : 40;
+    
+    return (
+      <div
+        style={{
+          ...commonStyle,
+          background: 'transparent',
+          minHeight: spaceHeight,
+          height: spaceHeight
+          // SOLUTION RADICALE: Pas de padding pour éviter tout décalage
+        }}
+        aria-hidden="true"
+      />
+    );
+  }
+  
   switch (m.type) {
     case 'BlocTexte': {
       return (
@@ -191,28 +213,32 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         </div>
       );
     case 'BlocSeparateur':
+      // Utiliser la même logique que dans le renderer pour cohérence WYSIWYG
+      // BlocEspace utilise aussi ce case (même type, juste un alias)
+      const spaceModule = m as any;
+      const spaceHeight = 
+        typeof spaceModule.height === 'number' ? spaceModule.height :
+        typeof spaceModule.spaceHeight === 'number' ? spaceModule.spaceHeight :
+        typeof m.minHeight === 'number' ? m.minHeight : 40;
+      
       return (
         <div
           style={{
             ...commonStyle,
             background: 'transparent',
-            minHeight: m.minHeight ?? 40,
-            height: m.minHeight ?? 40
+            minHeight: spaceHeight,
+            height: spaceHeight
           }}
           aria-hidden="true"
         />
       );
     case 'BlocVideo':
       return (
-        <div style={{ ...commonStyle }}>
-          <QuizModuleRenderer
-            modules={[m]}
-            previewMode={false}
-            device={device}
-            onModuleClick={() => {}}
-            onModuleUpdate={(_id, patch) => onUpdate(patch)}
-          />
-        </div>
+        <VideoModule
+          module={m as BlocVideo}
+          onClick={() => {}}
+          isSelected={false}
+        />
       );
     case 'BlocReseauxSociaux': {
       const moduleWithMeta = m as Module & {
@@ -658,21 +684,14 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
   }, [regularModules]);
 
   return (
-    <div className="w-full relative" data-modular-zone="1">
+    <div className="w-full" data-modular-zone="1">
       {/* Modules Logo - positionnés en pleine largeur au-dessus */}
       {logoModules.map((m) => (
-        <div
+        <div 
           key={m.id}
-          className={`absolute top-0 left-0 right-0 z-50 group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
-          style={{
-            width: '100%',
-            height: 'auto',
-            backgroundColor: 'transparent',
-            transform: 'translateZ(0)', // Force layer promotion
-            willChange: 'transform',
-            // Compenser le padding-top du conteneur parent
-            marginTop: '-24px' // Ajuster selon le padding du parent
-          }}
+          data-module-id={m.id}
+          className={`relative group ${selectedModuleId === m.id ? 'ring-2 ring-[#0ea5b7]/30' : ''}`}
+          style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(m);
@@ -693,15 +712,18 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           >
             <Trash2 className="h-5 w-5" />
           </button>
-          <Toolbar
-            visible={selectedModuleId === m.id}
-            layoutWidth="full"
-            onWidthChange={() => {}}
-            onDelete={() => onDelete(m.id)}
-            expanded={openToolbarFor === m.id}
-            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-            isMobile={device === 'mobile'}
-          />
+          {/* Ne pas afficher la toolbar pour les modules espace */}
+          {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+            <Toolbar
+              visible={selectedModuleId === m.id}
+              layoutWidth="full"
+              onWidthChange={() => {}}
+              onDelete={() => onDelete(m.id)}
+              expanded={openToolbarFor === m.id}
+              onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+              isMobile={device === 'mobile'}
+            />
+          )}
           {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
         </div>
       ))}
@@ -712,7 +734,6 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           className="flex flex-col gap-0"
           style={{
             minHeight: single ? minHeightPx : undefined,
-            // Alignement cohérent avec la preview: toujours en haut
             justifyContent: 'flex-start'
           }}
         >
@@ -903,8 +924,8 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                 })();
 
                 return (
-                  <div
-                    key={m.id}
+                  <div key={m.id}
+                    data-module-id={m.id}
                     className={`relative group bg-transparent rounded-md transition-colors cursor-pointer ${columnSpanClass} ${isSelected ? 'border border-[#0ea5b7] ring-2 ring-[#0ea5b7]/30' : 'border-0 hover:outline hover:outline-1 hover:outline-gray-400'} ${isDragging ? 'ring-2 ring-[#0ea5b7]/30 shadow-xl shadow-black/10' : ''}`}
                     role="button"
                     tabIndex={0}
@@ -922,18 +943,21 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                     style={isDragging ? { transform: `translateY(${dragOffset}px)`, zIndex: 50 } : undefined}
                     ref={(el) => { moduleRefs.current[m.id] = el; }}
                   >
-                    <Toolbar
-                      visible={isSelected || isDragging}
-                      layoutWidth={currentLayoutWidth}
-                      onWidthChange={(width) => onUpdate(m.id, { layoutWidth: width })}
-                      onDelete={() => onDelete(m.id)}
-                      align={(m.align || 'left') as 'left' | 'center' | 'right'}
-                      onAlignChange={(v) => onUpdate(m.id, { align: v } as any)}
-                      expanded={openToolbarFor === m.id}
-                      onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-                      isMobile={device === 'mobile'}
-                      onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
-                    />
+                    {/* Ne pas afficher la toolbar pour les modules espace */}
+                    {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+                      <Toolbar
+                        visible={isSelected || isDragging}
+                        layoutWidth={currentLayoutWidth}
+                        onWidthChange={(width) => onUpdate(m.id, { layoutWidth: width })}
+                        onDelete={() => onDelete(m.id)}
+                        align={(m.align || 'left') as 'left' | 'center' | 'right'}
+                        onAlignChange={(v) => onUpdate(m.id, { align: v } as any)}
+                        expanded={openToolbarFor === m.id}
+                        onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+                        isMobile={device === 'mobile'}
+                        onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                      />
+                    )}
                     <button
                       type="button"
                       data-module-drag-handle="true"
@@ -999,15 +1023,18 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           >
             <Trash2 className="h-5 w-5" />
           </button>
-          <Toolbar
-            visible={selectedModuleId === m.id}
-            layoutWidth="full"
-            onWidthChange={() => {}}
-            onDelete={() => onDelete(m.id)}
-            expanded={openToolbarFor === m.id}
-            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-            isMobile={device === 'mobile'}
-          />
+          {/* Ne pas afficher la toolbar pour les modules espace */}
+          {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+            <Toolbar
+              visible={selectedModuleId === m.id}
+              layoutWidth="full"
+              onWidthChange={() => {}}
+              onDelete={() => onDelete(m.id)}
+              expanded={openToolbarFor === m.id}
+              onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+              isMobile={device === 'mobile'}
+            />
+          )}
           {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
         </div>
       ))}

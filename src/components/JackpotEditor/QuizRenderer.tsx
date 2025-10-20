@@ -35,7 +35,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   onModuleUpdate
 }) => {
   const isMobileDevice = device === 'mobile';
-  const deviceScale = isMobileDevice ? 0.8 : 1;
+  // IMPORTANT: Pas de deviceScale pour avoir un rendu WYSIWYG identique entre édition et preview
+  const deviceScale = 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 

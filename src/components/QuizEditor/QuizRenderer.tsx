@@ -42,7 +42,8 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   });
   
   const isMobileDevice = device === 'mobile';
-  const deviceScale = isMobileDevice ? 0.8 : 1;
+  // IMPORTANT: Pas de deviceScale pour avoir un rendu WYSIWYG identique entre édition et preview
+  const deviceScale = 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -329,14 +330,15 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
         typeof space.height === 'number' ? space.height :
         typeof space.spaceHeight === 'number' ? space.spaceHeight :
         typeof space.minHeight === 'number' ? space.minHeight : 40;
-      const height = isMobileDevice ? Math.max(8, Math.round(baseHeight * 0.9)) : baseHeight;
+      // SOLUTION RADICALE: Ignorer les spacings en preview
+      const height = baseHeight;
       return (
         <div
           key={m.id}
           style={{
             ...commonStyle,
-            paddingTop: space.spacingTop ?? 0,
-            paddingBottom: space.spacingBottom ?? 0
+            paddingTop: previewMode ? 0 : (space.spacingTop ?? 0),
+            paddingBottom: previewMode ? 0 : (space.spacingBottom ?? 0)
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >

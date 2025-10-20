@@ -163,10 +163,9 @@ export const useEditorPreviewSync = () => {
    */
   const getCanonicalPreviewData = useCallback(() => {
     const design = campaign?.design || {};
-    const modularPage = (campaign as any)?.modularPage || (campaign?.design as any)?.designModules || { 
-      screens: { screen1: [], screen2: [], screen3: [] }, 
-      _updatedAt: Date.now() 
-    };
+    const modularPage = (campaign as any)?.modularPage
+      || (campaign?.design as any)?.designModules
+      || { screens: { screen1: [], screen2: [], screen3: [] }, _updatedAt: Date.now() };
 
     // Déterminer l'image de fond canonique
     let canonicalBackground: { type: 'color' | 'image'; value: string };

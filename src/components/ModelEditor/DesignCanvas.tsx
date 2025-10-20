@@ -1703,7 +1703,10 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         onJackpotPanelChange={onJackpotPanelChange}
       >
         {/* Canvas Toolbar - Show for text and shape elements */}
-        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile' && (
+        {(() => {
+          // ModelEditor n'a qu'un seul écran, donc toujours afficher si élément sélectionné
+          const shouldShow = (!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile';
+          return shouldShow ? (
           <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
             <CanvasToolbar 
               selectedElement={{
@@ -1719,7 +1722,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement>}
             />
           </div>
-        )}
+          ) : null;
+        })()}
         
         <div 
           ref={containerRef} 

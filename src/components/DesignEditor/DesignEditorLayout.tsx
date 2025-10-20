@@ -1995,6 +1995,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
                     selectedModuleId={selectedModuleId}
+                    selectedModule={selectedModule}
                     onSelectedModuleChange={setSelectedModuleId}
                   />
                 </div>
@@ -2106,12 +2107,13 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       onModuleMove={handleMoveModule}
                       onModuleDuplicate={handleDuplicateModule}
                       selectedModuleId={selectedModuleId}
+                      selectedModule={selectedModule}
                       onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
 
-                {/* Troisième Canvas - Screen 3 (Exit/Results) */}
+                {/* Troisième Canvas - Screen 3 (Result Screen) */}
                 <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence */}
                   <div 
@@ -2227,6 +2229,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                       onModuleMove={handleMoveModule}
                       onModuleDuplicate={handleDuplicateModule}
                       selectedModuleId={selectedModuleId}
+                      selectedModule={selectedModule}
                       onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>

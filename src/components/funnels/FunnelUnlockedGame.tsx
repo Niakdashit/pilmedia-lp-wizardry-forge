@@ -498,7 +498,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
             />
           </div>
           <div className="absolute inset-0 z-0" style={backgroundStyle} />
-          <div className="relative z-30 h-full w-full" style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
+          <div className="relative z-30 h-full w-full">
             <ResultScreen 
               gameResult={gameResult} 
               campaign={liveCampaign} 
@@ -549,17 +549,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 </div>
               )}
               
-              {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+              {/* Contenu principal - flex-1 pour pousser le footer en bas */}
+              {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
               <div className="flex-1 relative">
                 {regularModules1.length > 0 && (
-                  <div style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
-                    <DesignModuleRenderer
-                      modules={regularModules1 as any}
-                      previewMode
-                      device={previewMode}
-                      onButtonClick={handleGameButtonClick}
-                    />
-                  </div>
+                  <DesignModuleRenderer
+                    modules={regularModules1 as any}
+                    previewMode
+                    device={previewMode}
+                    onButtonClick={handleGameButtonClick}
+                  />
                 )}
               </div>
               
@@ -612,17 +611,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   </div>
                 )}
                 
-                {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+                {/* Contenu principal - flex-1 pour pousser le footer en bas */}
+                {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
                 <div className="flex-1 relative">
                   {regularModules1.length > 0 && (
-                    <div style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
-                      <QuizModuleRenderer 
-                        modules={regularModules1}
-                        previewMode={true}
-                        device={previewMode}
-                        onButtonClick={handleGameButtonClick}
-                      />
-                    </div>
+                    <QuizModuleRenderer 
+                      modules={regularModules1}
+                      previewMode={true}
+                      device={previewMode}
+                      onButtonClick={handleGameButtonClick}
+                    />
                   )}
                 </div>
                 
@@ -657,7 +655,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 <div className="flex-1 relative">
                   {/* Modules screen2 réguliers - en arrière-plan */}
                   {regularModules2.length > 0 && (
-                    <div style={{ pointerEvents: 'none', padding: safeZonePadding, boxSizing: 'border-box' }}>
+                    <div style={{ pointerEvents: 'none' }}>
                       <QuizModuleRenderer 
                         modules={regularModules2}
                         previewMode={true}
@@ -747,17 +745,16 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   </div>
                 )}
                 
-                {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
+                {/* Contenu principal - flex-1 pour pousser le footer en bas */}
+                {/* IMPORTANT: Pas de padding ici pour éviter le doublon avec les espacements des modules */}
                 <div className="flex-1 relative">
                   {regularModules3.length > 0 && (
-                    <div style={{ padding: safeZonePadding, boxSizing: 'border-box' }}>
-                      <QuizModuleRenderer 
-                        modules={regularModules3}
-                        previewMode={true}
-                        device={previewMode}
-                        onButtonClick={handleReset}
-                      />
-                    </div>
+                    <QuizModuleRenderer 
+                      modules={regularModules3}
+                      previewMode={true}
+                      device={previewMode}
+                      onButtonClick={handleReset}
+                    />
                   )}
                 </div>
                 

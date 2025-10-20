@@ -150,6 +150,29 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
     background: m.backgroundColor,
     textAlign: m.align || 'left'
   };
+  
+  // Gérer BlocEspace qui n'est pas dans les types TypeScript mais existe en runtime
+  if ((m as any).type === 'BlocEspace') {
+    const spaceModule = m as any;
+    const spaceHeight = 
+      typeof spaceModule.height === 'number' ? spaceModule.height :
+      typeof spaceModule.spaceHeight === 'number' ? spaceModule.spaceHeight :
+      typeof spaceModule.minHeight === 'number' ? spaceModule.minHeight : 40;
+    
+    return (
+      <div
+        style={{
+          ...commonStyle,
+          background: 'transparent',
+          minHeight: spaceHeight,
+          height: spaceHeight
+          // SOLUTION RADICALE: Pas de padding pour éviter tout décalage
+        }}
+        aria-hidden="true"
+      />
+    );
+  }
+  
   switch (m.type) {
     case 'BlocTexte': {
       return (
@@ -190,13 +213,21 @@ const renderModule = (m: Module, onUpdate: (patch: Partial<Module>) => void, dev
         </div>
       );
     case 'BlocSeparateur':
+      // Utiliser la même logique que dans le renderer pour cohérence WYSIWYG
+      // BlocEspace utilise aussi ce case (même type, juste un alias)
+      const spaceModule = m as any;
+      const spaceHeight = 
+        typeof spaceModule.height === 'number' ? spaceModule.height :
+        typeof spaceModule.spaceHeight === 'number' ? spaceModule.spaceHeight :
+        typeof m.minHeight === 'number' ? m.minHeight : 40;
+      
       return (
         <div
           style={{
             ...commonStyle,
             background: 'transparent',
-            minHeight: m.minHeight ?? 40,
-            height: m.minHeight ?? 40
+            minHeight: spaceHeight,
+            height: spaceHeight
           }}
           aria-hidden="true"
         />
@@ -681,15 +712,18 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           >
             <Trash2 className="h-5 w-5" />
           </button>
-          <Toolbar
-            visible={selectedModuleId === m.id}
-            layoutWidth="full"
-            onWidthChange={() => {}}
-            onDelete={() => onDelete(m.id)}
-            expanded={openToolbarFor === m.id}
-            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-            isMobile={device === 'mobile'}
-          />
+          {/* Ne pas afficher la toolbar pour les modules espace */}
+          {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+            <Toolbar
+              visible={selectedModuleId === m.id}
+              layoutWidth="full"
+              onWidthChange={() => {}}
+              onDelete={() => onDelete(m.id)}
+              expanded={openToolbarFor === m.id}
+              onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+              isMobile={device === 'mobile'}
+            />
+          )}
           {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
         </div>
       ))}
@@ -909,18 +943,21 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
                     style={isDragging ? { transform: `translateY(${dragOffset}px)`, zIndex: 50 } : undefined}
                     ref={(el) => { moduleRefs.current[m.id] = el; }}
                   >
-                    <Toolbar
-                      visible={isSelected || isDragging}
-                      layoutWidth={currentLayoutWidth}
-                      onWidthChange={(width) => onUpdate(m.id, { layoutWidth: width })}
-                      onDelete={() => onDelete(m.id)}
-                      align={(m.align || 'left') as 'left' | 'center' | 'right'}
-                      onAlignChange={(v) => onUpdate(m.id, { align: v } as any)}
-                      expanded={openToolbarFor === m.id}
-                      onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-                      isMobile={device === 'mobile'}
-                      onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
-                    />
+                    {/* Ne pas afficher la toolbar pour les modules espace */}
+                    {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+                      <Toolbar
+                        visible={isSelected || isDragging}
+                        layoutWidth={currentLayoutWidth}
+                        onWidthChange={(width) => onUpdate(m.id, { layoutWidth: width })}
+                        onDelete={() => onDelete(m.id)}
+                        align={(m.align || 'left') as 'left' | 'center' | 'right'}
+                        onAlignChange={(v) => onUpdate(m.id, { align: v } as any)}
+                        expanded={openToolbarFor === m.id}
+                        onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+                        isMobile={device === 'mobile'}
+                        onDuplicate={onDuplicate ? () => onDuplicate(m.id) : undefined}
+                      />
+                    )}
                     <button
                       type="button"
                       data-module-drag-handle="true"
@@ -986,15 +1023,18 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
           >
             <Trash2 className="h-5 w-5" />
           </button>
-          <Toolbar
-            visible={selectedModuleId === m.id}
-            layoutWidth="full"
-            onWidthChange={() => {}}
-            onDelete={() => onDelete(m.id)}
-            expanded={openToolbarFor === m.id}
-            onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
-            isMobile={device === 'mobile'}
-          />
+          {/* Ne pas afficher la toolbar pour les modules espace */}
+          {m.type !== 'BlocEspace' && (m as any).type !== 'BlocSeparateur' && (
+            <Toolbar
+              visible={selectedModuleId === m.id}
+              layoutWidth="full"
+              onWidthChange={() => {}}
+              onDelete={() => onDelete(m.id)}
+              expanded={openToolbarFor === m.id}
+              onToggle={() => setOpenToolbarFor((prev) => (prev === m.id ? null : m.id))}
+              isMobile={device === 'mobile'}
+            />
+          )}
           {renderModule(m, (patch) => onUpdate(m.id, patch), device)}
         </div>
       ))}

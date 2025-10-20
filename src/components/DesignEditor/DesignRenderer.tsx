@@ -36,7 +36,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
   onModuleDelete
 }) => {
   const isMobileDevice = device === 'mobile';
-  const deviceScale = isMobileDevice ? 0.8 : 1;
+  // IMPORTANT: Pas de deviceScale pour avoir un rendu WYSIWYG identique entre édition et preview
+  const deviceScale = 1;
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -379,7 +380,10 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
         typeof space.height === 'number' ? space.height :
         typeof space.spaceHeight === 'number' ? space.spaceHeight :
         typeof space.minHeight === 'number' ? space.minHeight : 40;
-      const height = isMobileDevice ? Math.max(8, Math.round(baseHeight * 0.9)) : baseHeight;
+      
+      // SOLUTION RADICALE: En mode preview, ignorer complètement les spacingTop/Bottom
+      // pour garantir un rendu WYSIWYG parfait sans aucun décalage
+      const height = baseHeight;
       const layoutWidth = space.layoutWidth || 'content';
       const maxW = layoutWidth === 'full' ? '100%' : '1200px';
 
@@ -392,8 +396,9 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
             maxWidth: maxW,
             margin: '0 auto',
             height: `${height}px`,
-            paddingTop: space.spacingTop ?? 0,
-            paddingBottom: space.spacingBottom ?? 0,
+            // IMPORTANT: Pas de padding en mode preview pour éviter tout décalage
+            paddingTop: previewMode ? 0 : (space.spacingTop ?? 0),
+            paddingBottom: previewMode ? 0 : (space.spacingBottom ?? 0),
             cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}

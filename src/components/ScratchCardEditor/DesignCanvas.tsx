@@ -2073,7 +2073,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         {(() => {
           if (readOnly) return false;
           const isModuleText = (externalSelectedElement as any)?.role === 'module-text' && (externalSelectedElement as any)?.moduleId;
-          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || isModuleText;
+          // Vérifier si le module sélectionné appartient à cet écran
+          const isModuleOnThisScreen = (externalSelectedElement as any)?.screenId === screenId;
+          const shouldShow = ((selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape')) && selectedDevice !== 'mobile') || (isModuleText && isModuleOnThisScreen);
           if (!shouldShow) return false;
 
           // Build a synthetic selected element for module text to drive the toolbar UI

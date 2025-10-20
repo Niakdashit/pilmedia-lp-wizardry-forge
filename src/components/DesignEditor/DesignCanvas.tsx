@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CanvasElement from './CanvasElement';
-import CanvasToolbar from './CanvasToolbar';
+import CanvasToolbar from '../QuizEditor/CanvasToolbar'; // Utiliser la même toolbar que QuizEditor
 import StandardizedWheel from '../shared/StandardizedWheel';
 import SmartAlignmentGuides from './components/SmartAlignmentGuides';
 import AlignmentToolbar from './components/AlignmentToolbar';
@@ -1742,6 +1742,50 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   }, [background, onBackgroundChange, onExtractedColorsChange]);
   const selectedElementData = selectedElement ? elementById.get(selectedElement) ?? null : null;
 
+  // Fallback pour les modules texte sélectionnés (qui ne sont pas dans elements)
+  // Si externalSelectedElement est un module texte, on l'utilise pour la toolbar
+  const toolbarElement = useMemo(() => {
+    console.log('🔍 [DesignCanvas] toolbarElement computation:', {
+      selectedElementData,
+      externalSelectedElement,
+      selectedModule,
+      selectedModuleType: selectedModule?.type
+    });
+    
+    // Priorité 1: Élément canvas classique
+    if (selectedElementData) {
+      console.log('✅ [DesignCanvas] Using selectedElementData for toolbar');
+      return selectedElementData;
+    }
+    
+    // Priorité 2: Module texte sélectionné depuis ModularCanvas
+    if (externalSelectedElement?.role === 'module-text' && selectedModule && selectedModule.type === 'BlocTexte') {
+      console.log('✅ [DesignCanvas] Building toolbar from BlocTexte module');
+      // Construire un objet compatible avec la toolbar depuis le module BlocTexte
+      const textModule = selectedModule as any; // Cast pour accéder aux propriétés du module
+      const toolbarData: any = {
+        type: 'text',
+        content: textModule.text || textModule.body || textModule.title || '',
+        fontFamily: textModule.bodyFontFamily || 'Inter',
+        fontSize: textModule.bodyFontSize || textModule.titleFontSize || 16,
+        color: textModule.bodyColor || '#000000',
+        fontWeight: (textModule.bodyBold || textModule.titleBold) ? 'bold' : 'normal',
+        fontStyle: (textModule.bodyItalic || textModule.titleItalic) ? 'italic' : 'normal',
+        textDecoration: (textModule.bodyUnderline || textModule.titleUnderline) ? 'underline' : 'none',
+        textAlign: textModule.align || 'left',
+        backgroundColor: textModule.cardBackground || textModule.backgroundColor || 'transparent',
+        // Propriétés avancées
+        customCSS: textModule.customCSS,
+        advancedStyle: textModule.advancedStyle
+      };
+      console.log('📦 [DesignCanvas] Toolbar data built:', toolbarData);
+      return toolbarData;
+    }
+    
+    console.log('❌ [DesignCanvas] No toolbar element found');
+    return null;
+  }, [selectedElementData, externalSelectedElement, selectedModule]);
+
   // Les segments et tailles sont maintenant gérés par StandardizedWheel
   return (
     <DndProvider backend={HTML5Backend}>
@@ -1777,15 +1821,36 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
         // Clear selection when clicking outside canvas/toolbars on mobile
         onClearSelection={handleClearSelection}
       >
-        {/* Canvas Toolbar - Show for text and shape elements */}
-        {(!readOnly) && selectedElementData && (selectedElementData.type === 'text' || selectedElementData.type === 'shape') && selectedDevice !== 'mobile' && (
-          <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
-            <CanvasToolbar 
+        {/* Canvas Toolbar - Show for text and shape elements (including modular text) */}
+        {(() => {
+          // Vérifier si le module sélectionné appartient à cet écran
+          const isModuleOnThisScreen = externalSelectedElement?.screenId === screenId;
+          const shouldShow = (!readOnly) && toolbarElement && (toolbarElement.type === 'text' || toolbarElement.type === 'shape') && selectedDevice !== 'mobile' && (selectedElementData || isModuleOnThisScreen);
+          console.log('🎨 [DesignCanvas] Toolbar render check:', {
+            screenId,
+            readOnly,
+            toolbarElement: toolbarElement?.type,
+            selectedDevice,
+            externalSelectedElementScreenId: externalSelectedElement?.screenId,
+            isModuleOnThisScreen,
+            shouldShow
+          });
+          return shouldShow ? (
+            <div className="z-10 absolute top-4 left-1/2 transform -translate-x-1/2">
+              <CanvasToolbar 
               selectedElement={{
-                ...selectedElementData,
-                ...getPropertiesForDevice(selectedElementData, selectedDevice)
+                ...toolbarElement,
+                ...(selectedElementData ? getPropertiesForDevice(toolbarElement, selectedDevice) : {})
               }} 
-              onElementUpdate={updates => selectedElement && handleElementUpdate(selectedElement, updates)}
+              onElementUpdate={updates => {
+                if (selectedElement) {
+                  handleElementUpdate(selectedElement, updates);
+                }
+                // Si c'est un module, mettre à jour via onModuleUpdate
+                if (externalSelectedElement?.role === 'module-text' && externalSelectedElement.moduleId && onModuleUpdate) {
+                  onModuleUpdate(externalSelectedElement.moduleId, updates);
+                }
+              }}
               onShowEffectsPanel={onShowEffectsPanel}
               onShowAnimationsPanel={onShowAnimationsPanel}
               onShowPositionPanel={onShowPositionPanel}
@@ -1794,7 +1859,8 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
               canvasRef={activeCanvasRef as React.RefObject<HTMLDivElement | null>}
             />
           </div>
-        )}
+          ) : null;
+        })()}
         
         <div 
           ref={containerRef} 
