@@ -110,6 +110,14 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   const hasQuizModularPage = Boolean((campaign as any)?.modularPage?.screens);
   const hasDesignModules = Boolean(campaign?.design?.designModules?.screens);
   
+  console.log('🔍 [PreviewRenderer] Renderer selection debug:', {
+    campaignType: campaign?.type,
+    hasQuizModularPage,
+    hasDesignModules,
+    'campaign.modularPage': (campaign as any)?.modularPage,
+    'campaign.design.designModules': campaign?.design?.designModules
+  });
+  
   // Choix robuste: pour tout type ≠ 'quiz', privilégier designModules même si modularPage existe
   const isDesignModular = (campaign?.type !== 'quiz' && hasDesignModules) || (!hasQuizModularPage && hasDesignModules);
   
@@ -121,7 +129,8 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   console.log('📦 [PreviewRenderer] Loading modules from:', {
     isDesignModular,
     source: isDesignModular ? 'campaign.design.designModules' : 'campaign.modularPage',
-    modularPage
+    modularPage,
+    'modularPage.screens.screen1': modularPage?.screens?.screen1
   });
   
   const allModules1 = modularPage?.screens?.screen1 || [];
