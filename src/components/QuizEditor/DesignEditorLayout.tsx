@@ -21,6 +21,7 @@ import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
+import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -223,7 +224,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     ? { type: 'color' as const, value: '#4ECDC4' }
     : { type: 'color' as const, value: 'linear-gradient(135deg, #87CEEB 0%, #98FB98 100%)' };
   
-  const [screenBackgrounds, setScreenBackgrounds] = useState<Record<'screen1' | 'screen2' | 'screen3', { type: 'color' | 'image'; value: string }>>({
+  const [screenBackgrounds, setScreenBackgrounds] = useState<ScreenBackgrounds>({
     screen1: defaultBackground,
     screen2: defaultBackground,
     screen3: defaultBackground
@@ -2561,42 +2562,32 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             >
               Mode édition
             </button>
-            {/* Sur appareil mobile physique: fullscreen sans scale. Sur desktop: scale selon device sélectionné */}
-            {actualDevice === 'mobile' ? (
-              /* Mobile physique: Fullscreen sans cadre ni scale */
-              <PreviewRenderer
-                campaign={campaignData}
-                previewMode="mobile"
-                wheelModalConfig={wheelModalConfig}
-              />
-            ) : (
-              /* Desktop/Tablet: Conteneur avec scale exact selon le device (comme Chrome DevTools) */
-              <div 
-                className="h-full overflow-hidden flex items-center justify-center"
-                style={{
-                  width: '100%',
-                  maxWidth: '100%'
-                }}
-              >
-                <div
+            {(selectedDevice === 'mobile' && actualDevice !== 'mobile') ? (
+              /* Mobile Preview sur Desktop: Canvas centré avec fond #2c2c35 - Dimensions identiques au mode édition */
+              <div className="flex items-center justify-center w-full h-full">
+                <div 
+                  className="relative overflow-hidden rounded-[32px] shadow-2xl"
                   style={{
-                    width: selectedDevice === 'mobile' ? '1700px' : selectedDevice === 'tablet' ? '1700px' : '1700px',
-                    height: '100%',
-                    transform: selectedDevice === 'mobile' 
-                      ? 'scale(0.253)' // 430/1700 = 0.253
-                      : selectedDevice === 'tablet'
-                      ? 'scale(0.482)' // 820/1700 = 0.482
-                      : 'scale(1)',
-                    transformOrigin: 'center center'
+                    width: '430px',
+                    height: '932px',
+                    maxHeight: '90vh'
                   }}
                 >
                   <PreviewRenderer
                     campaign={campaignData}
-                    previewMode={selectedDevice}
+                    previewMode="mobile"
                     wheelModalConfig={wheelModalConfig}
+                    constrainedHeight={true}
                   />
                 </div>
               </div>
+            ) : (
+              /* Desktop/Tablet Preview OU Mobile physique: Fullscreen sans cadre */
+              <PreviewRenderer
+                campaign={campaignData}
+                previewMode={actualDevice === 'desktop' && selectedDevice === 'desktop' ? 'desktop' : selectedDevice}
+                wheelModalConfig={wheelModalConfig}
+              />
             )}
           </div>
         ) : (
