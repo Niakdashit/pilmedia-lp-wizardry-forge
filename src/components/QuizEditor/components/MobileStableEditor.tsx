@@ -112,8 +112,8 @@ const MobileStableEditor: React.FC<MobileStableEditorProps> = ({
           position: relative;
           width: 100%;
           height: 100dvh;
-          /* Clip content to show rounded corners */
-          overflow: hidden;
+          /* Allow mobile tab bar to be visible */
+          overflow: visible;
           /* Create a stacking context */
           isolation: isolate;
         }
