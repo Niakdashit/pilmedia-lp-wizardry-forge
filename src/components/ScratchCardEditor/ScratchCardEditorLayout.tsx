@@ -2497,7 +2497,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -2505,7 +2505,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
             >
               Mode édition
             </button>
-            <div className="w-full h-full pointer-events-auto">
+            <div className="w-full h-full pointer-events-auto flex items-center justify-center">
               {campaignData?.type === 'quiz' ? (
                 <FunnelQuizParticipate
                   campaign={campaignData as any}

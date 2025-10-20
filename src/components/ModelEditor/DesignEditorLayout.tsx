@@ -1522,7 +1522,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             // Pour le form-editor, afficher le formulaire en plein écran
             if (showFormOverlay) {
               const node = (
-                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+                <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
                   {/* Floating Edit Mode Button */}
                   <button
                     onClick={() => setShowFunnel(false)}
@@ -1532,7 +1532,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                   >
                     Mode édition
                 </button>
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full flex items-center justify-center">
                   {/* Afficher le formulaire en plein écran comme les autres éditeurs */}
                   <FunnelUnlockedGame 
                     campaign={previewCampaign}
@@ -1556,7 +1556,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
 
             // Pour les autres types de jeux, utiliser FunnelUnlockedGame
             const node = (
-              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+              <div className="group fixed inset-0 z-[9999] w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#2c2c35] flex items-center justify-center">
                 {/* Floating Edit Mode Button */}
                 <button
                   onClick={() => setShowFunnel(false)}
@@ -1566,7 +1566,7 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
                 >
                   Mode édition
                 </button>
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <FunnelUnlockedGame 
                     campaign={previewCampaign}
                     previewMode={selectedDevice}
