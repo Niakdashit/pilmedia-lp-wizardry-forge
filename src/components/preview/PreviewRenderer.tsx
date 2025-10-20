@@ -17,6 +17,7 @@ interface PreviewRendererProps {
   campaign: any;
   previewMode: 'desktop' | 'tablet' | 'mobile';
   wheelModalConfig?: any;
+  constrainedHeight?: boolean; // Pour mode mobile centré avec hauteur fixe
 }
 
 /**
@@ -35,7 +36,8 @@ interface PreviewRendererProps {
 const PreviewRenderer: React.FC<PreviewRendererProps> = ({
   campaign: campaignProp,
   previewMode,
-  wheelModalConfig
+  wheelModalConfig,
+  constrainedHeight = false
 }) => {
   const [currentScreen, setCurrentScreen] = useState<DesignScreenId>('screen1');
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
@@ -375,7 +377,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
           }
         }
       `}</style>
-      <div className="w-full h-[100dvh] min-h-[100dvh]">
+      <div className={constrainedHeight ? "w-full h-full" : "w-full h-[100dvh] min-h-[100dvh]"}>
         <div className="relative w-full h-full">
         {/* Background */}
         <div className="absolute inset-0 z-0" style={backgroundStyle} />

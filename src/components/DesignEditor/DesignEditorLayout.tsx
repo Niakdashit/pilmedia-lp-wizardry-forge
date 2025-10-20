@@ -1867,6 +1867,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     campaign={campaignData}
                     previewMode="mobile"
                     wheelModalConfig={wheelModalConfig}
+                    constrainedHeight={true}
                   />
                 </div>
               </div>
