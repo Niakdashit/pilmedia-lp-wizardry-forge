@@ -8,9 +8,10 @@ interface ModalProps {
   onClose: () => void;
   width?: string;
   maxHeight?: string; // Nouvelle prop pour contrôler la hauteur max
+  usePortal?: boolean; // Si false, reste dans le flux normal (pour conteneurs contraints)
 }
 
-const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md', maxHeight }) => {
+const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-md', maxHeight, usePortal = true }) => {
   useEffect(() => {
     // Aide au debug en cas de soucis d'affichage
     // eslint-disable-next-line no-console
@@ -25,12 +26,12 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
     <div 
       className="bg-black/40 p-4"
       style={{ 
-        position: 'fixed', 
+        position: usePortal ? 'fixed' : 'absolute', 
         top: 0, 
         left: 0, 
         right: 0, 
         bottom: 0,
-        zIndex: 2147483647, // super élevé pour passer devant tout
+        zIndex: usePortal ? 2147483647 : 50, // Z-index adapté selon le mode
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -68,8 +69,9 @@ const Modal: React.FC<ModalProps> = ({ title, children, onClose, width = 'max-w-
     </div>
   );
 
-  // Utiliser createPortal pour rendre le modal directement dans le body
-  return createPortal(modalContent, document.body);
+  // Utiliser createPortal pour rendre le modal directement dans le body (si usePortal=true)
+  // Sinon, rendre dans le flux normal pour les conteneurs contraints
+  return usePortal ? createPortal(modalContent, document.body) : modalContent;
 };
 
 export default Modal;

@@ -857,6 +857,7 @@ const PreviewRenderer: React.FC<PreviewRendererProps> = ({
             }}
             title={campaign?.screens?.[1]?.title || 'Vos informations'}
             maxHeight={maxHeight}
+            usePortal={!constrainedHeight}
           >
         
           <DynamicContactForm
