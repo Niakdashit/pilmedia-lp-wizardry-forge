@@ -20,6 +20,7 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { recalculateAllElements } from '../../utils/recalculateAllModules';
+import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -246,8 +247,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     }
   });
 
-  // Hook de synchronisation preview (commented to avoid unused warning)
-  // const { syncBackground } = useEditorPreviewSync();
+  // Hook de synchronisation preview
+  const { syncBackground } = useEditorPreviewSync();
 
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
