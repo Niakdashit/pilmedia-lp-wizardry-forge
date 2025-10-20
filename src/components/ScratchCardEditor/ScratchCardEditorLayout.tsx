@@ -2538,6 +2538,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 selectedModule={selectedModule}
                 onModuleUpdate={handleUpdateModule}
                 onSelectedModuleChange={setSelectedModuleId}
+                // Modules de l'écran actuel pour le panneau de calques
+                modules={modularPage.screens[currentScreen] || []}
+                onModuleDelete={handleDeleteModule}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}

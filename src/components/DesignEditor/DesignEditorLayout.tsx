@@ -20,6 +20,7 @@ import { useWheelConfigSync } from '../../hooks/useWheelConfigSync';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { recalculateAllElements } from '../../utils/recalculateAllModules';
 
 
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -183,6 +184,43 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       return () => window.removeEventListener('resize', updateZoom);
     }
   }, [actualDevice]);
+
+  // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
+  const [hasRecalculated, setHasRecalculated] = useState(false);
+  useEffect(() => {
+    // Recalculer les éléments canvas (si présents)
+    if (canvasElements.length > 0 && !hasRecalculated) {
+      console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
+      const recalculated = recalculateAllElements(canvasElements, 'desktop');
+      setCanvasElements(recalculated);
+      setHasRecalculated(true);
+      console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
+    }
+
+    // Recalculer les modules modulaires (modularPage)
+    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+    if (allModules.length > 0 && !hasRecalculated) {
+      console.log('🔄 [Migration Modules] Recalcul automatique du scaling mobile pour', allModules.length, 'modules...');
+      const recalculatedModules = recalculateAllElements(allModules as any[], 'desktop');
+      
+      // Reconstruire modularPage avec les modules recalculés
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      let moduleIndex = 0;
+      
+      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
+        const screenModules = nextScreens[screenId] || [];
+        nextScreens[screenId] = screenModules.map(() => {
+          const recalculated = recalculatedModules[moduleIndex];
+          moduleIndex++;
+          return recalculated as Module;
+        });
+      });
+      
+      setModularPage({ screens: nextScreens, _updatedAt: Date.now() });
+      setHasRecalculated(true);
+      console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
+    }
+  }, [canvasElements.length, modularPage.screens, hasRecalculated]);
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -1836,6 +1874,9 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 selectedElements={selectedElements}
                 onSelectedElementsChange={setSelectedElements}
                 onAddToHistory={addToHistory}
+                // Modules de l'écran actuel pour le panneau de calques
+                modules={modularPage.screens[currentScreen] || []}
+                onModuleDelete={handleDeleteModule}
                 wheelBorderStyle={wheelModalConfig?.wheelBorderStyle || campaignConfig?.design?.wheelConfig?.borderStyle}
                 wheelBorderColor={wheelModalConfig?.wheelBorderColor || campaignConfig?.design?.wheelConfig?.borderColor}
                 wheelBorderWidth={campaignConfig?.design?.wheelConfig?.borderWidth}

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import type { DesignModule, DesignBlocTexte, DesignBlocImage, DesignBlocVideo, DesignBlocBouton, DesignBlocCarte, DesignBlocLogo, DesignBlocPiedDePage } from '@/types/designEditorModular';
 import type { DeviceType } from '@/utils/deviceDimensions';
+import { getDeviceScale } from '@/utils/deviceDimensions';
 
 interface DesignModuleRendererProps {
   modules: DesignModule[];
@@ -35,9 +36,19 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
   onModuleUpdate,
   onModuleDelete
 }) => {
-  const isMobileDevice = device === 'mobile';
-  // IMPORTANT: Pas de deviceScale pour avoir un rendu WYSIWYG identique entre édition et preview
-  const deviceScale = 1;
+  // Calcul du deviceScale : 65% de la taille desktop pour mobile
+  const scale = getDeviceScale('desktop', device);
+  const deviceScale = Math.min(scale.x, scale.y);
+  
+  // Log détaillé
+  console.log(`📱 [DesignRenderer] Device: ${device}, Scale: ${deviceScale.toFixed(3)} (${device === 'mobile' ? '65% desktop' : '100%'})`, {
+    device,
+    scale,
+    deviceScale,
+    previewMode,
+    modulesCount: modules.length
+  });
+  
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -80,6 +91,12 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
     }
     e.stopPropagation();
   }, []);
+
+  // Helper pour scaler les valeurs numériques (espacements, padding, etc.)
+  const scaleValue = useCallback((value: number | undefined, defaultValue: number = 0): number => {
+    if (value === undefined) return defaultValue;
+    return Math.round(value * deviceScale);
+  }, [deviceScale]);
 
   const renderModule = (m: DesignModule) => {
     const commonStyle: React.CSSProperties = {
@@ -151,8 +168,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           key={m.id} 
           style={{ 
             ...commonStyle, 
-            paddingTop: (textModule as any).spacingTop ?? 0, 
-            paddingBottom: (textModule as any).spacingBottom ?? 0 
+            paddingTop: scaleValue((textModule as any).spacingTop, 0), 
+            paddingBottom: scaleValue((textModule as any).spacingBottom, 0) 
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -276,8 +293,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: containerHeight,
-                paddingTop: (imageModule as any).spacingTop ?? 0,
-                paddingBottom: (imageModule as any).spacingBottom ?? 0
+                paddingTop: scaleValue((imageModule as any).spacingTop, 0),
+                paddingBottom: scaleValue((imageModule as any).spacingBottom, 0)
               }}
             >
               <img
@@ -329,8 +346,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
               display: 'flex', 
               justifyContent, 
               width: '100%',
-              paddingTop: (videoModule as any).spacingTop ?? 16,
-              paddingBottom: (videoModule as any).spacingBottom ?? 16
+              paddingTop: scaleValue((videoModule as any).spacingTop, 16),
+              paddingBottom: scaleValue((videoModule as any).spacingBottom, 16)
             }}
           >
             <div
@@ -436,8 +453,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
               border: `${(buttonModule as any).borderWidth ?? 0}px solid ${(buttonModule as any).borderColor || '#000000'}`,
               width: 'min(280px, 100%)',
               display: 'inline-flex',
-              marginTop: (buttonModule as any).spacingTop ?? 0,
-              marginBottom: (buttonModule as any).spacingBottom ?? 0,
+              marginTop: scaleValue((buttonModule as any).spacingTop, 0),
+              marginBottom: scaleValue((buttonModule as any).spacingBottom, 0),
               boxShadow: (buttonModule as any).boxShadow || '0 4px 12px rgba(0, 0, 0, 0.15)'
             }}
           >
@@ -460,10 +477,10 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
         border: carteModule.cardBorderWidth 
           ? `${carteModule.cardBorderWidth}px solid ${carteModule.cardBorderColor || '#e5e7eb'}`
           : '1px solid #e5e7eb',
-        padding: `${carteModule.padding ?? 24}px`,
+        padding: `${scaleValue(carteModule.padding, 24)}px`,
         boxShadow: carteModule.boxShadow || '0 4px 6px rgba(0, 0, 0, 0.1)',
         width: '100%',
-        maxWidth: maxWidth
+        maxWidth: maxWidth * deviceScale
       };
 
       return (
@@ -471,8 +488,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
           key={m.id} 
           style={{ 
             ...commonStyle,
-            paddingTop: (carteModule as any).spacingTop ?? 0,
-            paddingBottom: (carteModule as any).spacingBottom ?? 0
+            paddingTop: scaleValue((carteModule as any).spacingTop, 0),
+            paddingBottom: scaleValue((carteModule as any).spacingBottom, 0)
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
         >
@@ -565,11 +582,11 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
     // BlocLogo
     if (m.type === 'BlocLogo') {
       const logoModule = m as DesignBlocLogo;
-      const bandHeight = logoModule.bandHeight ?? 60;
+      const bandHeight = scaleValue(logoModule.bandHeight, 60);
       const bandColor = logoModule.bandColor ?? '#ffffff';
-      const bandPadding = logoModule.bandPadding ?? 16;
-      const logoWidth = logoModule.logoWidth ?? 120;
-      const logoHeight = logoModule.logoHeight ?? 120;
+      const bandPadding = scaleValue(logoModule.bandPadding, 16);
+      const logoWidth = scaleValue(logoModule.logoWidth, 120);
+      const logoHeight = scaleValue(logoModule.logoHeight, 120);
       const align = logoModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
 
@@ -584,8 +601,8 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
             alignItems: 'center',
             justifyContent,
             padding: `${bandPadding}px`,
-            paddingTop: (logoModule as any).spacingTop ?? 0,
-            paddingBottom: (logoModule as any).spacingBottom ?? 0,
+            paddingTop: scaleValue((logoModule as any).spacingTop, 0),
+            paddingBottom: scaleValue((logoModule as any).spacingBottom, 0),
             position: 'relative'
           }}
           onClick={() => !previewMode && onModuleClick?.(m.id)}
@@ -633,12 +650,12 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
     // BlocPiedDePage
     if (m.type === 'BlocPiedDePage') {
       const footerModule = m as DesignBlocPiedDePage;
-      const baseBandHeight = footerModule.bandHeight ?? 60;
-      const bandHeight = isMobileDevice ? baseBandHeight * 0.9 : baseBandHeight;
+      const baseBandHeight = scaleValue(footerModule.bandHeight, 60);
+      const bandHeight = baseBandHeight;
       const bandColor = footerModule.bandColor ?? '#ffffff';
-      const bandPadding = footerModule.bandPadding ?? 24;
-      const logoWidth = footerModule.logoWidth ?? 120;
-      const logoHeight = footerModule.logoHeight ?? 120;
+      const bandPadding = scaleValue(footerModule.bandPadding, 24);
+      const logoWidth = scaleValue(footerModule.logoWidth, 120);
+      const logoHeight = scaleValue(footerModule.logoHeight, 120);
       const align = footerModule.align || 'center';
       const justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
       
@@ -647,10 +664,10 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
       const footerLinks = footerModule.footerLinks ?? [];
       const textColor = footerModule.textColor ?? '#000000';
       const linkColor = footerModule.linkColor ?? '#841b60';
-      const fontSize = footerModule.fontSize ?? 14;
+      const fontSize = scaleValue(footerModule.fontSize, 14);
       const separator = footerModule.separator ?? '|';
       const socialLinks = footerModule.socialLinks ?? [];
-      const socialIconSize = footerModule.socialIconSize ?? 24;
+      const socialIconSize = scaleValue(footerModule.socialIconSize, 24);
       const socialIconColor = footerModule.socialIconColor ?? '#000000';
 
       const hasContent = footerModule.logoUrl || footerText || footerLinks.length > 0 || socialLinks.length > 0;
@@ -672,11 +689,11 @@ export const DesignModuleRenderer: React.FC<DesignModuleRendererProps & { onModu
             flexDirection: 'column',
             alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center',
             justifyContent: 'center',
-            paddingTop: (footerModule as any).spacingTop ?? bandPadding,
-            paddingBottom: (footerModule as any).spacingBottom ?? bandPadding,
-            paddingLeft: '64px',
-            paddingRight: '64px',
-            gap: '16px',
+            paddingTop: scaleValue((footerModule as any).spacingTop, bandPadding),
+            paddingBottom: scaleValue((footerModule as any).spacingBottom, bandPadding),
+            paddingLeft: scaleValue(64, 64),
+            paddingRight: scaleValue(64, 64),
+            gap: scaleValue(16, 16),
             cursor: previewMode ? 'default' : 'pointer'
           }}
           onClick={(e) => {

@@ -2525,7 +2525,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       <div className="flex-1 flex overflow-hidden relative">
         {showFunnel ? (
           /* Funnel Preview Mode */
-          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex">
+          <div className="group fixed inset-0 z-40 w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-transparent flex items-center justify-center">
             {/* Floating Edit Mode Button */}
             <button
               onClick={() => setShowFunnel(false)}
@@ -2533,11 +2533,33 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
             >
               Mode édition
             </button>
-            <PreviewRenderer
-              campaign={campaignData}
-              previewMode={selectedDevice}
-              wheelModalConfig={wheelModalConfig}
-            />
+            {/* Conteneur avec scale exact selon le device (comme Chrome DevTools) */}
+            <div 
+              className="h-full overflow-hidden flex items-center justify-center"
+              style={{
+                width: '100%',
+                maxWidth: '100%'
+              }}
+            >
+              <div
+                style={{
+                  width: selectedDevice === 'mobile' ? '1700px' : selectedDevice === 'tablet' ? '1700px' : '1700px',
+                  height: '100%',
+                  transform: selectedDevice === 'mobile' 
+                    ? 'scale(0.253)' // 430/1700 = 0.253
+                    : selectedDevice === 'tablet'
+                    ? 'scale(0.482)' // 820/1700 = 0.482
+                    : 'scale(1)',
+                  transformOrigin: 'center center'
+                }}
+              >
+                <PreviewRenderer
+                  campaign={campaignData}
+                  previewMode={selectedDevice}
+                  wheelModalConfig={wheelModalConfig}
+                />
+              </div>
+            </div>
           </div>
         ) : (
           /* Design Editor Mode */
@@ -2589,6 +2611,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 selectedModule={selectedModule}
                 onModuleUpdate={handleUpdateModule}
                 onSelectedModuleChange={setSelectedModuleId}
+                // Modules de l'écran actuel pour le panneau de calques
+                modules={modularPage.screens[currentScreen] || []}
+                onModuleDelete={handleDeleteModule}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}

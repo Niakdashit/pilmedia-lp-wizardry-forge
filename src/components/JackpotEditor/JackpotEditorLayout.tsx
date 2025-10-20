@@ -2459,6 +2459,9 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                 selectedModule={selectedModule}
                 onModuleUpdate={handleUpdateModule}
                 onSelectedModuleChange={setSelectedModuleId}
+                // Modules de l'écran actuel pour le panneau de calques
+                modules={modularPage.screens[currentScreen] || []}
+                onModuleDelete={handleDeleteModule}
                 // Quiz config props for HybridSidebar
                 quizQuestionCount={quizConfig.questionCount}
                 quizTimeLimit={quizConfig.timeLimit}

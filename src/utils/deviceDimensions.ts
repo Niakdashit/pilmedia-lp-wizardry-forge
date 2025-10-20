@@ -2,7 +2,7 @@
 export const STANDARD_DEVICE_DIMENSIONS = {
   desktop: { width: 1700, height: 850 },
   tablet: { width: 820, height: 1180 }, // Plus réaliste: iPad Pro 11" (834x1194) avec ratio d'affichage 
-  mobile: { width: 360, height: 640 }   // Format 9:16 mobile standardisé
+  mobile: { width: 430, height: 932 }   // iPhone 14 Pro Max (correspond à Chrome DevTools)
 } as const;
 
 export type DeviceType = keyof typeof STANDARD_DEVICE_DIMENSIONS;
@@ -15,9 +15,31 @@ export const getDeviceScale = (fromDevice: DeviceType, toDevice: DeviceType) => 
   const from = STANDARD_DEVICE_DIMENSIONS[fromDevice];
   const to = STANDARD_DEVICE_DIMENSIONS[toDevice];
   
+  // Calcul du scale de base (proportionnel aux dimensions)
+  let scaleX = to.width / from.width;
+  let scaleY = to.height / from.height;
+  
+  // Ajustement pour mobile : 65% de la taille desktop
+  if (fromDevice === 'desktop' && toDevice === 'mobile') {
+    const TARGET_MOBILE_SCALE = 0.65; // 65% de la taille desktop
+    const baseScale = Math.min(scaleX, scaleY);
+    const adjustmentFactor = TARGET_MOBILE_SCALE / baseScale;
+    scaleX = scaleX * adjustmentFactor;
+    scaleY = scaleY * adjustmentFactor;
+  }
+  
+  // Si on passe de mobile à desktop, inverser l'ajustement
+  if (fromDevice === 'mobile' && toDevice === 'desktop') {
+    const TARGET_MOBILE_SCALE = 0.65;
+    const baseScale = Math.min(scaleX, scaleY);
+    const adjustmentFactor = baseScale / TARGET_MOBILE_SCALE;
+    scaleX = scaleX * adjustmentFactor;
+    scaleY = scaleY * adjustmentFactor;
+  }
+  
   return {
-    x: to.width / from.width,
-    y: to.height / from.height
+    x: scaleX,
+    y: scaleY
   };
 };
 

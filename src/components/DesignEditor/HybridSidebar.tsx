@@ -111,6 +111,8 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   selectedModule?: Module | null;
   onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
   onSelectedModuleChange?: (moduleId: string | null) => void;
+  modules?: Module[];
+  onModuleDelete?: (id: string) => void;
   onQuizQuestionCountChange?: (count: number) => void;
   onQuizTimeLimitChange?: (time: number) => void;
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
@@ -194,6 +196,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   selectedModule,
   onModuleUpdate,
   onSelectedModuleChange,
+  modules,
+  onModuleDelete,
   activeTab,
   onActiveTabChange,
   // modular editor
@@ -850,6 +854,15 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
+            elements={elements}
+            onElementsChange={onElementsChange}
+            selectedElements={selectedElements}
+            onSelectedElementsChange={onSelectedElementsChange}
+            onAddToHistory={onAddToHistory}
+            modules={modules}
+            selectedModuleId={selectedModuleId}
+            onModuleSelect={onSelectedModuleChange}
+            onModuleDelete={onModuleDelete}
           />
         );
       case 'game':

@@ -9,19 +9,19 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
-import ImageModulePanel from './modules/ImageModulePanel';
-import LogoModulePanel from './modules/LogoModulePanel';
-import FooterModulePanel from './modules/FooterModulePanel';
-import ButtonModulePanel from './modules/ButtonModulePanel';
-import VideoModulePanel from './modules/VideoModulePanel';
-import SocialModulePanel from './modules/SocialModulePanel';
-import HtmlModulePanel from './modules/HtmlModulePanel';
-import CartePanel from './panels/CartePanel';
-import QuizConfigPanel from './panels/QuizConfigPanel';
+import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
+import LogoModulePanel from '../QuizEditor/modules/LogoModulePanel';
+import FooterModulePanel from '../QuizEditor/modules/FooterModulePanel';
+import ButtonModulePanel from '../QuizEditor/modules/ButtonModulePanel';
+import VideoModulePanel from '../QuizEditor/modules/VideoModulePanel';
+import SocialModulePanel from '../QuizEditor/modules/SocialModulePanel';
+import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
+import CartePanel from '../QuizEditor/panels/CartePanel';
+import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
+import GameManagementPanel from './panels/GameManagementPanel';
+import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
-import JackpotFullPanel from './panels/JackpotFullPanel';
-import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
@@ -63,10 +63,13 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Inline jackpot panel controls
   showJackpotPanel?: boolean;
   onJackpotPanelChange?: (show: boolean) => void;
+  // Inline wheel panel controls
+  showWheelPanel?: boolean;
+  onWheelPanelChange?: (show: boolean) => void;
   // Design panel controls
   showDesignPanel?: boolean;
   onDesignPanelChange?: (show: boolean) => void;
-  canvasRef?: React.RefObject<HTMLDivElement>;
+  canvasRef?: React.RefObject<HTMLDivElement | null>;
   // Props pour le système de groupes
   selectedElements?: any[];
   onSelectedElementsChange?: (elements: any[]) => void;
@@ -111,6 +114,8 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   selectedModule?: Module | null;
   onModuleUpdate?: (id: string, patch: Partial<Module>) => void;
   onSelectedModuleChange?: (moduleId: string | null) => void;
+  modules?: Module[];
+  onModuleDelete?: (id: string) => void;
   onQuizQuestionCountChange?: (count: number) => void;
   onQuizTimeLimitChange?: (time: number) => void;
   onQuizDifficultyChange?: (difficulty: 'easy' | 'medium' | 'hard') => void;
@@ -126,6 +131,19 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
+  // Wheel configuration props
+  wheelBorderStyle?: string;
+  wheelBorderColor?: string;
+  wheelBorderWidth?: number;
+  wheelScale?: number;
+  wheelShowBulbs?: boolean;
+  wheelPosition?: 'left' | 'right' | 'center';
+  onWheelBorderStyleChange?: (style: string) => void;
+  onWheelBorderColorChange?: (color: string) => void;
+  onWheelBorderWidthChange?: (width: number) => void;
+  onWheelScaleChange?: (scale: number) => void;
+  onWheelShowBulbsChange?: (show: boolean) => void;
+  onWheelPositionChange?: (position: 'left' | 'right' | 'center') => void;
 }
 
 const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
@@ -152,6 +170,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onQuizPanelChange,
   showJackpotPanel = false,
   onJackpotPanelChange,
+  showWheelPanel = false,
+  onWheelPanelChange,
   showDesignPanel = false,
   onDesignPanelChange,
   canvasRef,
@@ -181,11 +201,26 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   selectedModule,
   onModuleUpdate,
   onSelectedModuleChange,
+  modules,
+  onModuleDelete,
   activeTab,
   onActiveTabChange,
   // modular editor
   currentScreen,
-  onAddModule
+  onAddModule,
+  // wheel configuration
+  wheelBorderStyle,
+  wheelBorderColor,
+  wheelBorderWidth,
+  wheelScale,
+  wheelShowBulbs,
+  wheelPosition,
+  onWheelBorderStyleChange,
+  onWheelBorderColorChange,
+  onWheelBorderWidthChange,
+  onWheelScaleChange,
+  onWheelShowBulbsChange,
+  onWheelPositionChange
 }: HybridSidebarProps, ref) => {
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -234,7 +269,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab, isWindowMobile]);
-  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('elements');
+  const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
   // Short-lived guard to ignore external setActiveTab calls (e.g. onOpenElementsTab) after manual tab switch
@@ -273,20 +308,32 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         onPositionPanelChange?.(true);
       } else if (tab === 'quiz') {
         onQuizPanelChange?.(true);
-      } else if (tab === 'jackpot') {
-        onJackpotPanelChange?.(true);
+      } else if (tab === 'wheel') {
+        onWheelPanelChange?.(true);
       }
     }
-  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onJackpotPanelChange, setIsCollapsed]);
+  }), [onDesignPanelChange, onEffectsPanelChange, onAnimationsPanelChange, onPositionPanelChange, onQuizPanelChange, onWheelPanelChange, setIsCollapsed]);
 
   // Removed event-based auto-switching to avoid flicker and unintended returns to Elements.
 
-  // Toujours désélectionner le module si l'onglet actif n'est pas 'elements'
+  // Désélectionner le module si l'onglet actif n'est pas 'elements' ou 'background'
+  // (background est autorisé pour les BlocTexte)
   React.useEffect(() => {
-    if (internalActiveTab !== 'elements') {
+    if (internalActiveTab !== 'elements' && internalActiveTab !== 'background') {
       onSelectedModuleChange?.(null);
     }
   }, [internalActiveTab, onSelectedModuleChange]);
+  
+  // Log pour debug - ne pas forcer le changement d'onglet ici pour éviter les boucles
+  // La logique de changement d'onglet est gérée par DesignEditorLayout
+  React.useEffect(() => {
+    console.log('🎯 [HybridSidebar] selectedModuleId changed:', {
+      selectedModuleId,
+      selectedModule,
+      internalActiveTab,
+      moduleType: selectedModule?.type
+    });
+  }, [selectedModuleId, selectedModule?.type, internalActiveTab]);
   
   // Fonction interne pour gérer le changement d'onglet
   const activeTemplate = React.useMemo(() => {
@@ -307,7 +354,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showAnimationsPanel,
     showPositionPanel,
     showQuizPanel,
-    showJackpotPanel,
+    showWheelPanel,
     showDesignPanel,
     activeTab: internalActiveTab
   });
@@ -324,7 +371,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       { key: 'animations', active: showAnimationsPanel, prevActive: prev.showAnimationsPanel },
       { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
       { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
-      { key: 'jackpot', active: showJackpotPanel, prevActive: prev.showJackpotPanel },
+      { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
       { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
     ];
 
@@ -333,26 +380,26 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       newActiveTab = 'quiz';
       shouldUpdate = true;
     }
-    // Si le panneau Jackpot est activé, forcer l'onglet jackpot
-    else if (showJackpotPanel && !prev.showJackpotPanel) {
-      newActiveTab = 'jackpot';
+    // Si le panneau Wheel est activé, forcer l'onglet wheel
+    else if (showWheelPanel && !prev.showWheelPanel) {
+      newActiveTab = 'wheel';
       shouldUpdate = true;
     }
-    // Si le panneau Design est activé, forcer l'onglet background
-    else if (showDesignPanel && !prev.showDesignPanel) {
+    // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
+    else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
       newActiveTab = 'background';
       shouldUpdate = true;
     } 
     // Si un autre panneau a été activé, basculer vers son onglet correspondant
     else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'jackpot');
+      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
       if (activatedPanel) {
         newActiveTab = activatedPanel.key;
         shouldUpdate = true;
       } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour jackpot ou 'elements' pour les autres
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel ou 'elements' pour les autres
       else if (panelStates.some(p => p.key === internalActiveTab && !p.active && p.prevActive)) {
-        newActiveTab = internalActiveTab === 'jackpot' ? 'game' : 'elements';
+        newActiveTab = internalActiveTab === 'wheel' ? 'game' : 'elements';
         shouldUpdate = true;
       }
     }
@@ -368,7 +415,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       showAnimationsPanel,
       showPositionPanel,
       showQuizPanel,
-      showJackpotPanel,
+      showWheelPanel,
       showDesignPanel,
       activeTab: newActiveTab
     };
@@ -385,7 +432,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showAnimationsPanel, 
     showPositionPanel, 
     showQuizPanel,
-    showJackpotPanel,
+    showWheelPanel,
     showDesignPanel,
     activeTab,
     onDesignPanelChange
@@ -437,8 +484,16 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       label: 'Formulaire', 
       icon: FormInput
     },
-    { id: 'game', label: 'Jeu', icon: Gamepad2 },
-    { id: 'messages', label: 'Sortie', icon: MessageSquare }
+    { 
+      id: 'game', 
+      label: 'Jeu', 
+      icon: Gamepad2
+    },
+    { 
+      id: 'messages', 
+      label: 'Sortie', 
+      icon: MessageSquare
+    }
   ];
   
   // Vérifier si hiddenTabs est défini et est un tableau
@@ -451,12 +506,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     const backgroundVisible = tabs.some(t => t.id === 'background');
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
-    const isTransientJackpot = internalActiveTab === 'jackpot' && showJackpotPanel;
+    const isTransientWheel = internalActiveTab === 'wheel' && showWheelPanel;
 
-    if (!activeIsVisible && !isTransientQuiz && !isTransientJackpot) {
+    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel, showJackpotPanel]);
+  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -487,36 +542,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     isUserTabSwitchingRef.current = true;
     ignoreExternalUntilRef.current = Date.now() + 2000;
     setTimeout(() => { isUserTabSwitchingRef.current = false; }, 300);
-    // Si on clique sur un onglet différent, fermer les panneaux spéciaux
-    if (showEffectsPanel && tabId !== 'effects') {
-      onEffectsPanelChange?.(false);
-    }
-    if (showAnimationsPanel && tabId !== 'animations') {
-      onAnimationsPanelChange?.(false);
-    }
-    if (showPositionPanel && tabId !== 'position') {
-      onPositionPanelChange?.(false);
-    }
-    if (showQuizPanel && tabId !== 'quiz') {
-      onQuizPanelChange?.(false);
-    }
-    if (showJackpotPanel && tabId !== 'jackpot') {
-      onJackpotPanelChange?.(false);
-    }
+    
+    // TOUJOURS fermer TOUS les panneaux temporaires lors d'un changement d'onglet
+    onEffectsPanelChange?.(false);
+    onAnimationsPanelChange?.(false);
+    onPositionPanelChange?.(false);
+    onQuizPanelChange?.(false);
+    onWheelPanelChange?.(false);
+    onDesignPanelChange?.(false);
+    
     // Si la cible N'EST PAS 'elements', toujours désélectionner le module pour éviter que le panel temporaire reste ouvert
     if (tabId !== 'elements' && onSelectedModuleChange) {
       onSelectedModuleChange(null);
     }
 
     // Ouvrir explicitement le panneau correspondant au tab ciblé
-    if (tabId === 'elements') {
-      onEffectsPanelChange?.(false);
-      onAnimationsPanelChange?.(false);
-      onPositionPanelChange?.(false);
-      onQuizPanelChange?.(false);
-      onJackpotPanelChange?.(false);
-      onDesignPanelChange?.(false);
-    } else if (tabId === 'background') {
+    if (tabId === 'background') {
       onDesignPanelChange?.(true);
     } else if (tabId === 'effects') {
       onEffectsPanelChange?.(true);
@@ -526,8 +567,8 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       onPositionPanelChange?.(true);
     } else if (tabId === 'quiz') {
       onQuizPanelChange?.(true);
-    } else if (tabId === 'jackpot') {
-      onJackpotPanelChange?.(true);
+    } else if (tabId === 'wheel') {
+      onWheelPanelChange?.(true);
     }
     
     if (internalActiveTab === tabId) {
@@ -646,120 +687,26 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedDevice={selectedDevice}
           />
         );
-      case 'jackpot':
-        // Configuration du Jackpot depuis campaign.gameConfig.jackpot
-        const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
-        const jackpotStyle = (jackpotConfig.style as any) || {};
-        const customFrame = (jackpotConfig.customFrame as any) || {};
-        
+      case 'wheel':
         return (
-          <JackpotConfigPanel
+          <WheelConfigPanel
             onBack={() => {
-              onJackpotPanelChange?.(false);
+              onWheelPanelChange?.(false);
               setActiveTab('game');
             }}
-            reelSymbols={jackpotConfig.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣']}
-            selectedTemplate={jackpotConfig.template || 'jackpot-frame'}
-            borderColor={jackpotConfig.borderColor || jackpotStyle.borderColor || '#ffd700'}
-            backgroundColor={jackpotConfig.backgroundColor || jackpotStyle.backgroundColor || '#ffffff'}
-            textColor={jackpotConfig.textColor || jackpotStyle.textColor || '#333333'}
-            customFrame={customFrame}
-            customTemplateUrl={jackpotConfig.customTemplateUrl || ''}
-            onReelSymbolsChange={(symbols: string[]) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    symbols
-                  }
-                }
-              }));
-            }}
-            onTemplateChange={(templateId: string) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    template: templateId
-                  }
-                }
-              }));
-            }}
-            onBorderColorChange={(color: string) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    borderColor: color
-                  }
-                }
-              }));
-            }}
-            onBackgroundColorChange={(color: string) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    backgroundColor: color
-                  }
-                }
-              }));
-            }}
-            onTextColorChange={(color: string) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    textColor: color
-                  }
-                }
-              }));
-            }}
-            onCustomFrameChange={(updates: any) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    customFrame: {
-                      ...prev?.gameConfig?.jackpot?.customFrame,
-                      ...updates
-                    }
-                  }
-                }
-              }));
-            }}
-            onCustomTemplateChange={(url: string) => {
-              setCampaign((prev: any) => ({
-                ...prev,
-                name: prev?.name || 'Campaign',
-                gameConfig: {
-                  ...prev?.gameConfig,
-                  jackpot: {
-                    ...prev?.gameConfig?.jackpot,
-                    customTemplateUrl: url,
-                    template: 'user-template'
-                  }
-                }
-              }));
-            }}
+            wheelBorderStyle={wheelBorderStyle || 'solid'}
+            wheelBorderColor={wheelBorderColor || '#ffd700'}
+            wheelBorderWidth={wheelBorderWidth || 2}
+            wheelScale={wheelScale || 67}
+            wheelShowBulbs={wheelShowBulbs ?? true}
+            wheelPosition={wheelPosition || 'center'}
+            onBorderStyleChange={onWheelBorderStyleChange || (() => {})}
+            onBorderColorChange={onWheelBorderColorChange || (() => {})}
+            onBorderWidthChange={onWheelBorderWidthChange || (() => {})}
+            onScaleChange={onWheelScaleChange || (() => {})}
+            onShowBulbsChange={onWheelShowBulbsChange || (() => {})}
+            onPositionChange={onWheelPositionChange || (() => {})}
+            selectedDevice={selectedDevice}
           />
         );
       case 'background':
@@ -912,23 +859,20 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedElement={selectedElement}
             onElementUpdate={onElementUpdate}
             selectedDevice={selectedDevice}
-            existingModules={(() => {
-              // Récupérer tous les modules de tous les écrans pour vérifier si Logo/Footer existent
-              const allModules: Module[] = [];
-              if (campaignConfig?.design?.designModules?.screens) {
-                Object.values(campaignConfig.design.designModules.screens).forEach((screenModules: any) => {
-                  if (Array.isArray(screenModules)) {
-                    allModules.push(...screenModules);
-                  }
-                });
-              }
-              return allModules;
-            })()}
+            elements={elements}
+            onElementsChange={onElementsChange}
+            selectedElements={selectedElements}
+            onSelectedElementsChange={onSelectedElementsChange}
+            onAddToHistory={onAddToHistory}
+            modules={modules}
+            selectedModuleId={selectedModuleId}
+            onModuleSelect={onSelectedModuleChange}
+            onModuleDelete={onModuleDelete}
           />
         );
       case 'game':
         return (
-          <JackpotFullPanel
+          <GameManagementPanel
             campaign={campaign}
             setCampaign={setCampaign}
           />
@@ -944,9 +888,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'messages':
         return (
-          <MessagesPanel
-            campaign={campaign}
-            setCampaign={setCampaign}
+          <MessagesPanel 
+            campaignConfig={campaignConfig}
+            onCampaignConfigChange={onCampaignConfigChange}
           />
         );
       default:

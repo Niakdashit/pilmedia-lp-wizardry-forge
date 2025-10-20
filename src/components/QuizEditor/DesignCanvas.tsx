@@ -218,11 +218,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
     return DEVICE_DIMENSIONS[selectedDevice];
   }, [selectedDevice, DEVICE_DIMENSIONS]);
 
-  // Forcer un format mobile 9:16 sans bordures ni encoches
+  // Forcer un format mobile selon les dimensions de l'iPhone 14 Pro Max
   const effectiveCanvasSize = useMemo(() => {
     if (selectedDevice === 'mobile') {
-      // 9:16 exact ratio
-      return { width: 360, height: 640 };
+      // iPhone 14 Pro Max dimensions (correspond à Chrome DevTools)
+      return { width: 430, height: 932 };
     }
     return canvasSize;
   }, [selectedDevice, canvasSize]);

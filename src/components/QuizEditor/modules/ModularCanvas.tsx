@@ -729,7 +729,7 @@ const ModularCanvas: React.FC<ModularCanvasProps> = ({ screen, modules, onUpdate
       ))}
       
       {/* Modules réguliers - dans le conteneur centré avec max-width */}
-      <div className="w-full max-w-[1500px] mx-auto">
+      <div className="w-full max-w-[1700px] mx-auto">
         <div
           className="flex flex-col gap-0"
           style={{
