@@ -112,6 +112,9 @@ export interface DesignCanvasProps {
   onModuleDelete?: (id: string) => void;
   onModuleMove?: (id: string, dir: 'up' | 'down') => void;
   onModuleDuplicate?: (id: string) => void;
+  selectedModuleId?: string | null;
+  selectedModule?: Module | null;
+  onSelectedModuleChange?: (moduleId: string | null) => void;
   // Preview mode flag to disable rounded corners
   isPreviewMode?: boolean;
 }
@@ -168,9 +171,11 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   onModuleUpdate,
   onModuleDelete,
   onModuleMove,
-  onModuleDuplicate
+  onModuleDuplicate,
+  selectedModuleId,
+  selectedModule,
+  onSelectedModuleChange
 }, ref) => {
-
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoFitEnabledRef = useRef(true);
@@ -2460,6 +2465,9 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                             const evt = new CustomEvent('modularModuleSelected', { detail: { module: m } });
                             window.dispatchEvent(evt);
                           } catch {}
+                          
+                          onSelectedModuleChange?.(m.id);
+                          
                           if (m.type === 'BlocBouton') {
                             onSelectedElementChange?.({
                               id: `modular-button-${m.id}`,
@@ -2535,15 +2543,7 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
                           } as any);
                           onShowDesignPanel?.();
                         }}
-                        selectedModuleId={((externalSelectedElement as any)?.role === 'module-text'
-                          || (externalSelectedElement as any)?.role === 'module-image'
-                          || (externalSelectedElement as any)?.role === 'module-video'
-                          || (externalSelectedElement as any)?.role === 'module-social'
-                          || (externalSelectedElement as any)?.role === 'module-html'
-                          || (externalSelectedElement as any)?.role === 'module-carte'
-                          || (externalSelectedElement as any)?.role === 'module-logo')
-                          ? (externalSelectedElement as any)?.moduleId
-                          : undefined}
+                        selectedModuleId={selectedModuleId ?? undefined}
                       />
                       {footerModules.length > 0 && (
                         <div style={{ height: footerVisualHeight }} />

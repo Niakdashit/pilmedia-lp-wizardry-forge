@@ -21,6 +21,7 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
@@ -28,6 +29,8 @@ import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/backgr
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
+import type { GameModalConfig } from '@/types/gameConfig';
+import { createGameConfigFromQuiz } from '@/types/gameConfig';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -150,18 +153,15 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
         if (!Number.isNaN(v) && v >= 0.1 && v <= 1) return v;
       }
     } catch {}
-    if (device === 'mobile' && typeof window !== 'undefined') {
-      const { width, height } = getDeviceDimensions('mobile');
-      const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
-      return Math.min(scale, 1);
-    }
+    // Uniformisation : même zoom que le mode preview pour tous les appareils
+    // Cela garantit que l'écran a exactement la même taille en édition et en preview
     switch (device) {
       case 'desktop':
         return 0.7;
       case 'tablet':
         return 0.55;
       case 'mobile':
-        return 0.45;
+        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
       default:
         return 0.7;
     }
@@ -357,14 +357,8 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
-  useEffect(() => {
-    if (actualDevice === 'mobile') {
-      const updateZoom = () => setCanvasZoom(getDefaultZoom('mobile'));
-      window.addEventListener('resize', updateZoom);
-      return () => window.removeEventListener('resize', updateZoom);
-    }
-  }, [actualDevice]);
+  // Note: Le zoom mobile est maintenant fixe à 100% pour correspondre au mode preview
+  // L'ancien code qui ajustait automatiquement le zoom lors du redimensionnement a été supprimé
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -431,6 +425,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   // État pour l'élément sélectionné
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  
   const [activeSidebarTab, setActiveSidebarTab] = useState<string>('elements');
   const [previousSidebarTab, setPreviousSidebarTab] = useState<string>('elements');
   
@@ -450,13 +445,51 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   // Modular editor JSON state
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
+
+  // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
+  const [hasRecalculated, setHasRecalculated] = useState(false);
+  useEffect(() => {
+    // Recalculer les éléments canvas (si présents)
+    if (canvasElements.length > 0 && !hasRecalculated) {
+      console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
+      const recalculated = recalculateAllElements(canvasElements, 'desktop');
+      setCanvasElements(recalculated);
+      setHasRecalculated(true);
+      console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
+    }
+
+    // Recalculer les modules modulaires (modularPage)
+    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+    if (allModules.length > 0 && !hasRecalculated) {
+      console.log('🔄 [Migration Modules] Recalcul automatique du scaling mobile pour', allModules.length, 'modules...');
+      const recalculatedModules = recalculateAllElements(allModules as any[], 'desktop');
+      
+      // Reconstruire modularPage avec les modules recalculés
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      let moduleIndex = 0;
+      
+      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
+        const screenModules = nextScreens[screenId] || [];
+        nextScreens[screenId] = screenModules.map(() => {
+          const recalculated = recalculatedModules[moduleIndex];
+          moduleIndex++;
+          return recalculated as Module;
+        });
+      });
+      
+      setModularPage({ screens: nextScreens, _updatedAt: Date.now() });
+      setHasRecalculated(true);
+      console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
+    }
+  }, [canvasElements.length, modularPage.screens, hasRecalculated]);
   
-  // Détecter la position de scroll pour changer l'écran courant
+  // Détecter la position de scroll pour changer l'écran courant avec IntersectionObserver
   useEffect(() => {
     const canvasScrollArea = document.querySelector('.canvas-scroll-area') as HTMLElement | null;
     if (!canvasScrollArea) return;
@@ -464,45 +497,43 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
     if (anchors.length === 0) return;
 
-    const computeNearestScreen = () => {
-      const areaRect = canvasScrollArea.getBoundingClientRect();
-      const areaCenter = areaRect.top + areaRect.height / 2;
+    // Utiliser IntersectionObserver pour une détection plus précise
+    const observerOptions = {
+      root: canvasScrollArea,
+      rootMargin: '-40% 0px -40% 0px', // Zone centrale pour détecter l'écran principal
+      threshold: [0, 0.25, 0.5, 0.75, 1]
+    };
 
-      let closestId: 'screen1' | 'screen2' | 'screen3' = 'screen1';
-      let closestDistance = Infinity;
+    const visibilityMap = new Map<string, number>();
 
-      anchors.forEach((anchor) => {
-        const screenId = (anchor.dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3' | undefined) ?? 'screen1';
-        const rect = anchor.getBoundingClientRect();
-        const anchorCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(anchorCenter - areaCenter);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestId = screenId;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const screenId = (entry.target as HTMLElement).dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3';
+        if (screenId) {
+          visibilityMap.set(screenId, entry.intersectionRatio);
         }
       });
 
-      setCurrentScreen((prev) => (prev === closestId ? prev : closestId));
-    };
+      // Trouver l'écran avec le ratio d'intersection le plus élevé
+      let maxRatio = 0;
+      let mostVisibleScreen: 'screen1' | 'screen2' | 'screen3' = 'screen1';
+      
+      visibilityMap.forEach((ratio, screenId) => {
+        if (ratio > maxRatio) {
+          maxRatio = ratio;
+          mostVisibleScreen = screenId as 'screen1' | 'screen2' | 'screen3';
+        }
+      });
 
-    // Calcule initial après montage
-    requestAnimationFrame(computeNearestScreen);
+      if (maxRatio > 0.1) { // Seuil minimum pour éviter les changements trop sensibles
+        setCurrentScreen((prev) => (prev === mostVisibleScreen ? prev : mostVisibleScreen));
+      }
+    }, observerOptions);
 
-    const handleScroll = () => {
-      requestAnimationFrame(computeNearestScreen);
-    };
-
-    const handleResize = () => {
-      requestAnimationFrame(computeNearestScreen);
-    };
-
-    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
+    anchors.forEach((anchor) => observer.observe(anchor));
 
     return () => {
-      canvasScrollArea.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
     };
   }, []);
 
@@ -858,6 +889,12 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
+  // Game modal config unifié (nouveau) - doit être après extractedColors
+  const gameModalConfig: GameModalConfig = useMemo(() => createGameConfigFromQuiz({
+    ...quizModalConfig,
+    extractedColors
+  }, 'jackpot'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
@@ -1460,31 +1497,48 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
       role === 'module-html' ||
       role === 'module-carte' ||
       role === 'module-logo' ||
-      role === 'module-footer';
+      role === 'module-footer' ||
+      role === 'module-text';
 
     if (!moduleId || !isModularRole) {
-      lastModuleSelectionRef.current = null;
-      setSelectedModuleId(null);
-      if (!isModularRole) {
-        setActiveSidebarTab(previousSidebarTab || 'elements');
+      if (selectedModuleId !== null) {
+        setSelectedModuleId(null);
       }
       return;
     }
 
-    const isNewSelection = moduleId !== lastModuleSelectionRef.current;
-
+    const isNewSelection = selectedModuleId !== moduleId;
+    
     if (isNewSelection) {
       lastModuleSelectionRef.current = moduleId;
       setSelectedModuleId(moduleId);
-      setPreviousSidebarTab(activeSidebarTab);
-      setActiveSidebarTab('elements');
-      return;
+      
+      const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+      const module = allModules.find((m) => m.id === moduleId);
+      
+      if (module?.type === 'BlocTexte') {
+        if (activeSidebarTab !== 'background') {
+          setActiveSidebarTab('background');
+          if (sidebarRef.current) {
+            sidebarRef.current.setActiveTab('background');
+          }
+        }
+        setShowDesignInSidebar(true);
+      } else {
+        if (activeSidebarTab !== 'elements') {
+          setActiveSidebarTab('elements');
+          if (sidebarRef.current) {
+            sidebarRef.current.setActiveTab('elements');
+          }
+        }
+        setShowDesignInSidebar(false);
+      }
+      
+      setShowEffectsInSidebar(false);
+      setShowAnimationsInSidebar(false);
+      setShowPositionInSidebar(false);
     }
-
-    if (activeSidebarTab === 'elements' && selectedModuleId !== moduleId) {
-      setSelectedModuleId(moduleId);
-    }
-  }, [selectedElement, activeSidebarTab, previousSidebarTab, selectedModuleId]);
+  }, [selectedElement, selectedModuleId, activeSidebarTab, modularPage.screens]);
 
   const exitMessageElement = useMemo(() => {
     return canvasElements.find(
@@ -1817,15 +1871,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
 
     const jackpotConfig = (campaignState as any)?.jackpotConfig || {
       reels: 3,
-      symbolsPerReel: 3,
-      spinDuration: 3000,
-      symbols: ['🍒', '🍋', '💎', '⭐', '7️⃣']
     };
-
-    console.log('🎯 [JackpotEditorLayout] jackpot preview config', {
-      reels: jackpotConfig.reels,
-      device: selectedDevice
-    });
 
     return {
       id: 'jackpot-design-preview',
@@ -2488,6 +2534,12 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                 onElementUpdate={handleElementUpdate}
                 // Modular editor wiring
                 currentScreen={currentScreen}
+                onScreenChange={(screen) => {
+                  const scrolled = scrollToScreen(screen);
+                  if (scrolled) {
+                    setCurrentScreen(screen);
+                  }
+                }}
                 onAddModule={handleAddModule}
                 showAnimationsPanel={showAnimationsInSidebar}
                 onAnimationsPanelChange={setShowAnimationsInSidebar}
@@ -2814,7 +2866,9 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                     hideInlineQuizPreview
                     elementFilter={(element: any) => {
                       const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message');
+                      return !role.includes('exit-message') && 
+                             element?.screenId !== 'screen2' && 
+                             element?.screenId !== 'screen3';
                     }}
                     // Sidebar panel triggers
                     onShowAnimationsPanel={() => {
@@ -2850,7 +2904,8 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                      onOpenElementsTab={() => {
                        // Ouvrir le panneau de configuration du Jackpot (templates)
                        setShowJackpotPanel(true);
-                       // S'assurer que l'onglet game est actif
+                       setActiveSidebarTab('jackpot');
+                       // S'assurer que l'onglet jackpot est actif
                        if (sidebarRef.current) {
                          sidebarRef.current.setActiveTab('jackpot');
                        }
@@ -2874,11 +2929,16 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                     showQuizPanel={showQuizPanel}
                     onQuizPanelChange={setShowQuizPanel}
                     // Modular page (screen1)
-                    modularModules={modularPage.screens.screen1}
+                    modularModules={(() => {
+                      return modularPage.screens.screen1;
+                    })()}
                     onModuleUpdate={handleUpdateModule}
                     onModuleDelete={handleDeleteModule}
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
+                    selectedModuleId={selectedModuleId}
+                    selectedModule={selectedModule}
+                    onSelectedModuleChange={setSelectedModuleId}
                   />
                 </div>
                 
@@ -2923,7 +2983,10 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return !role.includes('exit-message');
+                        return !role.includes('exit-message') && 
+                               (element?.screenId === 'screen2' || 
+                                role.includes('form') || 
+                                role.includes('contact'));
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
@@ -2958,6 +3021,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       onOpenElementsTab={() => {
                         // Ouvrir le panneau de configuration du Jackpot (templates)
                         setShowJackpotPanel(true);
+                        setActiveSidebarTab('jackpot');
                         // S'assurer que l'onglet jackpot est actif
                         if (sidebarRef.current) {
                           sidebarRef.current.setActiveTab('jackpot');
@@ -2984,6 +3048,9 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
                       onModuleDuplicate={handleDuplicateModule}
+                      selectedModuleId={selectedModuleId}
+                      selectedModule={selectedModule}
+                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
@@ -3029,7 +3096,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return role.includes('exit-message');
+                        return role.includes('exit-message') || element?.screenId === 'screen3';
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
@@ -3072,6 +3139,7 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       onOpenElementsTab={() => {
                         // Ouvrir le panneau de configuration du Jackpot (templates)
                         setShowJackpotPanel(true);
+                        setActiveSidebarTab('jackpot');
                         // S'assurer que l'onglet jackpot est actif
                         if (sidebarRef.current) {
                           sidebarRef.current.setActiveTab('jackpot');
@@ -3098,6 +3166,10 @@ const JackpotEditorLayout: React.FC<JackpotEditorLayoutProps> = ({ mode = 'campa
                       onModuleUpdate={handleUpdateModule}
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
+                      onModuleDuplicate={handleDuplicateModule}
+                      selectedModuleId={selectedModuleId}
+                      selectedModule={selectedModule}
+                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>

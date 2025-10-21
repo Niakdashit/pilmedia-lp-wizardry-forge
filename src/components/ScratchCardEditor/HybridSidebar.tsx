@@ -19,7 +19,7 @@ import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
 import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import GameManagementPanel from './panels/GameManagementPanel';
+import ScratchGamePanel from './panels/ScratchGamePanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
@@ -867,7 +867,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
         );
       case 'game':
         return (
-          <GameManagementPanel
+          <ScratchGamePanel
             campaign={campaign}
             setCampaign={setCampaign}
           />

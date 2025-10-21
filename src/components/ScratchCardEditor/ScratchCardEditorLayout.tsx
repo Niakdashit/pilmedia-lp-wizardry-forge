@@ -21,6 +21,7 @@ import { useUndoRedo, useUndoRedoShortcuts } from '../../hooks/useUndoRedo';
 import { useGroupManager } from '../../hooks/useGroupManager';
 import { getDeviceDimensions } from '../../utils/deviceDimensions';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
+import { recalculateAllElements } from '../../utils/recalculateAllModules';
 import { useEditorPreviewSync } from '@/hooks/useEditorPreviewSync';
 import type { ScreenBackgrounds, DeviceSpecificBackground } from '@/types/background';
 
@@ -29,6 +30,8 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { createSaveAndContinueHandler, saveCampaignToDB } from '@/hooks/useModernCampaignEditor/saveHandler';
 import { quizTemplates } from '../../types/quizTemplates';
 import { useScratchCardStore } from './state/scratchcard.store';
+import type { GameModalConfig } from '@/types/gameConfig';
+import { createGameConfigFromQuiz } from '@/types/gameConfig';
 
 const KeyboardShortcutsHelp = lazy(() => import('../shared/KeyboardShortcutsHelp'));
 const MobileStableEditor = lazy(() => import('./components/MobileStableEditor'));
@@ -223,18 +226,15 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         if (!Number.isNaN(v) && v >= 0.1 && v <= 1) return v;
       }
     } catch {}
-    if (device === 'mobile' && typeof window !== 'undefined') {
-      const { width, height } = getDeviceDimensions('mobile');
-      const scale = Math.min(window.innerWidth / width, window.innerHeight / height);
-      return Math.min(scale, 1);
-    }
+    // Uniformisation : même zoom que le mode preview pour tous les appareils
+    // Cela garantit que l'écran a exactement la même taille en édition et en preview
     switch (device) {
       case 'desktop':
         return 0.7;
       case 'tablet':
         return 0.55;
       case 'mobile':
-        return 0.45;
+        return 1.0; // 100% - Identique au mode preview pour une taille uniforme
       default:
         return 0.7;
     }
@@ -429,14 +429,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     return () => window.removeEventListener('resize', updateWindowSize);
   }, []);
 
-  // Ajuste automatiquement le zoom lors du redimensionnement sur mobile
-  useEffect(() => {
-    if (actualDevice === 'mobile') {
-      const updateZoom = () => setCanvasZoom(getDefaultZoom('mobile'));
-      window.addEventListener('resize', updateZoom);
-      return () => window.removeEventListener('resize', updateZoom);
-    }
-  }, [actualDevice]);
+  // Note: Le zoom mobile est maintenant fixe à 100% pour correspondre au mode preview
+  // L'ancien code qui ajustait automatiquement le zoom lors du redimensionnement a été supprimé
   
   // Référence pour le canvas
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -522,11 +516,49 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   const [currentScreen, setCurrentScreen] = useState<'screen1' | 'screen2' | 'screen3'>('screen1');
   // Modular editor JSON state
   const [modularPage, setModularPage] = useState<ModularPage>(createEmptyModularPage());
+  
   const selectedModule: Module | null = useMemo(() => {
     if (!selectedModuleId) return null;
     const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
     return allModules.find((module) => module.id === selectedModuleId) || null;
   }, [selectedModuleId, modularPage.screens]);
+
+  // 🔄 MIGRATION AUTOMATIQUE : Recalcule le scaling mobile (-48.2%) pour les modules existants
+  const [hasRecalculated, setHasRecalculated] = useState(false);
+  useEffect(() => {
+    // Recalculer les éléments canvas (si présents)
+    if (canvasElements.length > 0 && !hasRecalculated) {
+      console.log('🔄 [Migration Canvas] Recalcul automatique du scaling mobile pour', canvasElements.length, 'éléments...');
+      const recalculated = recalculateAllElements(canvasElements, 'desktop');
+      setCanvasElements(recalculated);
+      setHasRecalculated(true);
+      console.log('✅ [Migration Canvas] Scaling recalculé avec succès !');
+    }
+
+    // Recalculer les modules modulaires (modularPage)
+    const allModules = (Object.values(modularPage.screens) as Module[][]).flat();
+    if (allModules.length > 0 && !hasRecalculated) {
+      console.log('🔄 [Migration Modules] Recalcul automatique du scaling mobile pour', allModules.length, 'modules...');
+      const recalculatedModules = recalculateAllElements(allModules as any[], 'desktop');
+      
+      // Reconstruire modularPage avec les modules recalculés
+      const nextScreens: ModularPage['screens'] = { ...modularPage.screens };
+      let moduleIndex = 0;
+      
+      (Object.keys(nextScreens) as ScreenId[]).forEach((screenId) => {
+        const screenModules = nextScreens[screenId] || [];
+        nextScreens[screenId] = screenModules.map(() => {
+          const recalculated = recalculatedModules[moduleIndex];
+          moduleIndex++;
+          return recalculated as Module;
+        });
+      });
+      
+      setModularPage({ screens: nextScreens, _updatedAt: Date.now() });
+      setHasRecalculated(true);
+      console.log('✅ [Migration Modules] Scaling recalculé avec succès !');
+    }
+  }, [canvasElements.length, modularPage.screens, hasRecalculated]);
   
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -930,6 +962,12 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
     }
   }, [canvasElements]);
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
+
+  // Game modal config unifié (nouveau) - doit être après extractedColors
+  const gameModalConfig: GameModalConfig = useMemo(() => createGameConfigFromQuiz({
+    ...quizModalConfig,
+    extractedColors
+  }, 'scratch'), [quizModalConfig, extractedColors]);
   const [showFunnel, setShowFunnel] = useState(false);
   const [previewButtonSide, setPreviewButtonSide] = useState<'left' | 'right'>(() =>
     (typeof window !== 'undefined' && localStorage.getItem('previewButtonSide') === 'left') ? 'left' : 'right'
@@ -2893,7 +2931,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     hideInlineQuizPreview
                     elementFilter={(element: any) => {
                       const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                      return !role.includes('exit-message');
+                      return !role.includes('exit-message') && 
+                             element?.screenId !== 'screen2' && 
+                             element?.screenId !== 'screen3';
                     }}
                     // Sidebar panel triggers
                     onShowAnimationsPanel={() => {
@@ -2955,6 +2995,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     onModuleDelete={handleDeleteModule}
                     onModuleMove={handleMoveModule}
                     onModuleDuplicate={handleDuplicateModule}
+                    selectedModuleId={selectedModuleId}
+                    selectedModule={selectedModule}
+                    onSelectedModuleChange={setSelectedModuleId}
                   />
                 </div>
                 
@@ -2999,7 +3042,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return !role.includes('exit-message');
+                        return !role.includes('exit-message') && 
+                               (element?.screenId === 'screen2' || 
+                                role.includes('form') || 
+                                role.includes('contact'));
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
@@ -3060,6 +3106,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
                       onModuleDuplicate={handleDuplicateModule}
+                      selectedModuleId={selectedModuleId}
+                      selectedModule={selectedModule}
+                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>
@@ -3105,7 +3154,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       containerClassName={mode === 'template' ? 'bg-gray-50' : undefined}
                       elementFilter={(element: any) => {
                         const role = typeof element?.role === 'string' ? element.role.toLowerCase() : '';
-                        return role.includes('exit-message');
+                        return role.includes('exit-message') || element?.screenId === 'screen3';
                       }}
                       // Sidebar panel triggers
                       onShowEffectsPanel={() => {
@@ -3174,6 +3223,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                       onModuleUpdate={handleUpdateModule}
                       onModuleDelete={handleDeleteModule}
                       onModuleMove={handleMoveModule}
+                      onModuleDuplicate={handleDuplicateModule}
+                      selectedModuleId={selectedModuleId}
+                      selectedModule={selectedModule}
+                      onSelectedModuleChange={setSelectedModuleId}
                     />
                   </div>
                 </div>

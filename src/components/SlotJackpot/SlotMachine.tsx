@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useEditorStore } from '../../stores/editorStore';
 import './SlotMachine.css';
 
@@ -27,7 +27,7 @@ const getTemplateFileName = (templateId: string): string => {
     'jackpot-10': 'Jackpot 10.svg',
     'jackpot-11': 'Jackpot 11.svg'
   };
-  return templateMap[templateId] || 'jackpot-frame.svg';
+  return templateMap[templateId] || 'Jackpot 11.svg';
 };
 
 // Retourne une URL encodée et safe pour CSS url(...) y compris les espaces
@@ -38,13 +38,16 @@ const getTemplateUrl = (templateId: string): string => {
 
 const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, disabled = false, symbols: propSymbols, templateOverride }) => {
   const [isSpinning, setIsSpinning] = useState(false);
+  const animReqs = useRef<number[]>([]);
+  const reelStartTimes = useRef<number[]>([]);
+  const [reelOffsets, setReelOffsets] = useState<number[]>([0, 0, 0]);
   
   // Persistance du template sélectionné via localStorage
   const getPersistedTemplate = () => {
     try {
-      return localStorage.getItem('jackpotTemplate') || 'jackpot-frame';
+      return localStorage.getItem('jackpotTemplate') || 'jackpot-11';
     } catch {
-      return 'jackpot-frame';
+      return 'jackpot-11';
     }
   };
 
@@ -77,7 +80,6 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       const newTemplate = storeTemplate || persistedTemplate;
       
       if (newTemplate !== currentTemplate) {
-        console.log('🎰 [SlotMachine] Template changed from', currentTemplate, 'to', newTemplate);
         setCurrentTemplate(newTemplate);
         setRenderKey(prev => prev + 1);
       }
@@ -90,7 +92,6 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       const newTemplate = storeTemplate || persistedTemplate;
       
       if (newTemplate !== currentTemplate) {
-        console.log('🎰 [SlotMachine] Initial template set to', newTemplate);
         setCurrentTemplate(newTemplate);
         setRenderKey(prev => prev + 1);
       }
@@ -117,56 +118,132 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   const reelBackgroundColor = jackpotConfig.backgroundColor || jackpotStyle.backgroundColor || '#ffffff';
   const reelTextColor = jackpotConfig.textColor || jackpotStyle.textColor || '#333333';
   
-  const symbols = useMemo(() => propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS, [propSymbols, campaignSymbols]);
+  const symbols = useMemo(() => {
+    const src = propSymbols ?? campaignSymbols ?? DEFAULT_SYMBOLS;
+    const cleaned = (src || []).filter((s) => typeof s === 'string' && s.trim().length > 0);
+    return cleaned.length > 0 ? cleaned : DEFAULT_SYMBOLS;
+  }, [propSymbols, campaignSymbols]);
   const [reels, setReels] = useState([symbols[0], symbols[0], symbols[0]]);
-
-  // Debug pour vérifier le template sélectionné
-  console.log('🎰 [SlotMachine] currentTemplate:', currentTemplate);
-  console.log('🎰 [SlotMachine] template file:', getTemplateFileName(currentTemplate));
-  console.log('🎰 [SlotMachine] renderKey:', renderKey);
-
-  // Force re-render is handled via renderKey; no extra memo needed
+  // Utiliser useRef pour completedReels car setState ne fonctionne pas bien dans requestAnimationFrame
+  const completedReelsRef = useRef<boolean[]>([true, true, true]);
+  const [completedReels, setCompletedReels] = useState<boolean[]>([true, true, true]);
+  
+  // Fonction helper pour mettre à jour completedReels de manière synchrone
+  const updateCompletedReel = (index: number, value: boolean) => {
+    completedReelsRef.current[index] = value;
+    setCompletedReels([...completedReelsRef.current]);
+  };
 
   const spin = useCallback(() => {
     if (isSpinning || disabled) return;
 
+    console.log('🚀 [SlotMachine] SPIN STARTED');
     setIsSpinning(true);
-    
-    // Durées différentes pour chaque rouleau (effet cascade)
-    const durations = [1500, 2000, 2500];
 
-    // Animation des rouleaux
-    durations.forEach((duration, index) => {
-      setTimeout(() => {
-        const finalSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-        setReels(prev => {
-          const newReels = [...prev];
-          newReels[index] = finalSymbol;
-          return newReels;
+    // Choisir les résultats finaux dès le départ
+    const finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+
+    // Durées en cascade pour effet professionnel
+    const durations = [1800, 2400, 3000];
+    const cellSize = (currentTemplate === 'jackpot-4') ? 80 : 70;
+
+    // Easing personnalisé pour slot machine (accélération puis forte décélération)
+    const slotEasing = (t: number) => {
+      // Courbe ease-in-out avec forte décélération finale
+      if (t < 0.5) {
+        return 2 * t * t;
+      }
+      return 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    // Nettoyage
+    animReqs.current.forEach((id) => cancelAnimationFrame(id));
+    animReqs.current = [];
+    reelStartTimes.current = [0, 0, 0];
+    setReelOffsets([0, 0, 0]);
+    completedReelsRef.current = [false, false, false];
+    setCompletedReels([false, false, false]);
+
+    [0, 1, 2].forEach((reelIndex) => {
+      const finalSymbol = finals[reelIndex];
+      const finalSymbolIndex = symbols.indexOf(finalSymbol);
+      
+      // Calculer la distance totale: plusieurs tours complets + position finale
+      const fullCycles = 8 + reelIndex * 2; // Plus de tours pour les rouleaux suivants
+      const totalSymbols = fullCycles * symbols.length + finalSymbolIndex;
+      const targetOffset = totalSymbols * cellSize;
+      const duration = durations[reelIndex];
+
+      const animate = (ts: number) => {
+        if (reelStartTimes.current[reelIndex] === 0) {
+          reelStartTimes.current[reelIndex] = ts;
+        }
+        const elapsed = ts - reelStartTimes.current[reelIndex];
+        const progress = Math.min(1, elapsed / duration);
+        const eased = slotEasing(progress);
+        const currentOffset = -targetOffset * eased;
+
+        setReelOffsets((prev) => {
+          const next = [...prev];
+          next[reelIndex] = currentOffset;
+          return next;
         });
-      }, duration);
+
+        if (progress < 1) {
+          animReqs.current[reelIndex] = requestAnimationFrame(animate);
+        } else {
+          // Animation terminée: forcer offset à 0 et marquer comme complété
+          console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé à ${Date.now()}`);
+          
+          // Utiliser updateCompletedReel pour mise à jour synchrone
+          updateCompletedReel(reelIndex, true);
+          console.log(`✅ [SlotMachine] completedReels mis à jour:`, completedReelsRef.current);
+          
+          // Puis mettre à jour les autres states
+          setReelOffsets((prev) => {
+            const next = [...prev];
+            next[reelIndex] = 0;
+            return next;
+          });
+          
+          setReels((prev) => {
+            const next = [...prev];
+            next[reelIndex] = finalSymbol;
+            console.log(`🎰 [SlotMachine] reels[${reelIndex}] = ${finalSymbol}`);
+            return next;
+          });
+        }
+      };
+      
+      animReqs.current[reelIndex] = requestAnimationFrame(animate);
     });
 
-    // Vérifier le résultat après que tous les rouleaux se soient arrêtés
+    // Vérifier le résultat après la fin du dernier rouleau (avec marge)
     setTimeout(() => {
+      console.log('🎰 [SlotMachine] Animation complete, setting isSpinning to false');
       setIsSpinning(false);
-      
-      // Logique de gain simple
-      const finalReels = reels.map(() => symbols[Math.floor(Math.random() * symbols.length)]);
-      setReels(finalReels);
-      
-      const isWinning = finalReels[0] === finalReels[1] && finalReels[1] === finalReels[2];
-      
+      const isWinning = finals[0] === finals[1] && finals[1] === finals[2];
+      console.log(`🎲 [SlotMachine] Result: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
       if (isWinning) {
-        onWin?.(finalReels);
+        console.log('🎉 [SlotMachine] Calling onWin');
+        onWin?.(finals);
       } else {
+        console.log('😔 [SlotMachine] Calling onLose');
         onLose?.();
       }
-    }, Math.max(...durations) + 100);
-  }, [isSpinning, disabled, symbols, reels, onWin, onLose]);
+    }, Math.max(...durations) + 200);
+  }, [isSpinning, disabled, symbols, currentTemplate, onWin, onLose]);
 
   const isCustomTemplate = currentTemplate === 'custom-frame';
   const isUserTemplate = currentTemplate === 'user-template' && !!customTemplateUrl;
+
+  // Log pour déboguer le rendu
+  console.log('🎨 [SlotMachine] RENDER:', {
+    isSpinning,
+    completedReels: completedReels,
+    completedReelsValues: `[${completedReels[0]}, ${completedReels[1]}, ${completedReels[2]}]`,
+    reels: reels.map(r => typeof r === 'string' ? r.substring(0, 10) : r)
+  });
 
   return (
     <div 
@@ -250,28 +327,84 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                   className="slot-reels"
                   style={{ display: 'flex', gap: '8px' }}
                 >
-                  {reels.map((symbol, index) => (
-                    <div
-                      key={index}
-                      className={`slot-reel ${isSpinning ? 'slot-spinning' : ''}`}
-                      style={{
-                        width: '70px',
-                        height: '70px',
-                        background: reelBackgroundColor,
-                        border: `2px solid ${reelBorderColor}`,
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '32px',
-                        fontWeight: 'bold',
-                        color: reelTextColor,
-                        animation: isSpinning ? `spin-reel-${index} 1500ms ease-out` : 'none'
-                      }}
-                    >
-                      {symbol}
-                    </div>
-                  ))}
+                  {reels.map((symbol, reelIdx) => {
+                    const size = 70;
+                    // Strip répétée pour défilement fluide
+                    const strip = Array(80).fill(null).flatMap(() => symbols);
+                    const isImg = typeof symbol === 'string' && (symbol.startsWith('data:') || symbol.startsWith('http'));
+                    
+                    return (
+                      <div
+                        key={reelIdx}
+                        className={`slot-reel`}
+                        style={{
+                          width: `${size}px`,
+                          height: `${size}px`,
+                          background: reelBackgroundColor,
+                          border: `2px solid ${reelBorderColor}`,
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          position: 'relative'
+                        }}
+                      >
+                        {!completedReels[reelIdx] ? (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              transform: `translateY(${reelOffsets[reelIdx]}px)`,
+                              willChange: 'transform'
+                            }}
+                          >
+                            {strip.map((s, i) => {
+                              const isStripImg = typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http'));
+                              return (
+                                <div
+                                  key={i}
+                                  style={{
+                                    height: `${size}px`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '32px',
+                                    fontWeight: 'bold',
+                                    color: reelTextColor
+                                  }}
+                                >
+                                  {isStripImg ? (
+                                    <img src={s as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                                  ) : (
+                                    <span>{s}</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '32px',
+                            fontWeight: 'bold',
+                            color: reelTextColor
+                          }}>
+                            {isImg ? (
+                              <img src={symbol as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                            ) : (
+                              <span>{symbol}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -300,28 +433,84 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
               gap: (currentTemplate === 'jackpot-4') ? '20%' : '8px'
             }}
           >
-            {reels.map((symbol, index) => (
-              <div
-                key={index}
-                className={`slot-reel ${isSpinning ? 'slot-spinning' : ''}`}
-                style={{
-                  width: (currentTemplate === 'jackpot-4') ? '80px' : '70px',
-                  height: (currentTemplate === 'jackpot-4') ? '80px' : '70px',
-                  background: (currentTemplate === 'jackpot-2' || currentTemplate === 'jackpot-3' || currentTemplate === 'jackpot-4') ? 'transparent' : reelBackgroundColor,
-                  border: (currentTemplate === 'jackpot-2' || currentTemplate === 'jackpot-3' || currentTemplate === 'jackpot-4') ? 'none' : `2px solid ${reelBorderColor}`,
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '32px',
-                  fontWeight: 'bold',
-                  color: reelTextColor,
-                  animation: isSpinning ? `spin-reel-${index} 1500ms ease-out` : 'none'
-                }}
-              >
-                {symbol}
-              </div>
-            ))}
+            {reels.map((symbol, reelIdx) => {
+              const size = (currentTemplate === 'jackpot-4') ? 80 : 70;
+              const strip = Array(80).fill(null).flatMap(() => symbols);
+              const showBorders = !(currentTemplate === 'jackpot-2' || currentTemplate === 'jackpot-3' || currentTemplate === 'jackpot-4');
+              const isImg = typeof symbol === 'string' && (symbol.startsWith('data:') || symbol.startsWith('http'));
+              
+              return (
+                <div
+                  key={reelIdx}
+                  className={`slot-reel`}
+                  style={{
+                    width: `${size}px`,
+                    height: `${size}px`,
+                    background: showBorders ? reelBackgroundColor : 'transparent',
+                    border: showBorders ? `2px solid ${reelBorderColor}` : 'none',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}
+                >
+                  {!completedReels[reelIdx] ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        transform: `translateY(${reelOffsets[reelIdx]}px)`,
+                        willChange: 'transform'
+                      }}
+                    >
+                      {strip.map((s, i) => {
+                        const isStripImg = typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http'));
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              height: `${size}px`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '32px',
+                              fontWeight: 'bold',
+                              color: reelTextColor
+                            }}
+                          >
+                            {isStripImg ? (
+                              <img src={s as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                            ) : (
+                              <span>{s}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '32px',
+                      fontWeight: 'bold',
+                      color: reelTextColor
+                    }}>
+                      {isImg ? (
+                        <img src={symbol as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                      ) : (
+                        <span>{symbol}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         )}

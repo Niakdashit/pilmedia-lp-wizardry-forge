@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import type { Module, BlocTexte, BlocImage, BlocVideo, BlocBouton, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
 import type { DeviceType } from '@/utils/deviceDimensions';
+import { STANDARD_DEVICE_DIMENSIONS, getDeviceScale } from '@/utils/deviceDimensions';
 
 interface QuizModuleRendererProps {
   modules: Module[];
@@ -35,8 +36,13 @@ export const QuizModuleRenderer: React.FC<QuizModuleRendererProps> = ({
   onModuleUpdate
 }) => {
   const isMobileDevice = device === 'mobile';
-  // IMPORTANT: Pas de deviceScale pour avoir un rendu WYSIWYG identique entre édition et preview
-  const deviceScale = 1;
+  
+  // Calcul du deviceScale : 65% de la taille desktop pour mobile
+  const scale = getDeviceScale('desktop', device);
+  const deviceScale = Math.min(scale.x, scale.y);
+  
+  console.log(`📱 [JackpotRenderer] Device: ${device}, Scale: ${deviceScale.toFixed(3)} (${device === 'mobile' ? '51.8% desktop' : '100%'})`);
+  console.log(`📌 [JackpotRenderer] Modules seront ${device === 'mobile' ? '51.8%' : '100%'} de la taille desktop`);
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const textRefs = useRef<Record<string, HTMLDivElement | null>>({});
 

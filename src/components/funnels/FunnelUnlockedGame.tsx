@@ -59,6 +59,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   const [showFormModal, setShowFormModal] = useState(false);
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
+  const [showResultScreen, setShowResultScreen] = useState(false);
   const [participationLoading, setParticipationLoading] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -451,6 +452,9 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
   };
 
   const handleGameFinish = async (result: 'win' | 'lose') => {
+    console.log('🎯 [FunnelUnlockedGame] handleGameFinish called with result:', result);
+    
+    // Le délai est géré dans CanvasGameRenderer, donc on peut définir gameResult immédiatement
     try {
       if (campaign.id) {
         await createParticipation({
@@ -464,7 +468,11 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du résultat:', error);
     }
+    console.log('📦 [FunnelUnlockedGame] Setting gameResult to:', result);
     setGameResult(result);
+    // Afficher l'écran de résultat immédiatement après avoir défini gameResult
+    console.log('✅ [FunnelUnlockedGame] Now showing result screen');
+    setShowResultScreen(true);
   };
 
   // FONCTION DE RESET COMPLET pour le funnel unlocked
@@ -472,13 +480,14 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     setCurrentScreen('screen1'); // Retour à l'écran 1
     setFormValidated(false);  // ⚠️ IMPORTANT : remettre le formulaire à false
     setGameResult(null);
+    setShowResultScreen(false);
     setShowFormModal(false);
     setShowValidationMessage(false);
     setHasPlayed(false);
   };
 
-  // Si on a un résultat de jeu, afficher l'écran de résultat avec le même fond que le canvas
-  if (gameResult) {
+  // Si on a un résultat de jeu ET qu'on doit afficher l'écran de résultat
+  if (gameResult && showResultScreen) {
     const backgroundStyle: React.CSSProperties = {
       background: campaign.design?.background?.type === 'image'
         ? `url(${campaign.design.background.value}) center/cover no-repeat`
@@ -487,25 +496,42 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          <div className="absolute inset-0 pointer-events-none z-20">
+          {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
+          <div className="absolute inset-0" style={backgroundStyle}>
+            {/* Safe zone overlay */}
             <div
-              className="absolute border border-dashed border-white/60"
+              className="pointer-events-none absolute inset-0 z-[6]"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute border border-dashed border-white/60"
+                style={{
+                  inset: `${safeZonePadding}px`,
+                  borderRadius: `${safeZoneRadius}px`,
+                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                }}
+              />
+            </div>
+            
+            {/* Content À L'INTÉRIEUR du background */}
+            <div 
+              className="relative h-full w-full"
               style={{
-                inset: safeZonePadding,
-                borderRadius: safeZoneRadius,
-                boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                paddingLeft: `${safeZonePadding}px`,
+                paddingRight: `${safeZonePadding}px`,
+                paddingTop: `${safeZonePadding}px`,
+                paddingBottom: `${safeZonePadding}px`,
+                boxSizing: 'border-box'
               }}
-            />
-          </div>
-          <div className="absolute inset-0 z-0" style={backgroundStyle} />
-          <div className="relative z-30 h-full w-full">
-            <ResultScreen 
-              gameResult={gameResult} 
-              campaign={liveCampaign} 
-              mobileConfig={mobileConfig} 
-              onReset={handleReset}
-              launchButtonStyles={launchButtonStyles}
-            />
+            >
+              <ResultScreen 
+                gameResult={gameResult} 
+                campaign={liveCampaign} 
+                mobileConfig={mobileConfig} 
+                onReset={handleReset}
+                launchButtonStyles={launchButtonStyles}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -533,11 +559,35 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          <div className="absolute inset-0 z-0" style={backgroundStyle} />
-          
-          {/* Content avec safe zone */}
-          <div className="relative z-30 h-full w-full overflow-y-auto">
-            <div className="flex flex-col min-h-full">
+          {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
+          <div className="absolute inset-0" style={backgroundStyle}>
+            {/* Safe zone overlay */}
+            <div
+              className="pointer-events-none absolute inset-0 z-[6]"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute border border-dashed border-white/60"
+                style={{
+                  inset: `${safeZonePadding}px`,
+                  borderRadius: `${safeZoneRadius}px`,
+                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                }}
+              />
+            </div>
+            
+            {/* Content À L'INTÉRIEUR du background */}
+            <div 
+              className="relative h-full w-full overflow-y-auto"
+              style={{
+                paddingLeft: `${safeZonePadding}px`,
+                paddingRight: `${safeZonePadding}px`,
+                paddingTop: `${safeZonePadding}px`,
+                paddingBottom: `${safeZonePadding}px`,
+                boxSizing: 'border-box'
+              }}
+            >
+              <div className="flex flex-col h-full">
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules1.length > 0 && (
                 <div className="w-full">
@@ -572,6 +622,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                   />
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
@@ -583,23 +634,37 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
     return (
       <div className="w-full h-[100dvh] min-h-[100dvh]">
         <div className="relative w-full h-full">
-          <div className="absolute inset-0 pointer-events-none">
+          {/* Background avec TOUT le contenu à l'intérieur - EXACTEMENT comme DesignCanvas */}
+          <div className="absolute inset-0" style={backgroundStyle}>
+            {/* Safe zone overlay */}
             <div
-              className="absolute border border-dashed border-white/60"
-              style={{
-                inset: safeZonePadding,
-                borderRadius: safeZoneRadius,
-                boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
-              }}
-            />
-          </div>
-          <div className="absolute inset-0" style={backgroundStyle} />
+              className="pointer-events-none absolute inset-0 z-[6]"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute border border-dashed border-white/60"
+                style={{
+                  inset: `${safeZonePadding}px`,
+                  borderRadius: `${safeZoneRadius}px`,
+                  boxShadow: '0 0 0 1px rgba(12, 18, 31, 0.08) inset'
+                }}
+              />
+            </div>
 
-          {/* Content avec safe zone */}
-          <div className="relative z-30 h-full w-full overflow-y-auto">
+            {/* Content À L'INTÉRIEUR du background */}
+            <div 
+              className="relative h-full w-full overflow-y-auto"
+              style={{
+                paddingLeft: `${safeZonePadding}px`,
+                paddingRight: `${safeZonePadding}px`,
+                paddingTop: `${safeZonePadding}px`,
+                paddingBottom: `${safeZonePadding}px`,
+                boxSizing: 'border-box'
+              }}
+            >
             {/* ÉCRAN 1 : Avant le jeu */}
             {currentScreen === 'screen1' && (
-              <div className="flex flex-col min-h-full">
+              <div className="flex flex-col h-full">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules1.length > 0 && (
                   <div className="w-full">
@@ -639,7 +704,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
             {/* ÉCRAN 2 : Cartes visibles (bloquées si formulaire non validé) */}
             {currentScreen === 'screen2' && gameResult === null && (
-              <div className="flex flex-col min-h-full">
+              <div className="flex flex-col h-full">
               {/* Modules Logo (collés en haut sans padding) */}
               {logoModules2.length > 0 && (
                 <div className="w-full" style={{ pointerEvents: 'auto' }}>
@@ -652,10 +717,10 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
               )}
               
                 {/* Contenu principal avec padding - flex-1 pour pousser le footer en bas */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative overflow-hidden">
                   {/* Modules screen2 réguliers - en arrière-plan */}
                   {regularModules2.length > 0 && (
-                    <div style={{ pointerEvents: 'none' }}>
+                    <div style={{ pointerEvents: 'none', position: 'absolute', inset: 0 }}>
                       <QuizModuleRenderer 
                         modules={regularModules2}
                         previewMode={true}
@@ -672,7 +737,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                       pointerEvents: 'auto'
                     }}
                   >
-                    <div className="relative w-full h-full flex items-center justify-center">
+                    <div className="relative flex items-center justify-center" style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }}>
                       {liveCampaign.type === 'wheel' || campaign.type === 'wheel' || liveCampaign.type === 'jackpot' || campaign.type === 'jackpot' ? (
                         <GameRenderer
                           campaign={liveCampaign}
@@ -681,14 +746,36 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                           previewMode={previewMode}
                           mobileConfig={mobileConfig}
                           onGameFinish={handleGameFinish}
-                          onGameStart={() => console.log('🎮 Game started')}
+                          onGameStart={handleGameStart}
                           onGameButtonClick={handleCardClick}
                         />
                       ) : (
-                        <ScratchCardCanvas 
-                          selectedDevice={previewMode}
-                          previewMode={!formValidated}
-                        />
+                        <div style={{ 
+                          maxWidth: '100%', 
+                          maxHeight: '100%', 
+                          width: '100%', 
+                          height: '100%', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          position: 'relative'
+                        }}>
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transform: 'scale(0.85)',
+                            transformOrigin: 'center center'
+                          }}>
+                            <ScratchCardCanvas 
+                              selectedDevice={previewMode}
+                              previewMode={!formValidated}
+                            />
+                          </div>
+                        </div>
                       )}
                       
                       {/* Overlay invisible pour intercepter les clics si formulaire non validé */}
@@ -733,7 +820,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
 
             {/* ÉCRAN 3 : Après le jeu (gameResult='win' ou 'lose') - Layout identique à l'éditeur */}
             {gameResult !== null && (
-              <div className="flex flex-col min-h-full">
+              <div className="flex flex-col h-full">
                 {/* Modules Logo (collés en haut sans padding) */}
                 {logoModules3.length > 0 && (
                   <div className="w-full">
@@ -770,19 +857,21 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
                 )}
               </div>
             )}
+            </div>
+            
+            {/* Modal de formulaire - À L'INTÉRIEUR du background pour rester dans le cadre */}
+            <FormHandler
+              showFormModal={showFormModal}
+              campaign={campaign}
+              fields={fields}
+              participationLoading={participationLoading}
+              onClose={() => setShowFormModal(false)}
+              onSubmit={handleFormSubmit}
+              launchButtonStyles={launchButtonStyles}
+              usePortal={false}
+            />
           </div>
         </div>
-
-        {/* Modal de formulaire */}
-        <FormHandler
-          showFormModal={showFormModal}
-          campaign={campaign}
-          fields={fields}
-          participationLoading={participationLoading}
-          onClose={() => setShowFormModal(false)}
-          onSubmit={handleFormSubmit}
-          launchButtonStyles={launchButtonStyles}
-        />
       </div>
     );
   }
@@ -973,6 +1062,7 @@ const FunnelUnlockedGame: React.FC<FunnelUnlockedGameProps> = ({
         }}
         onSubmit={handleFormSubmit}
         launchButtonStyles={launchButtonStyles}
+        usePortal={false}
       />
     </div>
   );

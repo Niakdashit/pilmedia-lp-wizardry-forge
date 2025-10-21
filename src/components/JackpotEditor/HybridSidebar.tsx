@@ -19,7 +19,8 @@ import HtmlModulePanel from '../QuizEditor/modules/HtmlModulePanel';
 import CartePanel from '../QuizEditor/panels/CartePanel';
 import QuizConfigPanel from '../QuizEditor/panels/QuizConfigPanel';
 import ModernFormTab from '../ModernEditor/ModernFormTab';
-import GameManagementPanel from './panels/GameManagementPanel';
+import JackpotFullPanel from './panels/JackpotFullPanel';
+import JackpotConfigPanel from '../SlotJackpot/panels/JackpotConfigPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
 import { useEditorStore } from '../../stores/editorStore';
@@ -130,6 +131,7 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   colorEditingContext?: 'fill' | 'border' | 'text';
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
+  onScreenChange?: (screen: 'screen1' | 'screen2' | 'screen3') => void;
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
   // Wheel configuration props
   wheelBorderStyle?: string;
@@ -207,6 +209,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onActiveTabChange,
   // modular editor
   currentScreen,
+  onScreenChange,
   onAddModule,
   // wheel configuration
   wheelBorderStyle,
@@ -324,16 +327,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, [internalActiveTab, onSelectedModuleChange]);
   
-  // Log pour debug - ne pas forcer le changement d'onglet ici pour éviter les boucles
-  // La logique de changement d'onglet est gérée par DesignEditorLayout
-  React.useEffect(() => {
-    console.log('🎯 [HybridSidebar] selectedModuleId changed:', {
-      selectedModuleId,
-      selectedModule,
-      internalActiveTab,
-      moduleType: selectedModule?.type
-    });
-  }, [selectedModuleId, selectedModule?.type, internalActiveTab]);
+  // La logique de changement d'onglet est gérée par JackpotEditorLayout
   
   // Fonction interne pour gérer le changement d'onglet
   const activeTemplate = React.useMemo(() => {
@@ -349,12 +343,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   };
   
   // Référence pour suivre les états précédents
-  const prevStatesRef = useRef({
+  const prevStatesRef = React.useRef({
     showEffectsPanel,
     showAnimationsPanel,
     showPositionPanel,
     showQuizPanel,
     showWheelPanel,
+    showJackpotPanel,
     showDesignPanel,
     activeTab: internalActiveTab
   });
@@ -372,6 +367,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       { key: 'position', active: showPositionPanel, prevActive: prev.showPositionPanel },
       { key: 'quiz', active: showQuizPanel, prevActive: prev.showQuizPanel },
       { key: 'wheel', active: showWheelPanel, prevActive: prev.showWheelPanel },
+      { key: 'jackpot', active: showJackpotPanel, prevActive: prev.showJackpotPanel },
       { key: 'background', active: showDesignPanel, prevActive: prev.showDesignPanel }
     ];
 
@@ -385,6 +381,11 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       newActiveTab = 'wheel';
       shouldUpdate = true;
     }
+    // Si le panneau Jackpot est activé, forcer l'onglet jackpot
+    else if (showJackpotPanel && !prev.showJackpotPanel) {
+      newActiveTab = 'jackpot';
+      shouldUpdate = true;
+    }
     // Si le panneau Design est activé, forcer l'onglet background (sauf si déjà sur background)
     else if (showDesignPanel && !prev.showDesignPanel && internalActiveTab !== 'background') {
       newActiveTab = 'background';
@@ -392,14 +393,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     } 
     // Si un autre panneau a été activé, basculer vers son onglet correspondant
     else {
-      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel');
+      const activatedPanel = panelStates.find(p => p.active && !p.prevActive && p.key !== 'background' && p.key !== 'quiz' && p.key !== 'wheel' && p.key !== 'jackpot');
       if (activatedPanel) {
         newActiveTab = activatedPanel.key;
         shouldUpdate = true;
       } 
-      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel ou 'elements' pour les autres
+      // Si l'onglet actif est un panneau qui a été désactivé, revenir à 'game' pour wheel/jackpot ou 'elements' pour les autres
       else if (panelStates.some(p => p.key === internalActiveTab && !p.active && p.prevActive)) {
-        newActiveTab = internalActiveTab === 'wheel' ? 'game' : 'elements';
+        newActiveTab = (internalActiveTab === 'wheel' || internalActiveTab === 'jackpot') ? 'game' : 'elements';
         shouldUpdate = true;
       }
     }
@@ -416,6 +417,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       showPositionPanel,
       showQuizPanel,
       showWheelPanel,
+      showJackpotPanel,
       showDesignPanel,
       activeTab: newActiveTab
     };
@@ -433,6 +435,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     showPositionPanel, 
     showQuizPanel,
     showWheelPanel,
+    showJackpotPanel,
     showDesignPanel,
     activeTab,
     onDesignPanelChange
@@ -507,11 +510,12 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     const activeIsVisible = internalActiveTab ? tabs.some(t => t.id === internalActiveTab) : false;
     const isTransientQuiz = internalActiveTab === 'quiz' && showQuizPanel;
     const isTransientWheel = internalActiveTab === 'wheel' && showWheelPanel;
+    const isTransientJackpot = internalActiveTab === 'jackpot' && showJackpotPanel;
 
-    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel) {
+    if (!activeIsVisible && !isTransientQuiz && !isTransientWheel && !isTransientJackpot) {
       setInternalActiveTab(backgroundVisible ? 'background' : (tabs[0]?.id ?? null));
     }
-  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel]);
+  }, [tabs, internalActiveTab, showQuizPanel, showWheelPanel, showJackpotPanel]);
 
   // Prefetch on hover/touch to smooth first paint
   const prefetchTab = (tabId: string) => {
@@ -870,9 +874,48 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             onModuleDelete={onModuleDelete}
           />
         );
+      case 'jackpot':
+        const jackpotConfig = (campaign as any)?.jackpotConfig || {};
+        return (
+          <JackpotConfigPanel
+            onBack={() => {
+              onJackpotPanelChange?.(false);
+              setActiveTab(null);
+            }}
+            selectedTemplate={jackpotConfig.template || 'jackpot-11'}
+            borderColor={jackpotConfig.borderColor || '#ffd700'}
+            backgroundColor={jackpotConfig.backgroundColor || '#ffffff'}
+            textColor={jackpotConfig.textColor || '#333333'}
+            reelSymbols={jackpotConfig.symbols}
+            onTemplateChange={(templateId) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                jackpotConfig: { ...jackpotConfig, template: templateId }
+              }));
+            }}
+            onBorderColorChange={(color) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                jackpotConfig: { ...jackpotConfig, borderColor: color }
+              }));
+            }}
+            onBackgroundColorChange={(color) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                jackpotConfig: { ...jackpotConfig, backgroundColor: color }
+              }));
+            }}
+            onTextColorChange={(color) => {
+              setCampaign?.((prev: any) => ({
+                ...prev,
+                jackpotConfig: { ...jackpotConfig, textColor: color }
+              }));
+            }}
+          />
+        );
       case 'game':
         return (
-          <GameManagementPanel
+          <JackpotFullPanel
             campaign={campaign}
             setCampaign={setCampaign}
           />
@@ -987,10 +1030,38 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             {(() => {
               const screenTitle = (currentScreen === 'screen2') ? 'Écran 2' : (currentScreen === 'screen3') ? 'Écran 3' : 'Écran 1';
+              const [showScreenMenu, setShowScreenMenu] = React.useState(false);
+              
               return (
-                <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
-                  {screenTitle}
-                </h2>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowScreenMenu(!showScreenMenu)}
+                    className="w-full flex items-center justify-between font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter hover:text-[#0ea5b7] transition-colors group"
+                  >
+                    <span>{screenTitle}</span>
+                    <svg className="w-4 h-4 transition-transform group-hover:text-[#0ea5b7]" style={{ transform: showScreenMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showScreenMenu && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                      {(['screen1', 'screen2', 'screen3'] as const).map((screen, idx) => (
+                        <button
+                          key={screen}
+                          onClick={() => {
+                            onScreenChange?.(screen);
+                            setShowScreenMenu(false);
+                          }}
+                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
+                            currentScreen === screen ? 'bg-[#0ea5b7]/10 text-[#0ea5b7] font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          Écran {idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })()}
           </div>

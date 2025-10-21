@@ -17,9 +17,10 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
   const jackpotConfig = (campaign?.gameConfig?.jackpot as any) || {};
   const symbols = jackpotConfig.symbols || ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '🔔', '7️⃣'];
   const buttonText = jackpotConfig.button?.text || 'SPIN';
-  const borderColor = jackpotConfig.borderColor || jackpotConfig.button?.colors?.border || '#b8860b';
-  const backgroundColor = jackpotConfig.backgroundColor || jackpotConfig.button?.colors?.background || '#841b60';
-  const textColor = jackpotConfig.textColor || jackpotConfig.button?.colors?.text || '#8b4513';
+  // Couleurs du BOUTON uniquement (séparées des couleurs des slots)
+  const buttonBorderColor = jackpotConfig.button?.colors?.border || '#ffffff';
+  const buttonBackgroundColor = jackpotConfig.button?.colors?.background || '#ff00a6';
+  const buttonTextColor = jackpotConfig.button?.colors?.text || '#8b4513';
 
   // Mise à jour des symboles
   const updateSymbol = (index: number, value: string) => {
@@ -121,8 +122,8 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
     }));
   };
 
-  // Mise à jour des couleurs
-  const updateBorderColor = (color: string) => {
+  // Mise à jour des couleurs du BOUTON uniquement
+  const updateButtonBorderColor = (color: string) => {
     if (!setCampaign) return;
     
     setCampaign((prev: any) => ({
@@ -132,7 +133,6 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
         ...prev?.gameConfig,
         jackpot: {
           ...prev?.gameConfig?.jackpot,
-          borderColor: color,
           button: {
             ...prev?.gameConfig?.jackpot?.button,
             colors: {
@@ -145,7 +145,7 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
     }));
   };
 
-  const updateBackgroundColor = (color: string) => {
+  const updateButtonBackgroundColor = (color: string) => {
     if (!setCampaign) return;
     
     setCampaign((prev: any) => ({
@@ -155,7 +155,6 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
         ...prev?.gameConfig,
         jackpot: {
           ...prev?.gameConfig?.jackpot,
-          backgroundColor: color,
           button: {
             ...prev?.gameConfig?.jackpot?.button,
             colors: {
@@ -168,7 +167,7 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
     }));
   };
 
-  const updateTextColor = (color: string) => {
+  const updateButtonTextColor = (color: string) => {
     if (!setCampaign) return;
     
     setCampaign((prev: any) => ({
@@ -178,7 +177,6 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
         ...prev?.gameConfig,
         jackpot: {
           ...prev?.gameConfig?.jackpot,
-          textColor: color,
           button: {
             ...prev?.gameConfig?.jackpot?.button,
             colors: {
@@ -272,64 +270,64 @@ const JackpotFullPanel: React.FC<JackpotFullPanelProps> = ({
           />
         </div>
 
-        {/* Couleur de la bordure */}
+        {/* Couleur de la bordure du bouton */}
         <div>
           <label className="block text-sm font-semibold mb-2">
-            Couleur de la bordure
+            Couleur de la bordure du bouton
           </label>
           <div className="flex items-center gap-3">
             <input
               type="color"
-              value={borderColor}
-              onChange={(e) => updateBorderColor(e.target.value)}
+              value={buttonBorderColor}
+              onChange={(e) => updateButtonBorderColor(e.target.value)}
               className="w-12 h-12 border border-gray-300 rounded-lg cursor-pointer"
             />
             <input
               type="text"
-              value={borderColor}
-              onChange={(e) => updateBorderColor(e.target.value)}
+              value={buttonBorderColor}
+              onChange={(e) => updateButtonBorderColor(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             />
           </div>
         </div>
 
-        {/* Couleur de fond */}
+        {/* Couleur de fond du bouton */}
         <div>
           <label className="block text-sm font-semibold mb-2">
-            Couleur de fond
+            Couleur de fond du bouton
           </label>
           <div className="flex items-center gap-3">
             <input
               type="color"
-              value={backgroundColor}
-              onChange={(e) => updateBackgroundColor(e.target.value)}
+              value={buttonBackgroundColor}
+              onChange={(e) => updateButtonBackgroundColor(e.target.value)}
               className="w-12 h-12 border border-gray-300 rounded-lg cursor-pointer"
             />
             <input
               type="text"
-              value={backgroundColor}
-              onChange={(e) => updateBackgroundColor(e.target.value)}
+              value={buttonBackgroundColor}
+              onChange={(e) => updateButtonBackgroundColor(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             />
           </div>
         </div>
 
-        {/* Couleur du texte */}
+        {/* Couleur du texte du bouton */}
         <div>
           <label className="block text-sm font-semibold mb-2">
-            Couleur du texte
+            Couleur du texte du bouton
           </label>
           <div className="flex items-center gap-3">
             <input
               type="color"
-              value={textColor}
-              onChange={(e) => updateTextColor(e.target.value)}
+              value={buttonTextColor}
+              onChange={(e) => updateButtonTextColor(e.target.value)}
               className="w-12 h-12 border border-gray-300 rounded-lg cursor-pointer"
             />
             <input
               type="text"
-              value={textColor}
-              onChange={(e) => updateTextColor(e.target.value)}
+              value={buttonTextColor}
+              onChange={(e) => updateButtonTextColor(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#841b60] focus:border-transparent"
             />
           </div>

@@ -258,45 +258,43 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
     const anchors = Array.from(canvasScrollArea.querySelectorAll('[data-screen-anchor]')) as HTMLElement[];
     if (anchors.length === 0) return;
 
-    const computeNearestScreen = () => {
-      const areaRect = canvasScrollArea.getBoundingClientRect();
-      const areaCenter = areaRect.top + areaRect.height / 2;
+    // Utiliser IntersectionObserver pour une détection plus précise
+    const observerOptions = {
+      root: canvasScrollArea,
+      rootMargin: '-40% 0px -40% 0px', // Zone centrale pour détecter l'écran principal
+      threshold: [0, 0.25, 0.5, 0.75, 1]
+    };
 
-      let closestId: 'screen1' | 'screen2' | 'screen3' = 'screen1';
-      let closestDistance = Infinity;
+    const visibilityMap = new Map<string, number>();
 
-      anchors.forEach((anchor) => {
-        const screenId = (anchor.dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3' | undefined) ?? 'screen1';
-        const rect = anchor.getBoundingClientRect();
-        const anchorCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(anchorCenter - areaCenter);
-
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestId = screenId;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const screenId = (entry.target as HTMLElement).dataset.screenAnchor as 'screen1' | 'screen2' | 'screen3';
+        if (screenId) {
+          visibilityMap.set(screenId, entry.intersectionRatio);
         }
       });
 
-      setCurrentScreen((prev) => (prev === closestId ? prev : closestId));
-    };
+      // Trouver l'écran avec le ratio d'intersection le plus élevé
+      let maxRatio = 0;
+      let mostVisibleScreen: 'screen1' | 'screen2' | 'screen3' = 'screen1';
+      
+      visibilityMap.forEach((ratio, screenId) => {
+        if (ratio > maxRatio) {
+          maxRatio = ratio;
+          mostVisibleScreen = screenId as 'screen1' | 'screen2' | 'screen3';
+        }
+      });
 
-    // Calcule initial après montage
-    requestAnimationFrame(computeNearestScreen);
+      if (maxRatio > 0.1) { // Seuil minimum pour éviter les changements trop sensibles
+        setCurrentScreen((prev) => (prev === mostVisibleScreen ? prev : mostVisibleScreen));
+      }
+    }, observerOptions);
 
-    const handleScroll = () => {
-      requestAnimationFrame(computeNearestScreen);
-    };
-
-    const handleResize = () => {
-      requestAnimationFrame(computeNearestScreen);
-    };
-
-    canvasScrollArea.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
+    anchors.forEach((anchor) => observer.observe(anchor));
 
     return () => {
-      canvasScrollArea.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
     };
   }, []);
 
@@ -1916,6 +1914,12 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             <HybridSidebar
                 ref={sidebarRef}
                 currentScreen={currentScreen}
+                onScreenChange={(screen) => {
+                  const scrolled = scrollToScreen(screen);
+                  if (scrolled) {
+                    setCurrentScreen(screen);
+                  }
+                }}
                 onAddElement={handleAddElement}
                 onAddModule={handleAddModule}
                 onBackgroundChange={handleBackgroundChange}

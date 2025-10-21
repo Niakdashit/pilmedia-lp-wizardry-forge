@@ -11,6 +11,7 @@ interface FormHandlerProps {
   participationLoading: boolean;
   onSubmit: (formData: Record<string, string>) => Promise<void>;
   launchButtonStyles?: React.CSSProperties;
+  usePortal?: boolean; // Pour contrôler si le modal doit être dans un portal ou dans le flux normal
 }
 
 const FormHandler: React.FC<FormHandlerProps> = ({
@@ -20,7 +21,8 @@ const FormHandler: React.FC<FormHandlerProps> = ({
   fields,
   participationLoading,
   onSubmit,
-  launchButtonStyles
+  launchButtonStyles,
+  usePortal = true
 }) => {
   if (!showFormModal) return null;
 
@@ -48,6 +50,7 @@ const FormHandler: React.FC<FormHandlerProps> = ({
       onClose={onClose}
       title={campaign.screens?.[1]?.title || 'Vos informations'}
       maxHeight={calculateMaxHeight()}
+      usePortal={usePortal}
     >
       <DynamicContactForm
         fields={fields}

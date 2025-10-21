@@ -127,6 +127,7 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   colorEditingContext?: 'fill' | 'border' | 'text';
   // Modular editor props
   currentScreen?: 'screen1' | 'screen2' | 'screen3';
+  onScreenChange?: (screen: 'screen1' | 'screen2' | 'screen3') => void;
   onAddModule?: (screen: 'screen1' | 'screen2' | 'screen3', module: any) => void;
   // Wheel configuration props
   wheelBorderStyle?: string;
@@ -202,6 +203,7 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onActiveTabChange,
   // modular editor
   currentScreen,
+  onScreenChange,
   onAddModule,
   // wheel configuration
   wheelBorderStyle,
@@ -982,10 +984,38 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             {(() => {
               const screenTitle = (currentScreen === 'screen2') ? 'Écran 2' : (currentScreen === 'screen3') ? 'Écran 3' : 'Écran 1';
+              const [showScreenMenu, setShowScreenMenu] = React.useState(false);
+              
               return (
-                <h2 className="font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter">
-                  {screenTitle}
-                </h2>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowScreenMenu(!showScreenMenu)}
+                    className="w-full flex items-center justify-between font-semibold text-[hsl(var(--sidebar-text-primary))] font-inter hover:text-[#0ea5b7] transition-colors group"
+                  >
+                    <span>{screenTitle}</span>
+                    <svg className="w-4 h-4 transition-transform group-hover:text-[#0ea5b7]" style={{ transform: showScreenMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showScreenMenu && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                      {(['screen1', 'screen2', 'screen3'] as const).map((screen, idx) => (
+                        <button
+                          key={screen}
+                          onClick={() => {
+                            onScreenChange?.(screen);
+                            setShowScreenMenu(false);
+                          }}
+                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
+                            currentScreen === screen ? 'bg-[#0ea5b7]/10 text-[#0ea5b7] font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          Écran {idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })()}
           </div>
