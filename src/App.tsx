@@ -31,6 +31,8 @@ const AppearanceStep = lazy(() => import('./pages/CampaignSettings/AppearanceSte
 const MobileTestPage = lazy(() => import('./pages/MobileTestPage'));
 const MobileCompleteTestPage = lazy(() => import('./pages/MobileCompleteTestPage'));
 const Templates = lazy(() => import('./pages/Templates'));
+const Partnerships = lazy(() => import('./pages/Partnerships'));
+const MediaDetail = lazy(() => import('./pages/MediaDetail'));
 
 function App() {
   // Idle prefetch heavy editor routes to smooth first navigation without impacting TTI
@@ -72,6 +74,8 @@ function App() {
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="modeles" element={<Templates />} />
                 <Route path="templates-editor" element={<TemplatesEditor />} />
+                <Route path="partnerships" element={<Partnerships />} />
+                <Route path="partnerships/:id" element={<MediaDetail />} />
               </Route>
 
               {/* Routes éditeur en plein écran */}

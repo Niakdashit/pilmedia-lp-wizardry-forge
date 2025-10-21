@@ -286,7 +286,7 @@ const MobileResponsiveLayout: React.FC<MobileResponsiveLayoutProps> = ({
           -webkit-tap-highlight-color: transparent;
           
           /* Safe areas iOS */
-          padding-top: env(safe-area-inset-top);
+          padding-top: 0; /* Removed to align with other pages */
           padding-bottom: env(safe-area-inset-bottom);
           padding-left: env(safe-area-inset-left);
           padding-right: env(safe-area-inset-right);

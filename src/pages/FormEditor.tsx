@@ -1,8 +1,8 @@
 import React from 'react';
-import ModelEditorLayout from '../components/ModelEditor/DesignEditorLayout';
+import FormEditorLayout from '../components/FormEditor/DesignEditorLayout';
 
 const FormEditor: React.FC = () => {
-  return <ModelEditorLayout mode="campaign" showFormOverlay={true} />;
+  return <FormEditorLayout mode="campaign" />;
 };
 
 export default FormEditor;
