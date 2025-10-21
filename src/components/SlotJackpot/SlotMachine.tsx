@@ -41,6 +41,11 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   const animReqs = useRef<number[]>([]);
   const reelStartTimes = useRef<number[]>([]);
   const [reelOffsets, setReelOffsets] = useState<number[]>([0, 0, 0]);
+  const finalsRef = useRef<string[]>([]);
+  const finishTimeoutRef = useRef<number | null>(null);
+  const resultTimeoutRef = useRef<number | null>(null);
+  const finishScheduledRef = useRef(false);
+  const targetOffsetsRef = useRef<number[]>([0, 0, 0]);
   
   // Persistance du template sélectionné via localStorage
   const getPersistedTemplate = () => {
@@ -55,13 +60,11 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
   const [currentTemplate, setCurrentTemplate] = useState<string>(() => {
     return templateOverride || getPersistedTemplate();
   });
-  const [renderKey, setRenderKey] = useState(0);
 
   // Forcer la mise à jour lorsqu'un templateOverride est fourni par le mode preview
   React.useEffect(() => {
     if (templateOverride) {
       setCurrentTemplate(templateOverride);
-      setRenderKey((prev) => prev + 1);
     }
   }, [templateOverride]);
   
@@ -81,7 +84,6 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       
       if (newTemplate !== currentTemplate) {
         setCurrentTemplate(newTemplate);
-        setRenderKey(prev => prev + 1);
       }
     });
     
@@ -93,7 +95,6 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       
       if (newTemplate !== currentTemplate) {
         setCurrentTemplate(newTemplate);
-        setRenderKey(prev => prev + 1);
       }
     };
     
@@ -124,6 +125,8 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     return cleaned.length > 0 ? cleaned : DEFAULT_SYMBOLS;
   }, [propSymbols, campaignSymbols]);
   const [reels, setReels] = useState([symbols[0], symbols[0], symbols[0]]);
+  const [isStable, setIsStable] = useState(false); // Empêcher le jeu tant que le composant n'est pas stable
+  const [hasPlayed, setHasPlayed] = useState(false); // Empêcher un deuxième spin
   // Utiliser useRef pour completedReels car setState ne fonctionne pas bien dans requestAnimationFrame
   const completedReelsRef = useRef<boolean[]>([true, true, true]);
   const [completedReels, setCompletedReels] = useState<boolean[]>([true, true, true]);
@@ -134,29 +137,67 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     setCompletedReels([...completedReelsRef.current]);
   };
 
+  const clearFinishTimers = useCallback(() => {
+    if (finishTimeoutRef.current) {
+      clearTimeout(finishTimeoutRef.current);
+      finishTimeoutRef.current = null;
+    }
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current);
+      resultTimeoutRef.current = null;
+    }
+    finishScheduledRef.current = false;
+  }, []);
+
+  const finalizeSpin = useCallback(() => {
+    if (finishTimeoutRef.current) {
+      clearTimeout(finishTimeoutRef.current);
+      finishTimeoutRef.current = null;
+    }
+    const finals = finalsRef.current;
+    finishScheduledRef.current = false;
+    console.log('🎯 [SlotMachine] finalizeSpin triggered');
+    setIsSpinning(false);
+
+    if (!finals || finals.length === 0) {
+      console.warn('⚠️ [SlotMachine] finalizeSpin appelée sans résultat');
+      return;
+    }
+
+    const isWinning = finals.every((symbol) => symbol === finals[0]);
+    console.log(`🎲 [SlotMachine] Final result computed: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
+
+    resultTimeoutRef.current = window.setTimeout(() => {
+      if (isWinning) {
+        console.log('🎉 [SlotMachine] Calling onWin after smooth stop');
+        onWin?.(finals);
+      } else {
+        console.log('😔 [SlotMachine] Calling onLose after smooth stop');
+        onLose?.();
+      }
+    }, 650);
+  }, [onLose, onWin]);
+
   const spin = useCallback(() => {
-    if (isSpinning || disabled) return;
+    if (isSpinning || disabled || !isStable || hasPlayed) {
+      console.log('⏸️ [SlotMachine] SPIN BLOCKED:', { isSpinning, disabled, isStable, hasPlayed });
+      return;
+    }
 
     console.log('🚀 [SlotMachine] SPIN STARTED');
+    setHasPlayed(true); // Marquer comme joué - plus de spin possible
+    clearFinishTimers();
     setIsSpinning(true);
 
     // Choisir les résultats finaux dès le départ
     const finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+    finalsRef.current = finals;
+    targetOffsetsRef.current = [0, 0, 0];
 
-    // Durées en cascade pour effet professionnel (plus longues pour voir le ralentissement)
-    const durations = [3000, 4000, 5000]; // 3s, 4s, 5s pour un ralentissement bien visible
+    // Durées identiques pour tous les rouleaux (ralentissement synchronisé = plus de suspense)
+    const durations = [4000, 4000, 4000]; // 4s pour tous les rouleaux en même temps
     const cellSize = (currentTemplate === 'jackpot-4') ? 80 : 70;
-
-    // Easing personnalisé pour slot machine avec décélération TRÈS forte
-    const slotEasing = (t: number) => {
-      // Phase 1 (0-0.5): Vitesse constante rapide
-      if (t < 0.5) {
-        return t;
-      }
-      // Phase 2 (0.5-1.0): Décélération exponentielle TRÈS forte
-      const slowPhase = (t - 0.5) / 0.5; // Normaliser 0.5-1.0 vers 0-1
-      return 0.5 + 0.5 * (1 - Math.pow(1 - slowPhase, 6)); // Décélération puissance 6
-    };
+    const stripLength = symbols.length * cellSize;
 
     // Nettoyage
     animReqs.current.forEach((id) => cancelAnimationFrame(id));
@@ -171,9 +212,15 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       const finalSymbolIndex = symbols.indexOf(finalSymbol);
       
       // Calculer la distance totale: plusieurs tours complets + position finale
-      const fullCycles = 8 + reelIndex * 2; // Plus de tours pour les rouleaux suivants
-      const totalSymbols = fullCycles * symbols.length + finalSymbolIndex;
-      const targetOffset = totalSymbols * cellSize;
+      const fullCycles = 10; // Même nombre de tours pour tous les rouleaux (synchronisé)
+      const totalDistance = (fullCycles * stripLength) + (finalSymbolIndex * cellSize);
+      // Tous les rouleaux utilisent le même offset (l'inversion visuelle est gérée par scaleY(-1))
+      const targetOffset = -(finalSymbolIndex * cellSize);
+      targetOffsetsRef.current[reelIndex] = targetOffset;
+      const fastCycles = Math.max(1, fullCycles - 1);
+      const fastDistance = fastCycles * stripLength;
+      const slowDistance = totalDistance - fastDistance;
+      const fastPortion = Math.min(0.85, fastDistance / totalDistance);
       const duration = durations[reelIndex];
 
       const animate = (ts: number) => {
@@ -182,12 +229,23 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
         }
         const elapsed = ts - reelStartTimes.current[reelIndex];
         const progress = Math.min(1, elapsed / duration);
-        const eased = slotEasing(progress);
-        const currentOffset = -targetOffset * eased;
+        let distanceTravelled: number;
+
+        if (progress < fastPortion) {
+          const phaseProgress = progress / fastPortion;
+          distanceTravelled = fastDistance * phaseProgress;
+        } else {
+          const phaseProgress = (progress - fastPortion) / (1 - fastPortion || 1);
+          const easedSlow = 1 - Math.pow(1 - phaseProgress, 4); // easeOutQuart
+          distanceTravelled = fastDistance + slowDistance * easedSlow;
+        }
+
+        // Tous les rouleaux utilisent le même calcul (l'inversion visuelle est gérée par scaleY(-1))
+        const normalizedOffset = -(distanceTravelled % stripLength);
 
         setReelOffsets((prev) => {
           const next = [...prev];
-          next[reelIndex] = currentOffset;
+          next[reelIndex] = normalizedOffset;
           return next;
         });
 
@@ -196,6 +254,12 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
         } else {
           // Animation terminée: marquer comme complété et continuer à animer jusqu'à la position finale
           console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé à ${Date.now()}`);
+          const snapOffset = targetOffsetsRef.current[reelIndex] ?? -(finalSymbolIndex * cellSize);
+          setReelOffsets((prev) => {
+            const next = [...prev];
+            next[reelIndex] = snapOffset;
+            return next;
+          });
           
           // Utiliser updateCompletedReel pour mise à jour synchrone
           updateCompletedReel(reelIndex, true);
@@ -209,29 +273,18 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
             return next;
           });
           
-          // NE PAS forcer offset à 0 immédiatement, laisser l'animation se terminer naturellement
-          // L'offset sera déjà proche de 0 grâce au calcul de targetOffset
+          if (completedReelsRef.current.every(Boolean) && !finishScheduledRef.current) {
+            finishScheduledRef.current = true;
+            finishTimeoutRef.current = window.setTimeout(() => {
+              finalizeSpin();
+            }, 300);
+          }
         }
       };
       
       animReqs.current[reelIndex] = requestAnimationFrame(animate);
     });
-
-    // Vérifier le résultat après la fin du dernier rouleau (avec marge suffisante)
-    setTimeout(() => {
-      console.log('🎰 [SlotMachine] Animation complete, setting isSpinning to false');
-      setIsSpinning(false);
-      const isWinning = finals[0] === finals[1] && finals[1] === finals[2];
-      console.log(`🎲 [SlotMachine] Result: ${isWinning ? 'WIN' : 'LOSE'}`, finals);
-      if (isWinning) {
-        console.log('🎉 [SlotMachine] Calling onWin');
-        onWin?.(finals);
-      } else {
-        console.log('😔 [SlotMachine] Calling onLose');
-        onLose?.();
-      }
-    }, Math.max(...durations) + 800); // Marge de 800ms pour être sûr que tous les rouleaux terminent
-  }, [isSpinning, disabled, symbols, currentTemplate, onWin, onLose]);
+  }, [isSpinning, disabled, isStable, hasPlayed, symbols, currentTemplate, finalizeSpin, clearFinishTimers]);
 
   const isCustomTemplate = currentTemplate === 'custom-frame';
   const isUserTemplate = currentTemplate === 'user-template' && !!customTemplateUrl;
@@ -254,6 +307,25 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       stackTrace: new Error().stack
     });
   }
+
+  React.useEffect(() => {
+    console.log('🟢 [SlotMachine] Component MOUNTED');
+    
+    // Attendre 1600ms avant de rendre le jeu jouable (stabilisation)
+    const stabilizationTimer = setTimeout(() => {
+      setIsStable(true);
+      console.log('✅ [SlotMachine] Component STABLE - game is now playable');
+    }, 1600);
+    
+    return () => {
+      console.log('🔴 [SlotMachine] Component UNMOUNTING - cleaning up animations');
+      clearTimeout(stabilizationTimer);
+      animReqs.current.forEach((id) => cancelAnimationFrame(id));
+      animReqs.current = [];
+      clearFinishTimers();
+      setIsStable(false);
+    };
+  }, [clearFinishTimers]);
 
   return (
     <div 
@@ -338,10 +410,13 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                 >
                   {reels.map((symbol, reelIdx) => {
                     const size = 70;
+                    const isReverse = reelIdx === 1; // Rouleau du milieu en sens inverse
                     // Strip répétée pour défilement fluide
                     const strip = Array(80).fill(null).flatMap(() => symbols);
-                    const isImg = typeof symbol === 'string' && (symbol.startsWith('data:') || symbol.startsWith('http'));
-                    
+                    const targetOffset = targetOffsetsRef.current[reelIdx] ?? -(Math.max(symbols.indexOf(reels[reelIdx]), 0) * size);
+                    const shouldAnimate = !completedReels[reelIdx];
+                    const currentOffset = shouldAnimate ? reelOffsets[reelIdx] : targetOffset;
+
                     return (
                       <div
                         key={reelIdx}
@@ -353,64 +428,48 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                           border: `2px solid ${reelBorderColor}`,
                           borderRadius: '8px',
                           overflow: 'hidden',
-                          position: 'relative'
+                          position: 'relative',
+                          transform: isReverse ? 'scaleY(-1)' : 'none' // Inverser visuellement le rouleau du milieu
                         }}
                       >
-                        {!completedReels[reelIdx] ? (
-                          <div
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              transform: `translateY(${reelOffsets[reelIdx]}px)`,
-                              willChange: 'transform'
-                            }}
-                          >
-                            {strip.map((s, i) => {
-                              const isStripImg = typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http'));
-                              return (
-                                <div
-                                  key={i}
-                                  style={{
-                                    height: `${size}px`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '32px',
-                                    fontWeight: 'bold',
-                                    color: reelTextColor
-                                  }}
-                                >
-                                  {isStripImg ? (
-                                    <img src={s as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
-                                  ) : (
-                                    <span>{s}</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div style={{
-                            width: '100%',
-                            height: '100%',
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '32px',
-                            fontWeight: 'bold',
-                            color: reelTextColor
-                          }}>
-                            {isImg ? (
-                              <img src={symbol as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
-                            ) : (
-                              <span>{symbol}</span>
-                            )}
-                          </div>
-                        )}
+                            flexDirection: 'column',
+                            transform: `translateY(${currentOffset}px)`,
+                            transition: shouldAnimate ? 'none' : 'transform 260ms cubic-bezier(0.25, 0.9, 0.3, 1)',
+                            willChange: shouldAnimate ? 'transform' : undefined
+                          }}
+                        >
+                          {strip.map((s, i) => {
+                            const isStripImg = typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http'));
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  height: `${size}px`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '32px',
+                                  fontWeight: 'bold',
+                                  color: reelTextColor,
+                                  transform: isReverse ? 'scaleY(-1)' : 'none' // Remettre les symboles à l'endroit
+                                }}
+                              >
+                                {isStripImg ? (
+                                  <img src={s as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                                ) : (
+                                  <span>{s}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
@@ -444,9 +503,12 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
           >
             {reels.map((symbol, reelIdx) => {
               const size = (currentTemplate === 'jackpot-4') ? 80 : 70;
+              const isReverse = reelIdx === 1; // Rouleau du milieu en sens inverse
               const strip = Array(80).fill(null).flatMap(() => symbols);
               const showBorders = !(currentTemplate === 'jackpot-2' || currentTemplate === 'jackpot-3' || currentTemplate === 'jackpot-4');
-              const isImg = typeof symbol === 'string' && (symbol.startsWith('data:') || symbol.startsWith('http'));
+              const targetOffset = targetOffsetsRef.current[reelIdx] ?? -(Math.max(symbols.indexOf(reels[reelIdx]), 0) * size);
+              const shouldAnimate = !completedReels[reelIdx];
+              const currentOffset = shouldAnimate ? reelOffsets[reelIdx] : targetOffset;
               
               return (
                 <div
@@ -459,64 +521,48 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                     border: showBorders ? `2px solid ${reelBorderColor}` : 'none',
                     borderRadius: '8px',
                     overflow: 'hidden',
-                    position: 'relative'
+                    position: 'relative',
+                    transform: isReverse ? 'scaleY(-1)' : 'none' // Inverser visuellement le rouleau du milieu
                   }}
                 >
-                  {isSpinning ? (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        transform: `translateY(${reelOffsets[reelIdx]}px)`,
-                        willChange: 'transform'
-                      }}
-                    >
-                      {strip.map((s, i) => {
-                        const isStripImg = typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http'));
-                        return (
-                          <div
-                            key={i}
-                            style={{
-                              height: `${size}px`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '32px',
-                              fontWeight: 'bold',
-                              color: reelTextColor
-                            }}
-                          >
-                            {isStripImg ? (
-                              <img src={s as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
-                            ) : (
-                              <span>{s}</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '32px',
-                      fontWeight: 'bold',
-                      color: reelTextColor
-                    }}>
-                      {isImg ? (
-                        <img src={symbol as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
-                      ) : (
-                        <span>{symbol}</span>
-                      )}
-                    </div>
-                  )}
+                      flexDirection: 'column',
+                      transform: `translateY(${currentOffset}px)`,
+                      transition: shouldAnimate ? 'none' : 'transform 260ms cubic-bezier(0.25, 0.9, 0.3, 1)',
+                      willChange: shouldAnimate ? 'transform' : undefined
+                    }}
+                  >
+                    {strip.map((s, i) => {
+                      const isStripImg = typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http'));
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            height: `${size}px`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '32px',
+                            fontWeight: 'bold',
+                            color: reelTextColor,
+                            transform: isReverse ? 'scaleY(-1)' : 'none' // Remettre les symboles à l'endroit
+                          }}
+                        >
+                          {isStripImg ? (
+                            <img src={s as string} alt="" style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                          ) : (
+                            <span>{s}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
@@ -528,10 +574,10 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
       {/* Bouton SPIN - En dehors du template */}
       <button
         onClick={spin}
-        disabled={isSpinning}
+        disabled={isSpinning || disabled || !isStable || hasPlayed}
         className="slot-spin-button"
         style={{
-          background: isSpinning
+          background: (isSpinning || !isStable || hasPlayed)
             ? (btnBg ? btnBg : 'linear-gradient(145deg, #999, #666)')
             : (btnBg ? btnBg : 'linear-gradient(145deg, #ffd700, #ffed4e)'),
           border: `3px solid ${btnBorder ?? '#b8860b'}`,
@@ -539,9 +585,9 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
           padding: '12px 30px',
           fontSize: '18px',
           fontWeight: 'bold',
-          color: isSpinning ? (btnTextColor ? btnTextColor : '#ccc') : (btnTextColor ?? '#8b4513'),
-          cursor: isSpinning ? 'not-allowed' : 'pointer',
-          boxShadow: isSpinning 
+          color: (isSpinning || !isStable || hasPlayed) ? (btnTextColor ? btnTextColor : '#ccc') : (btnTextColor ?? '#8b4513'),
+          cursor: (isSpinning || !isStable || hasPlayed) ? 'not-allowed' : 'pointer',
+          boxShadow: (isSpinning || !isStable || hasPlayed) 
             ? 'inset 0 4px 8px rgba(0,0,0,0.3)' 
             : '0 6px 20px rgba(255, 215, 0, 0.4), inset 0 2px 5px rgba(255,255,255,0.3)',
           transition: 'all 0.2s ease',
@@ -549,7 +595,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
           transform: isSpinning ? 'scale(0.95)' : 'scale(1)'
         }}
       >
-        {isSpinning ? 'SPINNING...' : (btnTextCfg || 'SPIN')}
+        {!isStable ? 'CHARGEMENT...' : isSpinning ? 'SPINNING...' : (btnTextCfg || 'SPIN')}
       </button>
     </div>
   );

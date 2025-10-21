@@ -342,6 +342,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     onActiveTabChange?.(tab);
   };
   
+  // État pour le menu déroulant des écrans (déplacé au niveau racine pour respecter les règles des hooks)
+  const [showScreenMenu, setShowScreenMenu] = React.useState(false);
+  
   // Référence pour suivre les états précédents
   const prevStatesRef = React.useRef({
     showEffectsPanel,
@@ -1030,7 +1033,6 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
           <div className="p-6 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-surface))]">
             {(() => {
               const screenTitle = (currentScreen === 'screen2') ? 'Écran 2' : (currentScreen === 'screen3') ? 'Écran 3' : 'Écran 1';
-              const [showScreenMenu, setShowScreenMenu] = React.useState(false);
               
               return (
                 <div className="relative">
