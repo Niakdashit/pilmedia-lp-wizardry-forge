@@ -1,0 +1,145 @@
+
+Running 2 tests using 1 worker
+
+✅ Mode preview activé
+✅ Bouton Participer cliqué
+✅ SlotMachine visible
+🎰 Clic sur overlay pour ouvrir le formulaire...
+📝 Remplissage du formulaire...
+✅ Formulaire validé
+🎰 Clique sur SPIN...
+🚀 [SlotMachine] SPIN STARTED
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+✅ Animation démarrée
+📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042575175}
+📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042575176}
+🎨 [SlotMachine] RENDER: {isSpinning: false, completedReels: Array(3), completedReelsValues: [true, true, true], reels: Array(3)}
+🎨 [SlotMachine] RENDER: {isSpinning: false, completedReels: Array(3), completedReelsValues: [true, true, true], reels: Array(3)}
+🎯 [SlotMachine] Rouleau 0 terminé à 1761042576242
+✅ [SlotMachine] completedReels mis à jour: [true, false, false]
+🎯 [SlotMachine] Rouleau 1 terminé à 1761042576842
+✅ [SlotMachine] completedReels mis à jour: [true, true, false]
+🎰 [SlotMachine] Animation complete, setting isSpinning to false
+🎲 [SlotMachine] Result: LOSE [🍇, 🍒, 🍊]
+😔 [SlotMachine] Calling onLose
+🎯 [SlotMachine] Rouleau 2 terminé à 1761042577445
+✅ [SlotMachine] completedReels mis à jour: [true, true, true]
+🎯 [FunnelUnlockedGame] handleGameFinish called with result: lose
+📦 [FunnelUnlockedGame] Setting gameResult to: lose
+✅ [FunnelUnlockedGame] Now showing result screen
+📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042578651}
+📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042578652}
+🎰 Rouleaux visibles après 3.5s: false
+⏱️ Temps total avant ResultScreen: 6062ms
+📊 ResultScreen visible: false
+
+📋 Logs collectés:
+1761042574234: 🚀 [SlotMachine] SPIN STARTED
+1761042574235: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574245: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574492: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574492: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574537: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574574: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574599: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574650: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574674: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574689: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574765: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574765: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574803: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574848: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574866: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574871: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574928: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574935: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574988: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042574993: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042575051: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042575060: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042575109: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042575115: 🎨 [SlotMachine] RENDER: {isSpinning: true, completedReels: Array(3), completedReelsValues: [false, false, false], reels: Array(3)}
+1761042575183: 📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042575175}
+1761042575183: 📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042575176}
+1761042575186: 🎨 [SlotMachine] RENDER: {isSpinning: false, completedReels: Array(3), completedReelsValues: [true, true, true], reels: Array(3)}
+1761042575189: 🎨 [SlotMachine] RENDER: {isSpinning: false, completedReels: Array(3), completedReelsValues: [true, true, true], reels: Array(3)}
+1761042576246: 🎯 [SlotMachine] Rouleau 0 terminé à 1761042576242
+1761042576246: ✅ [SlotMachine] completedReels mis à jour: [true, false, false]
+1761042576844: 🎯 [SlotMachine] Rouleau 1 terminé à 1761042576842
+1761042576845: ✅ [SlotMachine] completedReels mis à jour: [true, true, false]
+1761042577446: 🎰 [SlotMachine] Animation complete, setting isSpinning to false
+1761042577447: 🎲 [SlotMachine] Result: LOSE [🍇, 🍒, 🍊]
+1761042577449: 😔 [SlotMachine] Calling onLose
+1761042577450: 🎯 [SlotMachine] Rouleau 2 terminé à 1761042577445
+1761042577450: ✅ [SlotMachine] completedReels mis à jour: [true, true, true]
+1761042578648: 🎯 [FunnelUnlockedGame] handleGameFinish called with result: lose
+1761042578654: 📦 [FunnelUnlockedGame] Setting gameResult to: lose
+1761042578654: ✅ [FunnelUnlockedGame] Now showing result screen
+1761042578658: 📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042578651}
+1761042578660: 📦 [FunnelUnlockedGame] Using canonical modules: {screen1Count: 1, screen2Count: 0, screen3Count: 0, timestamp: 1761042578652}
+📸 Capture d'écran sauvegardée: jackpot-animation-test.png
+  ✓  1 [chromium] › test-jackpot-animation.spec.ts:4:3 › Jackpot Animation Flow › should complete spin animation before showing result screen (19.5s)
+📊 Changements visuels (nombre de rouleaux visibles):
+[
+  [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m,
+  [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m, [33m3[39m,
+  [33m3[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m,
+  [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m,
+  [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m, [33m0[39m
+]
+❌ Coupure brutale détectée: true
+  ✘  2 [chromium] › test-jackpot-animation.spec.ts:119:3 › Jackpot Animation Flow › should show smooth animation without abrupt cuts (28.5s)
+
+
+  1) [chromium] › test-jackpot-animation.spec.ts:119:3 › Jackpot Animation Flow › should show smooth animation without abrupt cuts 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mfalse[39m
+    Received: [31mtrue[39m
+
+      180 |     
+      181 |     console.log(`❌ Coupure brutale détectée: ${hasAbruptCut}`);
+    > 182 |     expect(hasAbruptCut).toBe(false);
+          |                          ^
+      183 |   });
+      184 | });
+      185 |
+        at /Users/jonathannzaumakoso/Desktop/Leadya/Test3/pilmedia-lp-wizardry-forge/test-jackpot-animation.spec.ts:182:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/test-jackpot-animation-Jac-f56de-imation-without-abrupt-cuts-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/test-jackpot-animation-Jac-f56de-imation-without-abrupt-cuts-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/test-jackpot-animation-Jac-f56de-imation-without-abrupt-cuts-chromium/error-context.md
+
+  1 failed
+    [chromium] › test-jackpot-animation.spec.ts:119:3 › Jackpot Animation Flow › should show smooth animation without abrupt cuts 
+  1 passed (1.0m)

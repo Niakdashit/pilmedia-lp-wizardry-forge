@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Jackpot Animation Flow', () => {
   test('should complete spin animation before showing result screen', async ({ page }) => {
     // Aller sur la page de l'éditeur jackpot
-    await page.goto('http://localhost:5173/jackpot-editor');
+    await page.goto('http://localhost:8080/jackpot-editor');
     
     // Attendre que la page soit chargée
     await page.waitForLoadState('networkidle');
@@ -16,17 +16,35 @@ test.describe('Jackpot Animation Flow', () => {
     console.log('✅ Mode preview activé');
     await page.waitForTimeout(1000);
     
+    // Cliquer sur le bouton "Participer" pour accéder au jeu
+    const participerButton = page.locator('button:has-text("Participer"), a:has-text("Participer")').first();
+    if (await participerButton.isVisible().catch(() => false)) {
+      await participerButton.click();
+      console.log('✅ Bouton Participer cliqué');
+      await page.waitForTimeout(1000);
+    }
+    
     // Attendre que le SlotMachine soit visible
     await page.waitForSelector('.slot-machine-container, .slot-root', { timeout: 10000 });
     console.log('✅ SlotMachine visible');
     
-    // Cliquer sur le formulaire si nécessaire
-    const formOverlay = page.locator('text=Remplir le formulaire, text=Valider').first();
-    if (await formOverlay.isVisible().catch(() => false)) {
-      await formOverlay.click();
-      await page.waitForTimeout(500);
-      
-      // Remplir le formulaire rapidement
+    // ÉTAPE 1: Cliquer sur l'overlay ou SPIN pour déclencher le formulaire
+    // Il y a un overlay transparent qui intercepte les clics, on clique dessus
+    const overlay = page.locator('.absolute.inset-0.flex.items-center.justify-center').first();
+    if (await overlay.isVisible().catch(() => false)) {
+      console.log('🎰 Clic sur overlay pour ouvrir le formulaire...');
+      await overlay.click();
+    } else {
+      const firstSpinButton = page.locator('button:has-text("SPIN"), button:has-text("Lancer")').first();
+      console.log('🎰 Clic sur SPIN pour ouvrir le formulaire...');
+      await firstSpinButton.click({ force: true });
+    }
+    await page.waitForTimeout(1000);
+    
+    // ÉTAPE 2: Remplir le formulaire
+    const emailInput = page.locator('input[type="email"]').first();
+    if (await emailInput.isVisible().catch(() => false)) {
+      console.log('📝 Remplissage du formulaire...');
       await page.fill('input[type="email"]', 'test@example.com');
       await page.fill('input[name="nom"], input[placeholder*="nom"]', 'Test');
       await page.fill('input[name="prenom"], input[placeholder*="prénom"]', 'User');
@@ -99,7 +117,7 @@ test.describe('Jackpot Animation Flow', () => {
   });
   
   test('should show smooth animation without abrupt cuts', async ({ page }) => {
-    await page.goto('http://localhost:5173/jackpot-editor');
+    await page.goto('http://localhost:8080/jackpot-editor');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
     
@@ -108,15 +126,30 @@ test.describe('Jackpot Animation Flow', () => {
     await previewButton.click();
     await page.waitForTimeout(1000);
     
+    // Cliquer sur le bouton "Participer"
+    const participerButton2 = page.locator('button:has-text("Participer"), a:has-text("Participer")').first();
+    if (await participerButton2.isVisible().catch(() => false)) {
+      await participerButton2.click();
+      await page.waitForTimeout(1000);
+    }
+    
     // Enregistrer une vidéo de l'animation
     const context = page.context();
     await context.tracing.start({ screenshots: true, snapshots: true });
     
-    // Valider le formulaire si nécessaire
-    const formOverlay = page.locator('text=Remplir le formulaire').first();
-    if (await formOverlay.isVisible().catch(() => false)) {
-      await formOverlay.click();
-      await page.waitForTimeout(500);
+    // Premier clic sur l'overlay pour ouvrir le formulaire
+    const overlay2 = page.locator('.absolute.inset-0.flex.items-center.justify-center').first();
+    if (await overlay2.isVisible().catch(() => false)) {
+      await overlay2.click();
+    } else {
+      const firstSpin = page.locator('button:has-text("SPIN")').first();
+      await firstSpin.click({ force: true });
+    }
+    await page.waitForTimeout(1000);
+    
+    // Valider le formulaire
+    const emailInput2 = page.locator('input[type="email"]').first();
+    if (await emailInput2.isVisible().catch(() => false)) {
       await page.fill('input[type="email"]', 'test@example.com');
       await page.fill('input[name="nom"]', 'Test');
       const submitButton = page.locator('button[type="submit"]').first();
@@ -124,28 +157,37 @@ test.describe('Jackpot Animation Flow', () => {
       await page.waitForTimeout(1000);
     }
     
-    // Lancer le spin
-    const spinButton = page.locator('button:has-text("SPIN")').first();
-    await spinButton.click();
+    // Deuxième clic sur SPIN pour lancer l'animation
+    const secondSpin = page.locator('button:has-text("SPIN")').first();
+    await secondSpin.click();
     
     // Surveiller les changements visuels toutes les 100ms
-    const visualChanges: number[] = [];
+    const visualChanges: {time: number, spinning: boolean, reelsCount: number}[] = [];
+    const startTime = Date.now();
+    
     for (let i = 0; i < 50; i++) { // 5 secondes
       await page.waitForTimeout(100);
+      const isSpinning = await page.evaluate(() => {
+        const spinButton = document.querySelector('button:has-text("SPIN")') as HTMLButtonElement;
+        return spinButton?.disabled || false;
+      });
       const slotsVisible = await page.locator('.slot-reel').count();
-      visualChanges.push(slotsVisible);
+      const elapsed = Date.now() - startTime;
+      visualChanges.push({ time: elapsed, spinning: isSpinning, reelsCount: slotsVisible });
     }
     
     await context.tracing.stop({ path: 'jackpot-animation-trace.zip' });
     
-    console.log('📊 Changements visuels (nombre de rouleaux visibles):');
-    console.log(visualChanges);
+    console.log('📊 Changements visuels détaillés:');
+    visualChanges.forEach(v => console.log(`  ${v.time}ms: spinning=${v.spinning}, reels=${v.reelsCount}`));
     
-    // Vérifier qu'il n'y a pas de disparition brutale (0 rouleaux) avant 4 secondes
-    const earlyChanges = visualChanges.slice(0, 40); // 4 premières secondes
-    const hasAbruptCut = earlyChanges.some(count => count === 0);
+    // Vérifier qu'il n'y a pas de disparition brutale pendant le spin
+    const duringSpinChanges = visualChanges.filter(v => v.spinning);
+    const hasAbruptCut = duringSpinChanges.some(v => v.reelsCount === 0);
     
-    console.log(`❌ Coupure brutale détectée: ${hasAbruptCut}`);
+    console.log(`\n❌ Coupure brutale pendant le spin: ${hasAbruptCut}`);
+    console.log(`📊 Animation a duré: ${visualChanges.filter(v => v.spinning).length * 100}ms`);
+    
     expect(hasAbruptCut).toBe(false);
   });
 });

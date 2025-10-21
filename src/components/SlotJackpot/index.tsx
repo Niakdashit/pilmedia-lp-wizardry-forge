@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import SlotMachine from './SlotMachine';
 
 interface SlotJackpotProps {
@@ -12,8 +12,10 @@ interface SlotJackpotProps {
   symbols?: string[];
 }
 
-const SlotJackpot: React.FC<SlotJackpotProps> = (props) => {
+const SlotJackpot: React.FC<SlotJackpotProps> = memo((props) => {
   return <SlotMachine {...props} />;
-};
+});
+
+SlotJackpot.displayName = 'SlotJackpot';
 
 export default SlotJackpot;

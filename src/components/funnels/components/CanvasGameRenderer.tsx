@@ -158,7 +158,7 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
   const canvasSize = getCanvasSize();
 
 
-  const handleGameComplete = (result: 'win' | 'lose') => {
+  const handleGameComplete = React.useCallback((result: 'win' | 'lose') => {
     console.log('🎯 [CanvasGameRenderer] Game completed with result:', result);
     // Délai pour laisser l'animation se terminer complètement avant d'appeler onGameFinish
     // Victoire: 1500ms pour voir les confettis, Défaite: 1200ms pour voir le résultat
@@ -168,7 +168,10 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
       console.log('✅ [CanvasGameRenderer] Now calling onGameFinish');
       onGameFinish(result);
     }, delay);
-  };
+  }, [onGameFinish]);
+
+  const handleWin = React.useCallback(() => handleGameComplete('win'), [handleGameComplete]);
+  const handleLose = React.useCallback(() => handleGameComplete('lose'), [handleGameComplete]);
 
   const handleGameStartInternal = () => {
     console.log('Game started');
@@ -331,8 +334,8 @@ const CanvasGameRenderer: React.FC<CanvasGameRendererProps> = ({
               key="slotjackpot-stable"
               templateOverride={effectiveTemplate}
               symbols={effectiveSymbols}
-              onWin={() => handleGameComplete('win')}
-              onLose={() => handleGameComplete('lose')}
+              onWin={handleWin}
+              onLose={handleLose}
               disabled={!formValidated}
             />
           </React.Suspense>

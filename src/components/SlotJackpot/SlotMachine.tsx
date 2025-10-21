@@ -143,17 +143,19 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
     // Choisir les résultats finaux dès le départ
     const finals = [0, 1, 2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
 
-    // Durées en cascade pour effet professionnel
-    const durations = [1800, 2400, 3000];
+    // Durées en cascade pour effet professionnel (plus longues pour voir le ralentissement)
+    const durations = [3000, 4000, 5000]; // 3s, 4s, 5s pour un ralentissement bien visible
     const cellSize = (currentTemplate === 'jackpot-4') ? 80 : 70;
 
-    // Easing personnalisé pour slot machine (accélération puis forte décélération)
+    // Easing personnalisé pour slot machine avec décélération TRÈS forte
     const slotEasing = (t: number) => {
-      // Courbe ease-in-out avec forte décélération finale
+      // Phase 1 (0-0.5): Vitesse constante rapide
       if (t < 0.5) {
-        return 2 * t * t;
+        return t;
       }
-      return 1 - Math.pow(-2 * t + 2, 3) / 2;
+      // Phase 2 (0.5-1.0): Décélération exponentielle TRÈS forte
+      const slowPhase = (t - 0.5) / 0.5; // Normaliser 0.5-1.0 vers 0-1
+      return 0.5 + 0.5 * (1 - Math.pow(1 - slowPhase, 6)); // Décélération puissance 6
     };
 
     // Nettoyage
@@ -192,33 +194,30 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
         if (progress < 1) {
           animReqs.current[reelIndex] = requestAnimationFrame(animate);
         } else {
-          // Animation terminée: forcer offset à 0 et marquer comme complété
+          // Animation terminée: marquer comme complété et continuer à animer jusqu'à la position finale
           console.log(`🎯 [SlotMachine] Rouleau ${reelIndex} terminé à ${Date.now()}`);
           
           // Utiliser updateCompletedReel pour mise à jour synchrone
           updateCompletedReel(reelIndex, true);
           console.log(`✅ [SlotMachine] completedReels mis à jour:`, completedReelsRef.current);
           
-          // Puis mettre à jour les autres states
-          setReelOffsets((prev) => {
-            const next = [...prev];
-            next[reelIndex] = 0;
-            return next;
-          });
-          
+          // Mettre à jour le symbole final
           setReels((prev) => {
             const next = [...prev];
             next[reelIndex] = finalSymbol;
             console.log(`🎰 [SlotMachine] reels[${reelIndex}] = ${finalSymbol}`);
             return next;
           });
+          
+          // NE PAS forcer offset à 0 immédiatement, laisser l'animation se terminer naturellement
+          // L'offset sera déjà proche de 0 grâce au calcul de targetOffset
         }
       };
       
       animReqs.current[reelIndex] = requestAnimationFrame(animate);
     });
 
-    // Vérifier le résultat après la fin du dernier rouleau (avec marge)
+    // Vérifier le résultat après la fin du dernier rouleau (avec marge suffisante)
     setTimeout(() => {
       console.log('🎰 [SlotMachine] Animation complete, setting isSpinning to false');
       setIsSpinning(false);
@@ -231,23 +230,33 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
         console.log('😔 [SlotMachine] Calling onLose');
         onLose?.();
       }
-    }, Math.max(...durations) + 200);
+    }, Math.max(...durations) + 800); // Marge de 800ms pour être sûr que tous les rouleaux terminent
   }, [isSpinning, disabled, symbols, currentTemplate, onWin, onLose]);
 
   const isCustomTemplate = currentTemplate === 'custom-frame';
   const isUserTemplate = currentTemplate === 'user-template' && !!customTemplateUrl;
 
-  // Log pour déboguer le rendu
+  // Log pour déboguer le rendu avec stack trace pour voir qui cause le re-render
   console.log('🎨 [SlotMachine] RENDER:', {
     isSpinning,
     completedReels: completedReels,
     completedReelsValues: `[${completedReels[0]}, ${completedReels[1]}, ${completedReels[2]}]`,
-    reels: reels.map(r => typeof r === 'string' ? r.substring(0, 10) : r)
+    reels: reels.map(r => typeof r === 'string' ? r.substring(0, 10) : r),
+    disabled,
+    templateOverride,
+    symbolsCount: symbols?.length
   });
+  
+  // Si on passe de spinning à non-spinning pendant l'animation, c'est un problème
+  if (!isSpinning && completedReels.some(c => !c)) {
+    console.error('❌ [SlotMachine] BUG DÉTECTÉ: isSpinning=false mais rouleaux pas tous terminés!', {
+      completedReels,
+      stackTrace: new Error().stack
+    });
+  }
 
   return (
     <div 
-      key={`slot-machine-${currentTemplate}-${renderKey}`}
       className="slot-root"
       style={{
         position: 'relative',
@@ -453,7 +462,7 @@ const SlotMachine: React.FC<SlotMachineProps> = ({ onWin, onLose, onOpenConfig, 
                     position: 'relative'
                   }}
                 >
-                  {!completedReels[reelIdx] ? (
+                  {isSpinning ? (
                     <div
                       style={{
                         position: 'absolute',
