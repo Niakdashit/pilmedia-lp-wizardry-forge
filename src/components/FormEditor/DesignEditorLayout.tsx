@@ -109,6 +109,12 @@ interface FormEditorLayoutProps {
 const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Détection du mode Article via URL (?mode=article)
+  const searchParams = new URLSearchParams(location.search);
+  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  console.log('🎨 [FormEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -190,11 +196,13 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
   };
 
   // Store centralisé pour l'optimisation
-  const { 
+  const {
+    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified
+    setIsModified,
+    resetCampaign
   } = useEditorStore();
   
   // Hook de synchronisation preview
@@ -204,6 +212,12 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+
+  // Réinitialiser la campagne au montage de l'éditeur
+  useEffect(() => {
+    console.log('🎨 [FormEditor] Mounting - resetting campaign state');
+    resetCampaign();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -1956,7 +1970,9 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage
+      modularPage: modularPage,
+      // Inclure articleConfig depuis le store pour le mode Article
+      articleConfig: (campaignState as any)?.articleConfig
     };
   }, [
     canvasElements,
@@ -2894,6 +2910,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
+                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
@@ -2982,7 +2999,8 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                 </div>
                 
-                {/* Deuxième Canvas */}
+                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3002,6 +3020,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -3089,6 +3108,7 @@ const FormEditorLayout: React.FC<FormEditorLayoutProps> = ({ mode = 'campaign', 
                     />
                   </div>
                 </div>
+                )}
 
                 {/* FormEditor only has 2 screens - screen3 removed */}
               </div>

@@ -93,6 +93,9 @@ interface EditorActions {
   setEditorPanelState: (editorType: string, panel: string, show: boolean) => void;
   getEditorState: (editorType: string) => EditorState['editorStates'][string];
   resetEditorState: (editorType: string) => void;
+  
+  // Reset campaign (for editor navigation)
+  resetCampaign: () => void;
 }
 
 type EditorStore = EditorState & EditorActions;
@@ -284,6 +287,17 @@ export const useEditorStore = create<EditorStore>()(
           }
         }
       }));
+    },
+    
+    resetCampaign: () => {
+      console.log('🔄 [EditorStore] Resetting campaign state');
+      set({
+        campaign: null,
+        isModified: false,
+        selectedElementId: null,
+        updateCounter: 0,
+        lastUpdateTime: Date.now()
+      });
     },
   }))
 );

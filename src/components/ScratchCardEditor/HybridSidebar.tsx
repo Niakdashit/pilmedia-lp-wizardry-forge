@@ -22,10 +22,12 @@ import ModernFormTab from '../ModernEditor/ModernFormTab';
 import ScratchGamePanel from './panels/ScratchGamePanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
+import ArticleSidebar from './ArticleSidebar';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
 import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
+import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -217,6 +219,10 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onWheelShowBulbsChange,
   onWheelPositionChange
 }: HybridSidebarProps, ref) => {
+  // Détection du mode Article via URL
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const editorMode = searchParams?.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
@@ -245,6 +251,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     }
   }, [isWindowMobile]);
   
+  // Synchroniser les uploads d'images avec la bannière article
+  useArticleBannerSync(editorMode);
+
   // Détecter si l'appareil est réellement mobile via l'user-agent plutôt que la taille de la fenêtre
   React.useEffect(() => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';

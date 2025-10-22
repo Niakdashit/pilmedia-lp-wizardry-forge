@@ -43,9 +43,6 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   }, []);
 
   const initialTemplateWidths = useMemo(() => getTemplateBaseWidths('image-quiz'), [getTemplateBaseWidths]);
-
-  // Hook pour surveiller les changements du store en temps réel
-  const storeCampaign = useEditorStore((state) => state.campaign);
   
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
@@ -91,17 +88,25 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
   };
 
   // Store centralisé pour l'optimisation
-  const { 
+  const {
+    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified
+    setIsModified,
+    resetCampaign
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+
+  // Réinitialiser la campagne au montage de l'éditeur
+  useEffect(() => {
+    console.log('🎨 [ModelEditor] Mounting - resetting campaign state');
+    resetCampaign();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -951,6 +956,9 @@ const ModelEditorLayout: React.FC<ModelEditorLayoutProps> = ({ mode = 'campaign'
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
       // Garder la configuration canvas pour compatibilité
+      modularPage: modularPage,
+      // Inclure articleConfig depuis le store pour le mode Article
+      articleConfig: (campaignState as any)?.articleConfig,
       canvasConfig: {
         elements: canvasElements,
         background: canvasBackground,

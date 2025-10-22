@@ -473,6 +473,28 @@ const BackgroundPanel: React.FC<BackgroundPanelProps> = ({
             device: selectedDevice
           }
         );
+        // Émettre des événements pour synchroniser le mode Article (ArticleEditorLayout écoute ces événements)
+        try {
+          const evtCurrent = new CustomEvent('applyBackgroundCurrentScreen', {
+            detail: {
+              url: imageUrl,
+              screenId: currentScreen,
+              device: selectedDevice
+            }
+          });
+          window.dispatchEvent(evtCurrent);
+          if (applyToAllScreens) {
+            const evtAll = new CustomEvent('applyBackgroundAllScreens', {
+              detail: {
+                url: imageUrl,
+                device: selectedDevice
+              }
+            });
+            window.dispatchEvent(evtAll);
+          }
+        } catch (err) {
+          console.warn('⚠️ Failed to dispatch article background sync events:', err);
+        }
         
         // Extract colors from the uploaded image
         const extractedColors = await extractColorsFromImage(imageUrl);

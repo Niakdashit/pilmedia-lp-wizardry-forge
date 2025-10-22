@@ -27,6 +27,10 @@ import ModularCanvas from './modules/ModularCanvas';
 import { QuizModuleRenderer } from './QuizRenderer';
 import type { Module } from '@/types/modularEditor';
 
+// Import pour le mode Article
+import ArticleCanvas from '../ArticleEditor/ArticleCanvas';
+import { DEFAULT_ARTICLE_CONFIG } from '../ArticleEditor/types/ArticleTypes';
+
 type CanvasScreenId = 'screen1' | 'screen2' | 'screen3' | 'all';
 
 const SAFE_ZONE_PADDING: Record<DeviceType, number> = {
@@ -42,6 +46,7 @@ const SAFE_ZONE_RADIUS: Record<DeviceType, number> = {
 };
 
 export interface DesignCanvasProps {
+  editorMode?: 'fullscreen' | 'article'; // Mode Article ou Fullscreen
   screenId?: CanvasScreenId;
   selectedDevice: DeviceType;
   elements: any[];
@@ -120,6 +125,7 @@ export interface DesignCanvasProps {
 }
 
 const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({ 
+  editorMode = 'fullscreen',
   screenId = 'screen1',
   selectedDevice,
   elements,
@@ -176,6 +182,74 @@ const DesignCanvas = React.forwardRef<HTMLDivElement, DesignCanvasProps>(({
   selectedModule,
   onSelectedModuleChange
 }, ref) => {
+
+  // ============================================
+  // MODE ARTICLE - Rendu simplifié
+  // ============================================
+  if (editorMode === 'article') {
+    const articleConfig = campaign?.articleConfig || DEFAULT_ARTICLE_CONFIG;
+    
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+        <ArticleCanvas
+          articleConfig={articleConfig}
+          onBannerChange={(imageUrl) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  banner: { ...articleConfig.banner, imageUrl },
+                },
+              });
+            }
+          }}
+          onBannerRemove={() => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  banner: { ...articleConfig.banner, imageUrl: undefined },
+                },
+              });
+            }
+          }}
+          onTitleChange={(title) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: { ...articleConfig.content, title },
+                },
+              });
+            }
+          }}
+          onDescriptionChange={(description) => {
+            if (onCampaignChange && campaign) {
+              onCampaignChange({
+                ...campaign,
+                articleConfig: {
+                  ...articleConfig,
+                  content: { ...articleConfig.content, description },
+                },
+              });
+            }
+          }}
+          onCTAClick={() => console.log('🎯 Article CTA clicked')}
+          currentStep="article"
+          editable={!readOnly}
+          maxWidth={810}
+          campaignType={campaign?.type || 'jackpot'}
+        />
+      </div>
+    );
+  }
+
+  // ============================================
+  // MODE FULLSCREEN - Rendu normal
+  // ============================================
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const autoFitEnabledRef = useRef(true);

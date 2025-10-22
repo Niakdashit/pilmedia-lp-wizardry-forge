@@ -37,6 +37,13 @@ interface DesignEditorLayoutProps {
 const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Détection du mode Article via URL (?mode=article)
+  const searchParams = new URLSearchParams(location.search);
+  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  console.log('🎨 [DesignEditorLayout] Editor Mode:', editorMode);
+  
   // Détection automatique de l'appareil basée sur l'user-agent pour éviter le basculement lors du redimensionnement de fenêtre
   const detectDevice = (): 'desktop' | 'tablet' | 'mobile' => {
     const override = getEditorDeviceOverride();
@@ -249,6 +256,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
 
   // Hook de synchronisation preview
   const { syncBackground } = useEditorPreviewSync();
+
+  // (handler defined later in file; see existing implementation around background history)
 
   // Détecter la position de scroll pour changer l'écran courant
   useEffect(() => {
@@ -939,6 +948,45 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
       });
       setCanvasBackground(bg);
     }
+
+    // 🔗 Mode Article: refléter toute image de background vers la bannière de l'article pour feedback immédiat
+    try {
+      if (editorMode === 'article' && bg?.type === 'image' && typeof bg?.value === 'string') {
+        // Mettre à jour le store Zustand
+        setCampaign((prev: any) => {
+          const base = prev || {};
+          const baseArticle = base.articleConfig || {};
+          const baseBanner = baseArticle.banner || {};
+          return {
+            ...base,
+            articleConfig: {
+              ...baseArticle,
+              banner: {
+                ...baseBanner,
+                imageUrl: bg.value
+              }
+            }
+          };
+        });
+        // Mettre à jour aussi le state local pour que campaignData le reflète immédiatement
+        setCampaignConfig((prev: any) => {
+          const base = prev || {};
+          const baseArticle = base.articleConfig || {};
+          const baseBanner = baseArticle.banner || {};
+          return {
+            ...base,
+            articleConfig: {
+              ...baseArticle,
+              banner: {
+                ...baseBanner,
+                imageUrl: bg.value
+              }
+            }
+          };
+        });
+        try { setIsModified(true); } catch {}
+      }
+    } catch {}
     
     setTimeout(() => {
       addToHistory({
@@ -1380,6 +1428,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
             { id: 'nom', label: 'Nom', type: 'text', required: true },
             { id: 'email', label: 'Email', type: 'email', required: true }
           ],
+      // Article config pour le mode Article
+      articleConfig: (campaignState as any)?.articleConfig || campaignConfig?.articleConfig,
       // Garder la configuration canvas pour compatibilité
       canvasConfig: {
         elements: canvasElements,
@@ -1982,6 +2032,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 onWheelShowBulbsChange={setShowBulbs}
                 onWheelPositionChange={setWheelPosition}
                 selectedDevice={selectedDevice}
+                forceFullTabs={editorMode === 'article'}
                 hiddenTabs={effectiveHiddenTabs}
                 colorEditingContext={designColorContext}
                 className={isWindowMobile ? "vertical-sidebar-drawer" : ""}
@@ -2015,6 +2066,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                 {/* Premier Canvas - Screen 1 */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
+                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
@@ -2119,7 +2171,8 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   />
                 </div>
                 
-                {/* Deuxième Canvas - Screen 2 (Wheel Game) */}
+                {/* Deuxième Canvas - Screen 2 (Wheel Game) - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence */}
                   <div 
@@ -2139,6 +2192,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -2231,8 +2285,10 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     />
                   </div>
                 </div>
+                )}
 
-                {/* Troisième Canvas - Screen 3 (Result Screen) */}
+                {/* Troisième Canvas - Screen 3 (Result Screen) - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence */}
                   <div 
@@ -2252,6 +2308,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -2353,6 +2410,7 @@ const DesignEditorLayout: React.FC<DesignEditorLayoutProps> = ({ mode = 'campaig
                     />
                   </div>
                 </div>
+                )}
               </div>
             </div>
           </>

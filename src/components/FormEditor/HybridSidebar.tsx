@@ -23,7 +23,9 @@ import GameManagementPanel from './panels/GameManagementPanel';
 import FormConfigPanel from './panels/FormConfigPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
+import ArticleSidebar from './ArticleSidebar';
 import { useEditorStore } from '../../stores/editorStore';
+import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
 import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
@@ -218,6 +220,13 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onWheelShowBulbsChange,
   onWheelPositionChange
 }: HybridSidebarProps, ref) => {
+  // Détection du mode Article via URL
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const editorMode = searchParams?.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  // Synchroniser les uploads d'images avec la bannière article
+  useArticleBannerSync(editorMode);
+  
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;

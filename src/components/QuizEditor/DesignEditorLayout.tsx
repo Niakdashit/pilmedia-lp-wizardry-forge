@@ -109,6 +109,12 @@ interface QuizEditorLayoutProps {
 const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Détection du mode Article via URL (?mode=article)
+  const searchParams = new URLSearchParams(location.search);
+  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  console.log('🎨 [QuizEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -192,10 +198,12 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Store centralisé pour l'optimisation
   const { 
+    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified
+    setIsModified,
+    resetCampaign
   } = useEditorStore();
   
   // Hook de synchronisation preview
@@ -205,6 +213,12 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+
+  // Réinitialiser la campagne au montage de l'éditeur
+  useEffect(() => {
+    console.log('🎨 [QuizEditor] Mounting - resetting campaign state');
+    resetCampaign();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -1122,6 +1136,30 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
       setCanvasBackground(bg);
     }
     
+    // 🔗 Mode Article: si une image de fond est uploadée depuis le panneau gauche,
+    // la refléter aussi vers la bannière Article pour un feedback immédiat.
+    try {
+      const searchParams = new URLSearchParams(location.search);
+      const isArticleMode = searchParams.get('mode') === 'article';
+      if (isArticleMode && bg?.type === 'image' && typeof bg?.value === 'string') {
+        setCampaignConfig((prev: any) => {
+          const base = prev || {};
+          const baseArticle = base.articleConfig || {};
+          const baseBanner = baseArticle.banner || {};
+          return {
+            ...base,
+            articleConfig: {
+              ...baseArticle,
+              banner: {
+                ...baseBanner,
+                imageUrl: bg.value
+              }
+            }
+          };
+        });
+      }
+    } catch {}
+
     setTimeout(() => {
       addToHistory({
         campaignConfig: { ...campaignConfig },
@@ -1898,6 +1936,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
     return {
       id: 'quiz-design-preview',
       type: 'quiz',
+      // Fournir la configuration Article pour le mode article
+      articleConfig: (campaignConfig as any)?.articleConfig,
       design: {
         background: canvasBackground,
         screenBackgrounds: screenBackgrounds, // Backgrounds par écran pour le preview
@@ -1990,7 +2030,9 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage
+      modularPage: modularPage,
+      // Inclure articleConfig depuis le store pour le mode Article
+      articleConfig: (campaignState as any)?.articleConfig
     };
   }, [
     canvasElements,
@@ -2607,6 +2649,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 onElementsChange={setCanvasElements}
                 selectedElement={selectedElement}
                 onElementUpdate={handleElementUpdate}
+                forceFullTabs={editorMode === 'article'}
                 // Modular editor wiring
                 currentScreen={currentScreen}
                 onAddModule={handleAddModule}
@@ -2928,6 +2971,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
+                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
@@ -3016,7 +3060,8 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                 </div>
                 
-                {/* Deuxième Canvas */}
+                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3036,6 +3081,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -3121,8 +3167,10 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     />
                   </div>
                 </div>
+                )}
 
-                {/* Troisième Canvas */}
+                {/* Troisième Canvas - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3142,6 +3190,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -3235,6 +3284,7 @@ const QuizEditorLayout: React.FC<QuizEditorLayoutProps> = ({ mode = 'campaign', 
                     />
                   </div>
                 </div>
+                )}
               </div>
             </div>
             {/* Zoom Slider with integrated Screen navigation button */}

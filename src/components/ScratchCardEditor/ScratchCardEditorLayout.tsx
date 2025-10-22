@@ -186,6 +186,12 @@ interface ScratchCardEditorLayoutProps {
 const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode = 'campaign', hiddenTabs }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Détection du mode Article via URL (?mode=article)
+  const searchParams = new URLSearchParams(location.search);
+  const editorMode = searchParams.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  console.log('🎨 [ScratchCardEditorLayout] Editor Mode:', editorMode);
   const getTemplateBaseWidths = useCallback((templateId?: string) => {
     const template = quizTemplates.find((tpl) => tpl.id === templateId) || quizTemplates[0];
     const width = template?.style?.containerWidth ?? 450;
@@ -241,17 +247,25 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
   };
 
   // Store centralisé pour l'optimisation
-  const { 
+  const {
+    campaign: storeCampaign,
     setCampaign,
     setPreviewDevice,
     setIsLoading,
-    setIsModified
+    setIsModified,
+    resetCampaign
   } = useEditorStore();
   // Campagne centralisée (source de vérité pour les champs de contact)
   const campaignState = useEditorStore((s) => s.campaign);
 
   // Supabase campaigns API
   const { saveCampaign } = useCampaigns();
+
+  // Réinitialiser la campagne au montage de l'éditeur
+  useEffect(() => {
+    console.log('🎨 [ScratchEditor] Mounting - resetting campaign state');
+    resetCampaign();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // État local pour la compatibilité existante
   const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>(actualDevice);
@@ -1994,7 +2008,9 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
         device: selectedDevice
       },
       // Ajouter modularPage pour compatibilité
-      modularPage: modularPage
+      modularPage: modularPage,
+      // Inclure articleConfig depuis le store pour le mode Article
+      articleConfig: (campaignState as any)?.articleConfig
     };
   }, [
     canvasElements,
@@ -2908,6 +2924,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                 {/* Premier Canvas */}
                 <div data-screen-anchor="screen1" className="relative">
                   <DesignCanvas
+                    editorMode={editorMode}
                     screenId="screen1"
                     ref={canvasRef}
                     selectedDevice={selectedDevice}
@@ -3001,7 +3018,8 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   />
                 </div>
                 
-                {/* Deuxième Canvas */}
+                {/* Deuxième Canvas - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen2">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3021,6 +3039,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen2"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -3112,8 +3131,10 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     />
                   </div>
                 </div>
+                )}
 
-                {/* Troisième Canvas */}
+                {/* Troisième Canvas - Seulement en mode Fullscreen */}
+                {editorMode === 'fullscreen' && (
                 <div className="mt-4 relative" data-screen-anchor="screen3">
                   {/* Background pour éviter la transparence de la bande magenta */}
                   <div 
@@ -3133,6 +3154,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                   />
                   <div className="relative z-10">
                     <DesignCanvas
+                      editorMode={editorMode}
                       screenId="screen3"
                       selectedDevice={selectedDevice}
                       elements={canvasElements}
@@ -3230,6 +3252,7 @@ const ScratchCardEditorLayout: React.FC<ScratchCardEditorLayoutProps> = ({ mode 
                     />
                   </div>
                 </div>
+                )}
               </div>
             </div>
             {/* Zoom Slider with integrated Screen navigation button */}

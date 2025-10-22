@@ -6,7 +6,11 @@ import {
   Gamepad2,
   Palette,
   FormInput,
-  MessageSquare
+  MessageSquare,
+  Image,
+  Type,
+  MousePointer,
+  List
 } from 'lucide-react';
 import { BackgroundPanel, CompositeElementsPanel, TextEffectsPanel } from '@/components/shared';
 import ImageModulePanel from '../QuizEditor/modules/ImageModulePanel';
@@ -22,10 +26,12 @@ import ModernFormTab from '../ModernEditor/ModernFormTab';
 import GameManagementPanel from './panels/GameManagementPanel';
 import WheelConfigPanel from './panels/WheelConfigPanel';
 import MessagesPanel from './panels/MessagesPanel';
+import ArticleModePanel from './panels/ArticleModePanel';
 import { useEditorStore } from '../../stores/editorStore';
 import { getEditorDeviceOverride } from '@/utils/deviceOverrides';
 import { quizTemplates } from '../../types/quizTemplates';
 import type { Module, BlocImage, BlocCarte, BlocLogo, BlocPiedDePage } from '@/types/modularEditor';
+import { useArticleBannerSync } from '@/hooks/useArticleBannerSync';
 
 // Lazy-loaded heavy panels
 const loadPositionPanel = () => import('../DesignEditor/panels/PositionPanel');
@@ -142,9 +148,11 @@ interface HybridSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   onWheelScaleChange?: (scale: number) => void;
   onWheelShowBulbsChange?: (show: boolean) => void;
   onWheelPositionChange?: (position: 'left' | 'right' | 'center') => void;
+  // When true, use the fullscreen tab set even if editorMode is 'article'
+  forceFullTabs?: boolean;
 }
 
-const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
+const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({ 
   onAddElement,
   onBackgroundChange,
   onExtractedColorsChange,
@@ -217,8 +225,14 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
   onWheelBorderWidthChange,
   onWheelScaleChange,
   onWheelShowBulbsChange,
-  onWheelPositionChange
+  onWheelPositionChange,
+  forceFullTabs = false
 }: HybridSidebarProps, ref) => {
+  // Détection du mode Article via URL
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const editorMode = searchParams?.get('mode') === 'article' ? 'article' : 'fullscreen';
+  
+  console.log('🎨 [HybridSidebar] Editor Mode:', editorMode);
   // Détection du format 9:16 (fenêtre portrait)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const isWindowMobile = windowSize.height > windowSize.width && windowSize.width < 768;
@@ -266,6 +280,9 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
       setIsCollapsed(true);
     }
   }, [onForceElementsTab, isWindowMobile]);
+
+  // Synchroniser les uploads d'images avec la bannière article
+  useArticleBannerSync(editorMode);
   const [internalActiveTab, setInternalActiveTab] = useState<string | null>('background');
   // Flag to indicate a deliberate user tab switch to avoid auto-switch overrides
   const isUserTabSwitchingRef = React.useRef(false);
@@ -467,34 +484,24 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
     return () => cancel(id);
   }, [activeTab]);
 
-  const allTabs = [
-    { 
-      id: 'background', 
-      label: 'Design', 
-      icon: Palette,
-      debug: 'Onglet Design (background)'
-    },
-    { 
-      id: 'elements', 
-      label: 'Éléments', 
-      icon: Plus
-    },
-    { 
-      id: 'form', 
-      label: 'Formulaire', 
-      icon: FormInput
-    },
-    { 
-      id: 'game', 
-      label: 'Jeu', 
-      icon: Gamepad2
-    },
-    { 
-      id: 'messages', 
-      label: 'Sortie', 
-      icon: MessageSquare
-    }
-  ];
+  // Tab definitions
+  const articleTabs = [
+    { id: 'banner', label: 'Bannière', icon: Image },
+    { id: 'text', label: 'Texte', icon: Type },
+    { id: 'button', label: 'Bouton', icon: MousePointer },
+    { id: 'funnel', label: 'Funnel', icon: List }
+  ] as const;
+  const fullscreenTabs = [
+    { id: 'background', label: 'Design', icon: Palette, debug: 'Onglet Design (background)' },
+    { id: 'elements', label: 'Éléments', icon: Plus },
+    { id: 'form', label: 'Formulaire', icon: FormInput },
+    { id: 'game', label: 'Jeu', icon: Gamepad2 },
+    { id: 'messages', label: 'Sortie', icon: MessageSquare }
+  ] as const;
+
+  // Choose tabs: allow forcing fullscreen even in article mode
+  const useArticleTabs = (editorMode === 'article') && !forceFullTabs;
+  const allTabs = useArticleTabs ? (articleTabs as any[]) : (fullscreenTabs as any[]);
   
   // Vérifier si hiddenTabs est défini et est un tableau
   const safeHiddenTabs = Array.isArray(hiddenTabs) ? hiddenTabs : [];
@@ -709,6 +716,22 @@ const HybridSidebar = forwardRef<HybridSidebarRef, HybridSidebarProps>(({
             selectedDevice={selectedDevice}
           />
         );
+      // Mode Article - Panneaux spécifiques
+      case 'banner':
+      case 'text':
+      case 'button':
+      case 'funnel':
+        if (editorMode === 'article') {
+          return (
+            <ArticleModePanel
+              campaign={campaign}
+              onCampaignChange={(updates) => setCampaign(updates as any)}
+              activePanel={tabId as 'banner' | 'text' | 'button' | 'funnel'}
+            />
+          );
+        }
+        return null;
+      
       case 'background':
         // Pour les modules texte, passer le module comme selectedElement
         const elementForBackground = selectedModule?.type === 'BlocTexte' ? selectedModule : selectedElement;
